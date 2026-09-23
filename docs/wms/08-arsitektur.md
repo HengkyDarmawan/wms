@@ -1,8 +1,8 @@
 # Arsitektur Sistem
 
-**Versi:** 0.1 (draf Part 3)
+**Versi:** 0.6 (Part 3; verifikasi paket diperbarui saat kerangka dipasang 23 Sep 2026)
 **Tanggal:** 23 September 2026
-**Status:** draf; keputusan arsitektur diberi ID `AD-xx` dan berlaku sampai diganti. Paket diverifikasi terhadap Laravel 13 pada 23 Sep 2026 (menutup [O-01](04-keputusan-dan-asumsi.md#o-01))
+**Status:** berlaku (asumsi A-25–A-49 divalidasi 23 Sep 2026; [A-50](04-keputusan-dan-asumsi.md#a-50) menunggu); keputusan arsitektur diberi ID `AD-xx` dan berlaku sampai diganti. Paket diverifikasi terhadap Laravel 13 pada 23 Sep 2026 (menutup [O-01](04-keputusan-dan-asumsi.md#o-01))
 **Dokumen terkait:** [Blueprint §17](01-blueprint.md#17-stack-teknologi) · [Model data 08a](08a-model-data-inti.md) · [08b](08b-model-data-stok-dokumen.md) · [08c](08c-model-data-pendukung.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Riset §2.8](02-riset-wms-sejenis.md#28-riset-teknis-untuk-part-3)
 
 ---
@@ -106,6 +106,8 @@ database/migrations/{central, tenant}            tests/{Feature/<Modul>, Unit}
 
 Aturan: model tidak berisi logika bisnis; setiap aksi bernama sesuai permission (`request.approve` → `Domain\Request\Actions\ApproveMaterialRequest`). Transisi status hanya lewat `States\<Doc>Transition::apply()` yang memeriksa guard Katalog, menulis timeline, dan memancarkan event Laravel untuk efek samping (notifikasi, job).
 
+**Paket bersama ([D-28](04-keputusan-dan-asumsi.md#d-28)):** domain `Approval` dibangun sebagai paket internal (`packages/approval`) yang dipasang WMS dan, nanti, modul Purchasing untuk PO (`document_type = purchase_order`, kondisi nilai uang hanya di sana). Domain `Purchasing` di WMS Fase 1 hanya berisi PRQ, catatan pemesanan, dan master vendor.
+
 ## 5. Stok: ledger, saldo, reservasi
 
 - `StockLedgerService::post(MovementBatch)`: satu transaksi; kunci baris `stock_balances` dalam urutan tetap; tolak bila hasil < 0 ([BR-STK-06](05-aturan-bisnis.md#br-stk)); tulis `stock_movements`, perbarui `stock_balances`, tulis `stock_events` (outbox). Semua dokumen memanggil ini; tidak ada jalur lain.
@@ -163,7 +165,7 @@ Aturan: model tidak berisi logika bisnis; setiap aksi bernama sesuai permission 
 | UI reaktif | `livewire/livewire` | 4.4.6 (21 Sep 2026) | ^10–^13 | — | ✔ |
 | Multi-tenancy | `stancl/tenancy` | 3.10.1 (5 Agu 2026) | ^10–^13 | — | ✔ (AD-01) |
 | Role & permission | `spatie/laravel-permission` | 8.3.0 (3 Jul 2026) | ^12, ^13 | — | ✔ (AD-06) |
-| Audit log | `spatie/laravel-activitylog` | 5.1.1 (8 Sep 2026) | ^12, ^13 | — | ✔ (AD-07) |
+| Audit log | `spatie/laravel-activitylog` | **4.12.3** | ^8–^13 | ≥ 8.1 | ✔ (AD-07) — v5.x menuntut PHP ≥ 8.4, tidak dipakai karena D-04 memakai PHP 8.3 |
 | PDF | `barryvdh/laravel-dompdf` | 3.1.2 (21 Feb 2026) | ^9–^13 | ≥ 8.1 | ✔ |
 | Excel | `maatwebsite/excel` | 4.0.3 (14 Sep 2026) | ^12, ^13 | ≥ 8.3 | ✔ |
 | Barcode 1D | `picqer/php-barcode-generator` | 3.3.0 (22 Agu 2026) | agnostik | ≥ 8.2 | ✔ |
@@ -171,15 +173,17 @@ Aturan: model tidak berisi logika bisnis; setiap aksi bernama sesuai permission 
 | QR (alternatif ditolak) | `endroid/qr-code` 6.1.3 | — | — | **≥ 8.4** | ✘ tidak cocok D-04 |
 | QR (alternatif ditolak) | `simplesoftwareio/simple-qrcode` 4.2.0 | 2021 | tidak dinyatakan | — | ✘ tidak terawat, bacon v2 |
 
-Belum diverifikasi (ditentukan saat implementasi): paket PWA/Vite plugin, klien WhatsApp Cloud API (F2), driver S3 (`league/flysystem-aws-s3-v3` — bawaan Laravel), TOTP 2FA.
+Belum diverifikasi (ditentukan saat implementasi): paket PWA/Vite plugin, klien WhatsApp Cloud API (F2), driver S3 (`league/flysystem-aws-s3-v3` — bawaan Laravel).
+
+**Terpasang 23 Sep 2026** (PHP 8.3.33, Composer 2.10): `laravel/framework` 13.33.0, `stancl/tenancy` 3.10.1, `spatie/laravel-permission` 8.3.0, `spatie/laravel-activitylog` 4.12.3, `livewire/livewire` 4.4.6, PHPUnit 12.5.35. Front-end di-bundle Vite tanpa CDN: Bootstrap 5.3, Bootstrap Icons, jQuery 3.7 (hanya untuk shell NexaDash dan plugin), font Inter di-host sendiri. **TOTP 2FA ditulis sendiri** (`App\Domain\Access\Support\TotpVerifier`, RFC 6238) sehingga tidak menambah paket.
 
 ## 10. Lingkungan
 
 | Lingkungan | Keterangan |
 |---|---|
-| Pengembangan | XAMPP: Apache + PHP 8.3 (`C:\xampp\php-8.3`), MySQL 8, Redis via WSL/Docker; subdomain lokal `*.wms.test` lewat hosts file; disk `local` |
+| Pengembangan | **Laragon**: Apache/Nginx + PHP **8.3.33** (`C:\laragon\bin\php\php-8.3.33-Win32-vs16-x64`, alias `php83`; `php` PATH 8.5 tidak dipakai), MySQL **8.4.3 LTS**, Redis via Laragon/Memurai atau Docker, Mailpit; subdomain `*.wms.test` otomatis oleh Laragon; disk `local`; template NexaDash sebagai referensi di `template/` (statis, jQuery) → layout Blade di `resources/views/layouts` |
 | Staging | Sama dengan produksi, data anonim; tempat uji restore backup |
-| Produksi | Linux, PHP 8.3-FPM, Nginx, MySQL 8, Redis, 2 worker queue, Supervisor; SSL wildcard ([O-05](04-keputusan-dan-asumsi.md#o-05)); S3-compatible ([O-14](04-keputusan-dan-asumsi.md#o-14)) |
+| Produksi | Linux, PHP 8.3-FPM, Nginx, MySQL **8.4 LTS** (sama dengan dev), Redis, 2 worker queue, Supervisor; SSL wildcard ([O-05](04-keputusan-dan-asumsi.md#o-05)); S3-compatible ([O-14](04-keputusan-dan-asumsi.md#o-14)) |
 
 Migrasi tenant di produksi: `tenants:migrate` per batch dengan log; gagal di satu tenant tidak menghentikan yang lain; hasil di `tenant_migration_runs` dan dashboard kesehatan tenant.
 
@@ -195,6 +199,7 @@ Migrasi tenant di produksi: `tenants:migrate` per batch dengan log; gagal di sat
 
 ## 12. Langkah berikutnya (Part 4)
 
-1. Pemilik produk memvalidasi A-25–A-49; model data direvisi dari `_generate_erd.py`.
+1. A-25–A-49 divalidasi 23 Sep 2026; model data v0.2 dibuat ulang dari `_generate_erd.py`; [A-50](04-keputusan-dan-asumsi.md#a-50) menunggu validasi.
 2. Spesifikasi modul memakai [template](_template-spesifikasi-modul.md), urutan: Access → Master → Warehouse → Stock → Request → Picking/Shipment → Receipt/Putaway → Approval → Count/Adjustment → Return/Transfer → Issue → Conversion/Waste → Asset → PurchaseRequest/VendorReturn → Platform.
 3. Setiap spesifikasi modul menurunkan migrasi dari 08a–08c dan kasus uji dari Katalog & BR.
+4. Urutan rilis mengikuti [D-29](04-keputusan-dan-asumsi.md#d-29): setelah modul Platform, **Purchasing inti** (Fase 1b) dibangun sebagai domain terpisah `app/Domain/Purchasing` yang memakai paket Approval bersama; WhatsApp (2a), PWA offline (2b), SSO (3) menyusul. Persiapan pemilik produk: [00-checklist-persiapan](../00-checklist-persiapan.md).

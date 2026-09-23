@@ -1,0 +1,131 @@
+/* ============================================================
+   NexaDash — Motion
+   Seluruh keyframe + animasi global. Dimuat setelah components.css
+   dan sebelum dark.css. Semua animasi di sini WAJIB mati saat
+   pengguna meminta prefers-reduced-motion (blok di paling bawah).
+   ============================================================ */
+
+/* ===================== Keyframes ===================== */
+@keyframes nx-fade-in      { from { opacity: 0 } to { opacity: 1 } }
+@keyframes nx-rise         { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+@keyframes nx-rise-sm      { from { opacity: 0; transform: translateY(5px) }  to { opacity: 1; transform: none } }
+@keyframes nx-slide-right  { from { opacity: 0; transform: translateX(-10px) } to { opacity: 1; transform: none } }
+@keyframes nx-pop          { from { opacity: 0; transform: scale(.96) } to { opacity: 1; transform: none } }
+@keyframes nx-pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgb(99 102 241 / .35) }
+  70%  { box-shadow: 0 0 0 10px rgb(99 102 241 / 0) }
+  100% { box-shadow: 0 0 0 0 rgb(99 102 241 / 0) }
+}
+@keyframes nx-shimmer      { from { background-position: -200% 0 } to { background-position: 200% 0 } }
+@keyframes nx-spin-slow    { to { transform: rotate(360deg) } }
+@keyframes nx-float        { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+@keyframes nx-blink        { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
+
+/* ===================== Utility animasi ===================== */
+.nx-anim-fade  { animation: nx-fade-in var(--nx-dur-slow) var(--nx-ease-out) both }
+.nx-anim-rise  { animation: nx-rise var(--nx-dur-slow) var(--nx-ease-out) both }
+.nx-anim-pop   { animation: nx-pop var(--nx-dur) var(--nx-ease-spring) both }
+.nx-anim-float { animation: nx-float 3s var(--nx-ease) infinite }
+.nx-anim-blink { animation: nx-blink 1.4s var(--nx-ease) infinite }
+.nx-anim-pulse { animation: nx-pulse-ring 2s var(--nx-ease) infinite }
+
+/* Delay bertingkat untuk efek stagger manual. */
+.nx-delay-1 { animation-delay: .05s } .nx-delay-2 { animation-delay: .10s }
+.nx-delay-3 { animation-delay: .15s } .nx-delay-4 { animation-delay: .20s }
+.nx-delay-5 { animation-delay: .25s } .nx-delay-6 { animation-delay: .30s }
+
+/* ===================== Masuk halaman ===================== */
+/* Konten utama naik halus tiap navigasi — memberi rasa "berpindah halaman". */
+.nx-content > .nx-page-head { animation: nx-rise var(--nx-dur-slow) var(--nx-ease-out) both }
+.nx-content > .nx-page-head { animation-delay: .02s }
+
+/* Kartu di dalam konten muncul bertahap (stagger) tanpa perlu class per elemen. */
+.nx-content .card { animation: nx-rise-sm var(--nx-dur-slow) var(--nx-ease-out) both }
+.nx-content .row > [class*="col"]:nth-child(1) .card { animation-delay: .04s }
+.nx-content .row > [class*="col"]:nth-child(2) .card { animation-delay: .08s }
+.nx-content .row > [class*="col"]:nth-child(3) .card { animation-delay: .12s }
+.nx-content .row > [class*="col"]:nth-child(4) .card { animation-delay: .16s }
+.nx-content .row > [class*="col"]:nth-child(5) .card { animation-delay: .20s }
+.nx-content .row > [class*="col"]:nth-child(6) .card { animation-delay: .24s }
+
+/* ===================== Hover & press ===================== */
+/* Kartu terangkat sedikit saat disentuh pointer. */
+.nx-content .card { transition: transform var(--nx-dur) var(--nx-ease), box-shadow var(--nx-dur) var(--nx-ease), border-color var(--nx-dur) var(--nx-ease) }
+@media (hover: hover) {
+  /* Bayangan berlaku untuk semua kartu. */
+  .nx-content .card:hover { box-shadow: var(--nx-shadow-lift) }
+  /* Tapi pergeseran 2px TIDAK boleh kena kartu berisi chart/peta/kanvas:
+     grafik akan ikut bergeser saat kursor masuk dan tooltip-nya jadi meleset.
+     Bila :has() tak didukung, seluruh aturan diabaikan — aman, hanya tanpa angkat. */
+  .nx-content .card:not(:has(.apexcharts-canvas, canvas, .leaflet-container, .tabulator, .fc)):hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Tombol: umpan balik tekan. */
+.btn { transition: transform var(--nx-dur-fast) var(--nx-ease), background-color var(--nx-dur-fast) var(--nx-ease), border-color var(--nx-dur-fast) var(--nx-ease), color var(--nx-dur-fast) var(--nx-ease), box-shadow var(--nx-dur-fast) var(--nx-ease) }
+.btn:active { transform: scale(.97) }
+.nx-icon-btn:active { transform: scale(.92) }
+
+/* Baris tabel & list menyorot mulus. */
+.table tbody tr { transition: background-color var(--nx-dur-fast) var(--nx-ease) }
+.list-group-item { transition: var(--nx-transition) }
+
+/* Badge & avatar pop ringan. */
+.badge { transition: transform var(--nx-dur-fast) var(--nx-ease-spring) }
+
+/* ===================== Komponen Bootstrap ===================== */
+/* Dropdown & popover masuk dengan pop, bukan muncul mendadak. */
+.dropdown-menu.show { animation: nx-pop var(--nx-dur-fast) var(--nx-ease-out) both }
+.popover.show, .tooltip.show { animation: nx-fade-in var(--nx-dur-fast) var(--nx-ease-out) both }
+.toast.show { animation: nx-rise var(--nx-dur) var(--nx-ease-spring) both }
+.modal.fade .modal-dialog { transition: transform var(--nx-dur) var(--nx-ease-out), opacity var(--nx-dur) var(--nx-ease-out) }
+.accordion-button::after { transition: transform var(--nx-dur) var(--nx-ease) }
+.nav-tabs .nav-link, .nav-pills .nav-link { transition: var(--nx-transition) }
+.progress-bar { transition: width var(--nx-dur-slow) var(--nx-ease-out) }
+.form-control, .form-select { transition: border-color var(--nx-dur-fast) var(--nx-ease), box-shadow var(--nx-dur-fast) var(--nx-ease), background-color var(--nx-dur-fast) var(--nx-ease) }
+
+/* Placeholder/skeleton berkilau. */
+.placeholder-glow .placeholder,
+.nx-skeleton {
+  background: linear-gradient(90deg, var(--nx-surface-2) 25%, var(--nx-hover-bg) 37%, var(--nx-surface-2) 63%);
+  background-size: 200% 100%;
+  animation: nx-shimmer 1.4s linear infinite;
+}
+
+/* ===================== Sidebar ===================== */
+/* Item menu bergeser sedikit saat hover — arah navigasi terasa. */
+@media (hover: hover) and (min-width: 992px) {
+  body:not(.nx-sidebar-collapsed) .nx-menu-link:hover { transform: translateX(2px) }
+}
+.nx-menu-link { transition: background-color var(--nx-dur-fast) var(--nx-ease), color var(--nx-dur-fast) var(--nx-ease), transform var(--nx-dur-fast) var(--nx-ease) }
+.nx-menu-link.active::before { animation: nx-rise-sm var(--nx-dur) var(--nx-ease-out) both }
+.nx-flyout { animation: nx-slide-right var(--nx-dur-fast) var(--nx-ease-out) both }
+.nx-sidebar-backdrop { animation: nx-fade-in var(--nx-dur-fast) var(--nx-ease) both }
+
+/* Item dalam seksi yang baru dibuka ikut masuk bertahap. */
+.nx-section-body.show > .nx-menu-item { animation: nx-slide-right var(--nx-dur) var(--nx-ease-out) both }
+.nx-section-body.show > .nx-menu-item:nth-child(1) { animation-delay: .02s }
+.nx-section-body.show > .nx-menu-item:nth-child(2) { animation-delay: .04s }
+.nx-section-body.show > .nx-menu-item:nth-child(3) { animation-delay: .06s }
+.nx-section-body.show > .nx-menu-item:nth-child(4) { animation-delay: .08s }
+.nx-section-body.show > .nx-menu-item:nth-child(5) { animation-delay: .10s }
+.nx-section-body.show > .nx-menu-item:nth-child(6) { animation-delay: .12s }
+
+/* ===================== Header ===================== */
+.nx-header { animation: nx-fade-in var(--nx-dur) var(--nx-ease) both }
+.nx-notif-item { transition: var(--nx-transition) }
+.nx-icon-btn .nx-dot { animation: nx-pulse-ring 2.4s var(--nx-ease) infinite }
+
+/* ===================== Hormati preferensi pengguna ===================== */
+/* Wajib: matikan seluruh gerak non-esensial bila OS meminta reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .nx-content .card:hover,
+  .nx-menu-link:hover { transform: none !important }
+}

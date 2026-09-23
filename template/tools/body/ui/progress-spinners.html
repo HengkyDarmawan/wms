@@ -1,0 +1,77 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Progress bars</h2></div><div class="card-body">
+          <p class="small text-muted mb-1">4px</p>
+          <div class="progress progress-thin mb-3" role="progressbar" aria-label="Thin" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:25%"></div></div>
+          <p class="small text-muted mb-1">8px (default)</p>
+          <div class="progress mb-3" role="progressbar" aria-label="Default" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:50%"></div></div>
+          <p class="small text-muted mb-1">12px with label</p>
+          <div class="progress mb-3" style="height:12px" role="progressbar" aria-label="Labelled" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:75%">75%</div></div>
+          <p class="small text-muted mb-1">Colours</p>
+          <div class="progress mb-2" role="progressbar" aria-label="Success" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" style="width:82%"></div></div>
+          <div class="progress mb-2" role="progressbar" aria-label="Warning" aria-valuenow="58" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-warning" style="width:58%"></div></div>
+          <div class="progress mb-3" role="progressbar" aria-label="Danger" aria-valuenow="34" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-danger" style="width:34%"></div></div>
+          <p class="small text-muted mb-1">Striped &amp; animated</p>
+          <div class="progress mb-3" role="progressbar" aria-label="Striped" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar progress-bar-striped progress-bar-animated" style="width:62%"></div></div>
+          <p class="small text-muted mb-1">Stacked</p>
+          <div class="progress-stacked mb-0">
+            <div class="progress" role="progressbar" aria-label="Segment 1" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100" style="width:35%"><div class="progress-bar"></div></div>
+            <div class="progress" role="progressbar" aria-label="Segment 2" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="width:25%"><div class="progress-bar bg-success"></div></div>
+            <div class="progress" role="progressbar" aria-label="Segment 3" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100" style="width:15%"><div class="progress-bar bg-warning"></div></div>
+          </div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Labelled rows &amp; circular</h2></div><div class="card-body">
+          <div class="nx-progress-row"><div class="nx-pr-head"><span class="nx-pr-label">Storage used</span><span class="nx-pr-value">72%</span></div><div class="progress" role="progressbar" aria-label="Storage" aria-valuenow="72" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:72%"></div></div></div>
+          <div class="nx-progress-row"><div class="nx-pr-head"><span class="nx-pr-label">Bandwidth</span><span class="nx-pr-value">44%</span></div><div class="progress" role="progressbar" aria-label="Bandwidth" aria-valuenow="44" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" style="width:44%"></div></div></div>
+          <div class="nx-progress-row"><div class="nx-pr-head"><span class="nx-pr-label">API quota</span><span class="nx-pr-value">91%</span></div><div class="progress" role="progressbar" aria-label="API quota" aria-valuenow="91" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-danger" style="width:91%"></div></div></div>
+          <hr class="my-4">
+          <div class="row text-center">
+            <div class="col-4"><div id="circ1"></div><div class="small text-muted">Design</div></div>
+            <div class="col-4"><div id="circ2"></div><div class="small text-muted">Build</div></div>
+            <div class="col-4"><div id="circ3"></div><div class="small text-muted">QA</div></div>
+          </div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Spinners</h2></div><div class="card-body">
+          <h3 class="h6 mb-2">Border</h3>
+          <div class="nx-demo-row mb-4">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading</span></div>
+            <div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading</span></div>
+            <div class="spinner-border text-danger" role="status"><span class="visually-hidden">Loading</span></div>
+            <div class="spinner-border text-warning" role="status"><span class="visually-hidden">Loading</span></div>
+            <div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading</span></div>
+          </div>
+          <h3 class="h6 mb-2">Grow</h3>
+          <div class="nx-demo-row mb-4">
+            <div class="spinner-grow text-primary" role="status"><span class="visually-hidden">Loading</span></div>
+            <div class="spinner-grow text-success" role="status"><span class="visually-hidden">Loading</span></div>
+            <div class="spinner-grow text-danger" role="status"><span class="visually-hidden">Loading</span></div>
+            <div class="spinner-grow spinner-grow-sm text-primary" role="status"><span class="visually-hidden">Loading</span></div>
+          </div>
+          <h3 class="h6 mb-2">Inside buttons</h3>
+          <div class="nx-demo-row mb-0">
+            <button class="btn btn-primary" type="button" disabled><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading&hellip;</button>
+            <button class="btn btn-soft-primary" type="button" disabled><span class="spinner-grow spinner-grow-sm me-2" aria-hidden="true"></span>Processing</button>
+            <button class="btn btn-outline-primary btn-icon" type="button" disabled aria-label="Loading"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span></button>
+          </div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Skeleton placeholders</h2></div><div class="card-body">
+          <div class="d-flex gap-3 mb-4" aria-hidden="true">
+            <span class="nx-avatar placeholder"></span>
+            <div class="flex-grow-1 placeholder-glow">
+              <span class="placeholder col-5 mb-2"></span>
+              <span class="placeholder col-8"></span>
+            </div>
+          </div>
+          <div class="placeholder-glow" aria-hidden="true">
+            <span class="placeholder col-12 mb-2" style="height:120px;border-radius:var(--nx-radius-sm)"></span>
+            <span class="placeholder col-7 mb-2"></span>
+            <span class="placeholder col-4 mb-2"></span>
+            <span class="placeholder col-10 mb-3"></span>
+            <span class="placeholder btn btn-primary disabled col-3"></span>
+          </div>
+        </div></div></div>
+
+      </div>

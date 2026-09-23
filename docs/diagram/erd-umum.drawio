@@ -61,7 +61,7 @@
         <mxCell id="document_sequences" value="document_sequences" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="360" y="528" width="260" height="114" as="geometry"/>
         </mxCell>
-        <mxCell id="document_sequences_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;warehouse_code : varchar(10)&lt;br&gt;period : varchar(7)&lt;br&gt;last_no : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_sequences">
+        <mxCell id="document_sequences_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;segment : varchar(20)&lt;br&gt;period : varchar(7)&lt;br&gt;last_number : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_sequences">
           <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="import_batches" value="import_batches" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">

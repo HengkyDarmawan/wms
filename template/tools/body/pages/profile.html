@@ -1,0 +1,155 @@
+      <!-- ===== Profile header ===== -->
+      <div class="card overflow-hidden mb-4">
+        <div class="nx-profile-cover"></div>
+        <div class="nx-profile-head">
+          <div class="d-flex flex-wrap align-items-end gap-3">
+            <img class="nx-profile-avatar" src="https://i.pravatar.cc/192?img=12" alt="Aigars Silkalns">
+            <div class="me-auto pb-2">
+              <h1 class="h2 mb-1 d-flex align-items-center gap-2">Aigars Silkalns
+                <i class="bi bi-patch-check-fill text-primary" data-bs-toggle="tooltip" data-bs-title="Verified account"></i>
+              </h1>
+              <p class="text-muted mb-0">Administrator &middot; Nexa Technologies &middot; <i class="bi bi-geo-alt"></i> Singapore</p>
+            </div>
+            <div class="d-flex gap-2 pb-2">
+              <button class="btn btn-soft-secondary d-inline-flex align-items-center gap-1" type="button"><i class="bi bi-envelope"></i>Message</button>
+              <a class="btn btn-primary d-inline-flex align-items-center gap-1" href="page-settings.html"><i class="bi bi-pencil"></i>Edit profile</a>
+            </div>
+          </div>
+          <div class="row g-3 mt-3" style="max-width:520px">
+            <div class="col-4"><div class="nx-profile-stat"><div class="nx-ps-num">128</div><div class="nx-ps-label">Posts</div></div></div>
+            <div class="col-4"><div class="nx-profile-stat"><div class="nx-ps-num">4,208</div><div class="nx-ps-label">Followers</div></div></div>
+            <div class="col-4"><div class="nx-profile-stat"><div class="nx-ps-num">312</div><div class="nx-ps-label">Following</div></div></div>
+          </div>
+        </div>
+        <div class="card-header p-0 border-top">
+          <ul class="nav nav-tabs w-100 px-3 pt-2" role="tablist">
+            <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pfOverview" type="button" role="tab">Overview</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pfProjects" type="button" role="tab">Projects</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pfSettings" type="button" role="tab">Settings</button></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tab-content">
+
+        <!-- ===== Overview ===== -->
+        <div class="tab-pane fade show active" id="pfOverview" role="tabpanel">
+          <div class="row g-4">
+            <div class="col-lg-4">
+              <div class="card mb-4">
+                <div class="card-header"><h2 class="card-title h4">About</h2></div>
+                <div class="card-body">
+                  <p class="text-muted">Building dashboards people actually enjoy using. Fifteen years across product, design systems and front-end architecture.</p>
+                  <ul class="list-unstyled mb-0 small">
+                    <li class="d-flex gap-2 py-1"><i class="bi bi-envelope text-muted"></i>aigars@nexadash.io</li>
+                    <li class="d-flex gap-2 py-1"><i class="bi bi-telephone text-muted"></i>+65 8123 4455</li>
+                    <li class="d-flex gap-2 py-1"><i class="bi bi-globe text-muted"></i>nexadash.io</li>
+                    <li class="d-flex gap-2 py-1"><i class="bi bi-calendar3 text-muted"></i>Joined March 2019</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="card mb-4">
+                <div class="card-header"><h2 class="card-title h4">Skills</h2></div>
+                <div class="card-body nx-demo-row">
+                  <span class="badge badge-soft-primary">Product strategy</span>
+                  <span class="badge badge-soft-primary">Design systems</span>
+                  <span class="badge badge-soft-primary">Front-end</span>
+                  <span class="badge badge-soft-primary">Data viz</span>
+                  <span class="badge badge-soft-primary">Accessibility</span>
+                  <span class="badge badge-soft-primary">Team leadership</span>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h2 class="card-title h4">Contribution</h2></div>
+                <div class="card-body"><div id="profileRadial" style="min-height:200px"></div>
+                  <p class="text-center text-muted small mb-0">of this quarter's goal completed</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-8">
+              <div class="card mb-4">
+                <div class="card-header"><h2 class="card-title h4">Activity over time</h2></div>
+                <div class="card-body"><div id="profileChart" style="min-height:260px"></div></div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h2 class="card-title h4">Recent activity</h2></div>
+                <div class="card-body">
+                  <ul class="nx-timeline">
+                    <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-rocket-takeoff"></i></span>
+                      <div class="nx-tl-body"><div class="nx-tl-text">Deployed <strong>v2.4.1</strong> to production</div><div class="nx-tl-time">2 minutes ago</div></div></li>
+                    <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-git"></i></span>
+                      <div class="nx-tl-body"><div class="nx-tl-text">Merged pull request <strong>#482</strong> into main</div><div class="nx-tl-time">26 minutes ago</div></div></li>
+                    <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-info);background:var(--nx-info-subtle)"><i class="bi bi-chat-dots"></i></span>
+                      <div class="nx-tl-body"><div class="nx-tl-text">Commented on <strong>Q4 roadmap</strong></div><div class="nx-tl-time">1 hour ago</div></div></li>
+                    <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-warning);background:var(--nx-warning-subtle)"><i class="bi bi-flag"></i></span>
+                      <div class="nx-tl-body"><div class="nx-tl-text">Enabled feature flag <strong>new-billing</strong></div><div class="nx-tl-time">5 hours ago</div></div></li>
+                    <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-secondary);background:var(--nx-secondary-subtle)"><i class="bi bi-person-plus"></i></span>
+                      <div class="nx-tl-body"><div class="nx-tl-text">Invited <strong>3 teammates</strong> to the workspace</div><div class="nx-tl-time">Yesterday</div></div></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Projects ===== -->
+        <div class="tab-pane fade" id="pfProjects" role="tabpanel">
+          <div class="row g-4">
+            <div class="col-lg-4 col-md-6"><div class="card h-100 nx-card-lift"><div class="card-body">
+              <div class="d-flex align-items-start gap-3 mb-3"><span class="nx-icon-sq primary"><i class="bi bi-kanban"></i></span>
+                <div><h3 class="h5 mb-0">Billing reliability</h3><div class="small text-muted">Engineering</div></div>
+                <span class="badge badge-soft-primary ms-auto">Active</span></div>
+              <p class="small text-muted">Rework the retry pipeline and migrate to the new Stripe API.</p>
+              <div class="progress progress-thin mb-2" role="progressbar" aria-label="Progress" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:68%"></div></div>
+              <div class="d-flex justify-content-between small text-muted"><span>68% complete</span><span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=68" alt=""></span><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=47" alt=""></span></span></div>
+            </div></div></div>
+            <div class="col-lg-4 col-md-6"><div class="card h-100 nx-card-lift"><div class="card-body">
+              <div class="d-flex align-items-start gap-3 mb-3"><span class="nx-icon-sq success"><i class="bi bi-magic"></i></span>
+                <div><h3 class="h5 mb-0">Self-serve onboarding</h3><div class="small text-muted">Product</div></div>
+                <span class="badge badge-soft-warning ms-auto">At risk</span></div>
+              <p class="small text-muted">A four-step wizard replacing the manual account setup call.</p>
+              <div class="progress progress-thin mb-2" role="progressbar" aria-label="Progress" aria-valuenow="42" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-warning" style="width:42%"></div></div>
+              <div class="d-flex justify-content-between small text-muted"><span>42% complete</span><span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=32" alt=""></span><span class="nx-avatar nx-avatar-xs">+3</span></span></div>
+            </div></div></div>
+            <div class="col-lg-4 col-md-6"><div class="card h-100 nx-card-lift"><div class="card-body">
+              <div class="d-flex align-items-start gap-3 mb-3"><span class="nx-icon-sq info"><i class="bi bi-graph-up"></i></span>
+                <div><h3 class="h5 mb-0">Analytics surface</h3><div class="small text-muted">Data</div></div>
+                <span class="badge badge-soft-secondary ms-auto">Planned</span></div>
+              <p class="small text-muted">Give customers the metrics they currently export by hand.</p>
+              <div class="progress progress-thin mb-2" role="progressbar" aria-label="Progress" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-secondary" style="width:12%"></div></div>
+              <div class="d-flex justify-content-between small text-muted"><span>12% complete</span><span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=5" alt=""></span></span></div>
+            </div></div></div>
+            <div class="col-lg-4 col-md-6"><div class="card h-100 nx-card-lift"><div class="card-body">
+              <div class="d-flex align-items-start gap-3 mb-3"><span class="nx-icon-sq warning"><i class="bi bi-palette"></i></span>
+                <div><h3 class="h5 mb-0">Design system v3</h3><div class="small text-muted">Design</div></div>
+                <span class="badge badge-soft-success ms-auto">Shipped</span></div>
+              <p class="small text-muted">Tokens, dark mode and the full component inventory.</p>
+              <div class="progress progress-thin mb-2" role="progressbar" aria-label="Progress" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" style="width:100%"></div></div>
+              <div class="d-flex justify-content-between small text-muted"><span>Complete</span><span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=32" alt=""></span><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=5" alt=""></span></span></div>
+            </div></div></div>
+          </div>
+        </div>
+
+        <!-- ===== Settings ===== -->
+        <div class="tab-pane fade" id="pfSettings" role="tabpanel">
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Public profile</h2></div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6"><label class="form-label" for="ppName">Display name</label><input class="form-control" id="ppName" value="Aigars Silkalns"></div>
+                <div class="col-md-6"><label class="form-label" for="ppTitle">Job title</label><input class="form-control" id="ppTitle" value="Administrator"></div>
+                <div class="col-md-6"><label class="form-label" for="ppLocation">Location</label><input class="form-control" id="ppLocation" value="Singapore"></div>
+                <div class="col-md-6"><label class="form-label" for="ppSite">Website</label><input class="form-control" id="ppSite" value="https://nexadash.io"></div>
+                <div class="col-12"><label class="form-label" for="ppBio">Bio</label><textarea class="form-control" id="ppBio" rows="3">Building dashboards people actually enjoy using.</textarea></div>
+                <div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="ppPublic" checked><label class="form-check-label" for="ppPublic">Show my profile publicly</label></div></div>
+              </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+              <button class="btn btn-soft-secondary" type="button">Cancel</button>
+              <a class="btn btn-primary" href="page-settings.html">Open full settings</a>
+            </div>
+          </div>
+        </div>
+
+      </div>

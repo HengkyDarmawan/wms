@@ -1,0 +1,62 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Basic</h2></div><div class="card-body">
+          <div class="mb-4"><label class="form-label" for="s2Single">Single select</label>
+            <select class="form-select" id="s2Single"><option>Indonesia</option><option>Singapore</option><option>Germany</option><option>Japan</option><option>United States</option><option>Brazil</option></select>
+          </div>
+          <div class="mb-4"><label class="form-label" for="s2Placeholder">With placeholder &amp; clear</label>
+            <select class="form-select" id="s2Placeholder"><option></option><option>Analytics</option><option>Billing</option><option>CRM</option><option>Support</option></select>
+          </div>
+          <div class="mb-0"><label class="form-label" for="s2Disabled">Disabled</label>
+            <select class="form-select" id="s2Disabled" disabled><option>Cannot change this</option></select>
+          </div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Multiple &amp; tags</h2></div><div class="card-body">
+          <div class="mb-4"><label class="form-label" for="s2Multi">Multiple select</label>
+            <select class="form-select" id="s2Multi" multiple><option selected>Analytics</option><option>Billing</option><option selected>CRM</option><option>Support</option><option>Deployments</option></select>
+          </div>
+          <div class="mb-4"><label class="form-label" for="s2Tags">Free tags</label>
+            <select class="form-select" id="s2Tags" multiple><option selected>bug</option><option selected>billing</option></select>
+            <div class="form-text">Type a new value and press enter to create it.</div>
+          </div>
+          <div class="mb-0"><label class="form-label" for="s2Limit">Max 3 selections</label>
+            <select class="form-select" id="s2Limit" multiple><option>Design</option><option>Backend</option><option>Frontend</option><option>QA</option><option>Ops</option><option>Data</option></select>
+          </div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">With avatars</h2></div><div class="card-body">
+          <label class="form-label" for="s2People">Assign to</label>
+          <select class="form-select" id="s2People">
+            <option value="47" data-avatar="47" data-role="Head of Product">Sarah Chen</option>
+            <option value="68" data-avatar="68" data-role="Staff Engineer">Marcus Webb</option>
+            <option value="32" data-avatar="32" data-role="Design Lead">Lena Iversen</option>
+            <option value="15" data-avatar="15" data-role="Support Lead">Tom Baker</option>
+            <option value="5" data-avatar="5" data-role="Product Designer">Ava Novak</option>
+          </select>
+          <div class="form-text">Custom <code>templateResult</code> renders an avatar and role in each option.</div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Grouped &amp; searchable</h2></div><div class="card-body">
+          <div class="mb-4"><label class="form-label" for="s2Group">Grouped options</label>
+            <select class="form-select" id="s2Group">
+              <optgroup label="Americas"><option>us-east-1</option><option>us-west-2</option><option>sa-east-1</option></optgroup>
+              <optgroup label="Europe"><option>eu-west-1</option><option>eu-central-1</option></optgroup>
+              <optgroup label="Asia Pacific"><option>ap-southeast-1</option><option>ap-northeast-1</option></optgroup>
+            </select>
+          </div>
+          <div class="mb-0"><label class="form-label" for="s2Big">Large list (filtered locally)</label>
+            <select class="form-select" id="s2Big"></select>
+          </div>
+        </div></div></div>
+
+        <div class="col-12"><div class="card"><div class="card-header"><h2 class="card-title h4">In a filter bar</h2></div><div class="card-body">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-3"><label class="form-label" for="s2fStatus">Status</label><select class="form-select" id="s2fStatus" multiple><option selected>Completed</option><option selected>Pending</option><option>Cancelled</option><option>Refunded</option></select></div>
+            <div class="col-md-3"><label class="form-label" for="s2fOwner">Owner</label><select class="form-select" id="s2fOwner"><option>Anyone</option><option>Sarah Chen</option><option>Marcus Webb</option></select></div>
+            <div class="col-md-3"><label class="form-label" for="s2fProduct">Product</label><select class="form-select" id="s2fProduct" multiple><option>Pro Plan</option><option>Starter Plan</option><option>Enterprise</option></select></div>
+            <div class="col-md-3 d-flex gap-2"><button class="btn btn-primary w-100" type="button">Apply</button><button class="btn btn-soft-secondary" type="button">Reset</button></div>
+          </div>
+        </div></div></div>
+
+      </div>

@@ -1,0 +1,52 @@
+      <!-- ===== Stats ===== -->
+      <div class="row g-4 mb-2">
+        <div class="col-md-3 col-6"><div class="card"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Total users</span><span class="nx-icon-sq primary"><i class="bi bi-people"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="48">0</span></div>
+        </div></div></div>
+        <div class="col-md-3 col-6"><div class="card"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Active</span><span class="nx-icon-sq success"><i class="bi bi-check-circle"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="41">0</span></div>
+        </div></div></div>
+        <div class="col-md-3 col-6"><div class="card"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Pending invites</span><span class="nx-icon-sq warning"><i class="bi bi-envelope-open"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="5">0</span></div>
+        </div></div></div>
+        <div class="col-md-3 col-6"><div class="card"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Suspended</span><span class="nx-icon-sq danger"><i class="bi bi-slash-circle"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="2">0</span></div>
+        </div></div></div>
+      </div>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle w-100" id="usersDT">
+            <thead><tr><th>User</th><th>Role</th><th>Department</th><th>Status</th><th>Last active</th><th class="text-end">Action</th></tr></thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== Invite modal ===== -->
+      <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="inviteTitle">Invite a user</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            <div class="modal-body">
+              <div class="mb-3"><label class="form-label" for="invEmail">Email address</label><input class="form-control" type="email" id="invEmail" placeholder="name@company.com"></div>
+              <div class="mb-3"><label class="form-label" for="invRole">Role</label>
+                <select class="form-select" id="invRole">
+                  <option value="Admin">Admin &mdash; full access including billing</option>
+                  <option value="Editor" selected>Editor &mdash; create and edit content</option>
+                  <option value="Viewer">Viewer &mdash; read-only access</option>
+                </select>
+              </div>
+              <div class="mb-3"><label class="form-label" for="invDept">Department</label>
+                <select class="form-select" id="invDept"><option>Product</option><option>Engineering</option><option>Design</option><option>Support</option><option>Sales</option><option>Data</option></select>
+              </div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" id="invNotify" checked><label class="form-check-label" for="invNotify">Send an email invitation now</label></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-soft-secondary" data-bs-dismiss="modal" type="button">Cancel</button><button class="btn btn-primary" type="button" id="btnSendInvite">Send invite</button></div>
+          </div>
+        </div>
+      </div>

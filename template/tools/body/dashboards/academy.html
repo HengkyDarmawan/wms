@@ -1,0 +1,87 @@
+      <div class="row g-4">
+        <div class="col-xl-3 col-md-6"><div class="card nx-kpi nx-card-lift"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Enrolled Students</span><span class="nx-icon-sq primary"><i class="bi bi-mortarboard"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="8412">0</span></div>
+          <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>14.8%</span><span>this term</span></div>
+        </div></div></div>
+        <div class="col-xl-3 col-md-6"><div class="card nx-kpi nx-card-lift"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Active Courses</span><span class="nx-icon-sq info"><i class="bi bi-journal-bookmark"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="46">0</span></div>
+          <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>6</span><span>published this month</span></div>
+        </div></div></div>
+        <div class="col-xl-3 col-md-6"><div class="card nx-kpi nx-card-lift"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Completion Rate</span><span class="nx-icon-sq success"><i class="bi bi-award"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="68.4" data-decimals="1">0</span>%</div>
+          <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>3.2%</span><span>vs last term</span></div>
+        </div></div></div>
+        <div class="col-xl-3 col-md-6"><div class="card nx-kpi nx-card-lift"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Watch Time</span><span class="nx-icon-sq warning"><i class="bi bi-play-btn"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="12.6" data-decimals="1">0</span>K h</div>
+          <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>9.1%</span><span>last 30 days</span></div>
+        </div></div></div>
+      </div>
+
+      <div class="row g-4 mt-0">
+        <div class="col-lg-8">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Enrolments &amp; completions</h2><div class="card-subtitle">Rolling 12 months</div></div></div>
+            <div class="card-body"><div id="enrolChart" style="min-height:320px"></div></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Progress by track</h2></div>
+            <div class="card-body"><div id="trackRadial" style="min-height:300px"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mt-0">
+        <div class="col-lg-7">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Top courses</h2><a href="apps-courses.html" class="nx-link small ms-auto">Catalogue</a></div>
+            <div class="card-body">
+              <div class="nx-row-list">
+                <div class="nx-row-item"><span class="nx-icon-sq primary"><i class="bi bi-bar-chart"></i></span>
+                  <div class="nx-row-main"><div class="nx-row-title">Building Dashboards That People Trust</div>
+                    <div class="progress progress-thin mt-2" role="progressbar" aria-label="Completion" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:82%"></div></div>
+                    <div class="nx-row-sub mt-1">1,284 enrolled &middot; 82% complete</div></div>
+                  <span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></span></div>
+                <div class="nx-row-item"><span class="nx-icon-sq success"><i class="bi bi-database"></i></span>
+                  <div class="nx-row-main"><div class="nx-row-title">SQL for Product Analysts</div>
+                    <div class="progress progress-thin mt-2" role="progressbar" aria-label="Completion" aria-valuenow="74" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" style="width:74%"></div></div>
+                    <div class="nx-row-sub mt-1">986 enrolled &middot; 74% complete</div></div>
+                  <span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></span></div>
+                <div class="nx-row-item"><span class="nx-icon-sq warning"><i class="bi bi-palette"></i></span>
+                  <div class="nx-row-main"><div class="nx-row-title">Design Systems from Scratch</div>
+                    <div class="progress progress-thin mt-2" role="progressbar" aria-label="Completion" aria-valuenow="61" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-warning" style="width:61%"></div></div>
+                    <div class="nx-row-sub mt-1">742 enrolled &middot; 61% complete</div></div>
+                  <span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i></span></div>
+                <div class="nx-row-item"><span class="nx-icon-sq info"><i class="bi bi-shield-lock"></i></span>
+                  <div class="nx-row-main"><div class="nx-row-title">Security Basics for Engineers</div>
+                    <div class="progress progress-thin mt-2" role="progressbar" aria-label="Completion" aria-valuenow="48" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-info" style="width:48%"></div></div>
+                    <div class="nx-row-sub mt-1">618 enrolled &middot; 48% complete</div></div>
+                  <span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i><i class="bi bi-star"></i></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Top learners</h2><div class="card-subtitle ms-auto">This term</div></div>
+            <div class="card-body">
+              <div class="d-flex align-items-center gap-3 p-3 rounded mb-3" style="background:var(--nx-warning-subtle)">
+                <span class="nx-badge-ring"><i class="bi bi-trophy"></i></span>
+                <div><div class="fw-semibold">Ravi Menon</div><div class="small text-muted">14 courses finished &middot; 128h watched</div>
+                  <span class="badge badge-soft-warning mt-1">Top of the leaderboard</span></div>
+              </div>
+              <div class="nx-row-list">
+                <div class="nx-row-item"><span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=26" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Sofia Rossi</div><div class="nx-row-sub">11 courses &middot; 96h</div></div><span class="badge badge-soft-secondary">#2</span></div>
+                <div class="nx-row-item"><span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=5" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Ava Novak</div><div class="nx-row-sub">9 courses &middot; 81h</div></div><span class="badge badge-soft-secondary">#3</span></div>
+                <div class="nx-row-item"><span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=28" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Ingrid Larsen</div><div class="nx-row-sub">8 courses &middot; 74h</div></div><span class="badge badge-soft-secondary">#4</span></div>
+                <div class="nx-row-item"><span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=13" alt=""></span><div class="nx-row-main"><div class="nx-row-title">James Lee</div><div class="nx-row-sub">7 courses &middot; 62h</div></div><span class="badge badge-soft-secondary">#5</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>

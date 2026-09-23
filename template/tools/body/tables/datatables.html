@@ -1,0 +1,35 @@
+      <div class="card">
+        <div class="nx-bulk-bar" id="dtBulkBar">
+          <span class="badge badge-soft-primary" id="dtBulkCount">0 selected</span>
+          <button class="btn btn-sm btn-soft-danger" type="button" id="dtBulkDelete"><i class="bi bi-trash me-1"></i>Delete selected</button>
+          <button class="btn btn-sm btn-soft-secondary" type="button"><i class="bi bi-envelope me-1"></i>Email selected</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle w-100" id="fullDT">
+            <thead>
+              <tr>
+                <th style="width:36px"><input class="form-check-input" type="checkbox" id="dtCheckAll" aria-label="Select all"></th>
+                <th>Employee</th><th>Position</th><th>Department</th><th>Location</th><th>Start date</th><th>Salary</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dtBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header"><h2 class="card-title h4">Minimal configuration</h2><span class="card-subtitle ms-auto">Sorting and search only</span></div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle w-100" id="miniDT">
+            <thead><tr><th>Region</th><th>Requests</th><th>Errors</th><th>p95 latency</th></tr></thead>
+            <tbody>
+              <tr><td>eu-west-1</td><td class="nx-num">18,402,113</td><td class="nx-num">241</td><td class="nx-num">124 ms</td></tr>
+              <tr><td>us-east-1</td><td class="nx-num">24,918,004</td><td class="nx-num">318</td><td class="nx-num">98 ms</td></tr>
+              <tr><td>ap-southeast-1</td><td class="nx-num">9,204,882</td><td class="nx-num">102</td><td class="nx-num">186 ms</td></tr>
+              <tr><td>eu-central-1</td><td class="nx-num">7,118,940</td><td class="nx-num">64</td><td class="nx-num">142 ms</td></tr>
+              <tr><td>sa-east-1</td><td class="nx-num">2,884,201</td><td class="nx-num">48</td><td class="nx-num">248 ms</td></tr>
+              <tr><td>ap-northeast-1</td><td class="nx-num">6,402,118</td><td class="nx-num">73</td><td class="nx-num">168 ms</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>

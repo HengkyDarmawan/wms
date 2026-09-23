@@ -1,0 +1,65 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Text inputs &amp; states</h2></div><div class="card-body">
+          <div class="mb-3"><label class="form-label" for="feDefault">Default</label><input class="form-control" id="feDefault" placeholder="Placeholder text"></div>
+          <div class="mb-3"><label class="form-label" for="feFocus">With value</label><input class="form-control" id="feFocus" value="Nexa Technologies"></div>
+          <div class="mb-3"><label class="form-label" for="feDisabled">Disabled</label><input class="form-control" id="feDisabled" value="Cannot edit this" disabled></div>
+          <div class="mb-3"><label class="form-label" for="feReadonly">Readonly</label><input class="form-control" id="feReadonly" value="nx_live_8f42••••••••" readonly></div>
+          <div class="mb-3"><label class="form-label" for="feValid">Valid</label><input class="form-control is-valid" id="feValid" value="hello@nexadash.io"><div class="valid-feedback">Looks good.</div></div>
+          <div class="mb-3"><label class="form-label" for="feInvalid">Invalid</label><input class="form-control is-invalid" id="feInvalid" value="not-an-email"><div class="invalid-feedback">Enter a valid email address.</div></div>
+          <div class="mb-0"><label class="form-label" for="feHelp">With help text</label><input class="form-control" id="feHelp" placeholder="my-workspace"><div class="form-text">Lowercase letters, numbers and hyphens only.</div></div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Sizes, floating &amp; input groups</h2></div><div class="card-body">
+          <input class="form-control form-control-lg mb-3" placeholder="Large input" aria-label="Large input">
+          <input class="form-control mb-3" placeholder="Default input" aria-label="Default input">
+          <input class="form-control form-control-sm mb-4" placeholder="Small input" aria-label="Small input">
+
+          <div class="form-floating mb-3"><input class="form-control" id="feFloat1" placeholder="Email"><label for="feFloat1">Email address</label></div>
+          <div class="form-floating mb-4"><select class="form-select" id="feFloat2"><option>Admin</option><option>Editor</option><option>Viewer</option></select><label for="feFloat2">Role</label></div>
+
+          <div class="input-group mb-3"><span class="input-group-text"><i class="bi bi-at"></i></span><input class="form-control" placeholder="Username" aria-label="Username"></div>
+          <div class="input-group mb-3"><input class="form-control" placeholder="Search orders" aria-label="Search orders"><button class="btn btn-primary" type="button"><i class="bi bi-search"></i></button></div>
+          <div class="input-group mb-3"><span class="input-group-text">$</span><input class="form-control" placeholder="0.00" aria-label="Amount"><span class="input-group-text">USD</span></div>
+          <div class="input-group mb-0">
+            <input class="form-control" placeholder="Filter" aria-label="Filter">
+            <button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" type="button">Status</button>
+            <div class="dropdown-menu dropdown-menu-end"><button class="dropdown-item" type="button">Completed</button><button class="dropdown-item" type="button">Pending</button></div>
+          </div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Textarea &amp; select</h2></div><div class="card-body">
+          <div class="mb-3"><label class="form-label" for="feArea">Description</label><textarea class="form-control" id="feArea" rows="3" placeholder="Tell us about your project"></textarea></div>
+          <div class="mb-3"><label class="form-label" for="feAutogrow">Auto-growing textarea</label><textarea class="form-control" id="feAutogrow" rows="2" placeholder="Type and this grows&hellip;"></textarea></div>
+          <div class="mb-3"><label class="form-label" for="feSelect">Single select</label><select class="form-select" id="feSelect"><option>eu-west-1</option><option>us-east-1</option><option>ap-southeast-1</option></select></div>
+          <div class="mb-0"><label class="form-label" for="feMulti">Multiple select</label><select class="form-select" id="feMulti" multiple size="4"><option selected>Analytics</option><option>Billing</option><option selected>CRM</option><option>Support</option></select></div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Checks, radios &amp; switches</h2></div><div class="card-body">
+          <h3 class="h6 mb-2">Checkboxes</h3>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="fcA" checked><label class="form-check-label" for="fcA">Email notifications</label></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="fcB"><label class="form-check-label" for="fcB">SMS notifications</label></div>
+          <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="fcC" disabled><label class="form-check-label" for="fcC">Disabled option</label></div>
+
+          <h3 class="h6 mb-2">Inline radios</h3>
+          <div class="mb-3">
+            <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="frA" id="frA1" checked><label class="form-check-label" for="frA1">Monthly</label></div>
+            <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="frA" id="frA2"><label class="form-check-label" for="frA2">Annual</label></div>
+            <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="frA" id="frA3" disabled><label class="form-check-label" for="frA3">Custom</label></div>
+          </div>
+
+          <h3 class="h6 mb-2">Switches</h3>
+          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="fsA" checked><label class="form-check-label" for="fsA">Two-factor authentication</label></div>
+          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="fsB"><label class="form-check-label" for="fsB">Public workspace</label></div>
+          <div class="form-check form-switch form-check-reverse mb-3"><input class="form-check-input" type="checkbox" role="switch" id="fsC" checked><label class="form-check-label" for="fsC">Reversed switch</label></div>
+
+          <h3 class="h6 mb-2">Range, colour &amp; file</h3>
+          <label class="form-label" for="feRange">Volume</label>
+          <input class="form-range mb-3" type="range" id="feRange" min="0" max="100" value="60">
+          <div class="row g-3 mb-0">
+            <div class="col-6"><label class="form-label" for="feColor">Brand colour</label><input class="form-control form-control-color w-100" type="color" id="feColor" value="#6366f1"></div>
+            <div class="col-6"><label class="form-label" for="feFile">Attachment</label><input class="form-control" type="file" id="feFile"></div>
+          </div>
+        </div></div></div>
+
+      </div>

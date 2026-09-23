@@ -1,0 +1,70 @@
+  <div class="nx-auth">
+
+    <aside class="nx-auth-brand">
+      <a class="nx-brand-row text-white text-decoration-none" href="index.html">
+        <img src="assets/img/logo.svg" alt=""><span>NexaDash</span>
+      </a>
+
+      <div>
+        <h2>Start free. No card required.</h2>
+        <div class="nx-auth-feature"><i class="bi bi-clock-history"></i><div><div class="nx-af-title">14-day trial</div><div class="nx-af-text">Full access to every Pro feature from the first minute.</div></div></div>
+        <div class="nx-auth-feature"><i class="bi bi-box-seam"></i><div><div class="nx-af-title">Import in minutes</div><div class="nx-af-text">Bring in CSV, Postgres or your existing warehouse.</div></div></div>
+        <div class="nx-auth-feature"><i class="bi bi-x-circle"></i><div><div class="nx-af-title">Cancel any time</div><div class="nx-af-text">No contracts, no cancellation calls, export whenever you like.</div></div></div>
+      </div>
+
+      <div class="nx-auth-testimonial">
+        <p class="mb-0">&ldquo;Our whole team was onboarded before lunch. Two weeks later we retired our old reporting stack entirely.&rdquo;</p>
+        <div class="nx-at-user">
+          <img src="https://i.pravatar.cc/72?img=31" alt="Amina Diallo">
+          <div><div class="fw-semibold">Amina Diallo</div><div class="small" style="opacity:.8">Head of Ops, Pulse Co.</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="nx-auth-form-wrap">
+      <div class="nx-auth-card">
+        <div class="d-lg-none d-flex align-items-center gap-2 mb-4">
+          <img src="assets/img/logo.svg" alt="" width="32" height="32"><span class="h4 mb-0">NexaDash</span>
+        </div>
+
+        <h1 class="h2 mb-1">Create your account</h1>
+        <p class="text-muted mb-4">Free for 14 days, then from $23 per user.</p>
+
+        <form id="registerForm" novalidate>
+          <div class="row g-3">
+            <div class="col-6"><label class="form-label" for="regFirst">First name</label><input class="form-control" id="regFirst" required><div class="invalid-feedback">Required.</div></div>
+            <div class="col-6"><label class="form-label" for="regLast">Last name</label><input class="form-control" id="regLast" required><div class="invalid-feedback">Required.</div></div>
+            <div class="col-12"><label class="form-label" for="regEmail">Work email</label><input class="form-control" type="email" id="regEmail" required><div class="invalid-feedback">Enter a valid email address.</div></div>
+            <div class="col-12">
+              <label class="form-label" for="regPassword">Password</label>
+              <div class="input-group">
+                <input class="form-control" type="password" id="regPassword" minlength="8" required>
+                <button class="btn btn-outline-secondary btn-toggle-pw" type="button" data-target="#regPassword" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                <div class="invalid-feedback">At least 8 characters.</div>
+              </div>
+              <div class="nx-strength" data-level="0" id="regStrength"><span></span><span></span><span></span><span></span></div>
+              <div class="form-text" id="regStrengthText">Use 8+ characters with mixed case, numbers and symbols.</div>
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="regTerms" required>
+                <label class="form-check-label small" for="regTerms">I agree to the <a class="nx-link" href="page-faq.html">terms of service</a> and <a class="nx-link" href="page-faq.html">privacy policy</a>.</label>
+                <div class="invalid-feedback">You must agree before continuing.</div>
+              </div>
+            </div>
+            <div class="col-12"><button class="btn btn-primary w-100 btn-lg" type="submit">Create account</button></div>
+          </div>
+        </form>
+
+        <div class="nx-auth-divider">or sign up with</div>
+        <div class="nx-auth-social">
+          <button class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-2" type="button"><i class="bi bi-google"></i>Google</button>
+          <button class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-2" type="button"><i class="bi bi-github"></i>GitHub</button>
+        </div>
+
+        <p class="text-center text-muted small mt-4 mb-0">
+          Already have an account? <a class="nx-link" href="auth-login.html">Sign in</a>
+        </p>
+      </div>
+    </main>
+  </div>

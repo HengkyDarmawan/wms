@@ -1,0 +1,118 @@
+      <div class="row g-4">
+        <div class="col-xl-8">
+          <div class="card mb-4">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Conversation</h2><div class="card-subtitle">4 messages &middot; opened 3 hours ago</div></div>
+              <div class="ms-auto d-flex gap-2">
+                <span class="badge badge-soft-danger">Urgent</span>
+                <span class="badge badge-soft-warning" id="tdStatus">Waiting on us</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <ul class="nx-timeline" id="tdThread">
+                <li class="nx-timeline-item">
+                  <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=25" alt=""></span>
+                  <div class="nx-tl-body">
+                    <div class="d-flex align-items-center gap-2"><strong>Chen Wei</strong><span class="badge badge-soft-secondary">Customer</span><span class="nx-tl-time ms-auto">Today, 06:40</span></div>
+                    <div class="p-3 rounded mt-2" style="background:var(--nx-body-bg);border:1px solid var(--nx-border)">
+                      <p class="mb-2">Since Friday our failed charges are retrying every few minutes instead of backing off. Two customers have seen eleven attempts in an hour and their banks are now blocking us entirely.</p>
+                      <p class="mb-0">Account: Orbit Labs (ent_8842). Affected charges start with <code>ch_3Pq</code>.</p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                      <a class="nx-attach-chip" href="#"><i class="bi bi-file-earmark-text text-danger"></i>charge-log.txt<span class="text-muted">18 KB</span></a>
+                    </div>
+                  </div>
+                </li>
+                <li class="nx-timeline-item">
+                  <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=15" alt=""></span>
+                  <div class="nx-tl-body">
+                    <div class="d-flex align-items-center gap-2"><strong>Tom Baker</strong><span class="badge badge-soft-primary">Agent</span><span class="nx-tl-time ms-auto">Today, 07:02</span></div>
+                    <div class="p-3 rounded mt-2" style="background:var(--nx-primary-subtle)">
+                      <p class="mb-0">Thanks Chen — I can reproduce it on your account. Confirming with engineering whether this is the soft-decline path we changed in v2.4.0. I have paused automatic retries for ent_8842 in the meantime.</p>
+                    </div>
+                  </div>
+                </li>
+                <li class="nx-timeline-item">
+                  <span class="nx-tl-dot" style="color:var(--nx-secondary);background:var(--nx-secondary-subtle)"><i class="bi bi-arrow-repeat"></i></span>
+                  <div class="nx-tl-body">
+                    <div class="nx-tl-text">Escalated to <strong>Engineering</strong> and linked to issue <code>#482</code></div>
+                    <div class="nx-tl-time">Today, 07:14</div>
+                  </div>
+                </li>
+                <li class="nx-timeline-item">
+                  <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=68" alt=""></span>
+                  <div class="nx-tl-body">
+                    <div class="d-flex align-items-center gap-2"><strong>Marcus Webb</strong><span class="badge badge-soft-info">Engineering</span><span class="nx-tl-time ms-auto">Today, 08:31</span></div>
+                    <div class="p-3 rounded mt-2" style="background:var(--nx-info-subtle)">
+                      <p class="mb-0">Confirmed. The backoff multiplier is not applied when the decline code is <code>generic_decline</code>. Fix is in review, targeting v2.4.1 today. Retries stay paused until it ships.</p>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+
+              <hr class="my-4">
+              <h3 class="h6 mb-2">Reply</h3>
+              <div id="tdEditor" style="min-height:150px"></div>
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <button class="btn btn-primary" id="tdSend" type="button"><i class="bi bi-send me-1"></i>Send reply</button>
+                <button class="btn btn-soft-secondary" id="tdNote" type="button"><i class="bi bi-lock me-1"></i>Add internal note</button>
+                <button class="btn btn-soft-success ms-auto" id="tdResolve" type="button"><i class="bi bi-check2 me-1"></i>Resolve ticket</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4">
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Ticket details</h2></div>
+            <div class="card-body">
+              <dl class="row small mb-0">
+                <dt class="col-5 text-muted fw-normal">Status</dt><dd class="col-7"><span class="badge badge-soft-warning">Waiting on us</span></dd>
+                <dt class="col-5 text-muted fw-normal">Priority</dt><dd class="col-7"><span class="badge badge-soft-danger">Urgent</span></dd>
+                <dt class="col-5 text-muted fw-normal">Category</dt><dd class="col-7">Billing</dd>
+                <dt class="col-5 text-muted fw-normal">Channel</dt><dd class="col-7">Email</dd>
+                <dt class="col-5 text-muted fw-normal">Created</dt><dd class="col-7">Today, 06:40</dd>
+                <dt class="col-5 text-muted fw-normal">First response</dt><dd class="col-7 text-success">22 min</dd>
+                <dt class="col-5 text-muted fw-normal">SLA</dt><dd class="col-7">4h &middot; <span class="text-warning">1h 12m left</span></dd>
+              </dl>
+              <hr class="my-3">
+              <label class="form-label" for="tdAssignee">Assignee</label>
+              <select class="form-select form-select-sm mb-3" id="tdAssignee">
+                <option>Tom Baker</option><option>Hana Sato</option><option>Maria Gomez</option><option>Diego Alvarez</option>
+              </select>
+              <label class="form-label">Tags</label>
+              <div class="d-flex flex-wrap gap-1">
+                <span class="badge badge-soft-primary">billing</span>
+                <span class="badge badge-soft-danger">regression</span>
+                <span class="badge badge-soft-warning">enterprise</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Requester</h2></div>
+            <div class="card-body">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="nx-avatar nx-avatar-lg"><img src="https://i.pravatar.cc/96?img=25" alt=""></span>
+                <div class="min-w-0"><div class="fw-semibold">Chen Wei</div><div class="small text-muted">CTO, Orbit Labs</div></div>
+              </div>
+              <ul class="list-unstyled small text-muted mb-3">
+                <li class="d-flex gap-2 py-1"><i class="bi bi-envelope"></i>chen@orbit.app</li>
+                <li class="d-flex gap-2 py-1"><i class="bi bi-geo-alt"></i>Singapore</li>
+                <li class="d-flex gap-2 py-1"><i class="bi bi-tags"></i>Enterprise plan &middot; 40 seats</li>
+                <li class="d-flex gap-2 py-1"><i class="bi bi-clock-history"></i>Customer since Jan 2023</li>
+              </ul>
+              <a class="btn btn-soft-primary w-100 btn-sm" href="commerce-customer-detail.html">View customer</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Related tickets</h2></div>
+            <div class="card-body py-2">
+              <a class="nx-row-item text-decoration-none" href="apps-ticket-detail.html"><span class="nx-icon-sq danger"><i class="bi bi-exclamation-circle"></i></span><div class="nx-row-main"><div class="nx-row-title">#TCK-2018</div><div class="nx-row-sub">Charge retried 9 times</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="apps-ticket-detail.html"><span class="nx-icon-sq warning"><i class="bi bi-credit-card"></i></span><div class="nx-row-main"><div class="nx-row-title">#TCK-1987</div><div class="nx-row-sub">Dunning email wording</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="apps-ticket-detail.html"><span class="nx-icon-sq secondary"><i class="bi bi-receipt"></i></span><div class="nx-row-main"><div class="nx-row-title">#TCK-1902</div><div class="nx-row-sub">Invoice tax line missing</div></div></a>
+            </div>
+          </div>
+        </div>
+      </div>

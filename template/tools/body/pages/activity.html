@@ -1,0 +1,67 @@
+      <div class="row g-4">
+
+        <!-- ===== Filters ===== -->
+        <div class="col-xl-3">
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Filter by type</h2></div>
+            <div class="card-body">
+              <div class="form-check mb-2"><input class="form-check-input act-filter" type="checkbox" value="commit" id="fCommit" checked><label class="form-check-label d-flex align-items-center gap-2" for="fCommit"><span class="nx-dot-label" style="background:var(--nx-primary)"></span>Commits</label></div>
+              <div class="form-check mb-2"><input class="form-check-input act-filter" type="checkbox" value="deploy" id="fDeploy" checked><label class="form-check-label d-flex align-items-center gap-2" for="fDeploy"><span class="nx-dot-label" style="background:var(--nx-success)"></span>Deploys</label></div>
+              <div class="form-check mb-2"><input class="form-check-input act-filter" type="checkbox" value="comment" id="fComment" checked><label class="form-check-label d-flex align-items-center gap-2" for="fComment"><span class="nx-dot-label" style="background:var(--nx-info)"></span>Comments</label></div>
+              <div class="form-check"><input class="form-check-input act-filter" type="checkbox" value="alert" id="fAlert" checked><label class="form-check-label d-flex align-items-center gap-2" for="fAlert"><span class="nx-dot-label" style="background:var(--nx-danger)"></span>Alerts</label></div>
+              <hr class="my-3">
+              <label class="form-label" for="actSearch">Search</label>
+              <div class="input-group input-group-sm"><span class="input-group-text"><i class="bi bi-search"></i></span><input class="form-control" type="search" id="actSearch" placeholder="Filter feed&hellip;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Feed ===== -->
+        <div class="col-xl-9">
+          <div class="card"><div class="card-body" id="actFeed">
+
+            <div class="nx-activity-day">Today &mdash; September 12, 2026</div>
+            <ul class="nx-timeline">
+              <li class="nx-timeline-item act-item" data-type="deploy"><span class="nx-tl-dot" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-rocket-takeoff"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text"><strong>Sarah Chen</strong> deployed <code>v2.4.1</code> to production</div><div class="nx-tl-time">09:41 &middot; 2 minutes ago</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="commit"><span class="nx-tl-dot" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-git"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text"><strong>Marcus Webb</strong> pushed 4 commits to <code>main</code></div><div class="nx-tl-time">09:15</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="comment"><span class="nx-tl-dot" style="color:var(--nx-info);background:var(--nx-info-subtle)"><i class="bi bi-chat-dots"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text"><strong>Lena Iversen</strong> commented on <strong>Q4 roadmap</strong></div><div class="nx-tl-time">08:52</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="alert"><span class="nx-tl-dot" style="color:var(--nx-danger);background:var(--nx-danger-subtle)"><i class="bi bi-exclamation-triangle"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text">Memory usage on <code>eu-west-1</code> exceeded 85%</div><div class="nx-tl-time">08:30</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="commit"><span class="nx-tl-dot" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-git"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text"><strong>Ravi Menon</strong> opened pull request <code>#485</code></div><div class="nx-tl-time">08:04</div></div></li>
+            </ul>
+
+            <div class="nx-activity-day">Yesterday</div>
+            <ul class="nx-timeline">
+              <li class="nx-timeline-item act-item" data-type="deploy"><span class="nx-tl-dot" style="color:var(--nx-danger);background:var(--nx-danger-subtle)"><i class="bi bi-x-circle"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text">Deployment of <code>v2.5.0-rc.3</code> failed health checks in dev</div><div class="nx-tl-time">18:22</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="comment"><span class="nx-tl-dot" style="color:var(--nx-info);background:var(--nx-info-subtle)"><i class="bi bi-chat-square-text"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text"><strong>Tom Baker</strong> replied to 6 support tickets</div><div class="nx-tl-time">16:40</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="commit"><span class="nx-tl-dot" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-git"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text"><strong>Marcus Webb</strong> merged pull request <code>#482</code> into <code>main</code></div><div class="nx-tl-time">14:18</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="deploy"><span class="nx-tl-dot" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-rocket-takeoff"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text"><strong>Ava Novak</strong> deployed <code>v2.5.0-rc.2</code> to staging</div><div class="nx-tl-time">11:02</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="alert"><span class="nx-tl-dot" style="color:var(--nx-warning);background:var(--nx-warning-subtle)"><i class="bi bi-bell"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text">API error rate crossed 0.5% for 5 minutes</div><div class="nx-tl-time">09:47</div></div></li>
+            </ul>
+
+            <div class="nx-activity-day">September 10, 2026</div>
+            <ul class="nx-timeline">
+              <li class="nx-timeline-item act-item" data-type="comment"><span class="nx-tl-dot" style="color:var(--nx-info);background:var(--nx-info-subtle)"><i class="bi bi-chat-dots"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text"><strong>Sarah Chen</strong> mentioned <strong>@aigars</strong> in a comment</div><div class="nx-tl-time">17:30</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="commit"><span class="nx-tl-dot" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-git"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text"><strong>Sofia Rossi</strong> pushed 2 commits to <code>feat/onboarding</code></div><div class="nx-tl-time">15:12</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="alert"><span class="nx-tl-dot" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-check-circle"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text">Incident <strong>INC-204</strong> resolved &mdash; latency back to normal</div><div class="nx-tl-time">12:08</div></div></li>
+              <li class="nx-timeline-item act-item" data-type="deploy"><span class="nx-tl-dot" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-rocket-takeoff"></i></span>
+                <div class="nx-tl-body"><div class="nx-tl-text"><strong>Chen Wei</strong> deployed <code>v2.4.0</code> to production</div><div class="nx-tl-time">10:00</div></div></li>
+            </ul>
+
+          </div>
+          <div class="card-footer text-center"><button class="btn btn-soft-secondary btn-sm" type="button">Load more activity</button></div>
+          </div>
+        </div>
+      </div>

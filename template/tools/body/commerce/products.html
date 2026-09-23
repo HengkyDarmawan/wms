@@ -1,0 +1,150 @@
+      <div class="row g-4">
+
+        <!-- ===== Filter sidebar ===== -->
+        <div class="col-xl-3">
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Filters</h2><button class="btn btn-xs btn-soft-secondary ms-auto" type="button" id="clearFilters">Clear</button></div>
+            <div class="card-body">
+              <h3 class="h6 mb-2">Category</h3>
+              <div class="form-check"><input class="form-check-input cat-filter" type="checkbox" value="Audio" id="cAudio" checked><label class="form-check-label" for="cAudio">Audio <span class="text-muted">(3)</span></label></div>
+              <div class="form-check"><input class="form-check-input cat-filter" type="checkbox" value="Wearables" id="cWear" checked><label class="form-check-label" for="cWear">Wearables <span class="text-muted">(1)</span></label></div>
+              <div class="form-check"><input class="form-check-input cat-filter" type="checkbox" value="Accessories" id="cAcc" checked><label class="form-check-label" for="cAcc">Accessories <span class="text-muted">(3)</span></label></div>
+              <div class="form-check mb-4"><input class="form-check-input cat-filter" type="checkbox" value="Home" id="cHome" checked><label class="form-check-label" for="cHome">Home <span class="text-muted">(1)</span></label></div>
+
+              <h3 class="h6 mb-3">Price range</h3>
+              <div id="priceSlider" class="mb-2"></div>
+              <div class="d-flex justify-content-between small text-muted mb-4"><span id="priceMin">$0</span><span id="priceMax">$300</span></div>
+
+              <h3 class="h6 mb-2">Rating</h3>
+              <div class="form-check"><input class="form-check-input" type="radio" name="rating" id="r4" checked><label class="form-check-label nx-rating" for="r4">&#9733;&#9733;&#9733;&#9733;&#9734; <span class="text-muted small">&amp; up</span></label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="rating" id="r3"><label class="form-check-label nx-rating" for="r3">&#9733;&#9733;&#9733;&#9734;&#9734; <span class="text-muted small">&amp; up</span></label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="rating" id="rAll"><label class="form-check-label small text-muted" for="rAll">All ratings</label></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Products ===== -->
+        <div class="col-xl-9">
+          <div class="card mb-4">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+              <span class="text-muted small me-auto"><strong id="productCount">8</strong> products found</span>
+              <select class="form-select form-select-sm" style="width:180px" id="sortBy" aria-label="Sort by">
+                <option>Most popular</option><option>Price: low to high</option><option>Price: high to low</option><option>Newest first</option>
+              </select>
+              <div class="btn-group btn-group-sm" role="group" aria-label="View mode">
+                <button class="btn btn-outline-primary active" type="button" id="pvGrid" aria-label="Grid view"><i class="bi bi-grid-3x3-gap"></i></button>
+                <button class="btn btn-outline-primary" type="button" id="pvTable" aria-label="Table view"><i class="bi bi-list-ul"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grid view -->
+          <div class="row g-4" id="productGrid">
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Audio" data-price="129">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="assets/img/products/p1.svg" alt="Aurora Wireless Headphones"><span class="badge badge-soft-danger position-absolute top-0 start-0 m-2">-20%</span>
+                  <div class="nx-pc-overlay"><a href="commerce-product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Audio</div>
+                <a href="commerce-product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Aurora Wireless Headphones</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9733; <span class="text-muted small">(412)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$129</strong><span class="nx-price-old">$159</span></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Wearables" data-price="249">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="assets/img/products/p2.svg" alt="Nova Smartwatch">
+                  <div class="nx-pc-overlay"><a href="commerce-product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Wearables</div>
+                <a href="commerce-product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Nova Smartwatch</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9734; <span class="text-muted small">(318)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$249</strong></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Audio" data-price="89">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="assets/img/products/p3.svg" alt="Pulse Portable Speaker"><span class="badge badge-soft-warning position-absolute top-0 start-0 m-2">Low stock</span>
+                  <div class="nx-pc-overlay"><a href="commerce-product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Audio</div>
+                <a href="commerce-product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Pulse Portable Speaker</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9734; <span class="text-muted small">(286)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$89</strong><span class="nx-price-old">$109</span></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Accessories" data-price="159">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="assets/img/products/p4.svg" alt="Orbit Mechanical Keyboard">
+                  <div class="nx-pc-overlay"><a href="commerce-product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Accessories</div>
+                <a href="commerce-product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Orbit Mechanical Keyboard</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9733; <span class="text-muted small">(241)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$159</strong></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Accessories" data-price="69">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="assets/img/products/p5.svg" alt="Zenith Ergonomic Mouse">
+                  <div class="nx-pc-overlay"><a href="commerce-product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Accessories</div>
+                <a href="commerce-product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Zenith Ergonomic Mouse</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9734;&#9734; <span class="text-muted small">(154)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$69</strong></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Home" data-price="119">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="assets/img/products/p6.svg" alt="Lumen Desk Lamp"><span class="badge badge-soft-success position-absolute top-0 start-0 m-2">New</span>
+                  <div class="nx-pc-overlay"><a href="commerce-product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Home</div>
+                <a href="commerce-product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Lumen Desk Lamp</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9734; <span class="text-muted small">(97)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$119</strong></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Audio" data-price="199">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="assets/img/products/p7.svg" alt="Vertex Streaming Camera">
+                  <div class="nx-pc-overlay"><a href="commerce-product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Audio</div>
+                <a href="commerce-product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Vertex Streaming Camera</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9734; <span class="text-muted small">(63)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$199</strong></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Accessories" data-price="89">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="assets/img/products/p8.svg" alt="Atlas Travel Backpack">
+                  <div class="nx-pc-overlay"><a href="commerce-product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Accessories</div>
+                <a href="commerce-product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Atlas Travel Backpack</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9733; <span class="text-muted small">(208)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$89</strong></div>
+              </div></div>
+            </div>
+          </div>
+
+          <!-- Table view -->
+          <div class="card d-none" id="productTable">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Rating</th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="assets/img/products/p1.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Aurora Wireless Headphones</span></div></td><td>Audio</td><td class="nx-num">$129</td><td><span class="badge badge-soft-success">82 in stock</span></td><td class="nx-rating">&#9733; 4.9</td><td class="text-end"><a href="commerce-product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="assets/img/products/p2.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Nova Smartwatch</span></div></td><td>Wearables</td><td class="nx-num">$249</td><td><span class="badge badge-soft-warning">46 in stock</span></td><td class="nx-rating">&#9733; 4.4</td><td class="text-end"><a href="commerce-product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="assets/img/products/p3.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Pulse Portable Speaker</span></div></td><td>Audio</td><td class="nx-num">$89</td><td><span class="badge badge-soft-danger">12 in stock</span></td><td class="nx-rating">&#9733; 4.2</td><td class="text-end"><a href="commerce-product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="assets/img/products/p4.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Orbit Mechanical Keyboard</span></div></td><td>Accessories</td><td class="nx-num">$159</td><td><span class="badge badge-soft-success">68 in stock</span></td><td class="nx-rating">&#9733; 4.8</td><td class="text-end"><a href="commerce-product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="assets/img/products/p5.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Zenith Ergonomic Mouse</span></div></td><td>Accessories</td><td class="nx-num">$69</td><td><span class="badge badge-soft-success">140 in stock</span></td><td class="nx-rating">&#9733; 3.9</td><td class="text-end"><a href="commerce-product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="assets/img/products/p6.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Lumen Desk Lamp</span></div></td><td>Home</td><td class="nx-num">$119</td><td><span class="badge badge-soft-success">54 in stock</span></td><td class="nx-rating">&#9733; 4.3</td><td class="text-end"><a href="commerce-product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>

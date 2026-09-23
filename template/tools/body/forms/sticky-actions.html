@@ -1,0 +1,126 @@
+      <form id="saForm">
+        <!-- ===== Sticky action bar ===== -->
+        <div class="card mb-4" style="position:sticky;top:calc(var(--nx-header-h) + 12px);z-index:1015">
+          <div class="card-body d-flex flex-wrap align-items-center gap-3">
+            <div class="me-auto">
+              <div class="fw-semibold">Workspace settings</div>
+              <div class="small text-muted" id="saState">No unsaved changes</div>
+            </div>
+            <button class="btn btn-soft-secondary" id="saReset" type="button">Discard</button>
+            <button class="btn btn-primary" id="saSave" type="button" disabled><i class="bi bi-check2 me-1"></i>Save changes</button>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-xl-3 d-none d-xl-block">
+            <div class="card" style="position:sticky;top:calc(var(--nx-header-h) + 110px)">
+              <div class="card-body">
+                <div class="nav flex-column nav-pills nx-settings-nav" id="saNav">
+                  <a class="nav-link active" href="#saGeneral">General</a>
+                  <a class="nav-link" href="#saBranding">Branding</a>
+                  <a class="nav-link" href="#saRegional">Regional</a>
+                  <a class="nav-link" href="#saLimits">Limits</a>
+                  <a class="nav-link" href="#saDanger">Danger zone</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-9">
+            <div class="card mb-4" id="saGeneral">
+              <div class="card-header"><h2 class="card-title h4">General</h2></div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-7"><label class="form-label" for="saName">Workspace name</label><input class="form-control" id="saName" value="Nexa Product"></div>
+                  <div class="col-md-5"><label class="form-label" for="saSlug">Workspace URL</label>
+                    <div class="input-group"><span class="input-group-text">nexadash.io/</span><input class="form-control" id="saSlug" value="nexa-product"></div>
+                  </div>
+                  <div class="col-12"><label class="form-label" for="saDesc">Description</label><textarea class="form-control" id="saDesc" rows="3">Product and engineering dashboards for the core platform team.</textarea></div>
+                  <div class="col-md-6"><label class="form-label" for="saOwner">Owner</label>
+                    <select class="form-select" id="saOwner"><option>Aigars Silkalns</option><option>Sarah Chen</option><option>Marcus Webb</option></select>
+                  </div>
+                  <div class="col-md-6"><label class="form-label" for="saVisibility">Visibility</label>
+                    <select class="form-select" id="saVisibility"><option>Private to members</option><option>Anyone with the link</option><option>Public</option></select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-4" id="saBranding">
+              <div class="card-header"><h2 class="card-title h4">Branding</h2></div>
+              <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center gap-4 mb-4">
+                  <img id="saLogoPreview" src="assets/img/logo.svg" width="64" height="64" alt="Logo preview" class="rounded">
+                  <div class="flex-grow-1"><label class="form-label" for="saLogo">Workspace logo</label>
+                    <input class="form-control" type="file" id="saLogo" accept="image/*">
+                    <div class="form-text">SVG or PNG, at least 128&times;128 px.</div>
+                  </div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-md-4"><label class="form-label" for="saPrimary">Primary colour</label><input class="form-control form-control-color w-100" type="color" id="saPrimary" value="#6366f1"></div>
+                  <div class="col-md-4"><label class="form-label" for="saAccent">Accent colour</label><input class="form-control form-control-color w-100" type="color" id="saAccent" value="#22d3ee"></div>
+                  <div class="col-md-4"><label class="form-label" for="saTheme">Default theme</label>
+                    <select class="form-select" id="saTheme"><option>Follow system</option><option>Always light</option><option>Always dark</option></select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-4" id="saRegional">
+              <div class="card-header"><h2 class="card-title h4">Regional</h2></div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-6"><label class="form-label" for="saTz">Timezone</label>
+                    <select class="form-select" id="saTz"><option>Asia/Singapore (GMT+8)</option><option>Asia/Jakarta (GMT+7)</option><option>Europe/Berlin (GMT+2)</option><option>America/New_York (GMT-4)</option></select>
+                  </div>
+                  <div class="col-md-6"><label class="form-label" for="saLocale">Locale</label>
+                    <select class="form-select" id="saLocale"><option>English (UK)</option><option>English (US)</option><option>Bahasa Indonesia</option><option>Deutsch</option></select>
+                  </div>
+                  <div class="col-md-4"><label class="form-label" for="saCurrency">Currency</label>
+                    <select class="form-select" id="saCurrency"><option>USD &mdash; US Dollar</option><option>SGD &mdash; Singapore Dollar</option><option>EUR &mdash; Euro</option><option>IDR &mdash; Rupiah</option></select>
+                  </div>
+                  <div class="col-md-4"><label class="form-label" for="saDateFmt">Date format</label>
+                    <select class="form-select" id="saDateFmt"><option>D MMM YYYY</option><option>MM/DD/YYYY</option><option>DD/MM/YYYY</option><option>YYYY-MM-DD</option></select>
+                  </div>
+                  <div class="col-md-4"><label class="form-label" for="saWeek">Week starts on</label>
+                    <select class="form-select" id="saWeek"><option>Monday</option><option>Sunday</option></select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-4" id="saLimits">
+              <div class="card-header"><h2 class="card-title h4">Limits</h2></div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-4"><label class="form-label" for="saSeats">Seat limit</label><input class="form-control" type="number" id="saSeats" value="50"></div>
+                  <div class="col-md-4"><label class="form-label" for="saRate">API rate limit</label>
+                    <div class="input-group"><input class="form-control" type="number" id="saRate" value="600"><span class="input-group-text">/min</span></div>
+                  </div>
+                  <div class="col-md-4"><label class="form-label" for="saRetention">Data retention</label>
+                    <select class="form-select" id="saRetention"><option>3 months</option><option selected>13 months</option><option>36 months</option></select>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="saOverage" checked><label class="form-check-label" for="saOverage">Allow overage instead of blocking requests</label></div>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="saAlert" checked><label class="form-check-label" for="saAlert">Email the owner at 80% of any limit</label></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card nx-danger-zone" id="saDanger">
+              <div class="card-header"><h2 class="card-title h4 text-danger">Danger zone</h2></div>
+              <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center gap-3 pb-3 border-bottom">
+                  <div class="flex-grow-1"><h3 class="h6 mb-1">Transfer ownership</h3><p class="small text-muted mb-0">The new owner gains full billing access immediately.</p></div>
+                  <button class="btn btn-soft-warning" type="button">Transfer</button>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-3 pt-3">
+                  <div class="flex-grow-1"><h3 class="h6 mb-1">Delete this workspace</h3><p class="small text-muted mb-0">Every dashboard, source and invoice is erased.</p></div>
+                  <button class="btn btn-danger" id="saDelete" type="button">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>

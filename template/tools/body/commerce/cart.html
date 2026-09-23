@@ -1,0 +1,77 @@
+      <div class="row g-4">
+        <div class="col-xl-8">
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Your items</h2><span class="badge badge-soft-secondary ms-auto" id="cartCount">3 items</span></div>
+            <div class="card-body p-0">
+              <div id="cartList"></div>
+              <div class="p-4 text-center text-muted d-none" id="cartEmpty">
+                <i class="bi bi-cart-x d-block fs-1 mb-2"></i>
+                <p class="mb-3">Your cart is empty.</p>
+                <a class="btn btn-primary" href="commerce-products.html">Browse products</a>
+              </div>
+            </div>
+            <div class="card-footer d-flex flex-wrap gap-2">
+              <a class="btn btn-soft-secondary" href="commerce-products.html"><i class="bi bi-arrow-left me-1"></i>Continue shopping</a>
+              <button class="btn btn-soft-danger ms-auto" id="cartClear" type="button">Clear cart</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">You may also like</h2></div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-4"><div class="card h-100"><div class="card-body">
+                  <div class="nx-pc-img mb-2"><img src="assets/img/products/p2.svg" alt="" style="object-fit:contain;padding:18px"></div>
+                  <div class="small fw-semibold">Nova Smartwatch</div><div class="small text-muted mb-2">$249</div>
+                  <button class="btn btn-xs btn-soft-primary w-100 cart-add" data-name="Nova Smartwatch" data-price="249" data-img="p2" type="button">Add to cart</button>
+                </div></div></div>
+                <div class="col-md-4"><div class="card h-100"><div class="card-body">
+                  <div class="nx-pc-img mb-2"><img src="assets/img/products/p6.svg" alt="" style="object-fit:contain;padding:18px"></div>
+                  <div class="small fw-semibold">Lumen Desk Lamp</div><div class="small text-muted mb-2">$119</div>
+                  <button class="btn btn-xs btn-soft-primary w-100 cart-add" data-name="Lumen Desk Lamp" data-price="119" data-img="p6" type="button">Add to cart</button>
+                </div></div></div>
+                <div class="col-md-4"><div class="card h-100"><div class="card-body">
+                  <div class="nx-pc-img mb-2"><img src="assets/img/products/p8.svg" alt="" style="object-fit:contain;padding:18px"></div>
+                  <div class="small fw-semibold">Atlas Backpack</div><div class="small text-muted mb-2">$89</div>
+                  <button class="btn btn-xs btn-soft-primary w-100 cart-add" data-name="Atlas Backpack" data-price="89" data-img="p8" type="button">Add to cart</button>
+                </div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4">
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Order summary</h2></div>
+            <div class="card-body">
+              <div class="d-flex justify-content-between py-1"><span class="text-muted">Subtotal</span><span class="nx-num" id="sumSubtotal">$0.00</span></div>
+              <div class="d-flex justify-content-between py-1"><span class="text-muted">Discount</span><span class="nx-num text-success" id="sumDiscount">&minus;$0.00</span></div>
+              <div class="d-flex justify-content-between py-1"><span class="text-muted">Shipping</span><span class="nx-num" id="sumShipping">$12.00</span></div>
+              <div class="d-flex justify-content-between py-1"><span class="text-muted">Tax (8%)</span><span class="nx-num" id="sumTax">$0.00</span></div>
+              <div class="d-flex justify-content-between py-3 mt-2 border-top"><span class="h5 mb-0">Total</span><span class="h5 mb-0 nx-num" id="sumTotal">$0.00</span></div>
+              <a class="btn btn-primary w-100 btn-lg mt-2" href="commerce-checkout.html">Checkout</a>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Promo code</h2></div>
+            <div class="card-body">
+              <div class="input-group mb-2">
+                <input class="form-control" id="promoInput" placeholder="WELCOME10" aria-label="Promo code">
+                <button class="btn btn-soft-primary" id="promoApply" type="button">Apply</button>
+              </div>
+              <div class="small" id="promoMsg"></div>
+              <div class="form-text">Try <code>WELCOME10</code> for 10% off.</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex gap-3 align-items-start">
+                <span class="nx-icon-sq success"><i class="bi bi-truck"></i></span>
+                <div><div class="fw-semibold small">Free shipping over $500</div><div class="small text-muted" id="freeShipMsg">Add $0.00 more to qualify.</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>

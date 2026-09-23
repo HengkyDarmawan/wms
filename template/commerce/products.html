@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Products | NexaDash</title>
+  <link rel="icon" href="../assets/img/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/simplebar@6.2.7/dist/simplebar.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/nouislider@15.8.1/dist/nouislider.min.css" rel="stylesheet">
+  <link href="../assets/css/variables.css" rel="stylesheet">
+  <link href="../assets/css/layout.css" rel="stylesheet">
+  <link href="../assets/css/components.css" rel="stylesheet">
+  <link href="../assets/css/pages.css" rel="stylesheet">
+  <link href="../assets/css/motion.css" rel="stylesheet">
+  <link href="../assets/css/dark.css" rel="stylesheet">
+  <script src="../assets/js/theme-init.js"></script>
+</head>
+<body data-nx-layout="app" data-nx-root="../">
+
+  <a class="nx-skip-link" href="#nxContent">Skip to main content</a>
+
+  <!-- ===== Sidebar ===== -->
+  <aside class="nx-sidebar" id="nxSidebar" aria-label="Main navigation">
+    <div class="nx-sidebar-head">
+      <a class="nx-sidebar-brand" href="../index.html">
+        <img src="../assets/img/logo.svg" alt="NexaDash logo">
+        <span class="nx-brand-text">NexaDash</span>
+      </a>
+      <!-- Hanya tampil saat offcanvas (<992px): hamburger di header tertutup backdrop. -->
+      <button class="nx-icon-btn nx-sidebar-close" id="nxSidebarClose" type="button" aria-label="Close navigation">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- ===== Menu filter ===== -->
+    <div class="nx-sidebar-search">
+      <i class="bi bi-search"></i>
+      <input type="search" id="nxMenuFilter" class="nx-sidebar-search-input"
+             placeholder="Filter menu&hellip;" autocomplete="off" aria-label="Filter menu"
+             aria-controls="nxSidebarNav">
+      <button type="button" class="nx-sidebar-search-clear" id="nxMenuFilterClear" aria-label="Clear filter" hidden>
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
+    <nav class="nx-sidebar-nav" id="nxSidebarNav">
+      <!-- ===== Overview ===== -->
+      <div class="nx-menu-section" data-nx-section="overview">
+        <button class="nx-menu-group" type="button" data-bs-toggle="collapse" data-bs-target="#nxSecOverview" aria-expanded="false" aria-controls="nxSecOverview">
+          <span class="nx-menu-group-text">Overview</span><i class="bi bi-chevron-down nx-group-chevron"></i>
+        </button>
+        <div class="collapse nx-section-body" id="nxSecOverview">
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../index.html" data-title="Dashboard"><i class="bi bi-grid-1x2"></i><span class="nx-menu-label">Dashboard</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../dashboards/analytics.html" data-title="Analytics"><i class="bi bi-graph-up"></i><span class="nx-menu-label">Analytics</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../dashboards/ecommerce.html" data-title="eCommerce"><i class="bi bi-bag"></i><span class="nx-menu-label">eCommerce</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../dashboards/crm.html" data-title="CRM"><i class="bi bi-people"></i><span class="nx-menu-label">CRM</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../dashboards/project.html" data-title="Project"><i class="bi bi-clipboard-data"></i><span class="nx-menu-label">Project</span><span class="badge badge-soft-success">New</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../dashboards/support.html" data-title="Support Desk"><i class="bi bi-headset"></i><span class="nx-menu-label">Support Desk</span><span class="badge badge-soft-success">New</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../dashboards/academy.html" data-title="Academy"><i class="bi bi-mortarboard"></i><span class="nx-menu-label">Academy</span><span class="badge badge-soft-success">New</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../dashboards/logistics.html" data-title="Logistics"><i class="bi bi-truck"></i><span class="nx-menu-label">Logistics</span><span class="badge badge-soft-success">New</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../dashboards/clinical.html" data-title="Clinical"><i class="bi bi-heart-pulse"></i><span class="nx-menu-label">Clinical</span></a>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuCharts" role="button" aria-expanded="false" data-title="Charts">
+              <i class="bi bi-bar-chart"></i><span class="nx-menu-label">Charts</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuCharts">
+              <li><a class="nx-menu-link" href="../charts/apexcharts.html">ApexCharts</a></li>
+              <li><a class="nx-menu-link" href="../charts/chartjs.html">Chart.js</a></li>
+              <li><a class="nx-menu-link" href="../charts/sparkline.html">Sparkline</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Commerce ===== -->
+      <div class="nx-menu-section" data-nx-section="commerce">
+        <button class="nx-menu-group" type="button" data-bs-toggle="collapse" data-bs-target="#nxSecCommerce" aria-expanded="false" aria-controls="nxSecCommerce">
+          <span class="nx-menu-group-text">Commerce</span><i class="bi bi-chevron-down nx-group-chevron"></i>
+        </button>
+        <div class="collapse nx-section-body" id="nxSecCommerce">
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuOrders" role="button" aria-expanded="false" data-title="Orders">
+              <i class="bi bi-receipt"></i><span class="nx-menu-label">Orders</span><span class="badge badge-soft-primary">12</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuOrders">
+              <li><a class="nx-menu-link" href="../commerce/orders.html">Order List</a></li>
+              <li><a class="nx-menu-link" href="../commerce/order-detail.html">Order Detail</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuProducts" role="button" aria-expanded="false" data-title="Products">
+              <i class="bi bi-box-seam"></i><span class="nx-menu-label">Products</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuProducts">
+              <li><a class="nx-menu-link" href="../commerce/products.html">Product List</a></li>
+              <li><a class="nx-menu-link" href="../commerce/product-detail.html">Product Detail</a></li>
+              <li><a class="nx-menu-link" href="../commerce/product-add.html">Add Product</a></li>
+              <li><a class="nx-menu-link" href="../commerce/categories.html">Categories</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuCustomers" role="button" aria-expanded="false" data-title="Customers">
+              <i class="bi bi-person-badge"></i><span class="nx-menu-label">Customers</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuCustomers">
+              <li><a class="nx-menu-link" href="../commerce/customers.html">Customer List</a></li>
+              <li><a class="nx-menu-link" href="../commerce/customer-detail.html">Customer Detail</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../commerce/reviews.html" data-title="Reviews"><i class="bi bi-star"></i><span class="nx-menu-label">Reviews</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../commerce/cart.html" data-title="Shopping Cart"><i class="bi bi-cart3"></i><span class="nx-menu-label">Shopping Cart</span><span class="badge badge-soft-warning">3</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../commerce/checkout.html" data-title="Checkout"><i class="bi bi-credit-card-2-front"></i><span class="nx-menu-label">Checkout</span></a>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuInvoices" role="button" aria-expanded="false" data-title="Invoices">
+              <i class="bi bi-file-earmark-text"></i><span class="nx-menu-label">Invoices</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuInvoices">
+              <li><a class="nx-menu-link" href="../commerce/invoices.html">Invoice List</a></li>
+              <li><a class="nx-menu-link" href="../commerce/invoice-detail.html">Invoice Detail</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Apps ===== -->
+      <div class="nx-menu-section" data-nx-section="apps">
+        <button class="nx-menu-group" type="button" data-bs-toggle="collapse" data-bs-target="#nxSecApps" aria-expanded="false" aria-controls="nxSecApps">
+          <span class="nx-menu-group-text">Apps</span><i class="bi bi-chevron-down nx-group-chevron"></i>
+        </button>
+        <div class="collapse nx-section-body" id="nxSecApps">
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../apps/mail.html" data-title="Mail"><i class="bi bi-envelope"></i><span class="nx-menu-label">Mail</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../apps/chat.html" data-title="Chat"><i class="bi bi-chat-dots"></i><span class="nx-menu-label">Chat</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../apps/social.html" data-title="Social Feed"><i class="bi bi-broadcast"></i><span class="nx-menu-label">Social Feed</span><span class="badge badge-soft-success">New</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../apps/contacts.html" data-title="Contacts"><i class="bi bi-person-rolodex"></i><span class="nx-menu-label">Contacts</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../apps/notes.html" data-title="Notes &amp; Tasks"><i class="bi bi-journal-check"></i><span class="nx-menu-label">Notes &amp; Tasks</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../apps/files.html" data-title="Files"><i class="bi bi-folder"></i><span class="nx-menu-label">Files</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../apps/kanban.html" data-title="Kanban"><i class="bi bi-kanban"></i><span class="nx-menu-label">Kanban</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../apps/calendar.html" data-title="Calendar"><i class="bi bi-calendar3"></i><span class="nx-menu-label">Calendar</span></a>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuTickets" role="button" aria-expanded="false" data-title="Support Tickets">
+              <i class="bi bi-life-preserver"></i><span class="nx-menu-label">Support Tickets</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuTickets">
+              <li><a class="nx-menu-link" href="../apps/tickets.html">Ticket List</a></li>
+              <li><a class="nx-menu-link" href="../apps/ticket-detail.html">Ticket Detail</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuEvents" role="button" aria-expanded="false" data-title="Events">
+              <i class="bi bi-ticket-perforated"></i><span class="nx-menu-label">Events</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuEvents">
+              <li><a class="nx-menu-link" href="../apps/events.html">Event List</a></li>
+              <li><a class="nx-menu-link" href="../apps/event-detail.html">Event Detail</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuAcademy" role="button" aria-expanded="false" data-title="E-Learning">
+              <i class="bi bi-mortarboard"></i><span class="nx-menu-label">E-Learning</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuAcademy">
+              <li><a class="nx-menu-link" href="../apps/courses.html">Course List</a></li>
+              <li><a class="nx-menu-link" href="../apps/course-detail.html">Course Detail</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../apps/wizard.html" data-title="Wizard"><i class="bi bi-magic"></i><span class="nx-menu-label">Wizard</span></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== UI Components ===== -->
+      <div class="nx-menu-section" data-nx-section="ui-components">
+        <button class="nx-menu-group" type="button" data-bs-toggle="collapse" data-bs-target="#nxSecUIComponents" aria-expanded="false" aria-controls="nxSecUIComponents">
+          <span class="nx-menu-group-text">UI Components</span><i class="bi bi-chevron-down nx-group-chevron"></i>
+        </button>
+        <div class="collapse nx-section-body" id="nxSecUIComponents">
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuComponents" role="button" aria-expanded="false" data-title="Components">
+              <i class="bi bi-palette"></i><span class="nx-menu-label">Components</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuComponents">
+              <li><a class="nx-menu-link" href="../ui/buttons.html">Buttons</a></li>
+              <li><a class="nx-menu-link" href="../ui/cards.html">Cards</a></li>
+              <li><a class="nx-menu-link" href="../ui/stat-cards.html">Statistic Cards</a></li>
+              <li><a class="nx-menu-link" href="../ui/carousel.html">Carousel</a></li>
+              <li><a class="nx-menu-link" href="../ui/modals.html">Modals</a></li>
+              <li><a class="nx-menu-link" href="../ui/tabs-accordions.html">Tabs &amp; Accordions</a></li>
+              <li><a class="nx-menu-link" href="../ui/alerts-badges.html">Alerts &amp; Badges</a></li>
+              <li><a class="nx-menu-link" href="../ui/progress-spinners.html">Progress &amp; Spinners</a></li>
+              <li><a class="nx-menu-link" href="../ui/blockui.html">BlockUI &amp; Dividers</a></li>
+              <li><a class="nx-menu-link" href="../ui/tooltips-popovers.html">Tooltips &amp; Popovers</a></li>
+              <li><a class="nx-menu-link" href="../ui/toasts.html">Toasts &amp; Notifications</a></li>
+              <li><a class="nx-menu-link" href="../ui/dropdowns.html">Dropdowns</a></li>
+              <li><a class="nx-menu-link" href="../ui/navbar-footer.html">Navbar &amp; Footer</a></li>
+              <li><a class="nx-menu-link" href="../ui/avatars-images.html">Avatars &amp; Images</a></li>
+              <li><a class="nx-menu-link" href="../ui/ratings.html">Star Ratings</a></li>
+              <li><a class="nx-menu-link" href="../ui/media-player.html">Media Player</a></li>
+              <li><a class="nx-menu-link" href="../ui/treeview.html">Treeview</a></li>
+              <li><a class="nx-menu-link" href="../ui/pagination-breadcrumbs.html">Pagination &amp; Breadcrumbs</a></li>
+              <li><a class="nx-menu-link" href="../ui/list-group-timeline.html">List Group &amp; Timeline</a></li>
+              <li><a class="nx-menu-link" href="../ui/offcanvas-placeholders.html">Offcanvas &amp; Placeholders</a></li>
+              <li><a class="nx-menu-link" href="../ui/typography.html">Typography</a></li>
+              <li><a class="nx-menu-link" href="../ui/icons.html">Icons</a></li>
+              <li><a class="nx-menu-link" href="../ui/colors.html">Colors</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuForms" role="button" aria-expanded="false" data-title="Forms">
+              <i class="bi bi-input-cursor-text"></i><span class="nx-menu-label">Forms</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuForms">
+              <li><a class="nx-menu-link" href="../forms/elements.html">Elements</a></li>
+              <li><a class="nx-menu-link" href="../forms/custom-options.html">Custom Options</a></li>
+              <li><a class="nx-menu-link" href="../forms/layouts.html">Layouts</a></li>
+              <li><a class="nx-menu-link" href="../forms/sticky-actions.html">Sticky Actions</a></li>
+              <li><a class="nx-menu-link" href="../forms/validation.html">Validation</a></li>
+              <li><a class="nx-menu-link" href="../forms/select2.html">Select2</a></li>
+              <li><a class="nx-menu-link" href="../forms/pickers.html">Pickers</a></li>
+              <li><a class="nx-menu-link" href="../forms/editors.html">Editors</a></li>
+              <li><a class="nx-menu-link" href="../forms/upload.html">File Upload</a></li>
+              <li><a class="nx-menu-link" href="../forms/input-mask.html">Input Mask</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuTables" role="button" aria-expanded="false" data-title="Tables">
+              <i class="bi bi-table"></i><span class="nx-menu-label">Tables</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuTables">
+              <li><a class="nx-menu-link" href="../tables/basic.html">Basic Tables</a></li>
+              <li><a class="nx-menu-link" href="../tables/datatables.html">DataTables</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Plugins ===== -->
+      <div class="nx-menu-section" data-nx-section="plugins">
+        <button class="nx-menu-group" type="button" data-bs-toggle="collapse" data-bs-target="#nxSecPlugins" aria-expanded="false" aria-controls="nxSecPlugins">
+          <span class="nx-menu-group-text">Plugins</span><i class="bi bi-chevron-down nx-group-chevron"></i>
+        </button>
+        <div class="collapse nx-section-body" id="nxSecPlugins">
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/index.html" data-title="All Plugins"><i class="bi bi-puzzle"></i><span class="nx-menu-label">All Plugins</span><span class="badge badge-soft-success">50</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/maps.html" data-title="Maps"><i class="bi bi-map"></i><span class="nx-menu-label">Maps</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/data-grids.html" data-title="Data Grids"><i class="bi bi-grid-3x3"></i><span class="nx-menu-label">Data Grids</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/media.html" data-title="Media &amp; Gallery"><i class="bi bi-images"></i><span class="nx-menu-label">Media &amp; Gallery</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/inputs.html" data-title="Advanced Inputs"><i class="bi bi-pencil-square"></i><span class="nx-menu-label">Advanced Inputs</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/documents.html" data-title="Documents &amp; Export"><i class="bi bi-filetype-pdf"></i><span class="nx-menu-label">Documents &amp; Export</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/ux.html" data-title="UX &amp; Onboarding"><i class="bi bi-stars"></i><span class="nx-menu-label">UX &amp; Onboarding</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/layout.html" data-title="Drag &amp; Drop Layout"><i class="bi bi-layout-wtf"></i><span class="nx-menu-label">Drag &amp; Drop Layout</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/utilities.html" data-title="Utilities"><i class="bi bi-tools"></i><span class="nx-menu-label">Utilities</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/diagrams.html" data-title="Diagrams"><i class="bi bi-diagram-3"></i><span class="nx-menu-label">Diagrams</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../plugins/org-chart.html" data-title="Org Chart"><i class="bi bi-diagram-2"></i><span class="nx-menu-label">Org Chart</span></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Layouts ===== -->
+      <div class="nx-menu-section" data-nx-section="layouts">
+        <button class="nx-menu-group" type="button" data-bs-toggle="collapse" data-bs-target="#nxSecLayouts" aria-expanded="false" aria-controls="nxSecLayouts">
+          <span class="nx-menu-group-text">Layouts</span><i class="bi bi-chevron-down nx-group-chevron"></i>
+        </button>
+        <div class="collapse nx-section-body" id="nxSecLayouts">
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../layouts/horizontal.html" data-title="Horizontal Menu"><i class="bi bi-distribute-horizontal"></i><span class="nx-menu-label">Horizontal Menu</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../layouts/fluid.html" data-title="Fluid Width"><i class="bi bi-arrows-angle-expand"></i><span class="nx-menu-label">Fluid Width</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../layouts/blank.html" data-title="Blank Layout"><i class="bi bi-square"></i><span class="nx-menu-label">Blank Layout</span></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Dev Tools ===== -->
+      <div class="nx-menu-section" data-nx-section="dev-tools">
+        <button class="nx-menu-group" type="button" data-bs-toggle="collapse" data-bs-target="#nxSecDevTools" aria-expanded="false" aria-controls="nxSecDevTools">
+          <span class="nx-menu-group-text">Dev Tools</span><i class="bi bi-chevron-down nx-group-chevron"></i>
+        </button>
+        <div class="collapse nx-section-body" id="nxSecDevTools">
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/roadmap.html" data-title="Roadmap"><i class="bi bi-signpost-split"></i><span class="nx-menu-label">Roadmap</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/activity.html" data-title="Activity"><i class="bi bi-activity"></i><span class="nx-menu-label">Activity</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/changelog.html" data-title="Changelog"><i class="bi bi-journal-code"></i><span class="nx-menu-label">Changelog</span></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Pages ===== -->
+      <div class="nx-menu-section" data-nx-section="pages">
+        <button class="nx-menu-group" type="button" data-bs-toggle="collapse" data-bs-target="#nxSecPages" aria-expanded="false" aria-controls="nxSecPages">
+          <span class="nx-menu-group-text">Pages</span><i class="bi bi-chevron-down nx-group-chevron"></i>
+        </button>
+        <div class="collapse nx-section-body" id="nxSecPages">
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/landing.html" data-title="Landing Page"><i class="bi bi-rocket-takeoff"></i><span class="nx-menu-label">Landing Page</span><span class="badge badge-soft-success">New</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/profile.html" data-title="Profile"><i class="bi bi-person-circle"></i><span class="nx-menu-label">Profile</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/pricing.html" data-title="Pricing"><i class="bi bi-tags"></i><span class="nx-menu-label">Pricing</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/payment.html" data-title="Payment"><i class="bi bi-wallet2"></i><span class="nx-menu-label">Payment</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/help-center.html" data-title="Help Center"><i class="bi bi-question-circle"></i><span class="nx-menu-label">Help Center</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/faq.html" data-title="FAQ"><i class="bi bi-patch-question"></i><span class="nx-menu-label">FAQ</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/timeline.html" data-title="Timeline"><i class="bi bi-clock-history"></i><span class="nx-menu-label">Timeline</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/starter.html" data-title="Starter Page"><i class="bi bi-file-earmark"></i><span class="nx-menu-label">Starter Page</span></a>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuAuth" role="button" aria-expanded="false" data-title="Auth">
+              <i class="bi bi-shield-lock"></i><span class="nx-menu-label">Auth</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuAuth">
+              <li><a class="nx-menu-link" href="../auth/login.html">Login</a></li>
+              <li><a class="nx-menu-link" href="../auth/register.html">Register</a></li>
+              <li><a class="nx-menu-link" href="../auth/verify-email.html">Verify Email</a></li>
+              <li><a class="nx-menu-link" href="../auth/forgot-password.html">Forgot Password</a></li>
+              <li><a class="nx-menu-link" href="../auth/reset-password.html">Reset Password</a></li>
+              <li><a class="nx-menu-link" href="../auth/lock-screen.html">Lock Screen</a></li>
+              <li><a class="nx-menu-link" href="../auth/two-factor.html">Two Factor</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuErrors" role="button" aria-expanded="false" data-title="Errors">
+              <i class="bi bi-exclamation-triangle"></i><span class="nx-menu-label">Errors</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuErrors">
+              <li><a class="nx-menu-link" href="../errors/401.html">401 Not Authorized</a></li>
+              <li><a class="nx-menu-link" href="../errors/404.html">404 Not Found</a></li>
+              <li><a class="nx-menu-link" href="../errors/500.html">500 Server Error</a></li>
+              <li><a class="nx-menu-link" href="../errors/maintenance.html">Maintenance</a></li>
+              <li><a class="nx-menu-link" href="../errors/coming-soon.html">Coming Soon</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuLevel" role="button" aria-expanded="false" data-title="Multi Level">
+              <i class="bi bi-list-nested"></i><span class="nx-menu-label">Multi Level</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuLevel">
+              <li><a class="nx-menu-link" href="../pages/level-two.html">Level 2</a></li>
+              <li class="nx-menu-item has-submenu">
+                <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuLevelDeep" role="button" aria-expanded="false" data-title="Level 2 with children">
+                  <span class="nx-menu-label">Level 2 &mdash; nested</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+                </a>
+                <ul class="collapse nx-submenu nx-submenu-deep" id="menuLevelDeep">
+                  <li><a class="nx-menu-link" href="../pages/level-three.html">Level 3</a></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== System ===== -->
+      <div class="nx-menu-section" data-nx-section="system">
+        <button class="nx-menu-group" type="button" data-bs-toggle="collapse" data-bs-target="#nxSecSystem" aria-expanded="false" aria-controls="nxSecSystem">
+          <span class="nx-menu-group-text">System</span><i class="bi bi-chevron-down nx-group-chevron"></i>
+        </button>
+        <div class="collapse nx-section-body" id="nxSecSystem">
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuUsers" role="button" aria-expanded="false" data-title="Users">
+              <i class="bi bi-people-fill"></i><span class="nx-menu-label">Users</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuUsers">
+              <li><a class="nx-menu-link" href="../pages/users.html">User List</a></li>
+              <li><a class="nx-menu-link" href="../pages/user-detail.html">User Detail</a></li>
+              <li><a class="nx-menu-link" href="../pages/teams.html">Teams</a></li>
+              <li><a class="nx-menu-link" href="../pages/projects.html">Projects</a></li>
+              <li><a class="nx-menu-link" href="../pages/connections.html">Connections</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item has-submenu">
+            <a class="nx-menu-link" data-bs-toggle="collapse" href="#menuRoles" role="button" aria-expanded="false" data-title="Roles &amp; Permissions">
+              <i class="bi bi-shield-check"></i><span class="nx-menu-label">Roles &amp; Permissions</span><i class="bi bi-chevron-right nx-menu-chevron"></i>
+            </a>
+            <ul class="collapse nx-submenu" id="menuRoles">
+              <li><a class="nx-menu-link" href="../pages/roles.html">Roles</a></li>
+              <li><a class="nx-menu-link" href="../pages/permissions.html">Permissions</a></li>
+            </ul>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/notifications.html" data-title="Notifications"><i class="bi bi-bell"></i><span class="nx-menu-label">Notifications</span><span class="badge badge-soft-danger">3</span></a>
+          </div>
+          <div class="nx-menu-item">
+            <a class="nx-menu-link" href="../pages/settings.html" data-title="Settings"><i class="bi bi-gear"></i><span class="nx-menu-label">Settings</span></a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ===== Sidebar footer ===== -->
+    <div class="nx-sidebar-foot">
+      <div class="nx-menu-item">
+        <a class="nx-menu-link" href="../pages/help-center.html" data-title="Documentation"><i class="bi bi-book"></i><span class="nx-menu-label">Documentation</span></a>
+      </div>
+      <div class="nx-sidebar-user">
+        <img src="https://i.pravatar.cc/80?img=12" alt="Aigars S.">
+        <span class="nx-user-meta">
+          <span class="nx-user-name d-block">Aigars S.</span>
+          <span class="nx-user-role">Admin</span>
+        </span>
+        <a href="../auth/login.html" aria-label="Logout"><i class="bi bi-box-arrow-right"></i></a>
+      </div>
+    </div>
+  </aside>
+  <div class="nx-sidebar-backdrop" id="nxSidebarBackdrop"></div>
+
+  <div class="nx-main">
+
+    <!-- ===== Header ===== -->
+    <header class="nx-header">
+      <button class="nx-icon-btn" id="nxSidebarToggle" type="button" aria-label="Toggle sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+
+      <button class="nx-search-trigger d-none d-md-flex" id="nxPaletteTrigger" type="button" aria-label="Open command palette">
+        <i class="bi bi-search"></i>
+        <span>Search anything&hellip;</span>
+        <span class="nx-kbd">&#8984;K</span>
+      </button>
+      <button class="nx-icon-btn d-md-none" id="nxPaletteTriggerSm" type="button" aria-label="Open command palette">
+        <i class="bi bi-search"></i>
+      </button>
+
+      <div class="ms-auto d-flex align-items-center gap-1">
+        <button class="btn btn-primary btn-sm d-none d-sm-inline-flex align-items-center gap-1 me-1" id="nxQuickAction" type="button">
+          <i class="bi bi-plus-lg"></i><span>New Order</span>
+        </button>
+
+        <button class="nx-icon-btn" id="nxThemeToggle" type="button" aria-label="Toggle dark mode">
+          <i class="bi bi-moon-stars"></i>
+        </button>
+
+        <button class="nx-icon-btn d-none d-md-inline-flex" id="nxFullscreen" type="button" aria-label="Toggle fullscreen">
+          <i class="bi bi-arrows-fullscreen"></i>
+        </button>
+
+        <!-- ===== Notifications dropdown ===== -->
+        <div class="dropdown">
+          <button class="nx-icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="nx-dot"></span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end nx-dropdown-notif">
+            <div class="nx-notif-head">
+              <h5 class="mb-0">Notifications</h5>
+              <a href="../pages/notifications.html" class="nx-link small">Mark all read</a>
+            </div>
+            <a class="nx-notif-item unread" href="../pages/notifications.html">
+              <span class="nx-notif-icon" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-rocket-takeoff"></i></span>
+              <span class="flex-grow-1">
+                <span class="nx-notif-title d-block">Deployment successful</span>
+                <span class="nx-notif-text">v2.4.1 was deployed to production without errors.</span>
+              </span>
+              <span class="nx-notif-time">2m ago</span>
+            </a>
+            <a class="nx-notif-item unread" href="../pages/notifications.html">
+              <span class="nx-notif-icon" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-bag-check"></i></span>
+              <span class="flex-grow-1">
+                <span class="nx-notif-title d-block">New order received</span>
+                <span class="nx-notif-text">#ORD-1042 &mdash; Pro Plan (annual) by Maria Gomez.</span>
+              </span>
+              <span class="nx-notif-time">14m ago</span>
+            </a>
+            <a class="nx-notif-item unread" href="../pages/notifications.html">
+              <span class="nx-notif-icon" style="color:var(--nx-warning);background:var(--nx-warning-subtle)"><i class="bi bi-exclamation-triangle"></i></span>
+              <span class="flex-grow-1">
+                <span class="nx-notif-title d-block">High memory usage</span>
+                <span class="nx-notif-text">Server eu-west-1 has exceeded 85% memory for 10 minutes.</span>
+              </span>
+              <span class="nx-notif-time">1h ago</span>
+            </a>
+            <a class="nx-notif-item" href="../pages/notifications.html">
+              <span class="nx-notif-icon" style="color:var(--nx-info);background:var(--nx-info-subtle)"><i class="bi bi-chat-dots"></i></span>
+              <span class="flex-grow-1">
+                <span class="nx-notif-title d-block">New comment</span>
+                <span class="nx-notif-text">Sarah commented on the Q3 roadmap document.</span>
+              </span>
+              <span class="nx-notif-time">3h ago</span>
+            </a>
+            <a class="nx-notif-foot nx-link" href="../pages/notifications.html">View all notifications</a>
+          </div>
+        </div>
+
+        <!-- ===== User dropdown ===== -->
+        <div class="dropdown">
+          <a class="nx-header-user" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
+            <img src="https://i.pravatar.cc/80?img=12" alt="Aigars S.">
+            <span class="nx-user-meta-wrap d-none d-lg-block">
+              <span class="nx-user-name d-block">Aigars S.</span>
+              <span class="nx-user-role">Admin</span>
+            </span>
+          </a>
+          <div class="dropdown-menu dropdown-menu-end" style="min-width:200px">
+            <a class="dropdown-item" href="../pages/profile.html"><i class="bi bi-person"></i>Profile</a>
+            <a class="dropdown-item" href="../pages/settings.html"><i class="bi bi-gear"></i>Settings</a>
+            <a class="dropdown-item" href="../commerce/invoices.html"><i class="bi bi-credit-card"></i>Billing</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="../auth/lock-screen.html"><i class="bi bi-lock"></i>Lock screen</a>
+            <a class="dropdown-item text-danger" href="../auth/login.html"><i class="bi bi-box-arrow-right"></i>Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="nx-content" id="nxContent" tabindex="-1">
+      <!-- ===== Page header ===== -->
+      <div class="nx-page-head d-flex flex-wrap align-items-end gap-3">
+        <div class="me-auto">
+          <nav class="nx-breadcrumb" aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+              <li class="breadcrumb-item">Commerce</li>
+              <li class="breadcrumb-item active" aria-current="page">Products</li>
+            </ol>
+          </nav>
+          <h1>Products</h1>
+          <p class="text-muted mb-0">Catalogue with grid and table views.</p>
+        </div>
+        <a href="#" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1"><i class="bi bi-plus-lg"></i>Add Product</a>
+      </div>
+
+      <div class="row g-4">
+
+        <!-- ===== Filter sidebar ===== -->
+        <div class="col-xl-3">
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Filters</h2><button class="btn btn-xs btn-soft-secondary ms-auto" type="button" id="clearFilters">Clear</button></div>
+            <div class="card-body">
+              <h3 class="h6 mb-2">Category</h3>
+              <div class="form-check"><input class="form-check-input cat-filter" type="checkbox" value="Audio" id="cAudio" checked><label class="form-check-label" for="cAudio">Audio <span class="text-muted">(3)</span></label></div>
+              <div class="form-check"><input class="form-check-input cat-filter" type="checkbox" value="Wearables" id="cWear" checked><label class="form-check-label" for="cWear">Wearables <span class="text-muted">(1)</span></label></div>
+              <div class="form-check"><input class="form-check-input cat-filter" type="checkbox" value="Accessories" id="cAcc" checked><label class="form-check-label" for="cAcc">Accessories <span class="text-muted">(3)</span></label></div>
+              <div class="form-check mb-4"><input class="form-check-input cat-filter" type="checkbox" value="Home" id="cHome" checked><label class="form-check-label" for="cHome">Home <span class="text-muted">(1)</span></label></div>
+
+              <h3 class="h6 mb-3">Price range</h3>
+              <div id="priceSlider" class="mb-2"></div>
+              <div class="d-flex justify-content-between small text-muted mb-4"><span id="priceMin">$0</span><span id="priceMax">$300</span></div>
+
+              <h3 class="h6 mb-2">Rating</h3>
+              <div class="form-check"><input class="form-check-input" type="radio" name="rating" id="r4" checked><label class="form-check-label nx-rating" for="r4">&#9733;&#9733;&#9733;&#9733;&#9734; <span class="text-muted small">&amp; up</span></label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="rating" id="r3"><label class="form-check-label nx-rating" for="r3">&#9733;&#9733;&#9733;&#9734;&#9734; <span class="text-muted small">&amp; up</span></label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="rating" id="rAll"><label class="form-check-label small text-muted" for="rAll">All ratings</label></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Products ===== -->
+        <div class="col-xl-9">
+          <div class="card mb-4">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+              <span class="text-muted small me-auto"><strong id="productCount">8</strong> products found</span>
+              <select class="form-select form-select-sm" style="width:180px" id="sortBy" aria-label="Sort by">
+                <option>Most popular</option><option>Price: low to high</option><option>Price: high to low</option><option>Newest first</option>
+              </select>
+              <div class="btn-group btn-group-sm" role="group" aria-label="View mode">
+                <button class="btn btn-outline-primary active" type="button" id="pvGrid" aria-label="Grid view"><i class="bi bi-grid-3x3-gap"></i></button>
+                <button class="btn btn-outline-primary" type="button" id="pvTable" aria-label="Table view"><i class="bi bi-list-ul"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grid view -->
+          <div class="row g-4" id="productGrid">
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Audio" data-price="129">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="../assets/img/products/p1.svg" alt="Aurora Wireless Headphones"><span class="badge badge-soft-danger position-absolute top-0 start-0 m-2">-20%</span>
+                  <div class="nx-pc-overlay"><a href="../commerce/product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Audio</div>
+                <a href="../commerce/product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Aurora Wireless Headphones</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9733; <span class="text-muted small">(412)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$129</strong><span class="nx-price-old">$159</span></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Wearables" data-price="249">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="../assets/img/products/p2.svg" alt="Nova Smartwatch">
+                  <div class="nx-pc-overlay"><a href="../commerce/product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Wearables</div>
+                <a href="../commerce/product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Nova Smartwatch</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9734; <span class="text-muted small">(318)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$249</strong></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Audio" data-price="89">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="../assets/img/products/p3.svg" alt="Pulse Portable Speaker"><span class="badge badge-soft-warning position-absolute top-0 start-0 m-2">Low stock</span>
+                  <div class="nx-pc-overlay"><a href="../commerce/product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Audio</div>
+                <a href="../commerce/product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Pulse Portable Speaker</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9734; <span class="text-muted small">(286)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$89</strong><span class="nx-price-old">$109</span></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Accessories" data-price="159">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="../assets/img/products/p4.svg" alt="Orbit Mechanical Keyboard">
+                  <div class="nx-pc-overlay"><a href="../commerce/product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Accessories</div>
+                <a href="../commerce/product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Orbit Mechanical Keyboard</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9733; <span class="text-muted small">(241)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$159</strong></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Accessories" data-price="69">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="../assets/img/products/p5.svg" alt="Zenith Ergonomic Mouse">
+                  <div class="nx-pc-overlay"><a href="../commerce/product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Accessories</div>
+                <a href="../commerce/product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Zenith Ergonomic Mouse</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9734;&#9734; <span class="text-muted small">(154)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$69</strong></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Home" data-price="119">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="../assets/img/products/p6.svg" alt="Lumen Desk Lamp"><span class="badge badge-soft-success position-absolute top-0 start-0 m-2">New</span>
+                  <div class="nx-pc-overlay"><a href="../commerce/product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Home</div>
+                <a href="../commerce/product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Lumen Desk Lamp</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9734; <span class="text-muted small">(97)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$119</strong></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Audio" data-price="199">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="../assets/img/products/p7.svg" alt="Vertex Streaming Camera">
+                  <div class="nx-pc-overlay"><a href="../commerce/product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Audio</div>
+                <a href="../commerce/product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Vertex Streaming Camera</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9734; <span class="text-muted small">(63)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$199</strong></div>
+              </div></div>
+            </div>
+            <div class="col-lg-4 col-sm-6 product-item" data-cat="Accessories" data-price="89">
+              <div class="card nx-product-card nx-card-lift h-100"><div class="card-body">
+                <div class="nx-pc-img"><img src="../assets/img/products/p8.svg" alt="Atlas Travel Backpack">
+                  <div class="nx-pc-overlay"><a href="../commerce/product-detail.html" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a><button class="btn btn-sm btn-light" type="button" aria-label="Edit"><i class="bi bi-pencil"></i></button></div>
+                </div>
+                <div class="small text-muted mt-3">Accessories</div>
+                <a href="../commerce/product-detail.html" class="fw-semibold d-block text-decoration-none" style="color:var(--nx-text)">Atlas Travel Backpack</a>
+                <div class="nx-rating my-1">&#9733;&#9733;&#9733;&#9733;&#9733; <span class="text-muted small">(208)</span></div>
+                <div class="d-flex align-items-center gap-2"><strong class="h4 mb-0">$89</strong></div>
+              </div></div>
+            </div>
+          </div>
+
+          <!-- Table view -->
+          <div class="card d-none" id="productTable">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Rating</th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="../assets/img/products/p1.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Aurora Wireless Headphones</span></div></td><td>Audio</td><td class="nx-num">$129</td><td><span class="badge badge-soft-success">82 in stock</span></td><td class="nx-rating">&#9733; 4.9</td><td class="text-end"><a href="../commerce/product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="../assets/img/products/p2.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Nova Smartwatch</span></div></td><td>Wearables</td><td class="nx-num">$249</td><td><span class="badge badge-soft-warning">46 in stock</span></td><td class="nx-rating">&#9733; 4.4</td><td class="text-end"><a href="../commerce/product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="../assets/img/products/p3.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Pulse Portable Speaker</span></div></td><td>Audio</td><td class="nx-num">$89</td><td><span class="badge badge-soft-danger">12 in stock</span></td><td class="nx-rating">&#9733; 4.2</td><td class="text-end"><a href="../commerce/product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="../assets/img/products/p4.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Orbit Mechanical Keyboard</span></div></td><td>Accessories</td><td class="nx-num">$159</td><td><span class="badge badge-soft-success">68 in stock</span></td><td class="nx-rating">&#9733; 4.8</td><td class="text-end"><a href="../commerce/product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="../assets/img/products/p5.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Zenith Ergonomic Mouse</span></div></td><td>Accessories</td><td class="nx-num">$69</td><td><span class="badge badge-soft-success">140 in stock</span></td><td class="nx-rating">&#9733; 3.9</td><td class="text-end"><a href="../commerce/product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="../assets/img/products/p6.svg" width="40" height="40" alt="" class="rounded"><span class="fw-semibold">Lumen Desk Lamp</span></div></td><td>Home</td><td class="nx-num">$119</td><td><span class="badge badge-soft-success">54 in stock</span></td><td class="nx-rating">&#9733; 4.3</td><td class="text-end"><a href="../commerce/product-detail.html" class="btn btn-xs btn-soft-primary">View</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ===== Footer ===== -->
+    <footer class="nx-footer">
+      <div>&copy; 2026 NexaDash &mdash; Crafted by Nexa</div>
+      <div class="d-flex gap-3">
+        <a href="../pages/faq.html">Docs</a>
+        <a href="../pages/faq.html">Support</a>
+        <a href="../pages/pricing.html">License</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/simplebar@6.2.7/dist/simplebar.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nouislider@15.8.1/dist/nouislider.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/pages/products.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <span class="nx-icon-sq primary mx-auto mb-3" style="width:56px;height:56px;font-size:24px"><i class="bi bi-2-circle"></i></span>
+          <h2 class="h4">You are on a second-level page</h2>
+          <p class="text-muted mb-4" style="max-width:520px;margin-inline:auto">
+            This page sits one level inside the <strong>Multi Level</strong> menu. Open the same menu again and you will find
+            a nested entry that goes one level deeper.
+          </p>
+          <a class="btn btn-primary" href="page-level-three.html">Go to the level 3 page<i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header"><h2 class="card-title h4">How nesting works</h2></div>
+        <div class="card-body">
+          <p class="text-muted">A submenu item can itself be a <code>.nx-menu-item.has-submenu</code>, holding another
+            <code>.nx-submenu</code>. The deeper list gets <code>.nx-submenu-deep</code>, which only shifts the indentation —
+            all the open/close behaviour is Bootstrap's collapse, so no extra JavaScript is involved.</p>
+          <pre class="p-3 rounded mb-0" style="background:var(--nx-body-bg);border:1px solid var(--nx-border);font-size:13px;overflow:auto"><code>&lt;li class="nx-menu-item has-submenu"&gt;
+  &lt;a class="nx-menu-link" data-bs-toggle="collapse" href="#menuLevelDeep"&gt;
+    &lt;span class="nx-menu-label"&gt;Level 2 &amp;mdash; nested&lt;/span&gt;
+    &lt;i class="bi bi-chevron-right nx-menu-chevron"&gt;&lt;/i&gt;
+  &lt;/a&gt;
+  &lt;ul class="collapse nx-submenu nx-submenu-deep" id="menuLevelDeep"&gt;
+    &lt;li&gt;&lt;a class="nx-menu-link" href="page-level-three.html"&gt;Level 3&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/li&gt;</code></pre>
+        </div>
+      </div>

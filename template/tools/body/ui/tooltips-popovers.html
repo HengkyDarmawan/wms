@@ -1,0 +1,56 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Tooltip directions</h2></div><div class="card-body nx-demo-row">
+          <button class="btn btn-soft-primary" type="button" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Tooltip on top">Top</button>
+          <button class="btn btn-soft-primary" type="button" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Tooltip on right">Right</button>
+          <button class="btn btn-soft-primary" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Tooltip on bottom">Bottom</button>
+          <button class="btn btn-soft-primary" type="button" data-bs-toggle="tooltip" data-bs-placement="left" data-bs-title="Tooltip on left">Left</button>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Tooltips on anything</h2></div><div class="card-body nx-demo-row">
+          <button class="nx-icon-btn" type="button" data-bs-toggle="tooltip" data-bs-title="Edit item" aria-label="Edit"><i class="bi bi-pencil"></i></button>
+          <button class="nx-icon-btn" type="button" data-bs-toggle="tooltip" data-bs-title="Duplicate" aria-label="Duplicate"><i class="bi bi-copy"></i></button>
+          <button class="nx-icon-btn" type="button" data-bs-toggle="tooltip" data-bs-title="Archive" aria-label="Archive"><i class="bi bi-archive"></i></button>
+          <span class="nx-avatar" data-bs-toggle="tooltip" data-bs-title="Sarah Chen — Head of Product"><img src="https://i.pravatar.cc/64?img=47" alt=""></span>
+          <a href="#" data-bs-toggle="tooltip" data-bs-title="Opens the documentation">Inline link</a>
+          <span class="badge badge-soft-warning" data-bs-toggle="tooltip" data-bs-title="Last synced 4 minutes ago">Stale</span>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Popover directions</h2></div><div class="card-body nx-demo-row">
+          <button class="btn btn-soft-secondary" type="button" data-bs-toggle="popover" data-bs-placement="top" data-bs-title="Top popover" data-bs-content="Popovers hold more text than a tooltip and stay until dismissed.">Top</button>
+          <button class="btn btn-soft-secondary" type="button" data-bs-toggle="popover" data-bs-placement="right" data-bs-title="Right popover" data-bs-content="Anchored to the right of the trigger.">Right</button>
+          <button class="btn btn-soft-secondary" type="button" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-title="Bottom popover" data-bs-content="Anchored below the trigger.">Bottom</button>
+          <button class="btn btn-soft-secondary" type="button" data-bs-toggle="popover" data-bs-placement="left" data-bs-title="Left popover" data-bs-content="Anchored to the left of the trigger.">Left</button>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Rich &amp; dismissible</h2></div><div class="card-body nx-demo-row">
+          <button class="btn btn-primary" type="button" data-bs-toggle="popover" data-bs-html="true" data-bs-title="Plan details"
+            data-bs-content="&lt;p class='small mb-2'&gt;The Pro plan includes:&lt;/p&gt;&lt;ul class='small mb-0 ps-3'&gt;&lt;li&gt;Unlimited projects&lt;/li&gt;&lt;li&gt;Priority support&lt;/li&gt;&lt;li&gt;API access&lt;/li&gt;&lt;/ul&gt;">HTML content</button>
+          <button class="btn btn-soft-primary" type="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Dismiss on next click" data-bs-content="Click anywhere outside to close this popover.">Dismiss on click</button>
+          <button class="btn btn-soft-info" type="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-title="Hover trigger" data-bs-content="Shown while the pointer is over the trigger.">Hover trigger</button>
+        </div></div></div>
+
+        <div class="col-12"><div class="card"><div class="card-header"><h2 class="card-title h4">In a form context</h2></div><div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label d-flex align-items-center gap-1" for="tpApi">API key
+                <i class="bi bi-question-circle text-muted" data-bs-toggle="tooltip" data-bs-title="Found under Settings → API"></i>
+              </label>
+              <input class="form-control" id="tpApi" value="nx_live_8f42••••••••" readonly>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label d-flex align-items-center gap-1" for="tpRegion">Region
+                <i class="bi bi-info-circle text-muted" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-title="Data residency" data-bs-content="The region cannot be changed after the workspace is created."></i>
+              </label>
+              <select class="form-select" id="tpRegion"><option>eu-west-1</option><option>us-east-1</option><option>ap-southeast-1</option></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label d-flex align-items-center gap-1" for="tpRate">Rate limit
+                <i class="bi bi-question-circle text-muted" data-bs-toggle="tooltip" data-bs-title="Requests per minute per key"></i>
+              </label>
+              <input class="form-control" id="tpRate" value="600">
+            </div>
+          </div>
+        </div></div></div>
+
+      </div>

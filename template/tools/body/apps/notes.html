@@ -1,0 +1,65 @@
+      <div class="row g-4">
+
+        <div class="col-xl-3">
+          <div class="card mb-4">
+            <div class="card-body">
+              <button class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-1" id="noteNew" type="button"><i class="bi bi-plus-lg"></i>New note</button>
+            </div>
+          </div>
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Labels</h2></div>
+            <div class="card-body py-2">
+              <button class="nx-mail-folder w-100 border-0 bg-transparent text-start active note-filter" data-label="" type="button"><i class="bi bi-journal-text"></i>All notes<span class="badge badge-soft-secondary ms-auto" id="cntAll">0</span></button>
+              <button class="nx-mail-folder w-100 border-0 bg-transparent text-start note-filter" data-label="Work" type="button"><span class="nx-mail-label-dot" style="background:var(--nx-chart-1)"></span>Work<span class="badge badge-soft-secondary ms-auto" id="cntWork">0</span></button>
+              <button class="nx-mail-folder w-100 border-0 bg-transparent text-start note-filter" data-label="Personal" type="button"><span class="nx-mail-label-dot" style="background:var(--nx-chart-5)"></span>Personal<span class="badge badge-soft-secondary ms-auto" id="cntPersonal">0</span></button>
+              <button class="nx-mail-folder w-100 border-0 bg-transparent text-start note-filter" data-label="Ideas" type="button"><span class="nx-mail-label-dot" style="background:var(--nx-chart-3)"></span>Ideas<span class="badge badge-soft-secondary ms-auto" id="cntIdeas">0</span></button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Quick tasks</h2><span class="badge badge-soft-primary ms-auto" id="taskLeft">0 left</span></div>
+            <div class="card-body">
+              <div class="input-group input-group-sm mb-3">
+                <input class="form-control" id="taskInput" placeholder="Add a task and press enter" aria-label="New task">
+                <button class="btn btn-primary" id="taskAdd" type="button"><i class="bi bi-plus-lg"></i></button>
+              </div>
+              <ul class="list-unstyled mb-0" id="taskList"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-9">
+          <div class="card mb-4">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+              <div class="input-group" style="max-width:320px">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input class="form-control" type="search" id="noteSearch" placeholder="Search notes&hellip;" aria-label="Search notes">
+              </div>
+              <span class="small text-muted ms-auto"><strong id="noteCount">0</strong> notes</span>
+            </div>
+          </div>
+          <div class="row g-4" id="noteGrid"></div>
+        </div>
+      </div>
+
+      <!-- ===== Note editor ===== -->
+      <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="noteModalTitle">New note</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            <div class="modal-body">
+              <input type="hidden" id="noteId">
+              <div class="mb-3"><label class="form-label" for="noteTitle">Title</label><input class="form-control" id="noteTitle" placeholder="What is this about?"></div>
+              <div class="mb-3"><label class="form-label" for="noteBody">Note</label><textarea class="form-control" id="noteBody" rows="6" placeholder="Write it down before you forget it&hellip;"></textarea></div>
+              <div class="row g-3">
+                <div class="col-md-6"><label class="form-label" for="noteLabel">Label</label>
+                  <select class="form-select" id="noteLabel"><option>Work</option><option>Personal</option><option>Ideas</option></select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                  <div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="notePinned"><label class="form-check-label" for="notePinned">Pin to the top</label></div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-soft-secondary" data-bs-dismiss="modal" type="button">Cancel</button><button class="btn btn-primary" id="noteSave" type="button">Save note</button></div>
+          </div>
+        </div>
+      </div>

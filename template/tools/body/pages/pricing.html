@@ -1,0 +1,127 @@
+      <!-- ===== Billing toggle ===== -->
+      <div class="text-center mb-4">
+        <div class="d-inline-flex align-items-center gap-3">
+          <span class="fw-semibold" id="labelMonthly">Monthly</span>
+          <div class="form-check form-switch mb-0" style="font-size:1.4rem">
+            <input class="form-check-input" type="checkbox" role="switch" id="billingToggle" checked aria-label="Toggle annual billing">
+          </div>
+          <span class="fw-semibold" id="labelAnnual">Annual</span>
+          <span class="badge badge-soft-success">Save 20%</span>
+        </div>
+      </div>
+
+      <!-- ===== Plans ===== -->
+      <div class="row g-4 justify-content-center mb-5">
+        <div class="col-lg-4 col-md-6">
+          <div class="card nx-price-card h-100">
+            <div class="card-body text-center d-flex flex-column">
+              <span class="nx-icon-sq secondary mx-auto mb-3"><i class="bi bi-rocket"></i></span>
+              <h2 class="h4">Starter</h2>
+              <p class="text-muted small">For individuals and small teams getting started.</p>
+              <div class="nx-price-value my-2">$<span class="price" data-monthly="29" data-annual="23">23</span></div>
+              <p class="text-muted small mb-4">per user / month, <span class="period">billed annually</span></p>
+              <div class="text-start flex-grow-1 mb-4">
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Up to 9 users</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>3 projects</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>10 GB storage</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Community support</div>
+                <div class="nx-price-feature off"><i class="bi bi-dash-lg"></i>API access</div>
+                <div class="nx-price-feature off"><i class="bi bi-dash-lg"></i>SAML SSO</div>
+              </div>
+              <button class="btn btn-soft-primary w-100" type="button">Start free trial</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+          <div class="card nx-price-card popular h-100">
+            <span class="badge bg-primary nx-popular-badge">Most popular</span>
+            <div class="card-body text-center d-flex flex-column">
+              <span class="nx-icon-sq primary mx-auto mb-3"><i class="bi bi-lightning-charge"></i></span>
+              <h2 class="h4">Pro</h2>
+              <p class="text-muted small">For growing teams that need control and insight.</p>
+              <div class="nx-price-value my-2">$<span class="price" data-monthly="59" data-annual="47">47</span></div>
+              <p class="text-muted small mb-4">per user / month, <span class="period">billed annually</span></p>
+              <div class="text-start flex-grow-1 mb-4">
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Up to 49 users</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Unlimited projects</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>200 GB storage</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Priority support</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Full API access</div>
+                <div class="nx-price-feature off"><i class="bi bi-dash-lg"></i>SAML SSO</div>
+              </div>
+              <button class="btn btn-primary w-100" type="button">Choose Pro</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+          <div class="card nx-price-card h-100">
+            <div class="card-body text-center d-flex flex-column">
+              <span class="nx-icon-sq success mx-auto mb-3"><i class="bi bi-building"></i></span>
+              <h2 class="h4">Enterprise</h2>
+              <p class="text-muted small">For organisations with compliance requirements.</p>
+              <div class="nx-price-value my-2">Custom</div>
+              <p class="text-muted small mb-4">annual contract, <span class="period">billed annually</span></p>
+              <div class="text-start flex-grow-1 mb-4">
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Unlimited users</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Unlimited projects</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Unlimited storage</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Dedicated CSM &amp; 4h SLA</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>Full API access</div>
+                <div class="nx-price-feature"><i class="bi bi-check-lg text-success"></i>SAML SSO &amp; audit logs</div>
+              </div>
+              <button class="btn btn-soft-primary w-100" type="button">Contact sales</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Comparison ===== -->
+      <div class="card mb-4">
+        <div class="card-header"><h2 class="card-title h4">Compare all features</h2></div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead><tr><th style="min-width:240px">Feature</th><th class="text-center">Starter</th><th class="text-center">Pro</th><th class="text-center">Enterprise</th></tr></thead>
+            <tbody>
+              <tr><td colspan="4" class="fw-semibold" style="background:var(--nx-body-bg)">Usage</td></tr>
+              <tr><td>Users included</td><td class="text-center nx-num">9</td><td class="text-center nx-num">49</td><td class="text-center">Unlimited</td></tr>
+              <tr><td>Projects</td><td class="text-center nx-num">3</td><td class="text-center">Unlimited</td><td class="text-center">Unlimited</td></tr>
+              <tr><td>Storage</td><td class="text-center">10 GB</td><td class="text-center">200 GB</td><td class="text-center">Unlimited</td></tr>
+              <tr><td>API calls per month</td><td class="text-center nx-num">50,000</td><td class="text-center nx-num">2,000,000</td><td class="text-center">Custom</td></tr>
+              <tr><td>Data retention</td><td class="text-center">3 months</td><td class="text-center">13 months</td><td class="text-center">36 months</td></tr>
+
+              <tr><td colspan="4" class="fw-semibold" style="background:var(--nx-body-bg)">Features</td></tr>
+              <tr><td>Dashboards &amp; charts</td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td></tr>
+              <tr><td>Kanban &amp; calendar</td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td></tr>
+              <tr><td>Custom roles (RBAC)</td><td class="text-center"><i class="bi bi-dash-lg text-muted"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td></tr>
+              <tr><td>Webhooks</td><td class="text-center"><i class="bi bi-dash-lg text-muted"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td></tr>
+              <tr><td>SAML SSO &amp; SCIM</td><td class="text-center"><i class="bi bi-dash-lg text-muted"></i></td><td class="text-center"><i class="bi bi-dash-lg text-muted"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td></tr>
+              <tr><td>Audit logs</td><td class="text-center"><i class="bi bi-dash-lg text-muted"></i></td><td class="text-center"><i class="bi bi-dash-lg text-muted"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td></tr>
+
+              <tr><td colspan="4" class="fw-semibold" style="background:var(--nx-body-bg)">Support</td></tr>
+              <tr><td>Community forum</td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td></tr>
+              <tr><td>Email support</td><td class="text-center">48h</td><td class="text-center">12h</td><td class="text-center">4h SLA</td></tr>
+              <tr><td>Dedicated CSM</td><td class="text-center"><i class="bi bi-dash-lg text-muted"></i></td><td class="text-center"><i class="bi bi-dash-lg text-muted"></i></td><td class="text-center"><i class="bi bi-check-lg text-success"></i></td></tr>
+              <tr><td>Onboarding &amp; migration</td><td class="text-center"><i class="bi bi-dash-lg text-muted"></i></td><td class="text-center">Paid add-on</td><td class="text-center">Included</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== FAQ ===== -->
+      <div class="card">
+        <div class="card-header"><h2 class="card-title h4">Pricing questions</h2></div>
+        <div class="card-body">
+          <div class="accordion accordion-flush" id="pricingFaq">
+            <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#pf1">Can I change plans mid-cycle?</button></h3>
+              <div id="pf1" class="accordion-collapse collapse" data-bs-parent="#pricingFaq"><div class="accordion-body text-muted">Yes. Upgrades take effect immediately and are pro-rated; downgrades apply at the end of your current period.</div></div></div>
+            <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#pf2">What happens when I exceed my seat count?</button></h3>
+              <div id="pf2" class="accordion-collapse collapse" data-bs-parent="#pricingFaq"><div class="accordion-body text-muted">Extra seats are billed pro-rata at your plan's per-seat rate. You are never blocked from inviting someone.</div></div></div>
+            <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#pf3">Do you offer refunds?</button></h3>
+              <div id="pf3" class="accordion-collapse collapse" data-bs-parent="#pricingFaq"><div class="accordion-body text-muted">Annual plans can be refunded pro-rata within the first 30 days. Monthly plans are not refundable but can be cancelled at any time.</div></div></div>
+            <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#pf4">Is there a discount for non-profits?</button></h3>
+              <div id="pf4" class="accordion-collapse collapse" data-bs-parent="#pricingFaq"><div class="accordion-body text-muted">Registered non-profits and educational institutions receive 50% off any plan. Contact sales with your documentation.</div></div></div>
+          </div>
+        </div>
+      </div>

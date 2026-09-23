@@ -4,7 +4,7 @@
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
-        <mxCell id="pool" value="Alur 7 — Aset dipinjamkan: keluar, jatuh tempo, kembali, hilang (draf berdasarkan default A-29, A-38)" style="swimlane;html=1;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="pool" value="Alur 7 — Aset dipinjamkan: keluar, jatuh tempo, kembali, hilang (draf berdasarkan default A-29, A-38, A-66)" style="swimlane;html=1;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="40" y="40" width="2520" height="780" as="geometry"/>
         </mxCell>
         <mxCell id="lane0" value="Pemohon / PIC Proyek" style="swimlane;html=1;startSize=30;horizontal=0;collapsible=0;fontStyle=1;" vertex="1" parent="pool">
@@ -25,7 +25,7 @@
         <mxCell id="s" value="Baris REQ &#x27;Pinjam&#x27; disetujui (alur 1)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=8;strokeColor=#2E7D32;fillColor=#D5E8D4;" vertex="1" parent="lane0">
           <mxGeometry x="139" y="54" width="42" height="42" as="geometry"/>
         </mxCell>
-        <mxCell id="t1" value="Picking serial aset; catat kondisi &amp; foto keluar; tanggal kembali" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane1">
+        <mxCell id="t1" value="Picking serial aset; catat kondisi, foto keluar, pembacaan meter (jam/km); tanggal kembali" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane1">
           <mxGeometry x="285" y="42" width="150" height="66" as="geometry"/>
         </mxCell>
         <mxCell id="t2" value="Kirim &amp; bukti terima (alur 1)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane2">
@@ -46,13 +46,13 @@
         <mxCell id="t5" value="Ajukan RET aset (alur 4)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane0">
           <mxGeometry x="1485" y="42" width="150" height="66" as="geometry"/>
         </mxCell>
-        <mxCell id="t6" value="Pemeriksaan: grade A–D + foto + catatan" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane1">
+        <mxCell id="t6" value="Pemeriksaan: baca meter kembali; grade A–D + skor kondisi % + foto + catatan komponen" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane1">
           <mxGeometry x="1685" y="42" width="150" height="66" as="geometry"/>
         </mxCell>
         <mxCell id="g3" value="Grade?" style="rhombus;whiteSpace=wrap;html=1;fontSize=9;strokeColor=#B8860B;fillColor=#FFF2CC;" vertex="1" parent="lane4">
           <mxGeometry x="1932" y="47" width="56" height="56" as="geometry"/>
         </mxCell>
-        <mxCell id="t7" value="State available; asset_returned dengan usage_days" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane4">
+        <mxCell id="t7" value="State available; asset_returned dengan usage_days, jam pakai, skor; hitung sisa umur %, peringatan bila &lt; ambang" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane4">
           <mxGeometry x="2085" y="42" width="150" height="66" as="geometry"/>
         </mxCell>
         <mxCell id="t8" value="State maintenance / damaged; asset_lost_or_damaged → Akuntansi (ganti rugi)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane4">

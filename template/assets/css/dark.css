@@ -1,0 +1,470 @@
+/* ============================================================
+   NexaDash — Override dark mode untuk library pihak ketiga:
+   DataTables, Select2, Flatpickr, Quill, Dropzone, FullCalendar,
+   SweetAlert2, noUiSlider. Token warna dari variables.css.
+   ============================================================ */
+
+/* ===================== DataTables ===================== */
+div.dt-container .dt-search input,
+div.dt-container .dt-length select {
+  background: var(--nx-card-bg);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-sm);
+  color: var(--nx-text-body);
+  padding: 6px 12px;
+  font-size: 13px;
+}
+div.dt-container .dt-info,
+div.dt-container .dt-length,
+div.dt-container .dt-search { color: var(--nx-text-muted); font-size: 13px; }
+div.dt-container .dt-paging .dt-paging-button {
+  border-radius: var(--nx-radius-sm) !important;
+  color: var(--nx-text-body) !important;
+}
+div.dt-container .dt-paging .dt-paging-button.current {
+  background: var(--nx-primary) !important;
+  border-color: var(--nx-primary) !important;
+  color: #fff !important;
+}
+table.dataTable { border-color: var(--nx-border) !important; }
+table.dataTable > tbody > tr.selected > * {
+  box-shadow: inset 0 0 0 9999px var(--nx-primary-subtle) !important;
+  color: var(--nx-text-body) !important;
+}
+/* Tombol export bawaan DataTables memakai gaya abu-abu sendiri — samakan
+   dengan .btn-soft-secondary agar konsisten dengan tombol lain di template. */
+div.dt-container .dt-buttons { gap: 6px; display: inline-flex; flex-wrap: wrap; }
+div.dt-container .dt-buttons .btn,
+div.dt-container .dt-buttons .dt-button {
+  margin: 0;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--nx-secondary);
+  background: var(--nx-secondary-subtle);
+  background-image: none;
+  border: 0;
+  border-radius: var(--nx-radius-sm);
+  box-shadow: none;
+}
+div.dt-container .dt-buttons .btn:hover,
+div.dt-container .dt-buttons .dt-button:hover {
+  color: #fff;
+  background: var(--nx-secondary);
+  background-image: none;
+  border: 0;
+}
+div.dt-container .dt-buttons .dt-button-down-arrow { opacity: .6; }
+div.dt-button-collection {
+  background: var(--nx-card-bg);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius);
+  box-shadow: var(--nx-shadow-lift);
+  padding: 8px;
+}
+div.dt-button-collection .dt-button {
+  color: var(--nx-text-body) !important;
+  background: transparent !important;
+  text-align: left;
+  width: 100%;
+}
+div.dt-button-collection .dt-button:hover,
+div.dt-button-collection .dt-button.dt-button-active {
+  background: var(--nx-primary-subtle) !important;
+  color: var(--nx-primary) !important;
+}
+
+/* ===================== Select2 ===================== */
+.select2-container--bootstrap-5 .select2-selection {
+  background-color: var(--nx-card-bg);
+  border-color: var(--nx-border);
+  color: var(--nx-text-body);
+  border-radius: var(--nx-radius-sm);
+}
+.select2-container--bootstrap-5 .select2-dropdown {
+  background-color: var(--nx-card-bg);
+  border-color: var(--nx-border);
+  border-radius: var(--nx-radius-sm);
+}
+.select2-container--bootstrap-5 .select2-dropdown .select2-results__option { color: var(--nx-text-body); }
+.select2-container--bootstrap-5 .select2-dropdown .select2-results__option--highlighted {
+  background-color: var(--nx-primary-subtle);
+  color: var(--nx-primary);
+}
+.select2-container--bootstrap-5 .select2-dropdown .select2-search .select2-search__field {
+  background: var(--nx-card-bg);
+  border-color: var(--nx-border);
+  color: var(--nx-text-body);
+}
+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+  background: var(--nx-primary-subtle);
+  border-color: transparent;
+  color: var(--nx-primary);
+}
+.select2-container--bootstrap-5 .select2-selection__rendered { color: var(--nx-text-body) !important; }
+
+/* ===================== Flatpickr ===================== */
+[data-bs-theme="dark"] .flatpickr-calendar {
+  background: var(--nx-card-bg);
+  border: 1px solid var(--nx-border);
+  box-shadow: var(--nx-shadow-lift);
+}
+[data-bs-theme="dark"] .flatpickr-calendar .flatpickr-months,
+[data-bs-theme="dark"] .flatpickr-calendar .flatpickr-weekdays,
+[data-bs-theme="dark"] .flatpickr-calendar .flatpickr-monthDropdown-months { background: transparent; color: var(--nx-text); fill: var(--nx-text); }
+[data-bs-theme="dark"] .flatpickr-calendar .flatpickr-current-month input.cur-year,
+[data-bs-theme="dark"] .flatpickr-calendar span.flatpickr-weekday { color: var(--nx-text); }
+[data-bs-theme="dark"] .flatpickr-calendar .flatpickr-day { color: var(--nx-text-body); }
+[data-bs-theme="dark"] .flatpickr-calendar .flatpickr-day.flatpickr-disabled,
+[data-bs-theme="dark"] .flatpickr-calendar .flatpickr-day.prevMonthDay,
+[data-bs-theme="dark"] .flatpickr-calendar .flatpickr-day.nextMonthDay { color: var(--nx-text-muted); }
+[data-bs-theme="dark"] .flatpickr-calendar .flatpickr-day:hover { background: var(--nx-hover-bg); border-color: var(--nx-hover-bg); }
+.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange,
+.flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover {
+  background: var(--nx-primary);
+  border-color: var(--nx-primary);
+}
+.flatpickr-day.inRange {
+  background: var(--nx-primary-subtle);
+  border-color: var(--nx-primary-subtle);
+  box-shadow: -5px 0 0 var(--nx-primary-subtle), 5px 0 0 var(--nx-primary-subtle);
+}
+[data-bs-theme="dark"] .flatpickr-time,
+[data-bs-theme="dark"] .flatpickr-time input,
+[data-bs-theme="dark"] .flatpickr-time .flatpickr-am-pm { background: var(--nx-card-bg); color: var(--nx-text); }
+
+/* ===================== Quill ===================== */
+.ql-toolbar.ql-snow, .ql-container.ql-snow { border-color: var(--nx-border) !important; }
+.ql-toolbar.ql-snow { border-radius: var(--nx-radius-sm) var(--nx-radius-sm) 0 0; }
+.ql-container.ql-snow { border-radius: 0 0 var(--nx-radius-sm) var(--nx-radius-sm); font-family: inherit; font-size: 14px; }
+[data-bs-theme="dark"] .ql-snow .ql-stroke { stroke: var(--nx-text-body); }
+[data-bs-theme="dark"] .ql-snow .ql-fill { fill: var(--nx-text-body); }
+[data-bs-theme="dark"] .ql-snow .ql-picker { color: var(--nx-text-body); }
+[data-bs-theme="dark"] .ql-snow .ql-picker-options { background: var(--nx-card-bg); border-color: var(--nx-border) !important; }
+[data-bs-theme="dark"] .ql-editor.ql-blank::before { color: var(--nx-text-muted); }
+
+/* ===================== Dropzone ===================== */
+.dropzone {
+  border: 2px dashed var(--nx-border);
+  border-radius: var(--nx-radius);
+  background: var(--nx-body-bg);
+  color: var(--nx-text-muted);
+  min-height: 200px;
+  transition: var(--nx-transition);
+}
+.dropzone:hover, .dropzone.dz-drag-hover { border-color: var(--nx-primary); }
+.dropzone .dz-preview .dz-image { border-radius: var(--nx-radius-sm); }
+.dropzone .dz-message { font-size: 14px; }
+
+/* ===================== FullCalendar ===================== */
+.fc {
+  --fc-border-color: var(--nx-border);
+  --fc-page-bg-color: var(--nx-card-bg);
+  --fc-neutral-bg-color: var(--nx-body-bg);
+  --fc-today-bg-color: var(--nx-primary-subtle);
+  --fc-button-bg-color: var(--nx-card-bg);
+  --fc-button-border-color: var(--nx-border);
+  --fc-button-text-color: var(--nx-text-body);
+  --fc-button-hover-bg-color: var(--nx-hover-bg);
+  --fc-button-hover-border-color: var(--nx-border);
+  --fc-button-active-bg-color: var(--nx-primary);
+  --fc-button-active-border-color: var(--nx-primary);
+}
+.fc .fc-button { border-radius: var(--nx-radius-sm); font-size: 13px; font-weight: 500; text-transform: capitalize; }
+.fc .fc-button-primary:not(:disabled).fc-button-active { color: #fff; }
+.fc .fc-toolbar-title { font-size: 18px; font-weight: 700; color: var(--nx-text); }
+.fc .fc-col-header-cell-cushion, .fc .fc-daygrid-day-number { color: var(--nx-text-body); text-decoration: none; font-size: 13px; }
+.fc-event { border-radius: 6px; font-size: 12px; border: 0; padding: 1px 6px; }
+
+/* ===================== SweetAlert2 ===================== */
+[data-bs-theme="dark"] .swal2-popup { background: var(--nx-card-bg); color: var(--nx-text-body); }
+[data-bs-theme="dark"] .swal2-title { color: var(--nx-text); }
+[data-bs-theme="dark"] .swal2-html-container { color: var(--nx-text-body); }
+.swal2-popup { border-radius: var(--nx-radius) !important; font-family: inherit !important; }
+.swal2-styled.swal2-confirm { background: var(--nx-primary) !important; border-radius: var(--nx-radius-sm) !important; }
+.swal2-styled.swal2-cancel { border-radius: var(--nx-radius-sm) !important; }
+
+/* ===================== noUiSlider ===================== */
+.noUi-target { background: var(--nx-secondary-subtle); border: 0; box-shadow: none; height: 6px; }
+.noUi-connect { background: var(--nx-primary); }
+.noUi-handle {
+  width: 18px !important; height: 18px !important;
+  top: -6px !important; right: -9px !important;
+  border-radius: 50%;
+  background: var(--nx-card-bg);
+  border: 2px solid var(--nx-primary);
+  box-shadow: none;
+  cursor: grab;
+}
+.noUi-handle::before, .noUi-handle::after { display: none; }
+.noUi-tooltip {
+  background: var(--nx-text);
+  color: var(--nx-body-bg);
+  border: 0;
+  border-radius: 6px;
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+/* ===================== Inputmask / lain-lain ===================== */
+[data-bs-theme="dark"] ::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+/* ============================================================
+   Bagian Plugins — penyesuaian tema untuk library tambahan.
+   ============================================================ */
+
+/* ---------- Leaflet ---------- */
+.leaflet-container {
+  background: var(--nx-body-bg);
+  font-family: inherit;
+  font-size: 13px;
+}
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: var(--nx-card-bg);
+  color: var(--nx-text-body);
+  box-shadow: var(--nx-shadow-lift);
+}
+.leaflet-popup-content-wrapper { border-radius: var(--nx-radius-sm); }
+.leaflet-bar a, .leaflet-control-layers, .leaflet-control-attribution {
+  background: var(--nx-card-bg) !important;
+  color: var(--nx-text-body) !important;
+  border-color: var(--nx-border) !important;
+}
+.leaflet-bar a:hover { background: var(--nx-hover-bg) !important; }
+.leaflet-control-attribution a { color: var(--nx-primary) !important; }
+/* Petak peta gelap di dark mode supaya tidak menyilaukan. */
+[data-bs-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9); }
+[data-bs-theme="dark"] .leaflet-tooltip {
+  background: var(--nx-card-bg); color: var(--nx-text-body); border-color: var(--nx-border);
+}
+.marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+  background: var(--nx-primary); color: #fff; font-family: inherit; font-weight: 600;
+}
+.marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+  background: rgb(99 102 241 / .3);
+}
+
+/* ---------- Grid.js ---------- */
+.gridjs-wrapper, .gridjs-footer, .gridjs-head {
+  background: transparent !important;
+  border-color: var(--nx-border) !important;
+  box-shadow: none !important;
+}
+.gridjs-table { width: 100%; }
+.gridjs-th {
+  background: transparent !important;
+  border-color: var(--nx-border) !important;
+  color: var(--nx-text-muted) !important;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600;
+}
+.gridjs-td { border-color: var(--nx-border) !important; color: var(--nx-text-body) !important; background: transparent !important; }
+.gridjs-tr:hover .gridjs-td { background: var(--nx-hover-bg) !important; }
+.gridjs-search-input, .gridjs-input {
+  background: var(--nx-card-bg) !important;
+  border-color: var(--nx-border) !important;
+  color: var(--nx-text-body) !important;
+  border-radius: var(--nx-radius-sm) !important;
+}
+.gridjs-pagination { color: var(--nx-text-muted) !important; }
+.gridjs-pagination .gridjs-pages button {
+  background: var(--nx-card-bg) !important;
+  border-color: var(--nx-border) !important;
+  color: var(--nx-text-body) !important;
+}
+.gridjs-pagination .gridjs-pages button:disabled { opacity: .5; }
+.gridjs-pagination .gridjs-pages button.gridjs-currentPage {
+  background: var(--nx-primary) !important;
+  border-color: var(--nx-primary) !important;
+  color: #fff !important;
+}
+
+/* ---------- Tabulator ---------- */
+.tabulator {
+  background: transparent;
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius);
+  font-size: 14px;
+}
+.tabulator .tabulator-header,
+.tabulator .tabulator-header .tabulator-col,
+.tabulator .tabulator-footer {
+  background: var(--nx-body-bg);
+  border-color: var(--nx-border);
+  color: var(--nx-text-muted);
+}
+.tabulator .tabulator-header .tabulator-col-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600;
+}
+.tabulator-row { background: var(--nx-card-bg); border-color: var(--nx-border); color: var(--nx-text-body); }
+.tabulator-row.tabulator-row-even { background: var(--nx-card-bg); }
+.tabulator-row:hover { background: var(--nx-hover-bg) !important; }
+.tabulator-row .tabulator-cell { border-color: var(--nx-border); }
+.tabulator-row .tabulator-cell.tabulator-editing input,
+.tabulator-row .tabulator-cell.tabulator-editing select {
+  background: var(--nx-card-bg); color: var(--nx-text); border-color: var(--nx-primary);
+}
+.tabulator .tabulator-footer .tabulator-page {
+  background: var(--nx-card-bg); border-color: var(--nx-border); color: var(--nx-text-body); border-radius: var(--nx-radius-sm);
+}
+.tabulator .tabulator-footer .tabulator-page.active { background: var(--nx-primary); color: #fff; }
+.tabulator-row.tabulator-group { background: var(--nx-secondary-subtle); color: var(--nx-text); font-weight: 600; }
+.tabulator-menu, .tabulator-edit-list {
+  background: var(--nx-card-bg); border-color: var(--nx-border); box-shadow: var(--nx-shadow-lift);
+}
+.tabulator-edit-list .tabulator-edit-list-item { color: var(--nx-text-body); }
+.tabulator-edit-list .tabulator-edit-list-item.active,
+.tabulator-edit-list .tabulator-edit-list-item:hover { background: var(--nx-primary-subtle); color: var(--nx-primary); }
+
+/* ---------- Tom Select ---------- */
+.ts-wrapper .ts-control {
+  background: var(--nx-card-bg);
+  border-color: var(--nx-border);
+  color: var(--nx-text-body);
+  border-radius: var(--nx-radius-sm);
+  min-height: 38px;
+}
+.ts-wrapper.focus .ts-control { border-color: var(--nx-primary); box-shadow: 0 0 0 3px rgb(99 102 241 / .15); }
+.ts-dropdown {
+  background: var(--nx-card-bg);
+  border-color: var(--nx-border);
+  color: var(--nx-text-body);
+  box-shadow: var(--nx-shadow-lift);
+  border-radius: var(--nx-radius-sm);
+}
+.ts-dropdown .active { background: var(--nx-primary-subtle); color: var(--nx-primary); }
+.ts-wrapper.multi .ts-control > div {
+  background: var(--nx-primary-subtle); color: var(--nx-primary); border-radius: 6px;
+}
+.ts-control input, .ts-control input::placeholder { color: var(--nx-text-body); }
+
+/* ---------- Swiper ---------- */
+/* Slide coverflow meluber keluar kontainer sebelum Swiper selesai mengukur,
+   jadi klip eksplisit supaya halaman tidak pernah bergeser horizontal. */
+.swiper { overflow: hidden; max-width: 100%; }
+.nx-swiper-clip { overflow: hidden; border-radius: var(--nx-radius-sm); }
+.swiper-button-next, .swiper-button-prev { color: var(--nx-primary); }
+.swiper-button-next::after, .swiper-button-prev::after { font-size: 22px; font-weight: 700; }
+.swiper-pagination-bullet { background: var(--nx-text-muted); }
+.swiper-pagination-bullet-active { background: var(--nx-primary); }
+
+/* ---------- Cropper ---------- */
+.cropper-view-box, .cropper-face { border-radius: 2px; }
+.cropper-line, .cropper-point { background-color: var(--nx-primary); }
+.cropper-view-box { outline-color: var(--nx-primary); }
+
+/* ---------- Pickr ---------- */
+.pickr .pcr-button { border-radius: var(--nx-radius-sm); height: 38px; width: 64px; }
+.pcr-app { background: var(--nx-card-bg); border: 1px solid var(--nx-border); box-shadow: var(--nx-shadow-lift); }
+.pcr-app .pcr-interaction input { background: var(--nx-body-bg); color: var(--nx-text-body); }
+.pcr-app .pcr-interaction .pcr-save { background: var(--nx-primary) !important; }
+
+/* ---------- Gridstack ---------- */
+.grid-stack { background: var(--nx-body-bg); border-radius: var(--nx-radius); min-height: 420px; }
+.grid-stack-item-content { overflow: visible; }
+.grid-stack > .grid-stack-item > .ui-resizable-se { filter: none; opacity: .5; }
+.grid-stack-placeholder > .placeholder-content {
+  background: var(--nx-primary-subtle);
+  border: 2px dashed var(--nx-primary);
+  border-radius: var(--nx-radius);
+}
+
+/* ---------- AOS ---------- */
+/* Animasi fade-left/right mulai dari posisi di luar kolomnya; klip pembungkusnya
+   agar tidak menimbulkan scrollbar horizontal saat elemen masih bergeser. */
+.nx-aos-demo { overflow: hidden; }
+
+/* ---------- Interact.js demo ---------- */
+.ix-box { user-select: none; box-shadow: var(--nx-shadow); }
+.ix-box:active { box-shadow: var(--nx-shadow-lift); }
+
+/* ---------- driver.js ---------- */
+.driver-popover {
+  background: var(--nx-card-bg);
+  color: var(--nx-text-body);
+  border-radius: var(--nx-radius);
+  box-shadow: var(--nx-shadow-lift);
+  font-family: inherit;
+}
+.driver-popover-title { color: var(--nx-text); font-size: 16px; }
+.driver-popover-description { color: var(--nx-text-muted); font-size: 13px; }
+.driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: var(--nx-card-bg); }
+.driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: var(--nx-card-bg); }
+.driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: var(--nx-card-bg); }
+.driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: var(--nx-card-bg); }
+.driver-popover-next-btn, .driver-popover-prev-btn {
+  background: var(--nx-primary) !important;
+  color: #fff !important;
+  border: 0 !important;
+  text-shadow: none !important;
+  border-radius: var(--nx-radius-sm) !important;
+  font-size: 13px !important;
+}
+.driver-popover-prev-btn { background: var(--nx-secondary-subtle) !important; color: var(--nx-secondary) !important; }
+.driver-popover-progress-text { color: var(--nx-text-muted); font-size: 12px; }
+
+/* ---------- Tippy ---------- */
+.tippy-box {
+  background: var(--nx-text);
+  color: var(--nx-body-bg);
+  border-radius: var(--nx-radius-sm);
+  font-size: 13px;
+}
+.tippy-box[data-placement^='top'] > .tippy-arrow::before { border-top-color: var(--nx-text); }
+.tippy-box[data-placement^='bottom'] > .tippy-arrow::before { border-bottom-color: var(--nx-text); }
+.tippy-box[data-placement^='left'] > .tippy-arrow::before { border-left-color: var(--nx-text); }
+.tippy-box[data-placement^='right'] > .tippy-arrow::before { border-right-color: var(--nx-text); }
+
+/* ---------- NProgress ---------- */
+#nprogress .bar { background: var(--nx-primary); height: 3px; }
+#nprogress .peg { box-shadow: 0 0 10px var(--nx-primary), 0 0 5px var(--nx-primary); }
+
+/* ---------- Prism ---------- */
+pre[class*="language-"] { border-radius: var(--nx-radius-sm); font-size: 13px; margin: 0; }
+
+/* ---------- d3-org-chart ---------- */
+#orgChart { background: var(--nx-body-bg); }
+#orgChart svg { font-family: inherit; }
+.oc-node {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--nx-card-bg);
+  border: 1px solid var(--nx-border);
+  border-left: 4px solid var(--nx-primary);
+  border-radius: var(--nx-radius);
+  box-shadow: var(--nx-shadow);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.oc-node-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.oc-avatar {
+  flex: 0 0 auto;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+.oc-node-meta { min-width: 0; display: flex; flex-direction: column; }
+.oc-name {
+  font-size: 14px; font-weight: 600; color: var(--nx-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.oc-role {
+  font-size: 12px; color: var(--nx-text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.oc-node-foot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.oc-dept {
+  font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.oc-loc, .oc-count { font-size: 11px; color: var(--nx-text-muted); }
+.oc-count { margin-left: auto; }
+/* Kartu yang disorot oleh pencarian. */
+.d3-org-chart-highlighted .oc-node,
+[stroke="#E27396"] + foreignObject .oc-node { border-color: var(--nx-primary); }
+
+/* ---------- Mermaid ---------- */
+#mmOutput svg, .card-body > div > svg[id^="mmid-"] { max-width: 100%; height: auto; }

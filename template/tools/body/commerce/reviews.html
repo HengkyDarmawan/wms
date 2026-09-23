@@ -1,0 +1,46 @@
+      <div class="row g-4 mb-2">
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="row g-3 align-items-center">
+                <div class="col-5 text-center">
+                  <div class="display-6 fw-bold">4.6</div>
+                  <span class="nx-stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></span>
+                  <div class="small text-muted mt-1">1,842 reviews</div>
+                </div>
+                <div class="col-7">
+                  <div class="nx-rating-bar mb-1"><span class="text-muted" style="width:28px">5&#9733;</span><div class="progress"><div class="progress-bar bg-warning" style="width:72%"></div></div><span class="text-muted" style="width:34px">72%</span></div>
+                  <div class="nx-rating-bar mb-1"><span class="text-muted" style="width:28px">4&#9733;</span><div class="progress"><div class="progress-bar bg-warning" style="width:18%"></div></div><span class="text-muted" style="width:34px">18%</span></div>
+                  <div class="nx-rating-bar mb-1"><span class="text-muted" style="width:28px">3&#9733;</span><div class="progress"><div class="progress-bar bg-warning" style="width:6%"></div></div><span class="text-muted" style="width:34px">6%</span></div>
+                  <div class="nx-rating-bar mb-1"><span class="text-muted" style="width:28px">2&#9733;</span><div class="progress"><div class="progress-bar bg-warning" style="width:3%"></div></div><span class="text-muted" style="width:34px">3%</span></div>
+                  <div class="nx-rating-bar"><span class="text-muted" style="width:28px">1&#9733;</span><div class="progress"><div class="progress-bar bg-warning" style="width:1%"></div></div><span class="text-muted" style="width:34px">1%</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Rating over time</h2><div class="card-subtitle">Average per month</div></div></div>
+            <div class="card-body"><div id="reviewChart" style="min-height:190px"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+          <div class="input-group" style="max-width:300px">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input class="form-control" type="search" id="rvSearch" placeholder="Search reviews&hellip;" aria-label="Search reviews">
+          </div>
+          <div class="d-flex flex-wrap gap-1" id="rvFilters">
+            <button class="btn btn-sm btn-soft-primary active" data-f="all" type="button">All</button>
+            <button class="btn btn-sm btn-soft-secondary" data-f="pending" type="button">Pending <span class="badge badge-soft-warning ms-1">4</span></button>
+            <button class="btn btn-sm btn-soft-secondary" data-f="published" type="button">Published</button>
+            <button class="btn btn-sm btn-soft-secondary" data-f="flagged" type="button">Flagged <span class="badge badge-soft-danger ms-1">2</span></button>
+          </div>
+          <span class="small text-muted ms-auto"><strong id="rvCount">0</strong> shown</span>
+        </div>
+      </div>
+
+      <div id="rvList"></div>

@@ -1,0 +1,180 @@
+      <div class="row g-4">
+
+        <!-- ===== Left rail ===== -->
+        <div class="col-xl-3 d-none d-xl-block">
+          <div class="card mb-4">
+            <div class="nx-profile-cover" style="height:80px"></div>
+            <div class="card-body text-center pt-0">
+              <img class="nx-profile-avatar" style="width:72px;height:72px;margin-top:-36px" src="https://i.pravatar.cc/144?img=12" alt="Aigars S.">
+              <h2 class="h5 mt-2 mb-0">Aigars Silkalns</h2>
+              <p class="small text-muted mb-3">Administrator</p>
+              <div class="row g-0 text-center">
+                <div class="col-4"><div class="fw-bold">128</div><div class="small text-muted">Posts</div></div>
+                <div class="col-4 border-start border-end"><div class="fw-bold">4.2K</div><div class="small text-muted">Followers</div></div>
+                <div class="col-4"><div class="fw-bold">312</div><div class="small text-muted">Following</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Shortcuts</h2></div>
+            <div class="card-body py-2">
+              <a class="nx-row-item text-decoration-none" href="apps-events.html"><span class="nx-icon-sq primary"><i class="bi bi-ticket-perforated"></i></span><div class="nx-row-main"><div class="nx-row-title">Events</div><div class="nx-row-sub">3 upcoming</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="apps-courses.html"><span class="nx-icon-sq success"><i class="bi bi-mortarboard"></i></span><div class="nx-row-main"><div class="nx-row-title">Courses</div><div class="nx-row-sub">46 published</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="apps-contacts.html"><span class="nx-icon-sq info"><i class="bi bi-person-rolodex"></i></span><div class="nx-row-main"><div class="nx-row-title">Contacts</div><div class="nx-row-sub">218 people</div></div></a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Trending</h2></div>
+            <div class="card-body d-flex flex-wrap gap-2">
+              <span class="badge badge-soft-primary">#release-2-5</span>
+              <span class="badge badge-soft-primary">#design-system</span>
+              <span class="badge badge-soft-primary">#onboarding</span>
+              <span class="badge badge-soft-primary">#apac</span>
+              <span class="badge badge-soft-primary">#hiring</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Feed ===== -->
+        <div class="col-xl-6 col-lg-8">
+          <div class="card mb-4 nx-post-composer">
+            <div class="card-body">
+              <div class="d-flex gap-3">
+                <span class="nx-avatar"><img src="https://i.pravatar.cc/80?img=12" alt=""></span>
+                <textarea class="form-control" id="postInput" rows="2" placeholder="Share an update with the team&hellip;"></textarea>
+              </div>
+              <div class="nx-post-actions">
+                <button class="nx-post-action" type="button"><i class="bi bi-image me-1"></i>Photo</button>
+                <button class="nx-post-action" type="button"><i class="bi bi-camera-video me-1"></i>Video</button>
+                <button class="nx-post-action" type="button"><i class="bi bi-bar-chart me-1"></i>Poll</button>
+                <button class="btn btn-primary btn-sm ms-auto" id="postSubmit" type="button">Post</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="feed">
+            <article class="card mb-4 nx-post">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <span class="nx-avatar"><img src="https://i.pravatar.cc/80?img=47" alt=""></span>
+                  <div class="min-w-0"><div class="fw-semibold">Sarah Chen</div><div class="small text-muted">Head of Product &middot; 2 hours ago</div></div>
+                  <div class="dropdown ms-auto"><button class="nx-icon-btn" data-bs-toggle="dropdown" type="button" aria-label="Post actions"><i class="bi bi-three-dots"></i></button>
+                    <div class="dropdown-menu dropdown-menu-end"><button class="dropdown-item" type="button"><i class="bi bi-bookmark"></i>Save</button><button class="dropdown-item" type="button"><i class="bi bi-link-45deg"></i>Copy link</button><button class="dropdown-item text-danger" type="button"><i class="bi bi-flag"></i>Report</button></div>
+                  </div>
+                </div>
+                <p>The Q4 roadmap is finally locked. Three themes: <strong>billing reliability</strong>, <strong>self-serve onboarding</strong> and the new <strong>analytics surface</strong>. Thanks to everyone who reviewed &mdash; the scoping feedback changed two of the three plans for the better.</p>
+                <div class="d-flex flex-wrap gap-1 mb-3"><span class="badge badge-soft-primary">#release-2-5</span><span class="badge badge-soft-primary">#roadmap</span></div>
+                <div class="d-flex align-items-center justify-content-between small text-muted">
+                  <span><i class="bi bi-hand-thumbs-up-fill text-primary"></i> <span class="like-count">48</span> &middot; 12 comments</span>
+                  <span>4 shares</span>
+                </div>
+                <div class="nx-post-actions">
+                  <button class="nx-post-action btn-like" type="button"><i class="bi bi-hand-thumbs-up me-1"></i>Like</button>
+                  <button class="nx-post-action btn-comment" type="button"><i class="bi bi-chat me-1"></i>Comment</button>
+                  <button class="nx-post-action" type="button"><i class="bi bi-share me-1"></i>Share</button>
+                </div>
+                <div class="nx-comments mt-3 d-none">
+                  <div class="d-flex gap-2 mb-3">
+                    <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=68" alt=""></span>
+                    <div class="p-2 px-3 rounded flex-grow-1" style="background:var(--nx-body-bg)"><div class="small fw-semibold">Marcus Webb</div><div class="small">Two sprints for the Stripe migration is tight but doable if we drop the legacy endpoints first.</div></div>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=12" alt=""></span>
+                    <input class="form-control form-control-sm comment-input" placeholder="Write a comment&hellip;">
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card mb-4 nx-post">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <span class="nx-avatar"><img src="https://i.pravatar.cc/80?img=32" alt=""></span>
+                  <div class="min-w-0"><div class="fw-semibold">Lena Iversen</div><div class="small text-muted">Design Lead &middot; Yesterday</div></div>
+                  <span class="badge badge-soft-success ms-auto">Design</span>
+                </div>
+                <p>Design tokens v3 are live in the shared library. Every colour, radius and shadow now has one name across Figma and code, which means dark mode is a file swap rather than a rewrite.</p>
+                <div class="nx-pc-img mb-3" style="aspect-ratio:16/9"><img src="https://picsum.photos/seed/nexa-tokens/1200/675" alt="Design tokens preview"></div>
+                <div class="d-flex align-items-center justify-content-between small text-muted">
+                  <span><i class="bi bi-hand-thumbs-up-fill text-primary"></i> <span class="like-count">96</span> &middot; 24 comments</span>
+                  <span>11 shares</span>
+                </div>
+                <div class="nx-post-actions">
+                  <button class="nx-post-action btn-like" type="button"><i class="bi bi-hand-thumbs-up me-1"></i>Like</button>
+                  <button class="nx-post-action btn-comment" type="button"><i class="bi bi-chat me-1"></i>Comment</button>
+                  <button class="nx-post-action" type="button"><i class="bi bi-share me-1"></i>Share</button>
+                </div>
+                <div class="nx-comments mt-3 d-none">
+                  <div class="d-flex gap-2">
+                    <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=12" alt=""></span>
+                    <input class="form-control form-control-sm comment-input" placeholder="Write a comment&hellip;">
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card mb-4 nx-post">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <span class="nx-avatar" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-rocket-takeoff"></i></span>
+                  <div class="min-w-0"><div class="fw-semibold">Deploy Bot</div><div class="small text-muted">Automated &middot; Yesterday</div></div>
+                  <span class="badge badge-soft-success ms-auto">prod</span>
+                </div>
+                <p class="mb-3"><code>v2.4.1</code> is live in production. 3 fixes, 2 improvements, zero failed health checks.</p>
+                <div class="p-3 rounded" style="background:var(--nx-body-bg);border:1px solid var(--nx-border)">
+                  <div class="small"><i class="bi bi-check2 text-success me-1"></i>Billing retries no longer loop on soft declines</div>
+                  <div class="small"><i class="bi bi-check2 text-success me-1"></i>Daily rollups respect workspace timezone</div>
+                  <div class="small"><i class="bi bi-check2 text-success me-1"></i>Invoice export no longer times out</div>
+                </div>
+                <div class="nx-post-actions">
+                  <button class="nx-post-action btn-like" type="button"><i class="bi bi-hand-thumbs-up me-1"></i>Like <span class="like-count d-none">0</span></button>
+                  <button class="nx-post-action btn-comment" type="button"><i class="bi bi-chat me-1"></i>Comment</button>
+                  <a class="nx-post-action text-decoration-none" href="page-changelog.html"><i class="bi bi-journal-code me-1"></i>Changelog</a>
+                </div>
+                <div class="nx-comments mt-3 d-none">
+                  <div class="d-flex gap-2">
+                    <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=12" alt=""></span>
+                    <input class="form-control form-control-sm comment-input" placeholder="Write a comment&hellip;">
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <!-- ===== Right rail ===== -->
+        <div class="col-xl-3 col-lg-4">
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Who to follow</h2></div>
+            <div class="card-body py-2">
+              <div class="nx-row-item"><span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=25" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Chen Wei</div><div class="nx-row-sub">Engineering</div></div><button class="btn btn-xs btn-soft-primary btn-follow" type="button">Follow</button></div>
+              <div class="nx-row-item"><span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=5" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Ava Novak</div><div class="nx-row-sub">Design</div></div><button class="btn btn-xs btn-soft-primary btn-follow" type="button">Follow</button></div>
+              <div class="nx-row-item"><span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=52" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Ravi Menon</div><div class="nx-row-sub">Engineering</div></div><button class="btn btn-xs btn-soft-primary btn-follow" type="button">Follow</button></div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Upcoming</h2></div>
+            <div class="card-body py-2">
+              <a class="nx-row-item text-decoration-none" href="apps-event-detail.html"><span class="nx-icon-sq primary"><i class="bi bi-calendar-event"></i></span><div class="nx-row-main"><div class="nx-row-title">NexaCon 2026</div><div class="nx-row-sub">Oct 14 &middot; Singapore</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="apps-events.html"><span class="nx-icon-sq info"><i class="bi bi-camera-video"></i></span><div class="nx-row-main"><div class="nx-row-title">Analytics webinar</div><div class="nx-row-sub">Sep 24 &middot; Online</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="apps-events.html"><span class="nx-icon-sq success"><i class="bi bi-people"></i></span><div class="nx-row-main"><div class="nx-row-title">Team offsite</div><div class="nx-row-sub">Sep 24&ndash;26</div></div></a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Online now</h2><span class="badge badge-soft-success ms-auto">7</span></div>
+            <div class="card-body d-flex flex-wrap gap-2">
+              <span class="nx-avatar-status online"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=47" alt=""></span></span>
+              <span class="nx-avatar-status online"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=68" alt=""></span></span>
+              <span class="nx-avatar-status online"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=5" alt=""></span></span>
+              <span class="nx-avatar-status online"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=25" alt=""></span></span>
+              <span class="nx-avatar-status online"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=36" alt=""></span></span>
+              <span class="nx-avatar-status online"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=52" alt=""></span></span>
+              <span class="nx-avatar-status online"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=26" alt=""></span></span>
+            </div>
+          </div>
+        </div>
+      </div>

@@ -1,8 +1,8 @@
 # Katalog Status & Enum
 
-**Versi:** 0.3
+**Versi:** 0.6
 **Tanggal:** 23 September 2026
-**Status:** baru (hasil audit dokumentasi v0.3); nilai menunggu validasi bersama [A-29](04-keputusan-dan-asumsi.md#a-29)–[A-49](04-keputusan-dan-asumsi.md#a-49)
+**Status:** nilai divalidasi 23 Sep 2026 bersama [A-29](04-keputusan-dan-asumsi.md#a-29)–[A-49](04-keputusan-dan-asumsi.md#a-49); guard SJ/TRF memuat bagian dari [A-50](04-keputusan-dan-asumsi.md#a-50) (menunggu validasi); v0.5: PRQ `draft`, aksi baris REQ (A-54, A-55, A-56, A-61), `shipment_method`, `spot_check`, enum vendor; v0.6: bukti terima baik/rusak/kurang, keberatan klien, DSC `reship`, `meter_unit`
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Glosarium](03-glosarium.md)
 
 Dokumen ini adalah **satu-satunya sumber** nilai status dan enum. UI memakai kolom *Label*, kode memakai kolom *Enum* (`snake_case`, Inggris). Developer dan agen AI **tidak boleh** menambah status di luar katalog ini tanpa menaikkan versi dokumen ini.
@@ -30,8 +30,10 @@ Nilai yang dipakai bersama oleh banyak dokumen. Warna badge adalah usulan untuk 
 | `partially_fulfilled` | Sebagian Terpenuhi | Sebagian baris selesai, sisanya backorder | warning |
 | `completed` | Selesai | Semua baris terpenuhi | success |
 | `closed_short` | Ditutup dengan Sisa | Ditutup manual; sisa backorder dilepas | dark |
-| `rejected` | Ditolak | Ditolak approver; wajib alasan | danger |
-| `cancelled` | Dibatalkan | Dibatalkan pengaju/admin; wajib alasan; bila stok sudah bergerak, dibuat dokumen pembalik | danger |
+| `rejected` | Ditolak | Ditolak approver; alasan wajib `*`, keterangan opsional | danger |
+| `cancelled` | Dibatalkan | Dibatalkan pengaju/admin; alasan wajib `*`, keterangan opsional; bila stok sudah bergerak, dibuat dokumen pembalik | danger |
+
+Catatan: di semua tabel §2, guard "Alasan" berarti *Alasan* dari master Alasan **wajib** (`*`) dan *Keterangan* teks bebas **opsional** ([BR-GEN-11](05-aturan-bisnis.md#br-gen)). Field wajib di setiap form ditandai `*`.
 
 ## 2. Mesin status per dokumen
 
@@ -45,6 +47,7 @@ Nilai yang dipakai bersama oleh banyak dokumen. Warna badge adalah usulan untuk 
 | `submitted` | `pending_approval` | otomatis | sistem | Pemohon internal; gudang sumber terisi ([A-31](04-keputusan-dan-asumsi.md#a-31)) | snapshot aturan approval |
 | `under_review` | `pending_approval` | `request.review` | Staf Gudang / Kepala Gudang | Semua baris non-katalog terpetakan ([A-39](04-keputusan-dan-asumsi.md#a-39)); gudang sumber terisi | perubahan baris tercatat di timeline; klien diberi tahu |
 | `under_review` | `rejected` | `request.review` | Staf / Kepala Gudang | Alasan | notifikasi klien |
+| `pending_approval` | `under_review` | `request.add_lines` | Klien | Klien menambah baris saat menunggu approval ([A-54](04-keputusan-dan-asumsi.md#a-54)) | snapshot approval dibuang; baris baru ditinjau |
 | `pending_approval` | `approved` | `request.approve` | Approver sesuai aturan | Semua lapis setuju; setiap baris punya sumber: stok tersedia, transfer, atau PR ([A-30](04-keputusan-dan-asumsi.md#a-30)) | **reservasi lunak** dibuat; backorder → TRF/PRQ dibuat |
 | `pending_approval` | `approved` | otomatis | sistem | Tidak ada aturan approval ([A-08](04-keputusan-dan-asumsi.md#a-08)) | sama |
 | `pending_approval` | `rejected` | `request.approve` | Approver | Alasan | — |
@@ -54,6 +57,8 @@ Nilai yang dipakai bersama oleh banyak dokumen. Warna badge adalah usulan untuk 
 | `partially_fulfilled` | `closed_short` | `request.close_short` | Kepala Gudang / Pemohon | Alasan | reservasi & backorder sisa dilepas; PRQ terkait dibatalkan bila belum diteruskan |
 | `draft`/`submitted`/`under_review`/`pending_approval` | `cancelled` | `request.cancel` | Pembuat / Admin | Alasan | — |
 | `approved`/`in_progress` | `cancelled` | `request.cancel` | Kepala Gudang | Tidak ada SJ `shipped`; alasan | reservasi dilepas; PCK dibatalkan; PRQ dibatalkan bila belum diteruskan |
+
+Aksi **tingkat baris** (tidak mengubah status dokumen): `request.add_lines` — Klien menambah baris saat `draft`/`submitted`/`under_review`; setelah `approved` membuat **REQ Tambahan** `origin = supplement` ([A-54](04-keputusan-dan-asumsi.md#a-54)) · `request.split_line` — staf memecah baris ke beberapa gudang sumber ([A-56](04-keputusan-dan-asumsi.md#a-56)) · `request.respond_substitution` — Klien menolak pengganti sebelum `substitution_deadline_at` ([A-55](04-keputusan-dan-asumsi.md#a-55)) · `request.request_cancel` / `request.confirm_cancel` — permintaan pembatalan baris oleh klien setelah `approved`, dikonfirmasi staf ([A-61](04-keputusan-dan-asumsi.md#a-61)) · `request.confirm_receipt` / `request.dispute_receipt` — pemohon menerima atau mengajukan keberatan (kurang/rusak) dalam `receipt_confirm_days`; keberatan membuka DSC ([A-63](04-keputusan-dan-asumsi.md#a-63), [BR-REQ-10](05-aturan-bisnis.md#br-req)).
 
 ### 2.2 `PCK` Tugas Picking — `pick_task` [F1]
 
@@ -68,10 +73,10 @@ Nilai yang dipakai bersama oleh banyak dokumen. Warna badge adalah usulan untuk 
 
 | Dari | Ke | Aksi | Aktor | Guard | Efek |
 |---|---|---|---|---|---|
-| — | `prepared` (Disiapkan) | `shipment.create` | Staf Gudang | Barang di Loading Area; tujuan (proyek/klien/gudang) & kendaraan/ekspedisi terisi | — |
+| — | `prepared` (Disiapkan) | `shipment.create` | Staf Gudang | ≥1 PCK `completed` di Loading Area dengan tujuan sama (boleh dari beberapa REQ, [BR-SJ-09](05-aturan-bisnis.md#br-sj)); `shipment_method` terisi: `own_fleet` → kendaraan & driver, `carrier` → ekspedisi & resi, `self_delivered` → nama pembawa (transfer dalam proyek, [A-50](04-keputusan-dan-asumsi.md#a-50), [A-57](04-keputusan-dan-asumsi.md#a-57)) | — |
 | `prepared` | `shipped` (Dikirim) | `shipment.ship` | Staf Gudang / Driver | Konfirmasi muat (foto opsional) | ledger: Loading Area → bin virtual *Dalam Perjalanan* (milik gudang asal); kejadian `goods_shipped` |
-| `shipped` | `delivered` (Diterima) | `shipment.confirm_delivery` | Driver / penerima bertoken ([A-41](04-keputusan-dan-asumsi.md#a-41)) | Bukti terima: foto + tanda tangan + jumlah = dikirim | lihat [BR-SJ-04](05-aturan-bisnis.md#br-sj) untuk efek per tujuan |
-| `shipped` | `partially_delivered` (Diterima Sebagian) | `shipment.confirm_delivery` | sama | Jumlah diterima < dikirim | sama + dokumen `DSC` dibuat otomatis |
+| `shipped` | `delivered` (Diterima) | `shipment.confirm_delivery` | Driver / penerima bertoken ([A-41](04-keputusan-dan-asumsi.md#a-41)) | Bukti terima per baris (per unit untuk serial/potongan): semua baris **baik** = dikirim; tanda tangan + foto | lihat [BR-SJ-04](05-aturan-bisnis.md#br-sj) untuk efek per tujuan |
+| `shipped` | `partially_delivered` (Diterima Sebagian) | `shipment.confirm_delivery` | sama | Jumlah **baik** < dikirim (kurang dan/atau rusak; foto wajib bila rusak, [A-64](04-keputusan-dan-asumsi.md#a-64)) | efek untuk jumlah baik; rusak → `in_transit` kondisi `damaged`; kurang tetap `in_transit`; dokumen `DSC` dibuat otomatis |
 | `prepared` | `cancelled` | `shipment.cancel` | Kepala Gudang | Alasan | barang tetap di Loading Area; PCK tetap `completed` |
 
 Catatan: SJ setelah `shipped` **tidak bisa dibatalkan**; koreksi lewat `DSC` atau `RET`. *Konfirmasi muat* adalah catatan timeline pada transisi ke `shipped`, bukan status tersendiri.
@@ -80,8 +85,8 @@ Catatan: SJ setelah `shipped` **tidak bisa dibatalkan**; koreksi lewat `DSC` ata
 
 | Dari | Ke | Aksi | Aktor | Guard | Efek |
 |---|---|---|---|---|---|
-| — | `open` (Terbuka) | otomatis | sistem | SJ `partially_delivered` | selisih tetap di *Dalam Perjalanan* |
-| `open` | `resolved` (Diselesaikan) | `discrepancy.resolve` | Kepala Gudang | Disposisi per baris: `returned_to_warehouse` / `adjusted` (hilang/rusak, alasan) / `claimed` (klaim ekspedisi) | ledger sesuai disposisi; kejadian `delivery_discrepancy` |
+| — | `open` (Terbuka) | otomatis | sistem | SJ `partially_delivered`, **atau** keberatan pemohon dalam `receipt_confirm_days` ([A-63](04-keputusan-dan-asumsi.md#a-63)) | kurang & rusak tetap di *Dalam Perjalanan* (rusak berkondisi `damaged`); rusak dibawa balik driver bila kendaraan sendiri ([A-65](04-keputusan-dan-asumsi.md#a-65)) |
+| `open` | `resolved` (Diselesaikan) | `discrepancy.resolve` | Kepala Gudang | Disposisi per baris (jenis kurang/rusak): `returned_to_warehouse` / `adjusted` (hilang, alasan) / `claimed` (klaim ekspedisi) / `reship` (kirim pengganti); keputusan klien `still_needed` / `not_needed` ([BR-SJ-10](05-aturan-bisnis.md#br-sj)) | ledger sesuai disposisi; `reship` → backorder baris REQ; `not_needed` → sisa baris ditutup; rusak yang dibawa balik → GRN retur; kejadian `delivery_discrepancy` |
 
 ### 2.5 `GRN` Penerimaan Barang — `goods_receipt` [F1]
 
@@ -106,7 +111,7 @@ Catatan: GRN `received` tidak bisa dibatalkan; koreksi lewat `ADJ` atau `RTV`. Q
 
 | Dari | Ke | Aksi | Aktor | Guard | Efek |
 |---|---|---|---|---|---|
-| — | `submitted` | `transfer.create` | Staf / Kepala Gudang / sistem (backorder) | Gudang asal ≠ tujuan atau proyek asal ≠ tujuan | — |
+| — | `submitted` | `transfer.create` | Staf / Kepala Gudang / sistem (backorder) | Gudang asal ≠ tujuan atau proyek asal ≠ tujuan; termasuk dua Gudang Site proyek yang sama — transfer dalam proyek ([A-50](04-keputusan-dan-asumsi.md#a-50)) | — |
 | `submitted` | `pending_approval` / `approved` | otomatis | sistem | Sesuai aturan approval | reservasi lunak di gudang asal |
 | `pending_approval` | `approved` / `rejected` | `transfer.approve` | Approver | — | — |
 | `approved` | `in_progress` | otomatis | sistem | PCK dibuat | — |
@@ -170,11 +175,11 @@ Aset `lost` / `written_off` diproses lewat `ADJ` ([BR-AST-04](05-aturan-bisnis.m
 
 | Dari | Ke | Aksi | Aktor | Guard | Efek |
 |---|---|---|---|---|---|
-| — | `planned` (Direncanakan) | `count.create` | Kepala Gudang / Auditor | Cakupan, tim, jenis, pembekuan ya/tidak | — |
+| — | `planned` (Direncanakan) | `count.create` | Kepala Gudang / Auditor | Cakupan, tim, jenis (`spot_check` = cakupan kecil tanpa pembekuan, [BR-OPN-10](05-aturan-bisnis.md#br-opn)), pembekuan ya/tidak | — |
 | `planned` | `in_progress` (Berjalan) | `count.start` | Kepala Gudang / Auditor | Tidak ada PCK `in_progress` di bin cakupan bila pembekuan aktif ([BR-OPN-02](05-aturan-bisnis.md#br-opn)) | bin dibeku; snapshot angka sistem (fisik) |
 | `in_progress` | `recount` (Hitung Ulang) | otomatis | sistem | Ada baris selisih kelas *sedang* ([A-42](04-keputusan-dan-asumsi.md#a-42)) | penugasan penghitung berbeda |
 | `in_progress` / `recount` | `reconciling` (Rekonsiliasi) | `count.reconcile` | Kepala Gudang / Auditor | Semua baris terhitung | draf ADJ per gudang dibuat |
-| `reconciling` | `approved` | `count.approve` | Approver | Selisih kelas *besar* punya akar masalah | ADJ → `posted`; bin dibuka |
+| `reconciling` | `approved` | `count.approve` | Approver | Selisih kelas *besar* punya akar masalah; approver bukan penghitung sesi; sesi `annual`/audit disetujui Auditor Internal atau Manajemen ([BR-OPN-09](05-aturan-bisnis.md#br-opn)) | ADJ → `posted` (tidak untuk `spot_check`); bin dibuka |
 | `approved` | `closed` (Ditutup) | otomatis | sistem | Laporan PDF terbit | — |
 | `planned` | `cancelled` | `count.cancel` | Pembuat | — | — |
 
@@ -192,11 +197,15 @@ Aset `lost` / `written_off` diproses lewat `ADJ` ([BR-AST-04](05-aturan-bisnis.m
 
 | Dari | Ke | Aksi | Aktor | Guard | Efek |
 |---|---|---|---|---|---|
-| — | `submitted` | otomatis / `pr.create` | sistem (backorder REQ) / Staf | Item terdefinisi (non-katalog sudah dipetakan) | kejadian `purchase_requested` |
-| `submitted` | `pending_approval` / `forwarded` | otomatis | sistem | Sesuai aturan (opsional) | — |
-| `pending_approval` | `forwarded` (Diteruskan) / `rejected` | `pr.approve` | Approver | — | — |
-| `forwarded` | `partially_fulfilled` / `fulfilled` (Dipenuhi) | otomatis | sistem | GRN baris merujuk PRQ baris ([A-47](04-keputusan-dan-asumsi.md#a-47)) | reservasi otomatis ke REQ penunggu |
-| `submitted` / `pending_approval` / `forwarded` | `cancelled` | `pr.cancel` | Penindak Lanjut PR | Alasan; belum ada GRN | kejadian `purchase_request_cancelled` |
+| — | `draft` | otomatis | sistem (titik pesan ulang) | Stok tersedia < titik pesan ulang; belum ada draf/PRQ terbuka untuk item & gudang itu ([BR-REQ-11](05-aturan-bisnis.md#br-req)) | `origin = reorder_point` |
+| `draft` | `submitted` | `pr.submit` | Kepala Gudang | Baris ditinjau | kejadian `purchase_requested` |
+| `draft` | `cancelled` | `pr.cancel` | Kepala Gudang | Alasan | — |
+| — | `submitted` | otomatis / `pr.create` | sistem (backorder REQ) / Staf / Kepala Gudang | Item terdefinisi (non-katalog sudah dipetakan) | kejadian `purchase_requested` |
+| `submitted` | `pending_approval` / `approved` | otomatis | sistem | Sesuai aturan (opsional; kondisi boleh jenis vendor & asal, [BR-APR-07](05-aturan-bisnis.md#br-apr)) | — |
+| `pending_approval` | `approved` / `rejected` | `pr.approve` | Approver | — | — |
+| `approved` | `forwarded` (Diteruskan) | `pr.order` | Penindak Lanjut PR | Minimal satu baris punya **catatan pemesanan** (vendor/toko online, nomor PO/pesanan, resi, ETA — [A-51](04-keputusan-dan-asumsi.md#a-51)); vendor baru boleh dibuat sementara ([A-53](04-keputusan-dan-asumsi.md#a-53)) | — |
+| `forwarded` | `partially_fulfilled` / `fulfilled` (Dipenuhi) | otomatis | sistem | Baris GRN merujuk baris catatan pemesanan ([A-47](04-keputusan-dan-asumsi.md#a-47)); `fulfilled` bila semua baris `qty_received ≥ qty_base` | reservasi otomatis ke REQ penunggu |
+| `submitted` / `pending_approval` / `approved` / `forwarded` | `cancelled` | `pr.cancel` | Penindak Lanjut PR | Alasan; belum ada GRN | kejadian `purchase_request_cancelled` |
 
 ### 2.16 `RTV` Retur ke Vendor — `vendor_return` [F1] (baru, [A-34](04-keputusan-dan-asumsi.md#a-34))
 
@@ -225,17 +234,28 @@ Aset `lost` / `written_off` diproses lewat `ADJ` ([BR-AST-04](05-aturan-bisnis.m
 | `condition_grade` | `A` = Baik · `B` = Layak · `C` = Rusak ringan · `D` = Rusak berat |
 | `return_sorting` | `good` = Layak · `damaged` = Rusak · `offcut` = Offcut · `waste` = Waste |
 | `waste_disposition` | `disposed` = Dibuang · `sold_scrap` = Dijual scrap · `reused` = Dipakai ulang |
-| `discrepancy_disposition` | `returned_to_warehouse` = Kembali ke gudang · `adjusted` = Disesuaikan (hilang/rusak) · `claimed` = Klaim ekspedisi |
+| `discrepancy_disposition` | `returned_to_warehouse` = Kembali ke gudang · `adjusted` = Disesuaikan (hilang) · `claimed` = Klaim ekspedisi · `reship` = Kirim pengganti ([A-64](04-keputusan-dan-asumsi.md#a-64)) |
+| `discrepancy_type` ([A-64](04-keputusan-dan-asumsi.md#a-64)) | `missing` = Kurang · `damaged` = Rusak |
+| `client_decision` | `still_needed` = Masih perlu (default) · `not_needed` = Tidak perlu (sisa ditutup) |
+| `receipt_confirmation` ([A-63](04-keputusan-dan-asumsi.md#a-63)) | `confirmed` = Diterima · `disputed` = Keberatan · `auto_confirmed` = Otomatis (lewat batas) |
+| `pod_unit_condition` | `good` = Baik · `damaged` = Rusak · `missing` = Kurang (per unit serial/potongan pada bukti terima) |
 | `project_status` ([A-40](04-keputusan-dan-asumsi.md#a-40)) | `active` = Aktif · `closed` = Ditutup · `cancelled` = Dibatalkan · `archived` = Diarsipkan |
 | `subscription_status` | `trial` · `active` = Aktif · `past_due` = Jatuh Tempo (tenggang) · `suspended` = Ditangguhkan · `terminated` = Diakhiri |
 | `approval_decision` | `approved` = Setuju · `rejected` = Tolak · `delegated` = Didelegasikan · `escalated` = Dieskalasi |
 | `approval_channel` | `web` · `whatsapp` |
 | `notification_channel` | `in_app` · `email` · `whatsapp` |
-| `count_type` | `monthly` · `annual` · `adhoc` · `cycle_abc` [F2] |
+| `count_type` | `monthly` · `annual` · `adhoc` · `spot_check` = Pemeriksaan mendadak (tanpa pembekuan, [BR-OPN-10](05-aturan-bisnis.md#br-opn)) · `cycle_abc` [F2] |
 | `variance_class` | `minor` = Kecil (auto) · `moderate` = Sedang (hitung ulang) · `major` = Besar (approval + akar masalah) |
 | `root_cause_category` | `mispick` = Salah ambil · `misplaced` = Salah taruh · `wrong_uom` = Salah satuan · `damaged_lost` = Rusak/hilang · `unrecorded_txn` = Transaksi tidak tercatat · `other` |
 | `sync_status` (PWA, [F2]) | `queued` · `synced` · `conflict` = Perlu tinjauan · `held` = Ditahan (langganan ditangguhkan) |
 | `item_status` | `active` · `provisional` = Sementara (dibuat dari baris non-katalog) · `inactive` |
+| `vendor_type` ([A-52](04-keputusan-dan-asumsi.md#a-52)) | `company` = Perusahaan · `shop` = Toko · `online_marketplace` = Toko online · `individual` = Perorangan |
+| `vendor_status` ([A-53](04-keputusan-dan-asumsi.md#a-53)) | `active` · `provisional` = Sementara (dibuat saat memesan) · `inactive` |
+| `purchase_request_origin` | `backorder` = Dari backorder REQ · `manual` · `reorder_point` = Titik pesan ulang |
+| `request_origin` ([A-54](04-keputusan-dan-asumsi.md#a-54)) | `regular` = Biasa · `supplement` = REQ Tambahan |
+| `substitution_response` ([A-55](04-keputusan-dan-asumsi.md#a-55)) | `accepted` = Diterima · `rejected` = Ditolak klien · `expired` = Lewat batas (dianggap setuju) |
+| `shipment_method` ([A-57](04-keputusan-dan-asumsi.md#a-57)) | `own_fleet` = Kendaraan sendiri · `carrier` = Ekspedisi · `self_delivered` = Diantar sendiri |
+| `meter_unit` ([A-66](04-keputusan-dan-asumsi.md#a-66)) | `hour` = Jam mesin · `km` = Kilometer · `none` = Tanpa meter |
 
 ## 4. Blok mesin-status untuk prompt & tes
 

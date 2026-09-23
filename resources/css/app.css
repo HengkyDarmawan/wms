@@ -1,0 +1,38 @@
+/* ============================================================
+   WMS Proyek — gaya aplikasi
+   Basis: template NexaDash (Bootstrap 5.3) di folder template/.
+   Semua library di-bundle lokal, tanpa CDN (Blueprint §17).
+   ============================================================ */
+
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+@import './nexadash/variables.css';
+@import './nexadash/layout.css';
+@import './nexadash/components.css';
+@import './nexadash/pages.css';
+@import './nexadash/motion.css';
+@import './nexadash/dark.css';
+
+/* ---------------------------------------------- penyesuaian WMS */
+
+/* Alpine: sembunyikan elemen sampai komponen siap. */
+[x-cloak] {
+    display: none !important;
+}
+
+/* BR-GEN-11: penanda field wajib pada label form. */
+.form-label .wajib,
+label .wajib {
+    color: var(--nx-danger);
+    margin-left: 0.125rem;
+    font-weight: 600;
+}
+
+/* Spanduk status langganan (BR-SUB-01/02). */
+.nx-subscription-banner {
+    border-radius: var(--nx-radius, 0.75rem);
+    padding: 0.625rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}

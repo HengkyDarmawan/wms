@@ -1,8 +1,8 @@
 # Glosarium
 
-**Versi:** 0.3
+**Versi:** 0.6
 **Tanggal:** 23 September 2026
-**Status:** istilah baru dari audit v0.3 ditandai *(baru)*; istilah yang bergantung pada A-29–A-49 mengikuti status validasinya
+**Status:** istilah dari A-29–A-49 berlaku (validasi 23 Sep 2026); istilah yang bergantung pada [A-50](04-keputusan-dan-asumsi.md#a-50) mengikuti status validasinya
 **Dokumen terkait:** [Blueprint](01-blueprint.md) · [Katalog Status & Enum](06-katalog-status-dan-enum.md) (nilai status **tidak** diulang di sini) · [Aturan Bisnis](05-aturan-bisnis.md)
 
 Istilah di bawah **wajib dipakai sama persis** di UI, dokumen, dan kode. Kolom *Nama di kode* adalah acuan penamaan tabel/model/variabel (Inggris, `snake_case` untuk tabel; model = bentuk `PascalCase` tunggal). Kolom *Rujukan* menunjuk bagian Blueprint (BP) atau aturan bisnis (BR).
@@ -40,7 +40,7 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Jabatan | `position` | Posisi dalam struktur organisasi, dipakai approval | BP 6.2 |
 | Tipe Gudang | `warehouse_type` | Utama, Cabang, Site, atau tipe buatan company | BP 6.2 |
 | Gudang | `warehouse` | Tempat penyimpanan fisik; bisa punya induk | BP 6.2 |
-| Gudang Site | `warehouse` (type = site) | Gudang di lokasi proyek, terikat satu proyek | BP 6.2 |
+| Gudang Site | `warehouse` (type = site) | Gudang di lokasi proyek, terikat satu proyek; satu proyek boleh punya beberapa (titik/segmen lokasi) | BP 6.2, A-40 |
 | Gudang Sumber / Tujuan *(baru)* | `source_warehouse_id`, `dest_warehouse_id` | Gudang pemenuh permintaan / gudang tujuan transfer | BR-REQ-04 |
 | Zona | `zone` | Area di dalam gudang | BP 6.3 |
 | Rak | `rack` | Rak di dalam zona | BP 6.3 |
@@ -74,13 +74,17 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Kategori Satuan | `uom_category` | Jumlah, panjang, berat, volume, luas | BP 6.5 |
 | Satuan Dasar | `base_uom` | Satuan penyimpanan stok untuk satu item | BP 6.5 |
 | Konversi Satuan | `uom_conversion` | Faktor antar satuan (global atau khusus item) | BP 6.5 |
-| Titik Pesan Ulang | `reorder_point` | Batas stok yang memicu saran Purchase Request | BP 6.4 |
+| Titik Pesan Ulang | `reorder_point` | Batas stok yang memicu draf Purchase Request harian | BP 6.4, BR-REQ-11 |
 | Kelas ABC | `abc_class` | Klasifikasi item untuk cycle count | BP 9 |
-| Vendor | `vendor` | Pemasok barang | BP 6.3a |
+| Vendor | `vendor` | Pemasok barang; jenis `vendor_type` (perusahaan / toko / toko online / perorangan) | BP 6.3a, A-52 |
+| Vendor Sementara *(baru)* | `vendor` (status = provisional) | Vendor yang dibuat cepat saat memesan, dilengkapi Admin kemudian | A-53 |
+| Vendor Tetap *(baru)* | `item_vendor` | Vendor pilihan per item (prioritas, tanpa harga) yang disarankan saat memesan | A-52 |
 | Klien | `client` | Pemilik proyek, pelanggan dari company | BP 6.3a |
 | Kendaraan *(baru)* | `vehicle` | Kendaraan pengiriman milik company | BP 6.3a |
 | Ekspedisi Pihak Ketiga *(baru)* | `carrier` | Jasa pengiriman luar; SJ mencatat nama & resi | BR-SJ-07 |
-| Alasan *(baru)* | `reason_code` | Master alasan untuk tolak/batal/penyesuaian/waste/short pick/selisih | BR-GEN-02 |
+| Nomor Resi *(baru)* | `tracking_no` | Nomor lacak kurir/ekspedisi pada SJ atau catatan pemesanan | BR-SJ-07, A-51 |
+| Alasan *(baru)* | `reason_code` | Master alasan untuk tolak/batal/penyesuaian/waste/short pick/selisih; wajib `*` saat tolak/batal | BR-GEN-02, BR-GEN-11 |
+| Keterangan *(baru)* | `notes` | Teks bebas **opsional** pada dokumen dan pada aksi tolak/batal | BR-GEN-11 |
 
 ## 4. Stok
 
@@ -93,6 +97,8 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Alokasi *(baru)* | `allocation` | Reservasi keras yang menunjuk bin/lot/serial/potongan | BR-STK-04 |
 | Stok Tersedia | `available_qty` | Saldo *Tersedia* − reservasi aktif | BR-STK-03 |
 | Dicadangkan | `reserved_qty` | Jumlah reservasi aktif (turunan, bukan status) | BR-STK-03 |
+| Reservasi Menggantung *(baru)* | `stale_reservation` (laporan) | Reservasi aktif tanpa PCK lebih dari N hari | BR-STK-16 |
+| Tanggal Kunci Stok *(baru)* | `stock_lock_date` | Batas periode; mutasi sebelum tanggal ini ditolak | BR-STK-15 |
 | Strategi Pengambilan | `removal_strategy` | FIFO, FEFO, Manual, Sisa potongan dulu | BP 6.6 |
 | Backorder | `backorder` | Sisa permintaan yang belum bisa dipenuhi dari stok; wajib punya sumber (TRF/PRQ) | BR-REQ-05 |
 | Cross-dock | `cross_dock` | Barang masuk langsung ke Loading Area tanpa put-away | BR-SJ-03 |
@@ -111,20 +117,36 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Permintaan Material | `material_request` (`REQ`) | Pengajuan barang dari pemohon internal atau klien | KS 2.1 |
 | Pemohon *(baru)* | `requester` | User yang mengajukan (internal atau klien) | BP 4.2 |
 | Tanggal Dibutuhkan *(baru)* | `required_date` | Tanggal barang harus tiba, per baris | BR-REQ-01 |
+| Tanggal Janji *(baru)* | `promised_date` | Tanggal kirim yang dijanjikan staf per baris, tampil di portal | BR-REQ-14 |
+| REQ Tambahan *(baru)* | `material_request` (origin = supplement) | Permintaan lanjutan dari klien setelah REQ induk disetujui | BR-REQ-12 |
+| Pecah Baris *(baru)* | `split_from_line_id` | Satu baris dibagi ke beberapa gudang sumber | BR-REQ-04 |
+| Penggantian Item *(baru)* | `substitution` (`substitution_response`) | Baris klien dipetakan ke item lain; klien boleh menolak dalam batas keberatan | BR-REQ-13 |
+| Batas Keberatan Pengganti *(baru)* | `substitution_objection_days` | Lama klien boleh menolak pengganti (default 1 hari) | BR-REQ-13 |
+| Permintaan Pembatalan *(baru)* | `cancel_request` | Klien meminta baris dibatalkan setelah disetujui; dikonfirmasi staf | BR-REQ-15 |
+| SLA Tinjau *(baru)* | `review_sla_days` | Batas waktu staf meninjau permintaan klien (default 1 hari kerja) | BR-REQ-14 |
 | Item Non-katalog | `non_catalog_line` | Baris permintaan untuk barang yang belum ada di master | BR-REQ-03 |
 | Baris Dokumen *(baru)* | `<dokumen>_line` | Baris item pada dokumen (mis. `material_request_line`) | BR §1 |
 | Tugas Picking | `pick_task` (`PCK`) | Tugas mengambil barang dari bin ke Loading Area | KS 2.2 |
 | Pengiriman / Surat Jalan | `shipment` (`SJ`) | Dokumen pengiriman barang | KS 2.3 |
 | Konfirmasi Muat *(baru)* | `load_confirmation` | Catatan timeline saat SJ dikirim (foto opsional) | KS 2.3 |
-| Bukti Terima | `proof_of_delivery` | Foto, tanda tangan, jumlah diterima di tujuan | BR-SJ-05 |
+| Cara Kirim *(baru)* | `shipment_method` | Kendaraan sendiri / ekspedisi / diantar sendiri; field wajib mengikuti pilihan | BR-SJ-07, A-57 |
+| Diantar Sendiri *(baru)* | `shipment_method = self_delivered` (SJ), `self_delivered` (RET) | Tanpa driver & kendaraan company; cukup nama pembawa | BR-SJ-07, KS 2.8, A-50 |
+| Gabung Pengiriman *(baru)* | `shipment` (n PCK) | Satu SJ memuat beberapa PCK/REQ ke tujuan yang sama | BR-SJ-09 |
+| Bukti Terima | `proof_of_delivery` | Satu per SJ: foto, tanda tangan, GPS; per baris jumlah baik/rusak/kurang; per unit untuk serial & potongan | BR-SJ-05, A-64 |
+| Keberatan Terima *(baru)* | `receipt_dispute` (`receipt_confirmation`) | Pemohon menolak sebagian bukti terima (kurang/rusak) dalam batas konfirmasi; membuka DSC | BR-REQ-10, A-63 |
+| Batas Konfirmasi Terima *(baru)* | `receipt_confirm_days` | Lama pemohon boleh konfirmasi/keberatan (default 3 hari) | BR-REQ-10 |
 | Tautan Bukti Terima *(baru)* | `delivery_token` | Token sekali pakai + OTP untuk penerima tanpa akun | BR-SJ-05 |
 | Konfirmasi Terima Pemohon *(baru)* | `receipt_confirmation` | Konfirmasi pemohon setelah bukti terima driver | BR-REQ-10 |
-| Selisih Pengiriman *(baru)* | `delivery_discrepancy` (`DSC`) | Dokumen penyelesaian jumlah diterima < dikirim | KS 2.4 |
+| Selisih Pengiriman *(baru)* | `delivery_discrepancy` (`DSC`) | Dokumen penyelesaian barang kurang atau rusak saat tiba | KS 2.4, BR-SJ-10 |
+| Jenis Selisih *(baru)* | `discrepancy_type` | Kurang / Rusak per baris DSC | BR-SJ-10 |
+| Kirim Pengganti *(baru)* | `reship` | Disposisi DSC: jumlah kembali ke backorder REQ dan dikirim ulang dari stok | BR-SJ-10 |
+| Keputusan Klien *(baru)* | `client_decision` | Masih perlu / tidak perlu sisa barang pada DSC | BR-SJ-10 |
+| Laporan Posisi Barang Rusak & Selisih *(baru)* | `damage_position_report` | Rusak dalam perjalanan, di bin Retur, diklaim, DSC terbuka | BR-SJ-10 |
 | Penerimaan Barang | `goods_receipt` (`GRN`) | Dokumen barang masuk (vendor, transfer, retur) | KS 2.5 |
 | Hasil QC *(baru)* | `qc_result` | Lolos / Karantina / Ditolak per baris GRN | BR-GRN-02 |
 | Put-away | `putaway_task` (`PUT`) | Tugas menaruh barang ke bin | KS 2.6 |
 | Retur ke Vendor *(baru)* | `vendor_return` (`RTV`) | Pengembalian barang gagal QC ke vendor | KS 2.16 |
-| Transfer | `transfer` (`TRF`) | Dokumen niat pemindahan antar gudang atau antar proyek | KS 2.7 |
+| Transfer | `transfer` (`TRF`) | Dokumen niat pemindahan antar gudang, antar proyek, atau antar Gudang Site dalam satu proyek | KS 2.7, A-50 |
 | Retur | `goods_return` (`RET`) | Pengembalian barang dari proyek/klien | KS 2.8 |
 | Pemilahan Retur | `return_sorting` | Layak, rusak, offcut, waste | BR-RET-04 |
 | Pemakaian Material *(baru)* | `material_issue` (`ISU`) | Barang habis pakai di Gudang Site dipakai proyek | KS 2.9 |
@@ -134,7 +156,9 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Penyesuaian Stok | `stock_adjustment` (`ADJ`) | Koreksi stok dengan approval | KS 2.12 |
 | Stock Opname | `stock_count` (`OPN`) | Sesi penghitungan fisik | KS 2.13 |
 | Berita Acara Waste | `waste_disposal` (`WST`) | Dokumen disposisi waste | KS 2.14 |
-| Purchase Request | `purchase_request` (`PRQ`) | Permintaan pembelian ke Purchasing | KS 2.15 |
+| Purchase Request | `purchase_request` (`PRQ`) | Permintaan pembelian ke Purchasing; asal `purchase_request_origin` | KS 2.15 |
+| Catatan Pemesanan *(baru)* | `purchase_request_order` | Pemesanan per vendor/toko online di bawah PRQ (nomor PO/pesanan, resi, ETA, baris × jumlah dipesan) | A-51 |
+| Nomor Pesanan Marketplace *(baru)* | `marketplace_order_no` | Nomor pesanan di toko online | A-51 |
 | Timeline Dokumen *(baru)* | `document_timeline` | Riwayat status/pelaku/waktu/kanal per dokumen (untuk user) | BR-GEN-05 |
 | Jejak Audit *(baru)* | `audit_log` | Catatan teknis nilai lama → baru (untuk Admin) | BR-GEN-05 |
 | Format Nomor *(baru)* | `numbering_format` | Pola nomor dokumen per company | BR-GEN-06 |
@@ -159,6 +183,10 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Aset | `asset` | Unit barang ber-serial dengan model kepemilikan aset | BP 6.8 |
 | State Aset *(baru)* | `asset_state` | Siklus hidup aset (lihat KS 3) | BR-AST-01 |
 | Kondisi / Grade Aset *(baru)* | `condition_grade` | A–D saat keluar/kembali | BR-AST-03 |
+| Skor Kondisi *(baru)* | `condition_score` | 0–100 % saat pemeriksaan; riwayat per aset untuk maintenance | BR-AST-08 |
+| Meter Pemakaian *(baru)* | `usage_meter` (`meter_unit`, `meter_out`, `meter_in`, `meter_total`) | Jam mesin / km dibaca saat keluar & kembali | BR-AST-08 |
+| Umur Pakai *(baru)* | `expected_life_days`, `expected_life_hours` | Umur harapan aset (hari dan/atau jam) | BR-AST-08 |
+| Sisa Umur *(baru)* | `remaining_life_pct` | Turunan: 100 − pemakaian/umur harapan; peringatan di bawah ambang | BR-AST-08 |
 | Jatuh Tempo Pengembalian *(baru)* | `due_return_date` | Tanggal kembali yang direncanakan | BR-AST-06 |
 | Hilang / Dihapuskan *(baru)* | `lost`, `written_off` | State aset hilang; dihapuskan lewat ADJ | BR-AST-04 |
 | Maintenance | `maintenance`, `maintenance_schedule` | Servis aset & jadwalnya [F2] | BR-AST-07 |
@@ -169,6 +197,7 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Istilah (UI) | Nama di kode | Arti | Rujukan |
 |---|---|---|---|
 | Hitung Buta | `blind_count` | Penghitung tidak melihat angka sistem | BP 9 |
+| Pemeriksaan Mendadak *(baru)* | `stock_count` (count_type = spot_check) | Sesi kecil tanpa pembekuan oleh Auditor/Kepala Gudang | BR-OPN-10 |
 | Penugasan Penghitung *(baru)* | `count_assignment` | Siapa menghitung bin mana | BR-OPN-05 |
 | Hitung Ulang *(baru)* | `recount` | Hitungan kedua oleh orang berbeda | BR-OPN-05 |
 | Toleransi Selisih | `variance_tolerance` | Ambang relatif & absolut untuk kelas selisih | BR-OPN-04 |
@@ -229,5 +258,6 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Penutupan Proyek *(baru)* | `project_closure` | Checklist & guard saat menutup proyek | BR-PRJ-02 |
 | Stok On-site | `on_site_stock` (tampilan) | Tiga sub-tampilan: Di Gudang Site, Aset di Proyek, Terkirim ke Klien | BR-PRJ-05 |
 | PIC Proyek | `project_pic` | Penanggung jawab proyek di company | BP 6.9 |
+| Rencana Kebutuhan Material *(baru)* | `project_material_plan` | BoQ kuantitas per proyek (item × jumlah rencana) [F2] | BR-PRJ-09 |
 
 *Singkatan rujukan:* BP = Blueprint, BR = Aturan Bisnis, KS = Katalog Status & Enum, NFR = kebutuhan non-fungsional.

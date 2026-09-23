@@ -1,0 +1,170 @@
+      <!-- ===== Board toolbar ===== -->
+      <div class="card mb-4">
+        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+          <div class="me-auto d-flex align-items-center gap-3">
+            <strong>Sprint 24</strong>
+            <span class="nx-avatar-group">
+              <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=12" alt=""></span>
+              <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=47" alt=""></span>
+              <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=68" alt=""></span>
+              <span class="nx-avatar nx-avatar-sm">+4</span>
+            </span>
+          </div>
+          <div class="input-group input-group-sm" style="width:220px">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="search" class="form-control" id="kanbanSearch" placeholder="Filter cards&hellip;" aria-label="Filter cards">
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Board ===== -->
+      <div class="nx-kanban-board" id="kanbanBoard">
+
+        <div class="nx-kanban-col">
+          <div class="nx-kanban-col-head"><span class="nx-dot-label" style="background:var(--nx-secondary)"></span>Backlog<span class="badge badge-soft-secondary ms-auto">4</span></div>
+          <div class="nx-kanban-cards" data-col="backlog">
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-info">Research</span>
+              <div class="nx-kc-title">Audit competitor onboarding flows</div>
+              <div class="nx-kc-desc">Compare the first-run experience of five competitors and summarise what converts.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=32" alt=""></span></span>
+                <span><i class="bi bi-chat"></i> 2</span><span><i class="bi bi-paperclip"></i> 1</span>
+                <span class="badge badge-soft-secondary ms-auto">Oct 2</span>
+              </div>
+            </div>
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-warning">Tech Debt</span>
+              <div class="nx-kc-title">Remove legacy pricing endpoints</div>
+              <div class="nx-kc-desc">Three v1 endpoints are still receiving traffic from the old mobile app.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=68" alt=""></span></span>
+                <span><i class="bi bi-chat"></i> 5</span>
+                <span class="badge badge-soft-secondary ms-auto">Oct 9</span>
+              </div>
+            </div>
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-primary">Feature</span>
+              <div class="nx-kc-title">Bulk export for invoices</div>
+              <div class="nx-kc-desc">Customers want to download a full year of invoices as one archive.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=15" alt=""></span></span>
+                <span><i class="bi bi-chat"></i> 1</span>
+                <span class="badge badge-soft-secondary ms-auto">Oct 14</span>
+              </div>
+            </div>
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-success">Docs</span>
+              <div class="nx-kc-title">Rewrite the webhooks guide</div>
+              <div class="nx-kc-desc">Current guide predates the v2 signature scheme and confuses new integrators.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=5" alt=""></span></span>
+                <span><i class="bi bi-paperclip"></i> 3</span>
+                <span class="badge badge-soft-secondary ms-auto">Oct 20</span>
+              </div>
+            </div>
+          </div>
+          <button class="nx-kanban-add" type="button"><i class="bi bi-plus-lg me-1"></i>Add task</button>
+        </div>
+
+        <div class="nx-kanban-col">
+          <div class="nx-kanban-col-head"><span class="nx-dot-label" style="background:var(--nx-primary)"></span>In Progress<span class="badge badge-soft-primary ms-auto">3</span></div>
+          <div class="nx-kanban-cards" data-col="progress">
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-danger">Bug</span>
+              <div class="nx-kc-title">Billing retry loops on 402</div>
+              <div class="nx-kc-desc">Failed charges retry indefinitely when the card issuer returns a soft decline.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=68" alt=""></span><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=12" alt=""></span></span>
+                <span><i class="bi bi-chat"></i> 12</span><span><i class="bi bi-paperclip"></i> 2</span>
+                <span class="badge badge-soft-danger ms-auto">Sep 9</span>
+              </div>
+            </div>
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-primary">Feature</span>
+              <div class="nx-kc-title">Self-serve onboarding wizard</div>
+              <div class="nx-kc-desc">Four-step wizard replacing the manual account setup call.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=47" alt=""></span><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=32" alt=""></span><span class="nx-avatar nx-avatar-xs">+2</span></span>
+                <span><i class="bi bi-chat"></i> 8</span>
+                <span class="badge badge-soft-warning ms-auto">Sep 18</span>
+              </div>
+            </div>
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-info">Research</span>
+              <div class="nx-kc-title">Analytics surface discovery</div>
+              <div class="nx-kc-desc">Interview eight accounts about which metrics they export manually today.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=5" alt=""></span></span>
+                <span><i class="bi bi-chat"></i> 4</span>
+                <span class="badge badge-soft-secondary ms-auto">Sep 22</span>
+              </div>
+            </div>
+          </div>
+          <button class="nx-kanban-add" type="button"><i class="bi bi-plus-lg me-1"></i>Add task</button>
+        </div>
+
+        <div class="nx-kanban-col">
+          <div class="nx-kanban-col-head"><span class="nx-dot-label" style="background:var(--nx-warning)"></span>Review<span class="badge badge-soft-warning ms-auto">2</span></div>
+          <div class="nx-kanban-cards" data-col="review">
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-warning">Tech Debt</span>
+              <div class="nx-kc-title">Extract billing service from monolith</div>
+              <div class="nx-kc-desc">PR #482 &mdash; needs a second reviewer before it can be merged.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=68" alt=""></span></span>
+                <span><i class="bi bi-chat"></i> 9</span>
+                <span class="badge badge-soft-secondary ms-auto">Sep 15</span>
+              </div>
+            </div>
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-success">Docs</span>
+              <div class="nx-kc-title">Changelog automation</div>
+              <div class="nx-kc-desc">Generate the changelog page from conventional commit messages.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=15" alt=""></span></span>
+                <span><i class="bi bi-chat"></i> 3</span><span><i class="bi bi-paperclip"></i> 1</span>
+                <span class="badge badge-soft-secondary ms-auto">Sep 16</span>
+              </div>
+            </div>
+          </div>
+          <button class="nx-kanban-add" type="button"><i class="bi bi-plus-lg me-1"></i>Add task</button>
+        </div>
+
+        <div class="nx-kanban-col">
+          <div class="nx-kanban-col-head"><span class="nx-dot-label" style="background:var(--nx-success)"></span>Done<span class="badge badge-soft-success ms-auto">3</span></div>
+          <div class="nx-kanban-cards" data-col="done">
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-primary">Feature</span>
+              <div class="nx-kc-title">Feature flag management UI</div>
+              <div class="nx-kc-desc">Shipped in v2.4.0 with per-environment overrides.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=5" alt=""></span></span>
+                <span><i class="bi bi-check2-circle text-success"></i> Done</span>
+                <span class="badge badge-soft-success ms-auto">Sep 4</span>
+              </div>
+            </div>
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-danger">Bug</span>
+              <div class="nx-kc-title">Fix timezone drift in reports</div>
+              <div class="nx-kc-desc">Daily rollups were computed in UTC regardless of workspace timezone.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=12" alt=""></span></span>
+                <span><i class="bi bi-check2-circle text-success"></i> Done</span>
+                <span class="badge badge-soft-success ms-auto">Sep 2</span>
+              </div>
+            </div>
+            <div class="nx-kanban-card">
+              <span class="badge badge-soft-info">Research</span>
+              <div class="nx-kc-title">Pricing page A/B results</div>
+              <div class="nx-kc-desc">Variant B lifted trial starts by 11.4% at 96% confidence.</div>
+              <div class="nx-kc-foot">
+                <span class="nx-avatar-group"><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=47" alt=""></span></span>
+                <span><i class="bi bi-check2-circle text-success"></i> Done</span>
+                <span class="badge badge-soft-success ms-auto">Aug 29</span>
+              </div>
+            </div>
+          </div>
+          <button class="nx-kanban-add" type="button"><i class="bi bi-plus-lg me-1"></i>Add task</button>
+        </div>
+      </div>

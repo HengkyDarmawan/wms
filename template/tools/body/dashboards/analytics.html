@@ -1,0 +1,103 @@
+      <!-- ===== KPI Cards ===== -->
+      <div class="row g-4">
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <span class="nx-kpi-label">Sessions</span>
+              <span class="nx-icon-sq primary"><i class="bi bi-people"></i></span>
+            </div>
+            <div class="nx-kpi-value"><span data-countup data-value="184203">0</span></div>
+            <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>8.4%</span><span>vs last period</span></div>
+          </div></div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <span class="nx-kpi-label">Bounce Rate</span>
+              <span class="nx-icon-sq danger"><i class="bi bi-box-arrow-up-right"></i></span>
+            </div>
+            <div class="nx-kpi-value"><span data-countup data-value="38.6" data-decimals="1">0</span>%</div>
+            <div class="nx-kpi-foot"><span class="nx-trend down"><i class="bi bi-arrow-down-right"></i>2.1%</span><span>vs last period</span></div>
+          </div></div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <span class="nx-kpi-label">Avg. Duration</span>
+              <span class="nx-icon-sq info"><i class="bi bi-stopwatch"></i></span>
+            </div>
+            <div class="nx-kpi-value">3m <span data-countup data-value="42">0</span>s</div>
+            <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>12s</span><span>vs last period</span></div>
+          </div></div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <span class="nx-kpi-label">Conversion</span>
+              <span class="nx-icon-sq success"><i class="bi bi-bullseye"></i></span>
+            </div>
+            <div class="nx-kpi-value"><span data-countup data-value="4.82" data-decimals="2">0</span>%</div>
+            <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>0.4%</span><span>vs last period</span></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- ===== Traffic overview ===== -->
+      <div class="row g-4 mt-0">
+        <div class="col-lg-8">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Traffic Overview</h2><div class="card-subtitle">Sessions and users, last 12 weeks</div></div>
+              <span class="badge badge-soft-primary ms-auto">Campaign launch annotated</span>
+            </div>
+            <div class="card-body"><div id="trafficChart" style="min-height:320px"></div></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Traffic Sources</h2></div>
+            <div class="card-body">
+              <div class="nx-progress-row"><div class="nx-pr-head"><span class="nx-pr-label">Organic Search</span><span class="nx-pr-value">44%</span></div><div class="progress" role="progressbar" aria-label="Organic" aria-valuenow="44" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:44%;background:var(--nx-chart-1)"></div></div></div>
+              <div class="nx-progress-row"><div class="nx-pr-head"><span class="nx-pr-label">Direct</span><span class="nx-pr-value">27%</span></div><div class="progress" role="progressbar" aria-label="Direct" aria-valuenow="27" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:27%;background:var(--nx-chart-2)"></div></div></div>
+              <div class="nx-progress-row"><div class="nx-pr-head"><span class="nx-pr-label">Referral</span><span class="nx-pr-value">18%</span></div><div class="progress" role="progressbar" aria-label="Referral" aria-valuenow="18" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:18%;background:var(--nx-chart-3)"></div></div></div>
+              <div class="nx-progress-row"><div class="nx-pr-head"><span class="nx-pr-label">Social</span><span class="nx-pr-value">11%</span></div><div class="progress" role="progressbar" aria-label="Social" aria-valuenow="11" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:11%;background:var(--nx-chart-4)"></div></div></div>
+              <hr class="my-4">
+              <h3 class="h5 mb-3">Devices</h3>
+              <div id="devicesChart" style="min-height:240px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Top pages + heatmap ===== -->
+      <div class="row g-4 mt-0">
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Top Pages</h2></div>
+            <div class="card-body"><div id="topPagesChart" style="min-height:320px"></div></div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Visitors by Hour</h2><div class="card-subtitle">Darker means busier</div></div></div>
+            <div class="card-body"><div id="hoursHeatmap" style="min-height:320px"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Top campaigns ===== -->
+      <div class="card mt-4">
+        <div class="card-header"><h2 class="card-title h4">Top Campaigns</h2><a href="dashboard-ecommerce.html" class="nx-link small ms-auto">View all</a></div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Campaign</th><th>Channel</th><th>Sessions</th><th>Conversion</th><th>Cost</th><th>ROAS</th></tr></thead>
+            <tbody>
+              <tr><td class="fw-semibold">Summer Launch 2026</td><td><span class="badge badge-soft-primary">Paid Search</span></td><td class="nx-num">42,180</td><td class="nx-num">5.8%</td><td class="nx-num">$12,400</td><td><span class="nx-trend up">4.2x</span></td></tr>
+              <tr><td class="fw-semibold">Retargeting &mdash; Cart</td><td><span class="badge badge-soft-info">Display</span></td><td class="nx-num">28,940</td><td class="nx-num">7.1%</td><td class="nx-num">$6,800</td><td><span class="nx-trend up">6.0x</span></td></tr>
+              <tr><td class="fw-semibold">Developer Newsletter</td><td><span class="badge badge-soft-success">Email</span></td><td class="nx-num">19,220</td><td class="nx-num">9.4%</td><td class="nx-num">$900</td><td><span class="nx-trend up">18.3x</span></td></tr>
+              <tr><td class="fw-semibold">Brand Awareness Q3</td><td><span class="badge badge-soft-warning">Social</span></td><td class="nx-num">64,510</td><td class="nx-num">1.2%</td><td class="nx-num">$18,200</td><td><span class="nx-trend down">0.8x</span></td></tr>
+              <tr><td class="fw-semibold">Partner Referrals</td><td><span class="badge badge-soft-secondary">Referral</span></td><td class="nx-num">11,304</td><td class="nx-num">6.6%</td><td class="nx-num">$2,100</td><td><span class="nx-trend up">5.1x</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>

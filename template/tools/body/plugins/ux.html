@@ -1,0 +1,105 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Driver.js &mdash; product tour</h2><div class="card-subtitle">Spotlights real elements and walks the user through them</div></div>
+              <span class="badge badge-soft-primary ms-auto">driver.js 1.3.1</span>
+            </div>
+            <div class="card-body">
+              <p class="text-muted small">A tour is the fastest way to explain a dense dashboard without writing documentation nobody reads.</p>
+              <div class="d-flex flex-wrap gap-2 mb-4">
+                <button class="btn btn-primary" id="tourStart" type="button"><i class="bi bi-play-circle me-1"></i>Start the tour</button>
+                <button class="btn btn-soft-secondary" id="tourHighlight" type="button"><i class="bi bi-lightbulb me-1"></i>Highlight one element</button>
+              </div>
+              <div class="row g-3">
+                <div class="col-6"><div class="card" id="tourStep1"><div class="card-body text-center"><span class="nx-icon-sq primary mx-auto mb-2"><i class="bi bi-1-circle"></i></span><div class="small fw-semibold">First stop</div></div></div></div>
+                <div class="col-6"><div class="card" id="tourStep2"><div class="card-body text-center"><span class="nx-icon-sq success mx-auto mb-2"><i class="bi bi-2-circle"></i></span><div class="small fw-semibold">Second stop</div></div></div></div>
+                <div class="col-12"><div class="card" id="tourStep3"><div class="card-body text-center"><span class="nx-icon-sq warning mx-auto mb-2"><i class="bi bi-3-circle"></i></span><div class="small fw-semibold">Final stop</div></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Tippy.js</h2><div class="card-subtitle">Tooltips with HTML, interactivity and smart placement</div></div>
+              <span class="badge badge-soft-primary ms-auto">tippy 6.3.7</span>
+            </div>
+            <div class="card-body">
+              <div class="nx-demo-row mb-4">
+                <button class="btn btn-soft-primary" id="tipTop" type="button">Top</button>
+                <button class="btn btn-soft-primary" id="tipRight" type="button">Right</button>
+                <button class="btn btn-soft-primary" id="tipBottom" type="button">Bottom</button>
+                <button class="btn btn-soft-primary" id="tipLeft" type="button">Left</button>
+              </div>
+              <div class="nx-demo-row mb-4">
+                <button class="btn btn-primary" id="tipRich" type="button">Rich HTML card</button>
+                <button class="btn btn-soft-secondary" id="tipClick" type="button">Click to open</button>
+                <button class="btn btn-soft-secondary" id="tipFollow" type="button">Follows the cursor</button>
+              </div>
+              <div class="p-4 rounded text-center" style="background:var(--nx-body-bg);border:1px solid var(--nx-border)">
+                <span id="tipInline" class="fw-semibold" style="border-bottom:2px dotted var(--nx-primary);cursor:help">Hover this phrase</span>
+                <span class="text-muted small d-block mt-1">Inline glossary terms are the classic use.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">NProgress, clipboard.js &amp; Toastify</h2><div class="card-subtitle">Three small utilities that do one job well</div></div>
+            </div>
+            <div class="card-body">
+              <h3 class="h6 mb-2">NProgress &mdash; top loading bar</h3>
+              <div class="nx-demo-row mb-4">
+                <button class="btn btn-soft-primary" id="npStart" type="button">Simulate a page load</button>
+                <button class="btn btn-soft-secondary" id="npInc" type="button">Increment</button>
+                <button class="btn btn-soft-secondary" id="npDone" type="button">Finish</button>
+              </div>
+
+              <h3 class="h6 mb-2">clipboard.js &mdash; copy anything</h3>
+              <div class="input-group mb-4">
+                <input class="form-control font-monospace" id="copySource" value="npm install nexadash" readonly>
+                <button class="btn btn-outline-secondary" id="copyBtn" data-clipboard-target="#copySource" type="button"><i class="bi bi-clipboard"></i></button>
+              </div>
+
+              <h3 class="h6 mb-2">Toastify &mdash; 3 KB notifications</h3>
+              <div class="nx-demo-row mb-0">
+                <button class="btn btn-soft-success toastify-demo" data-kind="success" type="button">Success</button>
+                <button class="btn btn-soft-danger toastify-demo" data-kind="error" type="button">Error</button>
+                <button class="btn btn-soft-info toastify-demo" data-kind="info" type="button">Info</button>
+                <button class="btn btn-soft-secondary toastify-demo" data-kind="action" type="button">With action</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Typed.js</h2><div class="card-subtitle">The typewriter effect for hero copy and empty states</div></div>
+              <span class="badge badge-soft-primary ms-auto">typed.js 2.1.0</span>
+            </div>
+            <div class="card-body">
+              <div class="p-4 rounded text-center mb-4" style="background:linear-gradient(135deg,#6366f1,#312e81);color:#fff">
+                <div class="small" style="opacity:.8">NexaDash helps you</div>
+                <h3 class="h2 mb-0" style="color:#fff">&nbsp;<span id="typedTarget"></span></h3>
+              </div>
+              <h3 class="h6 mb-2">AOS &mdash; animate on scroll</h3>
+              <p class="small text-muted">Scroll the cards below into view; each uses a different <code>data-aos</code> value.</p>
+              <div class="row g-3 nx-aos-demo">
+                <div class="col-4" data-aos="fade-up"><div class="card"><div class="card-body text-center small">fade-up</div></div></div>
+                <div class="col-4" data-aos="zoom-in" data-aos-delay="100"><div class="card"><div class="card-body text-center small">zoom-in</div></div></div>
+                <div class="col-4" data-aos="fade-left" data-aos-delay="200"><div class="card"><div class="card-body text-center small">fade-left</div></div></div>
+                <div class="col-4" data-aos="flip-up" data-aos-delay="100"><div class="card"><div class="card-body text-center small">flip-up</div></div></div>
+                <div class="col-4" data-aos="fade-down" data-aos-delay="200"><div class="card"><div class="card-body text-center small">fade-down</div></div></div>
+                <div class="col-4" data-aos="zoom-out" data-aos-delay="300"><div class="card"><div class="card-body text-center small">zoom-out</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>

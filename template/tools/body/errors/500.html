@@ -1,0 +1,27 @@
+  <main class="nx-error-page">
+    <a class="d-inline-flex align-items-center gap-2 text-decoration-none mb-4" href="index.html">
+      <img src="assets/img/logo.svg" alt="" width="32" height="32">
+      <span class="h4 mb-0" style="color:var(--nx-text)">NexaDash</span>
+    </a>
+
+    <svg width="200" height="140" viewBox="0 0 200 140" fill="none" aria-hidden="true">
+      <rect x="30" y="30" width="140" height="36" rx="8" fill="var(--nx-danger-subtle)"/>
+      <rect x="30" y="76" width="140" height="36" rx="8" fill="var(--nx-danger-subtle)" opacity=".6"/>
+      <circle cx="48" cy="48" r="6" fill="var(--nx-danger)"/>
+      <circle cx="48" cy="94" r="6" fill="var(--nx-danger)" opacity=".5"/>
+      <rect x="66" y="43" width="80" height="10" rx="5" fill="var(--nx-danger)" opacity=".35"/>
+      <rect x="66" y="89" width="56" height="10" rx="5" fill="var(--nx-danger)" opacity=".2"/>
+      <path d="M150 96l14 14M164 96l-14 14" stroke="var(--nx-danger)" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+
+    <div class="nx-error-code" style="color:var(--nx-danger)">500</div>
+    <h1>Something went wrong on our side</h1>
+    <p>Our team has been notified automatically and is already looking into it. Try again in a few moments.</p>
+
+    <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+      <button class="btn btn-primary d-inline-flex align-items-center gap-1" type="button" onclick="window.location.reload()"><i class="bi bi-arrow-clockwise"></i>Try again</button>
+      <a class="btn btn-soft-secondary d-inline-flex align-items-center gap-1" href="index.html"><i class="bi bi-house-door"></i>Back to dashboard</a>
+    </div>
+
+    <p class="text-muted small mt-4 mb-0">Incident reference: <code>INC-204-EUW1</code></p>
+  </main>

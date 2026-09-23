@@ -1,0 +1,50 @@
+      <div class="row g-4">
+        <div class="col-xl-5">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Category tree</h2><div class="card-subtitle">Click a row to edit it on the right</div></div>
+              <button class="btn btn-xs btn-soft-secondary ms-auto" id="catExpandAll" type="button">Expand all</button>
+            </div>
+            <div class="card-body">
+              <div class="input-group input-group-sm mb-3">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input class="form-control" type="search" id="catSearch" placeholder="Find a category&hellip;" aria-label="Find a category">
+              </div>
+              <ul class="nx-tree" id="catTree"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-7">
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4" id="catFormTitle">Edit category</h2><span class="badge badge-soft-secondary ms-auto" id="catPath">Audio</span></div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-7"><label class="form-label" for="catName">Name</label><input class="form-control" id="catName" value="Audio"></div>
+                <div class="col-md-5"><label class="form-label" for="catSlug">Slug</label><input class="form-control" id="catSlug" value="audio"></div>
+                <div class="col-md-7"><label class="form-label" for="catParent">Parent category</label>
+                  <select class="form-select" id="catParent"><option>None (top level)</option><option>Audio</option><option>Wearables</option><option>Accessories</option><option>Home</option></select>
+                </div>
+                <div class="col-md-5"><label class="form-label" for="catOrder">Sort order</label><input class="form-control" type="number" id="catOrder" value="1"></div>
+                <div class="col-12"><label class="form-label" for="catDesc">Description</label><textarea class="form-control" id="catDesc" rows="3">Headphones, speakers and everything that makes noise on purpose.</textarea></div>
+                <div class="col-12">
+                  <div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="catVisible" checked><label class="form-check-label" for="catVisible">Visible in storefront navigation</label></div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+              <button class="btn btn-soft-danger" id="catDelete" type="button">Delete</button>
+              <button class="btn btn-primary" id="catSave" type="button">Save category</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">All categories</h2><span class="badge badge-soft-secondary ms-auto" id="catTotal">0</span></div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead><tr><th>Category</th><th>Slug</th><th>Products</th><th>Visible</th></tr></thead>
+                <tbody id="catTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>

@@ -1,0 +1,125 @@
+      <div class="row">
+        <div class="col-xl-9">
+          <div class="nx-changelog">
+
+            <div class="nx-changelog-item">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span class="badge bg-primary">v2.4.1</span>
+                <span class="text-muted small">September 11, 2026</span>
+                <span class="badge badge-soft-success">Latest</span>
+              </div>
+              <h2 class="h4 mb-3">Billing fixes and smaller papercuts</h2>
+              <div class="card"><div class="card-body">
+                <h3 class="h6 mb-2"><span class="badge badge-soft-danger me-2">Fixed</span></h3>
+                <ul class="small text-muted">
+                  <li>Failed charges no longer retry indefinitely on soft declines from the issuer.</li>
+                  <li>Daily rollups now respect the workspace timezone instead of always using UTC.</li>
+                  <li>The invoice export no longer times out on workspaces with more than 5,000 invoices.</li>
+                </ul>
+                <h3 class="h6 mb-2 mt-3"><span class="badge badge-soft-warning me-2">Improved</span></h3>
+                <ul class="small text-muted mb-0">
+                  <li>Dunning emails explain the decline reason in plain language.</li>
+                  <li>Chart tooltips are keyboard accessible.</li>
+                </ul>
+              </div></div>
+            </div>
+
+            <div class="nx-changelog-item">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span class="badge bg-primary">v2.4.0</span>
+                <span class="text-muted small">September 4, 2026</span>
+              </div>
+              <h2 class="h4 mb-3">Feature flag management</h2>
+              <div class="card"><div class="card-body">
+                <h3 class="h6 mb-2"><span class="badge badge-soft-success me-2">New</span></h3>
+                <ul class="small text-muted">
+                  <li>Manage feature flags from the UI with per-environment overrides.</li>
+                  <li>Flag change history with author and timestamp.</li>
+                  <li>Percentage rollouts with sticky bucketing per user ID.</li>
+                </ul>
+                <h3 class="h6 mb-2 mt-3"><span class="badge badge-soft-warning me-2">Improved</span></h3>
+                <ul class="small text-muted mb-0">
+                  <li>The command palette now indexes flags alongside pages.</li>
+                  <li>Sidebar collapse state persists across sessions.</li>
+                </ul>
+              </div></div>
+            </div>
+
+            <div class="nx-changelog-item">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span class="badge bg-secondary">v2.3.0</span>
+                <span class="text-muted small">July 18, 2026</span>
+              </div>
+              <h2 class="h4 mb-3">Dark mode, everywhere</h2>
+              <div class="card"><div class="card-body">
+                <h3 class="h6 mb-2"><span class="badge badge-soft-success me-2">New</span></h3>
+                <ul class="small text-muted">
+                  <li>A complete dark palette covering charts, tables and third-party components.</li>
+                  <li>Theme follows the operating system by default and can be pinned per user.</li>
+                </ul>
+                <h3 class="h6 mb-2 mt-3"><span class="badge badge-soft-danger me-2">Fixed</span></h3>
+                <ul class="small text-muted mb-0">
+                  <li>Date picker contrast in low-light environments.</li>
+                  <li>Toast stacking order behind modals.</li>
+                </ul>
+              </div></div>
+            </div>
+
+            <div class="nx-changelog-item">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span class="badge bg-secondary">v2.2.0</span>
+                <span class="text-muted small">May 30, 2026</span>
+              </div>
+              <h2 class="h4 mb-3">Command palette</h2>
+              <div class="card"><div class="card-body">
+                <h3 class="h6 mb-2"><span class="badge badge-soft-success me-2">New</span></h3>
+                <ul class="small text-muted mb-0">
+                  <li>Press <kbd>&#8984;K</kbd> anywhere to jump to a page or run an action.</li>
+                  <li>Fuzzy matching across pages, actions and recent items.</li>
+                  <li>Full keyboard navigation with arrow keys and enter.</li>
+                </ul>
+              </div></div>
+            </div>
+
+            <div class="nx-changelog-item">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span class="badge bg-secondary">v2.1.0</span>
+                <span class="text-muted small">May 2, 2026</span>
+              </div>
+              <h2 class="h4 mb-3">Asia-Pacific region</h2>
+              <div class="card"><div class="card-body">
+                <h3 class="h6 mb-2"><span class="badge badge-soft-success me-2">New</span></h3>
+                <ul class="small text-muted">
+                  <li>ap-southeast-1 available for new workspaces.</li>
+                  <li>Data residency guarantees documented per region.</li>
+                </ul>
+                <h3 class="h6 mb-2 mt-3"><span class="badge badge-soft-warning me-2">Improved</span></h3>
+                <ul class="small text-muted mb-0">
+                  <li>Median API latency for APAC customers dropped from 186 ms to 41 ms.</li>
+                </ul>
+              </div></div>
+            </div>
+
+            <div class="nx-changelog-item">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span class="badge bg-secondary">v2.0.0</span>
+                <span class="text-muted small">January 15, 2026</span>
+              </div>
+              <h2 class="h4 mb-3">Design system v3</h2>
+              <div class="card"><div class="card-body">
+                <h3 class="h6 mb-2"><span class="badge badge-soft-success me-2">New</span></h3>
+                <ul class="small text-muted">
+                  <li>A full token rewrite shared between Figma and code.</li>
+                  <li>Documented component inventory with usage guidance.</li>
+                </ul>
+                <h3 class="h6 mb-2 mt-3"><span class="badge badge-soft-secondary me-2">Breaking</span></h3>
+                <ul class="small text-muted mb-0">
+                  <li>Legacy <code>.btn-flat</code> and <code>.card-shadow</code> classes were removed.</li>
+                  <li>The v1 theming API is no longer supported.</li>
+                </ul>
+              </div></div>
+            </div>
+
+          </div>
+        </div>
+      </div>

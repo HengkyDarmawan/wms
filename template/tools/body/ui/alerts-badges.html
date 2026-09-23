@@ -1,0 +1,84 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Alerts</h2></div><div class="card-body">
+          <div class="alert alert-primary" role="alert">A primary alert with a short message.</div>
+          <div class="alert alert-success" role="alert">Your changes were saved successfully.</div>
+          <div class="alert alert-warning" role="alert">Your trial ends in three days.</div>
+          <div class="alert alert-danger" role="alert">We could not process your payment method.</div>
+          <div class="alert alert-info mb-0" role="alert">A new version of the API is available.</div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Alerts with icons &amp; actions</h2></div><div class="card-body">
+          <div class="alert alert-success d-flex align-items-start gap-3" role="alert">
+            <i class="bi bi-check-circle-fill fs-5"></i>
+            <div><strong class="d-block">Deployment succeeded</strong><span class="small">v2.4.1 is live in production.</span></div>
+          </div>
+          <div class="alert alert-warning d-flex align-items-start gap-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <div class="flex-grow-1"><strong class="d-block">Storage almost full</strong><span class="small">You have used 94% of your plan's storage.</span></div>
+            <a href="page-pricing.html" class="btn btn-sm btn-warning flex-shrink-0">Upgrade</a>
+          </div>
+          <div class="alert alert-danger alert-dismissible fade show d-flex align-items-start gap-3" role="alert">
+            <i class="bi bi-x-circle-fill fs-5"></i>
+            <div><strong class="d-block">Payment failed</strong><span class="small">Your card was declined by the issuer.</span></div>
+            <button class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          <div class="alert alert-primary alert-dismissible fade show mb-0" role="alert">
+            Dismissible alert &mdash; click the cross to remove it.
+            <button class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Badges</h2></div><div class="card-body">
+          <h3 class="h6 mb-2">Solid</h3>
+          <div class="nx-demo-row mb-4">
+            <span class="badge bg-primary">Primary</span><span class="badge bg-secondary">Secondary</span><span class="badge bg-success">Success</span>
+            <span class="badge bg-danger">Danger</span><span class="badge bg-warning text-dark">Warning</span><span class="badge bg-info">Info</span><span class="badge bg-dark">Dark</span>
+          </div>
+          <h3 class="h6 mb-2">Soft (default in this template)</h3>
+          <div class="nx-demo-row mb-4">
+            <span class="badge badge-soft-primary">Primary</span><span class="badge badge-soft-secondary">Secondary</span><span class="badge badge-soft-success">Success</span>
+            <span class="badge badge-soft-danger">Danger</span><span class="badge badge-soft-warning">Warning</span><span class="badge badge-soft-info">Info</span>
+          </div>
+          <h3 class="h6 mb-2">Outline</h3>
+          <div class="nx-demo-row mb-4">
+            <span class="badge border" style="color:var(--nx-primary);border-color:var(--nx-primary)!important;background:transparent">Primary</span>
+            <span class="badge border" style="color:var(--nx-success);border-color:var(--nx-success)!important;background:transparent">Success</span>
+            <span class="badge border" style="color:var(--nx-danger);border-color:var(--nx-danger)!important;background:transparent">Danger</span>
+            <span class="badge border" style="color:var(--nx-text-muted);border-color:var(--nx-border)!important;background:transparent">Neutral</span>
+          </div>
+          <h3 class="h6 mb-2">With a status dot</h3>
+          <div class="nx-demo-row mb-0">
+            <span class="badge badge-soft-success d-inline-flex align-items-center gap-1"><span class="nx-dot-label" style="background:var(--nx-success);width:6px;height:6px"></span>Operational</span>
+            <span class="badge badge-soft-warning d-inline-flex align-items-center gap-1"><span class="nx-dot-label" style="background:var(--nx-warning);width:6px;height:6px"></span>Degraded</span>
+            <span class="badge badge-soft-danger d-inline-flex align-items-center gap-1"><span class="nx-dot-label nx-pulse" style="background:var(--nx-danger);width:6px;height:6px"></span>Outage</span>
+          </div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Badges in context</h2></div><div class="card-body">
+          <h3 class="h6 mb-2">On buttons</h3>
+          <div class="nx-demo-row mb-4">
+            <button class="btn btn-primary position-relative" type="button">Inbox
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">9+<span class="visually-hidden">unread messages</span></span>
+            </button>
+            <button class="btn btn-soft-secondary d-inline-flex align-items-center gap-2" type="button">Notifications <span class="badge badge-soft-danger">3</span></button>
+          </div>
+          <h3 class="h6 mb-2">On avatars</h3>
+          <div class="nx-demo-row mb-4">
+            <span class="position-relative d-inline-block">
+              <span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=47" alt=""></span>
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">5</span>
+            </span>
+            <span class="nx-avatar-status online"><span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=68" alt=""></span></span>
+            <span class="nx-avatar-status away"><span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=32" alt=""></span></span>
+            <span class="nx-avatar-status offline"><span class="nx-avatar"><img src="https://i.pravatar.cc/64?img=15" alt=""></span></span>
+          </div>
+          <h3 class="h6 mb-2">Trend chips</h3>
+          <div class="nx-demo-row mb-0">
+            <span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>12.4%</span>
+            <span class="nx-trend down"><i class="bi bi-arrow-down-right"></i>3.1%</span>
+            <span class="nx-trend up">4.2x ROAS</span>
+          </div>
+        </div></div></div>
+
+      </div>

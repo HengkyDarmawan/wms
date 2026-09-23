@@ -1,0 +1,47 @@
+      <div class="row g-4">
+        <div class="col-xl-8">
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Connected accounts</h2><span class="badge badge-soft-success ms-auto" id="cnCount">0 connected</span></div>
+            <div class="card-body p-0"><div id="cnConnected"></div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title h4">Available integrations</h2><div class="card-subtitle">Connect a service to pull data in or push events out</div></div></div>
+            <div class="card-body">
+              <div class="input-group mb-3" style="max-width:320px">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input class="form-control" type="search" id="cnSearch" placeholder="Search integrations&hellip;" aria-label="Search integrations">
+              </div>
+              <div class="row g-3" id="cnAvailable"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4">
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Social accounts</h2></div>
+            <div class="card-body p-0"><div id="cnSocial"></div></div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Webhooks</h2><button class="btn btn-xs btn-soft-primary ms-auto" id="cnAddHook" type="button"><i class="bi bi-plus-lg"></i></button></div>
+            <div class="card-body">
+              <div class="nx-row-list" id="cnHooks">
+                <div class="nx-row-item"><span class="nx-icon-sq success"><i class="bi bi-arrow-repeat"></i></span>
+                  <div class="nx-row-main"><div class="nx-row-title text-truncate">api.orbit.app/hooks/nexa</div><div class="nx-row-sub">3 events &middot; last fired 4m ago</div></div>
+                  <span class="badge badge-soft-success">Live</span></div>
+                <div class="nx-row-item"><span class="nx-icon-sq warning"><i class="bi bi-arrow-repeat"></i></span>
+                  <div class="nx-row-main"><div class="nx-row-title text-truncate">hooks.vertex.pl/nexa</div><div class="nx-row-sub">1 event &middot; 2 failures today</div></div>
+                  <span class="badge badge-soft-warning">Retrying</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body d-flex gap-3 align-items-start">
+              <span class="nx-icon-sq info"><i class="bi bi-shield-lock"></i></span>
+              <div><div class="fw-semibold small">Scopes are least-privilege</div><div class="small text-muted">Each connection asks only for what the integration actually reads or writes, and every token can be revoked here.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>

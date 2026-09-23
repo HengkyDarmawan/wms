@@ -1,0 +1,54 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Toast position</h2></div><div class="card-body">
+          <p class="small text-muted">Pick a position, then fire a toast.</p>
+          <div class="row g-2 mb-3">
+            <div class="col-4"><button class="btn btn-soft-secondary w-100 btn-pos active" data-pos="top-0 start-0" type="button">Top left</button></div>
+            <div class="col-4"><button class="btn btn-soft-secondary w-100 btn-pos" data-pos="top-0 start-50 translate-middle-x" type="button">Top center</button></div>
+            <div class="col-4"><button class="btn btn-soft-secondary w-100 btn-pos" data-pos="top-0 end-0" type="button">Top right</button></div>
+            <div class="col-4"><button class="btn btn-soft-secondary w-100 btn-pos" data-pos="bottom-0 start-0" type="button">Bottom left</button></div>
+            <div class="col-4"><button class="btn btn-soft-secondary w-100 btn-pos" data-pos="bottom-0 start-50 translate-middle-x" type="button">Bottom center</button></div>
+            <div class="col-4"><button class="btn btn-soft-secondary w-100 btn-pos" data-pos="bottom-0 end-0" type="button">Bottom right</button></div>
+          </div>
+          <button class="btn btn-primary w-100" type="button" id="fireToast"><i class="bi bi-bell me-1"></i>Show toast</button>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Toast variants</h2></div><div class="card-body nx-demo-row">
+          <button class="btn btn-soft-success btn-toast" data-variant="success" type="button">Success</button>
+          <button class="btn btn-soft-danger btn-toast" data-variant="danger" type="button">Danger</button>
+          <button class="btn btn-soft-warning btn-toast" data-variant="warning" type="button">Warning</button>
+          <button class="btn btn-soft-info btn-toast" data-variant="info" type="button">Info</button>
+          <button class="btn btn-soft-primary btn-toast" data-variant="avatar" type="button">With avatar</button>
+          <button class="btn btn-soft-secondary btn-toast" data-variant="action" type="button">With action</button>
+          <button class="btn btn-soft-secondary btn-toast" data-variant="manual" type="button">Manual dismiss</button>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Static toast markup</h2></div><div class="card-body">
+          <div class="toast show mb-3" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+              <span class="nx-icon-sq success me-2" style="width:24px;height:24px;font-size:13px"><i class="bi bi-check-lg"></i></span>
+              <strong class="me-auto">Deployment</strong><small class="text-muted">2m ago</small>
+              <button class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">v2.4.1 was deployed to production successfully.</div>
+          </div>
+          <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-body d-flex align-items-center gap-3">
+              <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=47" alt=""></span>
+              <div class="flex-grow-1"><strong class="d-block">Sarah Chen</strong><span class="small text-muted">Mentioned you in the Q4 roadmap</span></div>
+              <button class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          </div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">SweetAlert2 dialogs</h2></div><div class="card-body nx-demo-row">
+          <button class="btn btn-soft-success" type="button" id="swSuccess">Success</button>
+          <button class="btn btn-soft-danger" type="button" id="swError">Error</button>
+          <button class="btn btn-soft-warning" type="button" id="swConfirm">Confirm delete</button>
+          <button class="btn btn-soft-primary" type="button" id="swInput">Prompt for input</button>
+          <button class="btn btn-soft-info" type="button" id="swToast">Corner toast</button>
+        </div></div></div>
+
+      </div>
+
+      <div class="toast-container position-fixed p-3 top-0 end-0" id="toastContainer" style="z-index:1090"></div>

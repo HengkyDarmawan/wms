@@ -1,0 +1,100 @@
+      <div class="row justify-content-center">
+        <div class="col-xl-9">
+          <div class="card">
+            <div class="card-body p-4 p-lg-5">
+
+              <!-- ===== Stepper ===== -->
+              <div class="nx-stepper" id="wizStepper">
+                <div class="nx-step active" data-step="1"><span class="nx-step-circle">1</span><div class="nx-step-label">Account</div></div>
+                <div class="nx-step" data-step="2"><span class="nx-step-circle">2</span><div class="nx-step-label">Company</div></div>
+                <div class="nx-step" data-step="3"><span class="nx-step-circle">3</span><div class="nx-step-label">Plan</div></div>
+                <div class="nx-step" data-step="4"><span class="nx-step-circle">4</span><div class="nx-step-label">Finish</div></div>
+              </div>
+
+              <form id="wizardForm" novalidate>
+
+                <!-- Step 1 -->
+                <div class="nx-wizard-pane active" data-pane="1">
+                  <h2 class="h3 mb-1">Create your account</h2>
+                  <p class="text-muted">This is how you will sign in to NexaDash.</p>
+                  <div class="row g-3 mt-2">
+                    <div class="col-md-6"><label class="form-label" for="wFirst">First name</label><input type="text" class="form-control" id="wFirst" required><div class="invalid-feedback">First name is required.</div></div>
+                    <div class="col-md-6"><label class="form-label" for="wLast">Last name</label><input type="text" class="form-control" id="wLast" required><div class="invalid-feedback">Last name is required.</div></div>
+                    <div class="col-12"><label class="form-label" for="wEmail">Work email</label><input type="email" class="form-control" id="wEmail" required><div class="invalid-feedback">Enter a valid email address.</div></div>
+                    <div class="col-12"><label class="form-label" for="wPass">Password</label><input type="password" class="form-control" id="wPass" minlength="8" required><div class="form-text">At least 8 characters.</div><div class="invalid-feedback">Password must be at least 8 characters.</div></div>
+                  </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="nx-wizard-pane" data-pane="2">
+                  <h2 class="h3 mb-1">Tell us about your company</h2>
+                  <p class="text-muted">We use this to tailor your workspace defaults.</p>
+                  <div class="row g-3 mt-2">
+                    <div class="col-md-7"><label class="form-label" for="wCompany">Company name</label><input type="text" class="form-control" id="wCompany" required><div class="invalid-feedback">Company name is required.</div></div>
+                    <div class="col-md-5"><label class="form-label" for="wSize">Team size</label>
+                      <select class="form-select" id="wSize" required>
+                        <option value="">Choose&hellip;</option><option>1&ndash;9</option><option>10&ndash;49</option><option>50&ndash;199</option><option>200+</option>
+                      </select>
+                      <div class="invalid-feedback">Select a team size.</div>
+                    </div>
+                    <div class="col-md-7"><label class="form-label" for="wIndustry">Industry</label>
+                      <select class="form-select" id="wIndustry"><option>Software</option><option>Healthcare</option><option>Finance</option><option>Education</option><option>Retail</option></select>
+                    </div>
+                    <div class="col-md-5"><label class="form-label" for="wWebsite">Website</label><input type="url" class="form-control" id="wWebsite" placeholder="https://"></div>
+                  </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="nx-wizard-pane" data-pane="3">
+                  <h2 class="h3 mb-1">Choose a plan</h2>
+                  <p class="text-muted">You can change or cancel at any time.</p>
+                  <div class="row g-3 mt-2">
+                    <div class="col-md-4"><label class="nx-plan-option d-block h-100">
+                      <input class="d-none" type="radio" name="wplan" value="Starter">
+                      <div class="card h-100"><div class="card-body text-center">
+                        <span class="nx-icon-sq secondary mx-auto"><i class="bi bi-rocket"></i></span>
+                        <div class="fw-semibold mt-2">Starter</div><div class="nx-price-value">$29</div>
+                        <div class="small text-muted">per month</div>
+                      </div></div>
+                    </label></div>
+                    <div class="col-md-4"><label class="nx-plan-option d-block h-100">
+                      <input class="d-none" type="radio" name="wplan" value="Pro" checked>
+                      <div class="card h-100"><div class="card-body text-center">
+                        <span class="nx-icon-sq primary mx-auto"><i class="bi bi-lightning-charge"></i></span>
+                        <div class="fw-semibold mt-2">Pro</div><div class="nx-price-value">$59</div>
+                        <div class="small text-muted">per month</div>
+                      </div></div>
+                    </label></div>
+                    <div class="col-md-4"><label class="nx-plan-option d-block h-100">
+                      <input class="d-none" type="radio" name="wplan" value="Enterprise">
+                      <div class="card h-100"><div class="card-body text-center">
+                        <span class="nx-icon-sq success mx-auto"><i class="bi bi-building"></i></span>
+                        <div class="fw-semibold mt-2">Enterprise</div><div class="nx-price-value">Custom</div>
+                        <div class="small text-muted">contact sales</div>
+                      </div></div>
+                    </label></div>
+                  </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="nx-wizard-pane" data-pane="4">
+                  <div class="text-center">
+                    <div class="nx-success-check"><i class="bi bi-check-lg"></i></div>
+                    <h2 class="h3">You're all set!</h2>
+                    <p class="text-muted">Review your details below, then head to your new dashboard.</p>
+                  </div>
+                  <ul class="list-group list-group-flush mt-4" id="wizSummary"></ul>
+                </div>
+
+                <!-- ===== Nav ===== -->
+                <div class="d-flex gap-2 mt-4 pt-4 border-top">
+                  <button class="btn btn-soft-secondary" type="button" id="wizPrev" disabled><i class="bi bi-arrow-left me-1"></i>Back</button>
+                  <button class="btn btn-primary ms-auto" type="button" id="wizNext">Next<i class="bi bi-arrow-right ms-1"></i></button>
+                  <a class="btn btn-primary ms-auto d-none" id="wizFinish" href="index.html">Go to dashboard<i class="bi bi-arrow-right ms-1"></i></a>
+                </div>
+              </form>
+
+            </div>
+          </div>
+        </div>
+      </div>

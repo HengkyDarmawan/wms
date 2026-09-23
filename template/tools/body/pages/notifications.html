@@ -1,0 +1,98 @@
+      <div class="card">
+        <div class="card-header p-0 border-0">
+          <ul class="nav nav-tabs w-100 px-3 pt-2" role="tablist">
+            <li class="nav-item" role="presentation"><button class="nav-link active" data-filter="all" type="button">All <span class="badge badge-soft-secondary ms-1" id="cntAll">12</span></button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-filter="unread" type="button">Unread <span class="badge badge-soft-danger ms-1" id="cntUnread">5</span></button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" data-filter="mention" type="button">Mentions <span class="badge badge-soft-primary ms-1" id="cntMention">3</span></button></li>
+          </ul>
+        </div>
+        <div class="card-body" id="notifList">
+
+          <div class="nx-activity-day">Today</div>
+
+          <div class="nx-notif-item unread rounded" data-type="deploy">
+            <span class="nx-notif-icon" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-rocket-takeoff"></i></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">Deployment successful</span><span class="nx-notif-text">v2.4.1 was deployed to production without errors.</span></span>
+            <span class="nx-notif-time">2m ago</span>
+            <button class="nx-icon-btn btn-mark" type="button" aria-label="Mark as read"><i class="bi bi-check2"></i></button>
+          </div>
+
+          <div class="nx-notif-item unread rounded" data-type="mention">
+            <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=47" alt=""></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">Sarah Chen mentioned you</span><span class="nx-notif-text">&ldquo;@aigars can you review the billing section of the Q4 roadmap?&rdquo;</span></span>
+            <span class="nx-notif-time">14m ago</span>
+            <button class="nx-icon-btn btn-mark" type="button" aria-label="Mark as read"><i class="bi bi-check2"></i></button>
+          </div>
+
+          <div class="nx-notif-item unread rounded" data-type="order">
+            <span class="nx-notif-icon" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-bag-check"></i></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">New order received</span><span class="nx-notif-text">#ORD-1042 &mdash; Pro Plan (annual) by Maria Gomez, $588.00.</span></span>
+            <span class="nx-notif-time">42m ago</span>
+            <button class="nx-icon-btn btn-mark" type="button" aria-label="Mark as read"><i class="bi bi-check2"></i></button>
+          </div>
+
+          <div class="nx-notif-item unread rounded" data-type="alert">
+            <span class="nx-notif-icon" style="color:var(--nx-warning);background:var(--nx-warning-subtle)"><i class="bi bi-exclamation-triangle"></i></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">High memory usage</span><span class="nx-notif-text">Server eu-west-1 has exceeded 85% memory for 10 minutes.</span></span>
+            <span class="nx-notif-time">1h ago</span>
+            <button class="nx-icon-btn btn-mark" type="button" aria-label="Mark as read"><i class="bi bi-check2"></i></button>
+          </div>
+
+          <div class="nx-notif-item unread rounded" data-type="mention">
+            <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=68" alt=""></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">Marcus Webb requested your review</span><span class="nx-notif-text">Pull request #482 &mdash; extract billing service from the monolith.</span></span>
+            <span class="nx-notif-time">2h ago</span>
+            <button class="nx-icon-btn btn-mark" type="button" aria-label="Mark as read"><i class="bi bi-check2"></i></button>
+          </div>
+
+          <div class="nx-activity-day">Yesterday</div>
+
+          <div class="nx-notif-item rounded" data-type="mention">
+            <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=32" alt=""></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">Lena Iversen tagged you in a comment</span><span class="nx-notif-text">&ldquo;The new tokens are live &mdash; @aigars could you sanity-check dark mode?&rdquo;</span></span>
+            <span class="nx-notif-time">Yesterday, 17:02</span>
+          </div>
+
+          <div class="nx-notif-item rounded" data-type="billing">
+            <span class="nx-notif-icon" style="color:var(--nx-info);background:var(--nx-info-subtle)"><i class="bi bi-file-earmark-text"></i></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">Invoice generated</span><span class="nx-notif-text">#INV-2026-0042 for $2,391.12 is ready and due September 30.</span></span>
+            <span class="nx-notif-time">Yesterday, 09:00</span>
+          </div>
+
+          <div class="nx-notif-item rounded" data-type="deploy">
+            <span class="nx-notif-icon" style="color:var(--nx-danger);background:var(--nx-danger-subtle)"><i class="bi bi-x-circle"></i></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">Deployment failed</span><span class="nx-notif-text">v2.5.0-rc.3 failed health checks in dev and was rolled back automatically.</span></span>
+            <span class="nx-notif-time">Yesterday, 08:14</span>
+          </div>
+
+          <div class="nx-activity-day">Earlier this week</div>
+
+          <div class="nx-notif-item rounded" data-type="user">
+            <span class="nx-notif-icon" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-person-plus"></i></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">Three new teammates joined</span><span class="nx-notif-text">Sofia Rossi, Ravi Menon and Ingrid Larsen accepted their invitations.</span></span>
+            <span class="nx-notif-time">Sep 9</span>
+          </div>
+
+          <div class="nx-notif-item rounded" data-type="alert">
+            <span class="nx-notif-icon" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-check-circle"></i></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">Incident resolved</span><span class="nx-notif-text">Elevated latency in eu-west-1 has returned to normal. Postmortem to follow.</span></span>
+            <span class="nx-notif-time">Sep 9</span>
+          </div>
+
+          <div class="nx-notif-item rounded" data-type="billing">
+            <span class="nx-notif-icon" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-credit-card"></i></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">Payment received</span><span class="nx-notif-text">$2,391.12 paid by Orbit Labs via bank transfer.</span></span>
+            <span class="nx-notif-time">Sep 8</span>
+          </div>
+
+          <div class="nx-notif-item rounded" data-type="order">
+            <span class="nx-notif-icon" style="color:var(--nx-secondary);background:var(--nx-secondary-subtle)"><i class="bi bi-arrow-counterclockwise"></i></span>
+            <span class="flex-grow-1"><span class="nx-notif-title d-block">Refund processed</span><span class="nx-notif-text">$59.00 refunded to Amina Diallo for order #ORD-1039.</span></span>
+            <span class="nx-notif-time">Sep 8</span>
+          </div>
+
+        </div>
+        <div class="card-footer text-center">
+          <button class="btn btn-soft-secondary btn-sm" type="button">Load older notifications</button>
+        </div>
+      </div>

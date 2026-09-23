@@ -1,0 +1,99 @@
+      <div class="row g-4">
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Basic &amp; sizes</h2></div><div class="card-body nx-demo-row">
+          <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#mBasic">Basic</button>
+          <button class="btn btn-soft-primary" type="button" data-bs-toggle="modal" data-bs-target="#mSm">Small</button>
+          <button class="btn btn-soft-primary" type="button" data-bs-toggle="modal" data-bs-target="#mLg">Large</button>
+          <button class="btn btn-soft-primary" type="button" data-bs-toggle="modal" data-bs-target="#mXl">Extra large</button>
+          <button class="btn btn-soft-primary" type="button" data-bs-toggle="modal" data-bs-target="#mFull">Fullscreen</button>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Behaviour</h2></div><div class="card-body nx-demo-row">
+          <button class="btn btn-soft-secondary" type="button" data-bs-toggle="modal" data-bs-target="#mCentered">Vertically centered</button>
+          <button class="btn btn-soft-secondary" type="button" data-bs-toggle="modal" data-bs-target="#mScroll">Scrollable</button>
+          <button class="btn btn-soft-secondary" type="button" data-bs-toggle="modal" data-bs-target="#mStatic">Static backdrop</button>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">With form</h2></div><div class="card-body nx-demo-row">
+          <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#mForm"><i class="bi bi-person-plus me-1"></i>Invite teammate</button>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Confirmation</h2></div><div class="card-body nx-demo-row">
+          <button class="btn btn-soft-danger" type="button" data-bs-toggle="modal" data-bs-target="#mConfirm">Delete account</button>
+          <button class="btn btn-soft-warning" type="button" id="btnSwalConfirm">SweetAlert2 confirm</button>
+        </div></div></div>
+      </div>
+
+      <!-- ===== Modals ===== -->
+      <div class="modal fade" id="mBasic" tabindex="-1" aria-hidden="true" aria-labelledby="mBasicT"><div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="mBasicT">Basic modal</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body"><p class="mb-0">A standard modal with a header, body and footer. Escape and the backdrop both close it.</p></div>
+        <div class="modal-footer"><button class="btn btn-soft-secondary" data-bs-dismiss="modal" type="button">Close</button><button class="btn btn-primary" type="button">Save changes</button></div>
+      </div></div></div>
+
+      <div class="modal fade" id="mSm" tabindex="-1" aria-hidden="true" aria-labelledby="mSmT"><div class="modal-dialog modal-sm"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="mSmT">Small</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body"><p class="mb-0">300px wide &mdash; good for quick confirmations.</p></div>
+      </div></div></div>
+
+      <div class="modal fade" id="mLg" tabindex="-1" aria-hidden="true" aria-labelledby="mLgT"><div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="mLgT">Large</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body"><p class="mb-0">800px wide &mdash; comfortable for forms with two columns.</p></div>
+      </div></div></div>
+
+      <div class="modal fade" id="mXl" tabindex="-1" aria-hidden="true" aria-labelledby="mXlT"><div class="modal-dialog modal-xl"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="mXlT">Extra large</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body"><p class="mb-0">1140px wide &mdash; for tables and detail views.</p></div>
+      </div></div></div>
+
+      <div class="modal fade" id="mFull" tabindex="-1" aria-hidden="true" aria-labelledby="mFullT"><div class="modal-dialog modal-fullscreen"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="mFullT">Fullscreen</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body"><p>Takes the entire viewport &mdash; useful on mobile or for immersive editors.</p></div>
+        <div class="modal-footer"><button class="btn btn-soft-secondary" data-bs-dismiss="modal" type="button">Close</button></div>
+      </div></div></div>
+
+      <div class="modal fade" id="mCentered" tabindex="-1" aria-hidden="true" aria-labelledby="mCenT"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="mCenT">Vertically centered</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body"><p class="mb-0">Sits in the middle of the viewport regardless of height.</p></div>
+      </div></div></div>
+
+      <div class="modal fade" id="mScroll" tabindex="-1" aria-hidden="true" aria-labelledby="mScrT"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="mScrT">Scrollable body</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+          <p>The body scrolls while the header and footer stay fixed.</p>
+          <p>Terms and conditions typically live in a modal like this one. The content below repeats so you can see the scroll behaviour.</p>
+          <p>Section one. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi.</p>
+          <p>Section two. Integer posuere erat a ante venenatis dapibus posuere velit aliquet.</p>
+          <p>Section three. Cras mattis consectetur purus sit amet fermentum.</p>
+          <p>Section four. Aenean lacinia bibendum nulla sed consectetur.</p>
+          <p>Section five. Vestibulum id ligula porta felis euismod semper.</p>
+          <p>Section six. Donec ullamcorper nulla non metus auctor fringilla.</p>
+          <p>Section seven. Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+          <p class="mb-0">Section eight. Curabitur blandit tempus porttitor.</p>
+        </div>
+        <div class="modal-footer"><button class="btn btn-soft-secondary" data-bs-dismiss="modal" type="button">Decline</button><button class="btn btn-primary" data-bs-dismiss="modal" type="button">Accept</button></div>
+      </div></div></div>
+
+      <div class="modal fade" id="mStatic" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true" aria-labelledby="mStaT"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="mStaT">Static backdrop</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body"><p class="mb-0">Clicking outside or pressing Escape will not close this. Use it when a decision is required.</p></div>
+        <div class="modal-footer"><button class="btn btn-primary" data-bs-dismiss="modal" type="button">Understood</button></div>
+      </div></div></div>
+
+      <div class="modal fade" id="mForm" tabindex="-1" aria-hidden="true" aria-labelledby="mFormT"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="mFormT">Invite teammate</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label" for="miEmail">Email address</label><input class="form-control" type="email" id="miEmail" placeholder="name@company.com"></div>
+          <div class="mb-3"><label class="form-label" for="miRole">Role</label><select class="form-select" id="miRole"><option>Admin</option><option selected>Editor</option><option>Viewer</option></select></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="miNotify" checked><label class="form-check-label" for="miNotify">Send an email notification</label></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-soft-secondary" data-bs-dismiss="modal" type="button">Cancel</button><button class="btn btn-primary" data-bs-dismiss="modal" type="button">Send invite</button></div>
+      </div></div></div>
+
+      <div class="modal fade" id="mConfirm" tabindex="-1" aria-hidden="true" aria-labelledby="mConT"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content">
+        <div class="modal-body text-center p-4">
+          <div class="nx-success-check" style="color:var(--nx-danger);background:var(--nx-danger-subtle)"><i class="bi bi-exclamation-triangle"></i></div>
+          <h5 id="mConT">Delete this account?</h5>
+          <p class="text-muted small mb-4">Everything in the workspace will be permanently removed. This cannot be undone.</p>
+          <div class="d-flex gap-2"><button class="btn btn-soft-secondary w-100" data-bs-dismiss="modal" type="button">Cancel</button><button class="btn btn-danger w-100" data-bs-dismiss="modal" type="button">Delete</button></div>
+        </div>
+      </div></div></div>

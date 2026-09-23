@@ -1,0 +1,144 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">File tree</h2><div class="card-subtitle">Click a folder to fold it, a file to select it</div></div>
+              <button class="btn btn-xs btn-soft-secondary ms-auto" id="tvToggleAll" type="button">Expand all</button>
+            </div>
+            <div class="card-body">
+              <div class="input-group input-group-sm mb-3">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input class="form-control" type="search" id="tvSearch" placeholder="Filter the tree&hellip;" aria-label="Filter tree">
+              </div>
+              <ul class="nx-tree" id="tvFiles">
+                <li class="has-kids open">
+                  <div class="nx-tree-row open"><i class="bi bi-chevron-right nx-tree-caret"></i><i class="bi bi-folder-fill text-warning"></i><span>dashboard-template</span></div>
+                  <ul>
+                    <li class="has-kids open">
+                      <div class="nx-tree-row open"><i class="bi bi-chevron-right nx-tree-caret"></i><i class="bi bi-folder-fill text-warning"></i><span>assets</span></div>
+                      <ul>
+                        <li class="has-kids">
+                          <div class="nx-tree-row"><i class="bi bi-chevron-right nx-tree-caret"></i><i class="bi bi-folder-fill text-warning"></i><span>css</span><span class="badge badge-soft-secondary">5</span></div>
+                          <ul>
+                            <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-css text-primary"></i><span>variables.css</span></div></li>
+                            <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-css text-primary"></i><span>layout.css</span></div></li>
+                            <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-css text-primary"></i><span>components.css</span></div></li>
+                            <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-css text-primary"></i><span>pages.css</span></div></li>
+                            <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-css text-primary"></i><span>dark.css</span></div></li>
+                          </ul>
+                        </li>
+                        <li class="has-kids">
+                          <div class="nx-tree-row"><i class="bi bi-chevron-right nx-tree-caret"></i><i class="bi bi-folder-fill text-warning"></i><span>js</span></div>
+                          <ul>
+                            <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-js text-warning"></i><span>app.js</span></div></li>
+                            <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-js text-warning"></i><span>theme-init.js</span></div></li>
+                            <li class="has-kids"><div class="nx-tree-row"><i class="bi bi-chevron-right nx-tree-caret"></i><i class="bi bi-folder-fill text-warning"></i><span>pages</span></div>
+                              <ul>
+                                <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-js text-warning"></i><span>dashboard.js</span></div></li>
+                                <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-js text-warning"></i><span>analytics.js</span></div></li>
+                              </ul>
+                            </li>
+                          </ul>
+                        </li>
+                        <li class="has-kids">
+                          <div class="nx-tree-row"><i class="bi bi-chevron-right nx-tree-caret"></i><i class="bi bi-folder-fill text-warning"></i><span>img</span></div>
+                          <ul>
+                            <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-svg text-success"></i><span>logo.svg</span></div></li>
+                            <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-folder text-muted"></i><span>products</span></div></li>
+                          </ul>
+                        </li>
+                      </ul>
+                    </li>
+                    <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-filetype-html text-danger"></i><span>index.html</span></div></li>
+                    <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><i class="bi bi-file-earmark-text text-muted"></i><span>README.md</span></div></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Checkbox tree</h2><div class="card-subtitle">Ticking a parent selects everything under it</div></div></div>
+            <div class="card-body">
+              <ul class="nx-tree" id="tvPerms">
+                <li class="has-kids open">
+                  <div class="nx-tree-row open"><i class="bi bi-chevron-right nx-tree-caret"></i>
+                    <input class="form-check-input tv-check" type="checkbox" id="permAll" aria-label="All permissions">
+                    <label class="flex-grow-1 mb-0" for="permAll">All permissions</label></div>
+                  <ul>
+                    <li class="has-kids open">
+                      <div class="nx-tree-row open"><i class="bi bi-chevron-right nx-tree-caret"></i>
+                        <input class="form-check-input tv-check" type="checkbox" id="permCommerce" aria-label="Commerce">
+                        <label class="flex-grow-1 mb-0" for="permCommerce">Commerce</label></div>
+                      <ul>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><input class="form-check-input tv-check" type="checkbox" id="permOrders"><label class="flex-grow-1 mb-0" for="permOrders">Manage orders</label></div></li>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><input class="form-check-input tv-check" type="checkbox" id="permProducts" checked><label class="flex-grow-1 mb-0" for="permProducts">Manage products</label></div></li>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><input class="form-check-input tv-check" type="checkbox" id="permRefunds"><label class="flex-grow-1 mb-0" for="permRefunds">Issue refunds</label></div></li>
+                      </ul>
+                    </li>
+                    <li class="has-kids">
+                      <div class="nx-tree-row"><i class="bi bi-chevron-right nx-tree-caret"></i>
+                        <input class="form-check-input tv-check" type="checkbox" id="permUsers" aria-label="Users">
+                        <label class="flex-grow-1 mb-0" for="permUsers">Users</label></div>
+                      <ul>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><input class="form-check-input tv-check" type="checkbox" id="permInvite"><label class="flex-grow-1 mb-0" for="permInvite">Invite users</label></div></li>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><input class="form-check-input tv-check" type="checkbox" id="permRoles"><label class="flex-grow-1 mb-0" for="permRoles">Assign roles</label></div></li>
+                      </ul>
+                    </li>
+                    <li class="has-kids">
+                      <div class="nx-tree-row"><i class="bi bi-chevron-right nx-tree-caret"></i>
+                        <input class="form-check-input tv-check" type="checkbox" id="permBilling" aria-label="Billing">
+                        <label class="flex-grow-1 mb-0" for="permBilling">Billing</label></div>
+                      <ul>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><input class="form-check-input tv-check" type="checkbox" id="permInvoices"><label class="flex-grow-1 mb-0" for="permInvoices">View invoices</label></div></li>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><input class="form-check-input tv-check" type="checkbox" id="permPayment"><label class="flex-grow-1 mb-0" for="permPayment">Change payment method</label></div></li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+              <p class="small text-muted mb-0 mt-3">Selected: <strong id="tvSelected">1</strong> permission(s)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title h4">Org tree</h2><div class="card-subtitle">The same component with avatars instead of icons</div></div>
+              <a class="nx-link small ms-auto" href="plugin-org-chart.html">See the graphical version</a></div>
+            <div class="card-body">
+              <ul class="nx-tree">
+                <li class="has-kids open">
+                  <div class="nx-tree-row open"><i class="bi bi-chevron-right nx-tree-caret"></i>
+                    <span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=12" alt=""></span>
+                    <span class="flex-grow-1">Aigars Silkalns</span><span class="badge badge-soft-primary">CEO</span></div>
+                  <ul>
+                    <li class="has-kids open">
+                      <div class="nx-tree-row open"><i class="bi bi-chevron-right nx-tree-caret"></i>
+                        <span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=47" alt=""></span>
+                        <span class="flex-grow-1">Sarah Chen</span><span class="badge badge-soft-secondary">Product</span></div>
+                      <ul>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=36" alt=""></span><span class="flex-grow-1">Nadia Rahman</span></div></li>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=28" alt=""></span><span class="flex-grow-1">Ingrid Larsen</span></div></li>
+                      </ul>
+                    </li>
+                    <li class="has-kids">
+                      <div class="nx-tree-row"><i class="bi bi-chevron-right nx-tree-caret"></i>
+                        <span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=68" alt=""></span>
+                        <span class="flex-grow-1">Marcus Webb</span><span class="badge badge-soft-secondary">Engineering</span></div>
+                      <ul>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=25" alt=""></span><span class="flex-grow-1">Chen Wei</span></div></li>
+                        <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=52" alt=""></span><span class="flex-grow-1">Ravi Menon</span></div></li>
+                      </ul>
+                    </li>
+                    <li><div class="nx-tree-row"><i class="nx-tree-caret empty"></i><span class="nx-avatar nx-avatar-xs"><img src="https://i.pravatar.cc/40?img=32" alt=""></span><span class="flex-grow-1">Lena Iversen</span><span class="badge badge-soft-secondary">Design</span></div></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>

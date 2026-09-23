@@ -1,0 +1,95 @@
+<!-- ===== Header ===== -->
+<header class="nx-header">
+  <button class="nx-icon-btn" id="nxSidebarToggle" type="button" aria-label="Toggle sidebar">
+    <i class="bi bi-list"></i>
+  </button>
+
+  <button class="nx-search-trigger d-none d-md-flex" id="nxPaletteTrigger" type="button" aria-label="Open command palette">
+    <i class="bi bi-search"></i>
+    <span>Search anything&hellip;</span>
+    <span class="nx-kbd">&#8984;K</span>
+  </button>
+  <button class="nx-icon-btn d-md-none" id="nxPaletteTriggerSm" type="button" aria-label="Open command palette">
+    <i class="bi bi-search"></i>
+  </button>
+
+  <div class="ms-auto d-flex align-items-center gap-1">
+    <button class="btn btn-primary btn-sm d-none d-sm-inline-flex align-items-center gap-1 me-1" id="nxQuickAction" type="button">
+      <i class="bi bi-plus-lg"></i><span>New Order</span>
+    </button>
+
+    <button class="nx-icon-btn" id="nxThemeToggle" type="button" aria-label="Toggle dark mode">
+      <i class="bi bi-moon-stars"></i>
+    </button>
+
+    <button class="nx-icon-btn d-none d-md-inline-flex" id="nxFullscreen" type="button" aria-label="Toggle fullscreen">
+      <i class="bi bi-arrows-fullscreen"></i>
+    </button>
+
+    <!-- ===== Notifications dropdown ===== -->
+    <div class="dropdown">
+      <button class="nx-icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+        <i class="bi bi-bell"></i>
+        <span class="nx-dot"></span>
+      </button>
+      <div class="dropdown-menu dropdown-menu-end nx-dropdown-notif">
+        <div class="nx-notif-head">
+          <h5 class="mb-0">Notifications</h5>
+          <a href="page-notifications.html" class="nx-link small">Mark all read</a>
+        </div>
+        <a class="nx-notif-item unread" href="page-notifications.html">
+          <span class="nx-notif-icon" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-rocket-takeoff"></i></span>
+          <span class="flex-grow-1">
+            <span class="nx-notif-title d-block">Deployment successful</span>
+            <span class="nx-notif-text">v2.4.1 was deployed to production without errors.</span>
+          </span>
+          <span class="nx-notif-time">2m ago</span>
+        </a>
+        <a class="nx-notif-item unread" href="page-notifications.html">
+          <span class="nx-notif-icon" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-bag-check"></i></span>
+          <span class="flex-grow-1">
+            <span class="nx-notif-title d-block">New order received</span>
+            <span class="nx-notif-text">#ORD-1042 &mdash; Pro Plan (annual) by Maria Gomez.</span>
+          </span>
+          <span class="nx-notif-time">14m ago</span>
+        </a>
+        <a class="nx-notif-item unread" href="page-notifications.html">
+          <span class="nx-notif-icon" style="color:var(--nx-warning);background:var(--nx-warning-subtle)"><i class="bi bi-exclamation-triangle"></i></span>
+          <span class="flex-grow-1">
+            <span class="nx-notif-title d-block">High memory usage</span>
+            <span class="nx-notif-text">Server eu-west-1 has exceeded 85% memory for 10 minutes.</span>
+          </span>
+          <span class="nx-notif-time">1h ago</span>
+        </a>
+        <a class="nx-notif-item" href="page-notifications.html">
+          <span class="nx-notif-icon" style="color:var(--nx-info);background:var(--nx-info-subtle)"><i class="bi bi-chat-dots"></i></span>
+          <span class="flex-grow-1">
+            <span class="nx-notif-title d-block">New comment</span>
+            <span class="nx-notif-text">Sarah commented on the Q3 roadmap document.</span>
+          </span>
+          <span class="nx-notif-time">3h ago</span>
+        </a>
+        <a class="nx-notif-foot nx-link" href="page-notifications.html">View all notifications</a>
+      </div>
+    </div>
+
+    <!-- ===== User dropdown ===== -->
+    <div class="dropdown">
+      <a class="nx-header-user" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
+        <img src="https://i.pravatar.cc/80?img=12" alt="Aigars S.">
+        <span class="nx-user-meta-wrap d-none d-lg-block">
+          <span class="nx-user-name d-block">Aigars S.</span>
+          <span class="nx-user-role">Admin</span>
+        </span>
+      </a>
+      <div class="dropdown-menu dropdown-menu-end" style="min-width:200px">
+        <a class="dropdown-item" href="page-profile.html"><i class="bi bi-person"></i>Profile</a>
+        <a class="dropdown-item" href="page-settings.html"><i class="bi bi-gear"></i>Settings</a>
+        <a class="dropdown-item" href="commerce-invoices.html"><i class="bi bi-credit-card"></i>Billing</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="auth-lock-screen.html"><i class="bi bi-lock"></i>Lock screen</a>
+        <a class="dropdown-item text-danger" href="auth-login.html"><i class="bi bi-box-arrow-right"></i>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>

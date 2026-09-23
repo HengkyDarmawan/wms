@@ -1,0 +1,54 @@
+      <div class="row g-4">
+        <!-- ===== Sidebar ===== -->
+        <div class="col-xl-3">
+          <div class="card mb-4">
+            <div class="card-body">
+              <button class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-1" type="button" data-bs-toggle="modal" data-bs-target="#eventModal">
+                <i class="bi bi-plus-lg"></i>New Event
+              </button>
+            </div>
+          </div>
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Categories</h2></div>
+            <div class="card-body">
+              <div class="form-check mb-2"><input class="form-check-input cal-filter" type="checkbox" value="meeting" id="catMeeting" checked><label class="form-check-label d-flex align-items-center gap-2" for="catMeeting"><span class="nx-dot-label" style="background:var(--nx-primary)"></span>Meeting</label></div>
+              <div class="form-check mb-2"><input class="form-check-input cal-filter" type="checkbox" value="deadline" id="catDeadline" checked><label class="form-check-label d-flex align-items-center gap-2" for="catDeadline"><span class="nx-dot-label" style="background:var(--nx-danger)"></span>Deadline</label></div>
+              <div class="form-check"><input class="form-check-input cal-filter" type="checkbox" value="holiday" id="catHoliday" checked><label class="form-check-label d-flex align-items-center gap-2" for="catHoliday"><span class="nx-dot-label" style="background:var(--nx-success)"></span>Holiday</label></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Upcoming</h2></div>
+            <div class="card-body">
+              <div class="nx-row-list" id="upcomingList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Calendar ===== -->
+        <div class="col-xl-9">
+          <div class="card">
+            <div class="card-body"><div id="calendar"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Event modal ===== -->
+      <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="eventTitle">New event</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            <div class="modal-body">
+              <div class="mb-3"><label class="form-label" for="evTitle">Title</label><input type="text" class="form-control" id="evTitle" placeholder="Sprint planning"></div>
+              <div class="mb-3"><label class="form-label" for="evCat">Category</label>
+                <select class="form-select" id="evCat">
+                  <option value="meeting">Meeting</option>
+                  <option value="deadline">Deadline</option>
+                  <option value="holiday">Holiday</option>
+                </select>
+              </div>
+              <div class="mb-3"><label class="form-label" for="evDate">Date</label><input type="text" class="form-control" id="evDate"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-soft-secondary" type="button" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="button" id="btnSaveEvent">Save event</button></div>
+          </div>
+        </div>
+      </div>

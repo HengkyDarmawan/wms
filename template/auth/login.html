@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | NexaDash</title>
+  <link rel="icon" href="../assets/img/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  
+  <link href="../assets/css/variables.css" rel="stylesheet">
+  <link href="../assets/css/layout.css" rel="stylesheet">
+  <link href="../assets/css/components.css" rel="stylesheet">
+  <link href="../assets/css/pages.css" rel="stylesheet">
+  <link href="../assets/css/motion.css" rel="stylesheet">
+  <link href="../assets/css/dark.css" rel="stylesheet">
+  <script src="../assets/js/theme-init.js"></script>
+</head>
+<body class="" data-nx-root="../">
+
+  <div class="nx-auth">
+
+    <!-- ===== Brand panel ===== -->
+    <aside class="nx-auth-brand">
+      <a class="nx-brand-row text-white text-decoration-none" href="../index.html">
+        <img src="../assets/img/logo.svg" alt=""><span>NexaDash</span>
+      </a>
+
+      <div>
+        <h2>Every metric that matters, in one place.</h2>
+        <div class="nx-auth-feature"><i class="bi bi-lightning-charge"></i><div><div class="nx-af-title">Fast by default</div><div class="nx-af-text">Dashboards render in under 200 ms, even across millions of rows.</div></div></div>
+        <div class="nx-auth-feature"><i class="bi bi-shield-check"></i><div><div class="nx-af-title">Secure and compliant</div><div class="nx-af-text">SOC 2 Type II, ISO 27001 and regional data residency.</div></div></div>
+        <div class="nx-auth-feature"><i class="bi bi-people"></i><div><div class="nx-af-title">Built for teams</div><div class="nx-af-text">Granular roles, audit logs and single sign-on.</div></div></div>
+      </div>
+
+      <div class="nx-auth-testimonial">
+        <p class="mb-0">&ldquo;We replaced three internal tools with NexaDash in a fortnight. The onboarding was the easiest part of the quarter.&rdquo;</p>
+        <div class="nx-at-user">
+          <img src="https://i.pravatar.cc/72?img=25" alt="Chen Wei">
+          <div><div class="fw-semibold">Chen Wei</div><div class="small" style="opacity:.8">CTO, Orbit Labs</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== Form ===== -->
+    <main class="nx-auth-form-wrap">
+      <div class="nx-auth-card">
+        <div class="d-lg-none d-flex align-items-center gap-2 mb-4">
+          <img src="../assets/img/logo.svg" alt="" width="32" height="32"><span class="h4 mb-0">NexaDash</span>
+        </div>
+
+        <h1 class="h2 mb-1">Welcome back</h1>
+        <p class="text-muted mb-4">Sign in to continue to your workspace.</p>
+
+        <form id="loginForm" novalidate>
+          <div class="mb-3">
+            <label class="form-label" for="loginEmail">Email address</label>
+            <input class="form-control" type="email" id="loginEmail" value="aigars@nexadash.io" required>
+            <div class="invalid-feedback">Enter a valid email address.</div>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between">
+              <label class="form-label" for="loginPassword">Password</label>
+              <a class="nx-link small" href="../auth/forgot-password.html">Forgot password?</a>
+            </div>
+            <div class="input-group">
+              <input class="form-control" type="password" id="loginPassword" value="demo1234" required>
+              <button class="btn btn-outline-secondary btn-toggle-pw" type="button" data-target="#loginPassword" aria-label="Show password"><i class="bi bi-eye"></i></button>
+              <div class="invalid-feedback">Password is required.</div>
+            </div>
+          </div>
+          <div class="form-check form-switch mb-4">
+            <input class="form-check-input" type="checkbox" role="switch" id="loginRemember" checked>
+            <label class="form-check-label" for="loginRemember">Keep me signed in for 30 days</label>
+          </div>
+          <button class="btn btn-primary w-100 btn-lg" type="submit">Sign in</button>
+        </form>
+
+        <div class="nx-auth-divider">or continue with</div>
+        <div class="nx-auth-social">
+          <button class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-2" type="button"><i class="bi bi-google"></i>Google</button>
+          <button class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-2" type="button"><i class="bi bi-github"></i>GitHub</button>
+        </div>
+
+        <p class="text-center text-muted small mt-4 mb-0">
+          Don't have an account? <a class="nx-link" href="../auth/register.html">Create one free</a>
+        </p>
+      </div>
+    </main>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script src="../assets/js/app.js"></script>
+  <script src="../assets/js/pages/auth.js"></script>
+</body>
+</html>

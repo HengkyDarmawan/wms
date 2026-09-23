@@ -1,0 +1,137 @@
+      <div class="row g-4">
+        <div class="col-xl-4">
+          <div class="card mb-4">
+            <div class="card-body text-center">
+              <span class="nx-avatar mx-auto mb-3" style="width:96px;height:96px"><img src="https://i.pravatar.cc/192?img=47" alt=""></span>
+              <h2 class="h4 mb-0 d-flex align-items-center justify-content-center gap-2">Sarah Chen <i class="bi bi-patch-check-fill text-primary" data-bs-toggle="tooltip" data-bs-title="Verified"></i></h2>
+              <p class="small text-muted">sarah@nexa.io</p>
+              <div class="d-flex justify-content-center gap-2 mb-3">
+                <span class="badge badge-soft-danger">Owner</span>
+                <span class="badge badge-soft-success">Active</span>
+              </div>
+              <div class="row g-0 text-center border-top pt-3">
+                <div class="col-4"><div class="fw-bold">128</div><div class="small text-muted">Dashboards</div></div>
+                <div class="col-4 border-start border-end"><div class="fw-bold">42</div><div class="small text-muted">Projects</div></div>
+                <div class="col-4"><div class="fw-bold">4</div><div class="small text-muted">Teams</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Details</h2></div>
+            <div class="card-body">
+              <dl class="row small mb-0">
+                <dt class="col-5 text-muted fw-normal">User ID</dt><dd class="col-7 nx-num">USR-000142</dd>
+                <dt class="col-5 text-muted fw-normal">Job title</dt><dd class="col-7">Head of Product</dd>
+                <dt class="col-5 text-muted fw-normal">Department</dt><dd class="col-7">Product</dd>
+                <dt class="col-5 text-muted fw-normal">Manager</dt><dd class="col-7">Aigars Silkalns</dd>
+                <dt class="col-5 text-muted fw-normal">Location</dt><dd class="col-7">Singapore</dd>
+                <dt class="col-5 text-muted fw-normal">Timezone</dt><dd class="col-7">GMT+8</dd>
+                <dt class="col-5 text-muted fw-normal">Joined</dt><dd class="col-7">March 4, 2024</dd>
+                <dt class="col-5 text-muted fw-normal">Last active</dt><dd class="col-7 text-success">2 minutes ago</dd>
+              </dl>
+            </div>
+            <div class="card-footer d-flex gap-2">
+              <button class="btn btn-sm btn-soft-primary flex-grow-1" id="udEdit" type="button"><i class="bi bi-pencil me-1"></i>Edit</button>
+              <button class="btn btn-sm btn-soft-danger" id="udSuspend" type="button">Suspend</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Teams</h2></div>
+            <div class="card-body py-2">
+              <a class="nx-row-item text-decoration-none" href="page-teams.html"><span class="nx-icon-sq primary"><i class="bi bi-people"></i></span><div class="nx-row-main"><div class="nx-row-title">Core Product</div><div class="nx-row-sub">Lead &middot; 8 members</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="page-teams.html"><span class="nx-icon-sq success"><i class="bi bi-graph-up"></i></span><div class="nx-row-main"><div class="nx-row-title">Analytics Guild</div><div class="nx-row-sub">Member &middot; 12 members</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="page-teams.html"><span class="nx-icon-sq warning"><i class="bi bi-palette"></i></span><div class="nx-row-main"><div class="nx-row-title">Design Review</div><div class="nx-row-sub">Member &middot; 6 members</div></div></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-8">
+          <div class="card">
+            <div class="card-header p-0 border-0">
+              <ul class="nav nav-tabs w-100 px-3 pt-2" role="tablist">
+                <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#udOverview" type="button" role="tab">Overview</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#udSecurity" type="button" role="tab">Security</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#udActivity" type="button" role="tab">Activity</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#udBilling" type="button" role="tab">Billing</button></li>
+              </ul>
+            </div>
+            <div class="card-body">
+              <div class="tab-content">
+
+                <div class="tab-pane fade show active" id="udOverview" role="tabpanel">
+                  <h3 class="h6 mb-3">Contribution over the last year</h3>
+                  <div id="udChart" style="min-height:260px"></div>
+                  <hr class="my-4">
+                  <h3 class="h6 mb-3">Recent projects</h3>
+                  <div class="nx-row-list">
+                    <div class="nx-row-item"><span class="nx-icon-sq primary"><i class="bi bi-kanban"></i></span>
+                      <div class="nx-row-main"><div class="nx-row-title">Billing reliability</div>
+                        <div class="progress progress-thin mt-2" role="progressbar" aria-label="Progress" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:68%"></div></div></div>
+                      <span class="badge badge-soft-success">On track</span></div>
+                    <div class="nx-row-item"><span class="nx-icon-sq warning"><i class="bi bi-magic"></i></span>
+                      <div class="nx-row-main"><div class="nx-row-title">Self-serve onboarding</div>
+                        <div class="progress progress-thin mt-2" role="progressbar" aria-label="Progress" aria-valuenow="42" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-warning" style="width:42%"></div></div></div>
+                      <span class="badge badge-soft-warning">At risk</span></div>
+                    <div class="nx-row-item"><span class="nx-icon-sq info"><i class="bi bi-graph-up"></i></span>
+                      <div class="nx-row-main"><div class="nx-row-title">Analytics surface</div>
+                        <div class="progress progress-thin mt-2" role="progressbar" aria-label="Progress" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-secondary" style="width:12%"></div></div></div>
+                      <span class="badge badge-soft-secondary">Planning</span></div>
+                  </div>
+                </div>
+
+                <div class="tab-pane fade" id="udSecurity" role="tabpanel">
+                  <div class="d-flex flex-wrap gap-3 align-items-center p-3 rounded mb-4" style="background:var(--nx-success-subtle)">
+                    <span class="nx-icon-sq success"><i class="bi bi-shield-check"></i></span>
+                    <div class="flex-grow-1"><div class="fw-semibold">Two-factor authentication is on</div><div class="small text-muted">Authenticator app &middot; enrolled March 2024</div></div>
+                    <button class="btn btn-sm btn-soft-danger" type="button">Reset 2FA</button>
+                  </div>
+                  <h3 class="h6 mb-3">Sessions</h3>
+                  <div class="table-responsive"><table class="table align-middle mb-0">
+                    <thead><tr><th>Device</th><th>Location</th><th>Last active</th><th class="text-end">Action</th></tr></thead>
+                    <tbody>
+                      <tr><td><div class="d-flex align-items-center gap-3"><span class="nx-icon-sq primary"><i class="bi bi-laptop"></i></span><div><div class="fw-semibold">MacBook Pro &middot; Chrome</div><div class="small text-muted">Current session</div></div></div></td><td>Singapore</td><td class="small text-muted">Now</td><td class="text-end"><span class="badge badge-soft-success">Current</span></td></tr>
+                      <tr><td><div class="d-flex align-items-center gap-3"><span class="nx-icon-sq secondary"><i class="bi bi-phone"></i></span><div><div class="fw-semibold">iPhone 16 &middot; Safari</div><div class="small text-muted">iOS 19.1</div></div></div></td><td>Singapore</td><td class="small text-muted">2 hours ago</td><td class="text-end"><button class="btn btn-xs btn-soft-danger" type="button">Revoke</button></td></tr>
+                      <tr><td><div class="d-flex align-items-center gap-3"><span class="nx-icon-sq secondary"><i class="bi bi-display"></i></span><div><div class="fw-semibold">Windows PC &middot; Edge</div><div class="small text-muted">Unrecognised device</div></div></div></td><td>Jakarta</td><td class="small text-muted">Yesterday</td><td class="text-end"><button class="btn btn-xs btn-soft-danger" type="button">Revoke</button></td></tr>
+                    </tbody>
+                  </table></div>
+                </div>
+
+                <div class="tab-pane fade" id="udActivity" role="tabpanel">
+                  <ul class="nx-timeline">
+                    <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-rocket-takeoff"></i></span>
+                      <div class="nx-tl-body"><div class="nx-tl-text">Deployed <code>v2.4.1</code> to production</div><div class="nx-tl-time">2 minutes ago</div></div></li>
+                    <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-chat-dots"></i></span>
+                      <div class="nx-tl-body"><div class="nx-tl-text">Commented on <strong>Q4 roadmap</strong></div><div class="nx-tl-time">1 hour ago</div></div></li>
+                    <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-info);background:var(--nx-info-subtle)"><i class="bi bi-file-earmark-plus"></i></span>
+                      <div class="nx-tl-body"><div class="nx-tl-text">Created the dashboard <strong>Billing health</strong></div><div class="nx-tl-time">Yesterday</div></div></li>
+                    <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-warning);background:var(--nx-warning-subtle)"><i class="bi bi-person-plus"></i></span>
+                      <div class="nx-tl-body"><div class="nx-tl-text">Invited <strong>3 teammates</strong> to the workspace</div><div class="nx-tl-time">2 days ago</div></div></li>
+                    <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-secondary);background:var(--nx-secondary-subtle)"><i class="bi bi-shield-lock"></i></span>
+                      <div class="nx-tl-body"><div class="nx-tl-text">Enabled two-factor authentication</div><div class="nx-tl-time">March 4, 2024</div></div></li>
+                  </ul>
+                </div>
+
+                <div class="tab-pane fade" id="udBilling" role="tabpanel">
+                  <div class="d-flex flex-wrap gap-3 align-items-center p-3 rounded mb-4" style="background:var(--nx-primary-subtle)">
+                    <span class="nx-icon-sq primary"><i class="bi bi-gem"></i></span>
+                    <div class="flex-grow-1"><div class="fw-semibold">Pro plan &mdash; annual</div><div class="small text-muted">Renews August 31, 2027 &middot; 40 of 50 seats used</div></div>
+                    <a class="btn btn-sm btn-primary" href="page-pricing.html">Change plan</a>
+                  </div>
+                  <h3 class="h6 mb-3">Recent invoices</h3>
+                  <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Invoice</th><th>Date</th><th>Amount</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+                    <tbody>
+                      <tr><td><a class="nx-link" href="commerce-invoice-detail.html">#INV-2026-0042</a></td><td class="small">Sep 1, 2026</td><td class="nx-num">$2,391.12</td><td><span class="badge badge-soft-warning">Due</span></td><td class="text-end"><a class="btn btn-xs btn-soft-secondary" href="commerce-invoice-detail.html">View</a></td></tr>
+                      <tr><td><a class="nx-link" href="commerce-invoice-detail.html">#INV-2026-0041</a></td><td class="small">Aug 1, 2026</td><td class="nx-num">$2,391.12</td><td><span class="badge badge-soft-success">Paid</span></td><td class="text-end"><a class="btn btn-xs btn-soft-secondary" href="commerce-invoice-detail.html">View</a></td></tr>
+                      <tr><td><a class="nx-link" href="commerce-invoice-detail.html">#INV-2026-0040</a></td><td class="small">Jul 1, 2026</td><td class="nx-num">$2,280.00</td><td><span class="badge badge-soft-success">Paid</span></td><td class="text-end"><a class="btn btn-xs btn-soft-secondary" href="commerce-invoice-detail.html">View</a></td></tr>
+                    </tbody>
+                  </table></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>

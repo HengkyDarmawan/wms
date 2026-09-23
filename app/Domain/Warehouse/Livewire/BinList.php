@@ -1,0 +1,173 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domain\Warehouse\Livewire;
+
+use App\Domain\Master\Enums\ReasonContext;
+use App\Domain\Master\Models\StorageCategory;
+use App\Domain\Warehouse\Actions\ChangeBinStatus;
+use App\Domain\Warehouse\Enums\BinStatus;
+use App\Domain\Warehouse\Enums\BinType;
+use App\Domain\Warehouse\Livewire\Concerns\HandlesWarehouseRules;
+use App\Domain\Warehouse\Models\Bin;
+use App\Domain\Warehouse\Models\Warehouse;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\View\View;
+use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+/**
+ * Layar 12-warehouse §6 — daftar bin lintas gudang.
+ *
+ * Bin dibekukan saat sesi opname (BR-OPN-02) dan ditandai perlu dihitung
+ * setelah short pick (A-67, BR-SJ-02). Cakupan gudang dibatasi global scope.
+ */
+class BinList extends Component
+{
+    use HandlesWarehouseRules;
+    use WithPagination;
+
+    #[Url(as: 'q', except: '')]
+    public string $search = '';
+
+    #[Url(except: '')]
+    public string $warehouseFilter = '';
+
+    #[Url(except: '')]
+    public string $typeFilter = '';
+
+    #[Url(except: '')]
+    public string $statusFilter = '';
+
+    #[Url(except: '')]
+    public string $flagFilter = '';
+
+    #[Locked]
+    public ?int $actingId = null;
+
+    public string $aksi = '';
+
+    public string $reasonCode = '';
+
+    public string $reasonNotes = '';
+
+    public function mount(): void
+    {
+        $this->authorize('viewAny', Bin::class);
+    }
+
+    public function updated(string $property): void
+    {
+        if ($property === 'search' || str_ends_with($property, 'Filter')) {
+            $this->resetPage();
+        }
+    }
+
+    /** Membuka dialog bekukan atau nonaktifkan; keduanya menuntut alasan. */
+    public function minta(int $id, string $aksi): void
+    {
+        $bin = Bin::findOrFail($id);
+
+        $this->authorize('manage', $bin);
+
+        $this->ruleError = '';
+        $this->actingId = $bin->id;
+        $this->aksi = in_array($aksi, ['bekukan', 'nonaktifkan'], true) ? $aksi : '';
+        $this->reasonCode = '';
+        $this->reasonNotes = '';
+    }
+
+    public function jalankanAksi(ChangeBinStatus $action): void
+    {
+        $bin = Bin::findOrFail($this->actingId);
+
+        $this->authorize('manage', $bin);
+
+        $this->validate(['reasonCode' => ['required', 'string']], attributes: ['reasonCode' => __('Alasan')]);
+
+        $berhasil = $this->jalankan(fn () => match ($this->aksi) {
+            'bekukan' => $action->freeze($bin, $this->reasonCode, null, auth()->user()),
+            'nonaktifkan' => $action->deactivate($bin, $this->reasonCode, $this->reasonNotes ?: null, auth()->user()),
+            default => null,
+        });
+
+        if (! $berhasil) {
+            return;
+        }
+
+        $this->actingId = null;
+        $this->aksi = '';
+        $this->dispatch('pesan', teks: __('Status bin diperbarui.'));
+    }
+
+    public function batalAksi(): void
+    {
+        $this->actingId = null;
+        $this->aksi = '';
+        $this->ruleError = '';
+        $this->resetValidation();
+    }
+
+    public function cairkan(int $id, ChangeBinStatus $action): void
+    {
+        $bin = Bin::findOrFail($id);
+
+        $this->authorize('manage', $bin);
+
+        if ($this->jalankan(fn () => $action->unfreeze($bin, auth()->user()))) {
+            $this->dispatch('pesan', teks: __('Bin dicairkan.'));
+        }
+    }
+
+    public function aktifkan(int $id, ChangeBinStatus $action): void
+    {
+        $bin = Bin::findOrFail($id);
+
+        $this->authorize('manage', $bin);
+
+        $action->reactivate($bin, auth()->user());
+
+        $this->dispatch('pesan', teks: __('Bin diaktifkan kembali.'));
+    }
+
+    /** A-67 dan BR-SJ-02: penanda "perlu dihitung" bisa dipasang dan dilepas manual. */
+    public function ubahPenandaHitung(int $id, bool $flag, ChangeBinStatus $action): void
+    {
+        $bin = Bin::findOrFail($id);
+
+        $this->authorize('manage', $bin);
+
+        $action->flagForCount($bin, $flag, auth()->user());
+
+        $this->dispatch('pesan', teks: $flag ? __('Bin ditandai perlu dihitung.') : __('Penanda hitung dilepas.'));
+    }
+
+    public function render(): View
+    {
+        return view('livewire.warehouse.bin-list', [
+            'bins' => $this->bins(),
+            'warehouses' => Warehouse::query()->orderBy('code')->get(['id', 'code', 'name']),
+            'binTypes' => BinType::options(),
+            'binStatuses' => BinStatus::options(),
+            'storageCategories' => StorageCategory::query()->active()->orderBy('name')->get(['id', 'name']),
+            'alasan' => $this->pilihanAlasan($this->aksi === 'bekukan' ? ReasonContext::Adjustment : ReasonContext::Cancel),
+        ]);
+    }
+
+    private function bins(): LengthAwarePaginator
+    {
+        return Bin::query()
+            ->with('warehouse:id,code,name', 'storageCategory:id,name,capacity_mode', 'project:id,code,name')
+            ->when($this->search !== '', fn (Builder $q) => $q->where('code', 'like', '%'.$this->search.'%'))
+            ->when($this->warehouseFilter !== '', fn (Builder $q) => $q->where('warehouse_id', (int) $this->warehouseFilter))
+            ->when($this->typeFilter !== '', fn (Builder $q) => $q->where('bin_type', $this->typeFilter))
+            ->when($this->statusFilter !== '', fn (Builder $q) => $q->where('bin_status', $this->statusFilter))
+            ->when($this->flagFilter !== '', fn (Builder $q) => $q->where('count_flag', $this->flagFilter === 'ya'))
+            ->orderBy('code')
+            ->paginate(25);
+    }
+}

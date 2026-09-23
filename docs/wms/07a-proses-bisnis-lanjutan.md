@@ -1,8 +1,8 @@
 # Proses Bisnis To-Be — Alur 4–7 (retur, transfer, konversi & waste, aset)
 
-**Versi:** 0.1 (draf Part 2)
+**Versi:** 0.4 (Part 2, pasca-validasi & diskusi lanjutan 23 Sep 2026)
 **Tanggal:** 23 September 2026
-**Status:** **draf berdasarkan nilai default asumsi A-25–A-49** yang belum divalidasi; setiap alur mencantumkan asumsi yang dipakainya. Bila asumsi berubah, ubah data di [`diagram/_generate.py`](../diagram/_generate.py) dan jalankan ulang — file ini dan `.drawio` dibuat otomatis, **jangan diedit manual**.
+**Status:** asumsi A-25–A-49 dan A-51–A-66 disetujui 23 Sep 2026 (A-40 diubah); alur 1, 2, 7, 8 diperluas (purchasing, permintaan klien, pengiriman, audit); alur 5 memuat varian dari [A-50](04-keputusan-dan-asumsi.md#a-50) yang menunggu validasi; setiap alur mencantumkan asumsi yang dipakainya. Bila asumsi berubah, ubah data di [`diagram/_generate.py`](../diagram/_generate.py) dan jalankan ulang — file ini dan `.drawio` dibuat otomatis, **jangan diedit manual**.
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · [Alur 1–3](07-proses-bisnis.md) · [Alur 8–10](07b-proses-bisnis-pendukung.md)
 
 Lanjutan dari [07-proses-bisnis.md](07-proses-bisnis.md); daftar alur lengkap ada di sana.
@@ -13,7 +13,7 @@ Konvensi: ● awal · ⏱ awal berbasis waktu · ◇ gateway XOR · ◉ akhir ·
 
 ## Alur 4 — Retur dari proyek dan pemilahan
 
-**Diagram:** [`diagram/bpmn-04-retur-dan-pemilahan.drawio`](../diagram/bpmn-04-retur-dan-pemilahan.drawio) · **Asumsi yang dipakai (default):** [A-26](04-keputusan-dan-asumsi.md#a-26), [A-33](04-keputusan-dan-asumsi.md#a-33), [A-36](04-keputusan-dan-asumsi.md#a-36) · **Aturan:** [BR-RET-01–05](05-aturan-bisnis.md#br-ret), [BR-AST-03](05-aturan-bisnis.md#br-ast) · **Status:** `RET`, `SJ`, `GRN`, `AST`
+**Diagram:** [`diagram/bpmn-04-retur-dan-pemilahan.drawio`](../diagram/bpmn-04-retur-dan-pemilahan.drawio) · **Asumsi yang dipakai:** [A-26](04-keputusan-dan-asumsi.md#a-26), [A-33](04-keputusan-dan-asumsi.md#a-33), [A-36](04-keputusan-dan-asumsi.md#a-36) · **Aturan:** [BR-RET-01–05](05-aturan-bisnis.md#br-ret), [BR-AST-03](05-aturan-bisnis.md#br-ast) · **Status:** `RET`, `SJ`, `GRN`, `AST`
 
 Barang kembali dari proyek atau klien: sisa material, barang jual-putus yang tidak terpakai (A-26), atau aset yang selesai dipinjam. RET adalah dokumen niat; pergerakan fisik lewat SJ balik (opsional) dan GRN jenis retur, lalu dipilah.
 
@@ -93,9 +93,9 @@ flowchart LR
 
 ## Alur 5 — Transfer antar gudang dan antar proyek
 
-**Diagram:** [`diagram/bpmn-05-transfer-antar-gudang-proyek.drawio`](../diagram/bpmn-05-transfer-antar-gudang-proyek.drawio) · **Asumsi yang dipakai (default):** [A-30](04-keputusan-dan-asumsi.md#a-30), [A-33](04-keputusan-dan-asumsi.md#a-33), [A-43](04-keputusan-dan-asumsi.md#a-43) · **Aturan:** [BR-RET-01](05-aturan-bisnis.md#br-ret), [BR-RET-02](05-aturan-bisnis.md#br-ret), [BR-STK-13](05-aturan-bisnis.md#br-stk), [BR-GEN-06](05-aturan-bisnis.md#br-gen) · **Status:** `TRF`, `PCK`, `SJ`, `GRN`, `PUT`
+**Diagram:** [`diagram/bpmn-05-transfer-antar-gudang-proyek.drawio`](../diagram/bpmn-05-transfer-antar-gudang-proyek.drawio) · **Asumsi yang dipakai:** [A-30](04-keputusan-dan-asumsi.md#a-30), [A-33](04-keputusan-dan-asumsi.md#a-33), [A-40](04-keputusan-dan-asumsi.md#a-40), [A-43](04-keputusan-dan-asumsi.md#a-43), [A-50](04-keputusan-dan-asumsi.md#a-50) · **Aturan:** [BR-RET-01](05-aturan-bisnis.md#br-ret), [BR-RET-02](05-aturan-bisnis.md#br-ret), [BR-SJ-07](05-aturan-bisnis.md#br-sj), [BR-STK-13](05-aturan-bisnis.md#br-stk), [BR-GEN-06](05-aturan-bisnis.md#br-gen) · **Status:** `TRF`, `PCK`, `SJ`, `GRN`, `PUT`
 
-TRF dibuat manual atau otomatis dari backorder REQ. Sebagai dokumen niat, TRF memakai jalur fisik yang sama dengan pengiriman: PCK di gudang asal, SJ, GRN di gudang tujuan, PUT. Transfer antar proyek = transfer antar Gudang Site (atau bin on_site untuk aset).
+TRF dibuat manual atau otomatis dari backorder REQ. Sebagai dokumen niat, TRF memakai jalur fisik yang sama dengan pengiriman: PCK di gudang asal, SJ, GRN di gudang tujuan, PUT. Transfer antar proyek = transfer antar Gudang Site (atau bin on_site untuk aset). Pemindahan antar titik dalam satu proyek (mis. antar galian pipa) memakai TRF yang sama antar Gudang Site proyek itu dengan jalur ringan: tanpa approval bila tidak ada aturan, SJ boleh diantar sendiri, GRN = konfirmasi PIC titik tujuan (A-50).
 
 **Lane (aktor):** Pengaju (Staf / Kepala Gudang) · Approver · Staf Gudang Asal · Driver · Staf Gudang Tujuan · Sistem
 
@@ -109,19 +109,22 @@ TRF dibuat manual atau otomatis dari backorder REQ. Sebagai dokumen niat, TRF me
 | 4 | Approver | Setujui / tolak (alur 9) | TRF approved / rejected |
 | 5 | Sistem | Reservasi lunak di gudang asal; buat PCK | TRF approved → in_progress; PCK pending; [BR-STK-04](05-aturan-bisnis.md#br-stk) |
 | 6 | Staf Gudang Asal | Picking → Loading Area; buat SJ tujuan gudang | PCK completed; SJ prepared |
-| 7 | Driver | Muat & kirim | SJ shipped; ledger → in_transit (milik gudang asal); goods_shipped; [BR-STK-13](05-aturan-bisnis.md#br-stk) |
-| 8 | Staf Gudang Tujuan | GRN dari SJ: hitung, Diterima | GRN received; SJ delivered; stock_transferred |
-| 9 | Sistem | ◇ Jumlah = dikirim? |  |
-| 10 | Sistem | DSC untuk selisih (alur 1) | DSC open |
-| 11 | Staf Gudang Tujuan | Put-away | PUT completed |
-| 12 | Sistem | TRF selesai; bila dari backorder: reservasi ke REQ penunggu, saran cross-dock | TRF completed; [BR-REQ-08](05-aturan-bisnis.md#br-req) |
-| 13 | Sistem | ◉ Stok di gudang tujuan |  |
+| 7 | Sistem | ◇ Dalam proyek & diantar sendiri? | [A-50](04-keputusan-dan-asumsi.md#a-50) |
+| 8 | Staf Gudang Asal | Antar sendiri ke titik tujuan (SJ self_delivered, nama pembawa) | SJ shipped (shipment_method = self_delivered); ledger → in_transit; goods_shipped; [BR-SJ-07](05-aturan-bisnis.md#br-sj); [A-50](04-keputusan-dan-asumsi.md#a-50); [A-57](04-keputusan-dan-asumsi.md#a-57) |
+| 9 | Driver | Muat & kirim | SJ shipped; ledger → in_transit (milik gudang asal); goods_shipped; [BR-STK-13](05-aturan-bisnis.md#br-stk) |
+| 10 | Staf Gudang Tujuan | GRN dari SJ: hitung, Diterima | GRN received; SJ delivered; stock_transferred |
+| 11 | Sistem | ◇ Jumlah = dikirim? |  |
+| 12 | Sistem | DSC untuk selisih (alur 1) | DSC open |
+| 13 | Staf Gudang Tujuan | Put-away | PUT completed |
+| 14 | Sistem | TRF selesai; bila dari backorder: reservasi ke REQ penunggu, saran cross-dock | TRF completed; [BR-REQ-08](05-aturan-bisnis.md#br-req) |
+| 15 | Sistem | ◉ Stok di gudang tujuan |  |
 
 ### Percabangan
 
 | Gateway | Cabang → langkah |
 |---|---|
 | Ada lapis approval? | *ya* → Setujui / tolak (alur 9) · *tidak* → Reservasi lunak di gudang asal; buat PCK |
+| Dalam proyek & diantar sendiri? | *tidak* → Muat & kirim · *ya* → Antar sendiri ke titik tujuan (SJ self_delivered, nama pembawa) |
 | Jumlah = dikirim? | *tidak* → DSC untuk selisih (alur 1) · *ya* → Put-away |
 
 ### Diagram (Mermaid)
@@ -137,6 +140,7 @@ flowchart LR
   end
   subgraph L2["Staf Gudang Asal"]
     f5_t4["Picking → Loading Area; buat SJ tujuan gudang"]
+    f5_t5b["Antar sendiri ke titik tujuan (SJ self_delivered, nama pembawa)"]
   end
   subgraph L3["Driver"]
     f5_t5["Muat & kirim"]
@@ -148,6 +152,7 @@ flowchart LR
   subgraph L5["Sistem"]
     f5_g1{"Ada lapis approval?"}
     f5_t3["Reservasi lunak di gudang asal; buat PCK"]
+    f5_g0{"Dalam proyek & diantar sendiri?"}
     f5_g2{"Jumlah = dikirim?"}
     f5_t7["DSC untuk selisih (alur 1)"]
     f5_t9["TRF selesai; bila dari backorder: reservasi ke REQ penunggu, saran cross-dock"]
@@ -159,8 +164,11 @@ flowchart LR
   f5_g1 -->|"tidak"| f5_t3
   f5_t2 -->|"disetujui"| f5_t3
   f5_t3 --> f5_t4
-  f5_t4 --> f5_t5
+  f5_t4 --> f5_g0
+  f5_g0 -->|"tidak"| f5_t5
+  f5_g0 -->|"ya"| f5_t5b
   f5_t5 --> f5_t6
+  f5_t5b --> f5_t6
   f5_t6 --> f5_g2
   f5_g2 -->|"tidak"| f5_t7
   f5_t7 --> f5_t8
@@ -169,11 +177,11 @@ flowchart LR
   f5_t9 --> f5_e
 ```
 
-> TRF bisa dibatalkan sampai sebelum SJ `shipped`; setelah itu koreksi lewat DSC atau TRF balik. Selama `in_transit`, stok masih dihitung milik gudang asal di laporan saldo.
+> TRF bisa dibatalkan sampai sebelum SJ `shipped`; setelah itu koreksi lewat DSC atau TRF balik. Selama `in_transit`, stok masih dihitung milik gudang asal di laporan saldo. Transfer dalam proyek ([A-50](04-keputusan-dan-asumsi.md#a-50)): GRN tujuan cukup konfirmasi PIC titik tanpa QC; riwayat lokasi barang terlihat di kartu stok dan sub-tampilan Di Gudang Site per titik.
 
 ## Alur 6 — Konversi material, offcut, dan berita acara waste
 
-**Diagram:** [`diagram/bpmn-06-konversi-dan-waste.drawio`](../diagram/bpmn-06-konversi-dan-waste.drawio) · **Asumsi yang dipakai (default):** [A-06](04-keputusan-dan-asumsi.md#a-06), [A-19](04-keputusan-dan-asumsi.md#a-19), [A-36](04-keputusan-dan-asumsi.md#a-36) · **Aturan:** [BR-CNV-01–05](05-aturan-bisnis.md#br-cnv), [BR-GEN-04](05-aturan-bisnis.md#br-gen) · **Status:** `CNV`, `WST`
+**Diagram:** [`diagram/bpmn-06-konversi-dan-waste.drawio`](../diagram/bpmn-06-konversi-dan-waste.drawio) · **Asumsi yang dipakai:** [A-06](04-keputusan-dan-asumsi.md#a-06), [A-19](04-keputusan-dan-asumsi.md#a-19), [A-36](04-keputusan-dan-asumsi.md#a-36) · **Aturan:** [BR-CNV-01–05](05-aturan-bisnis.md#br-cnv), [BR-GEN-04](05-aturan-bisnis.md#br-gen) · **Status:** `CNV`, `WST`
 
 Pembeda utama produk: pipa/lembar dipotong menjadi item lain; sisa menjadi offcut (kembali ke stok dengan ID baru dan silsilah) atau waste. Waste ditutup lewat Berita Acara Waste dengan disposisi.
 
@@ -250,7 +258,7 @@ flowchart LR
 
 ## Alur 7 — Aset dipinjamkan: keluar, jatuh tempo, kembali, hilang
 
-**Diagram:** [`diagram/bpmn-07-aset-dipinjamkan.drawio`](../diagram/bpmn-07-aset-dipinjamkan.drawio) · **Asumsi yang dipakai (default):** [A-29](04-keputusan-dan-asumsi.md#a-29), [A-38](04-keputusan-dan-asumsi.md#a-38) · **Aturan:** [BR-AST-01–07](05-aturan-bisnis.md#br-ast), [BR-STK-08](05-aturan-bisnis.md#br-stk), [BR-STK-14](05-aturan-bisnis.md#br-stk) · **Status:** `AST`, `ADJ`
+**Diagram:** [`diagram/bpmn-07-aset-dipinjamkan.drawio`](../diagram/bpmn-07-aset-dipinjamkan.drawio) · **Asumsi yang dipakai:** [A-29](04-keputusan-dan-asumsi.md#a-29), [A-38](04-keputusan-dan-asumsi.md#a-38), [A-66](04-keputusan-dan-asumsi.md#a-66) · **Aturan:** [BR-AST-01–08](05-aturan-bisnis.md#br-ast), [BR-STK-08](05-aturan-bisnis.md#br-stk), [BR-STK-14](05-aturan-bisnis.md#br-stk) · **Status:** `AST`, `ADJ`
 
 Siklus aset ber-serial: keluar bersama pengiriman (alur 1), berada di bin virtual On-site Proyek, diingatkan saat lewat jatuh tempo, kembali lewat retur (alur 4) dengan pemeriksaan, atau ditandai hilang dan dihapuskan lewat ADJ.
 
@@ -261,7 +269,7 @@ Siklus aset ber-serial: keluar bersama pengiriman (alur 1), berada di bin virtua
 | # | Lane | Langkah | Status / efek / aturan |
 |---|---|---|---|
 | 1 | Pemohon / PIC Proyek | ● Baris REQ 'Pinjam' disetujui (alur 1) | line_ownership = loan; [A-38](04-keputusan-dan-asumsi.md#a-38) |
-| 2 | Staf Gudang | Picking serial aset; catat kondisi & foto keluar; tanggal kembali | AST; due_return_date; [BR-STK-08](05-aturan-bisnis.md#br-stk) |
+| 2 | Staf Gudang | Picking serial aset; catat kondisi, foto keluar, pembacaan meter (jam/km); tanggal kembali | AST; due_return_date; meter_out; [BR-STK-08](05-aturan-bisnis.md#br-stk); [BR-AST-08](05-aturan-bisnis.md#br-ast) |
 | 3 | Driver | Kirim & bukti terima (alur 1) | SJ delivered |
 | 4 | Sistem | Aset → bin On-site Proyek; state on_loan; asset_checked_out | AST checked_out; [BR-AST-01](05-aturan-bisnis.md#br-ast) |
 | 5 | Sistem | ⏱ Cek harian: lewat jatuh tempo? | [BR-AST-06](05-aturan-bisnis.md#br-ast) |
@@ -269,11 +277,11 @@ Siklus aset ber-serial: keluar bersama pengiriman (alur 1), berada di bin virtua
 | 7 | Pemohon / PIC Proyek | ◇ Aset masih ada? |  |
 | 8 | Pemohon / PIC Proyek | Ajukan RET aset (alur 4) | RET |
 | 9 | Staf Gudang | Tandai hilang (alasan) → buat ADJ keluar | asset_state lost; asset_lost_or_damaged; ADJ submitted |
-| 10 | Staf Gudang | Pemeriksaan: grade A–D + foto + catatan | AST returned → inspected; [BR-AST-03](05-aturan-bisnis.md#br-ast) |
+| 10 | Staf Gudang | Pemeriksaan: baca meter kembali; grade A–D + skor kondisi % + foto + catatan komponen | AST returned → inspected; meter_in; [BR-AST-03](05-aturan-bisnis.md#br-ast); [BR-AST-08](05-aturan-bisnis.md#br-ast) |
 | 11 | Approver | Setujui ADJ | ADJ approved → posted; stock_adjusted |
 | 12 | Sistem | ◇ Grade? |  |
 | 13 | Sistem | ◉ Aset dihapuskan | asset_state written_off |
-| 14 | Sistem | State available; asset_returned dengan usage_days | [BR-AST-05](05-aturan-bisnis.md#br-ast) |
+| 14 | Sistem | State available; asset_returned dengan usage_days, jam pakai, skor; hitung sisa umur %, peringatan bila < ambang | [BR-AST-05](05-aturan-bisnis.md#br-ast); [BR-AST-08](05-aturan-bisnis.md#br-ast); [A-66](04-keputusan-dan-asumsi.md#a-66) |
 | 15 | Sistem | State maintenance / damaged; asset_lost_or_damaged → Akuntansi (ganti rugi) | [BR-AST-04](05-aturan-bisnis.md#br-ast) |
 | 16 | Sistem | ◉ Aset tersedia kembali |  |
 | 17 | Sistem | ◉ Aset di maintenance / rusak |  |
@@ -284,7 +292,7 @@ Siklus aset ber-serial: keluar bersama pengiriman (alur 1), berada di bin virtua
 |---|---|
 | Cek harian: lewat jatuh tempo? | *ya* → Notifikasi PIC proyek & Kepala Gudang; laporan aset terlambat · *proyek selesai / diminta kembali* → Aset masih ada? |
 | Aset masih ada? | *ya* → Ajukan RET aset (alur 4) · *tidak (hilang)* → Tandai hilang (alasan) → buat ADJ keluar |
-| Grade? | *A / B* → State available; asset_returned dengan usage_days · *C / D* → State maintenance / damaged; asset_lost_or_damaged → Akuntansi (ganti rugi) |
+| Grade? | *A / B* → State available; asset_returned dengan usage_days, jam pakai, skor; hitung sisa umur %, peringatan bila < ambang · *C / D* → State maintenance / damaged; asset_lost_or_damaged → Akuntansi (ganti rugi) |
 
 ### Diagram (Mermaid)
 
@@ -296,8 +304,8 @@ flowchart LR
     f7_t5["Ajukan RET aset (alur 4)"]
   end
   subgraph L1["Staf Gudang"]
-    f7_t1["Picking serial aset; catat kondisi & foto keluar; tanggal kembali"]
-    f7_t6["Pemeriksaan: grade A–D + foto + catatan"]
+    f7_t1["Picking serial aset; catat kondisi, foto keluar, pembacaan meter (jam/km); tanggal kembali"]
+    f7_t6["Pemeriksaan: baca meter kembali; grade A–D + skor kondisi % + foto + catatan komponen"]
     f7_t9["Tandai hilang (alasan) → buat ADJ keluar"]
   end
   subgraph L2["Driver"]
@@ -311,7 +319,7 @@ flowchart LR
     f7_g1(("⏱ Cek harian: lewat jatuh tempo?"))
     f7_t4["Notifikasi PIC proyek & Kepala Gudang; laporan aset terlambat"]
     f7_g3{"Grade?"}
-    f7_t7["State available; asset_returned dengan usage_days"]
+    f7_t7["State available; asset_returned dengan usage_days, jam pakai, skor; hitung sisa umur %, peringatan bila < ambang"]
     f7_t8["State maintenance / damaged; asset_lost_or_damaged → Akuntansi (ganti rugi)"]
     f7_e1((("Aset tersedia kembali")))
     f7_e2((("Aset di maintenance / rusak")))
@@ -336,4 +344,4 @@ flowchart LR
   f7_t10 --> f7_e3
 ```
 
-> Peminjaman ke orang (bukan proyek klien) wajib memakai Proyek Internal agar bin on_site selalu punya proyek ([BR-AST-02](05-aturan-bisnis.md#br-ast)). Aset dalam maintenance tidak bisa dicadangkan (F2).
+> Peminjaman ke orang (bukan proyek klien) wajib memakai Proyek Internal agar bin on_site selalu punya proyek ([BR-AST-02](05-aturan-bisnis.md#br-ast)). Aset dalam maintenance tidak bisa dicadangkan (F2). Penyusutan nilai dihitung Akuntansi dari data meter, hari/jam pakai, dan skor kondisi ([A-66](04-keputusan-dan-asumsi.md#a-66), D-07).

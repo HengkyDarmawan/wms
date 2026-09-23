@@ -1,6 +1,6 @@
 # [Template] Spesifikasi Modul — `<Nama Modul>`
 
-> Salin file ini menjadi `wms/1x-<modul>.md` di Part 4. Hapus teks petunjuk (blok kutipan) setelah diisi. Batas ±400 baris per modul; bila lebih, pecah menjadi dua modul. Setiap kalimat kebutuhan diberi tag fase `[F1]`/`[F2]`/`[F3]`.
+> Template v0.2 (23 Sep 2026). Salin file ini menjadi `wms/1x-<modul>.md` di Part 4. Hapus teks petunjuk (blok kutipan) setelah diisi. Batas ±400 baris per modul; bila lebih, pecah menjadi dua modul. Setiap kalimat kebutuhan diberi tag fase `[F1]`/`[F2]`/`[F3]`.
 
 **Versi:** 0.1
 **Tanggal:** —
@@ -59,7 +59,7 @@ erDiagram
 
 ## 6. Layar
 
-> Per layar: route, komponen Livewire, tujuan, field & validasi, aksi, keadaan kosong/error. Untuk PWA sebutkan perilaku offline Fase 1 (draf lokal) bila ada. Tabel & form mengikuti pola NexaDash yang sama di semua modul (P-11).
+> Per layar: route, komponen Livewire, tujuan, field & validasi, aksi, keadaan kosong/error. Untuk PWA sebutkan perilaku offline Fase 1 (draf lokal) bila ada. Tabel & form mengikuti pola NexaDash yang sama di semua modul (P-11). **Field wajib ditandai `*`** di label; setiap aksi tolak/batal memakai dialog *Alasan* `*` (master Alasan) + *Keterangan* opsional ([BR-GEN-11](05-aturan-bisnis.md#br-gen)).
 
 ### 6.1 Daftar — `/requests` — `Request\Index`
 
@@ -68,8 +68,10 @@ erDiagram
 
 ### 6.2 Form — `/requests/create` — `Request\Form`
 
-| Field | Tipe | Validasi | Keterangan |
-|---|---|---|---|
+| Field | Tipe | Wajib | Validasi | Keterangan |
+|---|---|---|---|---|
+| `project_id` | select | `*` | proyek `active` | |
+| `notes` | textarea | — | maks 500 karakter | keterangan opsional |
 
 ### 6.3 Detail — `/requests/{id}` — `Request\Show`
 

@@ -1,0 +1,122 @@
+      <div class="row g-4">
+        <div class="col-xl-8">
+          <div class="card mb-4">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Items</h2><div class="card-subtitle">3 products &middot; 4 units</div></div>
+              <span class="badge badge-soft-success ms-auto">Paid</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead><tr><th>Product</th><th class="text-center">Qty</th><th class="text-end">Unit price</th><th class="text-end">Total</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="assets/img/products/p1.svg" width="44" height="44" alt="" class="rounded"><div><div class="fw-semibold">Aurora Wireless Headphones</div><div class="small text-muted">Midnight &middot; NX-AUR-220</div></div></div></td>
+                    <td class="text-center nx-num">1</td><td class="text-end nx-num">$129.00</td><td class="text-end nx-num fw-semibold">$129.00</td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="assets/img/products/p4.svg" width="44" height="44" alt="" class="rounded"><div><div class="fw-semibold">Orbit Mechanical Keyboard</div><div class="small text-muted">Tactile &middot; NX-ORB-110</div></div></div></td>
+                    <td class="text-center nx-num">2</td><td class="text-end nx-num">$159.00</td><td class="text-end nx-num fw-semibold">$318.00</td></tr>
+                  <tr><td><div class="d-flex align-items-center gap-3"><img src="assets/img/products/p5.svg" width="44" height="44" alt="" class="rounded"><div><div class="fw-semibold">Zenith Ergonomic Mouse</div><div class="small text-muted">Graphite &middot; NX-ZEN-040</div></div></div></td>
+                    <td class="text-center nx-num">1</td><td class="text-end nx-num">$69.00</td><td class="text-end nx-num fw-semibold">$69.00</td></tr>
+                </tbody>
+                <tfoot style="border-top:2px solid var(--nx-border)">
+                  <tr><td colspan="3" class="text-end text-muted">Subtotal</td><td class="text-end nx-num">$516.00</td></tr>
+                  <tr><td colspan="3" class="text-end text-muted">Discount (WELCOME10)</td><td class="text-end nx-num text-success">&minus;$51.60</td></tr>
+                  <tr><td colspan="3" class="text-end text-muted">Shipping</td><td class="text-end nx-num">$12.00</td></tr>
+                  <tr><td colspan="3" class="text-end text-muted">Tax (8%)</td><td class="text-end nx-num">$38.11</td></tr>
+                  <tr><th colspan="3" class="text-end h5 mb-0">Total</th><th class="text-end h5 mb-0 nx-num">$514.51</th></tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Fulfilment</h2>
+              <div class="ms-auto d-flex gap-2">
+                <select class="form-select form-select-sm" id="odStatus" style="width:170px" aria-label="Order status">
+                  <option>Placed</option><option>Processing</option><option>Shipped</option><option selected>Delivered</option><option>Returned</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="d-flex flex-wrap gap-3 mb-4 p-3 rounded" style="background:var(--nx-body-bg);border:1px solid var(--nx-border)">
+                <div><div class="small text-muted">Carrier</div><strong>NexaShip Express</strong></div>
+                <div><div class="small text-muted">Tracking</div><strong class="nx-num">NX884201993SG</strong></div>
+                <div><div class="small text-muted">Delivered</div><strong>Sep 11, 14:02</strong></div>
+                <button class="btn btn-sm btn-soft-primary ms-auto" id="odTrack" type="button"><i class="bi bi-geo-alt me-1"></i>Track parcel</button>
+              </div>
+              <ul class="nx-timeline" id="odTimeline">
+                <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-check-lg"></i></span>
+                  <div class="nx-tl-body"><div class="nx-tl-text"><strong>Delivered</strong> &mdash; signed for by M. Gomez</div><div class="nx-tl-time">Sep 11, 2026 &middot; 14:02</div></div></li>
+                <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-success);background:var(--nx-success-subtle)"><i class="bi bi-truck"></i></span>
+                  <div class="nx-tl-body"><div class="nx-tl-text"><strong>Out for delivery</strong> from Austin depot</div><div class="nx-tl-time">Sep 11, 2026 &middot; 08:15</div></div></li>
+                <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-box-seam"></i></span>
+                  <div class="nx-tl-body"><div class="nx-tl-text"><strong>Shipped</strong> from Dallas hub</div><div class="nx-tl-time">Sep 9, 2026 &middot; 19:40</div></div></li>
+                <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-primary);background:var(--nx-primary-subtle)"><i class="bi bi-box"></i></span>
+                  <div class="nx-tl-body"><div class="nx-tl-text"><strong>Packed</strong> and handed to the carrier</div><div class="nx-tl-time">Sep 9, 2026 &middot; 11:20</div></div></li>
+                <li class="nx-timeline-item"><span class="nx-tl-dot" style="color:var(--nx-secondary);background:var(--nx-secondary-subtle)"><i class="bi bi-bag-check"></i></span>
+                  <div class="nx-tl-body"><div class="nx-tl-text"><strong>Order placed</strong> and payment captured</div><div class="nx-tl-time">Sep 8, 2026 &middot; 11:22</div></div></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Internal notes</h2></div>
+            <div class="card-body">
+              <div id="odNotes">
+                <div class="d-flex gap-2 mb-3">
+                  <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=15" alt=""></span>
+                  <div class="p-2 px-3 rounded flex-grow-1" style="background:var(--nx-body-bg)"><div class="small fw-semibold">Tom Baker <span class="text-muted fw-normal">&middot; Sep 9</span></div><div class="small">Customer asked for the keyboard to ship in the same box — confirmed with the warehouse.</div></div>
+                </div>
+              </div>
+              <div class="input-group">
+                <input class="form-control" id="odNoteInput" placeholder="Add an internal note&hellip;" aria-label="Internal note">
+                <button class="btn btn-primary" id="odNoteAdd" type="button">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4">
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Customer</h2><a href="commerce-customer-detail.html" class="nx-link small ms-auto">View</a></div>
+            <div class="card-body">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="nx-avatar nx-avatar-lg"><img src="https://i.pravatar.cc/96?img=45" alt=""></span>
+                <div class="min-w-0"><div class="fw-semibold">Maria Gomez</div><div class="small text-muted">18 orders &middot; $9,420 lifetime</div></div>
+              </div>
+              <ul class="list-unstyled small text-muted mb-0">
+                <li class="d-flex gap-2 py-1"><i class="bi bi-envelope"></i>maria@acme.io</li>
+                <li class="d-flex gap-2 py-1"><i class="bi bi-telephone"></i>+1 512 555 0142</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Addresses</h2></div>
+            <div class="card-body">
+              <h3 class="h6 text-muted mb-1">Shipping</h3>
+              <p class="small mb-3">Maria Gomez<br>1421 Cedar Avenue, Suite 8<br>Austin, TX 78701<br>United States</p>
+              <h3 class="h6 text-muted mb-1">Billing</h3>
+              <p class="small mb-0">Acme IO Ltd.<br>1421 Cedar Avenue, Suite 8<br>Austin, TX 78701<br>United States</p>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Payment</h2></div>
+            <div class="card-body">
+              <div class="nx-row-item px-0"><span class="nx-icon-sq primary"><i class="bi bi-credit-card-2-front"></i></span>
+                <div class="nx-row-main"><div class="nx-row-title">Visa &bull;&bull;&bull;&bull; 4821</div><div class="nx-row-sub">Captured Sep 8, 11:22</div></div>
+                <span class="badge badge-soft-success">Paid</span></div>
+              <hr class="my-3">
+              <button class="btn btn-soft-warning w-100 btn-sm" id="odRefund" type="button"><i class="bi bi-arrow-counterclockwise me-1"></i>Issue refund</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Actions</h2></div>
+            <div class="card-body d-grid gap-2">
+              <a class="btn btn-soft-primary btn-sm" href="commerce-invoice-detail.html"><i class="bi bi-file-earmark-text me-1"></i>View invoice</a>
+              <button class="btn btn-soft-secondary btn-sm" id="odResend" type="button"><i class="bi bi-envelope me-1"></i>Resend confirmation</button>
+              <button class="btn btn-soft-secondary btn-sm" id="odPrint" type="button"><i class="bi bi-printer me-1"></i>Print packing slip</button>
+            </div>
+          </div>
+        </div>
+      </div>

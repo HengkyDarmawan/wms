@@ -1,0 +1,53 @@
+      <div class="row g-4">
+        <div class="col-xl-3 col-md-6"><div class="card nx-kpi nx-card-lift"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Revenue</span><span class="nx-icon-sq primary"><i class="bi bi-currency-dollar"></i></span></div>
+          <div class="nx-kpi-value">$<span data-countup data-value="48.2" data-decimals="1">0</span>K</div>
+          <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>12.4%</span><span>vs last month</span></div>
+        </div></div></div>
+        <div class="col-xl-3 col-md-6"><div class="card nx-kpi nx-card-lift"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Active Users</span><span class="nx-icon-sq info"><i class="bi bi-people"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="12847">0</span></div>
+          <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>3.1%</span><span>vs last month</span></div>
+        </div></div></div>
+        <div class="col-xl-3 col-md-6"><div class="card nx-kpi nx-card-lift"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Deployments</span><span class="nx-icon-sq warning"><i class="bi bi-rocket-takeoff"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="342">0</span></div>
+          <div class="nx-kpi-foot"><span class="nx-trend down"><i class="bi bi-arrow-down-right"></i>2.2%</span><span>vs last month</span></div>
+        </div></div></div>
+        <div class="col-xl-3 col-md-6"><div class="card nx-kpi nx-card-lift"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Uptime</span><span class="nx-icon-sq success"><i class="bi bi-shield-check"></i></span></div>
+          <div class="nx-kpi-value"><span data-countup data-value="99.98" data-decimals="2">0</span>%</div>
+          <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>0.01%</span><span>vs last month</span></div>
+        </div></div></div>
+      </div>
+
+      <div class="row g-4 mt-0">
+        <div class="col-lg-8"><div class="card h-100">
+          <div class="card-header"><div><h2 class="card-title h4">Revenue Growth</h2><div class="card-subtitle">Monthly recurring revenue</div></div></div>
+          <div class="card-body"><div id="lhChart" style="min-height:320px"></div></div>
+        </div></div>
+        <div class="col-lg-4"><div class="card h-100">
+          <div class="card-header"><h2 class="card-title h4">About this layout</h2></div>
+          <div class="card-body">
+            <p class="text-muted small">The sidebar is hidden and the same menu data is rendered as a horizontal bar under the header. Nothing else changes: the header, footer, theme handling and command palette are identical.</p>
+            <h3 class="h6 mt-4 mb-2">How it is switched on</h3>
+            <pre class="p-3 rounded mb-3" style="background:var(--nx-body-bg);border:1px solid var(--nx-border);font-size:12px;overflow:auto"><code>&lt;body data-nx-layout="app"
+      class="nx-layout-horizontal"&gt;</code></pre>
+            <p class="small text-muted mb-0">The class hides <code>.nx-sidebar</code> and drops the left margin on <code>.nx-main</code>. Below 992px the bar scrolls horizontally rather than wrapping, so it stays one line tall.</p>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header"><h2 class="card-title h4">When to pick which</h2></div>
+        <div class="table-responsive"><table class="table align-middle mb-0">
+          <thead><tr><th>Consideration</th><th>Vertical sidebar</th><th>Horizontal bar</th></tr></thead>
+          <tbody>
+            <tr><td>Number of top-level items</td><td class="text-success">Handles 30+ comfortably</td><td>Best under 8</td></tr>
+            <tr><td>Vertical space for content</td><td>Unchanged</td><td class="text-warning">48px less</td></tr>
+            <tr><td>Horizontal space for content</td><td class="text-warning">260px less</td><td class="text-success">Full width</td></tr>
+            <tr><td>Deep nesting</td><td class="text-success">Natural</td><td>Needs dropdowns</td></tr>
+            <tr><td>Best for</td><td>Dense admin tools</td><td>Focused apps and reporting views</td></tr>
+          </tbody>
+        </table></div>
+      </div>

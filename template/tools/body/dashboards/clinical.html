@@ -1,0 +1,105 @@
+      <!-- ===== KPI Cards ===== -->
+      <div class="row g-4">
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Patients Today</span><span class="nx-icon-sq primary"><i class="bi bi-person-vcard"></i></span></div>
+            <div class="nx-kpi-value"><span data-countup data-value="48">0</span></div>
+            <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>12%</span><span>vs yesterday</span></div>
+          </div></div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Appointments</span><span class="nx-icon-sq info"><i class="bi bi-calendar-check"></i></span></div>
+            <div class="nx-kpi-value"><span data-countup data-value="24">0</span></div>
+            <div class="nx-kpi-foot"><span class="badge badge-soft-info">8 left today</span><span>16 completed</span></div>
+          </div></div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Bed Occupancy</span><span class="nx-icon-sq warning"><i class="bi bi-hospital"></i></span></div>
+            <div class="nx-kpi-value"><span data-countup data-value="78">0</span>%</div>
+            <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>5%</span><span>vs last week</span></div>
+          </div></div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Revenue</span><span class="nx-icon-sq success"><i class="bi bi-currency-dollar"></i></span></div>
+            <div class="nx-kpi-value">$<span data-countup data-value="42.5" data-decimals="1">0</span>K</div>
+            <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>8%</span><span>vs last month</span></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- ===== Vitals monitor ===== -->
+      <div class="row g-4 mt-0">
+        <div class="col-lg-8">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">24h Patient Vitals Monitor</h2><div class="card-subtitle">Bed ICU-04 &middot; Heart rate (bpm)</div></div>
+              <span class="badge ms-auto d-inline-flex align-items-center gap-1" style="color:var(--nx-danger);background:var(--nx-danger-subtle)">
+                <span class="nx-dot-label nx-pulse" style="background:var(--nx-danger);width:6px;height:6px"></span>LIVE
+              </span>
+            </div>
+            <div class="card-body"><div id="vitalsChart" style="min-height:300px"></div></div>
+            <div class="card-footer d-flex flex-wrap gap-4">
+              <div><div class="small text-muted">Heart rate</div><strong class="h4 mb-0" id="vitalHR">78 bpm</strong></div>
+              <div><div class="small text-muted">SpO&#8322;</div><strong class="h4 mb-0">98%</strong></div>
+              <div><div class="small text-muted">Blood pressure</div><strong class="h4 mb-0">118/76</strong></div>
+              <div><div class="small text-muted">Temperature</div><strong class="h4 mb-0">36.8&deg;C</strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Bed Occupancy by Ward</h2></div>
+            <div class="card-body">
+              <div class="nx-progress-row"><div class="nx-pr-head"><span class="nx-pr-label">ICU</span><span class="nx-pr-value">85%</span></div><div class="progress" role="progressbar" aria-label="ICU" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-danger" style="width:85%"></div></div><div class="small text-muted mt-1">17 of 20 beds occupied</div></div>
+              <div class="nx-progress-row"><div class="nx-pr-head"><span class="nx-pr-label">General Ward</span><span class="nx-pr-value">72%</span></div><div class="progress" role="progressbar" aria-label="General" aria-valuenow="72" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:72%"></div></div><div class="small text-muted mt-1">86 of 120 beds occupied</div></div>
+              <div class="nx-progress-row"><div class="nx-pr-head"><span class="nx-pr-label">Emergency</span><span class="nx-pr-value">91%</span></div><div class="progress" role="progressbar" aria-label="Emergency" aria-valuenow="91" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-warning" style="width:91%"></div></div><div class="small text-muted mt-1">32 of 35 beds occupied</div></div>
+              <hr class="my-4">
+              <h3 class="h5 mb-3">Department Workload</h3>
+              <div id="deptChart" style="min-height:220px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Upcoming appointments ===== -->
+      <div class="row g-4 mt-0">
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Upcoming Appointments</h2><a href="apps-calendar.html" class="nx-link small ms-auto">Calendar</a></div>
+            <div class="card-body">
+              <div class="nx-row-list">
+                <div class="nx-row-item"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/56?img=45" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Maria Gomez</div><div class="nx-row-sub">Cardiology</div></div><span class="badge badge-soft-primary">09:30</span></div>
+                <div class="nx-row-item"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/56?img=13" alt=""></span><div class="nx-row-main"><div class="nx-row-title">James Lee</div><div class="nx-row-sub">Orthopedics</div></div><span class="badge badge-soft-primary">10:00</span></div>
+                <div class="nx-row-item"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/56?img=20" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Hana Sato</div><div class="nx-row-sub">Pediatrics</div></div><span class="badge badge-soft-primary">10:45</span></div>
+                <div class="nx-row-item"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/56?img=31" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Amina Diallo</div><div class="nx-row-sub">Neurology</div></div><span class="badge badge-soft-primary">11:15</span></div>
+                <div class="nx-row-item"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/56?img=8" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Lucas Meyer</div><div class="nx-row-sub">Emergency</div></div><span class="badge badge-soft-primary">11:40</span></div>
+                <div class="nx-row-item"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/56?img=36" alt=""></span><div class="nx-row-main"><div class="nx-row-title">Nadia Rahman</div><div class="nx-row-sub">Cardiology</div></div><span class="badge badge-soft-primary">13:00</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Today's schedule ===== -->
+        <div class="col-lg-8">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Today's Schedule</h2><div class="card-subtitle">All departments</div></div></div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead><tr><th>Time</th><th>Patient</th><th>Doctor</th><th>Department</th><th>Type</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td class="nx-num fw-semibold">09:30</td><td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=45" alt=""></span><div class="nx-tu-name">Maria Gomez</div></div></td><td>Dr. Smith</td><td>Cardiology</td><td><span class="badge border" style="color:var(--nx-text-body);background:transparent;border-color:var(--nx-border)!important">In-Person</span></td><td><span class="badge badge-soft-success">Confirmed</span></td></tr>
+                  <tr><td class="nx-num fw-semibold">10:00</td><td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=13" alt=""></span><div class="nx-tu-name">James Lee</div></div></td><td>Dr. Okafor</td><td>Orthopedics</td><td><span class="badge border" style="color:var(--nx-text-body);background:transparent;border-color:var(--nx-border)!important">Telehealth</span></td><td><span class="badge badge-soft-success">Confirmed</span></td></tr>
+                  <tr><td class="nx-num fw-semibold">10:45</td><td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=20" alt=""></span><div class="nx-tu-name">Hana Sato</div></div></td><td>Dr. Iversen</td><td>Pediatrics</td><td><span class="badge border" style="color:var(--nx-text-body);background:transparent;border-color:var(--nx-border)!important">In-Person</span></td><td><span class="badge badge-soft-warning">Waiting</span></td></tr>
+                  <tr><td class="nx-num fw-semibold">11:15</td><td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=31" alt=""></span><div class="nx-tu-name">Amina Diallo</div></div></td><td>Dr. Smith</td><td>Neurology</td><td><span class="badge border" style="color:var(--nx-text-body);background:transparent;border-color:var(--nx-border)!important">In-Person</span></td><td><span class="badge badge-soft-success">Confirmed</span></td></tr>
+                  <tr><td class="nx-num fw-semibold">11:40</td><td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=8" alt=""></span><div class="nx-tu-name">Lucas Meyer</div></div></td><td>Dr. Haddad</td><td>Emergency</td><td><span class="badge border" style="color:var(--nx-text-body);background:transparent;border-color:var(--nx-border)!important">In-Person</span></td><td><span class="badge badge-soft-danger">Cancelled</span></td></tr>
+                  <tr><td class="nx-num fw-semibold">13:00</td><td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=36" alt=""></span><div class="nx-tu-name">Nadia Rahman</div></div></td><td>Dr. Smith</td><td>Cardiology</td><td><span class="badge border" style="color:var(--nx-text-body);background:transparent;border-color:var(--nx-border)!important">Telehealth</span></td><td><span class="badge badge-soft-warning">Waiting</span></td></tr>
+                  <tr><td class="nx-num fw-semibold">14:20</td><td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=57" alt=""></span><div class="nx-tu-name">Piotr Nowak</div></div></td><td>Dr. Okafor</td><td>Orthopedics</td><td><span class="badge border" style="color:var(--nx-text-body);background:transparent;border-color:var(--nx-border)!important">In-Person</span></td><td><span class="badge badge-soft-success">Confirmed</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>

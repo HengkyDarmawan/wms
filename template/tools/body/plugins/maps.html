@@ -1,0 +1,67 @@
+      <div class="row g-4">
+
+        <div class="col-lg-8">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Leaflet &mdash; store locations</h2><div class="card-subtitle">Click a marker for details; use the layer control to switch basemaps</div></div>
+              <span class="badge badge-soft-success ms-auto">leaflet 1.9.4</span>
+            </div>
+            <div class="card-body p-0">
+              <div id="mapMain" style="height:460px;border-radius:0 0 var(--nx-radius) var(--nx-radius)"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Locations</h2><span class="badge badge-soft-secondary ms-auto" id="locCount">0</span></div>
+            <div class="card-body p-0">
+              <div class="nx-row-list px-3" id="locList" style="max-height:460px;overflow-y:auto"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Marker clustering</h2><div class="card-subtitle">500 points grouped as you zoom out</div></div>
+              <span class="badge badge-soft-success ms-auto">markercluster 1.5.3</span>
+            </div>
+            <div class="card-body p-0"><div id="mapCluster" style="height:380px;border-radius:0 0 var(--nx-radius) var(--nx-radius)"></div></div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Heatmap</h2><div class="card-subtitle">Weighted density of the same dataset</div></div>
+              <span class="badge badge-soft-success ms-auto">leaflet.heat 0.2.0</span>
+            </div>
+            <div class="card-body p-0"><div id="mapHeat" style="height:380px;border-radius:0 0 var(--nx-radius) var(--nx-radius)"></div></div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Regions &amp; shapes</h2><div class="card-subtitle">Polygons, circles and a coloured overlay</div></div>
+            </div>
+            <div class="card-body p-0"><div id="mapShapes" style="height:360px;border-radius:0 0 var(--nx-radius) var(--nx-radius)"></div></div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Pick a point</h2><div class="card-subtitle">Click the map to drop a pin and read the coordinates</div></div>
+            </div>
+            <div class="card-body p-0"><div id="mapPicker" style="height:290px"></div></div>
+            <div class="card-footer d-flex flex-wrap gap-3 align-items-center">
+              <div><div class="small text-muted">Latitude</div><strong class="nx-num" id="pickLat">&mdash;</strong></div>
+              <div><div class="small text-muted">Longitude</div><strong class="nx-num" id="pickLng">&mdash;</strong></div>
+              <button class="btn btn-sm btn-soft-secondary ms-auto" type="button" id="pickReset">Clear pin</button>
+            </div>
+          </div>
+        </div>
+
+      </div>

@@ -1,6 +1,6 @@
 # WMS Proyek — konteks untuk agen AI
 
-Repo ini **belum berisi kode**. Isinya dokumentasi desain WMS SaaS multi-company (Bahasa Indonesia) yang menjadi sumber kebenaran untuk BPMN, ERD, spesifikasi modul, dan implementasi Laravel 13 nanti.
+Repo ini berisi **dokumentasi desain** WMS SaaS multi-company (Bahasa Indonesia) di `docs/` — sumber kebenaran untuk BPMN, ERD, dan spesifikasi modul — **dan aplikasi Laravel 13** yang dibangun mengikuti dokumen itu, modul demi modul. Dokumen selalu menang: bila kode menyimpang, perbarui dokumen modulnya (naikkan versi + changelog `docs/README.md`), jangan diam-diam mengubah keputusan.
 
 ## Urutan baca (wajib sebelum mengerjakan apa pun)
 
@@ -23,5 +23,11 @@ Repo ini **belum berisi kode**. Isinya dokumentasi desain WMS SaaS multi-company
 
 ## Lingkungan lokal
 
-- XAMPP di `C:\xampp`; Apache memakai PHP 8.3, `php` di terminal masih 7.4 — pakai `C:\xampp\php-8.3\php.exe` (lihat memori proyek).
-- Belum ada `composer.json`; jangan membuat kerangka Laravel sebelum Part 3 selesai dan diminta.
+- **Laragon** di `C:\laragon` (bukan XAMPP). PHP proyek = **8.3.33**: `C:\laragon\bin\php\php-8.3.33-Win32-vs16-x64\php.exe` (alias `php83`); `php` di PATH adalah 8.5.10 dan **tidak boleh dipakai** untuk composer/artisan. MySQL **8.4 LTS** (standar dev & produksi), Composer 2.8, Node 22; subdomain lokal `*.wms.test` otomatis oleh Laragon. Generator dokumen: `py -3`.
+- Aplikasi Laravel ada di root repo (`app/`, `routes/`, `resources/`, `database/`). Semua perintah PHP memakai `php83`:
+  `php83 artisan migrate` (pusat) · `php83 artisan tenants:migrate` (semua company) · `php83 artisan db:seed` (pusat + company DEMO) ·
+  `php83 artisan tenants:seed --class="Database\Seeders\Tenant\DemoSeeder"` · `php83 artisan test` · `npm run build`.
+- Database: pusat `wms_central`, tenant `wms_tenant_<kode>`, uji `wms_central_test` / `wms_tenant_test_*`. MySQL lokal dipakai bersama proyek lain — **jangan menyentuh database di luar prefiks `wms_`**.
+- Akun seed/demo hanya dari `docs/00-akun-uji.md`; seeder harus sama persis dengan berkas itu.
+- `template/` adalah referensi UI NexaDash (statis), **tidak di-deploy**; aset yang dipakai sudah disalin ke `resources/` dan di-bundle Vite tanpa CDN.
+- Struktur kode per domain: `app/Domain/<Modul>/{Models,Enums,Actions,Policies,Support,Notifications}` (AD-02); satu aksi = satu kelas Action bernama sesuai permission.

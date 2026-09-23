@@ -1,0 +1,46 @@
+  <div class="nx-auth">
+
+    <aside class="nx-auth-brand">
+      <a class="nx-brand-row text-white text-decoration-none" href="index.html">
+        <img src="assets/img/logo.svg" alt=""><span>NexaDash</span>
+      </a>
+
+      <div>
+        <h2>Session locked for your safety.</h2>
+        <div class="nx-auth-feature"><i class="bi bi-clock"></i><div><div class="nx-af-title">Auto-lock after 15 minutes</div><div class="nx-af-text">Configurable per workspace under Settings &rarr; Security.</div></div></div>
+        <div class="nx-auth-feature"><i class="bi bi-display"></i><div><div class="nx-af-title">Your work is safe</div><div class="nx-af-text">Everything you had open is restored the moment you unlock.</div></div></div>
+      </div>
+
+      <div class="nx-auth-testimonial">
+        <p class="mb-0">&ldquo;Auto-lock was the single feature our security review asked for. It shipped two weeks later.&rdquo;</p>
+        <div class="nx-at-user">
+          <img src="https://i.pravatar.cc/72?img=44" alt="Olivia Brown">
+          <div><div class="fw-semibold">Olivia Brown</div><div class="small" style="opacity:.8">CISO, Atlas UK</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="nx-auth-form-wrap">
+      <div class="nx-auth-card text-center">
+        <img src="https://i.pravatar.cc/192?img=12" alt="Aigars Silkalns" class="rounded-circle mb-3" width="96" height="96" style="object-fit:cover">
+        <h1 class="h2 mb-1">Aigars Silkalns</h1>
+        <p class="text-muted mb-4">aigars@nexadash.io</p>
+
+        <form id="lockForm" class="text-start" novalidate>
+          <div class="mb-4">
+            <label class="form-label" for="lockPassword">Enter your password to unlock</label>
+            <div class="input-group">
+              <input class="form-control" type="password" id="lockPassword" placeholder="••••••••" required autofocus>
+              <button class="btn btn-outline-secondary btn-toggle-pw" type="button" data-target="#lockPassword" aria-label="Show password"><i class="bi bi-eye"></i></button>
+              <div class="invalid-feedback">Password is required.</div>
+            </div>
+          </div>
+          <button class="btn btn-primary w-100 btn-lg" type="submit"><i class="bi bi-unlock me-1"></i>Unlock</button>
+        </form>
+
+        <p class="text-muted small mt-4 mb-0">
+          Not you? <a class="nx-link" href="auth-login.html">Sign in with a different account</a>
+        </p>
+      </div>
+    </main>
+  </div>

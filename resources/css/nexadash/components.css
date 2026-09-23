@@ -1,0 +1,577 @@
+/* ============================================================
+   NexaDash — Komponen: card, button soft, badge, avatar, KPI,
+   timeline, tabel, dropdown, dsb. Extend/override Bootstrap 5.
+   ============================================================ */
+
+/* ===================== Card ===================== */
+.card {
+  --bs-card-bg: var(--nx-card-bg);
+  --bs-card-border-color: var(--nx-border);
+  --bs-card-border-radius: var(--nx-radius);
+  --bs-card-cap-bg: transparent;
+  box-shadow: var(--nx-shadow);
+}
+.card-body { padding: 20px; }
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--nx-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.card-header .card-title { margin: 0; font-size: 16px; font-weight: 600; }
+.card-header .card-subtitle { font-size: 12px; color: var(--nx-text-muted); margin-top: 2px; }
+.card-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--nx-border);
+  background: transparent;
+}
+.nx-card-lift { transition: var(--nx-transition); }
+.nx-card-lift:hover { box-shadow: var(--nx-shadow-lift); transform: translateY(-2px); }
+
+/* ===================== Buttons ===================== */
+.btn { border-radius: var(--nx-radius-sm); font-weight: 500; font-size: 14px; }
+.btn-sm { font-size: 13px; }
+.btn-primary {
+  --bs-btn-bg: var(--nx-primary);
+  --bs-btn-border-color: var(--nx-primary);
+  --bs-btn-hover-bg: var(--nx-primary-hover);
+  --bs-btn-hover-border-color: var(--nx-primary-hover);
+  --bs-btn-active-bg: var(--nx-primary-hover);
+  --bs-btn-active-border-color: var(--nx-primary-hover);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--nx-primary);
+  --bs-btn-border-color: var(--nx-primary);
+  --bs-btn-hover-bg: var(--nx-primary);
+  --bs-btn-hover-border-color: var(--nx-primary);
+}
+
+/* Soft buttons */
+.btn-soft-primary   { color: var(--nx-primary); background: var(--nx-primary-subtle); border-color: transparent; }
+.btn-soft-primary:hover   { color: #fff; background: var(--nx-primary); }
+.btn-soft-secondary { color: var(--nx-secondary); background: var(--nx-secondary-subtle); border-color: transparent; }
+.btn-soft-secondary:hover { color: #fff; background: var(--nx-secondary); }
+.btn-soft-success   { color: var(--nx-success); background: var(--nx-success-subtle); border-color: transparent; }
+.btn-soft-success:hover   { color: #fff; background: var(--nx-success); }
+.btn-soft-danger    { color: var(--nx-danger); background: var(--nx-danger-subtle); border-color: transparent; }
+.btn-soft-danger:hover    { color: #fff; background: var(--nx-danger); }
+.btn-soft-warning   { color: var(--nx-warning); background: var(--nx-warning-subtle); border-color: transparent; }
+.btn-soft-warning:hover   { color: #fff; background: var(--nx-warning); }
+.btn-soft-info      { color: var(--nx-info); background: var(--nx-info-subtle); border-color: transparent; }
+.btn-soft-info:hover      { color: #fff; background: var(--nx-info); }
+
+.btn-xs { padding: 2px 8px; font-size: 12px; border-radius: var(--nx-radius-xs); }
+.btn-icon {
+  width: 38px; height: 38px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-icon.btn-sm { width: 31px; height: 31px; }
+.btn-icon.rounded-circle { border-radius: 50% !important; }
+
+/* ===================== Badges ===================== */
+.badge { font-weight: 600; font-size: 11px; border-radius: 999px; padding: 4px 10px; }
+.badge-soft-primary   { color: var(--nx-primary); background: var(--nx-primary-subtle); }
+.badge-soft-secondary { color: var(--nx-secondary); background: var(--nx-secondary-subtle); }
+.badge-soft-success   { color: var(--nx-success); background: var(--nx-success-subtle); }
+.badge-soft-danger    { color: var(--nx-danger); background: var(--nx-danger-subtle); }
+.badge-soft-warning   { color: var(--nx-warning); background: var(--nx-warning-subtle); }
+.badge-soft-info      { color: var(--nx-info); background: var(--nx-info-subtle); }
+
+.nx-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.nx-trend.up   { color: var(--nx-success); background: var(--nx-success-subtle); }
+.nx-trend.down { color: var(--nx-danger); background: var(--nx-danger-subtle); }
+
+/* ===================== Avatars ===================== */
+.nx-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--nx-primary);
+  background: var(--nx-primary-subtle);
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.nx-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.nx-avatar-xs { width: 24px; height: 24px; font-size: 10px; }
+.nx-avatar-sm { width: 32px; height: 32px; font-size: 12px; }
+.nx-avatar-md { width: 28px; height: 28px; font-size: 11px; }
+.nx-avatar-lg { width: 48px; height: 48px; font-size: 16px; }
+.nx-avatar-xl { width: 64px; height: 64px; font-size: 20px; }
+
+.nx-avatar-group { display: inline-flex; }
+.nx-avatar-group .nx-avatar {
+  border: 2px solid var(--nx-card-bg);
+}
+.nx-avatar-group .nx-avatar + .nx-avatar { margin-left: -8px; }
+
+/* Status dot pada avatar */
+.nx-avatar-status { position: relative; display: inline-flex; }
+.nx-avatar-status::after {
+  content: "";
+  position: absolute;
+  right: 0; bottom: 0;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--nx-card-bg);
+  background: var(--nx-text-muted);
+}
+.nx-avatar-status.online::after  { background: var(--nx-success); }
+.nx-avatar-status.away::after    { background: var(--nx-warning); }
+.nx-avatar-status.offline::after { background: var(--nx-text-muted); }
+
+/* ===================== Icon square (KPI dsb) ===================== */
+.nx-icon-sq {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: var(--nx-radius-sm);
+  font-size: 18px;
+  flex: 0 0 auto;
+}
+.nx-icon-sq.primary { color: var(--nx-primary); background: var(--nx-primary-subtle); }
+.nx-icon-sq.success { color: var(--nx-success); background: var(--nx-success-subtle); }
+.nx-icon-sq.danger  { color: var(--nx-danger);  background: var(--nx-danger-subtle); }
+.nx-icon-sq.warning { color: var(--nx-warning); background: var(--nx-warning-subtle); }
+.nx-icon-sq.info    { color: var(--nx-info);    background: var(--nx-info-subtle); }
+.nx-icon-sq.secondary { color: var(--nx-secondary); background: var(--nx-secondary-subtle); }
+
+/* ===================== KPI Card ===================== */
+.nx-kpi .nx-kpi-label { font-size: 13px; color: var(--nx-text-muted); font-weight: 500; }
+.nx-kpi .nx-kpi-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--nx-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+  margin: 8px 0;
+}
+.nx-kpi .nx-kpi-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--nx-text-muted);
+  white-space: nowrap;
+  min-width: 0;
+}
+.nx-kpi .nx-kpi-foot > span:not(.nx-trend):not(.nx-kpi-spark):not(.badge) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Strip sparkline selebar kartu, di bawah baris tren. */
+.nx-kpi .nx-kpi-spark {
+  margin: 10px -20px -20px;
+  min-height: 46px;
+}
+
+/* ===================== Timeline ===================== */
+.nx-timeline { list-style: none; margin: 0; padding: 0; position: relative; }
+.nx-timeline::before {
+  content: "";
+  position: absolute;
+  left: 15px; top: 8px; bottom: 8px;
+  width: 2px;
+  background: var(--nx-border);
+}
+.nx-timeline-item {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding-bottom: 20px;
+}
+.nx-timeline-item:last-child { padding-bottom: 0; }
+.nx-timeline-item > .nx-avatar,
+.nx-timeline-item > .nx-tl-dot { position: relative; z-index: 1; }
+.nx-tl-dot {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex: 0 0 auto;
+  border: 2px solid var(--nx-card-bg);
+}
+.nx-timeline-item .nx-tl-body { flex: 1 1 auto; min-width: 0; padding-top: 4px; }
+.nx-timeline-item .nx-tl-text { font-size: 13px; color: var(--nx-text-body); }
+.nx-timeline-item .nx-tl-text strong { color: var(--nx-text); font-weight: 600; }
+.nx-timeline-item .nx-tl-time { font-size: 11px; color: var(--nx-text-muted); margin-top: 2px; }
+
+/* ===================== List rows (deployment, appointment) ===================== */
+.nx-row-list { display: flex; flex-direction: column; }
+.nx-row-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+.nx-row-item + .nx-row-item { border-top: 1px solid var(--nx-border); }
+.nx-row-item .nx-row-main { flex: 1 1 auto; min-width: 0; }
+.nx-row-item .nx-row-title {
+  font-size: 13px; font-weight: 600; color: var(--nx-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nx-row-item .nx-row-sub { font-size: 12px; color: var(--nx-text-muted); }
+
+/* ===================== Tables ===================== */
+.table {
+  --bs-table-color: var(--nx-text-body);
+  --bs-table-border-color: var(--nx-border);
+  --bs-table-hover-bg: var(--nx-hover-bg);
+  --bs-table-hover-color: var(--nx-text-body);
+  --bs-table-bg: transparent;
+  margin: 0;
+  font-size: 14px;
+}
+.table thead th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--nx-text-muted);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--nx-border);
+  white-space: nowrap;
+}
+.table tbody td {
+  padding: 14px 20px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--nx-border);
+}
+.table tbody tr:last-child td { border-bottom: 0; }
+
+.nx-table-user { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.nx-table-user .nx-tu-name { font-size: 14px; font-weight: 600; color: var(--nx-text); line-height: 1.3; }
+.nx-table-user .nx-tu-sub { font-size: 12px; color: var(--nx-text-muted); }
+
+/* ===================== Dropdown ===================== */
+.dropdown-menu {
+  --bs-dropdown-bg: var(--nx-card-bg);
+  --bs-dropdown-border-color: var(--nx-border);
+  --bs-dropdown-link-color: var(--nx-text-body);
+  --bs-dropdown-link-hover-bg: var(--nx-hover-bg);
+  --bs-dropdown-link-hover-color: var(--nx-text);
+  --bs-dropdown-link-active-bg: var(--nx-primary-subtle);
+  --bs-dropdown-link-active-color: var(--nx-primary);
+  border-radius: var(--nx-radius);
+  box-shadow: var(--nx-shadow-lift);
+  font-size: 14px;
+  padding: 8px;
+}
+.dropdown-item {
+  border-radius: var(--nx-radius-sm);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dropdown-item i { font-size: 15px; color: var(--nx-text-muted); }
+.dropdown-item:hover i { color: inherit; }
+.dropdown-item.text-danger i { color: var(--nx-danger); }
+.dropdown-divider { border-color: var(--nx-border); margin: 6px 0; }
+.dropdown-header {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  font-weight: 600;
+  padding: 8px 12px 4px;
+}
+
+/* ===================== Forms ===================== */
+.form-control, .form-select {
+  border-radius: var(--nx-radius-sm);
+  border-color: var(--nx-border);
+  background-color: var(--nx-card-bg);
+  color: var(--nx-text-body);
+  font-size: 14px;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--nx-primary);
+  box-shadow: 0 0 0 3px rgb(99 102 241 / .15);
+}
+.form-control::placeholder { color: var(--nx-text-muted); }
+.form-label { font-size: 13px; font-weight: 500; color: var(--nx-text); margin-bottom: 6px; }
+.form-check-input:checked { background-color: var(--nx-primary); border-color: var(--nx-primary); }
+.input-group-text {
+  background: var(--nx-body-bg);
+  border-color: var(--nx-border);
+  color: var(--nx-text-muted);
+  border-radius: var(--nx-radius-sm);
+}
+
+/* ===================== Progress ===================== */
+.progress {
+  background-color: var(--nx-secondary-subtle);
+  border-radius: 999px;
+  height: 8px;
+}
+.progress-thin { height: 4px; }
+.nx-progress-row { margin-bottom: 16px; }
+.nx-progress-row:last-child { margin-bottom: 0; }
+.nx-progress-row .nx-pr-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.nx-progress-row .nx-pr-label { font-weight: 500; color: var(--nx-text); }
+.nx-progress-row .nx-pr-value { font-weight: 600; color: var(--nx-text); font-variant-numeric: tabular-nums; }
+
+/* ===================== Nav pills / tabs kecil ===================== */
+.nx-pill-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--nx-body-bg);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-sm);
+}
+.nx-pill-tabs .nav-link {
+  border: 0;
+  border-radius: var(--nx-radius-xs);
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nx-text-muted);
+}
+.nx-pill-tabs .nav-link.active {
+  background: var(--nx-card-bg);
+  color: var(--nx-text);
+  box-shadow: var(--nx-shadow);
+}
+
+/* ===================== Star rating ===================== */
+.nx-stars { display: inline-flex; gap: 2px; color: var(--nx-warning); font-size: 15px; line-height: 1; }
+.nx-stars.sm { font-size: 12px; }
+.nx-stars.lg { font-size: 22px; }
+.nx-stars .bi { pointer-events: none; }
+/* Versi interaktif: bintang dibalik supaya CSS bisa mewarnai yang di kiri. */
+.nx-rate-input { display: inline-flex; flex-direction: row-reverse; gap: 3px; }
+.nx-rate-input input { position: absolute; opacity: 0; pointer-events: none; }
+.nx-rate-input label {
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--nx-border);
+  transition: color .15s ease;
+}
+.nx-rate-input label::before { content: "\2605"; }
+.nx-rate-input input:checked ~ label,
+.nx-rate-input label:hover,
+.nx-rate-input label:hover ~ label { color: var(--nx-warning); }
+.nx-rate-input.readonly label { cursor: default; }
+
+/* Ringkasan distribusi rating */
+.nx-rating-bar { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.nx-rating-bar .progress { flex: 1; height: 6px; }
+
+/* ===================== Treeview ===================== */
+.nx-tree, .nx-tree ul { list-style: none; margin: 0; padding: 0; }
+.nx-tree ul { padding-left: 20px; position: relative; }
+.nx-tree ul::before {
+  content: "";
+  position: absolute;
+  left: 9px; top: 0; bottom: 12px;
+  width: 1px;
+  background: var(--nx-border);
+}
+.nx-tree li { position: relative; }
+.nx-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: var(--nx-radius-sm);
+  font-size: 14px;
+  color: var(--nx-text-body);
+  cursor: pointer;
+  transition: var(--nx-transition);
+}
+.nx-tree-row:hover { background: var(--nx-hover-bg); }
+.nx-tree-row.selected { background: var(--nx-primary-subtle); color: var(--nx-primary); font-weight: 600; }
+.nx-tree-caret {
+  width: 18px; height: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  color: var(--nx-text-muted);
+  transition: transform .18s ease;
+  flex: 0 0 auto;
+}
+.nx-tree-row.open > .nx-tree-caret { transform: rotate(90deg); }
+.nx-tree-caret.empty { visibility: hidden; }
+.nx-tree-row > i.bi:not(.nx-tree-caret) { font-size: 15px; color: var(--nx-text-muted); }
+.nx-tree-row.selected > i.bi { color: var(--nx-primary); }
+.nx-tree li > ul { display: none; }
+.nx-tree li.open > ul { display: block; }
+
+/* ===================== BlockUI / overlay ===================== */
+.nx-block { position: relative; }
+.nx-block-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgb(255 255 255 / .72);
+  backdrop-filter: blur(2px);
+  border-radius: inherit;
+  z-index: 5;
+  font-size: 13px;
+  color: var(--nx-text-body);
+}
+[data-bs-theme="dark"] .nx-block-overlay { background: rgb(11 18 32 / .72); }
+
+/* ===================== Text divider ===================== */
+.nx-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--nx-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin: 20px 0;
+}
+.nx-divider::before, .nx-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--nx-border);
+}
+.nx-divider.start::before { flex: 0 0 24px; }
+.nx-divider.end::after { flex: 0 0 24px; }
+.nx-divider-dashed::before, .nx-divider-dashed::after {
+  height: 0;
+  border-top: 1px dashed var(--nx-border);
+  background: none;
+}
+
+/* ===================== Statistic card variants ===================== */
+.nx-stat-gradient {
+  color: #fff;
+  border: 0;
+  background: linear-gradient(135deg, var(--nx-primary), #4338ca);
+}
+.nx-stat-gradient .nx-kpi-label,
+.nx-stat-gradient .nx-kpi-value,
+.nx-stat-gradient .nx-kpi-foot { color: #fff; }
+.nx-stat-gradient .nx-kpi-foot { opacity: .85; }
+.nx-stat-split { display: flex; align-items: stretch; }
+.nx-stat-split > div { flex: 1; padding: 16px 20px; }
+.nx-stat-split > div + div { border-left: 1px solid var(--nx-border); }
+
+/* Ring pencapaian (gamification) */
+.nx-badge-ring {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  background: var(--nx-warning-subtle);
+  color: var(--nx-warning);
+  border: 3px solid var(--nx-warning);
+}
+
+/* ===================== Utilities ===================== */
+/* Bootstrap 5 tidak menyediakan min-width:0, padahal itu yang membuat anak
+   flexbox boleh menyusut sehingga text-overflow: ellipsis benar-benar bekerja. */
+.min-w-0 { min-width: 0 !important; }
+
+/* ===================== Misc ===================== */
+.nx-dot-label {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.nx-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 12px; color: var(--nx-text-muted); }
+.nx-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+
+.nx-pulse { animation: nx-pulse 1.2s ease infinite; }
+@keyframes nx-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+
+.nx-link { text-decoration: none; font-weight: 600; }
+.nx-link:hover { text-decoration: underline; }
+
+/* Modal & offcanvas surface */
+.modal-content, .offcanvas {
+  background: var(--nx-card-bg);
+  border-radius: var(--nx-radius);
+  border-color: var(--nx-border);
+}
+.modal-header, .offcanvas-header { border-color: var(--nx-border); }
+.modal-footer { border-color: var(--nx-border); }
+
+/* Toast */
+.toast { background: var(--nx-card-bg); border-color: var(--nx-border); border-radius: var(--nx-radius); }
+
+/* ===================== Permukaan bertona =====================
+   Light mode sebelumnya hampir seluruhnya #fff sehingga rata dan
+   sulit dibaca hierarkinya. Permukaan sekunder di bawah ini memakai
+   token --nx-surface-* yang punya pasangan dark, jadi keduanya ikut. */
+
+/* Kepala & kaki kartu diberi tona tipis agar terpisah dari badan kartu. */
+.card-header { background: var(--nx-surface-1); }
+.card-footer { background: var(--nx-surface-1); }
+/* Kepala tabel bertona supaya baris data lebih mudah dipindai.
+   Memakai surface-2 (lebih tegas dari surface-1 pada kepala kartu)
+   agar batas kepala/isi tabel tetap terbaca. */
+.table thead th { background: var(--nx-surface-2); }
+/* Bila tabel adalah elemen pertama kartu, sudut tona ikut membulat. */
+.card > .table-responsive:first-child .table > thead > tr > th:first-child { border-top-left-radius: var(--nx-radius); }
+.card > .table-responsive:first-child .table > thead > tr > th:last-child  { border-top-right-radius: var(--nx-radius); }
+
+/* Panel/well netral untuk blok info di dalam kartu. */
+.nx-well {
+  background: var(--nx-surface-2);
+  border-radius: var(--nx-radius-sm);
+  padding: 16px;
+}
+.nx-well-accent {
+  background: var(--nx-surface-accent);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius);
+  padding: 16px;
+}
+
+/* Input bertona lembut, bukan putih polos di atas kartu putih. */
+.form-control, .form-select { background-color: var(--nx-surface-1); }
+.form-control:focus, .form-select:focus {
+  background-color: var(--nx-card-bg);
+  box-shadow: var(--nx-shadow-glow);
+  border-color: var(--nx-primary);
+}
+.input-group-text { background-color: var(--nx-surface-2); }
+
+/* Tepi membulat konsisten untuk komponen yang belum memakai token. */
+.list-group { border-radius: var(--nx-radius); }
+.alert { border-radius: var(--nx-radius); }
+.modal-content { border-radius: var(--nx-radius-lg); }
+.toast { border-radius: var(--nx-radius-sm); }
+.progress { border-radius: var(--nx-radius-pill); }
+.nav-pills .nav-link { border-radius: var(--nx-radius-pill); }
+.dropdown-menu { border-radius: var(--nx-radius); }

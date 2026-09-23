@@ -1,0 +1,35 @@
+      <div class="card mb-4">
+        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+          <p class="mb-0 text-muted small me-auto">Every colour below is a CSS custom property defined in <code>assets/css/variables.css</code>. Toggle the theme to see the dark values.</p>
+          <button class="btn btn-soft-primary btn-sm" type="button" id="toggleThemeDemo"><i class="bi bi-circle-half me-1"></i>Toggle theme</button>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><h2 class="card-title h4">Brand &amp; semantic</h2></div>
+        <div class="card-body"><div class="row g-3" id="swatchBrand"></div></div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><h2 class="card-title h4">Surface &amp; text</h2></div>
+        <div class="card-body"><div class="row g-3" id="swatchSurface"></div></div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><h2 class="card-title h4">Chart palette</h2></div>
+        <div class="card-body"><div class="row g-3" id="swatchChart"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2 class="card-title h4">Shape &amp; elevation tokens</h2></div>
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-3"><div class="p-4 text-center" style="border:1px solid var(--nx-border);border-radius:var(--nx-radius)"><code>--nx-radius</code><div class="small text-muted">12px</div></div></div>
+            <div class="col-md-3"><div class="p-4 text-center" style="border:1px solid var(--nx-border);border-radius:var(--nx-radius-sm)"><code>--nx-radius-sm</code><div class="small text-muted">8px</div></div></div>
+            <div class="col-md-3"><div class="p-4 text-center" style="background:var(--nx-card-bg);border-radius:var(--nx-radius);box-shadow:var(--nx-shadow)"><code>--nx-shadow</code><div class="small text-muted">Resting card</div></div></div>
+            <div class="col-md-3"><div class="p-4 text-center" style="background:var(--nx-card-bg);border-radius:var(--nx-radius);box-shadow:var(--nx-shadow-lift)"><code>--nx-shadow-lift</code><div class="small text-muted">Hover / overlay</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast-container position-fixed bottom-0 end-0 p-3" id="colorToast" style="z-index:1090"></div>

@@ -1,0 +1,68 @@
+      <div class="nx-faq-hero">
+        <h1>How can we help?</h1>
+        <p class="mb-0" style="opacity:.85">Search 142 articles, or browse by topic.</p>
+        <div class="input-group input-group-lg">
+          <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
+          <input class="form-control border-0" type="search" id="hcSearch" placeholder="Search the knowledge base&hellip;" aria-label="Search articles">
+        </div>
+        <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+          <span class="small" style="opacity:.75">Popular:</span>
+          <button class="btn btn-sm btn-light hc-chip" type="button">rate limits</button>
+          <button class="btn btn-sm btn-light hc-chip" type="button">SSO</button>
+          <button class="btn btn-sm btn-light hc-chip" type="button">export</button>
+          <button class="btn btn-sm btn-light hc-chip" type="button">webhooks</button>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4" id="hcCategories"></div>
+
+      <div class="row g-4">
+        <div class="col-xl-8">
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4" id="hcResultTitle">Popular articles</h2><span class="badge badge-soft-secondary ms-auto"><span id="hcCount">0</span> articles</span></div>
+            <div class="card-body p-0"><div id="hcArticles"></div></div>
+          </div>
+        </div>
+
+        <div class="col-xl-4">
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Status</h2></div>
+            <div class="card-body">
+              <div class="nx-row-item px-0"><span class="nx-dot-label" style="background:var(--nx-success)"></span><div class="nx-row-main"><div class="nx-row-title">API</div></div><span class="small text-success">Operational</span></div>
+              <div class="nx-row-item px-0"><span class="nx-dot-label" style="background:var(--nx-success)"></span><div class="nx-row-main"><div class="nx-row-title">Dashboards</div></div><span class="small text-success">Operational</span></div>
+              <div class="nx-row-item px-0"><span class="nx-dot-label" style="background:var(--nx-warning)"></span><div class="nx-row-main"><div class="nx-row-title">Exports</div></div><span class="small text-warning">Degraded</span></div>
+              <div class="nx-row-item px-0"><span class="nx-dot-label" style="background:var(--nx-success)"></span><div class="nx-row-main"><div class="nx-row-title">Webhooks</div></div><span class="small text-success">Operational</span></div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Contact us</h2></div>
+            <div class="card-body">
+              <a class="nx-row-item text-decoration-none" href="apps-mail.html"><span class="nx-icon-sq primary"><i class="bi bi-envelope"></i></span><div class="nx-row-main"><div class="nx-row-title">Email support</div><div class="nx-row-sub">Replies within 12 hours</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="apps-chat.html"><span class="nx-icon-sq success"><i class="bi bi-chat-dots"></i></span><div class="nx-row-main"><div class="nx-row-title">Live chat</div><div class="nx-row-sub">09:00&ndash;18:00 SGT</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="apps-tickets.html"><span class="nx-icon-sq warning"><i class="bi bi-life-preserver"></i></span><div class="nx-row-main"><div class="nx-row-title">Open a ticket</div><div class="nx-row-sub">Track it end to end</div></div></a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Video guides</h2></div>
+            <div class="card-body py-2">
+              <a class="nx-row-item text-decoration-none" href="ui-media-player.html"><span class="nx-icon-sq danger"><i class="bi bi-play-circle"></i></span><div class="nx-row-main"><div class="nx-row-title">Your first dashboard</div><div class="nx-row-sub">6:12</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="ui-media-player.html"><span class="nx-icon-sq danger"><i class="bi bi-play-circle"></i></span><div class="nx-row-main"><div class="nx-row-title">Connecting a data source</div><div class="nx-row-sub">4:48</div></div></a>
+              <a class="nx-row-item text-decoration-none" href="ui-media-player.html"><span class="nx-icon-sq danger"><i class="bi bi-play-circle"></i></span><div class="nx-row-main"><div class="nx-row-title">Roles and permissions</div><div class="nx-row-sub">8:02</div></div></a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-body text-center p-4">
+          <span class="nx-icon-sq primary mx-auto mb-3" style="width:56px;height:56px;font-size:24px"><i class="bi bi-life-preserver"></i></span>
+          <h2 class="h4">Still stuck?</h2>
+          <p class="text-muted">Support replies within 12 hours on Pro and 4 hours on Enterprise. Include your workspace ID and we can usually skip a round trip.</p>
+          <div class="d-flex justify-content-center gap-2">
+            <a class="btn btn-primary d-inline-flex align-items-center gap-1" href="apps-tickets.html"><i class="bi bi-plus-lg"></i>Open a ticket</a>
+            <a class="btn btn-soft-secondary d-inline-flex align-items-center gap-1" href="page-faq.html"><i class="bi bi-patch-question"></i>Read the FAQ</a>
+          </div>
+        </div>
+      </div>

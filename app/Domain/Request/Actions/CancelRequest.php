@@ -1,0 +1,98 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domain\Request\Actions;
+
+use App\Domain\Access\Models\User;
+use App\Domain\Request\Enums\MaterialRequestStatus;
+use App\Domain\Request\Enums\RequestLineStatus;
+use App\Domain\Request\Exceptions\RequestRuleException;
+use App\Domain\Request\Models\MaterialRequest;
+use App\Domain\Stock\Actions\ManageReservation;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Permission: `request.cancel` — membatalkan seluruh REQ (Katalog Status §2.1).
+ *
+ * Sebelum disetujui, pembatalan hanya soal status. Sesudahnya ia melepas
+ * reservasi, dan karena itu dibatasi: REQ yang barangnya sudah berjalan tidak
+ * bisa ditarik kembali — sisanya diselesaikan lewat `closed_short` atau retur.
+ */
+class CancelRequest
+{
+    public function __construct(private readonly ManageReservation $reservasi) {}
+
+    public function handle(MaterialRequest $request, ?int $reasonCodeId, ?string $notes = null, ?User $actor = null): MaterialRequest
+    {
+        $this->pastikanBisaDibatalkan($request);
+
+        if ($reasonCodeId === null) {
+            throw RequestRuleException::field('BR-GEN-11', 'reasonCode', 'Alasan pembatalan wajib dipilih.');
+        }
+
+        return DB::transaction(function () use ($request, $reasonCodeId, $notes, $actor) {
+            $request->forceFill([
+                'status' => MaterialRequestStatus::Cancelled,
+                'cancel_reason_id' => $reasonCodeId,
+            ])->save();
+
+            $request->lines()->open()->update(['status' => RequestLineStatus::Cancelled->value]);
+
+            // BR-STK-05: reservasi dilepas seluruhnya, dalam transaksi yang sama.
+            $this->reservasi->releaseForDocument(
+                'material_request',
+                (int) $request->id,
+                'REQUEST_CANCELLED',
+                $actor,
+            );
+
+            activity('request')
+                ->performedOn($request)
+                ->causedBy($actor)
+                ->withProperties(['reason_code_id' => $reasonCodeId, 'notes' => $notes])
+                ->log('REQ dibatalkan');
+
+            return $request->refresh();
+        });
+    }
+
+    /**
+     * Katalog Status §2.1: `draft`, `submitted`, `under_review`, dan
+     * `pending_approval` bebas dibatalkan; `approved` dan `in_progress` hanya
+     * selama belum ada SJ terkirim.
+     */
+    private function pastikanBisaDibatalkan(MaterialRequest $request): void
+    {
+        $bebas = [
+            MaterialRequestStatus::Draft,
+            MaterialRequestStatus::Submitted,
+            MaterialRequestStatus::UnderReview,
+            MaterialRequestStatus::PendingApproval,
+        ];
+
+        if (in_array($request->status, $bebas, true)) {
+            return;
+        }
+
+        $bersyarat = [MaterialRequestStatus::Approved, MaterialRequestStatus::InProgress];
+
+        if (! in_array($request->status, $bersyarat, true)) {
+            throw RequestRuleException::rule(
+                'BR-REQ-09',
+                'REQ berstatus '.$request->status->label().' tidak bisa dibatalkan.',
+            );
+        }
+
+        // Modul `shipment` belum ada; jejak pengiriman dibaca dari baris REQ,
+        // satu-satunya tempat jumlah terkirim dicatat saat ini (BR-GEN-10).
+        $sudahJalan = $request->lines()->where('qty_shipped', '>', 0)->exists();
+
+        if ($sudahJalan) {
+            throw RequestRuleException::rule(
+                'BR-REQ-09',
+                'Sebagian barang sudah dikirim; tutup dengan sisa alih-alih membatalkan.',
+            );
+        }
+    }
+}

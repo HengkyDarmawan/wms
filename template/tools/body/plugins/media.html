@@ -1,0 +1,134 @@
+      <div class="row g-4">
+
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Swiper &mdash; product carousel</h2><div class="card-subtitle">Responsive breakpoints, navigation arrows and pagination dots</div></div>
+              <span class="badge badge-soft-info ms-auto">swiper 11.1.14</span>
+            </div>
+            <div class="card-body">
+              <!-- Slide Swiper memakai transform, yang lolos dari klip elemen ber-3D;
+                   pembungkus datar ini yang menahannya agar halaman tidak menggeser. -->
+              <div class="nx-swiper-clip">
+                <div class="swiper" id="swiperProducts">
+                  <div class="swiper-wrapper"></div>
+                  <div class="swiper-button-prev"></div>
+                  <div class="swiper-button-next"></div>
+                  <div class="swiper-pagination position-static mt-3"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Swiper &mdash; coverflow</h2><div class="card-subtitle">3D effect with autoplay and looping</div></div></div>
+            <div class="card-body">
+              <!-- Slide coverflow memakai transform 3D, yang tidak terklip oleh
+                   overflow pada elemen preserve-3d; pembungkus datar ini yang mengklip. -->
+              <div class="nx-swiper-clip">
+                <div class="swiper" id="swiperCover" style="padding:12px 0">
+                  <div class="swiper-wrapper"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Swiper &mdash; testimonials</h2><div class="card-subtitle">Fade transition, one slide at a time</div></div></div>
+            <div class="card-body">
+              <div class="nx-swiper-clip">
+              <div class="swiper" id="swiperQuotes">
+                <div class="swiper-wrapper">
+                  <div class="swiper-slide">
+                    <blockquote class="mb-3">&ldquo;We replaced three internal tools with NexaDash in a fortnight.&rdquo;</blockquote>
+                    <div class="d-flex align-items-center gap-2"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=25" alt=""></span><div><strong class="d-block">Chen Wei</strong><span class="small text-muted">CTO, Orbit Labs</span></div></div>
+                  </div>
+                  <div class="swiper-slide">
+                    <blockquote class="mb-3">&ldquo;Our whole team was onboarded before lunch.&rdquo;</blockquote>
+                    <div class="d-flex align-items-center gap-2"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=31" alt=""></span><div><strong class="d-block">Amina Diallo</strong><span class="small text-muted">Head of Ops, Pulse Co.</span></div></div>
+                  </div>
+                  <div class="swiper-slide">
+                    <blockquote class="mb-3">&ldquo;Enforcing 2FA across 400 seats took one toggle.&rdquo;</blockquote>
+                    <div class="d-flex align-items-center gap-2"><span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/48?img=57" alt=""></span><div><strong class="d-block">Piotr Nowak</strong><span class="small text-muted">IT Director, Vertex</span></div></div>
+                  </div>
+                </div>
+                <div class="swiper-pagination position-static mt-3"></div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <div><h2 class="card-title h4">GLightbox &mdash; gallery</h2><div class="card-subtitle">Click any tile; arrow keys and swipe both work</div></div>
+              <span class="badge badge-soft-info ms-auto">glightbox 3.3.0</span>
+            </div>
+            <div class="card-body">
+              <div class="row g-3" id="galleryGrid"></div>
+              <div class="mt-3 d-flex flex-wrap gap-2">
+                <a class="btn btn-soft-secondary btn-sm glightbox-inline" href="#inlineContent" data-glightbox="width: 560px"><i class="bi bi-window me-1"></i>Inline content</a>
+                <a class="btn btn-soft-secondary btn-sm glightbox-video" href="https://www.youtube.com/watch?v=Ga6RYejo6Hk"><i class="bi bi-play-circle me-1"></i>Video (external)</a>
+              </div>
+              <div id="inlineContent" style="display:none">
+                <h3 class="h4">Inline lightbox</h3>
+                <p class="text-muted mb-0">GLightbox can open any hidden element in the page, which makes it useful for quick previews and confirmations without building a modal.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Cropper.js</h2><div class="card-subtitle">Crop, rotate, flip and zoom &mdash; then export the result</div></div>
+              <span class="badge badge-soft-info ms-auto">cropperjs 1.6.2</span>
+            </div>
+            <div class="card-body">
+              <div style="max-height:420px">
+                <img id="cropImage" src="https://picsum.photos/seed/nexa-crop/900/600" alt="Image to crop" style="max-width:100%;display:block">
+              </div>
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <div class="btn-group btn-group-sm" role="group" aria-label="Aspect ratio">
+                  <button class="btn btn-outline-primary active crop-ratio" data-ratio="NaN" type="button">Free</button>
+                  <button class="btn btn-outline-primary crop-ratio" data-ratio="1" type="button">1:1</button>
+                  <button class="btn btn-outline-primary crop-ratio" data-ratio="1.7777" type="button">16:9</button>
+                  <button class="btn btn-outline-primary crop-ratio" data-ratio="0.75" type="button">3:4</button>
+                </div>
+                <button class="btn btn-sm btn-soft-secondary" id="cropRotL" type="button" aria-label="Rotate left"><i class="bi bi-arrow-counterclockwise"></i></button>
+                <button class="btn btn-sm btn-soft-secondary" id="cropRotR" type="button" aria-label="Rotate right"><i class="bi bi-arrow-clockwise"></i></button>
+                <button class="btn btn-sm btn-soft-secondary" id="cropFlipH" type="button" aria-label="Flip horizontally"><i class="bi bi-symmetry-vertical"></i></button>
+                <button class="btn btn-sm btn-soft-secondary" id="cropReset" type="button">Reset</button>
+                <button class="btn btn-sm btn-primary ms-auto" id="cropApply" type="button"><i class="bi bi-scissors me-1"></i>Crop</button>
+              </div>
+              <div class="mt-3">
+                <label class="form-label" for="cropUpload">Or use your own image</label>
+                <input class="form-control form-control-sm" type="file" id="cropUpload" accept="image/*">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Crop result</h2></div>
+            <div class="card-body d-flex flex-column">
+              <div class="nx-pc-img mb-3 d-flex align-items-center justify-content-center" style="aspect-ratio:4/3">
+                <img id="cropResult" alt="Cropped result" style="max-width:100%;max-height:100%;display:none">
+                <span class="text-muted small" id="cropPlaceholder">Press Crop to preview the output here</span>
+              </div>
+              <dl class="row small mb-0">
+                <dt class="col-5 text-muted fw-normal">Output size</dt><dd class="col-7 nx-num" id="cropSize">&mdash;</dd>
+                <dt class="col-5 text-muted fw-normal">Data size</dt><dd class="col-7 nx-num" id="cropWeight">&mdash;</dd>
+              </dl>
+              <a class="btn btn-soft-primary mt-auto disabled" id="cropDownload" download="cropped.png"><i class="bi bi-download me-1"></i>Download PNG</a>
+            </div>
+          </div>
+        </div>
+
+      </div>

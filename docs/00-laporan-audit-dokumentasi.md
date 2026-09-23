@@ -18,7 +18,7 @@ Tindakan v0.3:
 3. Blueprint, Glosarium, Keputusan, Akuntansi, Riset direvisi; semua rujukan menjadi link beranchor.
 4. Template spesifikasi modul dan `CLAUDE.md` disiapkan untuk Part 4 dan Part 6.
 
-Yang **harus dilakukan pemilik produk** sebelum Part 2: validasi A-25–A-49 (dikelompokkan per tema di [04 §2.3](wms/04-keputusan-dan-asumsi.md#23-baru-dari-audit-v03--menunggu-validasi)) dan isi keterangan di [00-audit](00-audit/README.md).
+Yang **harus dilakukan pemilik produk** sebelum Part 2: validasi A-25–A-49 (dikelompokkan per tema di [04 §2.3](wms/04-keputusan-dan-asumsi.md#23-baru-dari-audit-v03--disetujui-23-sep-2026)) dan isi keterangan di [00-audit](00-audit/README.md).
 
 ## 2. Metode
 

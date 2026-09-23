@@ -1,0 +1,28 @@
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title h4">Quill editor</h2><div class="card-subtitle">Full toolbar with headings, lists, links and code</div></div></div>
+            <div class="card-body">
+              <div id="fullEditor" style="min-height:340px"></div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+              <button class="btn btn-soft-secondary" type="button" id="clearEditor">Clear</button>
+              <button class="btn btn-primary" type="button" id="saveEditor">Save content</button>
+            </div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-header"><h2 class="card-title h4">Minimal editor</h2></div>
+            <div class="card-body"><div id="miniEditor" style="min-height:140px"></div></div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Live HTML output</h2><span class="badge badge-soft-secondary ms-auto" id="charCount">0 chars</span></div>
+            <div class="card-body">
+              <pre class="p-3 rounded mb-0" id="htmlOutput" style="background:var(--nx-body-bg);border:1px solid var(--nx-border);white-space:pre-wrap;word-break:break-word;max-height:520px;overflow:auto"><code></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>

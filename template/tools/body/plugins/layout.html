@@ -1,0 +1,76 @@
+      <div class="card mb-4">
+        <div class="card-header">
+          <div><h2 class="card-title h4">Gridstack.js &mdash; rearrangeable dashboard</h2><div class="card-subtitle">Drag a widget by its header, or grab a corner to resize it</div></div>
+          <span class="badge badge-soft-info ms-auto">gridstack 11.3.0</span>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-sm btn-soft-primary" id="gsAdd" type="button"><i class="bi bi-plus-lg me-1"></i>Add widget</button>
+            <button class="btn btn-sm btn-soft-secondary" id="gsSave" type="button"><i class="bi bi-save me-1"></i>Save layout</button>
+            <button class="btn btn-sm btn-soft-secondary" id="gsLoad" type="button"><i class="bi bi-arrow-clockwise me-1"></i>Restore saved</button>
+            <button class="btn btn-sm btn-soft-secondary" id="gsReset" type="button">Reset to default</button>
+            <div class="form-check form-switch ms-auto mb-0 d-flex align-items-center gap-2">
+              <input class="form-check-input" type="checkbox" role="switch" id="gsLock">
+              <label class="form-check-label small" for="gsLock">Lock layout</label>
+            </div>
+          </div>
+          <div class="grid-stack" id="gsGrid"></div>
+          <p class="small text-muted mb-0 mt-3">Layout is stored in <code>localStorage</code> under <code>nx-gridstack</code>. Status: <span id="gsStatus">unsaved</span></p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Interact.js &mdash; free-form dragging</h2><div class="card-subtitle">Drag, resize and snap to a grid</div></div>
+              <span class="badge badge-soft-info ms-auto">interact.js 1.10.27</span>
+            </div>
+            <div class="card-body">
+              <div class="d-flex flex-wrap gap-3 mb-3">
+                <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" role="switch" id="ixSnap" checked><label class="form-check-label small" for="ixSnap">Snap to 20px grid</label></div>
+                <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" role="switch" id="ixInertia"><label class="form-check-label small" for="ixInertia">Inertia</label></div>
+                <button class="btn btn-sm btn-soft-secondary ms-auto" id="ixReset" type="button">Reset positions</button>
+              </div>
+              <div id="ixCanvas" style="position:relative;height:360px;background:var(--nx-body-bg);border:1px dashed var(--nx-border);border-radius:var(--nx-radius);overflow:hidden">
+                <div class="ix-box card" data-x="24" data-y="24" style="position:absolute;width:180px;touch-action:none">
+                  <div class="card-body p-3"><span class="nx-icon-sq primary mb-2"><i class="bi bi-arrows-move"></i></span><div class="small fw-semibold">Draggable</div><div class="small text-muted">Move me anywhere</div></div>
+                </div>
+                <div class="ix-box ix-resize card" data-x="240" data-y="120" style="position:absolute;width:200px;height:130px;touch-action:none">
+                  <div class="card-body p-3"><span class="nx-icon-sq success mb-2"><i class="bi bi-aspect-ratio"></i></span><div class="small fw-semibold">Resizable</div><div class="small text-muted">Grab any edge</div></div>
+                </div>
+                <div class="ix-box card" data-x="120" data-y="230" style="position:absolute;width:160px;touch-action:none">
+                  <div class="card-body p-3"><span class="nx-icon-sq warning mb-2"><i class="bi bi-hand-index"></i></span><div class="small fw-semibold">Also draggable</div></div>
+                </div>
+              </div>
+              <p class="small text-muted mb-0 mt-2">Position: <span class="nx-num" id="ixPos">&mdash;</span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">When to use which</h2></div>
+            <div class="card-body">
+              <div class="nx-row-list">
+                <div class="nx-row-item align-items-start">
+                  <span class="nx-icon-sq info"><i class="bi bi-layout-wtf"></i></span>
+                  <div class="nx-row-main"><div class="nx-row-title">Gridstack.js</div>
+                    <div class="nx-row-sub">Column-based dashboards where widgets must not overlap and the layout needs to be saved and restored per user.</div></div>
+                </div>
+                <div class="nx-row-item align-items-start">
+                  <span class="nx-icon-sq success"><i class="bi bi-arrows-move"></i></span>
+                  <div class="nx-row-main"><div class="nx-row-title">Interact.js</div>
+                    <div class="nx-row-sub">Free positioning: diagram editors, seat maps, floor plans, anything that is not a grid.</div></div>
+                </div>
+                <div class="nx-row-item align-items-start">
+                  <span class="nx-icon-sq primary"><i class="bi bi-kanban"></i></span>
+                  <div class="nx-row-main"><div class="nx-row-title">SortableJS</div>
+                    <div class="nx-row-sub">Reordering lists and moving cards between columns. Simpler than both when order is all you need.</div></div>
+                </div>
+              </div>
+              <a class="btn btn-soft-primary w-100 mt-3" href="apps-kanban.html"><i class="bi bi-kanban me-1"></i>See the SortableJS board</a>
+            </div>
+          </div>
+        </div>
+      </div>

@@ -1,0 +1,37 @@
+      <div class="row g-4">
+        <div class="col-xl-3">
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Filters</h2><button class="btn btn-xs btn-soft-secondary ms-auto" id="crClear" type="button">Clear</button></div>
+            <div class="card-body">
+              <label class="form-label" for="crSearch">Search</label>
+              <div class="input-group input-group-sm mb-4"><span class="input-group-text"><i class="bi bi-search"></i></span><input class="form-control" type="search" id="crSearch" placeholder="Course or instructor"></div>
+
+              <h3 class="h6 mb-2">Track</h3>
+              <div class="form-check"><input class="form-check-input cr-track" type="checkbox" value="Analytics" id="trA" checked><label class="form-check-label" for="trA">Analytics</label></div>
+              <div class="form-check"><input class="form-check-input cr-track" type="checkbox" value="Data" id="trD" checked><label class="form-check-label" for="trD">Data</label></div>
+              <div class="form-check"><input class="form-check-input cr-track" type="checkbox" value="Design" id="trDe" checked><label class="form-check-label" for="trDe">Design</label></div>
+              <div class="form-check mb-4"><input class="form-check-input cr-track" type="checkbox" value="Security" id="trS" checked><label class="form-check-label" for="trS">Security</label></div>
+
+              <h3 class="h6 mb-2">Level</h3>
+              <div class="form-check"><input class="form-check-input cr-level" type="radio" name="crLevel" value="" id="lvAll" checked><label class="form-check-label" for="lvAll">Any level</label></div>
+              <div class="form-check"><input class="form-check-input cr-level" type="radio" name="crLevel" value="Beginner" id="lvB"><label class="form-check-label" for="lvB">Beginner</label></div>
+              <div class="form-check"><input class="form-check-input cr-level" type="radio" name="crLevel" value="Intermediate" id="lvI"><label class="form-check-label" for="lvI">Intermediate</label></div>
+              <div class="form-check mb-4"><input class="form-check-input cr-level" type="radio" name="crLevel" value="Advanced" id="lvA"><label class="form-check-label" for="lvA">Advanced</label></div>
+
+              <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="crEnrolled"><label class="form-check-label" for="crEnrolled">Only my courses</label></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-9">
+          <div class="card mb-4">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+              <span class="small text-muted me-auto"><strong id="crCount">0</strong> courses</span>
+              <select class="form-select form-select-sm" style="width:190px" id="crSort" aria-label="Sort courses">
+                <option>Most popular</option><option>Highest rated</option><option>Newest</option><option>Shortest first</option>
+              </select>
+            </div>
+          </div>
+          <div class="row g-4" id="crGrid"></div>
+        </div>
+      </div>

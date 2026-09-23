@@ -1,0 +1,25 @@
+  <main class="nx-error-page">
+    <a class="d-inline-flex align-items-center gap-2 text-decoration-none mb-4" href="index.html">
+      <img src="assets/img/logo.svg" alt="" width="32" height="32">
+      <span class="h4 mb-0" style="color:var(--nx-text)">NexaDash</span>
+    </a>
+
+    <svg width="200" height="140" viewBox="0 0 200 140" fill="none" aria-hidden="true">
+      <rect x="58" y="62" width="84" height="60" rx="10" fill="var(--nx-warning-subtle)"/>
+      <path d="M74 62V44a26 26 0 0 1 52 0v18" stroke="var(--nx-warning)" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <circle cx="100" cy="88" r="9" fill="var(--nx-warning)"/>
+      <rect x="96" y="94" width="8" height="16" rx="4" fill="var(--nx-warning)"/>
+    </svg>
+
+    <div class="nx-error-code" style="color:var(--nx-warning)">401</div>
+    <h1>You are not authorised</h1>
+    <p>Your account is signed in, but this page needs a permission your role does not have. An admin can grant it from Roles &amp; Permissions.</p>
+
+    <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+      <a class="btn btn-primary d-inline-flex align-items-center gap-1" href="index.html"><i class="bi bi-house-door"></i>Back to dashboard</a>
+      <a class="btn btn-soft-secondary d-inline-flex align-items-center gap-1" href="apps-tickets.html"><i class="bi bi-life-preserver"></i>Request access</a>
+      <a class="btn btn-soft-secondary d-inline-flex align-items-center gap-1" href="auth-login.html"><i class="bi bi-box-arrow-right"></i>Switch account</a>
+    </div>
+
+    <p class="text-muted small mt-4 mb-0">Required permission: <code>billing.read</code> &middot; your role: <code>Editor</code></p>
+  </main>

@@ -1,8 +1,8 @@
 # Proses Bisnis To-Be — Alur 8–10 (opname, approval, langganan)
 
-**Versi:** 0.1 (draf Part 2)
+**Versi:** 0.4 (Part 2, pasca-validasi & diskusi lanjutan 23 Sep 2026)
 **Tanggal:** 23 September 2026
-**Status:** **draf berdasarkan nilai default asumsi A-25–A-49** yang belum divalidasi; setiap alur mencantumkan asumsi yang dipakainya. Bila asumsi berubah, ubah data di [`diagram/_generate.py`](../diagram/_generate.py) dan jalankan ulang — file ini dan `.drawio` dibuat otomatis, **jangan diedit manual**.
+**Status:** asumsi A-25–A-49 dan A-51–A-66 disetujui 23 Sep 2026 (A-40 diubah); alur 1, 2, 7, 8 diperluas (purchasing, permintaan klien, pengiriman, audit); alur 5 memuat varian dari [A-50](04-keputusan-dan-asumsi.md#a-50) yang menunggu validasi; setiap alur mencantumkan asumsi yang dipakainya. Bila asumsi berubah, ubah data di [`diagram/_generate.py`](../diagram/_generate.py) dan jalankan ulang — file ini dan `.drawio` dibuat otomatis, **jangan diedit manual**.
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · [Alur 1–3](07-proses-bisnis.md) · [Alur 4–7](07a-proses-bisnis-lanjutan.md)
 
 Lanjutan dari [07-proses-bisnis.md](07-proses-bisnis.md); daftar alur lengkap ada di sana.
@@ -13,7 +13,7 @@ Konvensi: ● awal · ⏱ awal berbasis waktu · ◇ gateway XOR · ◉ akhir ·
 
 ## Alur 8 — Stock opname: sesi, hitung buta, hitung ulang, rekonsiliasi
 
-**Diagram:** [`diagram/bpmn-08-stock-opname.drawio`](../diagram/bpmn-08-stock-opname.drawio) · **Asumsi yang dipakai (default):** [A-09](04-keputusan-dan-asumsi.md#a-09), [A-42](04-keputusan-dan-asumsi.md#a-42), [A-46](04-keputusan-dan-asumsi.md#a-46) · **Aturan:** [BR-OPN-01–08](05-aturan-bisnis.md#br-opn) · **Status:** `OPN`, `ADJ`
+**Diagram:** [`diagram/bpmn-08-stock-opname.drawio`](../diagram/bpmn-08-stock-opname.drawio) · **Asumsi yang dipakai:** [A-09](04-keputusan-dan-asumsi.md#a-09), [A-42](04-keputusan-dan-asumsi.md#a-42), [A-46](04-keputusan-dan-asumsi.md#a-46) · **Aturan:** [BR-OPN-01–10](05-aturan-bisnis.md#br-opn) · **Status:** `OPN`, `ADJ`
 
 Sesi opname bulanan/tahunan/ad-hoc dengan pembekuan bin opsional, hitung buta, klasifikasi selisih berdasarkan ambang relatif dan absolut, hitung ulang oleh orang berbeda, dan rekonsiliasi yang menghasilkan satu ADJ per gudang yang disetujui di tingkat sesi.
 
@@ -24,7 +24,7 @@ Sesi opname bulanan/tahunan/ad-hoc dengan pembekuan bin opsional, hitung buta, k
 | # | Lane | Langkah | Status / efek / aturan |
 |---|---|---|---|
 | 1 | Kepala Gudang / Auditor | ● Jadwal opname / permintaan audit |  |
-| 2 | Kepala Gudang / Auditor | Rencanakan sesi: jenis, cakupan (gudang/zona/bin), tim, pembekuan ya/tidak | OPN planned |
+| 2 | Kepala Gudang / Auditor | Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak | OPN planned; [BR-OPN-10](05-aturan-bisnis.md#br-opn) |
 | 3 | Sistem | ◇ Ada PCK berjalan di cakupan (bila pembekuan)? | [BR-OPN-02](05-aturan-bisnis.md#br-opn) |
 | 4 | Kepala Gudang / Auditor | Selesaikan atau batalkan PCK dulu |  |
 | 5 | Sistem | Bekukan bin; snapshot saldo fisik (termasuk dicadangkan & Loading Area) | OPN in_progress; bin frozen; [BR-OPN-01](05-aturan-bisnis.md#br-opn) |
@@ -36,7 +36,7 @@ Sesi opname bulanan/tahunan/ad-hoc dengan pembekuan bin opsional, hitung buta, k
 | 11 | Kepala Gudang / Auditor | Isi kategori akar masalah untuk selisih besar | root_cause_category; [BR-OPN-07](05-aturan-bisnis.md#br-opn) |
 | 12 | Penghitung (Staf) | Hitung ulang oleh penghitung berbeda | OPN recount; [BR-OPN-05](05-aturan-bisnis.md#br-opn) |
 | 13 | Kepala Gudang / Auditor | Rekonsiliasi: tinjau semua baris; draf ADJ per gudang | OPN reconciling; ADJ submitted |
-| 14 | Approver | Setujui sesi (persetujuan di tingkat sesi, bukan per ADJ) | OPN approved; [A-09](04-keputusan-dan-asumsi.md#a-09); [BR-OPN-06](05-aturan-bisnis.md#br-opn) |
+| 14 | Approver | Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen) | OPN approved; [A-09](04-keputusan-dan-asumsi.md#a-09); [BR-OPN-06](05-aturan-bisnis.md#br-opn); [BR-OPN-09](05-aturan-bisnis.md#br-opn) |
 | 15 | Sistem | ADJ posted; stock_adjusted; buka bin; laporan PDF; dashboard akurasi | OPN closed |
 | 16 | Sistem | ◉ Sesi ditutup |  |
 
@@ -54,7 +54,7 @@ Sesi opname bulanan/tahunan/ad-hoc dengan pembekuan bin opsional, hitung buta, k
 flowchart LR
   subgraph L0["Kepala Gudang / Auditor"]
     f8_s(("Jadwal opname / permintaan audit"))
-    f8_t1["Rencanakan sesi: jenis, cakupan (gudang/zona/bin), tim, pembekuan ya/tidak"]
+    f8_t1["Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak"]
     f8_t2["Selesaikan atau batalkan PCK dulu"]
     f8_t7["Isi kategori akar masalah untuk selisih besar"]
     f8_t8["Rekonsiliasi: tinjau semua baris; draf ADJ per gudang"]
@@ -66,7 +66,7 @@ flowchart LR
     f8_t6["Hitung ulang oleh penghitung berbeda"]
   end
   subgraph L2["Approver"]
-    f8_t9["Setujui sesi (persetujuan di tingkat sesi, bukan per ADJ)"]
+    f8_t9["Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen)"]
   end
   subgraph L3["Sistem"]
     f8_g1{"Ada PCK berjalan di cakupan (bila pembekuan)?"}
@@ -97,11 +97,11 @@ flowchart LR
   f8_t11 -.-> f8_t4
 ```
 
-> Transaksi PWA offline yang tiba saat bin beku masuk antrean tinjauan (F2, [BR-OPN-03](05-aturan-bisnis.md#br-opn)). Auditor eksternal (F2) memakai akun tamu berbatas gudang & periode.
+> Transaksi PWA offline yang tiba saat bin beku masuk antrean tinjauan (F2, [BR-OPN-03](05-aturan-bisnis.md#br-opn)). Auditor eksternal (F2) memakai akun tamu berbatas gudang & periode. Pemeriksaan mendadak (spot_check) melewati pembekuan dan tidak memposting ADJ sendiri ([BR-OPN-10](05-aturan-bisnis.md#br-opn)); penutupan sesi bulanan memajukan tanggal kunci stok ([BR-STK-15](05-aturan-bisnis.md#br-stk)).
 
 ## Alur 9 — Approval generik (semua jenis dokumen)
 
-**Diagram:** [`diagram/bpmn-09-approval-generik.drawio`](../diagram/bpmn-09-approval-generik.drawio) · **Asumsi yang dipakai (default):** [A-08](04-keputusan-dan-asumsi.md#a-08), [A-09](04-keputusan-dan-asumsi.md#a-09), [A-18](04-keputusan-dan-asumsi.md#a-18), [A-45](04-keputusan-dan-asumsi.md#a-45) · **Aturan:** [BR-APR-01–11](05-aturan-bisnis.md#br-apr) · **Status:** `(semua dokumen dengan pending_approval)`
+**Diagram:** [`diagram/bpmn-09-approval-generik.drawio`](../diagram/bpmn-09-approval-generik.drawio) · **Asumsi yang dipakai:** [A-08](04-keputusan-dan-asumsi.md#a-08), [A-09](04-keputusan-dan-asumsi.md#a-09), [A-18](04-keputusan-dan-asumsi.md#a-18), [A-45](04-keputusan-dan-asumsi.md#a-45) · **Aturan:** [BR-APR-01–11](05-aturan-bisnis.md#br-apr) · **Status:** `(semua dokumen dengan pending_approval)`
 
 Mesin approval yang dipakai REQ, TRF, RET, CNV, ADJ, WST, PRQ, RTV, dan OPN. Aturan di-snapshot saat diajukan, lapis diproses sesuai cara putus, dengan delegasi, eskalasi, dan pemisahan tugas.
 
@@ -188,7 +188,7 @@ flowchart LR
 
 ## Alur 10 — Siklus langganan company (platform)
 
-**Diagram:** [`diagram/bpmn-10-langganan-company.drawio`](../diagram/bpmn-10-langganan-company.drawio) · **Asumsi yang dipakai (default):** [A-11](04-keputusan-dan-asumsi.md#a-11), [A-12](04-keputusan-dan-asumsi.md#a-12), [A-27](04-keputusan-dan-asumsi.md#a-27), [A-44](04-keputusan-dan-asumsi.md#a-44) · **Aturan:** [BR-SUB-01–04](05-aturan-bisnis.md#br-sub) · **Status:** `subscription_status`
+**Diagram:** [`diagram/bpmn-10-langganan-company.drawio`](../diagram/bpmn-10-langganan-company.drawio) · **Asumsi yang dipakai:** [A-11](04-keputusan-dan-asumsi.md#a-11), [A-12](04-keputusan-dan-asumsi.md#a-12), [A-27](04-keputusan-dan-asumsi.md#a-27), [A-44](04-keputusan-dan-asumsi.md#a-44) · **Aturan:** [BR-SUB-01–04](05-aturan-bisnis.md#br-sub) · **Status:** `subscription_status`
 
 Dari pembuatan company sampai penghentian: provisioning otomatis, trial, tagihan bulanan dengan pembayaran manual, tenggang, penangguhan hanya-baca, dan pengakhiran dengan masa ekspor.
 

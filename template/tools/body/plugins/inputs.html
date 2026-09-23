@@ -1,0 +1,108 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Tom Select</h2><div class="card-subtitle">A dependency-free alternative to Select2</div></div>
+              <span class="badge badge-soft-warning ms-auto">tom-select 2.4.1</span>
+            </div>
+            <div class="card-body">
+              <div class="mb-3"><label class="form-label" for="tsSingle">Single select</label>
+                <select id="tsSingle"><option value="">Choose a region</option><option>eu-west-1</option><option>us-east-1</option><option>ap-southeast-1</option><option>sa-east-1</option></select>
+              </div>
+              <div class="mb-3"><label class="form-label" for="tsMulti">Multi select with remove buttons</label>
+                <select id="tsMulti" multiple><option selected>Analytics</option><option>Billing</option><option selected>CRM</option><option>Support</option><option>Deployments</option></select>
+              </div>
+              <div class="mb-3"><label class="form-label" for="tsTags">Create your own tags</label>
+                <input id="tsTags" value="bug,billing">
+                <div class="form-text">Type a value and press enter to create it.</div>
+              </div>
+              <div class="mb-0"><label class="form-label" for="tsPeople">Rich options with avatars</label>
+                <select id="tsPeople" multiple></select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Signature Pad</h2><div class="card-subtitle">Draw with a mouse, trackpad, pen or finger</div></div>
+              <span class="badge badge-soft-warning ms-auto">signature_pad 5.0.4</span>
+            </div>
+            <div class="card-body d-flex flex-column">
+              <div style="border:1px dashed var(--nx-border);border-radius:var(--nx-radius-sm);background:var(--nx-body-bg)">
+                <canvas id="sigCanvas" style="width:100%;height:220px;display:block;touch-action:none"></canvas>
+              </div>
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <label class="d-flex align-items-center gap-2 small text-muted mb-0">Ink
+                  <input type="color" class="form-control form-control-color form-control-sm" id="sigColor" value="#0f172a" aria-label="Ink colour">
+                </label>
+                <button class="btn btn-sm btn-soft-secondary" id="sigUndo" type="button"><i class="bi bi-arrow-counterclockwise me-1"></i>Undo</button>
+                <button class="btn btn-sm btn-soft-danger" id="sigClear" type="button">Clear</button>
+                <button class="btn btn-sm btn-soft-primary ms-auto" id="sigPng" type="button">Export PNG</button>
+                <button class="btn btn-sm btn-soft-primary" id="sigSvg" type="button">Export SVG</button>
+              </div>
+              <div class="mt-3 p-3 rounded" style="background:var(--nx-body-bg);border:1px solid var(--nx-border);min-height:96px">
+                <div class="small text-muted mb-2">Saved signature</div>
+                <img id="sigPreview" alt="Saved signature" style="max-height:64px;display:none">
+                <span class="small text-muted" id="sigEmpty">Nothing exported yet.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Pickr</h2><div class="card-subtitle">Colour picking with swatches and multiple formats</div></div>
+              <span class="badge badge-soft-warning ms-auto">pickr 1.9.1</span>
+            </div>
+            <div class="card-body">
+              <div class="d-flex flex-wrap align-items-center gap-4">
+                <div>
+                  <label class="form-label d-block">Brand colour</label>
+                  <div id="pickrBrand"></div>
+                </div>
+                <div>
+                  <label class="form-label d-block">Accent colour</label>
+                  <div id="pickrAccent"></div>
+                </div>
+                <div class="ms-auto text-end">
+                  <div class="small text-muted">Selected</div>
+                  <code id="pickrValue">#6366f1</code>
+                </div>
+              </div>
+              <div class="p-4 rounded mt-4 text-center" id="pickrPreview" style="background:#6366f1;color:#fff">
+                <strong class="d-block">Live preview surface</strong>
+                <span class="small" style="opacity:.85">Both pickers write into this panel</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Cleave.js &amp; Autosize</h2><div class="card-subtitle">Formatting as you type, and textareas that grow</div></div>
+              <span class="badge badge-soft-warning ms-auto">cleave 1.6 &middot; autosize 6.0</span>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-7"><label class="form-label" for="clCard">Credit card</label>
+                  <div class="input-group"><input class="form-control" id="clCard" placeholder="•••• •••• •••• ••••"><span class="input-group-text" id="clBrand" style="min-width:72px"><i class="bi bi-credit-card"></i></span></div>
+                </div>
+                <div class="col-md-5"><label class="form-label" for="clDate">Expiry</label><input class="form-control" id="clDate" placeholder="MM/YY"></div>
+                <div class="col-md-6"><label class="form-label" for="clPhone">Phone</label><input class="form-control" id="clPhone" placeholder="0812 3456 7890"></div>
+                <div class="col-md-6"><label class="form-label" for="clMoney">Amount</label>
+                  <div class="input-group"><span class="input-group-text">Rp</span><input class="form-control text-end" id="clMoney" placeholder="0"></div>
+                </div>
+                <div class="col-12"><label class="form-label" for="clNote">Auto-growing note</label>
+                  <textarea class="form-control" id="clNote" rows="2" placeholder="Keep typing and this field grows with the content instead of scrolling…"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>

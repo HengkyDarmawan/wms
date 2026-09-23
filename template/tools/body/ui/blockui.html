@@ -1,0 +1,116 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6">
+          <div class="card h-100"><div class="card-header"><h2 class="card-title h4">Block a card</h2></div><div class="card-body">
+            <div class="nx-demo-row mb-3">
+              <button class="btn btn-soft-primary" id="blockCard" type="button">Block for 2 seconds</button>
+              <button class="btn btn-soft-secondary" id="blockToggle" type="button">Toggle indefinitely</button>
+            </div>
+            <div class="card nx-block" id="blockTarget">
+              <div class="card-body nx-kpi">
+                <div class="d-flex justify-content-between align-items-start">
+                  <span class="nx-kpi-label">Monthly Recurring Revenue</span>
+                  <span class="nx-icon-sq primary"><i class="bi bi-currency-dollar"></i></span>
+                </div>
+                <div class="nx-kpi-value">$48.2K</div>
+                <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>12.4%</span><span>vs last month</span></div>
+              </div>
+            </div>
+            <p class="small text-muted mt-3 mb-0">The overlay is absolutely positioned inside a <code>.nx-block</code> parent, so it covers exactly the element it belongs to and inherits its radius.</p>
+          </div></div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100"><div class="card-header"><h2 class="card-title h4">Block a form</h2></div><div class="card-body">
+            <form class="nx-block" id="blockForm">
+              <div class="mb-3"><label class="form-label" for="buEmail">Email</label><input class="form-control" type="email" id="buEmail" value="maria@acme.io"></div>
+              <div class="mb-3"><label class="form-label" for="buPlan">Plan</label><select class="form-select" id="buPlan"><option>Starter</option><option selected>Pro</option><option>Enterprise</option></select></div>
+              <div class="mb-3"><label class="form-label" for="buSeats">Seats</label><input class="form-control" type="number" id="buSeats" value="40"></div>
+              <button class="btn btn-primary" id="buSave" type="button">Save changes</button>
+            </form>
+            <p class="small text-muted mt-3 mb-0">Blocking a form while it saves is more honest than a disabled button: it also stops people editing fields that are about to be overwritten.</p>
+          </div></div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100"><div class="card-header"><h2 class="card-title h4">Overlay variants</h2></div><div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="card nx-block h-100">
+                  <div class="card-body text-center py-4"><span class="nx-icon-sq primary mx-auto mb-2"><i class="bi bi-graph-up"></i></span><div class="small">Spinner</div></div>
+                  <div class="nx-block-overlay"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading</span></div></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card nx-block h-100">
+                  <div class="card-body text-center py-4"><span class="nx-icon-sq success mx-auto mb-2"><i class="bi bi-cloud-arrow-up"></i></span><div class="small">With label</div></div>
+                  <div class="nx-block-overlay"><div class="spinner-border spinner-border-sm text-primary" role="status"></div><span>Uploading&hellip;</span></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card nx-block h-100">
+                  <div class="card-body text-center py-4"><span class="nx-icon-sq warning mx-auto mb-2"><i class="bi bi-lock"></i></span><div class="small">Locked</div></div>
+                  <div class="nx-block-overlay"><i class="bi bi-lock-fill fs-4 text-muted"></i><span>Upgrade to unlock</span></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card nx-block h-100">
+                  <div class="card-body text-center py-4"><span class="nx-icon-sq danger mx-auto mb-2"><i class="bi bi-wifi-off"></i></span><div class="small">Error</div></div>
+                  <div class="nx-block-overlay"><i class="bi bi-exclamation-triangle-fill fs-4 text-danger"></i><span>Could not load</span><button class="btn btn-xs btn-soft-primary" type="button">Retry</button></div>
+                </div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100"><div class="card-header"><h2 class="card-title h4">Text dividers</h2></div><div class="card-body">
+            <div class="nx-divider">Default centred</div>
+            <div class="nx-divider start">Aligned to the start</div>
+            <div class="nx-divider end">Aligned to the end</div>
+            <div class="nx-divider nx-divider-dashed">Dashed rule</div>
+            <div class="nx-divider"><span class="badge badge-soft-primary">With a badge</span></div>
+            <div class="nx-divider"><i class="bi bi-stars"></i>With an icon</div>
+            <hr class="my-4">
+            <h3 class="h6 mb-3">In context</h3>
+            <button class="btn btn-primary w-100">Sign in</button>
+            <div class="nx-divider">or continue with</div>
+            <div class="d-grid gap-2" style="grid-template-columns:1fr 1fr">
+              <button class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-2" type="button"><i class="bi bi-google"></i>Google</button>
+              <button class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-2" type="button"><i class="bi bi-github"></i>GitHub</button>
+            </div>
+          </div></div>
+        </div>
+
+        <div class="col-12">
+          <div class="card"><div class="card-header"><h2 class="card-title h4">Skeleton vs block</h2><span class="card-subtitle ms-auto">Skeletons for first load, overlays for refresh</span></div><div class="card-body">
+            <div class="row g-4">
+              <div class="col-lg-6">
+                <h3 class="h6 mb-3">Skeleton &mdash; nothing to show yet</h3>
+                <div class="card"><div class="card-body">
+                  <div class="d-flex gap-3 mb-3" aria-hidden="true">
+                    <span class="nx-avatar placeholder"></span>
+                    <div class="flex-grow-1 placeholder-glow"><span class="placeholder col-5 mb-2"></span><span class="placeholder col-8"></span></div>
+                  </div>
+                  <div class="placeholder-glow" aria-hidden="true">
+                    <span class="placeholder col-12 mb-2" style="height:80px;border-radius:var(--nx-radius-sm)"></span>
+                    <span class="placeholder col-7 mb-2"></span><span class="placeholder col-4"></span>
+                  </div>
+                </div></div>
+              </div>
+              <div class="col-lg-6">
+                <h3 class="h6 mb-3">Block &mdash; stale content still visible</h3>
+                <div class="card nx-block"><div class="card-body">
+                  <div class="d-flex gap-3 mb-3">
+                    <span class="nx-avatar"><img src="https://i.pravatar.cc/80?img=47" alt=""></span>
+                    <div><div class="fw-semibold">Sarah Chen</div><div class="small text-muted">Head of Product</div></div>
+                  </div>
+                  <p class="small text-muted mb-0">Keeping the previous values on screen while they refresh reads as faster than blanking the card, and it avoids layout jumps.</p>
+                </div>
+                <div class="nx-block-overlay"><div class="spinner-border spinner-border-sm text-primary" role="status"></div><span>Refreshing&hellip;</span></div></div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+
+      </div>

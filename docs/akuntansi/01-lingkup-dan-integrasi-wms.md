@@ -1,6 +1,6 @@
 # Modul Akuntansi — Lingkup & Integrasi dengan WMS
 
-**Versi:** 0.3
+**Versi:** 0.5
 **Tanggal:** 23 September 2026
 **Status:** kerangka awal; spesifikasi lengkap modul Akuntansi dibuat terpisah nanti. Daftar kejadian mengikuti [matriks kejadian stok](../wms/05-aturan-bisnis.md#14-matriks-kejadian-stok) v0.3
 **Dokumen terkait:** [Blueprint §15](../wms/01-blueprint.md#15-integrasi) · [Aturan Bisnis](../wms/05-aturan-bisnis.md) · [Purchasing](../purchasing/01-lingkup-dan-integrasi-wms.md) · [Keputusan D-07](../wms/04-keputusan-dan-asumsi.md#d-07)
@@ -80,14 +80,14 @@ Satu kejadian per satu pergerakan ledger ([BR §14](../wms/05-aturan-bisnis.md#1
 |---|---|---|---|
 | `goods_received` | GRN (vendor) `received` | `vendor_id`, `po_ref`, `prq_ref` | Menambah persediaan; mencocokkan dengan PO/tagihan vendor |
 | `goods_rejected` | RTV `shipped` | `vendor_id`, `grn_ref`, `reason` | Nota debit / pengurangan tagihan vendor |
-| `goods_shipped` | SJ `shipped` | `destination_type` (project_client / site_warehouse / warehouse) | Persediaan berpindah ke *dalam perjalanan* (masih milik gudang asal) |
-| `goods_delivered` | SJ `delivered` / bagian diterima dari `partially_delivered`, baris jual-putus ke klien | `ownership = sold`, `client_id` | Dasar faktur jual; keluar dari persediaan |
-| `asset_checked_out` | SJ `delivered`, baris aset | `serial_id`, `due_return_date` | Mulai hitung hari sewa |
+| `goods_shipped` | SJ `shipped` | `destination_type` (project_client / site_warehouse / warehouse), `shipment_method`, `carrier_id`, `tracking_no` (ongkir dinilai Akuntansi, [A-57](../wms/04-keputusan-dan-asumsi.md#a-57)) | Persediaan berpindah ke *dalam perjalanan* (masih milik gudang asal) |
+| `goods_delivered` | SJ `delivered` / bagian **baik** yang diterima dari `partially_delivered`, baris jual-putus ke klien | `ownership = sold`, `client_id` | Dasar faktur jual; keluar dari persediaan |
+| `asset_checked_out` | SJ `delivered`, baris aset | `serial_id`, `due_return_date`, `meter_out`, `meter_unit` | Mulai hitung hari sewa |
 | `stock_transferred` | GRN (dari SJ) `received` | `from_warehouse_id`, `to_warehouse_id`, `from_project_id`, `to_project_id` | Pemindahan antar gudang/proyek; tidak ada perubahan kepemilikan |
-| `delivery_discrepancy` | DSC `resolved` | `disposition` per baris, `carrier_id` | Kerugian dalam perjalanan / klaim ekspedisi / kembali ke persediaan |
+| `delivery_discrepancy` | DSC `resolved` | `discrepancy_type` (kurang/rusak), `disposition` per baris (`reship` tanpa nilai), `client_decision`, `carrier_id`, `claim_ref` | Kerugian dalam perjalanan / klaim ekspedisi / kembali ke persediaan |
 | `material_consumed` | ISU `confirmed` | `project_id` | **Beban material proyek** |
 | `goods_returned` | RET `sorted` | `ownership = sold \| company`, `sorting` per baris | `sold` → nota kredit/retur penjualan; `company` → pembalik beban proyek (bila sebelumnya `material_consumed`) atau sekadar pindah lokasi |
-| `asset_returned` | AST `inspected` | `serial_id`, `condition_grade`, `usage_days` | Akhir hari sewa; kondisi aset |
+| `asset_returned` | AST `inspected` | `serial_id`, `condition_grade`, `condition_score`, `usage_days`, `usage_hours`, `meter_in` | Akhir hari sewa; kondisi aset; dasar penyusutan berbasis pemakaian ([A-66](../wms/04-keputusan-dan-asumsi.md#a-66)) |
 | `asset_lost_or_damaged` | aksi tandai hilang / inspeksi grade C–D | `serial_id`, `state` | Ganti rugi; penghapusan menunggu `stock_adjusted` |
 | `material_converted` | CNV `completed` | `inputs`, `outputs`, `offcuts`, `waste`, `kerf` | Alokasi nilai input → output, offcut, waste, kerf |
 | `waste_disposed` | WST `closed` | `disposition` | Beban waste / pendapatan scrap |
@@ -101,6 +101,7 @@ Kejadian pembalik memakai `event_type` yang sama dengan asal dan mengisi `revers
 - **Urutan:** kejadian diproses berurutan per `source_type` + `source_id`; `occurred_at` dipakai untuk periode akuntansi.
 - **Koreksi** tidak mengedit kejadian lama; WMS menerbitkan kejadian pembalik.
 - **Versi skema:** perubahan payload menaikkan `schema_version`; Akuntansi wajib menerima versi lama selama 2 rilis.
+- **Tutup periode:** WMS menolak mutasi dengan `occurred_at` ≤ `stock_lock_date` company ([BR-STK-15](../wms/05-aturan-bisnis.md#br-stk)); Akuntansi menyelaraskan tanggal kunci periodenya dengan tanggal ini sehingga tidak ada kejadian mundur setelah tutup buku.
 - **Rekonsiliasi berkala:** laporan pembanding kuantitas WMS vs kuantitas yang sudah dinilai di Akuntansi per akhir bulan, per gudang & proyek.
 - **Mekanisme Fase 1:** WMS menulis kejadian ke tabel *outbox* di database tenant. Konsumsi oleh Akuntansi (antrean internal vs webhook/API) ditentukan di Part 3.
 
@@ -109,5 +110,6 @@ Kejadian pembalik memakai `event_type` yang sama dengan asal dan mengisi `revers
 1. Metode penilaian persediaan yang diizinkan per company.
 2. Aturan alokasi nilai pada konversi (per ukuran/berat/nilai relatif).
 3. Siklus dan rumus tagihan sewa (harian, mingguan, 28/30 hari, minimum sewa); apakah `usage_days` hari kalender atau hari kerja.
+3a. Metode penyusutan aset yang disewakan (garis lurus vs berbasis pemakaian jam/km): WMS memasok tanggal perolehan, umur harapan, meter, hari/jam pakai, dan skor kondisi — nilai perolehan dan penyusutan dihitung Akuntansi ([D-07](../wms/04-keputusan-dan-asumsi.md#d-07)).
 4. Perlakuan `material_consumed` vs `goods_delivered` untuk proyek yang sama (beban vs penjualan) dan dampaknya pada laporan laba proyek.
 5. Apakah modul Akuntansi dijual sebagai modul SaaS terpisah per company.

@@ -1,0 +1,96 @@
+      <div class="row g-4">
+
+        <div class="col-lg-4"><div class="card h-100"><div class="card-body">
+          <h2 class="h4">Basic card</h2>
+          <p class="text-muted mb-0">The simplest form: a bordered surface with 20px padding and a 12px radius.</p>
+        </div></div></div>
+
+        <div class="col-lg-4"><div class="card h-100">
+          <div class="card-header"><h2 class="card-title h4">With header</h2><button class="btn btn-xs btn-soft-primary ms-auto" type="button">Action</button></div>
+          <div class="card-body"><p class="text-muted mb-0">Header holds the title and a contextual action. Footer summarises or paginates.</p></div>
+          <div class="card-footer d-flex justify-content-between"><span class="small text-muted">Updated 2h ago</span><a href="#" class="nx-link small">View all</a></div>
+        </div></div>
+
+        <div class="col-lg-4"><div class="card h-100 nx-card-lift">
+          <div class="card-body">
+            <span class="nx-icon-sq primary mb-3"><i class="bi bi-lightning-charge"></i></span>
+            <h2 class="h4">Hover lift</h2>
+            <p class="text-muted mb-0">This card raises 2px and deepens its shadow on hover.</p>
+          </div>
+        </div></div>
+
+        <div class="col-lg-4"><div class="card h-100">
+          <div class="nx-pc-img" style="border-radius:var(--nx-radius) var(--nx-radius) 0 0"><img src="assets/img/products/p2.svg" alt="" style="object-fit:contain;padding:32px"></div>
+          <div class="card-body">
+            <h2 class="h4">Image on top</h2>
+            <p class="text-muted mb-3">A media area above the body, sharing the card's top radius.</p>
+            <a href="commerce-product-detail.html" class="btn btn-sm btn-soft-primary">Learn more</a>
+          </div>
+        </div></div>
+
+        <div class="col-lg-8"><div class="card h-100">
+          <div class="row g-0 h-100">
+            <div class="col-sm-4 nx-pc-img" style="border-radius:var(--nx-radius) 0 0 var(--nx-radius)"><img src="assets/img/products/p6.svg" alt="" style="object-fit:contain;padding:24px"></div>
+            <div class="col-sm-8"><div class="card-body h-100 d-flex flex-column">
+              <h2 class="h4">Horizontal card</h2>
+              <p class="text-muted">Media on the left, content on the right. Collapses to stacked below the small breakpoint.</p>
+              <div class="mt-auto d-flex gap-2"><button class="btn btn-sm btn-primary" type="button">Primary</button><button class="btn btn-sm btn-soft-secondary" type="button">Secondary</button></div>
+            </div></div>
+          </div>
+        </div></div>
+
+        <div class="col-lg-6"><div class="card h-100">
+          <div class="card-header p-0 border-0">
+            <ul class="nav nav-tabs w-100 px-3 pt-2" role="tablist">
+              <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#ct1" type="button" role="tab">Overview</button></li>
+              <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ct2" type="button" role="tab">Members</button></li>
+              <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ct3" type="button" role="tab">Settings</button></li>
+            </ul>
+          </div>
+          <div class="card-body"><div class="tab-content">
+            <div class="tab-pane fade show active" id="ct1" role="tabpanel"><p class="text-muted mb-0">Tabs live in the card header, content swaps in the body.</p></div>
+            <div class="tab-pane fade" id="ct2" role="tabpanel"><p class="text-muted mb-0">Twelve people have access to this workspace.</p></div>
+            <div class="tab-pane fade" id="ct3" role="tabpanel"><p class="text-muted mb-0">Workspace settings would appear here.</p></div>
+          </div></div>
+        </div></div>
+
+        <div class="col-lg-6"><div class="card h-100">
+          <div class="card-header">
+            <h2 class="card-title h4">Collapsible</h2>
+            <button class="nx-icon-btn ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCard" aria-expanded="true" aria-controls="collapseCard" aria-label="Toggle card"><i class="bi bi-chevron-up"></i></button>
+          </div>
+          <div class="collapse show" id="collapseCard"><div class="card-body">
+            <p class="text-muted mb-0">The chevron toggles a Bootstrap collapse around the card body. Useful for dense settings pages.</p>
+          </div></div>
+        </div></div>
+
+        <div class="col-lg-3 col-sm-6"><div class="card nx-kpi h-100"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-start"><span class="nx-kpi-label">Stat card</span><span class="nx-icon-sq success"><i class="bi bi-graph-up-arrow"></i></span></div>
+          <div class="nx-kpi-value">$24.8K</div>
+          <div class="nx-kpi-foot"><span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>6.4%</span><span>this week</span></div>
+        </div></div></div>
+
+        <div class="col-lg-3 col-sm-6"><div class="card nx-price-card popular h-100">
+          <span class="badge bg-primary nx-popular-badge">Most popular</span>
+          <div class="card-body text-center">
+            <h3 class="h5">Pricing card</h3>
+            <div class="nx-price-value">$59</div>
+            <p class="text-muted small">per user / month</p>
+            <button class="btn btn-primary w-100" type="button">Choose plan</button>
+          </div>
+        </div></div>
+
+        <div class="col-lg-6"><div class="card h-100 overflow-hidden">
+          <div class="nx-profile-cover" style="height:110px"></div>
+          <div class="card-body text-center pt-0">
+            <img class="nx-profile-avatar" style="width:72px;height:72px;margin-top:-36px" src="https://i.pravatar.cc/144?img=47" alt="Sarah Chen">
+            <h3 class="h5 mt-2 mb-0">Sarah Chen</h3>
+            <p class="text-muted small">Head of Product</p>
+            <div class="d-flex justify-content-center gap-2">
+              <button class="btn btn-sm btn-primary" type="button">Follow</button>
+              <button class="btn btn-sm btn-soft-secondary" type="button">Message</button>
+            </div>
+          </div>
+        </div></div>
+
+      </div>

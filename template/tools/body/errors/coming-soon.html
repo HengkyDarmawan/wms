@@ -1,0 +1,41 @@
+  <main class="nx-error-page">
+    <a class="d-inline-flex align-items-center gap-2 text-decoration-none mb-4" href="index.html">
+      <img src="assets/img/logo.svg" alt="" width="32" height="32">
+      <span class="h4 mb-0" style="color:var(--nx-text)">NexaDash</span>
+    </a>
+
+    <svg width="220" height="150" viewBox="0 0 220 150" fill="none" aria-hidden="true">
+      <path d="M110 18l18 46 46 4-35 31 11 45-40-25-40 25 11-45-35-31 46-4z" fill="var(--nx-primary-subtle)" stroke="var(--nx-primary)" stroke-width="5" stroke-linejoin="round"/>
+      <circle cx="40" cy="34" r="4" fill="var(--nx-primary)" opacity=".6"/>
+      <circle cx="182" cy="46" r="5" fill="var(--nx-primary)" opacity=".45"/>
+      <circle cx="176" cy="112" r="3" fill="var(--nx-primary)" opacity=".55"/>
+      <circle cx="34" cy="106" r="4" fill="var(--nx-primary)" opacity=".4"/>
+    </svg>
+
+    <span class="badge badge-soft-primary mb-3">In development</span>
+    <h1>Something good is coming</h1>
+    <p>The analytics surface is in private beta with fourteen workspaces. Leave your email and we will let you in as soon as a slot opens.</p>
+
+    <div class="nx-countdown" id="csCountdown">
+      <div class="nx-cd-box"><div class="nx-cd-num" id="csDays">21</div><div class="nx-cd-label">Days</div></div>
+      <div class="nx-cd-box"><div class="nx-cd-num" id="csHours">08</div><div class="nx-cd-label">Hours</div></div>
+      <div class="nx-cd-box"><div class="nx-cd-num" id="csMinutes">42</div><div class="nx-cd-label">Minutes</div></div>
+      <div class="nx-cd-box"><div class="nx-cd-num" id="csSeconds">18</div><div class="nx-cd-label">Seconds</div></div>
+    </div>
+
+    <form class="w-100" style="max-width:420px" id="csForm" novalidate>
+      <div class="input-group input-group-lg">
+        <input class="form-control" type="email" id="csEmail" placeholder="you@company.com" required aria-label="Email address">
+        <button class="btn btn-primary" type="submit">Notify me</button>
+      </div>
+      <div class="small mt-2" id="csMsg"></div>
+    </form>
+
+    <div class="d-flex gap-2 mt-4">
+      <a class="nx-icon-btn" href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+      <a class="nx-icon-btn" href="#" aria-label="GitHub"><i class="bi bi-github"></i></a>
+      <a class="nx-icon-btn" href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+    </div>
+
+    <p class="text-muted small mt-4 mb-0"><a class="nx-link" href="index.html">Back to the dashboard</a></p>
+  </main>

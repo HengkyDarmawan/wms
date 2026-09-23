@@ -1,8 +1,8 @@
 # Model Data — Konversi & aset, opname & penyesuaian, approval, umum
 
-**Versi:** 0.1 (draf Part 3)
+**Versi:** 0.6 (Part 3, diselaraskan dengan implementasi modul Master s.d. Picking/Shipment 24 Sep 2026)
 **Tanggal:** 23 September 2026
-**Status:** draf berdasarkan Blueprint v0.3, Aturan Bisnis, Katalog Status, dan nilai default asumsi A-25–A-49. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.4, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026). Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Inti](08a-model-data-inti.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md)
 
 Daftar area lengkap ada di [08a-model-data-inti.md](08a-model-data-inti.md).
@@ -89,10 +89,11 @@ erDiagram
 **`waste_disposal_lines` — WST baris.** 🔑`id` bigint · ↗`waste_disposal_id` bigint · ↗`bin_id` bigint *(bin Waste)* · `qty_base` decimal(18,4) · ↗`reason_code_id` bigint
   ↳ kolom baris standar (lihat konvensi)
 
-**`asset_handovers` — AST serah terima.** 🔑`id` bigint · ↗`serial_id` bigint · ↗`project_id` bigint · ↗`shipment_line_id` bigint *(keluar)* · ↗`goods_return_line_id` bigint *(kembali)* · `checked_out_at` datetime · `due_return_date` date · `condition_out` char(1) · ↗`photo_out_id` bigint *(attachments)* · `returned_at` datetime · `usage_days` int *([BR-AST-05](05-aturan-bisnis.md#br-ast))* · `status` enum *(checked_out|returned|inspected)*
+**`asset_handovers` — AST serah terima.** 🔑`id` bigint · ↗`serial_id` bigint · ↗`project_id` bigint · ↗`shipment_line_id` bigint *(keluar)* · ↗`goods_return_line_id` bigint *(kembali)* · `checked_out_at` datetime · `due_return_date` date · `condition_out` char(1) · ↗`photo_out_id` bigint *(attachments)* · `returned_at` datetime · `usage_days` int *([BR-AST-05](05-aturan-bisnis.md#br-ast))* · `meter_out` decimal(12,1) *([A-66](04-keputusan-dan-asumsi.md#a-66))* · `meter_in` decimal(12,1) *(≥ meter_out ([BR-AST-08](05-aturan-bisnis.md#br-ast)))* · `usage_hours` decimal(12,1) *(meter_in − meter_out bila hour)* · `status` enum *(checked_out|returned|inspected)*
   ↳ kolom header dokumen standar (lihat konvensi)
 
-**`asset_inspections` — Pemeriksaan aset.** 🔑`id` bigint · ↗`asset_handover_id` bigint · ↗`serial_id` bigint · ↗`inspected_by` bigint · `inspected_at` datetime · `condition_grade` char(1) *(A–D)* · ↗`photo_id` bigint · `notes` varchar(255) · `resulting_state` enum *(available|maintenance|damaged)*
+**`asset_inspections` — Pemeriksaan aset.** 🔑`id` bigint · ↗`asset_handover_id` bigint · ↗`serial_id` bigint · ↗`inspected_by` bigint · `inspected_at` datetime · `condition_grade` char(1) *(A–D)* · `condition_score` tinyint *(0–100 % wajib ([BR-AST-08](05-aturan-bisnis.md#br-ast)))* · `component_notes` json *(catatan per komponen)* · ↗`photo_id` bigint · `notes` varchar(255) · `resulting_state` enum *(available|maintenance|damaged)*
+  ↳ Riwayat kondisi aset ([A-66](04-keputusan-dan-asumsi.md#a-66))
 
 **`maintenance_schedules` — Jadwal maintenance (F2).** 🔑`id` bigint · ↗`serial_id` bigint · `scheduled_at` date · `interval_days` int · `performed_at` date · `notes` varchar(255) · `status` enum *(planned|in_progress|done)*
 
@@ -138,7 +139,7 @@ erDiagram
 
 ### Entitas
 
-**`stock_counts` — OPN sesi.** 🔑`id` bigint · `count_type` enum *(monthly|annual|adhoc|cycle_abc)* · `freeze_bins` bool · `scope` json *(gudang/zona/bin/item)* · `planned_start` date · `started_at` datetime · `approved_at` datetime · `closed_at` datetime · ↗`report_attachment_id` bigint *(PDF)* · ↗`approval_snapshot_id` bigint
+**`stock_counts` — OPN sesi.** 🔑`id` bigint · `count_type` enum *(monthly|annual|adhoc|spot_check|cycle_abc ([BR-OPN-10](05-aturan-bisnis.md#br-opn)))* · `freeze_bins` bool · `scope` json *(gudang/zona/bin/item)* · `planned_start` date · `started_at` datetime · `approved_at` datetime · `closed_at` datetime · ↗`report_attachment_id` bigint *(PDF)* · ↗`approval_snapshot_id` bigint
   ↳ kolom header dokumen standar (lihat konvensi); nomor memakai gudang atau ALL
 
 **`stock_count_warehouses` — OPN ↔ gudang.** ↗`stock_count_id` bigint · ↗`warehouse_id` bigint · ↗`stock_adjustment_id` bigint *(satu ADJ per gudang ([BR-OPN-06](05-aturan-bisnis.md#br-opn)))*
@@ -199,7 +200,7 @@ erDiagram
 
 ### Entitas
 
-**`approval_rules` — Aturan approval.** 🔑`id` bigint · `document_type` varchar(30) · `name` varchar(100) · `priority` int · `conditions` json *(gudang, proyek, kategori, kepemilikan, qty ≥, dari klien)* · `is_active` bool
+**`approval_rules` — Aturan approval.** 🔑`id` bigint · `document_type` varchar(30) · `name` varchar(100) · `priority` int · `conditions` json *(gudang, proyek, kategori, kepemilikan, qty ≥, dari klien, jenis vendor, asal PRQ ([BR-APR-07](05-aturan-bisnis.md#br-apr)); F2: melebihi rencana)* · `is_active` bool
 
 **`approval_steps` — Lapis aturan.** 🔑`id` bigint · ↗`approval_rule_id` bigint · `step_no` int · `approver_type` enum *(user|position|role|direct_manager|warehouse_head|project_pic)* · `approver_ref_id` bigint · `decision_mode` enum *(sequential|any|all)* · `backup_approver_type` enum · `backup_ref_id` bigint · `timeout_hours` int *(default 24)* · `channel` enum *(web|whatsapp|both)* · `require_pin` bool
 
@@ -299,8 +300,8 @@ erDiagram
 
 **`numbering_formats` — Format nomor.** 🔑`id` bigint · ◆`document_type` varchar(30) · `pattern` varchar(80) *({KODE}/{GUDANG}/{TAHUN}/{BULAN}/{URUT})* · `reset_period` enum *(monthly|yearly|never)* · `pad` int *(4)* · `warehouse_segment` enum *(origin|fulfilling|all ([A-43](04-keputusan-dan-asumsi.md#a-43)))*
 
-**`document_sequences` — Urutan nomor.** 🔑`id` bigint · `document_type` varchar(30) · `warehouse_code` varchar(10) *(atau ALL / PRJ)* · `period` varchar(7) *(2026-09)* · `last_no` int
-  ↳ UK(document_type, warehouse_code, period); SELECT … FOR UPDATE
+**`document_sequences` — Urutan nomor.** 🔑`id` bigint · `document_type` varchar(30) · `segment` varchar(20) *(kode gudang atau ALL)* · `period` varchar(7) *(2026-09)* · `last_number` int
+  ↳ UK(document_type, segment, period); SELECT … FOR UPDATE
 
 **`import_batches` — Impor Excel.** 🔑`id` bigint · `target` varchar(30) *(items|clients|vendors|bins|…)* · ↗`file_attachment_id` bigint · `status` enum *(validating|previewed|committed|failed)* · `total_rows` int · `error_rows` int · `committed_at` datetime
 

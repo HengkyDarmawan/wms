@@ -1,0 +1,157 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Day.js</h2><div class="card-subtitle">Dates, formatting and relative time in 2 KB</div></div>
+              <span class="badge badge-soft-secondary ms-auto">dayjs 1.11.13</span>
+            </div>
+            <div class="card-body">
+              <label class="form-label" for="dayInput">Pick a moment</label>
+              <input class="form-control mb-3" type="datetime-local" id="dayInput">
+              <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                  <thead><tr><th>Format</th><th>Result</th></tr></thead>
+                  <tbody id="dayTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Fuse.js</h2><div class="card-subtitle">Fuzzy search that tolerates typos &mdash; try &ldquo;kubrnetes&rdquo;</div></div>
+              <span class="badge badge-soft-secondary ms-auto">fuse.js 7.0.0</span>
+            </div>
+            <div class="card-body">
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input class="form-control" type="search" id="fuseInput" placeholder="Search the docs&hellip;">
+                <span class="input-group-text"><span id="fuseCount">0</span> hits</span>
+              </div>
+              <div class="nx-row-list" id="fuseResults" style="max-height:300px;overflow-y:auto"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">mark.js</h2><div class="card-subtitle">Highlights matches inside existing content</div></div>
+              <span class="badge badge-soft-secondary ms-auto">mark.js 8.11.1</span>
+            </div>
+            <div class="card-body">
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="bi bi-highlighter"></i></span>
+                <input class="form-control" type="search" id="markInput" placeholder="Type a word to highlight" value="dashboard">
+                <button class="btn btn-outline-secondary" id="markClear" type="button">Clear</button>
+              </div>
+              <div id="markTarget" class="small">
+                <p>A dashboard is only useful when the numbers on it are trustworthy. That means the dashboard has to agree with the source of truth, refresh predictably, and say plainly when data is stale.</p>
+                <p>Most teams start with a single dashboard and grow to dozens. At that point naming, ownership and permissions matter more than chart styling, because a dashboard nobody owns is a dashboard nobody fixes.</p>
+                <p class="mb-0">The healthiest pattern we see: one canonical dashboard per team, reviewed monthly, with every metric linked back to its query.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">List.js</h2><div class="card-subtitle">Search and sort plain HTML without rebuilding it</div></div>
+              <span class="badge badge-soft-secondary ms-auto">list.js 2.3.1</span>
+            </div>
+            <div class="card-body" id="listContainer">
+              <div class="d-flex gap-2 mb-3">
+                <input class="form-control search" placeholder="Filter team&hellip;" aria-label="Filter team">
+                <button class="btn btn-soft-secondary sort" data-sort="name" type="button">Name <i class="bi bi-arrow-down-up"></i></button>
+                <button class="btn btn-soft-secondary sort" data-sort="dept" type="button">Dept <i class="bi bi-arrow-down-up"></i></button>
+              </div>
+              <div class="nx-row-list list" style="max-height:280px;overflow-y:auto"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">QRious</h2><div class="card-subtitle">QR codes rendered to a canvas</div></div>
+              <span class="badge badge-soft-secondary ms-auto">qrious 4.0.2</span>
+            </div>
+            <div class="card-body">
+              <div class="row g-3 align-items-center">
+                <div class="col-sm-5 text-center">
+                  <canvas id="qrCanvas" style="max-width:100%;border-radius:var(--nx-radius-sm)"></canvas>
+                </div>
+                <div class="col-sm-7">
+                  <label class="form-label" for="qrValue">Content</label>
+                  <input class="form-control mb-3" id="qrValue" value="https://nexadash.io">
+                  <label class="form-label d-flex justify-content-between" for="qrSize">Size <span class="text-muted small" id="qrSizeLabel">200 px</span></label>
+                  <input class="form-range mb-3" type="range" id="qrSize" min="120" max="320" value="200">
+                  <label class="form-label" for="qrColor">Foreground</label>
+                  <input class="form-control form-control-color w-100 mb-3" type="color" id="qrColor" value="#0f172a">
+                  <a class="btn btn-soft-primary w-100" id="qrDownload" download="qr.png"><i class="bi bi-download me-1"></i>Download PNG</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Prism.js</h2><div class="card-subtitle">Syntax highlighting for docs and changelogs</div></div>
+              <span class="badge badge-soft-secondary ms-auto">prism 1.29.0</span>
+            </div>
+            <div class="card-body">
+              <pre class="mb-0" style="border-radius:var(--nx-radius-sm);max-height:340px"><code class="language-javascript" id="prismCode">// Mount a theme-aware chart in three lines
+nxMountChart('#revenueChart', function () {
+  return $.extend(true, nxApexBase(), {
+    chart: { type: 'area', height: 320 },
+    series: [{ name: 'Revenue', data: [28, 34, 31, 42, 48, 54] }],
+    colors: [nxCss('--nx-chart-1')],
+    stroke: { curve: 'smooth', width: 2.5 }
+  });
+});
+
+// The chart rebuilds itself whenever the theme changes,
+// because app.js keeps a registry of every mounted chart.
+document.addEventListener('nx:theme-changed', function () {
+  console.log('now in', nxTheme(), 'mode');
+});</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Lottie</h2><div class="card-subtitle">Vector animation played from JSON &mdash; sharp at any size</div></div>
+              <span class="badge badge-soft-secondary ms-auto">lottie-web 5.12.2</span>
+            </div>
+            <div class="card-body">
+              <div class="row g-4 align-items-center">
+                <div class="col-md-4 text-center">
+                  <div id="lottieBox" style="height:200px"></div>
+                </div>
+                <div class="col-md-8">
+                  <p class="text-muted small">Lottie plays animations exported from After Effects as JSON. They stay crisp at any resolution and weigh a fraction of an equivalent GIF, which makes them the usual choice for empty states, success confirmations and onboarding illustrations.</p>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-sm btn-soft-primary" id="lottiePlay" type="button"><i class="bi bi-play-fill me-1"></i>Play</button>
+                    <button class="btn btn-sm btn-soft-secondary" id="lottiePause" type="button"><i class="bi bi-pause-fill me-1"></i>Pause</button>
+                    <button class="btn btn-sm btn-soft-secondary" id="lottieStop" type="button"><i class="bi bi-stop-fill me-1"></i>Stop</button>
+                    <div class="d-flex align-items-center gap-2 ms-3">
+                      <label class="small text-muted mb-0" for="lottieSpeed">Speed</label>
+                      <input class="form-range" style="width:120px" type="range" id="lottieSpeed" min="0.25" max="2.5" step="0.25" value="1">
+                      <span class="small text-muted" id="lottieSpeedLabel">1×</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>

@@ -1,0 +1,114 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6">
+          <div class="card h-100"><div class="card-header"><h2 class="card-title h4">Read-only stars</h2></div><div class="card-body">
+            <div class="d-flex flex-column gap-3">
+              <div class="d-flex align-items-center gap-3"><span class="nx-stars lg"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></span><span class="text-muted small">5.0 &mdash; large</span></div>
+              <div class="d-flex align-items-center gap-3"><span class="nx-stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></span><span class="text-muted small">4.5 &mdash; default</span></div>
+              <div class="d-flex align-items-center gap-3"><span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i></span><span class="text-muted small">3.0 &mdash; small</span></div>
+              <div class="d-flex align-items-center gap-3"><span class="nx-stars" style="color:var(--nx-primary)"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i></span><span class="text-muted small">Recoloured with a token</span></div>
+              <div class="d-flex align-items-center gap-3"><span class="nx-stars" style="color:var(--nx-danger)"><i class="bi bi-heart-fill"></i><i class="bi bi-heart-fill"></i><i class="bi bi-heart-fill"></i><i class="bi bi-heart"></i><i class="bi bi-heart"></i></span><span class="text-muted small">Any icon works</span></div>
+            </div>
+          </div></div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100"><div class="card-header"><h2 class="card-title h4">Interactive input</h2></div><div class="card-body">
+            <label class="form-label d-block">How was your experience?</label>
+            <div class="nx-rate-input mb-2" id="rateMain">
+              <input type="radio" name="rateMain" id="rm5" value="5"><label for="rm5" title="5 stars"></label>
+              <input type="radio" name="rateMain" id="rm4" value="4"><label for="rm4" title="4 stars"></label>
+              <input type="radio" name="rateMain" id="rm3" value="3"><label for="rm3" title="3 stars"></label>
+              <input type="radio" name="rateMain" id="rm2" value="2"><label for="rm2" title="2 stars"></label>
+              <input type="radio" name="rateMain" id="rm1" value="1"><label for="rm1" title="1 star"></label>
+            </div>
+            <p class="small text-muted" id="rateLabel">Hover or click a star to rate.</p>
+
+            <hr class="my-4">
+
+            <label class="form-label d-block">Rate three aspects</label>
+            <div class="d-flex align-items-center gap-3 mb-2">
+              <span class="small text-muted" style="width:90px">Ease of use</span>
+              <div class="nx-rate-input" style="font-size:18px">
+                <input type="radio" name="rateA" id="ra5" value="5" checked><label for="ra5"></label>
+                <input type="radio" name="rateA" id="ra4" value="4"><label for="ra4"></label>
+                <input type="radio" name="rateA" id="ra3" value="3"><label for="ra3"></label>
+                <input type="radio" name="rateA" id="ra2" value="2"><label for="ra2"></label>
+                <input type="radio" name="rateA" id="ra1" value="1"><label for="ra1"></label>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-3 mb-2">
+              <span class="small text-muted" style="width:90px">Support</span>
+              <div class="nx-rate-input" style="font-size:18px">
+                <input type="radio" name="rateB" id="rb5" value="5"><label for="rb5"></label>
+                <input type="radio" name="rateB" id="rb4" value="4" checked><label for="rb4"></label>
+                <input type="radio" name="rateB" id="rb3" value="3"><label for="rb3"></label>
+                <input type="radio" name="rateB" id="rb2" value="2"><label for="rb2"></label>
+                <input type="radio" name="rateB" id="rb1" value="1"><label for="rb1"></label>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <span class="small text-muted" style="width:90px">Value</span>
+              <div class="nx-rate-input" style="font-size:18px">
+                <input type="radio" name="rateC" id="rc5" value="5"><label for="rc5"></label>
+                <input type="radio" name="rateC" id="rc4" value="4"><label for="rc4"></label>
+                <input type="radio" name="rateC" id="rc3" value="3" checked><label for="rc3"></label>
+                <input type="radio" name="rateC" id="rc2" value="2"><label for="rc2"></label>
+                <input type="radio" name="rateC" id="rc1" value="1"><label for="rc1"></label>
+              </div>
+            </div>
+
+            <button class="btn btn-primary mt-4" id="rateSubmit" type="button">Submit rating</button>
+          </div></div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100"><div class="card-header"><h2 class="card-title h4">Rating summary</h2></div><div class="card-body">
+            <div class="row g-3 align-items-center mb-4">
+              <div class="col-5 text-center">
+                <div class="display-5 fw-bold">4.6</div>
+                <span class="nx-stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></span>
+                <div class="small text-muted mt-1">1,842 reviews</div>
+              </div>
+              <div class="col-7">
+                <div class="nx-rating-bar mb-1"><span class="text-muted" style="width:28px">5&#9733;</span><div class="progress"><div class="progress-bar bg-warning" style="width:72%"></div></div><span class="text-muted" style="width:34px">72%</span></div>
+                <div class="nx-rating-bar mb-1"><span class="text-muted" style="width:28px">4&#9733;</span><div class="progress"><div class="progress-bar bg-warning" style="width:18%"></div></div><span class="text-muted" style="width:34px">18%</span></div>
+                <div class="nx-rating-bar mb-1"><span class="text-muted" style="width:28px">3&#9733;</span><div class="progress"><div class="progress-bar bg-warning" style="width:6%"></div></div><span class="text-muted" style="width:34px">6%</span></div>
+                <div class="nx-rating-bar mb-1"><span class="text-muted" style="width:28px">2&#9733;</span><div class="progress"><div class="progress-bar bg-warning" style="width:3%"></div></div><span class="text-muted" style="width:34px">3%</span></div>
+                <div class="nx-rating-bar"><span class="text-muted" style="width:28px">1&#9733;</span><div class="progress"><div class="progress-bar bg-warning" style="width:1%"></div></div><span class="text-muted" style="width:34px">1%</span></div>
+              </div>
+            </div>
+            <p class="small text-muted mb-0">The same markup powers the reviews page &mdash; a flex row of a label, a progress bar and a percentage.</p>
+          </div></div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100"><div class="card-header"><h2 class="card-title h4">In context</h2></div><div class="card-body">
+            <div class="nx-row-list">
+              <div class="nx-row-item"><img src="assets/img/products/p1.svg" width="44" height="44" alt="" class="rounded">
+                <div class="nx-row-main"><div class="nx-row-title">Aurora Headphones</div>
+                  <div class="d-flex align-items-center gap-2"><span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></span><span class="small text-muted">412 reviews</span></div></div>
+                <strong class="nx-num">$129</strong></div>
+              <div class="nx-row-item"><img src="assets/img/products/p2.svg" width="44" height="44" alt="" class="rounded">
+                <div class="nx-row-main"><div class="nx-row-title">Nova Smartwatch</div>
+                  <div class="d-flex align-items-center gap-2"><span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i></span><span class="small text-muted">318 reviews</span></div></div>
+                <strong class="nx-num">$249</strong></div>
+              <div class="nx-row-item"><img src="assets/img/products/p3.svg" width="44" height="44" alt="" class="rounded">
+                <div class="nx-row-main"><div class="nx-row-title">Pulse Speaker</div>
+                  <div class="d-flex align-items-center gap-2"><span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i><i class="bi bi-star"></i></span><span class="small text-muted">286 reviews</span></div></div>
+                <strong class="nx-num">$89</strong></div>
+            </div>
+            <hr class="my-4">
+            <h3 class="h6 mb-3">Inside a table cell</h3>
+            <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+              <thead><tr><th>Agent</th><th>Tickets</th><th>Rating</th></tr></thead>
+              <tbody>
+                <tr><td>Tom Baker</td><td class="nx-num">142</td><td><span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></span></td></tr>
+                <tr><td>Hana Sato</td><td class="nx-num">128</td><td><span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></span></td></tr>
+                <tr><td>Maria Gomez</td><td class="nx-num">96</td><td><span class="nx-stars sm"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i></span></td></tr>
+              </tbody>
+            </table></div>
+          </div></div>
+        </div>
+
+      </div>

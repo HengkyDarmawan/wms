@@ -1,0 +1,56 @@
+      <div class="row g-4">
+
+        <div class="col-lg-7"><div class="card h-100">
+          <div class="card-header"><div><h2 class="card-title h4">Bootstrap native validation</h2><div class="card-subtitle">Submit with empty fields to see the messages</div></div></div>
+          <div class="card-body">
+            <form class="row g-3 needs-validation" id="bsForm" novalidate>
+              <div class="col-md-6"><label class="form-label" for="bvFirst">First name</label><input class="form-control" id="bvFirst" required><div class="valid-feedback">Looks good.</div><div class="invalid-feedback">First name is required.</div></div>
+              <div class="col-md-6"><label class="form-label" for="bvLast">Last name</label><input class="form-control" id="bvLast" required><div class="valid-feedback">Looks good.</div><div class="invalid-feedback">Last name is required.</div></div>
+              <div class="col-md-6"><label class="form-label" for="bvEmail">Email</label><input class="form-control" type="email" id="bvEmail" required><div class="invalid-feedback">Enter a valid email address.</div></div>
+              <div class="col-md-6"><label class="form-label" for="bvPhone">Phone</label><div class="input-group has-validation"><span class="input-group-text">+62</span><input class="form-control" id="bvPhone" pattern="[0-9]{8,13}" required><div class="invalid-feedback">Digits only, 8&ndash;13 characters.</div></div></div>
+              <div class="col-md-6"><label class="form-label" for="bvCountry">Country</label><select class="form-select" id="bvCountry" required><option value="">Choose&hellip;</option><option>Indonesia</option><option>Singapore</option><option>Germany</option></select><div class="invalid-feedback">Select a country.</div></div>
+              <div class="col-md-6"><label class="form-label" for="bvZip">Postcode</label><input class="form-control" id="bvZip" required><div class="invalid-feedback">Postcode is required.</div></div>
+              <div class="col-12"><label class="form-label" for="bvUrl">Website</label><input class="form-control" type="url" id="bvUrl" placeholder="https://"><div class="invalid-feedback">Enter a valid URL including https://</div></div>
+              <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" id="bvTerms" required><label class="form-check-label" for="bvTerms">I agree to the terms and privacy policy</label><div class="invalid-feedback">You must agree before continuing.</div></div></div>
+              <div class="col-12 d-flex gap-2"><button class="btn btn-primary" type="submit">Create account</button><button class="btn btn-soft-secondary" type="reset" id="bsReset">Reset</button></div>
+            </form>
+          </div>
+        </div></div>
+
+        <div class="col-lg-5"><div class="card h-100">
+          <div class="card-header"><div><h2 class="card-title h4">Custom jQuery rules</h2><div class="card-subtitle">Live strength meter and match check</div></div></div>
+          <div class="card-body">
+            <form id="customForm">
+              <div class="mb-3"><label class="form-label" for="cvUser">Username</label>
+                <input class="form-control" id="cvUser" placeholder="At least 4 characters">
+                <div class="form-text" id="cvUserHint">Lowercase letters, numbers and hyphens.</div>
+              </div>
+              <div class="mb-3"><label class="form-label" for="cvPass">Password</label>
+                <div class="input-group">
+                  <input class="form-control" type="password" id="cvPass" placeholder="••••••••">
+                  <button class="btn btn-outline-secondary" type="button" id="cvToggle" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                </div>
+                <div class="nx-strength" data-level="0" id="cvStrength"><span></span><span></span><span></span><span></span></div>
+                <div class="form-text" id="cvStrengthText">Use 8+ characters with a mix of cases, numbers and symbols.</div>
+              </div>
+              <div class="mb-4"><label class="form-label" for="cvPass2">Confirm password</label>
+                <input class="form-control" type="password" id="cvPass2" placeholder="••••••••">
+                <div class="invalid-feedback" id="cvMatchFeedback">Passwords do not match.</div>
+              </div>
+              <button class="btn btn-primary w-100" type="submit" id="cvSubmit" disabled>Set password</button>
+            </form>
+          </div>
+        </div></div>
+
+        <div class="col-12"><div class="card"><div class="card-header"><h2 class="card-title h4">Validation states reference</h2></div><div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4"><label class="form-label" for="vsA">Valid input</label><input class="form-control is-valid" id="vsA" value="hello@nexadash.io"><div class="valid-feedback">That email is available.</div></div>
+            <div class="col-md-4"><label class="form-label" for="vsB">Invalid input</label><input class="form-control is-invalid" id="vsB" value="hello@"><div class="invalid-feedback">That email is not valid.</div></div>
+            <div class="col-md-4"><label class="form-label" for="vsC">Valid select</label><select class="form-select is-valid" id="vsC"><option>Indonesia</option></select><div class="valid-feedback">Country confirmed.</div></div>
+            <div class="col-md-4"><label class="form-label" for="vsD">Invalid select</label><select class="form-select is-invalid" id="vsD"><option value="">Choose&hellip;</option></select><div class="invalid-feedback">Please choose a country.</div></div>
+            <div class="col-md-4"><label class="form-label" for="vsE">Valid textarea</label><textarea class="form-control is-valid" id="vsE" rows="2">Looks good to me.</textarea></div>
+            <div class="col-md-4"><div class="form-check mt-4"><input class="form-check-input is-invalid" type="checkbox" id="vsF"><label class="form-check-label" for="vsF">Required checkbox</label><div class="invalid-feedback">This box must be ticked.</div></div></div>
+          </div>
+        </div></div></div>
+
+      </div>

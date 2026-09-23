@@ -1,0 +1,94 @@
+      <div class="row g-4">
+
+        <div class="col-lg-7">
+          <div class="card h-100"><div class="card-header"><h2 class="card-title h4">Video player</h2><span class="card-subtitle ms-auto">Native &lt;video&gt; with custom controls</span></div><div class="card-body">
+            <div class="nx-pc-img mb-3" style="aspect-ratio:16/9;background:#000">
+              <video id="mpVideo" style="width:100%;height:100%;object-fit:contain" poster="https://picsum.photos/seed/nexa-video/1280/720" playsinline>
+                <source src="assets/media/sample-video.mp4" type="video/mp4">
+                Your browser does not support the video element.
+              </video>
+            </div>
+            <div class="nx-player-bar mb-3" id="mpVideoBar"><div></div></div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <button class="btn btn-primary btn-icon rounded-circle" id="mpVideoPlay" type="button" aria-label="Play or pause"><i class="bi bi-play-fill"></i></button>
+              <button class="nx-icon-btn" id="mpVideoBack" type="button" aria-label="Back 10 seconds"><i class="bi bi-skip-backward"></i></button>
+              <button class="nx-icon-btn" id="mpVideoFwd" type="button" aria-label="Forward 10 seconds"><i class="bi bi-skip-forward"></i></button>
+              <span class="small text-muted nx-num" id="mpVideoTime">0:00 / 0:00</span>
+              <div class="ms-auto d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm" style="width:78px" id="mpVideoRate" aria-label="Playback speed">
+                  <option value="0.5">0.5&times;</option><option value="1" selected>1&times;</option><option value="1.5">1.5&times;</option><option value="2">2&times;</option>
+                </select>
+                <button class="nx-icon-btn" id="mpVideoMute" type="button" aria-label="Mute"><i class="bi bi-volume-up"></i></button>
+                <!-- Slider volume butuh ruang; di layar sempit tombol mute sudah cukup. -->
+                <input class="form-range d-none d-sm-block" type="range" id="mpVideoVol" min="0" max="1" step="0.05" value="1" style="width:90px" aria-label="Volume">
+                <button class="nx-icon-btn" id="mpVideoFull" type="button" aria-label="Fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
+              </div>
+            </div>
+          </div></div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card h-100"><div class="card-header"><h2 class="card-title h4">Audio player</h2></div><div class="card-body">
+            <div class="nx-player mb-3">
+              <span class="nx-player-art"><i class="bi bi-music-note-beamed"></i></span>
+              <div class="flex-grow-1 min-w-0">
+                <div class="fw-semibold text-truncate">Release notes, read aloud</div>
+                <div class="small text-muted">NexaDash &middot; v2.4.1</div>
+                <div class="nx-player-bar mt-2" id="mpAudioBar"><div></div></div>
+                <div class="d-flex justify-content-between small text-muted mt-1 nx-num"><span id="mpAudioCur">0:00</span><span id="mpAudioDur">0:00</span></div>
+              </div>
+              <button class="btn btn-primary btn-icon rounded-circle" id="mpAudioPlay" type="button" aria-label="Play or pause"><i class="bi bi-play-fill"></i></button>
+            </div>
+            <audio id="mpAudio" preload="metadata">
+              <source src="assets/media/sample-audio.mp3" type="audio/mpeg">
+            </audio>
+
+            <h3 class="h6 mt-4 mb-2">Playlist</h3>
+            <div class="nx-row-list" id="mpPlaylist">
+              <div class="nx-row-item playlist-item active" role="button"><span class="nx-icon-sq primary"><i class="bi bi-play-fill"></i></span><div class="nx-row-main"><div class="nx-row-title">Release notes, read aloud</div><div class="nx-row-sub">v2.4.1</div></div><span class="small text-muted">0:04</span></div>
+              <div class="nx-row-item playlist-item" role="button"><span class="nx-icon-sq secondary"><i class="bi bi-music-note"></i></span><div class="nx-row-main"><div class="nx-row-title">Onboarding walkthrough</div><div class="nx-row-sub">Product</div></div><span class="small text-muted">6:12</span></div>
+              <div class="nx-row-item playlist-item" role="button"><span class="nx-icon-sq secondary"><i class="bi bi-music-note"></i></span><div class="nx-row-main"><div class="nx-row-title">Postmortem: eu-west-1</div><div class="nx-row-sub">Engineering</div></div><span class="small text-muted">11:48</span></div>
+              <div class="nx-row-item playlist-item" role="button"><span class="nx-icon-sq secondary"><i class="bi bi-music-note"></i></span><div class="nx-row-main"><div class="nx-row-title">Design systems AMA</div><div class="nx-row-sub">Design</div></div><span class="small text-muted">24:02</span></div>
+            </div>
+
+            <hr class="my-4">
+            <h3 class="h6 mb-2">Native controls</h3>
+            <audio class="w-100" controls preload="none">
+              <source src="assets/media/sample-audio.mp3" type="audio/mpeg">
+            </audio>
+            <p class="small text-muted mb-0 mt-2">Native controls are the accessible default. Build custom ones only when you need branding or extra features.</p>
+          </div></div>
+        </div>
+
+        <div class="col-12">
+          <div class="card"><div class="card-header"><h2 class="card-title h4">Embeds</h2><span class="card-subtitle ms-auto">Responsive 16:9 wrappers</span></div><div class="card-body">
+            <div class="row g-4">
+              <div class="col-lg-4">
+                <div class="ratio ratio-16x9 rounded" style="overflow:hidden;background:var(--nx-body-bg)">
+                  <div class="d-flex flex-column align-items-center justify-content-center text-muted">
+                    <i class="bi bi-youtube fs-1 text-danger"></i><span class="small mt-2">YouTube iframe goes here</span>
+                  </div>
+                </div>
+                <p class="small text-muted mt-2 mb-0">Use <code>.ratio.ratio-16x9</code> so the embed scales with the column.</p>
+              </div>
+              <div class="col-lg-4">
+                <div class="ratio ratio-16x9 rounded" style="overflow:hidden;background:var(--nx-body-bg)">
+                  <div class="d-flex flex-column align-items-center justify-content-center text-muted">
+                    <i class="bi bi-vimeo fs-1 text-primary"></i><span class="small mt-2">Vimeo iframe goes here</span>
+                  </div>
+                </div>
+                <p class="small text-muted mt-2 mb-0">The placeholder keeps the demo offline-friendly.</p>
+              </div>
+              <div class="col-lg-4">
+                <div class="ratio ratio-4x3 rounded" style="overflow:hidden;background:var(--nx-body-bg)">
+                  <div class="d-flex flex-column align-items-center justify-content-center text-muted">
+                    <i class="bi bi-easel fs-1 text-success"></i><span class="small mt-2">4:3 slide deck</span>
+                  </div>
+                </div>
+                <p class="small text-muted mt-2 mb-0">Other ratios: 1x1, 4x3, 21x9.</p>
+              </div>
+            </div>
+          </div></div>
+        </div>
+
+      </div>

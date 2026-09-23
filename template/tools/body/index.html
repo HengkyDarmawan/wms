@@ -1,0 +1,382 @@
+      <!-- ===== Greeting ===== -->
+      <div class="nx-page-head d-flex flex-wrap align-items-end gap-3">
+        <div class="me-auto">
+          <h1>Good morning, Aigars &#128075;</h1>
+          <p class="text-muted mb-0">Here's what's happening with your product today.</p>
+        </div>
+        <div class="d-flex gap-2">
+          <div class="input-group input-group-sm" style="width:230px">
+            <span class="input-group-text"><i class="bi bi-calendar-range"></i></span>
+            <input type="text" class="form-control" id="dashRange" aria-label="Date range">
+          </div>
+          <button class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" id="btnExport" type="button">
+            <i class="bi bi-download"></i>Export
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== KPI Cards ===== -->
+      <div class="row g-4">
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="nx-kpi-label">Monthly Recurring Revenue</span>
+                <span class="nx-icon-sq primary"><i class="bi bi-currency-dollar"></i></span>
+              </div>
+              <div class="nx-kpi-value">$<span data-countup data-value="48.2" data-decimals="1">0</span>K</div>
+              <div class="nx-kpi-foot">
+                <span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>12.4%</span>
+                <span>vs last month</span>
+              </div>
+              <div class="nx-kpi-spark" id="spark1"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="nx-kpi-label">Active Users</span>
+                <span class="nx-icon-sq info"><i class="bi bi-people"></i></span>
+              </div>
+              <div class="nx-kpi-value"><span data-countup data-value="12847">0</span></div>
+              <div class="nx-kpi-foot">
+                <span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>3.1%</span>
+                <span>vs last month</span>
+              </div>
+              <div class="nx-kpi-spark" id="spark2"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="nx-kpi-label">Deployments</span>
+                <span class="nx-icon-sq warning"><i class="bi bi-rocket-takeoff"></i></span>
+              </div>
+              <div class="nx-kpi-value"><span data-countup data-value="342">0</span></div>
+              <div class="nx-kpi-foot">
+                <span class="nx-trend down"><i class="bi bi-arrow-down-right"></i>2.2%</span>
+                <span>vs last month</span>
+              </div>
+              <div class="nx-kpi-spark" id="spark3"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card nx-kpi nx-card-lift">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="nx-kpi-label">Uptime</span>
+                <span class="nx-icon-sq success"><i class="bi bi-shield-check"></i></span>
+              </div>
+              <div class="nx-kpi-value"><span data-countup data-value="99.98" data-decimals="2">0</span>%</div>
+              <div class="nx-kpi-foot">
+                <span class="nx-trend up"><i class="bi bi-arrow-up-right"></i>0.01%</span>
+                <span>vs last month</span>
+              </div>
+              <div class="nx-kpi-spark" id="spark4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Revenue + Channel ===== -->
+      <div class="row g-4 mt-0">
+        <div class="col-lg-8">
+          <div class="card h-100">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title h4">Revenue Growth</h2>
+                <div class="card-subtitle">Monthly recurring revenue trend</div>
+              </div>
+              <ul class="nav nx-pill-tabs ms-auto" id="revRange" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-range="12" type="button">12M</button></li>
+                <li class="nav-item"><button class="nav-link" data-range="6" type="button">6M</button></li>
+                <li class="nav-item"><button class="nav-link" data-range="1" type="button">30D</button></li>
+              </ul>
+            </div>
+            <div class="card-body">
+              <div id="revenueChart" style="min-height:320px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title h4">Sales by Channel</h2>
+                <div class="card-subtitle">Distribution this month</div>
+              </div>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+              <div id="channelDonut" style="min-height:300px;width:100%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Sprint / Activity / Deployments ===== -->
+      <div class="row g-4 mt-0">
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header">
+              <h2 class="card-title h4">Sprint 24</h2>
+              <span class="badge badge-soft-primary ms-auto">Active</span>
+            </div>
+            <div class="card-body">
+              <div id="sprintRadial" style="min-height:200px"></div>
+              <p class="text-center text-muted small mb-3">5 days remaining</p>
+              <div class="nx-row-list">
+                <div class="nx-row-item">
+                  <span class="nx-dot-label" style="background:var(--nx-success)"></span>
+                  <div class="nx-row-main"><div class="nx-row-title">Done</div></div>
+                  <strong class="nx-num">34</strong>
+                </div>
+                <div class="nx-row-item">
+                  <span class="nx-dot-label" style="background:var(--nx-primary)"></span>
+                  <div class="nx-row-main"><div class="nx-row-title">In progress</div></div>
+                  <strong class="nx-num">12</strong>
+                </div>
+                <div class="nx-row-item">
+                  <span class="nx-dot-label" style="background:var(--nx-danger)"></span>
+                  <div class="nx-row-main"><div class="nx-row-title">Blocked</div></div>
+                  <strong class="nx-num">3</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header">
+              <h2 class="card-title h4">Team Activity</h2>
+              <a href="page-activity.html" class="nx-link small ms-auto">View all</a>
+            </div>
+            <div class="card-body">
+              <ul class="nx-timeline">
+                <li class="nx-timeline-item">
+                  <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/64?img=47" alt="Sarah"></span>
+                  <div class="nx-tl-body">
+                    <div class="nx-tl-text"><strong>Sarah</strong> deployed <code>v2.4.1</code> to production</div>
+                    <div class="nx-tl-time">2 minutes ago</div>
+                  </div>
+                </li>
+                <li class="nx-timeline-item">
+                  <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/64?img=68" alt="Marcus"></span>
+                  <div class="nx-tl-body">
+                    <div class="nx-tl-text"><strong>Marcus</strong> merged PR <code>#482</code> into main</div>
+                    <div class="nx-tl-time">26 minutes ago</div>
+                  </div>
+                </li>
+                <li class="nx-timeline-item">
+                  <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/64?img=32" alt="Lena"></span>
+                  <div class="nx-tl-body">
+                    <div class="nx-tl-text"><strong>Lena</strong> commented on the Q3 roadmap</div>
+                    <div class="nx-tl-time">1 hour ago</div>
+                  </div>
+                </li>
+                <li class="nx-timeline-item">
+                  <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/64?img=15" alt="Tom"></span>
+                  <div class="nx-tl-body">
+                    <div class="nx-tl-text"><strong>Tom</strong> closed 6 support tickets</div>
+                    <div class="nx-tl-time">3 hours ago</div>
+                  </div>
+                </li>
+                <li class="nx-timeline-item">
+                  <span class="nx-avatar nx-avatar-sm"><img src="https://i.pravatar.cc/64?img=5" alt="Ava"></span>
+                  <div class="nx-tl-body">
+                    <div class="nx-tl-text"><strong>Ava</strong> enabled feature flag <code>new-billing</code></div>
+                    <div class="nx-tl-time">5 hours ago</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header">
+              <h2 class="card-title h4">Recent Deployments</h2>
+              <a href="page-changelog.html" class="nx-link small ms-auto">Changelog</a>
+            </div>
+            <div class="card-body">
+              <div class="nx-row-list">
+                <div class="nx-row-item">
+                  <span class="badge badge-soft-success">prod</span>
+                  <div class="nx-row-main">
+                    <div class="nx-row-title">v2.4.1 &mdash; Billing fixes</div>
+                    <div class="nx-row-sub">2 minutes ago</div>
+                  </div>
+                  <i class="bi bi-check-circle-fill text-success" aria-label="Success"></i>
+                </div>
+                <div class="nx-row-item">
+                  <span class="badge badge-soft-warning">staging</span>
+                  <div class="nx-row-main">
+                    <div class="nx-row-title">v2.5.0-rc.2 &mdash; New dashboard</div>
+                    <div class="nx-row-sub">48 minutes ago</div>
+                  </div>
+                  <i class="bi bi-check-circle-fill text-success" aria-label="Success"></i>
+                </div>
+                <div class="nx-row-item">
+                  <span class="badge badge-soft-secondary">dev</span>
+                  <div class="nx-row-main">
+                    <div class="nx-row-title">v2.5.0-rc.3 &mdash; Payments retry</div>
+                    <div class="nx-row-sub">2 hours ago</div>
+                  </div>
+                  <i class="bi bi-x-circle-fill text-danger" aria-label="Failed"></i>
+                </div>
+                <div class="nx-row-item">
+                  <span class="badge badge-soft-success">prod</span>
+                  <div class="nx-row-main">
+                    <div class="nx-row-title">v2.4.0 &mdash; Feature flags UI</div>
+                    <div class="nx-row-sub">Yesterday</div>
+                  </div>
+                  <i class="bi bi-check-circle-fill text-success" aria-label="Success"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Recent Orders ===== -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title h4">Recent Orders</h2>
+            <div class="card-subtitle">Latest 8 transactions</div>
+          </div>
+          <div class="ms-auto d-flex gap-2">
+            <div class="input-group input-group-sm" style="width:200px">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input type="search" class="form-control" id="orderSearch" placeholder="Search orders&hellip;" aria-label="Search orders">
+            </div>
+            <button class="btn btn-outline-primary btn-sm btn-icon" type="button" data-bs-toggle="tooltip" data-bs-title="Filter" aria-label="Filter"><i class="bi bi-funnel"></i></button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle" id="ordersTable">
+            <thead>
+              <tr>
+                <th>Order ID</th><th>Customer</th><th>Product</th><th>Date</th>
+                <th>Amount</th><th>Status</th><th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="commerce-orders.html" class="nx-link">#ORD-1042</a></td>
+                <td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=45" alt=""></span><div><div class="nx-tu-name">Maria Gomez</div><div class="nx-tu-sub">maria@acme.io</div></div></div></td>
+                <td>Pro Plan (annual)</td><td>Sep 11, 2026</td>
+                <td class="nx-num fw-semibold">$588.00</td>
+                <td><span class="badge badge-soft-success">Completed</span></td>
+                <td class="text-end">
+                  <div class="dropdown"><button class="btn btn-icon btn-sm btn-soft-secondary" data-bs-toggle="dropdown" aria-label="Row actions"><i class="bi bi-three-dots-vertical"></i></button>
+                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-eye"></i>View</a><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-pencil"></i>Edit</a><button class="dropdown-item text-danger btn-delete-row" type="button"><i class="bi bi-trash"></i>Delete</button></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><a href="commerce-orders.html" class="nx-link">#ORD-1041</a></td>
+                <td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=13" alt=""></span><div><div class="nx-tu-name">James Lee</div><div class="nx-tu-sub">james@nova.dev</div></div></div></td>
+                <td>Starter Plan</td><td>Sep 11, 2026</td>
+                <td class="nx-num fw-semibold">$29.00</td>
+                <td><span class="badge badge-soft-warning">Pending</span></td>
+                <td class="text-end">
+                  <div class="dropdown"><button class="btn btn-icon btn-sm btn-soft-secondary" data-bs-toggle="dropdown" aria-label="Row actions"><i class="bi bi-three-dots-vertical"></i></button>
+                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-eye"></i>View</a><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-pencil"></i>Edit</a><button class="dropdown-item text-danger btn-delete-row" type="button"><i class="bi bi-trash"></i>Delete</button></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><a href="commerce-orders.html" class="nx-link">#ORD-1040</a></td>
+                <td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=25" alt=""></span><div><div class="nx-tu-name">Chen Wei</div><div class="nx-tu-sub">chen@orbit.app</div></div></div></td>
+                <td>Enterprise (custom)</td><td>Sep 10, 2026</td>
+                <td class="nx-num fw-semibold">$2,400.00</td>
+                <td><span class="badge badge-soft-success">Completed</span></td>
+                <td class="text-end">
+                  <div class="dropdown"><button class="btn btn-icon btn-sm btn-soft-secondary" data-bs-toggle="dropdown" aria-label="Row actions"><i class="bi bi-three-dots-vertical"></i></button>
+                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-eye"></i>View</a><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-pencil"></i>Edit</a><button class="dropdown-item text-danger btn-delete-row" type="button"><i class="bi bi-trash"></i>Delete</button></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><a href="commerce-orders.html" class="nx-link">#ORD-1039</a></td>
+                <td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=31" alt=""></span><div><div class="nx-tu-name">Amina Diallo</div><div class="nx-tu-sub">amina@pulse.co</div></div></div></td>
+                <td>Pro Plan (monthly)</td><td>Sep 10, 2026</td>
+                <td class="nx-num fw-semibold">$59.00</td>
+                <td><span class="badge badge-soft-danger">Cancelled</span></td>
+                <td class="text-end">
+                  <div class="dropdown"><button class="btn btn-icon btn-sm btn-soft-secondary" data-bs-toggle="dropdown" aria-label="Row actions"><i class="bi bi-three-dots-vertical"></i></button>
+                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-eye"></i>View</a><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-pencil"></i>Edit</a><button class="dropdown-item text-danger btn-delete-row" type="button"><i class="bi bi-trash"></i>Delete</button></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><a href="commerce-orders.html" class="nx-link">#ORD-1038</a></td>
+                <td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=57" alt=""></span><div><div class="nx-tu-name">Piotr Nowak</div><div class="nx-tu-sub">piotr@vertex.pl</div></div></div></td>
+                <td>Add-on: Extra seats</td><td>Sep 9, 2026</td>
+                <td class="nx-num fw-semibold">$120.00</td>
+                <td><span class="badge badge-soft-success">Completed</span></td>
+                <td class="text-end">
+                  <div class="dropdown"><button class="btn btn-icon btn-sm btn-soft-secondary" data-bs-toggle="dropdown" aria-label="Row actions"><i class="bi bi-three-dots-vertical"></i></button>
+                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-eye"></i>View</a><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-pencil"></i>Edit</a><button class="dropdown-item text-danger btn-delete-row" type="button"><i class="bi bi-trash"></i>Delete</button></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><a href="commerce-orders.html" class="nx-link">#ORD-1037</a></td>
+                <td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=20" alt=""></span><div><div class="nx-tu-name">Hana Sato</div><div class="nx-tu-sub">hana@kumo.jp</div></div></div></td>
+                <td>Pro Plan (annual)</td><td>Sep 9, 2026</td>
+                <td class="nx-num fw-semibold">$588.00</td>
+                <td><span class="badge badge-soft-secondary">Refunded</span></td>
+                <td class="text-end">
+                  <div class="dropdown"><button class="btn btn-icon btn-sm btn-soft-secondary" data-bs-toggle="dropdown" aria-label="Row actions"><i class="bi bi-three-dots-vertical"></i></button>
+                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-eye"></i>View</a><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-pencil"></i>Edit</a><button class="dropdown-item text-danger btn-delete-row" type="button"><i class="bi bi-trash"></i>Delete</button></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><a href="commerce-orders.html" class="nx-link">#ORD-1036</a></td>
+                <td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=8" alt=""></span><div><div class="nx-tu-name">Lucas Meyer</div><div class="nx-tu-sub">lucas@delta.de</div></div></div></td>
+                <td>Starter Plan</td><td>Sep 8, 2026</td>
+                <td class="nx-num fw-semibold">$29.00</td>
+                <td><span class="badge badge-soft-success">Completed</span></td>
+                <td class="text-end">
+                  <div class="dropdown"><button class="btn btn-icon btn-sm btn-soft-secondary" data-bs-toggle="dropdown" aria-label="Row actions"><i class="bi bi-three-dots-vertical"></i></button>
+                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-eye"></i>View</a><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-pencil"></i>Edit</a><button class="dropdown-item text-danger btn-delete-row" type="button"><i class="bi bi-trash"></i>Delete</button></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><a href="commerce-orders.html" class="nx-link">#ORD-1035</a></td>
+                <td><div class="nx-table-user"><span class="nx-avatar nx-avatar-md"><img src="https://i.pravatar.cc/56?img=36" alt=""></span><div><div class="nx-tu-name">Nadia Rahman</div><div class="nx-tu-sub">nadia@lumen.id</div></div></div></td>
+                <td>Pro Plan (monthly)</td><td>Sep 8, 2026</td>
+                <td class="nx-num fw-semibold">$59.00</td>
+                <td><span class="badge badge-soft-warning">Pending</span></td>
+                <td class="text-end">
+                  <div class="dropdown"><button class="btn btn-icon btn-sm btn-soft-secondary" data-bs-toggle="dropdown" aria-label="Row actions"><i class="bi bi-three-dots-vertical"></i></button>
+                    <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-eye"></i>View</a><a class="dropdown-item" href="commerce-orders.html"><i class="bi bi-pencil"></i>Edit</a><button class="dropdown-item text-danger btn-delete-row" type="button"><i class="bi bi-trash"></i>Delete</button></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer d-flex align-items-center">
+          <span class="small text-muted">Showing 1&ndash;8 of 120</span>
+          <nav class="ms-auto" aria-label="Orders pagination">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item disabled"><a class="page-link" href="#" aria-label="Previous"><i class="bi bi-chevron-left"></i></a></li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="commerce-orders.html">2</a></li>
+              <li class="page-item"><a class="page-link" href="commerce-orders.html">3</a></li>
+              <li class="page-item"><a class="page-link" href="commerce-orders.html" aria-label="Next"><i class="bi bi-chevron-right"></i></a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+    

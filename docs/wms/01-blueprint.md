@@ -1,8 +1,8 @@
 # Blueprint WMS Proyek
 
-**Versi:** 0.3 (hasil audit dokumentasi — lihat [laporan audit](../00-laporan-audit-dokumentasi.md) dan catatan perubahan di [README](../README.md))
+**Versi:** 0.7 (pasca-validasi & diskusi lanjutan 23 Sep 2026 — lihat [laporan validasi](../00-laporan-validasi-2026-09-23.md), [laporan audit](../00-laporan-audit-dokumentasi.md), dan catatan perubahan di [README](../README.md))
 **Tanggal:** 23 September 2026
-**Status:** A-01–A-24 disetujui; A-25–A-49 menunggu validasi
+**Status:** D-01–D-29; A-01–A-49 dan A-51–A-66 disetujui (A-40 diubah); [A-50](04-keputusan-dan-asumsi.md#a-50) menunggu validasi
 **Sumber:** sesi diskusi kebutuhan dengan pemilik produk · audit prototipe ([00-audit](../00-audit/README.md)) · [riset](02-riset-wms-sejenis.md)
 **Dokumen terkait:** [Glosarium](03-glosarium.md) · [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status & Enum](06-katalog-status-dan-enum.md)
 
@@ -48,6 +48,8 @@ Platform & langganan, manajemen company, user & hak akses, struktur organisasi, 
 | Harga jual, harga modal, nilai persediaan, pembayaran (DP/lunas), tagihan sewa, jurnal | Modul **Akuntansi** — [lingkup & integrasi](../akuntansi/01-lingkup-dan-integrasi-wms.md) |
 | Purchase Order, pemilihan vendor, harga beli | Modul **Purchasing** — [lingkup & integrasi](../purchasing/01-lingkup-dan-integrasi-wms.md) |
 | Penjadwalan proyek, RAB, SDM | Di luar produk |
+| Transfer stok antar company dalam satu grup | Di luar produk (database terpisah, [D-03](04-keputusan-dan-asumsi.md#d-03)); bila dibutuhkan, keputusan baru |
+| Biaya ongkir / nilai pengiriman | Modul **Akuntansi**; WMS hanya meneruskan nama ekspedisi & resi ([A-57](04-keputusan-dan-asumsi.md#a-57)) |
 
 WMS hanya menyimpan **kuantitas**. Nilai uang dikelola modul Akuntansi ([D-07](04-keputusan-dan-asumsi.md#d-07)).
 
@@ -71,8 +73,8 @@ Role berikut adalah **template bawaan**. Admin Company bisa mengubah hak aksesny
 | **Staf Gudang** | Penerimaan, QC, put-away, picking, konversi, pemakaian material di site, hitung stok | PWA (utama), Web |
 | **Driver** | Menerima tugas kirim, surat jalan digital, bukti terima (foto + tanda tangan) | PWA |
 | **Pemohon Internal** | Engineer / PIC proyek dari company: mengajukan permintaan, konfirmasi terima, mengajukan retur | Web, PWA |
-| **Klien** | User dari pemilik proyek: mengajukan permintaan (termasuk non-katalog), melacak status, mengajukan retur | Portal klien (web) |
-| **Penindak Lanjut PR** | Mencatat tindak lanjut Purchase Request secara manual di Fase 1 (PO, perkiraan datang); di `[F3]` digantikan modul Purchasing ([A-47](04-keputusan-dan-asumsi.md#a-47)) | Web |
+| **Klien** | User dari pemilik proyek: mengajukan permintaan (termasuk non-katalog), menambah baris, menanggapi pengganti, mengajukan pembatalan ([A-54](04-keputusan-dan-asumsi.md#a-54), [A-55](04-keputusan-dan-asumsi.md#a-55), [A-61](04-keputusan-dan-asumsi.md#a-61)), melacak status & tanggal janji, **mengonfirmasi atau mengajukan keberatan terima** (kurang/rusak, [A-63](04-keputusan-dan-asumsi.md#a-63)), mengajukan retur | Portal klien (web) |
+| **Penindak Lanjut PR** | Mencatat **catatan pemesanan** per vendor/toko online di Fase 1 (nomor PO/pesanan, resi, perkiraan datang), membuat vendor sementara; di `[F3]` digantikan modul Purchasing ([A-47](04-keputusan-dan-asumsi.md#a-47), [A-51](04-keputusan-dan-asumsi.md#a-51), [A-53](04-keputusan-dan-asumsi.md#a-53)) | Web |
 | **Auditor Internal** | Stock opname & rekonsiliasi; read-only terhadap mutasi stok, boleh menginput hitungan | Web, PWA |
 | **Auditor Eksternal** `[F2]` | Sama dengan auditor internal, akun tamu berbatas waktu & cakupan | Web, PWA |
 
@@ -109,7 +111,7 @@ Role berikut adalah **template bawaan**. Admin Company bisa mengubah hak aksesny
 
 - **Struktur organisasi:** unit (divisi/departemen), jabatan, relasi atasan. Dipakai approval engine ("atasan langsung pemohon", "jabatan X di divisi Y").
 - **Tipe gudang** adalah master yang bisa ditambah company. Bawaan: *Gudang Utama*, *Gudang Cabang*, *Gudang Site*.
-- **Hierarki gudang** berbentuk pohon. Gudang Site selalu terikat satu **Proyek** dan dinonaktifkan otomatis saat proyek ditutup dengan saldo nol ([BR-PRJ-04](05-aturan-bisnis.md#br-prj)).
+- **Hierarki gudang** berbentuk pohon. Gudang Site selalu terikat satu **Proyek**; satu proyek boleh punya **beberapa Gudang Site** (titik/segmen lokasi, mis. galian pipa — [A-40](04-keputusan-dan-asumsi.md#a-40)), dan setiap Gudang Site dinonaktifkan otomatis saat proyek ditutup dengan saldo nol ([BR-PRJ-04](05-aturan-bisnis.md#br-prj)).
 - Setiap gudang punya penanggung jawab (Kepala Gudang) dan daftar penugasan role yang boleh mengaksesnya.
 
 ### 6.3 Lokasi (rak & bin) — wajib
@@ -132,10 +134,10 @@ Gudang
 | Master | Isi pokok | Catatan |
 |---|---|---|
 | **Klien** | Nama perusahaan, NPWP, alamat, kontak, user portal | Satu klien bisa punya banyak proyek |
-| **Vendor** | Nama, NPWP, contact person, telepon, email, alamat, termin | Dikelola WMS sampai modul Purchasing tersedia (UX-17) |
+| **Vendor** | Nama, **jenis** (perusahaan / toko / toko online / perorangan), NPWP, contact person, telepon, email, alamat, termin; **vendor tetap per item** (prioritas, tanpa harga) | Dikelola WMS sampai modul Purchasing tersedia (UX-17); vendor sementara boleh dibuat saat memesan ([A-52](04-keputusan-dan-asumsi.md#a-52), [A-53](04-keputusan-dan-asumsi.md#a-53)) |
 | **Kategori barang** | Nama, induk, kategori penyimpanan bawaan, strategi pengambilan bawaan, ambang toleransi opname | Tidak bisa dihapus bila dipakai (UX-14) |
 | **Kendaraan & driver** | Nomor polisi, jenis, driver bawaan; ekspedisi pihak ketiga | Dipakai di pengiriman |
-| **Alasan** | Daftar alasan untuk tolak, batal, penyesuaian, waste, kerusakan, short pick, selisih kirim | Agar laporan akar masalah bisa dikelompokkan |
+| **Alasan** | Daftar alasan untuk tolak, batal, penyesuaian, waste, kerusakan, short pick, selisih kirim | Agar laporan akar masalah bisa dikelompokkan. Form tolak/batal: Alasan wajib `*`, keterangan bebas opsional; semua field wajib ditandai `*` ([BR-GEN-11](05-aturan-bisnis.md#br-gen)) |
 
 Semua master bisa **diimpor dari Excel** dengan template, validasi baris, dan pratinjau sebelum disimpan.
 
@@ -150,7 +152,7 @@ Semua master bisa **diimpor dari Excel** dengan template, validasi baris, dan pr
 | Satuan dasar & konversi | Lihat 6.5 |
 | Bisa dipotong/dikonversi | Ya/tidak, panjang minimum offcut (wajib bila ya, [A-19](04-keputusan-dan-asumsi.md#a-19)), rugi potong (kerf) opsional |
 | Wajib QC saat terima | Ya/tidak |
-| Stok minimum / titik pesan ulang | Memicu saran Purchase Request |
+| Stok minimum / titik pesan ulang | Membuat draf Purchase Request harian yang ditinjau Kepala Gudang ([BR-REQ-11](05-aturan-bisnis.md#br-req)) |
 | Identitas fisik | Barcode, QR, dan/atau tag RFID `[F2]` (lihat 6.10) |
 | Dimensi & berat | Dengan satuan yang bisa dipilih |
 
@@ -174,14 +176,15 @@ Model tunggal ([A-29](04-keputusan-dan-asumsi.md#a-29), [A-30](04-keputusan-dan-
 | **Stok tersedia** | Turunan | Saldo *Tersedia* − reservasi aktif |
 
 - **Strategi pengambilan** (per company, bisa ditimpa per kategori/item): FIFO, FEFO, Manual, **Sisa potongan dulu**. Sistem menyarankan bin & lot saat picking; user boleh mengganti dengan alasan.
-- **Backorder:** bila stok tersedia kurang saat approval, yang ada dicadangkan dan sisanya wajib diberi sumber: transfer dari gudang lain (TRF) atau Purchase Request (PRQ). Tanpa sumber, approval tertahan ([BR-REQ-05](05-aturan-bisnis.md#br-req)).
+- **Backorder:** bila stok tersedia kurang saat approval, yang ada dicadangkan dan sisanya wajib diberi sumber: transfer dari gudang lain (TRF) atau Purchase Request (PRQ). Tanpa sumber, approval tertahan ([BR-REQ-05](05-aturan-bisnis.md#br-req)). Satu baris boleh **dipecah** ke beberapa gudang sumber yang masing-masing mengirim langsung ke tujuan ([A-56](04-keputusan-dan-asumsi.md#a-56)).
 - **Stok negatif diblokir**; penguncian baris saldo dalam satu transaksi (NFR-13).
+- **Tutup periode stok:** mutasi berkejadian pada/sebelum tanggal kunci company ditolak, koreksi di periode berjalan ([A-58](04-keputusan-dan-asumsi.md#a-58)); **reservasi menggantung** dilaporkan dan diperingatkan setelah 7 hari ([A-59](04-keputusan-dan-asumsi.md#a-59)).
 - **Efek pengiriman terhadap stok company** ([A-25](04-keputusan-dan-asumsi.md#a-25), [BR-SJ-04](05-aturan-bisnis.md#br-sj)):
 
 | Tujuan & kepemilikan | Efek di stok |
 |---|---|
 | Ke **Gudang Site** / gudang lain (barang apa pun) | Transfer — tetap stok company; *Dalam Perjalanan* milik gudang asal sampai GRN tujuan |
-| Ke klien, barang **jual putus** | Keluar dari stok saat bukti terima; tercatat di riwayat proyek sebagai *Terkirim ke Klien* |
+| Ke klien, barang **jual putus** | Keluar dari stok saat bukti terima **untuk jumlah baik**; tercatat di riwayat proyek sebagai *Terkirim ke Klien*. Rusak & kurang tetap *Dalam Perjalanan* (rusak berkondisi Rusak) sampai DSC selesai; rusak dibawa balik driver, tidak pernah menjadi stok klien/site ([A-65](04-keputusan-dan-asumsi.md#a-65), [BR-SJ-10](05-aturan-bisnis.md#br-sj)) |
 | Ke proyek, **aset dipinjamkan** | Tetap stok company, pindah ke bin virtual *On-site Proyek* sampai dikembalikan |
 
 - **Pemakaian material** ([A-32](04-keputusan-dan-asumsi.md#a-32)): barang habis pakai di Gudang Site keluar dari stok lewat dokumen `ISU` saat dipakai proyek. Tanpa ini, beban proyek tidak pernah tercatat.
@@ -201,16 +204,16 @@ Model tunggal ([A-29](04-keputusan-dan-asumsi.md#a-29), [A-30](04-keputusan-dan-
 - Aset wajib **serial number / kode aset**.
 - **Siklus hidup** (`asset_state`): Tersedia → Dicadangkan → Dalam Perjalanan → Dipinjam → Dikembalikan → Pemeriksaan → Tersedia / Maintenance / Rusak; Hilang → Dihapuskan. Pemetaan state → bin → kondisi: [BR-AST-01](05-aturan-bisnis.md#br-ast).
 - **Serah terima** mencatat peminjam (proyek; peminjaman ke orang memakai Proyek Internal), tanggal kembali, kondisi & foto.
-- **Pengembalian** wajib pemeriksaan (grade A–D + foto). Kerusakan/kehilangan diteruskan ke Akuntansi; kehilangan dihapuskan lewat ADJ.
+- **Pengembalian** wajib pemeriksaan (grade A–D + **skor kondisi 0–100 %** + foto + catatan komponen → riwayat kondisi aset). Kerusakan/kehilangan diteruskan ke Akuntansi; kehilangan dihapuskan lewat ADJ.
 - **Peringatan otomatis** aset lewat jatuh tempo; daftar aset belum kembali saat proyek ditutup.
 - **Maintenance** `[F2]`: jadwal servis, riwayat, status tidak bisa dipinjam.
-- WMS menyediakan **hari pakai** per aset per proyek ([BR-AST-05](05-aturan-bisnis.md#br-ast)); tagihan sewa di Akuntansi.
+- WMS menyediakan **hari pakai** dan **meter pemakaian** (jam/km dibaca saat keluar & kembali) per aset per proyek, serta **umur harapan & sisa umur %** dengan peringatan ([BR-AST-05](05-aturan-bisnis.md#br-ast), [A-66](04-keputusan-dan-asumsi.md#a-66)); tagihan sewa dan penyusutan di Akuntansi.
 
 ### 6.9 Proyek
 
-- Master proyek: kode, nama, klien, alamat & titik peta, tanggal mulai/target selesai, PIC, gudang site, **status** (Aktif / Ditutup / Dibatalkan / Diarsipkan — [A-40](04-keputusan-dan-asumsi.md#a-40)).
+- Master proyek: kode, nama, klien, alamat & titik peta, tanggal mulai/target selesai, PIC, **Gudang Site (boleh lebih dari satu: titik/segmen lokasi)**, **status** (Aktif / Ditutup / Dibatalkan / Diarsipkan — [A-40](04-keputusan-dan-asumsi.md#a-40)).
 - **Tab detail proyek:** Ringkasan · Permintaan · Pengiriman · **Stok On-site** (tiga sub-tampilan: *Di Gudang Site*, *Aset di Proyek*, *Terkirim ke Klien*) · Pemakaian · Konversi · Retur · Waste · Dokumen · Riwayat.
-- **Penutupan proyek** memakai checklist dengan guard ([BR-PRJ-02](05-aturan-bisnis.md#br-prj)): tidak ada dokumen terbuka, aset sudah kembali, saldo Gudang Site nol (pilihan: retur ke gudang, transfer ke proyek lain, pemakaian akhir, waste). Barang jual-putus yang sudah diterima klien tidak masuk checklist.
+- **Penutupan proyek** memakai checklist dengan guard ([BR-PRJ-02](05-aturan-bisnis.md#br-prj)): tidak ada dokumen terbuka, aset sudah kembali, saldo **semua** Gudang Site nol (pilihan per titik: retur ke gudang, transfer ke titik lain / proyek lain, pemakaian akhir, waste). Barang jual-putus yang sudah diterima klien tidak masuk checklist.
 - Proyek tidak pernah dihapus, hanya dibatalkan/diarsipkan.
 - **Klien** melihat ketiga sub-tampilan Stok On-site untuk proyeknya, tidak melihat gudang company lain ([A-21](04-keputusan-dan-asumsi.md#a-21) diperjelas).
 
@@ -223,10 +226,10 @@ Semua laporan punya filter periode bebas dan **ekspor Excel & PDF** (UX-11, UX-1
 | Kartu stok per item | Saldo awal, setiap mutasi, saldo akhir |
 | Saldo stok | Per gudang, zona, bin, lot/serial/potongan, kondisi; potongan: jumlah + total panjang |
 | Mutasi periode | Masuk, keluar, transfer, konversi, pemakaian, penyesuaian dengan saldo awal & akhir |
-| Material per proyek | Diminta vs terkirim vs **terpakai** vs diretur vs on-site vs waste |
+| Material per proyek | Diminta vs terkirim vs **terpakai** vs diretur vs on-site vs waste; `[F2]` vs **rencana** (BoQ kuantitas, [A-62](04-keputusan-dan-asumsi.md#a-62)) |
 | Konversi & waste | Per proyek, per item, persentase waste |
-| Aset | Posisi aset, hari pakai per proyek, lewat jatuh tempo, riwayat maintenance |
-| Permintaan terbuka | Backorder, menunggu approval, lewat tanggal dibutuhkan, selisih pengiriman terbuka |
+| Aset | Posisi aset, hari & jam pakai per proyek, sisa umur %, skor kondisi & riwayatnya, lewat jatuh tempo, riwayat maintenance |
+| Permintaan terbuka & posisi barang rusak | Backorder, menunggu approval, lewat tanggal dibutuhkan, DSC terbuka > N hari; rusak dalam perjalanan / di bin Retur / diklaim ([BR-SJ-10](05-aturan-bisnis.md#br-sj)) |
 | Akurasi stok | Hasil opname per gudang/zona dan trennya |
 
 ### 6.10 Identifikasi & perangkat
@@ -242,14 +245,14 @@ Status lengkap, aksi, guard, dan efek ada di [Katalog Status & Enum](06-katalog-
 
 | Kode | Dokumen | Status inti | Catatan |
 |---|---|---|---|
-| `REQ` | **Permintaan Material** | Draf → Diajukan → (Ditinjau Staf, khusus klien) → Menunggu Approval → Disetujui → Diproses → Sebagian Terpenuhi → Selesai / Ditutup dengan Sisa · Ditolak / Dibatalkan | Satu proyek per REQ; baris katalog atau non-katalog; `required_date`; Disetujui = reservasi lunak + TRF/PRQ untuk kekurangan |
+| `REQ` | **Permintaan Material** | Draf → Diajukan → (Ditinjau Staf, khusus klien) → Menunggu Approval → Disetujui → Diproses → Sebagian Terpenuhi → Selesai / Ditutup dengan Sisa · Ditolak / Dibatalkan | Satu proyek per REQ; baris katalog atau non-katalog; `required_date`; Disetujui = reservasi lunak + TRF/PRQ untuk kekurangan; tanggal janji per baris; klien boleh menambah baris (REQ Tambahan setelah disetujui), menolak pengganti dalam 1 hari, mengajukan pembatalan ([A-54](04-keputusan-dan-asumsi.md#a-54), [A-55](04-keputusan-dan-asumsi.md#a-55), [A-60](04-keputusan-dan-asumsi.md#a-60), [A-61](04-keputusan-dan-asumsi.md#a-61)) |
 | `PCK` | Tugas Picking | Menunggu → Dikerjakan → Selesai · Dibatalkan | Alokasi keras; short pick dengan alasan |
-| `SJ` | **Pengiriman / Surat Jalan** | Disiapkan → Dikirim → Diterima / Diterima Sebagian · Dibatalkan (sebelum Dikirim) | Kendaraan/ekspedisi wajib; bukti terima oleh driver atau penerima bertoken ([A-41](04-keputusan-dan-asumsi.md#a-41)) |
-| `DSC` | Selisih Pengiriman *(baru)* | Terbuka → Diselesaikan | Otomatis dari Diterima Sebagian; disposisi: kembali ke gudang / disesuaikan / klaim ([A-35](04-keputusan-dan-asumsi.md#a-35)) |
+| `SJ` | **Pengiriman / Surat Jalan** | Disiapkan → Dikirim → Diterima / Diterima Sebagian · Dibatalkan (sebelum Dikirim) | Cara kirim: kendaraan sendiri / ekspedisi / diantar sendiri ([A-57](04-keputusan-dan-asumsi.md#a-57)); satu SJ boleh memuat beberapa REQ ke tujuan yang sama ([BR-SJ-09](05-aturan-bisnis.md#br-sj)); bukti terima per baris baik/rusak/kurang (per unit untuk serial/potongan, foto bila rusak) oleh driver atau penerima bertoken ([A-41](04-keputusan-dan-asumsi.md#a-41), [A-64](04-keputusan-dan-asumsi.md#a-64)); klien konfirmasi/keberatan 3 hari ([A-63](04-keputusan-dan-asumsi.md#a-63)) |
+| `DSC` | Selisih Pengiriman *(baru)* | Terbuka → Diselesaikan | Otomatis dari Diterima Sebagian atau keberatan klien; baris kurang/rusak; disposisi: kembali ke gudang / disesuaikan / klaim / **kirim pengganti**; klien memilih masih perlu atau tidak ([A-35](04-keputusan-dan-asumsi.md#a-35), [A-64](04-keputusan-dan-asumsi.md#a-64)) |
 | `GRN` | **Penerimaan Barang** | Draf → Diterima → Selesai · Dibatalkan (sebelum Diterima) | QC = langkah per baris (Lolos / Karantina / Ditolak); cross-dock ke Loading Area |
 | `PUT` | Tugas Put-away | Menunggu → Selesai · Dibatalkan | Saran bin |
 | `RTV` | Retur ke Vendor *(baru)* | Diajukan → Disetujui → Dikirim → Selesai · Ditolak / Dibatalkan | Dari Karantina hasil QC ([A-34](04-keputusan-dan-asumsi.md#a-34)) |
-| `TRF` | **Transfer** | Diajukan → Disetujui → Diproses → Selesai · Ditolak / Dibatalkan | Dokumen niat; fisik lewat SJ + GRN. Antar gudang **dan antar proyek** |
+| `TRF` | **Transfer** | Diajukan → Disetujui → Diproses → Selesai · Ditolak / Dibatalkan | Dokumen niat; fisik lewat SJ + GRN. Antar gudang, **antar proyek**, dan **antar titik dalam proyek** dengan jalur ringan ([A-50](04-keputusan-dan-asumsi.md#a-50)) |
 | `RET` | **Retur dari Proyek** | Diajukan → Disetujui → Diproses → Diterima → Dipilah · Ditolak / Dibatalkan | Pemilahan: layak, rusak, offcut, waste; jual-putus boleh diretur ([A-26](04-keputusan-dan-asumsi.md#a-26)) |
 | `ISU` | Pemakaian Material *(baru)* | Draf → Dikonfirmasi · Dibatalkan | Gudang Site → proyek, hanya habis pakai ([A-32](04-keputusan-dan-asumsi.md#a-32)) |
 | `CNV` | **Konversi Material** | Draf → (Approval opsional) → Selesai · Dibatalkan | Wajib proyek |
@@ -257,7 +260,7 @@ Status lengkap, aksi, guard, dan efek ada di [Katalog Status & Enum](06-katalog-
 | `ADJ` | Penyesuaian Stok | Diajukan → Menunggu Approval → Disetujui → Diposting · Ditolak / Dibatalkan | Manual selalu approval; dari OPN disetujui di sesi |
 | `OPN` | **Sesi Stock Opname** | Direncanakan → Berjalan → Hitung Ulang → Rekonsiliasi → Disetujui → Ditutup · Dibatalkan | Lihat §9 |
 | `WST` | Berita Acara Waste | Diajukan → Disetujui → Ditutup · Ditolak / Dibatalkan | Disposisi waste |
-| `PRQ` | Purchase Request | Diajukan → (Approval opsional) → Diteruskan → Sebagian / Dipenuhi · Ditolak / Dibatalkan | Fase 1 manual; [Purchasing](../purchasing/01-lingkup-dan-integrasi-wms.md) |
+| `PRQ` | Purchase Request | Draf (titik pesan ulang) → Diajukan → (Approval opsional) → Disetujui → Diteruskan → Sebagian / Dipenuhi · Ditolak / Dibatalkan | Fase 1 manual: **catatan pemesanan** per vendor/toko online ([A-51](04-keputusan-dan-asumsi.md#a-51)); [Purchasing](../purchasing/01-lingkup-dan-integrasi-wms.md) |
 
 ### 7.1 Relasi antar dokumen
 
@@ -279,13 +282,13 @@ Setiap company membuat **aturan approval per jenis dokumen** yang terdiri dari b
 |---|---|
 | Approver | User tertentu · Jabatan · Role · Atasan langsung pemohon · Kepala gudang terkait · PIC proyek |
 | Cara putus | Berurutan · Cukup salah satu · Semua harus setuju |
-| Kondisi berlaku | Gudang · proyek · kategori barang · model kepemilikan · jumlah (satuan dasar per baris / jumlah baris) di atas batas · permintaan dari klien |
+| Kondisi berlaku | Gudang · proyek · kategori barang · model kepemilikan · jumlah (satuan dasar per baris / jumlah baris) di atas batas · permintaan dari klien · jenis vendor & asal PRQ · `[F2]` melebihi rencana proyek |
 | Batas waktu | Eskalasi ke approver cadangan atau atasan bila lewat X jam (default 24 jam kalender) |
 | Kanal | Web · WhatsApp `[F2]` · keduanya |
 
 Fitur pendukung: **delegasi** berperiode (tidak berantai), **simulasi aturan** sebelum disimpan, **riwayat** lengkap. Aturan di-*snapshot* saat dokumen diajukan. Edge case (SoD, approver ganda, approver nonaktif, keputusan bersamaan): [BR-APR](05-aturan-bisnis.md#br-apr).
 
-Tanpa aturan, dokumen langsung disetujui ([A-08](04-keputusan-dan-asumsi.md#a-08)), **kecuali Penyesuaian Stok manual** ([A-09](04-keputusan-dan-asumsi.md#a-09)).
+Tanpa aturan, dokumen langsung disetujui ([A-08](04-keputusan-dan-asumsi.md#a-08)), **kecuali Penyesuaian Stok manual** ([A-09](04-keputusan-dan-asumsi.md#a-09)). Approval berdasarkan **nilai uang** ada di modul Purchasing dengan mesin approval yang sama ([D-28](04-keputusan-dan-asumsi.md#d-28)); template aturan bawaan: "PRQ manual → Kepala Gudang → Manajemen bila melebihi batas jumlah/kategori", "toko online → satu lapis tambahan".
 
 ### 8.2 Approval via WhatsApp `[F2]`
 
@@ -296,20 +299,20 @@ Tanpa aturan, dokumen langsung disetujui ([A-08](04-keputusan-dan-asumsi.md#a-08
 
 ## 9. Stock opname & audit
 
-- **Jenis sesi:** bulanan, tahunan, ad-hoc, dan `[F2]` *cycle count* ABC.
+- **Jenis sesi:** bulanan, tahunan, ad-hoc, **pemeriksaan mendadak** (cakupan kecil tanpa pembekuan — [BR-OPN-10](05-aturan-bisnis.md#br-opn)), dan `[F2]` *cycle count* ABC.
 - **Cakupan:** per gudang, zona, atau daftar bin/item. Semua sesi terkonsolidasi di satu dashboard.
 - **Angka pembanding = saldo fisik** per bin (termasuk dicadangkan & Loading Area) — [BR-OPN-01](05-aturan-bisnis.md#br-opn).
 - **Pembekuan lokasi** per sesi: bin beku menolak tugas baru; override SJ mendesak oleh Kepala Gudang dengan alasan ([BR-OPN-02](05-aturan-bisnis.md#br-opn)).
 - **Hitung buta** dan **toleransi berjenjang** dengan ambang **relatif dan absolut** (default ≤ 1 % *dan* ≤ 1 unit = kecil; ≤ 5 % = sedang → hitung ulang oleh orang berbeda; selebihnya besar → approval + akar masalah) — [A-42](04-keputusan-dan-asumsi.md#a-42).
 - **Rekonsiliasi** menghasilkan satu ADJ per gudang, **disetujui di tingkat sesi** ([A-09](04-keputusan-dan-asumsi.md#a-09)).
-- **Auditor** internal / `[F2]` eksternal (akun tamu berbatas gudang & periode, nonaktif otomatis).
+- **Auditor** internal / `[F2]` eksternal (akun tamu berbatas gudang & periode, nonaktif otomatis). **Pemisahan tugas:** penghitung tidak menyetujui sesinya; sesi tahunan/audit disetujui Auditor Internal atau Manajemen ([BR-OPN-09](05-aturan-bisnis.md#br-opn)).
 - **Riwayat audit** lengkap per sesi dan **dashboard opname** (progres, akurasi, tren, top selisih, akar masalah).
 
 ## 10. Notifikasi
 
 | Kanal | Dipakai untuk |
 |---|---|
-| In-app (lonceng) | Semua kejadian |
+| In-app (lonceng) | Semua kejadian, termasuk pengingat SLA tinjau permintaan klien dan reservasi menggantung ([A-59](04-keputusan-dan-asumsi.md#a-59), [A-60](04-keputusan-dan-asumsi.md#a-60)) |
 | Email | Ringkasan, undangan user, tagihan langganan |
 | WhatsApp `[F2]` | Approval, dokumen butuh tindakan, aset lewat jatuh tempo, pengingat opname, OTP bukti terima |
 
@@ -333,7 +336,7 @@ User mengatur preferensi kanal; Admin Company menentukan kejadian mana yang bole
 
 ## 13. Autentikasi & SSO
 
-- **Fase 1: login lokal per company.** Undangan user, atur password sendiri, lupa password, 2FA opsional, kunci akun setelah gagal berulang.
+- **Fase 1: login lokal per company.** Undangan user, atur password sendiri, lupa password, 2FA opsional, kunci akun setelah gagal berulang. Halaman dari template `template/auth/` (login, lupa/reset password, verifikasi undangan, 2FA); tombol "Masuk dengan NXTG" ditambahkan di halaman login yang sama pada Fase 3 ([checklist §4](../00-checklist-persiapan.md#4-halaman-login-lokal-dulu-sso-menyusul)).
 - `[F3]` **"Masuk dengan NXTG"** memakai OAuth2 Authorization Code (WMS sebagai *confidential client*).
 - **Identitas dari SSO, hak akses dari WMS.** Kunci = ID user SSO (`sub`); keanggotaan company, role, dan cakupan tetap di WMS.
 - **Auditor eksternal dan user klien** tetap memakai login lokal.
@@ -352,7 +355,7 @@ User mengatur preferensi kanal; Admin Company menentukan kejadian mana yang bole
 | Dengan | Cara | Dokumen |
 |---|---|---|
 | Modul Akuntansi | WMS menerbitkan **kejadian stok** (kuantitas + referensi, satu kejadian per pergerakan); Akuntansi memberi nilai | [akuntansi/01](../akuntansi/01-lingkup-dan-integrasi-wms.md), [matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok) |
-| Modul Purchasing | WMS menerbitkan Purchase Request; Purchasing mengirim PO yang diterima lewat GRN | [purchasing/01](../purchasing/01-lingkup-dan-integrasi-wms.md) |
+| Modul Purchasing | WMS menerbitkan Purchase Request; Purchasing mengirim PO yang diterima lewat GRN; approval PO (nilai uang) memakai mesin approval WMS ([D-28](04-keputusan-dan-asumsi.md#d-28)) | [purchasing/01](../purchasing/01-lingkup-dan-integrasi-wms.md) |
 | NXTG SSO `[F3]` | OAuth2 Authorization Code | §13 |
 | WhatsApp `[F2]` | Cloud API + webhook | §8.2 |
 | Perangkat & sistem lain `[F3]` | REST API dengan token per perangkat/aplikasi | Part 3 |
@@ -401,25 +404,26 @@ User mengatur preferensi kanal; Admin Company menentukan kejadian mana yang bole
 | Impor data master dari Excel | ✔ | | |
 | Master data, UoM dinamis, gudang & lokasi rak/bin | ✔ | | |
 | Kartu stok, reservasi dua tahap, strategi pengambilan | ✔ | | |
-| Penerimaan (GRN), QC, put-away, retur ke vendor (RTV) | ✔ (manual) | | Terhubung PO |
+| Penerimaan (GRN), QC, put-away, retur ke vendor (RTV) | ✔ (manual) | **1b:** terhubung PO | |
 | Permintaan (internal + portal klien, non-katalog, gudang sumber) | ✔ | | |
 | Picking, pengiriman, bukti terima (driver & tautan bertoken), selisih pengiriman (DSC) | ✔ | | |
 | Pemakaian material di site (ISU) | ✔ | | |
-| Retur & transfer (termasuk antar proyek) | ✔ | | |
+| Retur & transfer (termasuk antar proyek dan antar titik dalam proyek) | ✔ | | |
 | **Konversi material, offcut, waste** | ✔ | Resep konversi | |
 | Aset dipinjamkan (serah terima, pengembalian, pemeriksaan) | ✔ | Maintenance | |
 | Approval engine (web, delegasi, eskalasi, simulasi) | ✔ | Approval via WhatsApp | |
 | Stock opname (bulanan/tahunan, blind count, toleransi ganda, rekonsiliasi) | ✔ | Auditor eksternal, cycle count ABC | |
-| Notifikasi in-app & email | ✔ | WhatsApp | |
+| Notifikasi in-app & email | ✔ | WhatsApp (**2a**) | |
 | Template dokumen & label | ✔ (bawaan + layout induk) | Editor template penuh | |
 | Laporan & dashboard | ✔ (inti) | Dashboard konsolidasi opname & waste | Analitik lanjutan |
-| PWA | ✔ (installable, scan kamera, draf lokal) | **Offline penuh + sinkron** | |
+| Rencana kebutuhan material per proyek (BoQ, kuantitas) | stub | ✔ | |
+| PWA | ✔ (installable, scan kamera, draf lokal) | **Offline penuh + sinkron (2b)** | |
 | RFID | | ✔ | |
-| Integrasi Purchasing & Akuntansi | Purchase Request manual; kejadian stok ditulis ke tabel *outbox* | | ✔ (konsumsi oleh modul) |
+| Integrasi Purchasing & Akuntansi | Purchase Request manual; kejadian stok ditulis ke tabel *outbox* | **1b:** modul Purchasing inti (PO, harga beli, approval nilai) | Purchasing lengkap; konsumsi oleh Akuntansi |
 | Landing page produk | ✔ | | |
 | REST API publik | | | ✔ |
 
-Alasan urutan: Fase 1 menutup akar masalah prototipe dan fitur pembeda (konversi, proyek, aset, pemakaian). Fitur yang bergantung pihak luar (WhatsApp, SSO, payment gateway) atau paling berisiko teknis (offline sync) ditaruh sesudahnya. Kebutuhan `[F2]`/`[F3]` di Fase 1 dibangun sebagai *stub* ([BR-GEN-10](05-aturan-bisnis.md#br-gen)).
+Alasan urutan: Fase 1 menutup akar masalah prototipe dan fitur pembeda (konversi, proyek, aset, pemakaian). Peta rilis ([D-29](04-keputusan-dan-asumsi.md#d-29)): Fase 1 → 1b Purchasing inti → 2a WhatsApp → 2b PWA offline → 3 SSO & Purchasing lengkap; persiapan di [00-checklist-persiapan](../00-checklist-persiapan.md). Fitur yang bergantung pihak luar (WhatsApp, SSO, payment gateway) atau paling berisiko teknis (offline sync) ditaruh sesudahnya. Kebutuhan `[F2]`/`[F3]` di Fase 1 dibangun sebagai *stub* ([BR-GEN-10](05-aturan-bisnis.md#br-gen)).
 
 ## 19. Risiko & mitigasi
 
@@ -433,11 +437,11 @@ Alasan urutan: Fase 1 menutup akar masalah prototipe dan fitur pembeda (konversi
 | Pemeliharaan banyak database tenant | Sedang | Migrasi terotomasi dengan log per tenant, backup per tenant, dashboard kesehatan tenant |
 | Data master awal klien berantakan | Tinggi | Impor Excel dengan validasi & pratinjau |
 | Ketergantungan SSO pada pembuatan akun manual | Sedang | Login lokal tetap tersedia |
-| Banyak asumsi baru (A-29–A-49) belum divalidasi | Sedang | Validasi sebelum Part 2; BPMN hanya digambar untuk alur yang asumsinya sudah disetujui |
+| Asumsi A-50 (pemindahan dalam proyek) belum divalidasi | Rendah | A-25–A-49 divalidasi 23 Sep 2026; A-50 hanya menyentuh jalur ringan TRF/SJ, divalidasi sebelum Part 4 modul Transfer |
 
 ## 20. Langkah berikutnya
 
-1. Pemilik produk memvalidasi [A-25–A-49](04-keputusan-dan-asumsi.md#2-asumsi) dan mengisi keterangan di [00-audit](../00-audit/README.md).
+1. A-25–A-49 divalidasi 23 Sep 2026 ([laporan](../00-laporan-validasi-2026-09-23.md)); tersisa [A-50](04-keputusan-dan-asumsi.md#a-50), O-12/O-13/O-15, dan keterangan di [00-audit](../00-audit/README.md) — semuanya di [checklist persiapan](../00-checklist-persiapan.md).
 2. **Part 2 (draf sudah ada):** proses bisnis to-be BPMN 2.0 di `docs/diagram/` + ringkasan tekstual per lane di [07-proses-bisnis.md](07-proses-bisnis.md), [07a](07a-proses-bisnis-lanjutan.md), [07b](07b-proses-bisnis-pendukung.md) — 10 alur berbasis nilai default asumsi; difinalkan setelah validasi.
 3. **Part 3 (draf sudah ada):** [08-arsitektur.md](08-arsitektur.md) (keputusan AD-xx, paket terverifikasi, outbox kejadian stok) dan model data [08a](08a-model-data-inti.md), [08b](08b-model-data-stok-dokumen.md), [08c](08c-model-data-pendukung.md) + `diagram/erd-*.drawio`; difinalkan setelah validasi asumsi.
 4. **Part 4:** spesifikasi modul dari [template](_template-spesifikasi-modul.md), urutan di [08 §12](08-arsitektur.md#12-langkah-berikutnya-part-4).

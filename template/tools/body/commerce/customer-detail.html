@@ -1,0 +1,113 @@
+      <div class="row g-4">
+        <div class="col-xl-4">
+          <div class="card mb-4">
+            <div class="card-body text-center">
+              <span class="nx-avatar nx-avatar-xl mx-auto mb-3" style="width:96px;height:96px"><img src="https://i.pravatar.cc/192?img=45" alt=""></span>
+              <h2 class="h4 mb-0">Maria Gomez</h2>
+              <p class="small text-muted">maria@acme.io</p>
+              <span class="badge badge-soft-warning mb-3"><i class="bi bi-gem me-1"></i>VIP customer</span>
+              <div class="row g-0 text-center border-top pt-3">
+                <div class="col-4"><div class="fw-bold"><span data-countup data-value="18">0</span></div><div class="small text-muted">Orders</div></div>
+                <div class="col-4 border-start border-end"><div class="fw-bold">$<span data-countup data-value="9.42" data-decimals="2">0</span>K</div><div class="small text-muted">Spent</div></div>
+                <div class="col-4"><div class="fw-bold">$<span data-countup data-value="523">0</span></div><div class="small text-muted">Avg order</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title h4">Details</h2><button class="btn btn-xs btn-soft-primary ms-auto" id="cdEdit" type="button">Edit</button></div>
+            <div class="card-body">
+              <dl class="row small mb-0">
+                <dt class="col-5 text-muted fw-normal">Customer ID</dt><dd class="col-7 nx-num">CUS-004821</dd>
+                <dt class="col-5 text-muted fw-normal">Phone</dt><dd class="col-7 nx-num">+1 512 555 0142</dd>
+                <dt class="col-5 text-muted fw-normal">Company</dt><dd class="col-7">Acme IO Ltd.</dd>
+                <dt class="col-5 text-muted fw-normal">Location</dt><dd class="col-7">Austin, United States</dd>
+                <dt class="col-5 text-muted fw-normal">Customer since</dt><dd class="col-7">March 4, 2024</dd>
+                <dt class="col-5 text-muted fw-normal">Last order</dt><dd class="col-7">September 8, 2026</dd>
+                <dt class="col-5 text-muted fw-normal">Status</dt><dd class="col-7"><span class="badge badge-soft-success">Active</span></dd>
+              </dl>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2 class="card-title h4">Tags</h2></div>
+            <div class="card-body d-flex flex-wrap gap-2">
+              <span class="badge badge-soft-primary">wholesale</span>
+              <span class="badge badge-soft-success">net-30</span>
+              <span class="badge badge-soft-warning">vip</span>
+              <span class="badge badge-soft-secondary">newsletter</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-8">
+          <div class="card mb-4">
+            <div class="card-header p-0 border-0">
+              <ul class="nav nav-tabs w-100 px-3 pt-2" role="tablist">
+                <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#cdOverview" type="button" role="tab">Overview</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cdOrders" type="button" role="tab">Orders <span class="badge badge-soft-secondary ms-1">18</span></button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cdAddresses" type="button" role="tab">Addresses</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cdNotify" type="button" role="tab">Notifications</button></li>
+              </ul>
+            </div>
+            <div class="card-body">
+              <div class="tab-content">
+
+                <div class="tab-pane fade show active" id="cdOverview" role="tabpanel">
+                  <h3 class="h6 mb-3">Spend over time</h3>
+                  <div id="cdSpendChart" style="min-height:260px"></div>
+                  <hr class="my-4">
+                  <h3 class="h6 mb-3">Most bought</h3>
+                  <div class="nx-row-list">
+                    <div class="nx-row-item"><img src="assets/img/products/p4.svg" width="40" height="40" alt="" class="rounded"><div class="nx-row-main"><div class="nx-row-title">Orbit Mechanical Keyboard</div><div class="nx-row-sub">6 units &middot; $954.00</div></div></div>
+                    <div class="nx-row-item"><img src="assets/img/products/p1.svg" width="40" height="40" alt="" class="rounded"><div class="nx-row-main"><div class="nx-row-title">Aurora Wireless Headphones</div><div class="nx-row-sub">4 units &middot; $516.00</div></div></div>
+                    <div class="nx-row-item"><img src="assets/img/products/p5.svg" width="40" height="40" alt="" class="rounded"><div class="nx-row-main"><div class="nx-row-title">Zenith Ergonomic Mouse</div><div class="nx-row-sub">3 units &middot; $207.00</div></div></div>
+                  </div>
+                </div>
+
+                <div class="tab-pane fade" id="cdOrders" role="tabpanel">
+                  <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
+                    <tbody>
+                      <tr><td><a class="nx-link" href="commerce-order-detail.html">#ORD-1042</a></td><td class="small">Sep 8, 2026</td><td class="nx-num">4</td><td class="nx-num fw-semibold">$514.51</td><td><span class="badge badge-soft-success">Delivered</span></td></tr>
+                      <tr><td><a class="nx-link" href="commerce-order-detail.html">#ORD-0994</a></td><td class="small">Aug 21, 2026</td><td class="nx-num">2</td><td class="nx-num fw-semibold">$288.00</td><td><span class="badge badge-soft-success">Delivered</span></td></tr>
+                      <tr><td><a class="nx-link" href="commerce-order-detail.html">#ORD-0961</a></td><td class="small">Jul 30, 2026</td><td class="nx-num">1</td><td class="nx-num fw-semibold">$129.00</td><td><span class="badge badge-soft-secondary">Refunded</span></td></tr>
+                      <tr><td><a class="nx-link" href="commerce-order-detail.html">#ORD-0918</a></td><td class="small">Jul 2, 2026</td><td class="nx-num">5</td><td class="nx-num fw-semibold">$742.30</td><td><span class="badge badge-soft-success">Delivered</span></td></tr>
+                      <tr><td><a class="nx-link" href="commerce-order-detail.html">#ORD-0877</a></td><td class="small">Jun 14, 2026</td><td class="nx-num">3</td><td class="nx-num fw-semibold">$411.00</td><td><span class="badge badge-soft-success">Delivered</span></td></tr>
+                    </tbody>
+                  </table></div>
+                </div>
+
+                <div class="tab-pane fade" id="cdAddresses" role="tabpanel">
+                  <div class="row g-3">
+                    <div class="col-md-6"><div class="card h-100"><div class="card-body">
+                      <div class="d-flex align-items-center gap-2 mb-2"><span class="badge badge-soft-primary">Default shipping</span></div>
+                      <p class="small mb-3">Maria Gomez<br>1421 Cedar Avenue, Suite 8<br>Austin, TX 78701<br>United States</p>
+                      <div class="d-flex gap-2"><button class="btn btn-xs btn-soft-secondary" type="button">Edit</button><button class="btn btn-xs btn-soft-danger" type="button">Remove</button></div>
+                    </div></div></div>
+                    <div class="col-md-6"><div class="card h-100"><div class="card-body">
+                      <div class="d-flex align-items-center gap-2 mb-2"><span class="badge badge-soft-success">Billing</span></div>
+                      <p class="small mb-3">Acme IO Ltd.<br>1421 Cedar Avenue, Suite 8<br>Austin, TX 78701<br>United States</p>
+                      <div class="d-flex gap-2"><button class="btn btn-xs btn-soft-secondary" type="button">Edit</button><button class="btn btn-xs btn-soft-danger" type="button">Remove</button></div>
+                    </div></div></div>
+                    <div class="col-12"><button class="btn btn-soft-primary w-100" id="cdAddAddress" type="button"><i class="bi bi-plus-lg me-1"></i>Add address</button></div>
+                  </div>
+                </div>
+
+                <div class="tab-pane fade" id="cdNotify" role="tabpanel">
+                  <div class="table-responsive"><table class="table align-middle mb-0">
+                    <thead><tr><th>Type</th><th class="text-center">Email</th><th class="text-center">SMS</th><th class="text-center">Push</th></tr></thead>
+                    <tbody>
+                      <tr><td>Order confirmations</td><td class="text-center"><input class="form-check-input" type="checkbox" checked aria-label="Email"></td><td class="text-center"><input class="form-check-input" type="checkbox" checked aria-label="SMS"></td><td class="text-center"><input class="form-check-input" type="checkbox" aria-label="Push"></td></tr>
+                      <tr><td>Shipping updates</td><td class="text-center"><input class="form-check-input" type="checkbox" checked aria-label="Email"></td><td class="text-center"><input class="form-check-input" type="checkbox" checked aria-label="SMS"></td><td class="text-center"><input class="form-check-input" type="checkbox" checked aria-label="Push"></td></tr>
+                      <tr><td>Promotions</td><td class="text-center"><input class="form-check-input" type="checkbox" checked aria-label="Email"></td><td class="text-center"><input class="form-check-input" type="checkbox" aria-label="SMS"></td><td class="text-center"><input class="form-check-input" type="checkbox" aria-label="Push"></td></tr>
+                      <tr><td>Abandoned cart</td><td class="text-center"><input class="form-check-input" type="checkbox" aria-label="Email"></td><td class="text-center"><input class="form-check-input" type="checkbox" aria-label="SMS"></td><td class="text-center"><input class="form-check-input" type="checkbox" aria-label="Push"></td></tr>
+                    </tbody>
+                  </table></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>

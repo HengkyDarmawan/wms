@@ -1,0 +1,150 @@
+/* ============================================================
+   NexaDash — Design Tokens
+   Sumber kebenaran seluruh warna/spacing/radius. Jangan hardcode
+   hex di HTML/CSS lain — selalu pakai var(--nx-*).
+   ============================================================ */
+
+:root {
+  /* Brand */
+  --nx-primary: #6366f1;
+  --nx-primary-hover: #4f46e5;
+  --nx-primary-subtle: #eef2ff;
+  --nx-secondary: #64748b;
+  --nx-secondary-subtle: #f1f5f9;
+
+  /* Semantic */
+  --nx-success: #10b981;  --nx-success-subtle: #ecfdf5;
+  --nx-danger:  #ef4444;  --nx-danger-subtle:  #fef2f2;
+  --nx-warning: #f59e0b;  --nx-warning-subtle: #fffbeb;
+  --nx-info:    #0ea5e9;  --nx-info-subtle:    #f0f9ff;
+
+  /* Surface — sengaja diberi rona indigo tipis supaya light mode
+     tidak terasa "putih rata"; kartu tetap putih agar tetap menonjol. */
+  --nx-body-bg: #f2f4fc;
+  --nx-card-bg: #ffffff;
+  --nx-border:  #e3e6f3;
+  --nx-hover-bg: #eceffb;
+  /* Permukaan sekunder: header tabel, panel, well, footer kartu. */
+  --nx-surface-1: #f7f8fe;
+  --nx-surface-2: #eef1fb;
+  --nx-surface-accent: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+
+  /* Text */
+  --nx-text:       #0f172a;
+  --nx-text-body:  #3b4861;
+  --nx-text-muted: #8b93ad;
+
+  /* Sidebar */
+  --nx-sidebar-bg: #fbfbff;
+  --nx-sidebar-w: 260px;
+  --nx-sidebar-w-collapsed: 72px;
+  --nx-header-h: 64px;
+
+  /* Charts */
+  --nx-chart-1: #6366f1;
+  --nx-chart-2: #22d3ee;
+  --nx-chart-3: #f59e0b;
+  --nx-chart-4: #10b981;
+  --nx-chart-5: #f472b6;
+
+  /* Shape — skala radius penuh supaya setiap tepi konsisten membulat. */
+  --nx-radius-xs: 6px;
+  --nx-radius-sm: 10px;
+  --nx-radius: 16px;
+  --nx-radius-lg: 20px;
+  --nx-radius-xl: 28px;
+  --nx-radius-pill: 999px;
+  --nx-shadow: 0 1px 2px rgb(15 23 42 / .06);
+  --nx-shadow-lift: 0 8px 24px rgb(79 70 229 / .10);
+  --nx-shadow-glow: 0 0 0 4px rgb(99 102 241 / .12);
+
+  /* Motion — satu sumber durasi/easing untuk seluruh animasi. */
+  --nx-ease: cubic-bezier(.4, 0, .2, 1);
+  --nx-ease-out: cubic-bezier(.16, 1, .3, 1);
+  --nx-ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --nx-dur-fast: .15s;
+  --nx-dur: .25s;
+  --nx-dur-slow: .4s;
+  --nx-transition: all var(--nx-dur) var(--nx-ease);
+
+  /* Bridge ke Bootstrap */
+  --bs-body-bg: var(--nx-body-bg);
+  --bs-body-color: var(--nx-text-body);
+  --bs-border-color: var(--nx-border);
+  --bs-primary: var(--nx-primary);
+  --bs-primary-rgb: 99, 102, 241;
+  --bs-link-color: var(--nx-primary);
+  --bs-link-hover-color: var(--nx-primary-hover);
+  --bs-body-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Supaya komponen Bootstrap ikut skala radius NexaDash. */
+  --bs-border-radius-sm: var(--nx-radius-xs);
+  --bs-border-radius: var(--nx-radius-sm);
+  --bs-border-radius-lg: var(--nx-radius);
+  --bs-border-radius-xl: var(--nx-radius-lg);
+  --bs-border-radius-2xl: var(--nx-radius-xl);
+  --bs-border-radius-pill: var(--nx-radius-pill);
+}
+
+[data-bs-theme="dark"] {
+  --nx-primary-subtle: #26264d;
+  --nx-secondary-subtle: #1c2740;
+  --nx-success-subtle: #0c2b22;
+  --nx-danger-subtle:  #2d1517;
+  --nx-warning-subtle: #2b2211;
+  --nx-info-subtle:    #0d2436;
+
+  /* Dark mode dibuat indigo-navy, bukan abu netral, supaya tetap berwarna. */
+  --nx-body-bg: #0a0e1f;
+  --nx-card-bg: #141a33;
+  --nx-border:  #262e4e;
+  --nx-hover-bg: #1f2647;
+  --nx-surface-1: #182041;
+  --nx-surface-2: #1f2749;
+  --nx-surface-accent: linear-gradient(135deg, #1e1f45 0%, #241f45 100%);
+
+  --nx-text:       #e8eaf6;
+  --nx-text-body:  #c3c9e0;
+  --nx-text-muted: #7d85a3;
+
+  --nx-sidebar-bg: #0e1329;
+
+  --nx-shadow: 0 1px 2px rgb(0 0 0 / .3);
+  --nx-shadow-lift: 0 8px 24px rgb(0 0 0 / .45);
+  --nx-shadow-glow: 0 0 0 4px rgb(99 102 241 / .22);
+
+  --bs-body-bg: var(--nx-body-bg);
+  --bs-body-color: var(--nx-text-body);
+  --bs-border-color: var(--nx-border);
+}
+
+/* ============ Tipografi dasar ============ */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--nx-text-body);
+  background: var(--nx-body-bg);
+}
+
+h1, h2, h3, h4, h5, h6 { color: var(--nx-text); }
+h1, .h1 { font-size: 24px; font-weight: 700; }
+h2, .h2 { font-size: 20px; font-weight: 700; }
+h3, .h3 { font-size: 18px; font-weight: 600; }
+h4, .h4 { font-size: 16px; font-weight: 600; }
+h5, .h5 { font-size: 14px; font-weight: 600; }
+h6, .h6 {
+  font-size: 12px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+}
+
+.text-muted { color: var(--nx-text-muted) !important; }
+.small, small { font-size: 12px; }
+
+.nx-num { font-variant-numeric: tabular-nums; }
+
+::selection { background: var(--nx-primary); color: #fff; }
+
+:focus-visible {
+  outline: 2px solid var(--nx-primary);
+  outline-offset: 2px;
+}

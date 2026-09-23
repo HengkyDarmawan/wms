@@ -22,7 +22,7 @@
         <mxCell id="s" value="Jadwal opname / permintaan audit" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=8;strokeColor=#2E7D32;fillColor=#D5E8D4;" vertex="1" parent="lane0">
           <mxGeometry x="139" y="54" width="42" height="42" as="geometry"/>
         </mxCell>
-        <mxCell id="t1" value="Rencanakan sesi: jenis, cakupan (gudang/zona/bin), tim, pembekuan ya/tidak" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane0">
+        <mxCell id="t1" value="Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane0">
           <mxGeometry x="285" y="42" width="150" height="66" as="geometry"/>
         </mxCell>
         <mxCell id="g1" value="Ada PCK berjalan di cakupan (bila pembekuan)?" style="rhombus;whiteSpace=wrap;html=1;fontSize=9;strokeColor=#B8860B;fillColor=#FFF2CC;" vertex="1" parent="lane3">
@@ -52,7 +52,7 @@
         <mxCell id="t8" value="Rekonsiliasi: tinjau semua baris; draf ADJ per gudang" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane0">
           <mxGeometry x="1685" y="42" width="150" height="66" as="geometry"/>
         </mxCell>
-        <mxCell id="t9" value="Setujui sesi (persetujuan di tingkat sesi, bukan per ADJ)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane2">
+        <mxCell id="t9" value="Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane2">
           <mxGeometry x="1885" y="42" width="150" height="66" as="geometry"/>
         </mxCell>
         <mxCell id="t10" value="ADJ posted; stock_adjusted; buka bin; laporan PDF; dashboard akurasi" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane3">

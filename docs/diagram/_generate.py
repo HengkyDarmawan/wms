@@ -34,14 +34,14 @@ dict(
     intro="Alur inti outbound: dari kebutuhan material di proyek sampai barang diterima di tujuan dan REQ selesai. "
           "Mencakup tinjauan staf untuk permintaan klien, reservasi dua tahap, picking dengan short pick, pengiriman, "
           "bukti terima, dan selisih pengiriman.",
-    assumptions=["A-07", "A-30", "A-31", "A-33", "A-35", "A-39", "A-41"],
-    br=["BR-REQ-01..10", "BR-STK-03..05", "BR-SJ-01..08", "BR-GEN-06"],
+    assumptions=["A-07", "A-30", "A-31", "A-33", "A-35", "A-39", "A-41", "A-54", "A-55", "A-56", "A-57", "A-60", "A-61", "A-63", "A-64", "A-65"],
+    br=["BR-REQ-01..15", "BR-STK-03..05", "BR-SJ-01..10", "BR-GEN-06"],
     status=["REQ", "PCK", "SJ", "DSC"],
     nodes=[
         ("s", "Pemohon (Internal / Klien)", "start", "Kebutuhan material di proyek", ""),
         ("t1", "Pemohon (Internal / Klien)", "task", "Buat & ajukan REQ (baris katalog / non-katalog, tanggal dibutuhkan)", "REQ draft → submitted; BR-REQ-01"),
         ("g1", "Sistem", "gw", "Pemohon klien?", "A-07"),
-        ("t2", "Staf Gudang", "task", "Tinjau: petakan non-katalog, tetapkan gudang sumber, ubah baris bila perlu", "REQ under_review; BR-REQ-02..04; A-39, A-31"),
+        ("t2", "Staf Gudang", "task", "Tinjau: petakan non-katalog (klien boleh menolak pengganti 1 hari), tetapkan gudang sumber / pecah baris antar gudang, isi tanggal janji", "REQ under_review; BR-REQ-02..04; BR-REQ-13; BR-REQ-14; A-39, A-31, A-55, A-56, A-60"),
         ("t3", "Sistem", "task", "Snapshot aturan approval; lewati lapis pengaju (SoD)", "REQ pending_approval; BR-APR-01, BR-APR-03"),
         ("g2", "Sistem", "gw", "Ada lapis approval?", "A-08"),
         ("t4", "Approver", "task", "Setujui / tolak (alasan) — lihat alur 9", "BR-APR"),
@@ -50,14 +50,15 @@ dict(
         ("t5", "Sistem", "task", "Reservasi lunak per gudang; kekurangan → TRF (alur 5) / PRQ (alur 2)", "REQ approved; BR-REQ-05; BR-STK-04; A-30"),
         ("t6", "Sistem", "task", "Buat PCK per gudang sumber; alokasi keras bin/lot/serial/potongan", "PCK pending; REQ in_progress; BR-STK-04"),
         ("t7", "Staf Gudang", "task", "Picking: scan bin & item → Loading Area; short pick + alasan", "PCK in_progress → completed; BR-SJ-01, BR-SJ-02"),
-        ("t8", "Staf Gudang", "task", "Buat SJ: tujuan, kendaraan / ekspedisi", "SJ prepared; BR-SJ-07"),
+        ("t8", "Staf Gudang", "task", "Buat SJ: gabungkan PCK ke tujuan sama (boleh beberapa REQ); cara kirim kendaraan sendiri / ekspedisi / diantar sendiri", "SJ prepared; BR-SJ-07; BR-SJ-09; A-57"),
         ("t9", "Driver / Penerima", "task", "Konfirmasi muat & berangkat", "SJ shipped; ledger → in_transit; goods_shipped"),
-        ("t10", "Driver / Penerima", "task", "Bukti terima: foto, tanda tangan, jumlah per baris (driver atau tautan bertoken + OTP)", "BR-SJ-05; A-41"),
-        ("g4", "Sistem", "gw", "Jumlah diterima = dikirim?", ""),
-        ("t11", "Sistem", "task", "Buat DSC (selisih tetap di in_transit)", "SJ partially_delivered; DSC open; BR-SJ-06"),
-        ("t12", "Kepala Gudang", "task", "Selesaikan DSC: disposisi kembali / disesuaikan / klaim", "DSC resolved; delivery_discrepancy"),
+        ("t10", "Driver / Penerima", "task", "Bukti terima per baris: baik / rusak (foto wajib) / kurang; per unit untuk serial & potongan; tanda tangan (driver atau tautan bertoken + OTP)", "BR-SJ-05; A-41; A-64"),
+        ("g4", "Sistem", "gw", "Semua baik & lengkap?", ""),
+        ("t11", "Sistem", "task", "Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik driver", "SJ partially_delivered; DSC open; BR-SJ-06; A-64; A-65"),
+        ("t12", "Kepala Gudang", "task", "Selesaikan DSC: kembali ke gudang / disesuaikan / klaim / kirim pengganti; klien masih perlu sisanya?", "DSC resolved; BR-SJ-10; delivery_discrepancy"),
         ("t13", "Sistem", "task", "Efek stok per tujuan: jual putus keluar (goods_delivered), aset → on_site (asset_checked_out), gudang → GRN tujuan", "SJ delivered; BR-SJ-04; A-25"),
-        ("t14", "Pemohon (Internal / Klien)", "task", "Konfirmasi terima (otomatis setelah 3 hari)", "BR-REQ-10"),
+        ("t14", "Pemohon (Internal / Klien)", "task", "Konfirmasi terima atau ajukan keberatan kurang/rusak (otomatis terima setelah 3 hari; otomatis bila pemohon mengisi bukti terima sendiri)", "BR-REQ-10; A-63"),
+        ("g6", "Sistem", "gw", "Keberatan?", "A-63"),
         ("g5", "Sistem", "gw", "Semua baris terpenuhi?", ""),
         ("t15", "Sistem", "task", "Tunggu backorder (TRF / PRQ tiba → reservasi otomatis, cross-dock)", "REQ partially_fulfilled; BR-REQ-08"),
         ("e", "Sistem", "end", "REQ selesai", "REQ completed; reservasi = 0"),
@@ -68,21 +69,26 @@ dict(
         ("t4", "g3", "", False), ("g3", "e_rej", "tidak", False), ("g3", "t5", "ya", False),
         ("t5", "t6", "", False), ("t6", "t7", "", False), ("t7", "t8", "", False), ("t8", "t9", "", False), ("t9", "t10", "", False),
         ("t10", "g4", "", False), ("g4", "t11", "tidak", False), ("t11", "t12", "", False), ("t12", "t13", "", False), ("g4", "t13", "ya", False),
-        ("t13", "t14", "", False), ("t14", "g5", "", False), ("g5", "e", "ya", False), ("g5", "t15", "tidak", False), ("t15", "t6", "barang tiba", True),
+        ("t13", "t14", "", False), ("t14", "g6", "", False), ("g6", "t11", "ya", True), ("g6", "g5", "tidak", False), ("g5", "e", "ya", False), ("g5", "t15", "tidak", False), ("t15", "t6", "barang tiba", True),
     ],
-    gateways_note="Pembatalan: REQ bisa dibatalkan sampai sebelum ada SJ `shipped` (reservasi & PCK dilepas). `closed_short` dari `partially_fulfilled` oleh Kepala Gudang/pemohon melepas sisa backorder.",
+    gateways_note="Pembatalan: REQ bisa dibatalkan sampai sebelum ada SJ `shipped` (reservasi & PCK dilepas); setelah disetujui, klien mengajukan permintaan pembatalan baris yang dikonfirmasi staf (BR-REQ-15). Klien boleh menambah baris sampai disetujui; sesudahnya menjadi REQ Tambahan (BR-REQ-12). `closed_short` dari `partially_fulfilled` oleh Kepala Gudang/pemohon melepas sisa backorder; reservasi menggantung > 7 hari diperingatkan (BR-STK-16). Posisi barang rusak: tetap Dalam Perjalanan berkondisi Rusak sampai DSC selesai; kendaraan sendiri membawa balik → GRN retur → pemilahan; ekspedisi → RET + klaim (BR-SJ-10).",
 ),
 dict(
     n=2, slug="penerimaan-qc-putaway-rtv", title="Penerimaan dari vendor, QC, put-away, retur ke vendor",
     lanes=["Penindak Lanjut PR", "Staf Gudang", "Approver", "Sistem"],
-    intro="Alur inti inbound: barang dari vendor (dengan atau tanpa PRQ) diterima, diposting ke bin Penerimaan/Karantina, "
-          "diperiksa (QC sebagai langkah), lalu di-put-away atau cross-dock. Baris yang ditolak QC diproses lewat RTV.",
-    assumptions=["A-34", "A-47"],
-    br=["BR-GRN-01..05", "BR-REQ-08", "BR-SJ-03"],
+    intro="Alur inti inbound, dimulai dari siklus PRQ Fase 1 (sumber: backorder REQ, manual Kepala Gudang, draf titik pesan ulang; approval bertingkat tanpa nilai uang; "
+          "catatan pemesanan per vendor/toko online oleh Penindak Lanjut PR), lalu barang vendor diterima, diposting ke bin Penerimaan/Karantina, "
+          "diperiksa (QC sebagai langkah), dan di-put-away atau cross-dock. Baris yang ditolak QC diproses lewat RTV.",
+    assumptions=["A-34", "A-47", "A-51", "A-52", "A-53"],
+    br=["BR-GRN-01..05", "BR-REQ-08", "BR-REQ-11", "BR-APR-07", "BR-SJ-03"],
     status=["PRQ", "GRN", "PUT", "RTV"],
     nodes=[
-        ("s", "Staf Gudang", "start", "Barang vendor tiba", ""),
-        ("t1", "Staf Gudang", "task", "Buat GRN; pilih baris PRQ yang dipenuhi (bila ada)", "GRN draft; A-47"),
+        ("s", "Staf Gudang", "start", "Kebutuhan beli: backorder REQ / manual Kepala Gudang / draf titik pesan ulang", "PRQ draft|submitted; BR-REQ-05; BR-REQ-11"),
+        ("g0", "Sistem", "gw", "Ada lapis approval PRQ?", "BR-APR-07; jumlah / kategori / jenis vendor / asal"),
+        ("t0a", "Approver", "task", "Setujui / tolak PRQ (alur 9)", "PRQ approved|rejected"),
+        ("t0b", "Penindak Lanjut PR", "task", "Buat catatan pemesanan per vendor: vendor tetap disarankan; vendor baru = sementara; toko online = no. pesanan + resi; ETA", "PRQ forwarded; A-51; A-52; A-53"),
+        ("w0", "Penindak Lanjut PR", "timer", "Tunggu barang tiba (ETA; lewat ETA masuk laporan)", ""),
+        ("t1", "Staf Gudang", "task", "Buat GRN; pilih catatan pemesanan & baris yang dipenuhi (bila ada)", "GRN draft; A-47; A-51"),
         ("t2", "Staf Gudang", "task", "Hitung; isi lot / serial / potongan; Diterima", "GRN received; BR-GRN-01"),
         ("t3", "Sistem", "task", "Ledger → bin Penerimaan (atau Karantina bila wajib QC); goods_received; PRQ terpenuhi; reservasi ke REQ penunggu", "BR-GRN-01; BR-REQ-08"),
         ("g1", "Sistem", "gw", "QC wajib?", "pengaturan item / company"),
@@ -101,13 +107,14 @@ dict(
         ("e2", "Penindak Lanjut PR", "end", "RTV selesai", ""),
     ],
     edges=[
-        ("s", "t1", "", False), ("t1", "t2", "", False), ("t2", "t3", "", False), ("t3", "g1", "", False),
+        ("s", "g0", "", False), ("g0", "t0a", "ya", False), ("g0", "t0b", "tidak", False), ("t0a", "t0b", "disetujui", False), ("t0b", "w0", "", False), ("w0", "t1", "", False),
+        ("t1", "t2", "", False), ("t2", "t3", "", False), ("t3", "g1", "", False),
         ("g1", "t4", "ya", False), ("g1", "g3", "tidak", False), ("t4", "g2", "", False),
         ("g2", "g3", "lolos", False), ("g2", "t5", "karantina", False), ("t5", "t4", "periksa ulang", True), ("g2", "t9", "ditolak", False),
         ("g3", "t6", "ya", False), ("g3", "t7", "tidak", False), ("t7", "t8", "", False), ("t8", "e1", "", False), ("t6", "e1", "", False),
         ("t9", "t10", "", False), ("t10", "t11", "disetujui", False), ("t11", "t12", "", False), ("t12", "e2", "", False),
     ],
-    gateways_note="GRN `received` tidak bisa dibatalkan; koreksi jumlah lewat ADJ. Kelebihan terima dibanding SJ/PRQ dicatat sebagai baris tanpa rujukan dan memicu ADJ (BR-GRN-05). GRN dari SJ (transfer) dan dari RET mengikuti alur 5 dan 4.",
+    gateways_note="GRN `received` tidak bisa dibatalkan; koreksi jumlah lewat ADJ. Kelebihan terima dibanding SJ/PRQ dicatat sebagai baris tanpa rujukan dan memicu ADJ (BR-GRN-05). GRN dari SJ (transfer) dan dari RET mengikuti alur 5 dan 4. Satu PRQ boleh dipesan ke beberapa vendor/toko online (A-51); approval berdasarkan nilai uang ada di modul Purchasing dengan mesin approval yang sama (D-28).",
 ),
 dict(
     n=3, slug="pemakaian-material-site", title="Pemakaian material di Gudang Site",
@@ -169,9 +176,11 @@ dict(
     n=5, slug="transfer-antar-gudang-proyek", title="Transfer antar gudang dan antar proyek",
     lanes=["Pengaju (Staf / Kepala Gudang)", "Approver", "Staf Gudang Asal", "Driver", "Staf Gudang Tujuan", "Sistem"],
     intro="TRF dibuat manual atau otomatis dari backorder REQ. Sebagai dokumen niat, TRF memakai jalur fisik yang sama dengan pengiriman: "
-          "PCK di gudang asal, SJ, GRN di gudang tujuan, PUT. Transfer antar proyek = transfer antar Gudang Site (atau bin on_site untuk aset).",
-    assumptions=["A-30", "A-33", "A-43"],
-    br=["BR-RET-01", "BR-RET-02", "BR-STK-13", "BR-GEN-06"],
+          "PCK di gudang asal, SJ, GRN di gudang tujuan, PUT. Transfer antar proyek = transfer antar Gudang Site (atau bin on_site untuk aset). "
+          "Pemindahan antar titik dalam satu proyek (mis. antar galian pipa) memakai TRF yang sama antar Gudang Site proyek itu dengan jalur ringan: "
+          "tanpa approval bila tidak ada aturan, SJ boleh diantar sendiri, GRN = konfirmasi PIC titik tujuan (A-50).",
+    assumptions=["A-30", "A-33", "A-40", "A-43", "A-50"],
+    br=["BR-RET-01", "BR-RET-02", "BR-SJ-07", "BR-STK-13", "BR-GEN-06"],
     status=["TRF", "PCK", "SJ", "GRN", "PUT"],
     nodes=[
         ("s", "Pengaju (Staf / Kepala Gudang)", "start", "Kebutuhan pindah stok (manual / backorder REQ)", ""),
@@ -180,7 +189,9 @@ dict(
         ("t2", "Approver", "task", "Setujui / tolak (alur 9)", "TRF approved / rejected"),
         ("t3", "Sistem", "task", "Reservasi lunak di gudang asal; buat PCK", "TRF approved → in_progress; PCK pending; BR-STK-04"),
         ("t4", "Staf Gudang Asal", "task", "Picking → Loading Area; buat SJ tujuan gudang", "PCK completed; SJ prepared"),
+        ("g0", "Sistem", "gw", "Dalam proyek & diantar sendiri?", "A-50"),
         ("t5", "Driver", "task", "Muat & kirim", "SJ shipped; ledger → in_transit (milik gudang asal); goods_shipped; BR-STK-13"),
+        ("t5b", "Staf Gudang Asal", "task", "Antar sendiri ke titik tujuan (SJ self_delivered, nama pembawa)", "SJ shipped (shipment_method = self_delivered); ledger → in_transit; goods_shipped; BR-SJ-07; A-50; A-57"),
         ("t6", "Staf Gudang Tujuan", "task", "GRN dari SJ: hitung, Diterima", "GRN received; SJ delivered; stock_transferred"),
         ("g2", "Sistem", "gw", "Jumlah = dikirim?", ""),
         ("t7", "Sistem", "task", "DSC untuk selisih (alur 1)", "DSC open"),
@@ -190,10 +201,10 @@ dict(
     ],
     edges=[
         ("s", "t1", "", False), ("t1", "g1", "", False), ("g1", "t2", "ya", False), ("g1", "t3", "tidak", False), ("t2", "t3", "disetujui", False),
-        ("t3", "t4", "", False), ("t4", "t5", "", False), ("t5", "t6", "", False), ("t6", "g2", "", False), ("g2", "t7", "tidak", False), ("t7", "t8", "", False),
+        ("t3", "t4", "", False), ("t4", "g0", "", False), ("g0", "t5", "tidak", False), ("g0", "t5b", "ya", False), ("t5", "t6", "", False), ("t5b", "t6", "", False), ("t6", "g2", "", False), ("g2", "t7", "tidak", False), ("t7", "t8", "", False),
         ("g2", "t8", "ya", False), ("t8", "t9", "", False), ("t9", "e", "", False),
     ],
-    gateways_note="TRF bisa dibatalkan sampai sebelum SJ `shipped`; setelah itu koreksi lewat DSC atau TRF balik. Selama `in_transit`, stok masih dihitung milik gudang asal di laporan saldo.",
+    gateways_note="TRF bisa dibatalkan sampai sebelum SJ `shipped`; setelah itu koreksi lewat DSC atau TRF balik. Selama `in_transit`, stok masih dihitung milik gudang asal di laporan saldo. Transfer dalam proyek (A-50): GRN tujuan cukup konfirmasi PIC titik tanpa QC; riwayat lokasi barang terlihat di kartu stok dan sub-tampilan Di Gudang Site per titik.",
 ),
 dict(
     n=6, slug="konversi-dan-waste", title="Konversi material, offcut, dan berita acara waste",
@@ -231,21 +242,21 @@ dict(
     lanes=["Pemohon / PIC Proyek", "Staf Gudang", "Driver", "Approver", "Sistem"],
     intro="Siklus aset ber-serial: keluar bersama pengiriman (alur 1), berada di bin virtual On-site Proyek, diingatkan saat lewat jatuh tempo, "
           "kembali lewat retur (alur 4) dengan pemeriksaan, atau ditandai hilang dan dihapuskan lewat ADJ.",
-    assumptions=["A-29", "A-38"],
-    br=["BR-AST-01..07", "BR-STK-08", "BR-STK-14"],
+    assumptions=["A-29", "A-38", "A-66"],
+    br=["BR-AST-01..08", "BR-STK-08", "BR-STK-14"],
     status=["AST", "ADJ"],
     nodes=[
         ("s", "Pemohon / PIC Proyek", "start", "Baris REQ 'Pinjam' disetujui (alur 1)", "line_ownership = loan; A-38"),
-        ("t1", "Staf Gudang", "task", "Picking serial aset; catat kondisi & foto keluar; tanggal kembali", "AST; due_return_date; BR-STK-08"),
+        ("t1", "Staf Gudang", "task", "Picking serial aset; catat kondisi, foto keluar, pembacaan meter (jam/km); tanggal kembali", "AST; due_return_date; meter_out; BR-STK-08; BR-AST-08"),
         ("t2", "Driver", "task", "Kirim & bukti terima (alur 1)", "SJ delivered"),
         ("t3", "Sistem", "task", "Aset → bin On-site Proyek; state on_loan; asset_checked_out", "AST checked_out; BR-AST-01"),
         ("g1", "Sistem", "timer", "Cek harian: lewat jatuh tempo?", "BR-AST-06"),
         ("t4", "Sistem", "task", "Notifikasi PIC proyek & Kepala Gudang; laporan aset terlambat", ""),
         ("g2", "Pemohon / PIC Proyek", "gw", "Aset masih ada?", ""),
         ("t5", "Pemohon / PIC Proyek", "task", "Ajukan RET aset (alur 4)", "RET"),
-        ("t6", "Staf Gudang", "task", "Pemeriksaan: grade A–D + foto + catatan", "AST returned → inspected; BR-AST-03"),
+        ("t6", "Staf Gudang", "task", "Pemeriksaan: baca meter kembali; grade A–D + skor kondisi % + foto + catatan komponen", "AST returned → inspected; meter_in; BR-AST-03; BR-AST-08"),
         ("g3", "Sistem", "gw", "Grade?", ""),
-        ("t7", "Sistem", "task", "State available; asset_returned dengan usage_days", "BR-AST-05"),
+        ("t7", "Sistem", "task", "State available; asset_returned dengan usage_days, jam pakai, skor; hitung sisa umur %, peringatan bila < ambang", "BR-AST-05; BR-AST-08; A-66"),
         ("t8", "Sistem", "task", "State maintenance / damaged; asset_lost_or_damaged → Akuntansi (ganti rugi)", "BR-AST-04"),
         ("t9", "Staf Gudang", "task", "Tandai hilang (alasan) → buat ADJ keluar", "asset_state lost; asset_lost_or_damaged; ADJ submitted"),
         ("t10", "Approver", "task", "Setujui ADJ", "ADJ approved → posted; stock_adjusted"),
@@ -258,7 +269,7 @@ dict(
         ("t4", "g2", "", False), ("g2", "t5", "ya", False), ("g2", "t9", "tidak (hilang)", False), ("t5", "t6", "", False), ("t6", "g3", "", False),
         ("g3", "t7", "A / B", False), ("g3", "t8", "C / D", False), ("t7", "e1", "", False), ("t8", "e2", "", False), ("t9", "t10", "", False), ("t10", "e3", "", False),
     ],
-    gateways_note="Peminjaman ke orang (bukan proyek klien) wajib memakai Proyek Internal agar bin on_site selalu punya proyek (BR-AST-02). Aset dalam maintenance tidak bisa dicadangkan (F2).",
+    gateways_note="Peminjaman ke orang (bukan proyek klien) wajib memakai Proyek Internal agar bin on_site selalu punya proyek (BR-AST-02). Aset dalam maintenance tidak bisa dicadangkan (F2). Penyusutan nilai dihitung Akuntansi dari data meter, hari/jam pakai, dan skor kondisi (A-66, D-07).",
 ),
 dict(
     n=8, slug="stock-opname", title="Stock opname: sesi, hitung buta, hitung ulang, rekonsiliasi",
@@ -266,11 +277,11 @@ dict(
     intro="Sesi opname bulanan/tahunan/ad-hoc dengan pembekuan bin opsional, hitung buta, klasifikasi selisih berdasarkan ambang relatif dan absolut, "
           "hitung ulang oleh orang berbeda, dan rekonsiliasi yang menghasilkan satu ADJ per gudang yang disetujui di tingkat sesi.",
     assumptions=["A-09", "A-42", "A-46"],
-    br=["BR-OPN-01..08"],
+    br=["BR-OPN-01..10"],
     status=["OPN", "ADJ"],
     nodes=[
         ("s", "Kepala Gudang / Auditor", "start", "Jadwal opname / permintaan audit", ""),
-        ("t1", "Kepala Gudang / Auditor", "task", "Rencanakan sesi: jenis, cakupan (gudang/zona/bin), tim, pembekuan ya/tidak", "OPN planned"),
+        ("t1", "Kepala Gudang / Auditor", "task", "Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak", "OPN planned; BR-OPN-10"),
         ("g1", "Sistem", "gw", "Ada PCK berjalan di cakupan (bila pembekuan)?", "BR-OPN-02"),
         ("t2", "Kepala Gudang / Auditor", "task", "Selesaikan atau batalkan PCK dulu", ""),
         ("t3", "Sistem", "task", "Bekukan bin; snapshot saldo fisik (termasuk dicadangkan & Loading Area)", "OPN in_progress; bin frozen; BR-OPN-01"),
@@ -280,7 +291,7 @@ dict(
         ("t6", "Penghitung (Staf)", "task", "Hitung ulang oleh penghitung berbeda", "OPN recount; BR-OPN-05"),
         ("t7", "Kepala Gudang / Auditor", "task", "Isi kategori akar masalah untuk selisih besar", "root_cause_category; BR-OPN-07"),
         ("t8", "Kepala Gudang / Auditor", "task", "Rekonsiliasi: tinjau semua baris; draf ADJ per gudang", "OPN reconciling; ADJ submitted"),
-        ("t9", "Approver", "task", "Setujui sesi (persetujuan di tingkat sesi, bukan per ADJ)", "OPN approved; A-09; BR-OPN-06"),
+        ("t9", "Approver", "task", "Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen)", "OPN approved; A-09; BR-OPN-06; BR-OPN-09"),
         ("t10", "Sistem", "task", "ADJ posted; stock_adjusted; buka bin; laporan PDF; dashboard akurasi", "OPN closed"),
         ("e", "Sistem", "end", "Sesi ditutup", ""),
         ("g3", "Kepala Gudang / Auditor", "gw", "SJ mendesak dari bin beku?", ""),
@@ -292,7 +303,7 @@ dict(
         ("g2", "t7", "besar", False), ("g2", "t8", "kecil", False), ("t7", "t8", "", False), ("t8", "t9", "", False), ("t9", "t10", "disetujui", False), ("t10", "e", "", False),
         ("t3", "g3", "selama sesi", False), ("g3", "t11", "ya", False), ("t11", "t4", "", True),
     ],
-    gateways_note="Transaksi PWA offline yang tiba saat bin beku masuk antrean tinjauan (F2, BR-OPN-03). Auditor eksternal (F2) memakai akun tamu berbatas gudang & periode.",
+    gateways_note="Transaksi PWA offline yang tiba saat bin beku masuk antrean tinjauan (F2, BR-OPN-03). Auditor eksternal (F2) memakai akun tamu berbatas gudang & periode. Pemeriksaan mendadak (spot_check) melewati pembekuan dan tidak memposting ADJ sendiri (BR-OPN-10); penutupan sesi bulanan memajukan tanggal kunci stok (BR-STK-15).",
 ),
 dict(
     n=9, slug="approval-generik", title="Approval generik (semua jenis dokumen)",
@@ -478,7 +489,7 @@ def flow_md(flow):
     order = sorted(flow["nodes"], key=lambda n: (rank[n[0]], flow["lanes"].index(n[1])))
     o = [f'## Alur {flow["n"]} — {flow["title"]}', "",
          f'**Diagram:** [`diagram/bpmn-{flow["n"]:02d}-{flow["slug"]}.drawio`](../diagram/bpmn-{flow["n"]:02d}-{flow["slug"]}.drawio) · '
-         f'**Asumsi yang dipakai (default):** ' + ", ".join(f"[{a}](04-keputusan-dan-asumsi.md#{a.lower()})" for a in flow["assumptions"]) + " · "
+         f'**Asumsi yang dipakai:** ' + ", ".join(f"[{a}](04-keputusan-dan-asumsi.md#{a.lower()})" for a in flow["assumptions"]) + " · "
          f'**Aturan:** ' + link_ids(", ".join(flow["br"])) + " · **Status:** " + ", ".join(f"`{s}`" for s in flow["status"]), "",
          flow["intro"], "",
          "**Lane (aktor):** " + " · ".join(flow["lanes"]), "",
@@ -498,9 +509,9 @@ def flow_md(flow):
 
 HEADER = """# Proses Bisnis To-Be — {part}
 
-**Versi:** 0.1 (draf Part 2)
+**Versi:** 0.4 (Part 2, pasca-validasi & diskusi lanjutan 23 Sep 2026)
 **Tanggal:** 23 September 2026
-**Status:** **draf berdasarkan nilai default asumsi A-25–A-49** yang belum divalidasi; setiap alur mencantumkan asumsi yang dipakainya. Bila asumsi berubah, ubah data di [`diagram/_generate.py`](../diagram/_generate.py) dan jalankan ulang — file ini dan `.drawio` dibuat otomatis, **jangan diedit manual**.
+**Status:** asumsi A-25–A-49 dan A-51–A-66 disetujui 23 Sep 2026 (A-40 diubah); alur 1, 2, 7, 8 diperluas (purchasing, permintaan klien, pengiriman, audit); alur 5 memuat varian dari [A-50](04-keputusan-dan-asumsi.md#a-50) yang menunggu validasi; setiap alur mencantumkan asumsi yang dipakainya. Bila asumsi berubah, ubah data di [`diagram/_generate.py`](../diagram/_generate.py) dan jalankan ulang — file ini dan `.drawio` dibuat otomatis, **jangan diedit manual**.
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · {other}
 
 {scope}

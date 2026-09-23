@@ -1,0 +1,70 @@
+      <div class="row g-4">
+
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="card-header">
+              <div><h2 class="card-title h4">Live editor</h2><div class="card-subtitle">Edit the text and the diagram redraws</div></div>
+              <span class="badge badge-soft-secondary ms-auto">mermaid 11.4.1</span>
+            </div>
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-sm btn-soft-secondary mm-sample" data-sample="flow" type="button">Flowchart</button>
+                <button class="btn btn-sm btn-soft-secondary mm-sample" data-sample="sequence" type="button">Sequence</button>
+                <button class="btn btn-sm btn-soft-secondary mm-sample" data-sample="state" type="button">State</button>
+                <button class="btn btn-sm btn-soft-secondary mm-sample" data-sample="er" type="button">ER</button>
+              </div>
+              <textarea class="form-control font-monospace flex-grow-1" id="mmSource" rows="16" spellcheck="false" style="font-size:13px;min-height:320px"></textarea>
+              <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-primary btn-sm" id="mmRender" type="button"><i class="bi bi-play-fill me-1"></i>Render</button>
+                <button class="btn btn-soft-secondary btn-sm" id="mmSvg" type="button"><i class="bi bi-download me-1"></i>Download SVG</button>
+              </div>
+              <div class="text-danger small mt-2 d-none" id="mmError"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="card h-100">
+            <div class="card-header"><h2 class="card-title h4">Output</h2></div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="min-height:420px;overflow:auto">
+              <div id="mmOutput" style="width:100%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Deployment pipeline</h2><div class="card-subtitle">Flowchart with styled nodes</div></div></div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="overflow:auto"><div id="mmPipeline"></div></div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Checkout sequence</h2><div class="card-subtitle">Who calls whom, in order</div></div></div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="overflow:auto"><div id="mmSequence"></div></div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title h4">Release plan</h2><div class="card-subtitle">A Gantt chart written as eight lines of text</div></div></div>
+            <div class="card-body" style="overflow:auto"><div id="mmGantt"></div></div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Subscription states</h2><div class="card-subtitle">State diagram with transitions</div></div></div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="overflow:auto"><div id="mmState"></div></div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header"><div><h2 class="card-title h4">Plan mix</h2><div class="card-subtitle">Mermaid also draws simple pies</div></div></div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="overflow:auto"><div id="mmPie"></div></div>
+          </div>
+        </div>
+
+      </div>

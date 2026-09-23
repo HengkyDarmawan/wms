@@ -1,0 +1,131 @@
+      <!-- ===== Mail app ===== -->
+      <div class="nx-mail">
+
+        <!-- Folders -->
+        <div class="nx-mail-folders">
+          <a class="nx-mail-folder active" href="#"><i class="bi bi-inbox"></i>Inbox<span class="badge badge-soft-primary">24</span></a>
+          <a class="nx-mail-folder" href="#"><i class="bi bi-star"></i>Starred</a>
+          <a class="nx-mail-folder" href="#"><i class="bi bi-send"></i>Sent</a>
+          <a class="nx-mail-folder" href="#"><i class="bi bi-file-earmark"></i>Draft<span class="badge badge-soft-secondary">3</span></a>
+          <a class="nx-mail-folder" href="#"><i class="bi bi-exclamation-octagon"></i>Spam</a>
+          <a class="nx-mail-folder" href="#"><i class="bi bi-trash"></i>Trash</a>
+
+          <div class="nx-menu-group px-2">Labels</div>
+          <a class="nx-mail-folder" href="#"><span class="nx-mail-label-dot" style="background:var(--nx-chart-1)"></span>Product</a>
+          <a class="nx-mail-folder" href="#"><span class="nx-mail-label-dot" style="background:var(--nx-chart-4)"></span>Finance</a>
+          <a class="nx-mail-folder" href="#"><span class="nx-mail-label-dot" style="background:var(--nx-chart-3)"></span>Support</a>
+          <a class="nx-mail-folder" href="#"><span class="nx-mail-label-dot" style="background:var(--nx-chart-5)"></span>Personal</a>
+        </div>
+
+        <!-- List -->
+        <div class="nx-mail-list" id="mailList">
+          <div class="nx-mail-item unread selected" data-id="1">
+            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" aria-label="Select email">
+            <i class="bi bi-star nx-mi-star" aria-label="Star"></i>
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex"><span class="nx-mi-from flex-grow-1">Sarah Chen</span><span class="nx-mi-time">09:24</span></div>
+              <div class="nx-mi-subject">Q4 roadmap review &mdash; your input needed</div>
+              <div class="nx-mi-preview">Hi team, I've drafted the Q4 roadmap based on last week's planning session&hellip;</div>
+            </div>
+          </div>
+          <div class="nx-mail-item unread" data-id="2">
+            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" aria-label="Select email">
+            <i class="bi bi-star-fill nx-mi-star starred" aria-label="Star"></i>
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex"><span class="nx-mi-from flex-grow-1">Billing &mdash; Stripe</span><span class="nx-mi-time">08:02</span></div>
+              <div class="nx-mi-subject">Your invoice for September is ready</div>
+              <div class="nx-mi-preview">Invoice INV-2026-0042 for $2,400.00 is now available in your dashboard&hellip;</div>
+            </div>
+          </div>
+          <div class="nx-mail-item" data-id="3">
+            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" aria-label="Select email">
+            <i class="bi bi-star nx-mi-star" aria-label="Star"></i>
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex"><span class="nx-mi-from flex-grow-1">Marcus Webb</span><span class="nx-mi-time">Yesterday</span></div>
+              <div class="nx-mi-subject">PR #482 is ready for review</div>
+              <div class="nx-mi-preview">I've refactored the billing retry logic and added integration tests&hellip;</div>
+            </div>
+          </div>
+          <div class="nx-mail-item" data-id="4">
+            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" aria-label="Select email">
+            <i class="bi bi-star nx-mi-star" aria-label="Star"></i>
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex"><span class="nx-mi-from flex-grow-1">Hana Sato</span><span class="nx-mi-time">Yesterday</span></div>
+              <div class="nx-mi-subject">Kumo Inc. &mdash; discount request</div>
+              <div class="nx-mi-preview">Following up on our call, could we get a 15% annual commitment discount?</div>
+            </div>
+          </div>
+          <div class="nx-mail-item" data-id="5">
+            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" aria-label="Select email">
+            <i class="bi bi-star nx-mi-star" aria-label="Star"></i>
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex"><span class="nx-mi-from flex-grow-1">Status Page</span><span class="nx-mi-time">Sep 9</span></div>
+              <div class="nx-mi-subject">Resolved: elevated latency in eu-west-1</div>
+              <div class="nx-mi-preview">The incident has been resolved. Full postmortem will follow within 48 hours&hellip;</div>
+            </div>
+          </div>
+          <div class="nx-mail-item" data-id="6">
+            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" aria-label="Select email">
+            <i class="bi bi-star nx-mi-star" aria-label="Star"></i>
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex"><span class="nx-mi-from flex-grow-1">Lena Iversen</span><span class="nx-mi-time">Sep 8</span></div>
+              <div class="nx-mi-subject">Design tokens are live in Figma</div>
+              <div class="nx-mi-preview">The new palette and spacing scale have been published to the shared library&hellip;</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reading pane -->
+        <div class="nx-mail-read">
+          <div class="nx-mail-read-head">
+            <span class="nx-avatar"><img src="https://i.pravatar.cc/80?img=47" alt="Sarah Chen"></span>
+            <div class="flex-grow-1 min-w-0">
+              <h2 class="h4 mb-0" id="readSubject">Q4 roadmap review &mdash; your input needed</h2>
+              <div class="small text-muted"><span id="readFrom">Sarah Chen</span> &lt;sarah@nexa.io&gt; &middot; to me &middot; 09:24</div>
+            </div>
+            <div class="d-flex gap-1">
+              <button class="nx-icon-btn" type="button" data-bs-toggle="tooltip" data-bs-title="Reply" aria-label="Reply"><i class="bi bi-reply"></i></button>
+              <button class="nx-icon-btn" type="button" data-bs-toggle="tooltip" data-bs-title="Forward" aria-label="Forward"><i class="bi bi-arrow-right-short fs-4"></i></button>
+              <button class="nx-icon-btn" type="button" id="btnDeleteMail" data-bs-toggle="tooltip" data-bs-title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>
+          <div class="nx-mail-read-body">
+            <p>Hi team,</p>
+            <p>I've drafted the Q4 roadmap based on last week's planning session. The three themes we agreed on are <strong>billing reliability</strong>, <strong>self-serve onboarding</strong>, and <strong>the new analytics surface</strong>.</p>
+            <p>Before I share it with leadership on Friday, I'd like each of you to review your area and flag anything that looks under- or over-scoped. Particularly:</p>
+            <ul>
+              <li>Billing retries &mdash; is two sprints realistic given the Stripe migration?</li>
+              <li>Onboarding wizard &mdash; can design land the final flows by week 3?</li>
+              <li>Analytics &mdash; do we need a dedicated backend engineer?</li>
+            </ul>
+            <p>Attachment has the full breakdown per squad.</p>
+            <p class="mb-4">Thanks,<br>Sarah</p>
+            <div class="d-flex flex-wrap gap-2">
+              <a class="nx-attach-chip" href="#"><i class="bi bi-file-earmark-pdf text-danger"></i>Q4-roadmap.pdf<span class="text-muted">1.2 MB</span></a>
+              <a class="nx-attach-chip" href="#"><i class="bi bi-file-earmark-spreadsheet text-success"></i>squad-capacity.xlsx<span class="text-muted">348 KB</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Compose modal ===== -->
+      <div class="modal fade" id="composeModal" tabindex="-1" aria-labelledby="composeTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="composeTitle">New message</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3"><label class="form-label" for="composeTo">To</label><input type="email" class="form-control" id="composeTo" placeholder="name@company.com"></div>
+              <div class="mb-3"><label class="form-label" for="composeSubject">Subject</label><input type="text" class="form-control" id="composeSubject" placeholder="Subject"></div>
+              <label class="form-label">Message</label>
+              <div id="composeEditor" style="min-height:220px"></div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-soft-secondary" type="button" data-bs-dismiss="modal">Discard</button>
+              <button class="btn btn-primary" type="button" id="btnSendMail"><i class="bi bi-send me-1"></i>Send</button>
+            </div>
+          </div>
+        </div>
+      </div>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         failOnWarning="true"
+         failOnRisky="true"
+         cacheDirectory=".phpunit.cache"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <!-- Kunci tetap: .env di-gitignore, jadi uji harus jalan pada klon bersih. -->
+        <env name="APP_KEY" value="base64:i+h8iXKXaT36K43tKZgChZ44Fh1oYhZGONmWx/iesJc="/>
+        <env name="APP_URL" value="http://wms.test"/>
+        <env name="APP_CENTRAL_DOMAIN" value="wms.test"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <!-- Database uji terpisah; jangan menyentuh database di luar prefiks wms_. -->
+        <env name="DB_CONNECTION" value="central"/>
+        <env name="DB_DATABASE" value="wms_central_test"/>
+        <env name="TENANT_DB_PREFIX" value="wms_tenant_test_"/>
+        <env name="DB_URL" value=""/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+    </php>
+</phpunit>

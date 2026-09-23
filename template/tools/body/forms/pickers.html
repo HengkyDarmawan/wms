@@ -1,0 +1,52 @@
+      <div class="row g-4">
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Date &amp; time (Flatpickr)</h2></div><div class="card-body">
+          <div class="mb-3"><label class="form-label" for="pkDate">Single date</label><input class="form-control" id="pkDate" placeholder="Select a date"></div>
+          <div class="mb-3"><label class="form-label" for="pkRange">Date range</label><input class="form-control" id="pkRange" placeholder="Select a range"></div>
+          <div class="mb-3"><label class="form-label" for="pkDateTime">Date &amp; time</label><input class="form-control" id="pkDateTime" placeholder="Select date and time"></div>
+          <div class="mb-3"><label class="form-label" for="pkTime">Time only</label><input class="form-control" id="pkTime" placeholder="Select a time"></div>
+          <div class="mb-0"><label class="form-label" for="pkMulti">Multiple dates</label><input class="form-control" id="pkMulti" placeholder="Pick several dates"></div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Inline calendar</h2></div><div class="card-body">
+          <div id="pkInline"></div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Range sliders (noUiSlider)</h2></div><div class="card-body">
+          <label class="form-label">Single value <span class="text-muted small" id="sl1Val">50</span></label>
+          <div id="sl1" class="mb-4"></div>
+
+          <label class="form-label">Two handles <span class="text-muted small" id="sl2Val">20 &ndash; 80</span></label>
+          <div id="sl2" class="mb-4"></div>
+
+          <label class="form-label">With tooltips and steps of 10</label>
+          <div id="sl3" class="mb-4 mt-4"></div>
+
+          <label class="form-label">Currency format (IDR)</label>
+          <div id="sl4" class="mb-2 mt-4"></div>
+          <div class="d-flex justify-content-between small text-muted"><span id="sl4Min"></span><span id="sl4Max"></span></div>
+        </div></div></div>
+
+        <div class="col-lg-6"><div class="card h-100"><div class="card-header"><h2 class="card-title h4">Colour picker</h2></div><div class="card-body">
+          <div class="mb-4">
+            <label class="form-label" for="pkColor">Native colour input</label>
+            <div class="d-flex align-items-center gap-3">
+              <input class="form-control form-control-color" type="color" id="pkColor" value="#6366f1">
+              <code id="pkColorVal">#6366f1</code>
+            </div>
+          </div>
+          <label class="form-label">Preset swatches</label>
+          <div class="d-flex flex-wrap gap-2" id="pkPresets">
+            <button class="nx-thumb active" type="button" data-color="#6366f1" style="width:40px;height:40px;background:#6366f1" aria-label="Indigo"></button>
+            <button class="nx-thumb" type="button" data-color="#22d3ee" style="width:40px;height:40px;background:#22d3ee" aria-label="Cyan"></button>
+            <button class="nx-thumb" type="button" data-color="#10b981" style="width:40px;height:40px;background:#10b981" aria-label="Emerald"></button>
+            <button class="nx-thumb" type="button" data-color="#f59e0b" style="width:40px;height:40px;background:#f59e0b" aria-label="Amber"></button>
+            <button class="nx-thumb" type="button" data-color="#ef4444" style="width:40px;height:40px;background:#ef4444" aria-label="Red"></button>
+            <button class="nx-thumb" type="button" data-color="#f472b6" style="width:40px;height:40px;background:#f472b6" aria-label="Pink"></button>
+            <button class="nx-thumb" type="button" data-color="#a855f7" style="width:40px;height:40px;background:#a855f7" aria-label="Purple"></button>
+            <button class="nx-thumb" type="button" data-color="#0f172a" style="width:40px;height:40px;background:#0f172a" aria-label="Slate"></button>
+          </div>
+          <div class="mt-4 p-4 rounded text-center" id="pkPreview" style="background:#6366f1;color:#fff">Preview surface</div>
+        </div></div></div>
+
+      </div>
