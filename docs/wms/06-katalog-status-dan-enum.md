@@ -1,0 +1,289 @@
+# Katalog Status & Enum
+
+**Versi:** 0.3
+**Tanggal:** 23 September 2026
+**Status:** baru (hasil audit dokumentasi v0.3); nilai menunggu validasi bersama [A-29](04-keputusan-dan-asumsi.md#a-29)–[A-49](04-keputusan-dan-asumsi.md#a-49)
+**Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Glosarium](03-glosarium.md)
+
+Dokumen ini adalah **satu-satunya sumber** nilai status dan enum. UI memakai kolom *Label*, kode memakai kolom *Enum* (`snake_case`, Inggris). Developer dan agen AI **tidak boleh** menambah status di luar katalog ini tanpa menaikkan versi dokumen ini.
+
+Konvensi:
+- Aksi ditulis sebagai permission `<modul>.<aksi>` (mis. `request.approve`).
+- *Guard* = syarat yang harus terpenuhi sebelum transisi.
+- *Efek* = perubahan pada ledger / reservasi / kejadian stok (rujuk [matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok)).
+- Tag fase `[F1]` `[F2]` `[F3]` mengikuti [Blueprint §18](01-blueprint.md#18-peta-modul--fase-rilis).
+
+---
+
+## 1. Status umum dokumen
+
+Nilai yang dipakai bersama oleh banyak dokumen. Warna badge adalah usulan untuk NexaDash.
+
+| Enum | Label UI | Arti | Badge |
+|---|---|---|---|
+| `draft` | Draf | Belum diajukan, boleh diedit/dihapus oleh pembuat | secondary |
+| `submitted` | Diajukan | Sudah diajukan, menunggu tahap berikutnya | info |
+| `under_review` | Ditinjau Staf | Ditinjau staf company (khusus permintaan klien) | info |
+| `pending_approval` | Menunggu Approval | Sedang di lapis approval | warning |
+| `approved` | Disetujui | Semua lapis approval selesai | primary |
+| `in_progress` | Diproses | Dokumen anak (tugas/pengiriman) sedang berjalan | primary |
+| `partially_fulfilled` | Sebagian Terpenuhi | Sebagian baris selesai, sisanya backorder | warning |
+| `completed` | Selesai | Semua baris terpenuhi | success |
+| `closed_short` | Ditutup dengan Sisa | Ditutup manual; sisa backorder dilepas | dark |
+| `rejected` | Ditolak | Ditolak approver; wajib alasan | danger |
+| `cancelled` | Dibatalkan | Dibatalkan pengaju/admin; wajib alasan; bila stok sudah bergerak, dibuat dokumen pembalik | danger |
+
+## 2. Mesin status per dokumen
+
+### 2.1 `REQ` Permintaan Material — `material_request` [F1]
+
+| Dari | Ke | Aksi (permission) | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `draft` | `request.create` | Pemohon Internal, Klien | Proyek aktif | — |
+| `draft` | `submitted` | `request.submit` | Pembuat | ≥1 baris; tanggal dibutuhkan terisi | timeline |
+| `submitted` | `under_review` | otomatis | sistem | Pemohon = Klien ([A-07](04-keputusan-dan-asumsi.md#a-07)) | notifikasi staf |
+| `submitted` | `pending_approval` | otomatis | sistem | Pemohon internal; gudang sumber terisi ([A-31](04-keputusan-dan-asumsi.md#a-31)) | snapshot aturan approval |
+| `under_review` | `pending_approval` | `request.review` | Staf Gudang / Kepala Gudang | Semua baris non-katalog terpetakan ([A-39](04-keputusan-dan-asumsi.md#a-39)); gudang sumber terisi | perubahan baris tercatat di timeline; klien diberi tahu |
+| `under_review` | `rejected` | `request.review` | Staf / Kepala Gudang | Alasan | notifikasi klien |
+| `pending_approval` | `approved` | `request.approve` | Approver sesuai aturan | Semua lapis setuju; setiap baris punya sumber: stok tersedia, transfer, atau PR ([A-30](04-keputusan-dan-asumsi.md#a-30)) | **reservasi lunak** dibuat; backorder → TRF/PRQ dibuat |
+| `pending_approval` | `approved` | otomatis | sistem | Tidak ada aturan approval ([A-08](04-keputusan-dan-asumsi.md#a-08)) | sama |
+| `pending_approval` | `rejected` | `request.approve` | Approver | Alasan | — |
+| `approved` | `in_progress` | otomatis | sistem | PCK pertama dibuat, atau cross-dock dari GRN | — |
+| `in_progress` | `partially_fulfilled` | otomatis | sistem | ≥1 SJ `delivered`, masih ada baris terbuka | — |
+| `in_progress` / `partially_fulfilled` | `completed` | otomatis | sistem | Semua baris terkirim & dikonfirmasi terima | reservasi tersisa = 0 |
+| `partially_fulfilled` | `closed_short` | `request.close_short` | Kepala Gudang / Pemohon | Alasan | reservasi & backorder sisa dilepas; PRQ terkait dibatalkan bila belum diteruskan |
+| `draft`/`submitted`/`under_review`/`pending_approval` | `cancelled` | `request.cancel` | Pembuat / Admin | Alasan | — |
+| `approved`/`in_progress` | `cancelled` | `request.cancel` | Kepala Gudang | Tidak ada SJ `shipped`; alasan | reservasi dilepas; PCK dibatalkan; PRQ dibatalkan bila belum diteruskan |
+
+### 2.2 `PCK` Tugas Picking — `pick_task` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `pending` (Menunggu) | otomatis / `pick.create` | sistem / Kepala Gudang | REQ/TRF `approved` | alokasi keras: bin/lot/potongan disarankan sesuai strategi |
+| `pending` | `in_progress` (Dikerjakan) | `pick.start` | Staf Gudang | Bin tidak dibeku opname | — |
+| `in_progress` | `completed` (Selesai) | `pick.complete` | Staf Gudang | Semua baris dipindai/dikonfirmasi; **short pick** wajib alasan ([A-35](04-keputusan-dan-asumsi.md#a-35)) | ledger: bin → Loading Area; short pick → bin ditandai hitung, sisa jadi backorder |
+| `pending`/`in_progress` | `cancelled` | `pick.cancel` | Kepala Gudang | Alasan | barang di Loading Area dikembalikan ke bin (ledger balik); alokasi dilepas |
+
+### 2.3 `SJ` Pengiriman / Surat Jalan — `shipment` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `prepared` (Disiapkan) | `shipment.create` | Staf Gudang | Barang di Loading Area; tujuan (proyek/klien/gudang) & kendaraan/ekspedisi terisi | — |
+| `prepared` | `shipped` (Dikirim) | `shipment.ship` | Staf Gudang / Driver | Konfirmasi muat (foto opsional) | ledger: Loading Area → bin virtual *Dalam Perjalanan* (milik gudang asal); kejadian `goods_shipped` |
+| `shipped` | `delivered` (Diterima) | `shipment.confirm_delivery` | Driver / penerima bertoken ([A-41](04-keputusan-dan-asumsi.md#a-41)) | Bukti terima: foto + tanda tangan + jumlah = dikirim | lihat [BR-SJ-04](05-aturan-bisnis.md#br-sj) untuk efek per tujuan |
+| `shipped` | `partially_delivered` (Diterima Sebagian) | `shipment.confirm_delivery` | sama | Jumlah diterima < dikirim | sama + dokumen `DSC` dibuat otomatis |
+| `prepared` | `cancelled` | `shipment.cancel` | Kepala Gudang | Alasan | barang tetap di Loading Area; PCK tetap `completed` |
+
+Catatan: SJ setelah `shipped` **tidak bisa dibatalkan**; koreksi lewat `DSC` atau `RET`. *Konfirmasi muat* adalah catatan timeline pada transisi ke `shipped`, bukan status tersendiri.
+
+### 2.4 `DSC` Selisih Pengiriman — `delivery_discrepancy` [F1] (baru, [A-35](04-keputusan-dan-asumsi.md#a-35))
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `open` (Terbuka) | otomatis | sistem | SJ `partially_delivered` | selisih tetap di *Dalam Perjalanan* |
+| `open` | `resolved` (Diselesaikan) | `discrepancy.resolve` | Kepala Gudang | Disposisi per baris: `returned_to_warehouse` / `adjusted` (hilang/rusak, alasan) / `claimed` (klaim ekspedisi) | ledger sesuai disposisi; kejadian `delivery_discrepancy` |
+
+### 2.5 `GRN` Penerimaan Barang — `goods_receipt` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `draft` | `receipt.create` | Staf Gudang | Sumber: vendor (manual / PO [F3]) · SJ masuk · RET | — |
+| `draft` | `received` (Diterima) | `receipt.receive` | Staf Gudang | Jumlah per baris; lot/serial/potongan terisi bila mode pelacakan menuntut | ledger: masuk ke bin Penerimaan (atau Karantina bila item wajib QC); kejadian `goods_received` / `stock_transferred` / `goods_returned` sesuai sumber |
+| `received` | `completed` (Selesai) | `receipt.complete` | Staf Gudang | Hasil QC per baris terisi (`passed`/`quarantined`/`rejected`) bila QC aktif; PUT dibuat untuk baris `passed` | baris `rejected` tetap di Karantina menunggu `RTV`; cross-dock → langsung Loading Area |
+| `draft` | `cancelled` | `receipt.cancel` | Kepala Gudang | Alasan | — |
+
+Catatan: GRN `received` tidak bisa dibatalkan; koreksi lewat `ADJ` atau `RTV`. QC adalah **langkah** di dalam status `received`, bukan status.
+
+### 2.6 `PUT` Tugas Put-away — `putaway_task` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `pending` | otomatis | sistem | GRN `completed` | bin disarankan (kategori penyimpanan, kapasitas) |
+| `pending` | `completed` | `putaway.complete` | Staf Gudang | Bin tujuan dipindai | ledger: Penerimaan → bin tujuan |
+| `pending` | `cancelled` | `putaway.cancel` | Kepala Gudang | Alasan | barang tetap di bin Penerimaan |
+
+### 2.7 `TRF` Transfer — `transfer` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `submitted` | `transfer.create` | Staf / Kepala Gudang / sistem (backorder) | Gudang asal ≠ tujuan atau proyek asal ≠ tujuan | — |
+| `submitted` | `pending_approval` / `approved` | otomatis | sistem | Sesuai aturan approval | reservasi lunak di gudang asal |
+| `pending_approval` | `approved` / `rejected` | `transfer.approve` | Approver | — | — |
+| `approved` | `in_progress` | otomatis | sistem | PCK dibuat | — |
+| `in_progress` | `completed` | otomatis | sistem | GRN tujuan `completed` | — |
+| `submitted`/`pending_approval`/`approved` | `cancelled` | `transfer.cancel` | Pengaju / Kepala Gudang | Belum ada SJ `shipped`; alasan | reservasi dilepas |
+
+### 2.8 `RET` Retur dari Proyek — `goods_return` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `submitted` | `return.create` | Pemohon Internal / Klien / Staf | Merujuk SJ asal atau proyek; baris jual-putus mengikuti [A-26](04-keputusan-dan-asumsi.md#a-26) | — |
+| `submitted` | `pending_approval` / `approved` | otomatis | sistem | Sesuai aturan | — |
+| `pending_approval` | `approved` / `rejected` | `return.approve` | Approver | — | — |
+| `approved` | `in_progress` | otomatis | sistem | SJ balik dibuat (atau tanpa SJ bila diantar sendiri) | — |
+| `in_progress` | `received` (Diterima) | otomatis | sistem | GRN jenis retur `received` | ledger masuk ke bin Retur |
+| `received` | `sorted` (Dipilah) | `return.sort` | Staf Gudang | Setiap baris: `good` / `damaged` / `offcut` / `waste` | ledger: bin Retur → bin tujuan; offcut mendapat ID potongan + silsilah; kejadian `goods_returned` (dengan penanda kepemilikan) atau `asset_returned` |
+| `submitted`/`pending_approval`/`approved` | `cancelled` | `return.cancel` | Pengaju | Belum ada SJ `shipped`; alasan | — |
+
+### 2.9 `ISU` Pemakaian Material — `material_issue` [F1] (baru, [A-32](04-keputusan-dan-asumsi.md#a-32))
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `draft` | `issue.create` | Staf Gudang Site / Pemohon Internal | Gudang Site milik proyek; hanya item habis pakai | — |
+| `draft` | `confirmed` (Dikonfirmasi) | `issue.confirm` | Staf Gudang Site | Stok tersedia cukup | ledger: bin Gudang Site → keluar (dipakai proyek); kejadian `material_consumed` |
+| `draft` | `cancelled` | `issue.cancel` | Pembuat | — | — |
+
+Pembalikan setelah `confirmed` hanya lewat dokumen ISU pembalik (jumlah negatif, alasan, approval).
+
+### 2.10 `CNV` Konversi Material — `conversion` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `draft` | `conversion.create` | Staf Gudang | Proyek terisi ([D-10](04-keputusan-dan-asumsi.md#d-10)); input tersedia | — |
+| `draft` | `pending_approval` | `conversion.submit` | Staf Gudang | Ada aturan approval | — |
+| `draft` / `pending_approval` | `completed` | `conversion.complete` / `conversion.approve` | Staf / Approver | Neraca ukuran: input = output + offcut + waste + kerf | ledger: input keluar, output & offcut masuk (ID potongan baru + silsilah), waste ke bin Waste; kejadian `material_converted` |
+| `draft` / `pending_approval` | `cancelled` | `conversion.cancel` | Pembuat | Alasan | — |
+
+Pembalikan `completed` hanya bila **tidak ada output/offcut yang sudah dipakai** ([BR-CNV-05](05-aturan-bisnis.md#br-cnv)).
+
+### 2.11 `AST` Serah Terima Aset — `asset_handover` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `checked_out` (Dipinjam) | otomatis | sistem | SJ berisi aset `delivered` | aset → bin virtual *On-site Proyek*; state aset `on_loan`; kejadian `asset_checked_out` |
+| `checked_out` | `returned` (Dikembalikan) | otomatis | sistem | GRN retur berisi aset `received` | aset → bin Retur; state `returned` |
+| `returned` | `inspected` (Diperiksa) | `asset.inspect` | Staf Gudang | Grade kondisi + foto | state → `available` / `maintenance` / `damaged`; kejadian `asset_returned` |
+
+Aset `lost` / `written_off` diproses lewat `ADJ` ([BR-AST-04](05-aturan-bisnis.md#br-ast)).
+
+### 2.12 `ADJ` Penyesuaian Stok — `stock_adjustment` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `submitted` | `adjustment.create` | Staf / Kepala Gudang / sistem (dari OPN, DSC) | Alasan dari master Alasan | — |
+| `submitted` | `pending_approval` | otomatis | sistem | Manual: **selalu** ([A-09](04-keputusan-dan-asumsi.md#a-09)); dari OPN: dilewati, approval di sesi | — |
+| `pending_approval` | `approved` / `rejected` | `adjustment.approve` | Approver | — | — |
+| `approved` | `posted` (Diposting) | otomatis | sistem | — | ledger ±; kejadian `stock_adjusted` |
+| `submitted` / `pending_approval` | `cancelled` | `adjustment.cancel` | Pengaju | — | — |
+
+### 2.13 `OPN` Sesi Stock Opname — `stock_count` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `planned` (Direncanakan) | `count.create` | Kepala Gudang / Auditor | Cakupan, tim, jenis, pembekuan ya/tidak | — |
+| `planned` | `in_progress` (Berjalan) | `count.start` | Kepala Gudang / Auditor | Tidak ada PCK `in_progress` di bin cakupan bila pembekuan aktif ([BR-OPN-02](05-aturan-bisnis.md#br-opn)) | bin dibeku; snapshot angka sistem (fisik) |
+| `in_progress` | `recount` (Hitung Ulang) | otomatis | sistem | Ada baris selisih kelas *sedang* ([A-42](04-keputusan-dan-asumsi.md#a-42)) | penugasan penghitung berbeda |
+| `in_progress` / `recount` | `reconciling` (Rekonsiliasi) | `count.reconcile` | Kepala Gudang / Auditor | Semua baris terhitung | draf ADJ per gudang dibuat |
+| `reconciling` | `approved` | `count.approve` | Approver | Selisih kelas *besar* punya akar masalah | ADJ → `posted`; bin dibuka |
+| `approved` | `closed` (Ditutup) | otomatis | sistem | Laporan PDF terbit | — |
+| `planned` | `cancelled` | `count.cancel` | Pembuat | — | — |
+
+### 2.14 `WST` Berita Acara Waste — `waste_disposal` [F1]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `submitted` | `waste.create` | Staf Gudang | Baris dari bin Waste; disposisi `disposed` / `sold_scrap` / `reused` | — |
+| `submitted` | `pending_approval` / `approved` | otomatis | sistem | Sesuai aturan | — |
+| `pending_approval` | `approved` / `rejected` | `waste.approve` | Approver | — | — |
+| `approved` | `closed` | `waste.close` | Staf Gudang | Bukti (foto/berita acara) | ledger: bin Waste → keluar (atau kembali ke stok bila `reused`); kejadian `waste_disposed` |
+| `submitted` / `pending_approval` | `cancelled` | `waste.cancel` | Pengaju | — | — |
+
+### 2.15 `PRQ` Purchase Request — `purchase_request` [F1 manual, F3 terhubung]
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `submitted` | otomatis / `pr.create` | sistem (backorder REQ) / Staf | Item terdefinisi (non-katalog sudah dipetakan) | kejadian `purchase_requested` |
+| `submitted` | `pending_approval` / `forwarded` | otomatis | sistem | Sesuai aturan (opsional) | — |
+| `pending_approval` | `forwarded` (Diteruskan) / `rejected` | `pr.approve` | Approver | — | — |
+| `forwarded` | `partially_fulfilled` / `fulfilled` (Dipenuhi) | otomatis | sistem | GRN baris merujuk PRQ baris ([A-47](04-keputusan-dan-asumsi.md#a-47)) | reservasi otomatis ke REQ penunggu |
+| `submitted` / `pending_approval` / `forwarded` | `cancelled` | `pr.cancel` | Penindak Lanjut PR | Alasan; belum ada GRN | kejadian `purchase_request_cancelled` |
+
+### 2.16 `RTV` Retur ke Vendor — `vendor_return` [F1] (baru, [A-34](04-keputusan-dan-asumsi.md#a-34))
+
+| Dari | Ke | Aksi | Aktor | Guard | Efek |
+|---|---|---|---|---|---|
+| — | `submitted` | `vendor_return.create` | Staf Gudang | Baris dari Karantina hasil QC `rejected` (atau alasan lain) | — |
+| `submitted` | `pending_approval` / `approved` | otomatis | sistem | Sesuai aturan | — |
+| `pending_approval` | `approved` / `rejected` | `vendor_return.approve` | Approver | — | — |
+| `approved` | `shipped` (Dikirim) | `vendor_return.ship` | Staf Gudang | Surat jalan retur | ledger: Karantina → keluar; kejadian `goods_rejected` |
+| `shipped` | `completed` | `vendor_return.complete` | Penindak Lanjut PR | Konfirmasi vendor (ganti barang → GRN baru) | — |
+| `submitted` / `pending_approval` / `approved` | `cancelled` | `vendor_return.cancel` | Pengaju | Alasan | — |
+
+## 3. Enum lain
+
+| Enum | Nilai (`kode` = Label) |
+|---|---|
+| `stock_status` (kondisi saldo) | `available` = Tersedia · `quarantine` = Karantina · `damaged` = Rusak. *Dicadangkan* bukan status, melainkan tabel `stock_reservation` ([A-29](04-keputusan-dan-asumsi.md#a-29)). |
+| `bin_type` | `storage` = Penyimpanan · `receiving` = Penerimaan · `staging` = Loading Area · `quarantine` = Karantina QC · `return` = Retur · `waste` = Waste · `in_transit` = Dalam Perjalanan (virtual) · `on_site` = On-site Proyek (virtual) |
+| `bin_status` | `active` = Aktif · `frozen` = Dibeku (opname) · `inactive` = Nonaktif |
+| `ownership_model` | `consumable` = Habis pakai / jual putus · `asset` = Aset dipinjamkan · `both` = Keduanya |
+| `line_ownership` (per baris REQ, [A-38](04-keputusan-dan-asumsi.md#a-38)) | `buy` = Beli · `loan` = Pinjam |
+| `tracking_mode` | `none` · `lot` = Batch/Lot · `serial` = Serial number · `piece` = Per potong |
+| `removal_strategy` | `fifo` · `fefo` · `manual` · `offcut_first` = Sisa potongan dulu |
+| `asset_state` | `available` · `reserved` · `in_transit` · `on_loan` = Dipinjam · `returned` = Dikembalikan · `inspection` = Pemeriksaan · `maintenance` · `damaged` = Rusak · `lost` = Hilang · `written_off` = Dihapuskan |
+| `qc_result` | `passed` = Lolos · `quarantined` = Karantina · `rejected` = Ditolak |
+| `condition_grade` | `A` = Baik · `B` = Layak · `C` = Rusak ringan · `D` = Rusak berat |
+| `return_sorting` | `good` = Layak · `damaged` = Rusak · `offcut` = Offcut · `waste` = Waste |
+| `waste_disposition` | `disposed` = Dibuang · `sold_scrap` = Dijual scrap · `reused` = Dipakai ulang |
+| `discrepancy_disposition` | `returned_to_warehouse` = Kembali ke gudang · `adjusted` = Disesuaikan (hilang/rusak) · `claimed` = Klaim ekspedisi |
+| `project_status` ([A-40](04-keputusan-dan-asumsi.md#a-40)) | `active` = Aktif · `closed` = Ditutup · `cancelled` = Dibatalkan · `archived` = Diarsipkan |
+| `subscription_status` | `trial` · `active` = Aktif · `past_due` = Jatuh Tempo (tenggang) · `suspended` = Ditangguhkan · `terminated` = Diakhiri |
+| `approval_decision` | `approved` = Setuju · `rejected` = Tolak · `delegated` = Didelegasikan · `escalated` = Dieskalasi |
+| `approval_channel` | `web` · `whatsapp` |
+| `notification_channel` | `in_app` · `email` · `whatsapp` |
+| `count_type` | `monthly` · `annual` · `adhoc` · `cycle_abc` [F2] |
+| `variance_class` | `minor` = Kecil (auto) · `moderate` = Sedang (hitung ulang) · `major` = Besar (approval + akar masalah) |
+| `root_cause_category` | `mispick` = Salah ambil · `misplaced` = Salah taruh · `wrong_uom` = Salah satuan · `damaged_lost` = Rusak/hilang · `unrecorded_txn` = Transaksi tidak tercatat · `other` |
+| `sync_status` (PWA, [F2]) | `queued` · `synced` · `conflict` = Perlu tinjauan · `held` = Ditahan (langganan ditangguhkan) |
+| `item_status` | `active` · `provisional` = Sementara (dibuat dari baris non-katalog) · `inactive` |
+
+## 4. Blok mesin-status untuk prompt & tes
+
+Ringkasan yang bisa disalin langsung ke prompt Claude Code atau ke tes transisi. Sumber kebenaran tetap tabel di atas.
+
+```yaml
+material_request:
+  initial: draft
+  transitions:
+    - {from: draft, to: submitted, action: request.submit}
+    - {from: submitted, to: under_review, action: system, when: requester_is_client}
+    - {from: submitted, to: pending_approval, action: system}
+    - {from: under_review, to: pending_approval, action: request.review}
+    - {from: under_review, to: rejected, action: request.review}
+    - {from: pending_approval, to: approved, action: request.approve}
+    - {from: pending_approval, to: rejected, action: request.approve}
+    - {from: approved, to: in_progress, action: system}
+    - {from: in_progress, to: partially_fulfilled, action: system}
+    - {from: [in_progress, partially_fulfilled], to: completed, action: system}
+    - {from: partially_fulfilled, to: closed_short, action: request.close_short}
+    - {from: [draft, submitted, under_review, pending_approval], to: cancelled, action: request.cancel}
+    - {from: [approved, in_progress], to: cancelled, action: request.cancel, guard: no_shipped_shipment}
+  terminal: [completed, closed_short, rejected, cancelled]
+shipment:
+  initial: prepared
+  transitions:
+    - {from: prepared, to: shipped, action: shipment.ship}
+    - {from: shipped, to: delivered, action: shipment.confirm_delivery}
+    - {from: shipped, to: partially_delivered, action: shipment.confirm_delivery, effect: create_dsc}
+    - {from: prepared, to: cancelled, action: shipment.cancel}
+  terminal: [delivered, partially_delivered, cancelled]
+goods_receipt:
+  initial: draft
+  transitions:
+    - {from: draft, to: received, action: receipt.receive, effect: ledger_in}
+    - {from: received, to: completed, action: receipt.complete, effect: create_putaway}
+    - {from: draft, to: cancelled, action: receipt.cancel}
+  terminal: [completed, cancelled]
+stock_count:
+  initial: planned
+  transitions:
+    - {from: planned, to: in_progress, action: count.start, effect: freeze_bins}
+    - {from: in_progress, to: recount, action: system}
+    - {from: [in_progress, recount], to: reconciling, action: count.reconcile}
+    - {from: reconciling, to: approved, action: count.approve, effect: post_adjustments}
+    - {from: approved, to: closed, action: system}
+    - {from: planned, to: cancelled, action: count.cancel}
+  terminal: [closed, cancelled]
+```
+
+Dokumen lain (PCK, PUT, TRF, RET, ISU, CNV, AST, ADJ, WST, PRQ, RTV, DSC) mengikuti tabel §2 dengan pola yang sama; blok YAML-nya dibuat di spesifikasi modul masing-masing (Part 4).

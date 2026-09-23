@@ -1,0 +1,103 @@
+<mxfile host="app.diagrams.net" agent="wms-erd-generator">
+  <diagram name="ERD stok" id="erd-stok">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="1654">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="stock_movements" value="stock_movements" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="260" height="306" as="geometry"/>
+        </mxCell>
+        <mxCell id="stock_movements_cols" value="🔑 id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ from_bin_id : bigint&lt;br&gt;↗ to_bin_id : bigint&lt;br&gt;↗ lot_id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ piece_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;stock_status : enum&lt;br&gt;↗ project_id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;document_id : bigint&lt;br&gt;document_line_id : bigint&lt;br&gt;↗ reason_code_id : bigint&lt;br&gt;occurred_at : datetime&lt;br&gt;↗ performed_by : bigint&lt;br&gt;↗ reverses_movement_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="stock_movements">
+          <mxGeometry y="26" width="260" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="stock_balances" value="stock_balances" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="40" width="260" height="194" as="geometry"/>
+        </mxCell>
+        <mxCell id="stock_balances_cols" value="🔑 id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ bin_id : bigint&lt;br&gt;↗ lot_id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ piece_id : bigint&lt;br&gt;stock_status : enum&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;piece_count : int&lt;br&gt;version : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="stock_balances">
+          <mxGeometry y="26" width="260" height="168" as="geometry"/>
+        </mxCell>
+        <mxCell id="stock_reservations" value="stock_reservations" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="40" width="260" height="258" as="geometry"/>
+        </mxCell>
+        <mxCell id="stock_reservations_cols" value="🔑 id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ bin_id : bigint&lt;br&gt;↗ lot_id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ piece_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;level : enum&lt;br&gt;document_type : varchar(30)&lt;br&gt;document_id : bigint&lt;br&gt;document_line_id : bigint&lt;br&gt;status : enum&lt;br&gt;released_reason : varchar(60)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="stock_reservations">
+          <mxGeometry y="26" width="260" height="232" as="geometry"/>
+        </mxCell>
+        <mxCell id="stock_events" value="stock_events" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="40" width="260" height="258" as="geometry"/>
+        </mxCell>
+        <mxCell id="stock_events_cols" value="🔑 id : bigint&lt;br&gt;◆ event_id : uuid&lt;br&gt;schema_version : varchar(10)&lt;br&gt;event_type : varchar(40)&lt;br&gt;occurred_at : datetime&lt;br&gt;recorded_at : datetime&lt;br&gt;source_type : varchar(30)&lt;br&gt;source_id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;payload : json&lt;br&gt;reverses_event_id : uuid&lt;br&gt;published_at : datetime&lt;br&gt;attempts : int&lt;br&gt;last_error : text" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="stock_events">
+          <mxGeometry y="26" width="260" height="232" as="geometry"/>
+        </mxCell>
+        <mxCell id="bins" value="bins" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="396" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="bins_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="bins">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="items" value="items" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="360" y="396" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="items_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="items">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="lots" value="lots" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="680" y="396" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="lots_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="lots">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="pieces" value="pieces" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="396" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="pieces_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="pieces">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="serials" value="serials" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="496" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="serials_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="serials">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="warehouses" value="warehouses" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="360" y="496" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="warehouses_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="warehouses">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="r0" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="items" target="stock_movements">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r1" value="from/to" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="bins" target="stock_movements">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="items" target="stock_balances">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="bins" target="stock_balances">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="items" target="stock_reservations">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r5" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="warehouses" target="stock_reservations">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r6" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="lots" target="stock_balances">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r7" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="serials" target="stock_balances">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r8" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="pieces" target="stock_balances">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r9" value="memicu" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="stock_movements" target="stock_events">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r10" value="pembalik" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="stock_movements" target="stock_movements">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

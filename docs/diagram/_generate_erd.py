@@ -1,0 +1,343 @@
+# -*- coding: utf-8 -*-
+"""
+Generator model data / ERD WMS (Part 3).
+
+Satu sumber data (AREAS) menghasilkan:
+  - docs/diagram/erd-<area>.drawio            (ERD per area, diagrams.net)
+  - docs/wms/08a-model-data-inti.md           (pusat, akses & organisasi, master, gudang & lokasi)
+  - docs/wms/08b-model-data-stok-dokumen.md   (stok, outbound, inbound & niat)
+  - docs/wms/08c-model-data-pendukung.md      (konversi & aset, opname & penyesuaian, approval, umum)
+
+Jalankan:  py -3 docs/diagram/_generate_erd.py   (dari root proyek)
+Jangan mengedit file keluaran secara manual.
+
+Konvensi kolom yang TIDAK ditulis ulang di setiap tabel (berlaku untuk semua tabel tenant kecuali disebut lain):
+  id BIGINT PK · created_at · updated_at · created_by (FK users) · updated_by (FK users)
+Tabel dokumen (header) juga punya: number (unik per company), status (enum Katalog), source_type/source_id (polimorfik ke induk),
+  reversal_of_id (FK diri sendiri), notes, timezone snapshot tidak perlu (BR-GEN-07 simpan UTC).
+Tabel baris dokumen (<doc>_lines) juga punya: line_no, item_id FK, uom_id FK (satuan input), qty_input, qty_base DECIMAL(18,4),
+  lot_id / serial_id / piece_id (nullable sesuai tracking_mode), source_line_type/source_line_id (baris induk).
+
+Format entitas: dict(name, label, cols=[(nama, tipe, flag, catatan)], note)   flag ∈ {"PK","FK","UK",""}
+Format relasi : (from, to, card, label)   card ∈ {"1-n","1-1","0-1","n-n"}
+"""
+import os, re, html
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DIAG = os.path.join(ROOT, "docs", "diagram")
+WMS = os.path.join(ROOT, "docs", "wms")
+
+def E(name, label, cols, note=""):
+    return dict(name=name, label=label, cols=cols, note=note)
+
+LINE_NOTE = "kolom baris standar (lihat konvensi)"
+HDR_NOTE = "kolom header dokumen standar (lihat konvensi)"
+
+AREAS = [
+# ---------------------------------------------------------------- A. PUSAT
+dict(key="pusat", title="Database pusat (platform)", file="08a",
+     intro="Satu database untuk seluruh platform. Tidak menyimpan data operasional company. Semua tabel di sini memakai `company_id` bila terkait satu company.",
+     refs=["Blueprint §6.1", "Blueprint §14", "BR-SUB"],
+     entities=[
+        E("companies", "Company (tenant)", [("id","bigint","PK",""),("code","varchar(20)","UK","kode pendek, dipakai di nomor dokumen"),("name","varchar(150)","",""),("subdomain","varchar(63)","UK","A-01"),("db_name","varchar(64)","UK","database tenant"),("timezone","varchar(40)","","Asia/Jakarta"),("status","enum","","provisioning|active|suspended|terminated"),("plan_id","bigint","FK","")]),
+        E("plans", "Paket", [("id","bigint","PK",""),("code","varchar(30)","UK",""),("name","varchar(80)","",""),("monthly_price","decimal(14,2)","","hanya di pusat (bukan WMS)"),("wa_quota","int","","pesan/bulan, O-04"),("storage_quota_mb","int","",""),("is_active","bool","","")]),
+        E("subscriptions", "Langganan", [("id","bigint","PK",""),("company_id","bigint","FK",""),("plan_id","bigint","FK",""),("status","enum","","subscription_status"),("trial_ends_at","datetime","","A-11"),("current_period_start","date","",""),("current_period_end","date","",""),("grace_ends_at","datetime","","A-12"),("suspended_at","datetime","",""),("terminated_at","datetime","",""),("purge_after","date","","+90 hari")]),
+        E("subscription_invoices", "Tagihan langganan", [("id","bigint","PK",""),("subscription_id","bigint","FK",""),("number","varchar(40)","UK",""),("period_start","date","",""),("period_end","date","",""),("amount","decimal(14,2)","",""),("due_date","date","",""),("status","enum","","open|paid|overdue|void")]),
+        E("subscription_payments", "Bukti bayar langganan", [("id","bigint","PK",""),("invoice_id","bigint","FK",""),("uploaded_by","bigint","FK","user tenant (id + company_id)"),("proof_path","varchar(255)","",""),("amount","decimal(14,2)","",""),("paid_at","date","",""),("verified_by","bigint","FK","platform_users"),("verified_at","datetime","",""),("status","enum","","pending|verified|rejected")]),
+        E("platform_users", "Super Admin", [("id","bigint","PK",""),("name","varchar(100)","",""),("email","varchar(150)","UK",""),("password","varchar(255)","",""),("two_factor_secret","text","","opsional")]),
+        E("sso_identities", "Pemetaan identitas SSO", [("id","bigint","PK",""),("provider","varchar(30)","","nxtg"),("sub","varchar(191)","","ID user di SSO"),("company_id","bigint","FK",""),("tenant_user_id","bigint","","user di DB tenant"),("last_login_at","datetime","","")], "UK(provider, sub, company_id); satu sub bisa terpeta ke banyak company → pemilih company (A-48)"),
+        E("feature_flags", "Feature flag per company", [("id","bigint","PK",""),("company_id","bigint","FK",""),("key","varchar(60)","","mis. whatsapp, offline_sync, rfid"),("enabled","bool","",""),("config","json","","")], "UK(company_id, key)"),
+        E("support_accesses", "Akses dukungan", [("id","bigint","PK",""),("company_id","bigint","FK",""),("platform_user_id","bigint","FK",""),("granted_by_tenant_user_id","bigint","",""),("starts_at","datetime","",""),("ends_at","datetime","",""),("reason","varchar(255)","",""),("revoked_at","datetime","","")], "A-27, BR-SUB-04; setiap akses tercatat di audit_logs tenant"),
+        E("tenant_migration_runs", "Log migrasi per tenant", [("id","bigint","PK",""),("company_id","bigint","FK",""),("batch","varchar(40)","",""),("migration","varchar(191)","",""),("status","enum","","ok|failed"),("error","text","",""),("ran_at","datetime","","")]),
+        E("wa_message_logs", "Log pesan WhatsApp", [("id","bigint","PK",""),("company_id","bigint","FK",""),("direction","enum","","out|in"),("category","enum","","utility_template|service|inbound"),("wa_message_id","varchar(120)","UK",""),("to_number","varchar(20)","",""),("template","varchar(80)","",""),("payload","json","",""),("status","enum","","queued|sent|delivered|read|failed"),("cost_units","decimal(10,4)","","untuk O-04")], "Satu nomor platform (A-24); routing balasan ke tenant lewat penanda company (NFR-12)"),
+     ],
+     rels=[("companies","subscriptions","1-n","memiliki"),("plans","subscriptions","1-n","dipakai"),("subscriptions","subscription_invoices","1-n","menagih"),("subscription_invoices","subscription_payments","1-n","dibayar"),("platform_users","subscription_payments","1-n","verifikasi"),("companies","sso_identities","1-n",""),("companies","feature_flags","1-n",""),("companies","support_accesses","1-n",""),("platform_users","support_accesses","1-n",""),("companies","tenant_migration_runs","1-n",""),("companies","wa_message_logs","1-n","")]),
+
+# ---------------------------------------------------------------- B. AKSES & ORGANISASI
+dict(key="akses", title="User, role, cakupan, struktur organisasi (tenant)", file="08a",
+     intro="Cakupan akses melekat pada penugasan role (BR-GEN-09). User klien adalah user biasa dengan `client_id` terisi dan hanya role Klien.",
+     refs=["Blueprint §4.2", "Blueprint §6.2", "BR-GEN-09", "A-46"],
+     entities=[
+        E("users", "User", [("id","bigint","PK",""),("name","varchar(100)","",""),("email","varchar(150)","UK",""),("phone","varchar(20)","","WA untuk approval/OTP"),("password","varchar(255)","","nullable bila hanya SSO"),("client_id","bigint","FK","terisi = user klien"),("org_unit_id","bigint","FK",""),("position_id","bigint","FK",""),("manager_id","bigint","FK","atasan langsung (self)"),("signature_path","varchar(255)","",""),("is_active","bool","",""),("locked_until","datetime","","kunci akun"),("two_factor_secret","text","",""),("sso_sub","varchar(191)","UK","nullable")]),
+        E("roles", "Role", [("id","bigint","PK",""),("code","varchar(40)","UK","warehouse_head, …"),("name","varchar(80)","",""),("is_builtin","bool","","template bawaan"),("is_client_role","bool","","tidak bisa digabung role internal")]),
+        E("permissions", "Permission", [("id","bigint","PK",""),("key","varchar(80)","UK","<modul>.<aksi>"),("module","varchar(30)","","")]),
+        E("role_permissions", "Role ↔ permission", [("role_id","bigint","FK",""),("permission_id","bigint","FK","")], "PK(role_id, permission_id)"),
+        E("role_assignments", "Penugasan role × cakupan", [("id","bigint","PK",""),("user_id","bigint","FK",""),("role_id","bigint","FK",""),("scope_type","enum","","all|warehouse|project"),("scope_id","bigint","","warehouse_id / project_id"),("valid_from","date","",""),("valid_until","date","","auditor eksternal")], "UK(user_id, role_id, scope_type, scope_id)"),
+        E("org_units", "Unit organisasi", [("id","bigint","PK",""),("parent_id","bigint","FK","self"),("code","varchar(30)","UK",""),("name","varchar(100)","","")]),
+        E("positions", "Jabatan", [("id","bigint","PK",""),("org_unit_id","bigint","FK",""),("code","varchar(30)","UK",""),("name","varchar(100)","",""),("level","int","","untuk 'atasan'")]),
+        E("user_invitations", "Undangan user", [("id","bigint","PK",""),("user_id","bigint","FK",""),("token","varchar(64)","UK",""),("expires_at","datetime","",""),("accepted_at","datetime","","")]),
+        E("devices", "Perangkat terdaftar", [("id","bigint","PK",""),("user_id","bigint","FK",""),("device_uid","varchar(64)","UK",""),("name","varchar(80)","",""),("platform","varchar(30)","",""),("last_seen_at","datetime","",""),("is_active","bool","","")]),
+     ],
+     rels=[("users","role_assignments","1-n",""),("roles","role_assignments","1-n",""),("roles","role_permissions","1-n",""),("permissions","role_permissions","1-n",""),("org_units","positions","1-n",""),("org_units","users","1-n",""),("positions","users","1-n",""),("users","users","1-n","atasan"),("users","user_invitations","1-n",""),("users","devices","1-n","")]),
+
+# ---------------------------------------------------------------- C. MASTER
+dict(key="master", title="Master data (tenant)", file="08a",
+     intro="Master tidak pernah dihapus, hanya dinonaktifkan (P-03). Satuan dinamis: konversi global per kategori satuan + konversi khusus per item.",
+     refs=["Blueprint §6.3a", "§6.4", "§6.5", "§6.9", "BR-STK-08..12"],
+     entities=[
+        E("clients", "Klien", [("id","bigint","PK",""),("code","varchar(30)","UK",""),("name","varchar(150)","",""),("tax_id","varchar(30)","","NPWP"),("address","text","",""),("contact_name","varchar(100)","",""),("phone","varchar(20)","",""),("email","varchar(150)","",""),("is_active","bool","","")]),
+        E("projects", "Proyek", [("id","bigint","PK",""),("code","varchar(30)","UK",""),("name","varchar(150)","",""),("client_id","bigint","FK","null = Proyek Internal"),("is_internal","bool","","A-06"),("status","enum","","project_status (A-40)"),("address","text","",""),("lat","decimal(10,7)","",""),("lng","decimal(10,7)","",""),("start_date","date","",""),("target_end_date","date","",""),("pic_user_id","bigint","FK",""),("site_warehouse_id","bigint","FK","Gudang Site"),("closed_at","datetime","","")]),
+        E("vendors", "Vendor", [("id","bigint","PK",""),("code","varchar(30)","UK",""),("name","varchar(150)","",""),("tax_id","varchar(30)","",""),("contact_name","varchar(100)","",""),("phone","varchar(20)","",""),("email","varchar(150)","",""),("address","text","",""),("payment_terms","varchar(60)","","teks, tanpa nilai"),("is_active","bool","","")], "Dimiliki WMS sampai Purchasing aktif"),
+        E("vehicles", "Kendaraan", [("id","bigint","PK",""),("plate_no","varchar(15)","UK",""),("type","varchar(40)","",""),("default_driver_id","bigint","FK","users"),("is_active","bool","","")]),
+        E("carriers", "Ekspedisi pihak ketiga", [("id","bigint","PK",""),("name","varchar(100)","",""),("phone","varchar(20)","",""),("is_active","bool","","")]),
+        E("reason_codes", "Alasan", [("id","bigint","PK",""),("context","enum","","reject|cancel|adjustment|waste|damage|short_pick|discrepancy|lost"),("code","varchar(30)","",""),("label","varchar(100)","",""),("is_active","bool","","")], "UK(context, code)"),
+        E("item_categories", "Kategori barang", [("id","bigint","PK",""),("parent_id","bigint","FK","self"),("code","varchar(30)","UK",""),("name","varchar(100)","",""),("storage_category_id","bigint","FK","default"),("removal_strategy","enum","","default, nullable"),("tolerance_pct","decimal(5,2)","","BR-OPN-04"),("tolerance_abs","decimal(18,4)","",""),("abc_class","char(1)","","F2")]),
+        E("storage_categories", "Kategori penyimpanan", [("id","bigint","PK",""),("code","varchar(30)","UK",""),("name","varchar(100)","",""),("capacity_mode","enum","","warn|block (A-37)")]),
+        E("uom_categories", "Kategori satuan", [("id","bigint","PK",""),("code","varchar(20)","UK","count|length|weight|volume|area"),("name","varchar(60)","",""),("reference_uom_id","bigint","FK","satuan acuan")]),
+        E("uoms", "Satuan", [("id","bigint","PK",""),("uom_category_id","bigint","FK",""),("code","varchar(15)","UK",""),("name","varchar(60)","",""),("factor_to_reference","decimal(18,8)","","1 cm = 0.01 m"),("rounding","decimal(18,4)","","")]),
+        E("items", "Item", [("id","bigint","PK",""),("code","varchar(40)","UK",""),("name","varchar(150)","",""),("item_category_id","bigint","FK",""),("status","enum","","item_status (provisional = dari non-katalog)"),("ownership_model","enum","",""),("default_line_ownership","enum","","buy|loan (A-38)"),("tracking_mode","enum","",""),("has_expiry","bool","",""),("base_uom_id","bigint","FK",""),("is_cuttable","bool","",""),("min_offcut_length","decimal(18,4)","","wajib bila is_cuttable (A-19)"),("kerf","decimal(18,4)","",""),("requires_qc","bool","",""),("removal_strategy","enum","","override, nullable"),("reorder_point","decimal(18,4)","",""),("min_stock","decimal(18,4)","",""),("barcode","varchar(64)","","Code128"),("qr_payload","varchar(120)","",""),("photo_path","varchar(255)","",""),("dimensions","json","","dengan satuan"),("weight","decimal(18,4)","",""),("weight_uom_id","bigint","FK","")], "CHECK: ownership_model in (asset,both) ⇒ tracking_mode = serial (BR-STK-08); kombinasi sah BR §15"),
+        E("item_uom_conversions", "Konversi satuan khusus item", [("id","bigint","PK",""),("item_id","bigint","FK",""),("uom_id","bigint","FK","1 batang"),("qty_base","decimal(18,4)","","= 6 m"),("is_nominal_piece","bool","","hanya potongan nominal (BR-STK-09)")], "UK(item_id, uom_id)"),
+        E("lots", "Lot / batch", [("id","bigint","PK",""),("item_id","bigint","FK",""),("lot_no","varchar(60)","",""),("expiry_date","date","",""),("received_at","date","",""),("vendor_id","bigint","FK",""),("attributes","json","","mis. heat number")], "UK(item_id, lot_no)"),
+        E("serials", "Serial / aset", [("id","bigint","PK",""),("item_id","bigint","FK",""),("serial_no","varchar(80)","",""),("asset_state","enum","","asset_state (BR-AST-01)"),("condition_grade","char(1)","",""),("lot_id","bigint","FK","opsional"),("expiry_date","date","",""),("rfid_tag","varchar(64)","","F2"),("current_project_id","bigint","FK","saat on_loan"),("due_return_date","date","","")], "UK(item_id, serial_no)"),
+        E("pieces", "Potongan", [("id","bigint","PK",""),("item_id","bigint","FK",""),("piece_no","varchar(40)","UK","P-000123"),("length","decimal(18,4)","","dalam base_uom (panjang)"),("is_offcut","bool","",""),("parent_piece_id","bigint","FK","silsilah (BR-CNV-04)"),("origin_type","varchar(30)","","grn|conversion|return"),("origin_id","bigint","",""),("is_consumed","bool","","")]),
+        E("company_settings", "Pengaturan company", [("key","varchar(60)","PK",""),("value","json","","")], "zona waktu, ambang toleransi default, kapasitas bin, konfirmasi terima otomatis (3 hari), dll."),
+        E("feature_settings", "Pengaturan fitur stok", [("key","varchar(60)","PK","lot|serial|piece|expiry|fefo|rfid|qc"),("enabled","bool","",""),("config","json","","")], "Lapis 1 dari P-08"),
+     ],
+     rels=[("clients","projects","1-n",""),("clients","users","1-n","user portal"),("projects","users","1-n","PIC"),("item_categories","items","1-n",""),("item_categories","item_categories","1-n","induk"),("storage_categories","item_categories","1-n","default"),("uom_categories","uoms","1-n",""),("uoms","items","1-n","base_uom"),("items","item_uom_conversions","1-n",""),("uoms","item_uom_conversions","1-n",""),("items","lots","1-n",""),("items","serials","1-n",""),("items","pieces","1-n",""),("pieces","pieces","1-n","parent"),("vendors","lots","1-n",""),("projects","serials","1-n","on_loan"),("users","vehicles","1-n","driver")]),
+
+# ---------------------------------------------------------------- D. GUDANG & LOKASI
+dict(key="gudang", title="Gudang & lokasi (tenant)", file="08a",
+     intro="Lokasi adalah entitas (P-06). Kode bin diturunkan dari hierarki. Bin virtual `in_transit` (satu per gudang) dan `on_site` (satu per proyek) dibuat otomatis.",
+     refs=["Blueprint §6.2", "§6.3", "BR-STK-02", "BR-STK-13", "BR-STK-14"],
+     entities=[
+        E("warehouse_types", "Tipe gudang", [("id","bigint","PK",""),("code","varchar(20)","UK","main|branch|site|…"),("name","varchar(60)","",""),("is_builtin","bool","","")]),
+        E("warehouses", "Gudang", [("id","bigint","PK",""),("code","varchar(10)","UK","segmen nomor dokumen"),("name","varchar(100)","",""),("warehouse_type_id","bigint","FK",""),("parent_id","bigint","FK","self, hierarki"),("project_id","bigint","FK","wajib bila type = site"),("head_user_id","bigint","FK","Kepala Gudang"),("address","text","",""),("is_active","bool","","")]),
+        E("zones", "Zona", [("id","bigint","PK",""),("warehouse_id","bigint","FK",""),("code","varchar(10)","",""),("name","varchar(60)","","")], "UK(warehouse_id, code)"),
+        E("racks", "Rak", [("id","bigint","PK",""),("zone_id","bigint","FK",""),("code","varchar(10)","","")], "UK(zone_id, code)"),
+        E("rack_levels", "Level", [("id","bigint","PK",""),("rack_id","bigint","FK",""),("code","varchar(10)","","")], "UK(rack_id, code)"),
+        E("bins", "Bin", [("id","bigint","PK",""),("warehouse_id","bigint","FK","denormalisasi untuk query"),("rack_level_id","bigint","FK","null untuk bin virtual/dock"),("code","varchar(40)","UK","CKG-A-R03-L2-B05"),("bin_type","enum","","bin_type"),("bin_status","enum","","active|frozen|inactive"),("storage_category_id","bigint","FK",""),("capacity_qty","decimal(18,4)","",""),("capacity_weight","decimal(18,4)","",""),("capacity_volume","decimal(18,4)","",""),("capacity_length","decimal(18,4)","",""),("project_id","bigint","FK","hanya on_site"),("is_virtual","bool","",""),("frozen_by_count_id","bigint","FK","stock_counts")]),
+     ],
+     rels=[("warehouse_types","warehouses","1-n",""),("warehouses","warehouses","1-n","induk"),("warehouses","zones","1-n",""),("zones","racks","1-n",""),("racks","rack_levels","1-n",""),("rack_levels","bins","1-n",""),("warehouses","bins","1-n",""),("storage_categories","bins","1-n",""),("projects","warehouses","1-n","site"),("projects","bins","1-n","on_site")]),
+
+# ---------------------------------------------------------------- E. STOK
+dict(key="stok", title="Stok: ledger, saldo, reservasi, kejadian (tenant)", file="08b",
+     intro="Ledger append-only (BR-STK-01). Saldo adalah agregat yang dipelihara transaksional (dikunci baris, NFR-13) dan bisa dibangun ulang. Reservasi terpisah dari ledger (BR-STK-03). Kejadian stok ditulis ke outbox dalam transaksi yang sama.",
+     refs=["Blueprint §6.6", "BR-STK", "BR §14", "Akuntansi §4"],
+     entities=[
+        E("stock_movements", "Kartu stok (ledger)", [("id","bigint","PK",""),("item_id","bigint","FK",""),("from_bin_id","bigint","FK","null = masuk dari luar"),("to_bin_id","bigint","FK","null = keluar"),("lot_id","bigint","FK",""),("serial_id","bigint","FK",""),("piece_id","bigint","FK",""),("qty_base","decimal(18,4)","","selalu positif; arah dari from/to"),("stock_status","enum","","kondisi yang berpindah"),("project_id","bigint","FK",""),("document_type","varchar(30)","",""),("document_id","bigint","",""),("document_line_id","bigint","",""),("reason_code_id","bigint","FK",""),("occurred_at","datetime","","UTC"),("performed_by","bigint","FK",""),("reverses_movement_id","bigint","FK","self")], "Tidak ada UPDATE/DELETE (trigger/permission DB). Index (item_id, to_bin_id), (document_type, document_id), (occurred_at)"),
+        E("stock_balances", "Saldo stok", [("id","bigint","PK",""),("item_id","bigint","FK",""),("bin_id","bigint","FK",""),("lot_id","bigint","FK",""),("serial_id","bigint","FK",""),("piece_id","bigint","FK",""),("stock_status","enum","","available|quarantine|damaged"),("qty_base","decimal(18,4)","","≥ 0 (CHECK)"),("piece_count","int","","untuk piece"),("version","int","","optimistic lock cadangan")], "UK(item_id, bin_id, lot_id, serial_id, piece_id, stock_status); dikunci FOR UPDATE saat mutasi"),
+        E("stock_reservations", "Reservasi", [("id","bigint","PK",""),("item_id","bigint","FK",""),("warehouse_id","bigint","FK","lunak"),("bin_id","bigint","FK","keras (nullable)"),("lot_id","bigint","FK",""),("serial_id","bigint","FK",""),("piece_id","bigint","FK",""),("qty_base","decimal(18,4)","",""),("level","enum","","soft|hard (BR-STK-04)"),("document_type","varchar(30)","","material_request|transfer"),("document_id","bigint","",""),("document_line_id","bigint","",""),("status","enum","","active|consumed|released"),("released_reason","varchar(60)","","BR-STK-05")], "Stok tersedia = Σ balance.available − Σ reservasi active (per item, gudang)"),
+        E("stock_events", "Outbox kejadian stok", [("id","bigint","PK",""),("event_id","uuid","UK",""),("schema_version","varchar(10)","",""),("event_type","varchar(40)","","BR §14"),("occurred_at","datetime","",""),("recorded_at","datetime","",""),("source_type","varchar(30)","",""),("source_id","bigint","",""),("project_id","bigint","FK",""),("payload","json","","Akuntansi §4.1"),("reverses_event_id","uuid","",""),("published_at","datetime","","null = belum dikonsumsi"),("attempts","int","",""),("last_error","text","","")], "Ditulis dalam transaksi yang sama dengan stock_movements (pola outbox)"),
+     ],
+     rels=[("items","stock_movements","1-n",""),("bins","stock_movements","1-n","from/to"),("items","stock_balances","1-n",""),("bins","stock_balances","1-n",""),("items","stock_reservations","1-n",""),("warehouses","stock_reservations","1-n",""),("lots","stock_balances","1-n",""),("serials","stock_balances","1-n",""),("pieces","stock_balances","1-n",""),("stock_movements","stock_events","1-n","memicu"),("stock_movements","stock_movements","1-n","pembalik")]),
+
+# ---------------------------------------------------------------- F. OUTBOUND
+dict(key="outbound", title="Permintaan, picking, pengiriman, bukti terima, selisih (tenant)", file="08b",
+     intro="Dokumen niat REQ dipisah dari pergerakan fisik PCK → SJ. Baris SJ merujuk baris PCK, baris PCK merujuk baris REQ/TRF, sehingga pemenuhan dihitung per baris.",
+     refs=["KS 2.1–2.4", "BR-REQ", "BR-SJ", "BR §1"],
+     entities=[
+        E("material_requests", "REQ header", [("id","bigint","PK",""),("project_id","bigint","FK","A-22"),("requester_id","bigint","FK","users"),("requester_type","enum","","internal|client"),("required_date","date","","header default"),("reviewed_by","bigint","FK","Ditinjau Staf"),("reviewed_at","datetime","",""),("approval_snapshot_id","bigint","FK",""),("closed_reason_id","bigint","FK","closed_short")], HDR_NOTE),
+        E("material_request_lines", "REQ baris", [("id","bigint","PK",""),("material_request_id","bigint","FK",""),("item_id","bigint","FK","null bila non-katalog belum dipetakan"),("non_catalog_text","varchar(255)","","A-39"),("mapped_by","bigint","FK",""),("line_ownership","enum","","buy|loan (A-38)"),("required_date","date","",""),("source_warehouse_id","bigint","FK","A-31"),("fulfillment_source","enum","","stock|transfer|purchase (BR-REQ-05)"),("qty_base","decimal(18,4)","",""),("qty_reserved","decimal(18,4)","",""),("qty_shipped","decimal(18,4)","",""),("qty_received","decimal(18,4)","",""),("qty_backorder","decimal(18,4)","",""),("nominal_length","decimal(18,4)","","piece: 'n potongan ukuran nominal'")], LINE_NOTE),
+        E("pick_tasks", "PCK header", [("id","bigint","PK",""),("warehouse_id","bigint","FK",""),("assigned_to","bigint","FK",""),("started_at","datetime","",""),("completed_at","datetime","","")], HDR_NOTE + "; source = material_request | transfer"),
+        E("pick_task_lines", "PCK baris (alokasi keras)", [("id","bigint","PK",""),("pick_task_id","bigint","FK",""),("bin_id","bigint","FK","alokasi"),("suggested_bin_id","bigint","FK",""),("qty_allocated","decimal(18,4)","",""),("qty_picked","decimal(18,4)","",""),("short_reason_id","bigint","FK","BR-SJ-02"),("override_reason","varchar(255)","","ganti saran"),("scanned_at","datetime","","")], LINE_NOTE),
+        E("shipments", "SJ header", [("id","bigint","PK",""),("warehouse_id","bigint","FK","asal"),("destination_type","enum","","project_client|site_warehouse|warehouse|vendor"),("destination_project_id","bigint","FK",""),("destination_warehouse_id","bigint","FK",""),("vehicle_id","bigint","FK",""),("driver_id","bigint","FK",""),("carrier_id","bigint","FK",""),("tracking_no","varchar(60)","",""),("loaded_at","datetime","","konfirmasi muat"),("shipped_at","datetime","",""),("delivered_at","datetime","","")], HDR_NOTE + "; BR-SJ-07"),
+        E("shipment_lines", "SJ baris", [("id","bigint","PK",""),("shipment_id","bigint","FK",""),("pick_task_line_id","bigint","FK",""),("qty_shipped","decimal(18,4)","",""),("qty_delivered","decimal(18,4)","",""),("ownership_effect","enum","","sold|transfer|loan (BR-SJ-04)")], LINE_NOTE),
+        E("proofs_of_delivery", "Bukti terima", [("id","bigint","PK",""),("shipment_id","bigint","FK","UK"),("received_by_name","varchar(100)","",""),("received_by_user_id","bigint","FK","nullable"),("signature_id","bigint","FK",""),("photo_attachment_id","bigint","FK",""),("lat","decimal(10,7)","",""),("lng","decimal(10,7)","",""),("confirmed_at","datetime","",""),("channel","enum","","driver_pwa|token_link"),("requester_confirmed_at","datetime","","BR-REQ-10"),("device_id","bigint","FK","")]),
+        E("delivery_tokens", "Tautan bukti terima bertoken", [("id","bigint","PK",""),("shipment_id","bigint","FK",""),("token","varchar(64)","UK",""),("otp_hash","varchar(255)","",""),("phone","varchar(20)","",""),("expires_at","datetime","","24 jam"),("used_at","datetime","",""),("attempts","int","","rate limit NFR-04")], "A-41, BR-SJ-05"),
+        E("delivery_discrepancies", "DSC header", [("id","bigint","PK",""),("shipment_id","bigint","FK",""),("resolved_by","bigint","FK",""),("resolved_at","datetime","","")], HDR_NOTE),
+        E("delivery_discrepancy_lines", "DSC baris", [("id","bigint","PK",""),("delivery_discrepancy_id","bigint","FK",""),("shipment_line_id","bigint","FK",""),("qty_missing","decimal(18,4)","",""),("disposition","enum","","discrepancy_disposition"),("reason_code_id","bigint","FK",""),("claim_ref","varchar(60)","","")], LINE_NOTE),
+     ],
+     rels=[("projects","material_requests","1-n",""),("users","material_requests","1-n","pemohon"),("material_requests","material_request_lines","1-n",""),("items","material_request_lines","1-n",""),("warehouses","material_request_lines","1-n","sumber"),("material_request_lines","pick_task_lines","1-n","source_line"),("pick_tasks","pick_task_lines","1-n",""),("bins","pick_task_lines","1-n",""),("pick_task_lines","shipment_lines","1-n",""),("shipments","shipment_lines","1-n",""),("warehouses","shipments","1-n","asal"),("vehicles","shipments","1-n",""),("carriers","shipments","1-n",""),("shipments","proofs_of_delivery","1-1",""),("shipments","delivery_tokens","1-n",""),("shipments","delivery_discrepancies","0-1",""),("delivery_discrepancies","delivery_discrepancy_lines","1-n",""),("shipment_lines","delivery_discrepancy_lines","1-n","")]),
+
+# ---------------------------------------------------------------- G. INBOUND & NIAT
+dict(key="inbound", title="Penerimaan, put-away, retur ke vendor, PR, transfer, retur, pemakaian (tenant)", file="08b",
+     intro="GRN adalah satu-satunya dokumen masuk: dari vendor (dengan/tanpa PRQ), dari SJ (transfer), dari RET. TRF dan RET adalah dokumen niat (A-33). ISU mengeluarkan stok Gudang Site tanpa SJ.",
+     refs=["KS 2.5–2.9, 2.15, 2.16", "BR-GRN", "BR-RET", "BR-PRJ-08", "purchasing/01"],
+     entities=[
+        E("goods_receipts", "GRN header", [("id","bigint","PK",""),("warehouse_id","bigint","FK","tujuan"),("receipt_type","enum","","vendor|transfer|return"),("vendor_id","bigint","FK",""),("vendor_doc_no","varchar(60)","","surat jalan vendor"),("po_ref","varchar(60)","","F3: po_id"),("shipment_id","bigint","FK","bila dari SJ"),("goods_return_id","bigint","FK","bila dari RET"),("received_at","datetime","",""),("completed_at","datetime","","")], HDR_NOTE),
+        E("goods_receipt_lines", "GRN baris", [("id","bigint","PK",""),("goods_receipt_id","bigint","FK",""),("purchase_request_line_id","bigint","FK","A-47"),("shipment_line_id","bigint","FK",""),("goods_return_line_id","bigint","FK",""),("receiving_bin_id","bigint","FK","receiving|quarantine|return"),("qty_received","decimal(18,4)","",""),("qc_result","enum","","passed|quarantined|rejected"),("qc_by","bigint","FK",""),("qc_at","datetime","",""),("qc_note","varchar(255)","",""),("is_cross_dock","bool","","BR-SJ-03")], LINE_NOTE),
+        E("putaway_tasks", "PUT header", [("id","bigint","PK",""),("goods_receipt_id","bigint","FK",""),("warehouse_id","bigint","FK",""),("assigned_to","bigint","FK",""),("completed_at","datetime","","")], HDR_NOTE),
+        E("putaway_task_lines", "PUT baris", [("id","bigint","PK",""),("putaway_task_id","bigint","FK",""),("goods_receipt_line_id","bigint","FK",""),("suggested_bin_id","bigint","FK","BR-GRN-03"),("bin_id","bigint","FK","aktual"),("qty_base","decimal(18,4)","",""),("scanned_at","datetime","","")], LINE_NOTE),
+        E("vendor_returns", "RTV header", [("id","bigint","PK",""),("warehouse_id","bigint","FK",""),("vendor_id","bigint","FK",""),("goods_receipt_id","bigint","FK",""),("shipped_at","datetime","",""),("vendor_confirmed_at","datetime","",""),("replacement_receipt_id","bigint","FK","GRN pengganti")], HDR_NOTE),
+        E("vendor_return_lines", "RTV baris", [("id","bigint","PK",""),("vendor_return_id","bigint","FK",""),("goods_receipt_line_id","bigint","FK",""),("qty_base","decimal(18,4)","",""),("reason_code_id","bigint","FK","")], LINE_NOTE),
+        E("purchase_requests", "PRQ header", [("id","bigint","PK",""),("warehouse_id","bigint","FK","tujuan"),("project_id","bigint","FK",""),("origin","enum","","backorder|manual|reorder_point"),("external_po_no","varchar(60)","","Fase 1 manual"),("vendor_id","bigint","FK","Fase 1 manual"),("eta_date","date","",""),("forwarded_by","bigint","FK","Penindak Lanjut PR"),("forwarded_at","datetime","","")], HDR_NOTE + "; nomor memakai ALL (A-43)"),
+        E("purchase_request_lines", "PRQ baris", [("id","bigint","PK",""),("purchase_request_id","bigint","FK",""),("material_request_line_id","bigint","FK","REQ penunggu"),("required_date","date","",""),("qty_base","decimal(18,4)","",""),("qty_received","decimal(18,4)","",""),("po_line_ref","varchar(60)","","F3")], LINE_NOTE),
+        E("transfers", "TRF header", [("id","bigint","PK",""),("from_warehouse_id","bigint","FK",""),("to_warehouse_id","bigint","FK",""),("from_project_id","bigint","FK","antar proyek"),("to_project_id","bigint","FK",""),("origin","enum","","manual|backorder"),("approval_snapshot_id","bigint","FK","")], HDR_NOTE + "; fisik lewat PCK/SJ/GRN (source_type = transfer)"),
+        E("transfer_lines", "TRF baris", [("id","bigint","PK",""),("transfer_id","bigint","FK",""),("material_request_line_id","bigint","FK","bila dari backorder"),("qty_base","decimal(18,4)","",""),("qty_shipped","decimal(18,4)","",""),("qty_received","decimal(18,4)","","")], LINE_NOTE),
+        E("goods_returns", "RET header", [("id","bigint","PK",""),("project_id","bigint","FK",""),("origin_shipment_id","bigint","FK","SJ asal, nullable"),("requester_id","bigint","FK",""),("to_warehouse_id","bigint","FK",""),("self_delivered","bool","","tanpa SJ balik"),("return_shipment_id","bigint","FK","SJ balik"),("approval_snapshot_id","bigint","FK",""),("sorted_at","datetime","","")], HDR_NOTE + "; nama tabel goods_returns (return = kata kunci PHP)"),
+        E("goods_return_lines", "RET baris", [("id","bigint","PK",""),("goods_return_id","bigint","FK",""),("origin_shipment_line_id","bigint","FK",""),("ownership","enum","","sold|company (BR-RET-03)"),("qty_base","decimal(18,4)","",""),("sorting","enum","","good|damaged|offcut|waste"),("sorted_qty","decimal(18,4)","",""),("new_piece_id","bigint","FK","offcut hasil pilah"),("target_bin_id","bigint","FK",""),("reason_code_id","bigint","FK","")], LINE_NOTE),
+        E("material_issues", "ISU header", [("id","bigint","PK",""),("project_id","bigint","FK",""),("warehouse_id","bigint","FK","Gudang Site proyek"),("issued_by","bigint","FK",""),("confirmed_at","datetime","",""),("approval_snapshot_id","bigint","FK","hanya ISU pembalik")], HDR_NOTE + "; A-32"),
+        E("material_issue_lines", "ISU baris", [("id","bigint","PK",""),("material_issue_id","bigint","FK",""),("bin_id","bigint","FK",""),("qty_base","decimal(18,4)","","negatif pada ISU pembalik"),("work_note","varchar(255)","","untuk apa dipakai")], LINE_NOTE),
+     ],
+     rels=[("warehouses","goods_receipts","1-n",""),("vendors","goods_receipts","1-n",""),("shipments","goods_receipts","0-1","transfer masuk"),("goods_returns","goods_receipts","0-1","retur masuk"),("goods_receipts","goods_receipt_lines","1-n",""),("purchase_request_lines","goods_receipt_lines","1-n",""),("goods_receipts","putaway_tasks","1-n",""),("putaway_tasks","putaway_task_lines","1-n",""),("goods_receipt_lines","putaway_task_lines","1-n",""),("goods_receipts","vendor_returns","1-n",""),("vendor_returns","vendor_return_lines","1-n",""),("goods_receipt_lines","vendor_return_lines","1-n",""),("purchase_requests","purchase_request_lines","1-n",""),("material_request_lines","purchase_request_lines","1-n","backorder"),("transfers","transfer_lines","1-n",""),("material_request_lines","transfer_lines","1-n","backorder"),("warehouses","transfers","1-n","asal/tujuan"),("projects","goods_returns","1-n",""),("shipments","goods_returns","1-n","asal"),("goods_returns","goods_return_lines","1-n",""),("shipment_lines","goods_return_lines","1-n",""),("pieces","goods_return_lines","1-n","offcut baru"),("projects","material_issues","1-n",""),("warehouses","material_issues","1-n","site"),("material_issues","material_issue_lines","1-n",""),("bins","material_issue_lines","1-n","")]),
+
+# ---------------------------------------------------------------- H. KONVERSI & ASET
+dict(key="konversi-aset", title="Konversi, resep, waste, aset (tenant)", file="08c",
+     intro="Konversi memakai tabel input dan output terpisah agar neraca ukuran bisa divalidasi (BR-CNV-02). Aset memakai `serials` sebagai identitas; serah terima dan pemeriksaan adalah catatan per kejadian.",
+     refs=["KS 2.10, 2.11, 2.14", "BR-CNV", "BR-AST"],
+     entities=[
+        E("conversions", "CNV header", [("id","bigint","PK",""),("project_id","bigint","FK","BR-CNV-01"),("warehouse_id","bigint","FK",""),("conversion_type","enum","","cut|assemble|disassemble|repack"),("recipe_id","bigint","FK","F2"),("total_input","decimal(18,4)","",""),("total_output","decimal(18,4)","",""),("total_offcut","decimal(18,4)","",""),("total_waste","decimal(18,4)","",""),("total_kerf","decimal(18,4)","",""),("approval_snapshot_id","bigint","FK",""),("completed_at","datetime","","")], HDR_NOTE),
+        E("conversion_inputs", "CNV input", [("id","bigint","PK",""),("conversion_id","bigint","FK",""),("item_id","bigint","FK",""),("bin_id","bigint","FK",""),("lot_id","bigint","FK",""),("piece_id","bigint","FK",""),("qty_base","decimal(18,4)","","")]),
+        E("conversion_outputs", "CNV output / offcut / waste", [("id","bigint","PK",""),("conversion_id","bigint","FK",""),("output_kind","enum","","output|offcut|waste|kerf"),("item_id","bigint","FK","output bisa item lain"),("bin_id","bigint","FK","waste → bin Waste"),("qty_base","decimal(18,4)","",""),("new_piece_id","bigint","FK","potongan baru (silsilah via pieces.parent_piece_id)"),("parent_input_id","bigint","FK","conversion_inputs (silsilah)")]),
+        E("conversion_recipes", "Resep konversi (F2)", [("id","bigint","PK",""),("code","varchar(30)","UK",""),("name","varchar(100)","",""),("definition","json","","input → output + sisa"),("is_active","bool","","")]),
+        E("waste_disposals", "WST header", [("id","bigint","PK",""),("warehouse_id","bigint","FK",""),("project_id","bigint","FK",""),("disposition","enum","","waste_disposition"),("evidence_attachment_id","bigint","FK",""),("approval_snapshot_id","bigint","FK",""),("closed_at","datetime","","")], HDR_NOTE),
+        E("waste_disposal_lines", "WST baris", [("id","bigint","PK",""),("waste_disposal_id","bigint","FK",""),("bin_id","bigint","FK","bin Waste"),("qty_base","decimal(18,4)","",""),("reason_code_id","bigint","FK","")], LINE_NOTE),
+        E("asset_handovers", "AST serah terima", [("id","bigint","PK",""),("serial_id","bigint","FK",""),("project_id","bigint","FK",""),("shipment_line_id","bigint","FK","keluar"),("goods_return_line_id","bigint","FK","kembali"),("checked_out_at","datetime","",""),("due_return_date","date","",""),("condition_out","char(1)","",""),("photo_out_id","bigint","FK","attachments"),("returned_at","datetime","",""),("usage_days","int","","BR-AST-05"),("status","enum","","checked_out|returned|inspected")], HDR_NOTE),
+        E("asset_inspections", "Pemeriksaan aset", [("id","bigint","PK",""),("asset_handover_id","bigint","FK",""),("serial_id","bigint","FK",""),("inspected_by","bigint","FK",""),("inspected_at","datetime","",""),("condition_grade","char(1)","","A–D"),("photo_id","bigint","FK",""),("notes","varchar(255)","",""),("resulting_state","enum","","available|maintenance|damaged")]),
+        E("maintenance_schedules", "Jadwal maintenance (F2)", [("id","bigint","PK",""),("serial_id","bigint","FK",""),("scheduled_at","date","",""),("interval_days","int","",""),("performed_at","date","",""),("notes","varchar(255)","",""),("status","enum","","planned|in_progress|done")]),
+     ],
+     rels=[("projects","conversions","1-n",""),("warehouses","conversions","1-n",""),("conversions","conversion_inputs","1-n",""),("conversions","conversion_outputs","1-n",""),("conversion_inputs","conversion_outputs","1-n","silsilah"),("pieces","conversion_inputs","1-n",""),("pieces","conversion_outputs","1-n","baru"),("conversion_recipes","conversions","1-n",""),("waste_disposals","waste_disposal_lines","1-n",""),("bins","waste_disposal_lines","1-n",""),("serials","asset_handovers","1-n",""),("projects","asset_handovers","1-n",""),("shipment_lines","asset_handovers","1-n","keluar"),("goods_return_lines","asset_handovers","1-n","kembali"),("asset_handovers","asset_inspections","1-n",""),("serials","maintenance_schedules","1-n","")]),
+
+# ---------------------------------------------------------------- I. OPNAME & PENYESUAIAN
+dict(key="opname", title="Stock opname & penyesuaian (tenant)", file="08c",
+     intro="Sesi opname menyimpan snapshot saldo fisik per bin saat mulai (BR-OPN-01), hitungan per penghitung (hitung buta), klasifikasi selisih, dan menghasilkan satu ADJ per gudang.",
+     refs=["KS 2.12, 2.13", "BR-OPN", "A-42"],
+     entities=[
+        E("stock_counts", "OPN sesi", [("id","bigint","PK",""),("count_type","enum","","monthly|annual|adhoc|cycle_abc"),("freeze_bins","bool","",""),("scope","json","","gudang/zona/bin/item"),("planned_start","date","",""),("started_at","datetime","",""),("approved_at","datetime","",""),("closed_at","datetime","",""),("report_attachment_id","bigint","FK","PDF"),("approval_snapshot_id","bigint","FK","")], HDR_NOTE + "; nomor memakai gudang atau ALL"),
+        E("stock_count_warehouses", "OPN ↔ gudang", [("stock_count_id","bigint","FK",""),("warehouse_id","bigint","FK",""),("stock_adjustment_id","bigint","FK","satu ADJ per gudang (BR-OPN-06)")], "PK(stock_count_id, warehouse_id)"),
+        E("count_assignments", "Penugasan penghitung", [("id","bigint","PK",""),("stock_count_id","bigint","FK",""),("bin_id","bigint","FK",""),("counter_user_id","bigint","FK",""),("round","int","","1 = pertama, 2 = hitung ulang (orang berbeda)"),("status","enum","","pending|done")], "UK(stock_count_id, bin_id, round)"),
+        E("count_lines", "Baris hitung", [("id","bigint","PK",""),("stock_count_id","bigint","FK",""),("bin_id","bigint","FK",""),("item_id","bigint","FK",""),("lot_id","bigint","FK",""),("serial_id","bigint","FK",""),("piece_id","bigint","FK",""),("system_qty","decimal(18,4)","","snapshot fisik"),("counted_qty_r1","decimal(18,4)","",""),("counted_qty_r2","decimal(18,4)","",""),("final_qty","decimal(18,4)","",""),("variance_qty","decimal(18,4)","",""),("variance_pct","decimal(8,4)","",""),("variance_class","enum","","minor|moderate|major"),("root_cause","enum","","root_cause_category"),("note","varchar(255)","",""),("device_id","bigint","FK","")]),
+        E("stock_adjustments", "ADJ header", [("id","bigint","PK",""),("warehouse_id","bigint","FK",""),("origin","enum","","manual|count|discrepancy|asset_lost"),("stock_count_id","bigint","FK",""),("reason_code_id","bigint","FK",""),("approval_snapshot_id","bigint","FK","manual: wajib (A-09)"),("posted_at","datetime","","")], HDR_NOTE),
+        E("stock_adjustment_lines", "ADJ baris", [("id","bigint","PK",""),("stock_adjustment_id","bigint","FK",""),("bin_id","bigint","FK",""),("qty_delta","decimal(18,4)","","±"),("stock_status","enum","",""),("count_line_id","bigint","FK",""),("reason_code_id","bigint","FK","")], LINE_NOTE),
+     ],
+     rels=[("stock_counts","stock_count_warehouses","1-n",""),("warehouses","stock_count_warehouses","1-n",""),("stock_counts","count_assignments","1-n",""),("bins","count_assignments","1-n",""),("users","count_assignments","1-n","penghitung"),("stock_counts","count_lines","1-n",""),("bins","count_lines","1-n",""),("stock_counts","stock_adjustments","1-n",""),("stock_adjustments","stock_adjustment_lines","1-n",""),("count_lines","stock_adjustment_lines","1-n",""),("bins","stock_adjustment_lines","1-n","")]),
+
+# ---------------------------------------------------------------- J. APPROVAL
+dict(key="approval", title="Approval engine (tenant)", file="08c",
+     intro="Aturan hidup (`approval_rules/steps`) di-snapshot ke `approval_snapshots` saat dokumen diajukan (BR-APR-01). Tugas per lapis dan keputusan dicatat terpisah agar delegasi, eskalasi, dan kanal WA bisa diaudit.",
+     refs=["Blueprint §8", "KS 3", "BR-APR"],
+     entities=[
+        E("approval_rules", "Aturan approval", [("id","bigint","PK",""),("document_type","varchar(30)","",""),("name","varchar(100)","",""),("priority","int","",""),("conditions","json","","gudang, proyek, kategori, kepemilikan, qty ≥, dari klien"),("is_active","bool","","")]),
+        E("approval_steps", "Lapis aturan", [("id","bigint","PK",""),("approval_rule_id","bigint","FK",""),("step_no","int","",""),("approver_type","enum","","user|position|role|direct_manager|warehouse_head|project_pic"),("approver_ref_id","bigint","",""),("decision_mode","enum","","sequential|any|all"),("backup_approver_type","enum","",""),("backup_ref_id","bigint","",""),("timeout_hours","int","","default 24"),("channel","enum","","web|whatsapp|both"),("require_pin","bool","","")]),
+        E("approval_snapshots", "Snapshot per dokumen", [("id","bigint","PK",""),("document_type","varchar(30)","",""),("document_id","bigint","",""),("rule_id","bigint","FK","asal"),("steps","json","","salinan lapis yang berlaku setelah SoD"),("status","enum","","pending|approved|rejected|cancelled"),("current_step","int","",""),("submitted_by","bigint","FK",""),("submitted_at","datetime","",""),("decided_at","datetime","","")], "UK(document_type, document_id, submitted_at)"),
+        E("approval_tasks", "Tugas approval per lapis", [("id","bigint","PK",""),("approval_snapshot_id","bigint","FK",""),("step_no","int","",""),("approver_user_id","bigint","FK","resolusi approver_type"),("delegated_from_user_id","bigint","FK","BR-APR-05"),("escalated_from_task_id","bigint","FK","BR-APR-06"),("due_at","datetime","",""),("status","enum","","open|decided|superseded|expired")]),
+        E("approval_decisions", "Keputusan", [("id","bigint","PK",""),("approval_task_id","bigint","FK",""),("decision","enum","","approval_decision"),("decided_by","bigint","FK",""),("decided_at","datetime","",""),("channel","enum","","web|whatsapp"),("reason_code_id","bigint","FK",""),("comment","varchar(255)","",""),("wa_from_number","varchar(20)","","BR-APR-10"),("wa_message_id","varchar(120)","",""),("approval_token_id","bigint","FK","")]),
+        E("approval_delegations", "Delegasi", [("id","bigint","PK",""),("from_user_id","bigint","FK",""),("to_user_id","bigint","FK",""),("starts_at","datetime","",""),("ends_at","datetime","",""),("document_types","json","","null = semua"),("is_active","bool","","")]),
+        E("approval_tokens", "Token WA (F2)", [("id","bigint","PK",""),("approval_task_id","bigint","FK",""),("token","varchar(64)","UK",""),("expires_at","datetime","",""),("used_at","datetime","",""),("wa_message_id","varchar(120)","","")]),
+     ],
+     rels=[("approval_rules","approval_steps","1-n",""),("approval_rules","approval_snapshots","1-n",""),("approval_snapshots","approval_tasks","1-n",""),("approval_tasks","approval_decisions","1-n",""),("users","approval_tasks","1-n","approver"),("approval_tasks","approval_tokens","1-n",""),("users","approval_delegations","1-n","dari/ke"),("approval_tasks","approval_tasks","1-n","eskalasi")]),
+
+# ---------------------------------------------------------------- K. UMUM & INTEGRASI
+dict(key="umum", title="Timeline, audit, lampiran, notifikasi, template, penomoran, impor, sinkron (tenant)", file="08c",
+     intro="Dua catatan resmi (BR-GEN-05): `document_timelines` untuk user, `audit_logs` untuk Admin. Penomoran dikunci di `document_sequences` (BR-GEN-06).",
+     refs=["BR-GEN-05", "BR-GEN-06", "Blueprint §10–§12", "NFR-03", "NFR-14"],
+     entities=[
+        E("document_timelines", "Timeline dokumen", [("id","bigint","PK",""),("document_type","varchar(30)","",""),("document_id","bigint","",""),("from_status","varchar(30)","",""),("to_status","varchar(30)","",""),("action","varchar(40)","","permission"),("actor_id","bigint","FK",""),("channel","enum","","web|pwa|whatsapp|system|token_link"),("note","varchar(255)","",""),("reason_code_id","bigint","FK",""),("occurred_at","datetime","","")], "append-only; index (document_type, document_id)"),
+        E("audit_logs", "Jejak audit teknis", [("id","bigint","PK",""),("table_name","varchar(60)","",""),("record_id","bigint","",""),("event","enum","","created|updated|deleted|login|setting|support_access"),("old_values","json","",""),("new_values","json","",""),("user_id","bigint","FK",""),("platform_user_id","bigint","","akses dukungan"),("ip","varchar(45)","","hanya Admin"),("user_agent","varchar(255)","",""),("occurred_at","datetime","","")], "append-only; kandidat paket spatie/laravel-activitylog"),
+        E("attachments", "Lampiran", [("id","bigint","PK",""),("attachable_type","varchar(40)","",""),("attachable_id","bigint","",""),("kind","enum","","photo|document|signature|report"),("disk","varchar(20)","","s3|local"),("path","varchar(255)","",""),("original_name","varchar(150)","",""),("mime","varchar(60)","",""),("size_bytes","int","","≤ 5 MB (A-23)"),("uploaded_by","bigint","FK",""),("device_id","bigint","FK","")]),
+        E("signatures", "Tanda tangan", [("id","bigint","PK",""),("user_id","bigint","FK","null bila penerima tanpa akun"),("signer_name","varchar(100)","",""),("attachment_id","bigint","FK",""),("captured_at","datetime","",""),("source","enum","","profile|device")]),
+        E("notifications", "Notifikasi", [("id","uuid","PK",""),("user_id","bigint","FK",""),("type","varchar(60)","",""),("channel","enum","","in_app|email|whatsapp"),("data","json","",""),("document_type","varchar(30)","",""),("document_id","bigint","",""),("sent_at","datetime","",""),("read_at","datetime","","")]),
+        E("notification_preferences", "Preferensi kanal", [("user_id","bigint","FK",""),("event_key","varchar(60)","",""),("in_app","bool","",""),("email","bool","",""),("whatsapp","bool","","dibatasi Admin Company")], "PK(user_id, event_key)"),
+        E("document_layouts", "Layout induk", [("id","bigint","PK",""),("name","varchar(80)","",""),("logo_attachment_id","bigint","FK",""),("header_html","text","",""),("footer_html","text","",""),("colors","json","",""),("signature_blocks","json","",""),("is_default","bool","","")]),
+        E("document_templates", "Template dokumen", [("id","bigint","PK",""),("document_type","varchar(30)","",""),("name","varchar(80)","",""),("layout_id","bigint","FK",""),("body_html","text","","variabel {nomor_dokumen} …"),("paper","varchar(10)","","A4|label_50x30"),("is_default","bool","",""),("version","int","","")], "UK(document_type, name, version)"),
+        E("numbering_formats", "Format nomor", [("id","bigint","PK",""),("document_type","varchar(30)","UK",""),("pattern","varchar(80)","","{KODE}/{GUDANG}/{TAHUN}/{BULAN}/{URUT}"),("reset_period","enum","","monthly|yearly|never"),("pad","int","","4"),("warehouse_segment","enum","","origin|fulfilling|all (A-43)")]),
+        E("document_sequences", "Urutan nomor", [("id","bigint","PK",""),("document_type","varchar(30)","",""),("warehouse_code","varchar(10)","","atau ALL / PRJ"),("period","varchar(7)","","2026-09"),("last_no","int","","")], "UK(document_type, warehouse_code, period); SELECT … FOR UPDATE"),
+        E("import_batches", "Impor Excel", [("id","bigint","PK",""),("target","varchar(30)","","items|clients|vendors|bins|…"),("file_attachment_id","bigint","FK",""),("status","enum","","validating|previewed|committed|failed"),("total_rows","int","",""),("error_rows","int","",""),("committed_at","datetime","","")]),
+        E("import_rows", "Baris impor", [("id","bigint","PK",""),("import_batch_id","bigint","FK",""),("row_no","int","",""),("data","json","",""),("errors","json","",""),("result_id","bigint","","id record yang dibuat")]),
+        E("sync_queue", "Antrean sinkron PWA (F2)", [("id","uuid","PK","dibuat di perangkat"),("device_id","bigint","FK",""),("user_id","bigint","FK",""),("action","varchar(40)","",""),("payload","json","",""),("temp_number","varchar(50)","","TMP-…"),("status","enum","","sync_status"),("conflict_reason","varchar(255)","",""),("received_at","datetime","",""),("processed_at","datetime","","")]),
+     ],
+     rels=[("users","document_timelines","1-n","aktor"),("users","audit_logs","1-n",""),("users","attachments","1-n",""),("attachments","signatures","1-1",""),("users","notifications","1-n",""),("users","notification_preferences","1-n",""),("document_layouts","document_templates","1-n",""),("import_batches","import_rows","1-n",""),("devices","sync_queue","1-n",""),("devices","attachments","1-n","")]),
+]
+
+# ---------------------------------------------------------------- MERMAID
+CARD = {"1-n": "||--o{", "1-1": "||--||", "0-1": "||--o|", "n-n": "}o--o{"}
+def mm_type(t): return re.sub(r"[^a-z0-9_]", "_", t.lower().replace("(", "_").replace(")", "")).strip("_")
+
+def mermaid(area):
+    names = {e["name"] for e in area["entities"]}
+    o = ["```mermaid", "erDiagram"]
+    for e in area["entities"]:
+        keys = [(c, t, f) for c, t, f, n in e["cols"] if f in ("PK", "UK")][:2]
+        o.append(f"  {e['name']} {{")
+        for c, t, f in keys:
+            o.append(f"    {mm_type(t)} {c} {f}")
+        o.append("  }")
+    for a, b, card, label in area["rels"]:
+        o.append(f"  {a} {CARD[card]} {b} : \"{label or ' '}\"")
+    o.append("```")
+    return "\n".join(o)
+
+# ---------------------------------------------------------------- DRAWIO
+ARROW = {"1-n": ("ERmandOne", "ERzeroToMany"), "1-1": ("ERmandOne", "ERmandOne"), "0-1": ("ERmandOne", "ERzeroToOne"), "n-n": ("ERzeroToMany", "ERzeroToMany")}
+def drawio(area):
+    ents = area["entities"]; names = {e["name"] for e in ents}
+    ext = sorted({x for a, b, _, _ in area["rels"] for x in (a, b) if x not in names})
+    W, ROWH, GAPX, GAPY, COLS = 260, 16, 60, 50, 4
+    out = ['<mxfile host="app.diagrams.net" agent="wms-erd-generator">', f'  <diagram name="ERD {area["key"]}" id="erd-{area["key"]}">',
+           '    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="1654">',
+           '      <root>', '        <mxCell id="0"/>', '        <mxCell id="1" parent="0"/>']
+    x = y = 40; rowmax = 0
+    for i, e in enumerate(ents + [dict(name=n, label=n + " (area lain)", cols=[], note="") for n in ext]):
+        h = 26 + max(1, len(e["cols"])) * ROWH + 8
+        if i and i % COLS == 0:
+            x = 40; y += rowmax + GAPY; rowmax = 0
+        fill = "#F5F5F5" if e["name"] in ext else "#FFFFFF"
+        out.append(f'        <mxCell id="{e["name"]}" value="{html.escape(e["name"])}" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor={fill};" vertex="1" parent="1">')
+        out.append(f'          <mxGeometry x="{x}" y="{y}" width="{W}" height="{h}" as="geometry"/>')
+        out.append('        </mxCell>')
+        rows = "&lt;br&gt;".join(html.escape(f"{'🔑 ' if f=='PK' else '↗ ' if f=='FK' else '◆ ' if f=='UK' else ''}{c} : {t}") for c, t, f, n in e["cols"]) or "…"
+        out.append(f'        <mxCell id="{e["name"]}_cols" value="{rows}" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="{e["name"]}">')
+        out.append(f'          <mxGeometry y="26" width="{W}" height="{h-26}" as="geometry"/>')
+        out.append('        </mxCell>')
+        x += W + GAPX; rowmax = max(rowmax, h)
+    for k, (a, b, card, label) in enumerate(area["rels"]):
+        s, t = ARROW[card]
+        out.append(f'        <mxCell id="r{k}" value="{html.escape(label)}" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow={t};startArrow={s};endFill=0;startFill=0;" edge="1" parent="1" source="{a}" target="{b}">')
+        out.append('          <mxGeometry relative="1" as="geometry"/>'); out.append('        </mxCell>')
+    out += ['      </root>', '    </mxGraphModel>', '  </diagram>', '</mxfile>', '']
+    return "\n".join(out)
+
+# ---------------------------------------------------------------- MARKDOWN
+def link_ids(text):
+    text = re.sub(r"\b(A-\d{2})\b", lambda m: f"[{m.group(1)}](04-keputusan-dan-asumsi.md#{m.group(1).lower()})", text)
+    text = re.sub(r"(?<![\[\w])(BR-([A-Z]+))-(\d{2})\.\.(\d{2})\b", lambda m: f"[{m.group(1)}-{m.group(3)}–{m.group(4)}](05-aturan-bisnis.md#br-{m.group(2).lower()})", text)
+    text = re.sub(r"(?<![\[\w])(BR-([A-Z]+)-\d{2})\b(?![\d–])", lambda m: f"[{m.group(1)}](05-aturan-bisnis.md#br-{m.group(2).lower()})", text)
+    text = re.sub(r"(?<![\[\w-])(BR-([A-Z]+))\b(?!-)", lambda m: f"[{m.group(1)}](05-aturan-bisnis.md#br-{m.group(2).lower()})", text)
+    return text
+
+def area_md(area):
+    o = [f'## Area: {area["title"]}', "",
+         f'**Diagram:** [`diagram/erd-{area["key"]}.drawio`](../diagram/erd-{area["key"]}.drawio) · **Rujukan:** ' + link_ids(", ".join(area["refs"])), "",
+         area["intro"], "", "### Diagram (Mermaid)", "", mermaid(area), "", "### Entitas", ""]
+    mark = {"PK": "🔑", "FK": "↗", "UK": "◆", "": ""}
+    for e in area["entities"]:
+        cols = " · ".join(f"{mark[f]}`{c}` {t}" + (f" *({link_ids(n)})*" if n else "") for c, t, f, n in e["cols"])
+        o.append(f'**`{e["name"]}` — {e["label"]}.** {cols}')
+        if e["note"]: o.append(f"  ↳ {link_ids(e['note'])}")
+        o.append("")
+    return "\n".join(o)
+
+HEADER = """# Model Data — {part}
+
+**Versi:** 0.1 (draf Part 3)
+**Tanggal:** 23 September 2026
+**Status:** draf berdasarkan Blueprint v0.3, Aturan Bisnis, Katalog Status, dan nilai default asumsi A-25–A-49. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · {other}
+
+{scope}
+
+**Konvensi yang tidak diulang di setiap tabel:**
+- Semua tabel tenant: `id BIGINT PK`, `created_at`, `updated_at`, `created_by`, `updated_by` (FK `users`). Semua waktu UTC ([BR-GEN-07](05-aturan-bisnis.md#br-gen)).
+- Header dokumen: `number` (unik), `status` (enum Katalog), `source_type` + `source_id` (induk polimorfik), `reversal_of_id`, `notes`, `submitted_at`, `cancelled_at`, `cancel_reason_id`.
+- Baris dokumen `<doc>_lines`: `line_no`, `item_id`, `uom_id` (satuan input), `qty_input`, `qty_base DECIMAL(18,4)`, `lot_id`, `serial_id`, `piece_id` (nullable sesuai `tracking_mode`), `source_line_type` + `source_line_id`.
+- Enum memakai nilai dari [Katalog Status & Enum](06-katalog-status-dan-enum.md); di MySQL disimpan sebagai `VARCHAR(30)` + CHECK/validasi aplikasi, bukan tipe ENUM MySQL (agar migrasi per tenant aman).
+- Kunci: 🔑 PK · ↗ FK · ◆ unik. Tabel abu-abu di `.drawio` = milik area lain (rujukan).
+
+---
+
+"""
+
+FILES = {
+    "08a": ("08a-model-data-inti.md", "Pusat, akses & organisasi, master, gudang & lokasi", "[Stok & dokumen](08b-model-data-stok-dokumen.md) · [Pendukung](08c-model-data-pendukung.md)"),
+    "08b": ("08b-model-data-stok-dokumen.md", "Stok, outbound, inbound & dokumen niat", "[Inti](08a-model-data-inti.md) · [Pendukung](08c-model-data-pendukung.md)"),
+    "08c": ("08c-model-data-pendukung.md", "Konversi & aset, opname & penyesuaian, approval, umum", "[Inti](08a-model-data-inti.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md)"),
+}
+
+def main():
+    total = 0
+    for a in AREAS:
+        p = os.path.join(DIAG, f"erd-{a['key']}.drawio")
+        with open(p, "w", encoding="utf-8", newline="\n") as f: f.write(drawio(a))
+        total += len(a["entities"])
+    idx = "\n".join(f"- [{a['title']}]({FILES[a['file']][0]}#area-{re.sub(r'[^a-z0-9 \-]', '', a['title'].lower()).replace(' ', '-')}) — {len(a['entities'])} tabel" for a in AREAS)
+    for key, (fname, part, other) in FILES.items():
+        areas = [a for a in AREAS if a["file"] == key]
+        scope = (f"Daftar area ({total} tabel):\n\n" + idx) if key == "08a" else "Daftar area lengkap ada di [08a-model-data-inti.md](08a-model-data-inti.md)."
+        with open(os.path.join(WMS, fname), "w", encoding="utf-8", newline="\n") as f:
+            f.write(HEADER.format(part=part, other=other, scope=scope))
+            f.write("\n".join(area_md(a) for a in areas))
+        print("ditulis", fname)
+    print("total tabel:", total)
+
+if __name__ == "__main__":
+    main()

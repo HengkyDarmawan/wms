@@ -1,0 +1,94 @@
+<mxfile host="app.diagrams.net" agent="wms-erd-generator">
+  <diagram name="ERD akses" id="erd-akses">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="1654">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="users" value="users" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="260" height="258" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_cols" value="🔑 id : bigint&lt;br&gt;name : varchar(100)&lt;br&gt;◆ email : varchar(150)&lt;br&gt;phone : varchar(20)&lt;br&gt;password : varchar(255)&lt;br&gt;↗ client_id : bigint&lt;br&gt;↗ org_unit_id : bigint&lt;br&gt;↗ position_id : bigint&lt;br&gt;↗ manager_id : bigint&lt;br&gt;signature_path : varchar(255)&lt;br&gt;is_active : bool&lt;br&gt;locked_until : datetime&lt;br&gt;two_factor_secret : text&lt;br&gt;◆ sso_sub : varchar(191)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="users">
+          <mxGeometry y="26" width="260" height="232" as="geometry"/>
+        </mxCell>
+        <mxCell id="roles" value="roles" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="40" width="260" height="114" as="geometry"/>
+        </mxCell>
+        <mxCell id="roles_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(40)&lt;br&gt;name : varchar(80)&lt;br&gt;is_builtin : bool&lt;br&gt;is_client_role : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="roles">
+          <mxGeometry y="26" width="260" height="88" as="geometry"/>
+        </mxCell>
+        <mxCell id="permissions" value="permissions" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="40" width="260" height="82" as="geometry"/>
+        </mxCell>
+        <mxCell id="permissions_cols" value="🔑 id : bigint&lt;br&gt;◆ key : varchar(80)&lt;br&gt;module : varchar(30)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="permissions">
+          <mxGeometry y="26" width="260" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="role_permissions" value="role_permissions" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="40" width="260" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="role_permissions_cols" value="↗ role_id : bigint&lt;br&gt;↗ permission_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="role_permissions">
+          <mxGeometry y="26" width="260" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="role_assignments" value="role_assignments" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="348" width="260" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="role_assignments_cols" value="🔑 id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;↗ role_id : bigint&lt;br&gt;scope_type : enum&lt;br&gt;scope_id : bigint&lt;br&gt;valid_from : date&lt;br&gt;valid_until : date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="role_assignments">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="org_units" value="org_units" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="348" width="260" height="98" as="geometry"/>
+        </mxCell>
+        <mxCell id="org_units_cols" value="🔑 id : bigint&lt;br&gt;↗ parent_id : bigint&lt;br&gt;◆ code : varchar(30)&lt;br&gt;name : varchar(100)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="org_units">
+          <mxGeometry y="26" width="260" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="positions" value="positions" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="348" width="260" height="114" as="geometry"/>
+        </mxCell>
+        <mxCell id="positions_cols" value="🔑 id : bigint&lt;br&gt;↗ org_unit_id : bigint&lt;br&gt;◆ code : varchar(30)&lt;br&gt;name : varchar(100)&lt;br&gt;level : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="positions">
+          <mxGeometry y="26" width="260" height="88" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_invitations" value="user_invitations" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="348" width="260" height="114" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_invitations_cols" value="🔑 id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;◆ token : varchar(64)&lt;br&gt;expires_at : datetime&lt;br&gt;accepted_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="user_invitations">
+          <mxGeometry y="26" width="260" height="88" as="geometry"/>
+        </mxCell>
+        <mxCell id="devices" value="devices" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="544" width="260" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="devices_cols" value="🔑 id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;◆ device_uid : varchar(64)&lt;br&gt;name : varchar(80)&lt;br&gt;platform : varchar(30)&lt;br&gt;last_seen_at : datetime&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="devices">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="r0" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="role_assignments">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r1" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="roles" target="role_assignments">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="roles" target="role_permissions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="permissions" target="role_permissions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="org_units" target="positions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r5" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="org_units" target="users">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r6" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="positions" target="users">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r7" value="atasan" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="users">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r8" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="user_invitations">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r9" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="devices">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

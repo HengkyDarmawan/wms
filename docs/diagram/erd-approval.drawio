@@ -1,0 +1,82 @@
+<mxfile host="app.diagrams.net" agent="wms-erd-generator">
+  <diagram name="ERD approval" id="erd-approval">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="1654">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="approval_rules" value="approval_rules" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_rules_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;name : varchar(100)&lt;br&gt;priority : int&lt;br&gt;conditions : json&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="approval_rules">
+          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_steps" value="approval_steps" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="40" width="260" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_steps_cols" value="🔑 id : bigint&lt;br&gt;↗ approval_rule_id : bigint&lt;br&gt;step_no : int&lt;br&gt;approver_type : enum&lt;br&gt;approver_ref_id : bigint&lt;br&gt;decision_mode : enum&lt;br&gt;backup_approver_type : enum&lt;br&gt;backup_ref_id : bigint&lt;br&gt;timeout_hours : int&lt;br&gt;channel : enum&lt;br&gt;require_pin : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="approval_steps">
+          <mxGeometry y="26" width="260" height="184" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_snapshots" value="approval_snapshots" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="40" width="260" height="194" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_snapshots_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;document_id : bigint&lt;br&gt;↗ rule_id : bigint&lt;br&gt;steps : json&lt;br&gt;status : enum&lt;br&gt;current_step : int&lt;br&gt;↗ submitted_by : bigint&lt;br&gt;submitted_at : datetime&lt;br&gt;decided_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="approval_snapshots">
+          <mxGeometry y="26" width="260" height="168" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_tasks" value="approval_tasks" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="40" width="260" height="162" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_tasks_cols" value="🔑 id : bigint&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;step_no : int&lt;br&gt;↗ approver_user_id : bigint&lt;br&gt;↗ delegated_from_user_id : bigint&lt;br&gt;↗ escalated_from_task_id : bigint&lt;br&gt;due_at : datetime&lt;br&gt;status : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="approval_tasks">
+          <mxGeometry y="26" width="260" height="136" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_decisions" value="approval_decisions" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="260" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_decisions_cols" value="🔑 id : bigint&lt;br&gt;↗ approval_task_id : bigint&lt;br&gt;decision : enum&lt;br&gt;↗ decided_by : bigint&lt;br&gt;decided_at : datetime&lt;br&gt;channel : enum&lt;br&gt;↗ reason_code_id : bigint&lt;br&gt;comment : varchar(255)&lt;br&gt;wa_from_number : varchar(20)&lt;br&gt;wa_message_id : varchar(120)&lt;br&gt;↗ approval_token_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="approval_decisions">
+          <mxGeometry y="26" width="260" height="184" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_delegations" value="approval_delegations" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="300" width="260" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_delegations_cols" value="🔑 id : bigint&lt;br&gt;↗ from_user_id : bigint&lt;br&gt;↗ to_user_id : bigint&lt;br&gt;starts_at : datetime&lt;br&gt;ends_at : datetime&lt;br&gt;document_types : json&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="approval_delegations">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_tokens" value="approval_tokens" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="300" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="approval_tokens_cols" value="🔑 id : bigint&lt;br&gt;↗ approval_task_id : bigint&lt;br&gt;◆ token : varchar(64)&lt;br&gt;expires_at : datetime&lt;br&gt;used_at : datetime&lt;br&gt;wa_message_id : varchar(120)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="approval_tokens">
+          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        </mxCell>
+        <mxCell id="users" value="users" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="300" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="users">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="r0" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="approval_rules" target="approval_steps">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r1" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="approval_rules" target="approval_snapshots">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="approval_snapshots" target="approval_tasks">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="approval_tasks" target="approval_decisions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4" value="approver" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="approval_tasks">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r5" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="approval_tasks" target="approval_tokens">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r6" value="dari/ke" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="approval_delegations">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r7" value="eskalasi" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="approval_tasks" target="approval_tasks">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

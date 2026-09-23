@@ -1,0 +1,389 @@
+# Model Data — Pusat, akses & organisasi, master, gudang & lokasi
+
+**Versi:** 0.1 (draf Part 3)
+**Tanggal:** 23 September 2026
+**Status:** draf berdasarkan Blueprint v0.3, Aturan Bisnis, Katalog Status, dan nilai default asumsi A-25–A-49. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md) · [Pendukung](08c-model-data-pendukung.md)
+
+Daftar area (106 tabel):
+
+- [Database pusat (platform)](08a-model-data-inti.md#area-database-pusat-platform) — 11 tabel
+- [User, role, cakupan, struktur organisasi (tenant)](08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) — 9 tabel
+- [Master data (tenant)](08a-model-data-inti.md#area-master-data-tenant) — 17 tabel
+- [Gudang & lokasi (tenant)](08a-model-data-inti.md#area-gudang--lokasi-tenant) — 6 tabel
+- [Stok: ledger, saldo, reservasi, kejadian (tenant)](08b-model-data-stok-dokumen.md#area-stok-ledger-saldo-reservasi-kejadian-tenant) — 4 tabel
+- [Permintaan, picking, pengiriman, bukti terima, selisih (tenant)](08b-model-data-stok-dokumen.md#area-permintaan-picking-pengiriman-bukti-terima-selisih-tenant) — 10 tabel
+- [Penerimaan, put-away, retur ke vendor, PR, transfer, retur, pemakaian (tenant)](08b-model-data-stok-dokumen.md#area-penerimaan-put-away-retur-ke-vendor-pr-transfer-retur-pemakaian-tenant) — 14 tabel
+- [Konversi, resep, waste, aset (tenant)](08c-model-data-pendukung.md#area-konversi-resep-waste-aset-tenant) — 9 tabel
+- [Stock opname & penyesuaian (tenant)](08c-model-data-pendukung.md#area-stock-opname--penyesuaian-tenant) — 6 tabel
+- [Approval engine (tenant)](08c-model-data-pendukung.md#area-approval-engine-tenant) — 7 tabel
+- [Timeline, audit, lampiran, notifikasi, template, penomoran, impor, sinkron (tenant)](08c-model-data-pendukung.md#area-timeline-audit-lampiran-notifikasi-template-penomoran-impor-sinkron-tenant) — 13 tabel
+
+**Konvensi yang tidak diulang di setiap tabel:**
+- Semua tabel tenant: `id BIGINT PK`, `created_at`, `updated_at`, `created_by`, `updated_by` (FK `users`). Semua waktu UTC ([BR-GEN-07](05-aturan-bisnis.md#br-gen)).
+- Header dokumen: `number` (unik), `status` (enum Katalog), `source_type` + `source_id` (induk polimorfik), `reversal_of_id`, `notes`, `submitted_at`, `cancelled_at`, `cancel_reason_id`.
+- Baris dokumen `<doc>_lines`: `line_no`, `item_id`, `uom_id` (satuan input), `qty_input`, `qty_base DECIMAL(18,4)`, `lot_id`, `serial_id`, `piece_id` (nullable sesuai `tracking_mode`), `source_line_type` + `source_line_id`.
+- Enum memakai nilai dari [Katalog Status & Enum](06-katalog-status-dan-enum.md); di MySQL disimpan sebagai `VARCHAR(30)` + CHECK/validasi aplikasi, bukan tipe ENUM MySQL (agar migrasi per tenant aman).
+- Kunci: 🔑 PK · ↗ FK · ◆ unik. Tabel abu-abu di `.drawio` = milik area lain (rujukan).
+
+---
+
+## Area: Database pusat (platform)
+
+**Diagram:** [`diagram/erd-pusat.drawio`](../diagram/erd-pusat.drawio) · **Rujukan:** Blueprint §6.1, Blueprint §14, [BR-SUB](05-aturan-bisnis.md#br-sub)
+
+Satu database untuk seluruh platform. Tidak menyimpan data operasional company. Semua tabel di sini memakai `company_id` bila terkait satu company.
+
+### Diagram (Mermaid)
+
+```mermaid
+erDiagram
+  companies {
+    bigint id PK
+    varchar_20 code UK
+  }
+  plans {
+    bigint id PK
+    varchar_30 code UK
+  }
+  subscriptions {
+    bigint id PK
+  }
+  subscription_invoices {
+    bigint id PK
+    varchar_40 number UK
+  }
+  subscription_payments {
+    bigint id PK
+  }
+  platform_users {
+    bigint id PK
+    varchar_150 email UK
+  }
+  sso_identities {
+    bigint id PK
+  }
+  feature_flags {
+    bigint id PK
+  }
+  support_accesses {
+    bigint id PK
+  }
+  tenant_migration_runs {
+    bigint id PK
+  }
+  wa_message_logs {
+    bigint id PK
+    varchar_120 wa_message_id UK
+  }
+  companies ||--o{ subscriptions : "memiliki"
+  plans ||--o{ subscriptions : "dipakai"
+  subscriptions ||--o{ subscription_invoices : "menagih"
+  subscription_invoices ||--o{ subscription_payments : "dibayar"
+  platform_users ||--o{ subscription_payments : "verifikasi"
+  companies ||--o{ sso_identities : " "
+  companies ||--o{ feature_flags : " "
+  companies ||--o{ support_accesses : " "
+  platform_users ||--o{ support_accesses : " "
+  companies ||--o{ tenant_migration_runs : " "
+  companies ||--o{ wa_message_logs : " "
+```
+
+### Entitas
+
+**`companies` — Company (tenant).** 🔑`id` bigint · ◆`code` varchar(20) *(kode pendek, dipakai di nomor dokumen)* · `name` varchar(150) · ◆`subdomain` varchar(63) *([A-01](04-keputusan-dan-asumsi.md#a-01))* · ◆`db_name` varchar(64) *(database tenant)* · `timezone` varchar(40) *(Asia/Jakarta)* · `status` enum *(provisioning|active|suspended|terminated)* · ↗`plan_id` bigint
+
+**`plans` — Paket.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(80) · `monthly_price` decimal(14,2) *(hanya di pusat (bukan WMS))* · `wa_quota` int *(pesan/bulan, O-04)* · `storage_quota_mb` int · `is_active` bool
+
+**`subscriptions` — Langganan.** 🔑`id` bigint · ↗`company_id` bigint · ↗`plan_id` bigint · `status` enum *(subscription_status)* · `trial_ends_at` datetime *([A-11](04-keputusan-dan-asumsi.md#a-11))* · `current_period_start` date · `current_period_end` date · `grace_ends_at` datetime *([A-12](04-keputusan-dan-asumsi.md#a-12))* · `suspended_at` datetime · `terminated_at` datetime · `purge_after` date *(+90 hari)*
+
+**`subscription_invoices` — Tagihan langganan.** 🔑`id` bigint · ↗`subscription_id` bigint · ◆`number` varchar(40) · `period_start` date · `period_end` date · `amount` decimal(14,2) · `due_date` date · `status` enum *(open|paid|overdue|void)*
+
+**`subscription_payments` — Bukti bayar langganan.** 🔑`id` bigint · ↗`invoice_id` bigint · ↗`uploaded_by` bigint *(user tenant (id + company_id))* · `proof_path` varchar(255) · `amount` decimal(14,2) · `paid_at` date · ↗`verified_by` bigint *(platform_users)* · `verified_at` datetime · `status` enum *(pending|verified|rejected)*
+
+**`platform_users` — Super Admin.** 🔑`id` bigint · `name` varchar(100) · ◆`email` varchar(150) · `password` varchar(255) · `two_factor_secret` text *(opsional)*
+
+**`sso_identities` — Pemetaan identitas SSO.** 🔑`id` bigint · `provider` varchar(30) *(nxtg)* · `sub` varchar(191) *(ID user di SSO)* · ↗`company_id` bigint · `tenant_user_id` bigint *(user di DB tenant)* · `last_login_at` datetime
+  ↳ UK(provider, sub, company_id); satu sub bisa terpeta ke banyak company → pemilih company ([A-48](04-keputusan-dan-asumsi.md#a-48))
+
+**`feature_flags` — Feature flag per company.** 🔑`id` bigint · ↗`company_id` bigint · `key` varchar(60) *(mis. whatsapp, offline_sync, rfid)* · `enabled` bool · `config` json
+  ↳ UK(company_id, key)
+
+**`support_accesses` — Akses dukungan.** 🔑`id` bigint · ↗`company_id` bigint · ↗`platform_user_id` bigint · `granted_by_tenant_user_id` bigint · `starts_at` datetime · `ends_at` datetime · `reason` varchar(255) · `revoked_at` datetime
+  ↳ [A-27](04-keputusan-dan-asumsi.md#a-27), [BR-SUB-04](05-aturan-bisnis.md#br-sub); setiap akses tercatat di audit_logs tenant
+
+**`tenant_migration_runs` — Log migrasi per tenant.** 🔑`id` bigint · ↗`company_id` bigint · `batch` varchar(40) · `migration` varchar(191) · `status` enum *(ok|failed)* · `error` text · `ran_at` datetime
+
+**`wa_message_logs` — Log pesan WhatsApp.** 🔑`id` bigint · ↗`company_id` bigint · `direction` enum *(out|in)* · `category` enum *(utility_template|service|inbound)* · ◆`wa_message_id` varchar(120) · `to_number` varchar(20) · `template` varchar(80) · `payload` json · `status` enum *(queued|sent|delivered|read|failed)* · `cost_units` decimal(10,4) *(untuk O-04)*
+  ↳ Satu nomor platform ([A-24](04-keputusan-dan-asumsi.md#a-24)); routing balasan ke tenant lewat penanda company (NFR-12)
+
+## Area: User, role, cakupan, struktur organisasi (tenant)
+
+**Diagram:** [`diagram/erd-akses.drawio`](../diagram/erd-akses.drawio) · **Rujukan:** Blueprint §4.2, Blueprint §6.2, [BR-GEN-09](05-aturan-bisnis.md#br-gen), [A-46](04-keputusan-dan-asumsi.md#a-46)
+
+Cakupan akses melekat pada penugasan role (BR-GEN-09). User klien adalah user biasa dengan `client_id` terisi dan hanya role Klien.
+
+### Diagram (Mermaid)
+
+```mermaid
+erDiagram
+  users {
+    bigint id PK
+    varchar_150 email UK
+  }
+  roles {
+    bigint id PK
+    varchar_40 code UK
+  }
+  permissions {
+    bigint id PK
+    varchar_80 key UK
+  }
+  role_permissions {
+  }
+  role_assignments {
+    bigint id PK
+  }
+  org_units {
+    bigint id PK
+    varchar_30 code UK
+  }
+  positions {
+    bigint id PK
+    varchar_30 code UK
+  }
+  user_invitations {
+    bigint id PK
+    varchar_64 token UK
+  }
+  devices {
+    bigint id PK
+    varchar_64 device_uid UK
+  }
+  users ||--o{ role_assignments : " "
+  roles ||--o{ role_assignments : " "
+  roles ||--o{ role_permissions : " "
+  permissions ||--o{ role_permissions : " "
+  org_units ||--o{ positions : " "
+  org_units ||--o{ users : " "
+  positions ||--o{ users : " "
+  users ||--o{ users : "atasan"
+  users ||--o{ user_invitations : " "
+  users ||--o{ devices : " "
+```
+
+### Entitas
+
+**`users` — User.** 🔑`id` bigint · `name` varchar(100) · ◆`email` varchar(150) · `phone` varchar(20) *(WA untuk approval/OTP)* · `password` varchar(255) *(nullable bila hanya SSO)* · ↗`client_id` bigint *(terisi = user klien)* · ↗`org_unit_id` bigint · ↗`position_id` bigint · ↗`manager_id` bigint *(atasan langsung (self))* · `signature_path` varchar(255) · `is_active` bool · `locked_until` datetime *(kunci akun)* · `two_factor_secret` text · ◆`sso_sub` varchar(191) *(nullable)*
+
+**`roles` — Role.** 🔑`id` bigint · ◆`code` varchar(40) *(warehouse_head, …)* · `name` varchar(80) · `is_builtin` bool *(template bawaan)* · `is_client_role` bool *(tidak bisa digabung role internal)*
+
+**`permissions` — Permission.** 🔑`id` bigint · ◆`key` varchar(80) *(<modul>.<aksi>)* · `module` varchar(30)
+
+**`role_permissions` — Role ↔ permission.** ↗`role_id` bigint · ↗`permission_id` bigint
+  ↳ PK(role_id, permission_id)
+
+**`role_assignments` — Penugasan role × cakupan.** 🔑`id` bigint · ↗`user_id` bigint · ↗`role_id` bigint · `scope_type` enum *(all|warehouse|project)* · `scope_id` bigint *(warehouse_id / project_id)* · `valid_from` date · `valid_until` date *(auditor eksternal)*
+  ↳ UK(user_id, role_id, scope_type, scope_id)
+
+**`org_units` — Unit organisasi.** 🔑`id` bigint · ↗`parent_id` bigint *(self)* · ◆`code` varchar(30) · `name` varchar(100)
+
+**`positions` — Jabatan.** 🔑`id` bigint · ↗`org_unit_id` bigint · ◆`code` varchar(30) · `name` varchar(100) · `level` int *(untuk 'atasan')*
+
+**`user_invitations` — Undangan user.** 🔑`id` bigint · ↗`user_id` bigint · ◆`token` varchar(64) · `expires_at` datetime · `accepted_at` datetime
+
+**`devices` — Perangkat terdaftar.** 🔑`id` bigint · ↗`user_id` bigint · ◆`device_uid` varchar(64) · `name` varchar(80) · `platform` varchar(30) · `last_seen_at` datetime · `is_active` bool
+
+## Area: Master data (tenant)
+
+**Diagram:** [`diagram/erd-master.drawio`](../diagram/erd-master.drawio) · **Rujukan:** Blueprint §6.3a, §6.4, §6.5, §6.9, [BR-STK-08–12](05-aturan-bisnis.md#br-stk)
+
+Master tidak pernah dihapus, hanya dinonaktifkan (P-03). Satuan dinamis: konversi global per kategori satuan + konversi khusus per item.
+
+### Diagram (Mermaid)
+
+```mermaid
+erDiagram
+  clients {
+    bigint id PK
+    varchar_30 code UK
+  }
+  projects {
+    bigint id PK
+    varchar_30 code UK
+  }
+  vendors {
+    bigint id PK
+    varchar_30 code UK
+  }
+  vehicles {
+    bigint id PK
+    varchar_15 plate_no UK
+  }
+  carriers {
+    bigint id PK
+  }
+  reason_codes {
+    bigint id PK
+  }
+  item_categories {
+    bigint id PK
+    varchar_30 code UK
+  }
+  storage_categories {
+    bigint id PK
+    varchar_30 code UK
+  }
+  uom_categories {
+    bigint id PK
+    varchar_20 code UK
+  }
+  uoms {
+    bigint id PK
+    varchar_15 code UK
+  }
+  items {
+    bigint id PK
+    varchar_40 code UK
+  }
+  item_uom_conversions {
+    bigint id PK
+  }
+  lots {
+    bigint id PK
+  }
+  serials {
+    bigint id PK
+  }
+  pieces {
+    bigint id PK
+    varchar_40 piece_no UK
+  }
+  company_settings {
+    varchar_60 key PK
+  }
+  feature_settings {
+    varchar_60 key PK
+  }
+  clients ||--o{ projects : " "
+  clients ||--o{ users : "user portal"
+  projects ||--o{ users : "PIC"
+  item_categories ||--o{ items : " "
+  item_categories ||--o{ item_categories : "induk"
+  storage_categories ||--o{ item_categories : "default"
+  uom_categories ||--o{ uoms : " "
+  uoms ||--o{ items : "base_uom"
+  items ||--o{ item_uom_conversions : " "
+  uoms ||--o{ item_uom_conversions : " "
+  items ||--o{ lots : " "
+  items ||--o{ serials : " "
+  items ||--o{ pieces : " "
+  pieces ||--o{ pieces : "parent"
+  vendors ||--o{ lots : " "
+  projects ||--o{ serials : "on_loan"
+  users ||--o{ vehicles : "driver"
+```
+
+### Entitas
+
+**`clients` — Klien.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(150) · `tax_id` varchar(30) *(NPWP)* · `address` text · `contact_name` varchar(100) · `phone` varchar(20) · `email` varchar(150) · `is_active` bool
+
+**`projects` — Proyek.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(150) · ↗`client_id` bigint *(null = Proyek Internal)* · `is_internal` bool *([A-06](04-keputusan-dan-asumsi.md#a-06))* · `status` enum *(project_status ([A-40](04-keputusan-dan-asumsi.md#a-40)))* · `address` text · `lat` decimal(10,7) · `lng` decimal(10,7) · `start_date` date · `target_end_date` date · ↗`pic_user_id` bigint · ↗`site_warehouse_id` bigint *(Gudang Site)* · `closed_at` datetime
+
+**`vendors` — Vendor.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(150) · `tax_id` varchar(30) · `contact_name` varchar(100) · `phone` varchar(20) · `email` varchar(150) · `address` text · `payment_terms` varchar(60) *(teks, tanpa nilai)* · `is_active` bool
+  ↳ Dimiliki WMS sampai Purchasing aktif
+
+**`vehicles` — Kendaraan.** 🔑`id` bigint · ◆`plate_no` varchar(15) · `type` varchar(40) · ↗`default_driver_id` bigint *(users)* · `is_active` bool
+
+**`carriers` — Ekspedisi pihak ketiga.** 🔑`id` bigint · `name` varchar(100) · `phone` varchar(20) · `is_active` bool
+
+**`reason_codes` — Alasan.** 🔑`id` bigint · `context` enum *(reject|cancel|adjustment|waste|damage|short_pick|discrepancy|lost)* · `code` varchar(30) · `label` varchar(100) · `is_active` bool
+  ↳ UK(context, code)
+
+**`item_categories` — Kategori barang.** 🔑`id` bigint · ↗`parent_id` bigint *(self)* · ◆`code` varchar(30) · `name` varchar(100) · ↗`storage_category_id` bigint *(default)* · `removal_strategy` enum *(default, nullable)* · `tolerance_pct` decimal(5,2) *([BR-OPN-04](05-aturan-bisnis.md#br-opn))* · `tolerance_abs` decimal(18,4) · `abc_class` char(1) *(F2)*
+
+**`storage_categories` — Kategori penyimpanan.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(100) · `capacity_mode` enum *(warn|block ([A-37](04-keputusan-dan-asumsi.md#a-37)))*
+
+**`uom_categories` — Kategori satuan.** 🔑`id` bigint · ◆`code` varchar(20) *(count|length|weight|volume|area)* · `name` varchar(60) · ↗`reference_uom_id` bigint *(satuan acuan)*
+
+**`uoms` — Satuan.** 🔑`id` bigint · ↗`uom_category_id` bigint · ◆`code` varchar(15) · `name` varchar(60) · `factor_to_reference` decimal(18,8) *(1 cm = 0.01 m)* · `rounding` decimal(18,4)
+
+**`items` — Item.** 🔑`id` bigint · ◆`code` varchar(40) · `name` varchar(150) · ↗`item_category_id` bigint · `status` enum *(item_status (provisional = dari non-katalog))* · `ownership_model` enum · `default_line_ownership` enum *(buy|loan ([A-38](04-keputusan-dan-asumsi.md#a-38)))* · `tracking_mode` enum · `has_expiry` bool · ↗`base_uom_id` bigint · `is_cuttable` bool · `min_offcut_length` decimal(18,4) *(wajib bila is_cuttable ([A-19](04-keputusan-dan-asumsi.md#a-19)))* · `kerf` decimal(18,4) · `requires_qc` bool · `removal_strategy` enum *(override, nullable)* · `reorder_point` decimal(18,4) · `min_stock` decimal(18,4) · `barcode` varchar(64) *(Code128)* · `qr_payload` varchar(120) · `photo_path` varchar(255) · `dimensions` json *(dengan satuan)* · `weight` decimal(18,4) · ↗`weight_uom_id` bigint
+  ↳ CHECK: ownership_model in (asset,both) ⇒ tracking_mode = serial ([BR-STK-08](05-aturan-bisnis.md#br-stk)); kombinasi sah BR §15
+
+**`item_uom_conversions` — Konversi satuan khusus item.** 🔑`id` bigint · ↗`item_id` bigint · ↗`uom_id` bigint *(1 batang)* · `qty_base` decimal(18,4) *(= 6 m)* · `is_nominal_piece` bool *(hanya potongan nominal ([BR-STK-09](05-aturan-bisnis.md#br-stk)))*
+  ↳ UK(item_id, uom_id)
+
+**`lots` — Lot / batch.** 🔑`id` bigint · ↗`item_id` bigint · `lot_no` varchar(60) · `expiry_date` date · `received_at` date · ↗`vendor_id` bigint · `attributes` json *(mis. heat number)*
+  ↳ UK(item_id, lot_no)
+
+**`serials` — Serial / aset.** 🔑`id` bigint · ↗`item_id` bigint · `serial_no` varchar(80) · `asset_state` enum *(asset_state ([BR-AST-01](05-aturan-bisnis.md#br-ast)))* · `condition_grade` char(1) · ↗`lot_id` bigint *(opsional)* · `expiry_date` date · `rfid_tag` varchar(64) *(F2)* · ↗`current_project_id` bigint *(saat on_loan)* · `due_return_date` date
+  ↳ UK(item_id, serial_no)
+
+**`pieces` — Potongan.** 🔑`id` bigint · ↗`item_id` bigint · ◆`piece_no` varchar(40) *(P-000123)* · `length` decimal(18,4) *(dalam base_uom (panjang))* · `is_offcut` bool · ↗`parent_piece_id` bigint *(silsilah ([BR-CNV-04](05-aturan-bisnis.md#br-cnv)))* · `origin_type` varchar(30) *(grn|conversion|return)* · `origin_id` bigint · `is_consumed` bool
+
+**`company_settings` — Pengaturan company.** 🔑`key` varchar(60) · `value` json
+  ↳ zona waktu, ambang toleransi default, kapasitas bin, konfirmasi terima otomatis (3 hari), dll.
+
+**`feature_settings` — Pengaturan fitur stok.** 🔑`key` varchar(60) *(lot|serial|piece|expiry|fefo|rfid|qc)* · `enabled` bool · `config` json
+  ↳ Lapis 1 dari P-08
+
+## Area: Gudang & lokasi (tenant)
+
+**Diagram:** [`diagram/erd-gudang.drawio`](../diagram/erd-gudang.drawio) · **Rujukan:** Blueprint §6.2, §6.3, [BR-STK-02](05-aturan-bisnis.md#br-stk), [BR-STK-13](05-aturan-bisnis.md#br-stk), [BR-STK-14](05-aturan-bisnis.md#br-stk)
+
+Lokasi adalah entitas (P-06). Kode bin diturunkan dari hierarki. Bin virtual `in_transit` (satu per gudang) dan `on_site` (satu per proyek) dibuat otomatis.
+
+### Diagram (Mermaid)
+
+```mermaid
+erDiagram
+  warehouse_types {
+    bigint id PK
+    varchar_20 code UK
+  }
+  warehouses {
+    bigint id PK
+    varchar_10 code UK
+  }
+  zones {
+    bigint id PK
+  }
+  racks {
+    bigint id PK
+  }
+  rack_levels {
+    bigint id PK
+  }
+  bins {
+    bigint id PK
+    varchar_40 code UK
+  }
+  warehouse_types ||--o{ warehouses : " "
+  warehouses ||--o{ warehouses : "induk"
+  warehouses ||--o{ zones : " "
+  zones ||--o{ racks : " "
+  racks ||--o{ rack_levels : " "
+  rack_levels ||--o{ bins : " "
+  warehouses ||--o{ bins : " "
+  storage_categories ||--o{ bins : " "
+  projects ||--o{ warehouses : "site"
+  projects ||--o{ bins : "on_site"
+```
+
+### Entitas
+
+**`warehouse_types` — Tipe gudang.** 🔑`id` bigint · ◆`code` varchar(20) *(main|branch|site|…)* · `name` varchar(60) · `is_builtin` bool
+
+**`warehouses` — Gudang.** 🔑`id` bigint · ◆`code` varchar(10) *(segmen nomor dokumen)* · `name` varchar(100) · ↗`warehouse_type_id` bigint · ↗`parent_id` bigint *(self, hierarki)* · ↗`project_id` bigint *(wajib bila type = site)* · ↗`head_user_id` bigint *(Kepala Gudang)* · `address` text · `is_active` bool
+
+**`zones` — Zona.** 🔑`id` bigint · ↗`warehouse_id` bigint · `code` varchar(10) · `name` varchar(60)
+  ↳ UK(warehouse_id, code)
+
+**`racks` — Rak.** 🔑`id` bigint · ↗`zone_id` bigint · `code` varchar(10)
+  ↳ UK(zone_id, code)
+
+**`rack_levels` — Level.** 🔑`id` bigint · ↗`rack_id` bigint · `code` varchar(10)
+  ↳ UK(rack_id, code)
+
+**`bins` — Bin.** 🔑`id` bigint · ↗`warehouse_id` bigint *(denormalisasi untuk query)* · ↗`rack_level_id` bigint *(null untuk bin virtual/dock)* · ◆`code` varchar(40) *(CKG-A-R03-L2-B05)* · `bin_type` enum *(bin_type)* · `bin_status` enum *(active|frozen|inactive)* · ↗`storage_category_id` bigint · `capacity_qty` decimal(18,4) · `capacity_weight` decimal(18,4) · `capacity_volume` decimal(18,4) · `capacity_length` decimal(18,4) · ↗`project_id` bigint *(hanya on_site)* · `is_virtual` bool · ↗`frozen_by_count_id` bigint *(stock_counts)*

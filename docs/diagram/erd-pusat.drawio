@@ -1,0 +1,109 @@
+<mxfile host="app.diagrams.net" agent="wms-erd-generator">
+  <diagram name="ERD pusat" id="erd-pusat">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="1654">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="companies" value="companies" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="260" height="162" as="geometry"/>
+        </mxCell>
+        <mxCell id="companies_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(20)&lt;br&gt;name : varchar(150)&lt;br&gt;◆ subdomain : varchar(63)&lt;br&gt;◆ db_name : varchar(64)&lt;br&gt;timezone : varchar(40)&lt;br&gt;status : enum&lt;br&gt;↗ plan_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="companies">
+          <mxGeometry y="26" width="260" height="136" as="geometry"/>
+        </mxCell>
+        <mxCell id="plans" value="plans" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="40" width="260" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="plans_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(30)&lt;br&gt;name : varchar(80)&lt;br&gt;monthly_price : decimal(14,2)&lt;br&gt;wa_quota : int&lt;br&gt;storage_quota_mb : int&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="plans">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="subscriptions" value="subscriptions" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="40" width="260" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="subscriptions_cols" value="🔑 id : bigint&lt;br&gt;↗ company_id : bigint&lt;br&gt;↗ plan_id : bigint&lt;br&gt;status : enum&lt;br&gt;trial_ends_at : datetime&lt;br&gt;current_period_start : date&lt;br&gt;current_period_end : date&lt;br&gt;grace_ends_at : datetime&lt;br&gt;suspended_at : datetime&lt;br&gt;terminated_at : datetime&lt;br&gt;purge_after : date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="subscriptions">
+          <mxGeometry y="26" width="260" height="184" as="geometry"/>
+        </mxCell>
+        <mxCell id="subscription_invoices" value="subscription_invoices" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="40" width="260" height="162" as="geometry"/>
+        </mxCell>
+        <mxCell id="subscription_invoices_cols" value="🔑 id : bigint&lt;br&gt;↗ subscription_id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;period_start : date&lt;br&gt;period_end : date&lt;br&gt;amount : decimal(14,2)&lt;br&gt;due_date : date&lt;br&gt;status : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="subscription_invoices">
+          <mxGeometry y="26" width="260" height="136" as="geometry"/>
+        </mxCell>
+        <mxCell id="subscription_payments" value="subscription_payments" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="260" height="178" as="geometry"/>
+        </mxCell>
+        <mxCell id="subscription_payments_cols" value="🔑 id : bigint&lt;br&gt;↗ invoice_id : bigint&lt;br&gt;↗ uploaded_by : bigint&lt;br&gt;proof_path : varchar(255)&lt;br&gt;amount : decimal(14,2)&lt;br&gt;paid_at : date&lt;br&gt;↗ verified_by : bigint&lt;br&gt;verified_at : datetime&lt;br&gt;status : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="subscription_payments">
+          <mxGeometry y="26" width="260" height="152" as="geometry"/>
+        </mxCell>
+        <mxCell id="platform_users" value="platform_users" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="300" width="260" height="114" as="geometry"/>
+        </mxCell>
+        <mxCell id="platform_users_cols" value="🔑 id : bigint&lt;br&gt;name : varchar(100)&lt;br&gt;◆ email : varchar(150)&lt;br&gt;password : varchar(255)&lt;br&gt;two_factor_secret : text" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="platform_users">
+          <mxGeometry y="26" width="260" height="88" as="geometry"/>
+        </mxCell>
+        <mxCell id="sso_identities" value="sso_identities" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="300" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="sso_identities_cols" value="🔑 id : bigint&lt;br&gt;provider : varchar(30)&lt;br&gt;sub : varchar(191)&lt;br&gt;↗ company_id : bigint&lt;br&gt;tenant_user_id : bigint&lt;br&gt;last_login_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="sso_identities">
+          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        </mxCell>
+        <mxCell id="feature_flags" value="feature_flags" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="300" width="260" height="114" as="geometry"/>
+        </mxCell>
+        <mxCell id="feature_flags_cols" value="🔑 id : bigint&lt;br&gt;↗ company_id : bigint&lt;br&gt;key : varchar(60)&lt;br&gt;enabled : bool&lt;br&gt;config : json" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="feature_flags">
+          <mxGeometry y="26" width="260" height="88" as="geometry"/>
+        </mxCell>
+        <mxCell id="support_accesses" value="support_accesses" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="528" width="260" height="162" as="geometry"/>
+        </mxCell>
+        <mxCell id="support_accesses_cols" value="🔑 id : bigint&lt;br&gt;↗ company_id : bigint&lt;br&gt;↗ platform_user_id : bigint&lt;br&gt;granted_by_tenant_user_id : bigint&lt;br&gt;starts_at : datetime&lt;br&gt;ends_at : datetime&lt;br&gt;reason : varchar(255)&lt;br&gt;revoked_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="support_accesses">
+          <mxGeometry y="26" width="260" height="136" as="geometry"/>
+        </mxCell>
+        <mxCell id="tenant_migration_runs" value="tenant_migration_runs" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="528" width="260" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="tenant_migration_runs_cols" value="🔑 id : bigint&lt;br&gt;↗ company_id : bigint&lt;br&gt;batch : varchar(40)&lt;br&gt;migration : varchar(191)&lt;br&gt;status : enum&lt;br&gt;error : text&lt;br&gt;ran_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="tenant_migration_runs">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="wa_message_logs" value="wa_message_logs" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="528" width="260" height="194" as="geometry"/>
+        </mxCell>
+        <mxCell id="wa_message_logs_cols" value="🔑 id : bigint&lt;br&gt;↗ company_id : bigint&lt;br&gt;direction : enum&lt;br&gt;category : enum&lt;br&gt;◆ wa_message_id : varchar(120)&lt;br&gt;to_number : varchar(20)&lt;br&gt;template : varchar(80)&lt;br&gt;payload : json&lt;br&gt;status : enum&lt;br&gt;cost_units : decimal(10,4)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="wa_message_logs">
+          <mxGeometry y="26" width="260" height="168" as="geometry"/>
+        </mxCell>
+        <mxCell id="r0" value="memiliki" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="companies" target="subscriptions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r1" value="dipakai" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="plans" target="subscriptions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" value="menagih" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="subscriptions" target="subscription_invoices">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3" value="dibayar" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="subscription_invoices" target="subscription_payments">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4" value="verifikasi" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="platform_users" target="subscription_payments">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r5" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="companies" target="sso_identities">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r6" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="companies" target="feature_flags">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r7" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="companies" target="support_accesses">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r8" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="platform_users" target="support_accesses">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r9" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="companies" target="tenant_migration_runs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r10" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="companies" target="wa_message_logs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
