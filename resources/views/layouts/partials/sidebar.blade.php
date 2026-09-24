@@ -74,7 +74,7 @@
             </div>
         @endcanany
 
-        @canany(['user.view', 'role.view', 'org.view', 'support_access.grant'])
+        @canany(['user.view', 'role.view', 'org.view', 'support_access.grant', 'document_layout.manage'])
             <div class="nx-menu-section">
                 <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
                     {{ __('Administrasi') }}
@@ -112,6 +112,15 @@
                         <a class="nx-menu-link {{ request()->routeIs('support-access.*') ? 'active' : '' }}"
                            href="{{ route('support-access.index') }}" data-title="{{ __('Akses dukungan') }}">
                             <i class="bi bi-life-preserver"></i><span class="nx-menu-label">{{ __('Akses dukungan') }}</span>
+                        </a>
+                    </div>
+                @endcan
+
+                @can('document_layout.manage')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('document-layout.*') ? 'active' : '' }}"
+                           href="{{ route('document-layout.edit') }}" data-title="{{ __('Layout dokumen') }}">
+                            <i class="bi bi-file-earmark-richtext"></i><span class="nx-menu-label">{{ __('Layout dokumen') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -406,6 +415,17 @@
                 </div>
             </div>
         @endcanany
+
+        @can('label.print')
+            <div class="nx-menu-section">
+                <div class="nx-menu-item">
+                    <a class="nx-menu-link {{ request()->routeIs('labels.*') ? 'active' : '' }}"
+                       href="{{ route('labels.index') }}" data-title="{{ __('Cetak label') }}">
+                        <i class="bi bi-upc-scan"></i><span class="nx-menu-label">{{ __('Cetak label') }}</span>
+                    </a>
+                </div>
+            </div>
+        @endcan
 
         <div class="nx-menu-section">
             <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">{{ __('Akun') }}</div>

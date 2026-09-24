@@ -10,6 +10,7 @@ use App\Providers\ReceiptServiceProvider;
 use App\Providers\RequestServiceProvider;
 use App\Providers\ShipmentServiceProvider;
 use App\Providers\StockServiceProvider;
+use App\Providers\TemplateServiceProvider;
 use App\Providers\TenancyServiceProvider;
 use App\Providers\WarehouseServiceProvider;
 
@@ -26,4 +27,5 @@ return [
     ApprovalServiceProvider::class,
     AdjustmentServiceProvider::class,
     CountServiceProvider::class,
+    TemplateServiceProvider::class,
 ];

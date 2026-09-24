@@ -165,6 +165,10 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Urutan Nomor *(baru)* | `document_sequence` | Penghitung nomor per format/gudang/bulan, dikunci di DB | BR-GEN-06 |
 | Lampiran *(baru)* | `attachment` | Foto/berkas pada dokumen (maks 5 MB) | NFR-14 |
 | Tanda Tangan *(baru)* | `signature` | Gambar tanda tangan dari profil atau perangkat | BP 12 |
+| Layout Induk *(baru)* | `document_layout` | Kop cetak per company: logo, teks kop, warna aksen, footer, blok tanda tangan | BP 12, [18](18-template-dokumen-label.md) |
+| Template Dokumen *(baru)* | `document_template` | Bentuk cetak per jenis dokumen/label beserta kertasnya; F1 bawaan, editor [F2] | BP 12, A-122 |
+| Label *(baru)* | `label` (`label_bin`, `label_item`, `label_lot`, `label_piece`) | Stiker cetak berisi teks, barcode Code128, dan QR untuk ditempel pada bin atau barang | BP 6.10, A-120 |
+| Blok Tanda Tangan *(baru)* | `signature_blocks` | Kotak tanda tangan di kaki dokumen cetak, mis. "Pengemudi", "Penerima" | A-125 |
 
 ## 6. Konversi, offcut, waste
 

@@ -76,9 +76,10 @@ class DemoSeederTest extends TenantTestCase
         $this->assertSame(5, (int) ($perModul['approval'] ?? 0), 'Jumlah permission modul Approval.');
         $this->assertSame(8, (int) ($perModul['count'] ?? 0), 'Jumlah permission modul Count (stock opname).');
         $this->assertSame(4, (int) ($perModul['adjustment'] ?? 0), 'Jumlah permission modul Adjustment.');
+        $this->assertSame(2, (int) ($perModul['template'] ?? 0), 'Jumlah permission modul Template.');
 
         $akses = collect($perModul)
-            ->except(['master', 'warehouse', 'stock', 'request', 'picking', 'shipment', 'receipt', 'putaway', 'vendor_return', 'approval', 'count', 'adjustment'])
+            ->except(['master', 'warehouse', 'stock', 'request', 'picking', 'shipment', 'receipt', 'putaway', 'vendor_return', 'approval', 'count', 'adjustment', 'template'])
             ->sum();
 
         $this->assertSame(22, (int) $akses, 'Jumlah permission modul Access.');

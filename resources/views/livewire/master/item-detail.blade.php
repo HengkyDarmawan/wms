@@ -11,6 +11,12 @@
             @can('update', $item)
                 <a class="btn btn-outline-secondary" href="{{ route('items.edit', $item) }}">{{ __('Ubah') }}</a>
             @endcan
+            @can('label.print')
+                <a class="btn btn-outline-secondary" target="_blank" rel="noopener"
+                   href="{{ route('labels.print', ['type' => 'label_item', 'ids' => $item->id]) }}">
+                    <i class="bi bi-upc-scan"></i> {{ __('Cetak label') }}
+                </a>
+            @endcan
             <a class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>

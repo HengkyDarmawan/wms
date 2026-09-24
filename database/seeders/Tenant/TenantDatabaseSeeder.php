@@ -17,5 +17,6 @@ class TenantDatabaseSeeder extends Seeder
         $this->call(ReferenceSeeder::class);
         $this->call(MasterReferenceSeeder::class);
         $this->call(WarehouseReferenceSeeder::class);
+        $this->call(TemplateReferenceSeeder::class);
     }
 }

@@ -259,6 +259,8 @@ Penolakan approval tidak mengubah status: sesi tetap `reconciling` dan diajukan 
 | `variance_class` | `minor` = Kecil (auto) · `moderate` = Sedang (hitung ulang) · `major` = Besar (approval + akar masalah) |
 | `root_cause_category` | `mispick` = Salah ambil · `misplaced` = Salah taruh · `wrong_uom` = Salah satuan · `damaged_lost` = Rusak/hilang · `unrecorded_txn` = Transaksi tidak tercatat · `other` |
 | `count_assignment_status` (penugasan penghitung, ERD 08c; bukan status dokumen) | `pending` = Belum dihitung · `done` = Selesai |
+| `document_template_type` (jenis template cetak, [18-template-dokumen-label](18-template-dokumen-label.md); bukan status) | Dokumen: `shipment` = Surat Jalan · `proof_of_delivery` = Bukti Terima · `pick_task` = Picklist · `delivery_discrepancy` = BA Selisih Pengiriman · `vendor_return` = Surat Retur ke Vendor · `stock_adjustment` = BA Penyesuaian · `stock_count` = Laporan Stock Opname · `asset_handover` = BA Serah Terima Aset (stub) · `waste_disposal` = BA Waste (stub). Label: `label_bin` · `label_item` · `label_lot` · `label_piece` |
+| `paper_size` (kertas cetak, [A-120](04-keputusan-dan-asumsi.md#a-120)) | `a4` = A4 tegak · `a4_landscape` = A4 lanskap · `label_50x30` = Label thermal 50×30 mm · `label_a4_3x8` = Lembar label A4 3×8 |
 | `adjustment_origin` (asal ADJ, ERD 08c) | `manual` = Manual · `count` = Hasil opname · `discrepancy` = Selisih pengiriman (titik sambung, [A-98](04-keputusan-dan-asumsi.md#a-98)) · `asset_lost` = Aset hilang (titik sambung modul Aset) |
 | `sync_status` (PWA, [F2]) | `queued` · `synced` · `conflict` = Perlu tinjauan · `held` = Ditahan (langganan ditangguhkan) |
 | `item_status` | `active` · `provisional` = Sementara (dibuat dari baris non-katalog) · `inactive` |

@@ -19,7 +19,10 @@
             @if ($adj->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $adj->cancelReason->label }}</p> @endif
             @if ($pembalik) <p class="small mb-0">{{ __('Dibalik oleh') }} <a href="{{ route('adjustments.show', $pembalik) }}">{{ $pembalik->number }}</a></p> @endif
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('adjustments.index') }}">{{ __('Kembali') }}</a>
+        <div class="d-flex flex-wrap gap-2">
+            @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::StockAdjustment, 'id' => $adj->id, 'teks' => __('Cetak BA')])
+            <a class="btn btn-outline-secondary" href="{{ route('adjustments.index') }}">{{ __('Kembali') }}</a>
+        </div>
     </div>
 
     @if ($ruleError !== '')

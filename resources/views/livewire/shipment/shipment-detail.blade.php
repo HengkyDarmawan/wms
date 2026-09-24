@@ -13,7 +13,13 @@
                 @endif
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('shipments.index') }}">{{ __('Kembali') }}</a>
+        <div class="d-flex flex-wrap gap-2">
+            @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::Shipment, 'id' => $sj->id, 'teks' => __('Cetak SJ')])
+            @if ($bukti)
+                @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::ProofOfDelivery, 'id' => $sj->id, 'teks' => __('Cetak bukti terima')])
+            @endif
+            <a class="btn btn-outline-secondary" href="{{ route('shipments.index') }}">{{ __('Kembali') }}</a>
+        </div>
     </div>
 
     @if ($ruleError !== '')
@@ -260,7 +266,11 @@
                     <li class="list-group-item">
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('discrepancies.index') }}">{{ $dsc->number }}</a>
-                            <span class="badge {{ $dsc->status->badge() }}">{{ $dsc->status->label() }}</span>
+                            <span>
+                                <a class="small me-2" target="_blank" rel="noopener"
+                                   href="{{ route('print.document', ['type' => 'delivery-discrepancy', 'id' => $dsc->id]) }}"><i class="bi bi-printer"></i> {{ __('Cetak BA') }}</a>
+                                <span class="badge {{ $dsc->status->badge() }}">{{ $dsc->status->label() }}</span>
+                            </span>
                         </div>
                         <div class="small text-muted">
                             @foreach ($dsc->lines as $dl)
