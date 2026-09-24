@@ -15,7 +15,10 @@
             @if ($rtv->rejectReason) <p class="text-danger small mb-0">{{ __('Ditolak') }}: {{ $rtv->rejectReason->label }}</p> @endif
             @if ($rtv->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $rtv->cancelReason->label }}</p> @endif
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('vendor-returns.index') }}">{{ __('Kembali') }}</a>
+        <div class="d-flex flex-wrap gap-2">
+            @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::VendorReturn, 'id' => $rtv->id, 'teks' => __('Cetak surat retur')])
+            <a class="btn btn-outline-secondary" href="{{ route('vendor-returns.index') }}">{{ __('Kembali') }}</a>
+        </div>
     </div>
 
     @if ($ruleError !== '')

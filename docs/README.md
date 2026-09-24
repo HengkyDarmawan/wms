@@ -1,8 +1,8 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.27
+**Versi:** 0.28
 **Tanggal:** 24 September 2026
-**Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, dan Return/Transfer selesai untuk Fase 1** (461 uji hijau di MariaDB 10.4). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Modul berikutnya: Issue. D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; **[A-72–A-76](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) dan [A-77–A-116](wms/04-keputusan-dan-asumsi.md#26-baru-dari-pembangunan-modul-lanjutan--24-sep-2026) menunggu validasi** (lahir dari pencocokan dokumen dengan kode dan dari pembangunan modul). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
+**Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, dan Template dokumen & label selesai untuk Fase 1** (476 uji hijau di MariaDB 10.4). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Modul berikutnya: Issue. D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; **[A-72–A-76](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) dan [A-77–A-116](wms/04-keputusan-dan-asumsi.md#26-baru-dari-pembangunan-modul-lanjutan--24-sep-2026), [A-120–A-126](wms/04-keputusan-dan-asumsi.md#27-baru-dari-modul-template-dokumen--label--24-sep-2026) menunggu validasi** (lahir dari pencocokan dokumen dengan kode dan dari pembangunan modul). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
 Dokumentasi ini adalah acuan tunggal untuk membangun WMS baru dari nol. Prototipe lama (`warehouse.sipembantu.com`) hanya referensi; indeks temuan auditnya ada di [00-audit](00-audit/README.md).
 
@@ -44,6 +44,7 @@ docs/
 │   ├── 15-picking-shipment.md             ← Part 4: modul Picking & Shipment (PCK, SJ, bukti terima, DSC) — v0.3, §13 status & catatan implementasi
 │   ├── 16-shared-laporan-berkas.md        ← Part 4: kerangka laporan bersama + ekspor Excel, 7 laporan, unggah berkas, aset global — v0.2 (mendokumentasikan kode yang sudah ada)
 │   ├── 17-platform-login.md               ← Part 4: Platform Fase 1 — login Super Admin, gerbang langganan, seeder pusat — v0.1
+│   ├── 18-template-dokumen-label.md       ← Part 4: modul Template dokumen & label (layout induk, cetak PDF dokumen, label barcode/QR) — v0.1, §13 catatan implementasi
 │   ├── 19-receipt-putaway.md              ← Part 4: modul Receipt/Putaway (GRN vendor & transfer, QC, PUT, RTV) — v0.4, §13 status & catatan implementasi
 │   ├── 20-approval.md                     ← Part 4: mesin approval bersama (aturan, lapis, SoD, delegasi, eskalasi, simulasi; REQ, RTV, ADJ, OPN tersambung) — v0.3, §13 status & catatan implementasi
 │   ├── 21-opname-penyesuaian.md           ← Part 4: modul Count/Adjustment (sesi opname, hitung buta, hitung ulang, approval sesi, ADJ manual & pembalik) — v0.2, §13 status & catatan implementasi
@@ -68,9 +69,9 @@ docs/
 | 1 | Blueprint, riset, glosarium, keputusan & asumsi, aturan bisnis, katalog status | `wms/01`–`06`, `akuntansi/01`, `purchasing/01` | **Selesai** — tiap berkas punya versinya sendiri (blueprint 0.7, glosarium 0.6, keputusan 0.13, aturan 0.10, katalog 0.8). A-25–A-49 divalidasi dan A-51–A-66 disetujui 23 Sep 2026; A-50–A-71 disetujui 24 Sep 2026; [A-72–A-84](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) menunggu validasi |
 | 2 | Proses bisnis to-be (BPMN 2.0) | `diagram/bpmn-*.drawio` + `wms/07`, `07a`, `07b` (teks per lane + tabel langkah + Mermaid), dari satu sumber `diagram/_generate.py` | **v0.4** — final; alur 1/2/7/8 diperluas (A-51–A-66, BR-OPN-09–10); alur 5 memuat varian transfer dalam proyek (A-50) |
 | 3 | Arsitektur & ERD (DB pusat + DB per company), verifikasi paket | `wms/08-arsitektur.md` + `08a`–`08c` (Mermaid `erDiagram`) + `diagram/erd-*.drawio`, dari `diagram/_generate_erd.py` | **Arsitektur v0.10, model data v0.11** — 114 tabel, 15 keputusan AD-xx, paket terverifikasi (O-01 ✔); 24 Sep 2026 diselaraskan dengan implementasi (`projects.site_warehouse_id` dihapus per A-40, kolom implementasi modul Master s.d. Transfer/Retur masuk) |
-| 4 | Spesifikasi modul BE (per modul, dari template) | `wms/10-…` s.d. `wms/2x-…` | **Berjalan** — [10-access](wms/10-access.md) v0.5, [11-master](wms/11-master.md) v0.3, [12-warehouse](wms/12-warehouse.md) v0.4, [13-stock](wms/13-stock.md) v0.3, [14-request](wms/14-request.md) v0.5, [15-picking-shipment](wms/15-picking-shipment.md) v0.4, [19-receipt-putaway](wms/19-receipt-putaway.md) v0.4, [20-approval](wms/20-approval.md) v0.4, [21-opname-penyesuaian](wms/21-opname-penyesuaian.md) v0.2, dan [22-retur-transfer](wms/22-retur-transfer.md) v0.2 **selesai Fase 1**; [16-shared-laporan-berkas](wms/16-shared-laporan-berkas.md) dan [17-platform-login](wms/17-platform-login.md) v0.1 mendokumentasikan kode bersama yang dibangun tanpa spesifikasi; berikutnya modul Issue. Pola per modul: spesifikasi → prompt → kode |
+| 4 | Spesifikasi modul BE (per modul, dari template) | `wms/10-…` s.d. `wms/2x-…` | **Berjalan** — [10-access](wms/10-access.md) v0.5, [11-master](wms/11-master.md) v0.3, [12-warehouse](wms/12-warehouse.md) v0.4, [13-stock](wms/13-stock.md) v0.3, [14-request](wms/14-request.md) v0.5, [15-picking-shipment](wms/15-picking-shipment.md) v0.4, [19-receipt-putaway](wms/19-receipt-putaway.md) v0.4, [20-approval](wms/20-approval.md) v0.4, [21-opname-penyesuaian](wms/21-opname-penyesuaian.md) v0.2, [22-retur-transfer](wms/22-retur-transfer.md) v0.2, dan [18-template-dokumen-label](wms/18-template-dokumen-label.md) v0.1 **selesai Fase 1**; [16-shared-laporan-berkas](wms/16-shared-laporan-berkas.md) dan [17-platform-login](wms/17-platform-login.md) v0.1 mendokumentasikan kode bersama yang dibangun tanpa spesifikasi; berikutnya modul Issue. Pola per modul: spesifikasi → prompt → kode |
 | 5 | FE landing page (gaya indonesia.travel) | `wms/30-landing-page.md` | — |
-| 6 | Paket prompt Claude Code (per modul) | `prompts/*.md` | **Berjalan** — [prompts/10-access.md](prompts/10-access.md), [prompts/11-master.md](prompts/11-master.md), [prompts/12-warehouse.md](prompts/12-warehouse.md), [prompts/13-stock.md](prompts/13-stock.md), [prompts/14-request.md](prompts/14-request.md), [prompts/15-picking-shipment.md](prompts/15-picking-shipment.md), [prompts/16-shared.md](prompts/16-shared.md), [prompts/17-platform-login.md](prompts/17-platform-login.md). Prompt 13–15 menyebut dirinya "Part 7–9"; itu nomor sesi, bukan Part rencana ini |
+| 6 | Paket prompt Claude Code (per modul) | `prompts/*.md` | **Berjalan** — [prompts/10-access.md](prompts/10-access.md), [prompts/11-master.md](prompts/11-master.md), [prompts/12-warehouse.md](prompts/12-warehouse.md), [prompts/13-stock.md](prompts/13-stock.md), [prompts/14-request.md](prompts/14-request.md), [prompts/15-picking-shipment.md](prompts/15-picking-shipment.md), [prompts/16-shared.md](prompts/16-shared.md), [prompts/17-platform-login.md](prompts/17-platform-login.md), [prompts/18-template-label.md](prompts/18-template-label.md). Prompt 13–15 menyebut dirinya "Part 7–9"; itu nomor sesi, bukan Part rencana ini |
 
 ## Jalur baca per audiens
 
@@ -93,6 +94,31 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.28 — 24 September 2026 (modul Template dokumen & label selesai Fase 1)
+- **Berkas baru `wms/18-template-dokumen-label.md` v0.1 (selesai Fase 1)** dan `prompts/18-template-label.md`. Dibangun paralel di branch `feat/template-label`, lalu digabung setelah v0.27.
+  - Domain `app/Domain/Template`.
+  - Layout induk per company: kop, logo, warna, footer, blok tanda tangan. Layar *Administrasi → Layout dokumen*.
+  - Cetak PDF dari tombol **Cetak** di detail dokumen: SJ, bukti terima, picklist PCK, BA selisih DSC, surat retur RTV, BA penyesuaian ADJ. Laporan opname memakai kop yang sama.
+  - Label Code128 + QR untuk bin, item, lot, potongan, dalam dua kertas (thermal 50×30 mm, A4 3×8). Layar *Cetak label*.
+  - Editor template dan template AST/WST berupa stub (BR-GEN-10).
+- **Asumsi baru [A-120](wms/04-keputusan-dan-asumsi.md#a-120)–[A-126](wms/04-keputusan-dan-asumsi.md#a-126)** (*Perlu validasi*, `04` → v0.18, §2.7). A-120–A-149 dicadangkan untuk modul ini.
+  - A-120: ukuran label sementara sampai O-09; batas 200 label per cetak karena memori/waktu.
+  - A-121: isi barcode/QR.
+  - A-122: template F1 = Blade bawaan, kop teks biasa.
+  - A-123: kolom di luar ERD.
+  - A-124: cetak memakai izin `view`.
+  - A-125: blok tanda tangan.
+  - A-126: tanda air "DIBATALKAN", tanpa log cetak.
+- **Permission baru** modul `template` (2): `document_layout.manage` (Admin Company) dan `label.print` (Admin, Kepala Gudang, Staf Gudang).
+- **Katalog** `06` → v0.12: enum `document_template_type` dan `paper_size`, **tanpa status baru**.
+- **Glosarium** `03` → v0.8: Layout Induk, Template Dokumen, Label, Blok Tanda Tangan.
+- **Model data** 08c digenerate ulang: `document_layouts.logo_path`, `document_templates.paper` varchar(20). Migrasi tenant `000200`.
+- **Modul lain:**
+  - `12-warehouse` → v0.6: label bin selesai.
+  - `19-receipt-putaway` → v0.6: cetak RTV selesai.
+  - Laporan progres → v1.6: Template ✅.
+- **Uji:** 15 uji TC-TPL. `phpunit.xml` diberi `memory_limit` 512M karena render PDF dalam satu proses suite melewati 128 MB. **476 uji hijau.**
 
 ### v0.27 — 24 September 2026 (modul Transfer & Retur selesai Fase 1)
 - **Berkas baru `wms/22-retur-transfer.md` v0.2 (selesai Fase 1):** domain `app/Domain/Transfer` dan `app/Domain/Return` (Arsitektur §4). **TRF** antar gudang, antar proyek, dan antar titik dalam proyek (jalur ringan [A-50](wms/04-keputusan-dan-asumsi.md#a-50), [BR-RET-02](wms/05-aturan-bisnis.md#br-ret)); TRF otomatis dari baris REQ bersumber transfer saat REQ disetujui ([BR-REQ-05](wms/05-aturan-bisnis.md#br-req)); disetujui → reservasi lunak gudang asal + PCK otomatis → SJ → bukti terima → GRN transfer → `completed`; barang TRF backorder direservasi ke REQ penunggu setelah put-away lalu dipetik dan dikirim ke proyek ([BR-REQ-08](wms/05-aturan-bisnis.md#br-req)). **RET** dari stok Gudang Site, aset On-site, barang terkirim ke klien (retur penjualan, [BR-RET-03](wms/05-aturan-bisnis.md#br-ret)), dan barang rusak ditinggal ekspedisi ([BR-RET-05](wms/05-aturan-bisnis.md#br-ret)); SJ balik dari Gudang Site; GRN retur ke bin Retur; pemilahan layak/rusak/offcut/waste dengan `goods_returned`/`asset_returned` ([BR-RET-04](wms/05-aturan-bisnis.md#br-ret), matriks §14). Enam layar (RET juga di portal klien `/portal/returns`), menu *Transfer & retur* + palet. Migrasi `2026_01_01_000110_create_transfer_return_tables`. Uji TC-TRF-01–16 dan TC-RET-01–17 (33 uji); **461 uji hijau**.

@@ -14,7 +14,8 @@
     </style>
 </head>
 <body>
-    <h1>{{ __('Laporan Stock Opname') }} {{ $count->number }}</h1>
+    {{-- Kop layout induk (18-template-dokumen-label §5.1). --}}
+    @include('print.partials.kop', ['judul' => __('Laporan Stock Opname'), 'nomor' => $count->number, 'status' => $count->status->label(), 'qr' => null])
     <div class="muted">
         {{ $count->count_type->label() }} · {{ $count->status->label() }} ·
         {{ __('Gudang') }}: {{ $count->warehouses->pluck('code')->implode(', ') }} ·

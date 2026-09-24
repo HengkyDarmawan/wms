@@ -38,6 +38,8 @@ use App\Http\Controllers\Warehouse\WarehouseTypeController;
 use App\Http\Controllers\Portal\PortalDashboardController;
 use App\Http\Controllers\Shared\FileController;
 use App\Http\Controllers\Shared\ReportController;
+use App\Http\Controllers\Template\DocumentLayoutController;
+use App\Http\Controllers\Template\PrintController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -124,6 +126,17 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
         Route::get('/settings/support-access', [SupportAccessController::class, 'index'])
             ->name('support-access.index');
+
+        // Template dokumen & label (18-template-dokumen-label §6). Cetak = GET, hanya membaca.
+        Route::get('/print/{type}/{id}', [PrintController::class, 'document'])
+            ->whereNumber('id')->name('print.document');
+        Route::get('/labels', [PrintController::class, 'labelForm'])->name('labels.index');
+        Route::get('/labels/print', [PrintController::class, 'labels'])->name('labels.print');
+        Route::get('/settings/document-layout', [DocumentLayoutController::class, 'edit'])->name('document-layout.edit');
+        Route::get('/settings/document-layout/preview', [DocumentLayoutController::class, 'preview'])->name('document-layout.preview');
+        Route::get('/settings/document-layout/logo', [DocumentLayoutController::class, 'logo'])->name('document-layout.logo');
+        Route::post('/settings/document-layout/logo', [DocumentLayoutController::class, 'storeLogo'])->name('document-layout.logo.store');
+        Route::delete('/settings/document-layout/logo', [DocumentLayoutController::class, 'destroyLogo'])->name('document-layout.logo.destroy');
 
         // Master data (11-master §6). Semua transisi status lewat POST, bukan GET.
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');

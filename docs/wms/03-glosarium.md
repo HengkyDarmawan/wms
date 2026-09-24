@@ -1,8 +1,8 @@
 # Glosarium
 
-**Versi:** 0.7
+**Versi:** 0.8
 **Tanggal:** 24 September 2026
-**Status:** istilah dari A-29–A-49 berlaku (validasi 23 Sep 2026); istilah yang bergantung pada [A-50](04-keputusan-dan-asumsi.md#a-50) mengikuti status validasinya; v0.7: istilah mesin approval (Tugas Approval, Cara Putus, Jenis Approver, Approver Cadangan, Simulasi Aturan) dari modul [20-approval](20-approval.md)
+**Status:** istilah dari A-29–A-49 berlaku (validasi 23 Sep 2026); istilah yang bergantung pada [A-50](04-keputusan-dan-asumsi.md#a-50) mengikuti status validasinya; v0.7: istilah mesin approval (Tugas Approval, Cara Putus, Jenis Approver, Approver Cadangan, Simulasi Aturan) dari modul [20-approval](20-approval.md); v0.8: istilah cetak (Layout Induk, Template Dokumen, Label, Blok Tanda Tangan — [18](18-template-dokumen-label.md))
 **Dokumen terkait:** [Blueprint](01-blueprint.md) · [Katalog Status & Enum](06-katalog-status-dan-enum.md) (nilai status **tidak** diulang di sini) · [Aturan Bisnis](05-aturan-bisnis.md)
 
 Istilah di bawah **wajib dipakai sama persis** di UI, dokumen, dan kode. Kolom *Nama di kode* adalah acuan penamaan tabel/model/variabel (Inggris, `snake_case` untuk tabel; model = bentuk `PascalCase` tunggal). Kolom *Rujukan* menunjuk bagian Blueprint (BP) atau aturan bisnis (BR).
@@ -165,6 +165,10 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Urutan Nomor *(baru)* | `document_sequence` | Penghitung nomor per format/gudang/bulan, dikunci di DB | BR-GEN-06 |
 | Lampiran *(baru)* | `attachment` | Foto/berkas pada dokumen (maks 5 MB) | NFR-14 |
 | Tanda Tangan *(baru)* | `signature` | Gambar tanda tangan dari profil atau perangkat | BP 12 |
+| Layout Induk *(baru)* | `document_layout` | Kop cetak per company: logo, teks kop, warna aksen, footer, blok tanda tangan | BP 12, [18](18-template-dokumen-label.md) |
+| Template Dokumen *(baru)* | `document_template` | Bentuk cetak per jenis dokumen/label beserta kertasnya; F1 bawaan, editor [F2] | BP 12, A-122 |
+| Label *(baru)* | `label` (`label_bin`, `label_item`, `label_lot`, `label_piece`) | Stiker cetak berisi teks, barcode Code128, dan QR untuk ditempel pada bin atau barang | BP 6.10, A-120 |
+| Blok Tanda Tangan *(baru)* | `signature_blocks` | Kotak tanda tangan di kaki dokumen cetak, mis. "Pengemudi", "Penerima" | A-125 |
 
 ## 6. Konversi, offcut, waste
 

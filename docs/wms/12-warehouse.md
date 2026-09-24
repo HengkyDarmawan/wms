@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `warehouse` (Gudang, Zona, Rak, Level, Bin)
 
-**Versi:** 0.5
+**Versi:** 0.6
 **Tanggal:** 24 September 2026
-**Status:** **selesai untuk Fase 1** — empat layar, delapan aksi domain, dan 28 uji hijau; penyimpangan implementasi dicatat §13
+**Status:** **selesai untuk Fase 1** — empat layar, delapan aksi domain, dan 28 uji hijau; penyimpangan implementasi dicatat §13; v0.6: label bin Code128 + QR dicetak lewat modul Template ([18](18-template-dokumen-label.md)), ukuran sementara [A-120](04-keputusan-dan-asumsi.md#a-120)
 **Modul:** `warehouse`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.2](01-blueprint.md#62-struktur-organisasi--gudang), [§6.3](01-blueprint.md#63-lokasi-rak--bin--wajib) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data gudang](08a-model-data-inti.md#area-gudang--lokasi-tenant) · [Akun uji](../00-akun-uji.md)
@@ -236,7 +236,7 @@ Uji yang menopangnya ada di `tests/Feature/Warehouse`: `WarehouseTest` (TC-WH-01
 
 ### 13.4 Sisa pekerjaan modul ini
 
-1. **Label bin barcode dan QR** — paket sudah terpasang ([AD-08](08-arsitektur.md)), tetapi ukuran kertas dan jenis printer menunggu [O-09](04-keputusan-dan-asumsi.md#o-09).
+1. ~~**Label bin barcode dan QR**~~ — **selesai** lewat modul Template ([18-template-dokumen-label](18-template-dokumen-label.md) §5.3): tautan *Cetak label* di `/bins`. Ukuran kertas final dan jenis printer tetap menunggu [O-09](04-keputusan-dan-asumsi.md#o-09); sampai itu, [A-120](04-keputusan-dan-asumsi.md#a-120).
 2. ~~**Penjagaan saldo dan reservasi nol** sebelum menonaktifkan gudang atau bin ([BR-GEN-04](05-aturan-bisnis.md#br-gen))~~ — selesai di modul [`stock`](13-stock.md) lewat `StockGuard`.
 3. **Penutupan Gudang Site otomatis** saat proyek ditutup ([BR-PRJ-04](05-aturan-bisnis.md#br-prj)) — penjagaan saldonya sudah ada, pemicunya menyusul di modul `project`.
 4. **Impor Excel gudang dan bin** — menunggu [O-12](04-keputusan-dan-asumsi.md#o-12).

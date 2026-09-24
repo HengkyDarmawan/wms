@@ -32,6 +32,7 @@ class DemoSeeder extends Seeder
         $this->call(ReferenceSeeder::class);
         $this->call(MasterReferenceSeeder::class);
         $this->call(WarehouseReferenceSeeder::class);
+        $this->call(TemplateReferenceSeeder::class);
 
         // Master lebih dulu: users.client_id menunjuk clients, cakupan menunjuk projects.
         $this->call(MasterDemoSeeder::class);

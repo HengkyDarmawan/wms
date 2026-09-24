@@ -51,6 +51,8 @@
         ['izin' => 'role.view', 'route' => 'roles.index', 'label' => __('Role'), 'ikon' => 'bi-shield-lock'],
         ['izin' => 'org.view', 'route' => 'org.index', 'label' => __('Struktur organisasi'), 'ikon' => 'bi-diagram-3'],
         ['izin' => 'support_access.grant', 'route' => 'support-access.index', 'label' => __('Akses dukungan'), 'ikon' => 'bi-life-preserver'],
+        ['izin' => 'document_layout.manage', 'route' => 'document-layout.edit', 'label' => __('Layout dokumen'), 'ikon' => 'bi-file-earmark-richtext'],
+        ['izin' => 'label.print', 'route' => 'labels.index', 'label' => __('Cetak label'), 'ikon' => 'bi-upc-scan'],
         ['izin' => null, 'route' => 'reports.index', 'label' => __('Laporan'), 'ikon' => 'bi-file-earmark-bar-graph'],
         ['izin' => null, 'route' => 'profile.edit', 'label' => __('Profil'), 'ikon' => 'bi-person'],
         ['izin' => 'device.view', 'route' => 'devices.index', 'label' => __('Perangkat'), 'ikon' => 'bi-phone'],

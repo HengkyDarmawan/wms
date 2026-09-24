@@ -1,8 +1,8 @@
 # Laporan Progres — 24 September 2026
 
-**Versi:** 1.5
+**Versi:** 1.6
 **Tanggal:** 24 September 2026
-**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); diperbarui setiap modul selesai
+**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau)
 **Dokumen terkait:** [README](README.md) · [Setup lokal §5](00-setup-lokal.md#5-skenario-uji-manual) · [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) · [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) · [Keputusan & Asumsi](wms/04-keputusan-dan-asumsi.md)
 
 Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang baru di-seed: delapan skenario uji manual lewat Chrome headless, 321 uji otomatis, dan pencocokan setiap kasus uji `TC-xx` di spesifikasi dengan ujinya. Hasilnya dipakai untuk memetakan seberapa jauh Fase 1 sudah berjalan.
@@ -16,7 +16,7 @@ Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang
 | Skenario E2E [00-setup-lokal §5](00-setup-lokal.md#5-skenario-uji-manual) | **9 dari 9 langkah lulus**, 0 error console |
 | Uji otomatis | **321 lulus / 1.836 asersi**, 0 gagal (MariaDB 10.4) |
 | Kasus uji `TC-xx` di spesifikasi 10–17 | **178 dari 178 punya uji otomatis**, semuanya lulus |
-| Butir Fase 1 di [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) | **7 selesai · 6 sebagian · 10 belum dibangun** (dari 23; v1.2 menambah Penerimaan/QC/put-away/RTV; v1.3 Approval engine) |
+| Butir Fase 1 di [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) | **10 selesai · 6 sebagian · 7 belum dibangun** (dari 23, satu 'selesai' berupa stub; v1.2 Penerimaan/QC/put-away/RTV; v1.3 Approval engine; v1.4 Stock opname; v1.5 Retur & transfer; v1.6 Template dokumen & label) |
 | Bug baru dari E2E | **1 berat** (§5.1), 1 ringan (§5.2) |
 | Asumsi menunggu validasi | A-72–A-94 |
 
@@ -67,7 +67,7 @@ Sumber baris: [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis). S
 |---|---|---|
 | Login lokal, user, role & permission, cakupan | ✅ Selesai | [10-access](wms/10-access.md); 2FA, perangkat, akses dukungan |
 | Struktur organisasi | ✅ Selesai | [10-access](wms/10-access.md) |
-| Master data, UoM dinamis, gudang & lokasi rak/bin | ✅ Selesai | [11-master](wms/11-master.md), [12-warehouse](wms/12-warehouse.md); label barcode menunggu O-09 |
+| Master data, UoM dinamis, gudang & lokasi rak/bin | ✅ Selesai | [11-master](wms/11-master.md), [12-warehouse](wms/12-warehouse.md); label barcode selesai (18), ukuran final menunggu O-09 |
 | Picking, pengiriman, bukti terima, DSC | ✅ Selesai | [15-picking-shipment](wms/15-picking-shipment.md); halaman penerima bertoken belum (O-06) |
 | Rencana kebutuhan material (stub) | ✅ Stub | tabel ada, layar Fase 2 |
 | Platform, tenancy, trial, tagihan manual | 🟡 Sebagian | tenancy, login Super Admin, gerbang langganan; **belum** buat company (`CreateTenant`) dan tagihan ([17-platform-login](wms/17-platform-login.md)) |
@@ -85,7 +85,7 @@ Sumber baris: [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis). S
 | Aset dipinjamkan | ⬜ Belum | |
 | Approval engine | ✅ Selesai | [20-approval](wms/20-approval.md): aturan per jenis dokumen tanpa nilai uang, lapis & cara putus, SoD, snapshot, delegasi, eskalasi terjadwal + manual, simulasi, riwayat; REQ, RTV, ADJ, OPN, TRF, dan RET tersambung; WhatsApp stub Fase 2a; notifikasi stub ([A-91](wms/04-keputusan-dan-asumsi.md#a-91)) |
 | Stock opname | ✅ Selesai | [21-opname-penyesuaian](wms/21-opname-penyesuaian.md): sesi bulanan/tahunan/ad-hoc/pemeriksaan mendadak, pembekuan bin, hitung buta di halaman ramah HP, toleransi ganda, hitung ulang orang berbeda, akar masalah, approval tingkat sesi (Auditor untuk tahunan/audit), ADJ per gudang diposting lewat buku besar, kunci periode bulanan, penanda hitung; ADJ manual dua lapis & pembalik; override SJ mendesak dan dashboard tren belum ([A-95](wms/04-keputusan-dan-asumsi.md#a-95)–[A-105](wms/04-keputusan-dan-asumsi.md#a-105)) |
-| Template dokumen & label | ⬜ Belum | |
+| Template dokumen & label | ✅ Selesai | [18-template-dokumen-label](wms/18-template-dokumen-label.md); editor template [F2]; ukuran label menunggu O-09 (A-120) |
 | PWA (installable, scan kamera, draf lokal) | ⬜ Belum | |
 | Landing page produk | ⬜ Belum | Part 5 |
 

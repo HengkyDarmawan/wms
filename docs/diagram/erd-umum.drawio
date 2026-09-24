@@ -41,15 +41,15 @@
           <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="document_layouts" value="document_layouts" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="332" width="260" height="162" as="geometry"/>
+          <mxGeometry x="680" y="332" width="260" height="178" as="geometry"/>
         </mxCell>
-        <mxCell id="document_layouts_cols" value="🔑 id : bigint&lt;br&gt;name : varchar(80)&lt;br&gt;↗ logo_attachment_id : bigint&lt;br&gt;header_html : text&lt;br&gt;footer_html : text&lt;br&gt;colors : json&lt;br&gt;signature_blocks : json&lt;br&gt;is_default : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_layouts">
-          <mxGeometry y="26" width="260" height="136" as="geometry"/>
+        <mxCell id="document_layouts_cols" value="🔑 id : bigint&lt;br&gt;name : varchar(80)&lt;br&gt;logo_attachment_id : bigint&lt;br&gt;logo_path : varchar(255)&lt;br&gt;header_html : text&lt;br&gt;footer_html : text&lt;br&gt;colors : json&lt;br&gt;signature_blocks : json&lt;br&gt;is_default : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_layouts">
+          <mxGeometry y="26" width="260" height="152" as="geometry"/>
         </mxCell>
         <mxCell id="document_templates" value="document_templates" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="1000" y="332" width="260" height="162" as="geometry"/>
         </mxCell>
-        <mxCell id="document_templates_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;name : varchar(80)&lt;br&gt;↗ layout_id : bigint&lt;br&gt;body_html : text&lt;br&gt;paper : varchar(10)&lt;br&gt;is_default : bool&lt;br&gt;version : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_templates">
+        <mxCell id="document_templates_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;name : varchar(80)&lt;br&gt;↗ layout_id : bigint&lt;br&gt;body_html : text&lt;br&gt;paper : varchar(20)&lt;br&gt;is_default : bool&lt;br&gt;version : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_templates">
           <mxGeometry y="26" width="260" height="136" as="geometry"/>
         </mxCell>
         <mxCell id="numbering_formats" value="numbering_formats" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">

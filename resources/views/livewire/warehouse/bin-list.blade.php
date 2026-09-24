@@ -6,6 +6,12 @@
                 {{ __('Lokasi terkecil tempat stok disimpan. Bin dibuat dari detail gudang, bukan dari layar ini.') }}
             </p>
         </div>
+        @can('label.print')
+            <a class="btn btn-outline-secondary"
+               href="{{ route('labels.index', ['type' => 'label_bin', 'warehouse' => $warehouseFilter ?: null]) }}">
+                <i class="bi bi-upc-scan"></i> {{ __('Cetak label') }}
+            </a>
+        @endcan
     </div>
 
     @if ($ruleError !== '')

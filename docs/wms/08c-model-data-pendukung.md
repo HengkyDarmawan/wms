@@ -299,9 +299,9 @@ erDiagram
 **`notification_preferences` — Preferensi kanal.** ↗`user_id` bigint · `event_key` varchar(60) · `in_app` bool · `email` bool · `whatsapp` bool *(dibatasi Admin Company)*
   ↳ PK(user_id, event_key)
 
-**`document_layouts` — Layout induk.** 🔑`id` bigint · `name` varchar(80) · ↗`logo_attachment_id` bigint · `header_html` text · `footer_html` text · `colors` json · `signature_blocks` json · `is_default` bool
+**`document_layouts` — Layout induk.** 🔑`id` bigint · `name` varchar(80) · `logo_attachment_id` bigint *(tanpa FK sampai tabel lampiran ada (A-123))* · `logo_path` varchar(255) *(A-123)* · `header_html` text *(F1 teks biasa (A-122))* · `footer_html` text *(F1 teks biasa)* · `colors` json *({accent})* · `signature_blocks` json *({jenis: [label]} (A-125))* · `is_default` bool
 
-**`document_templates` — Template dokumen.** 🔑`id` bigint · `document_type` varchar(30) · `name` varchar(80) · ↗`layout_id` bigint · `body_html` text *(variabel {nomor_dokumen} …)* · `paper` varchar(10) *(A4|label_50x30)* · `is_default` bool · `version` int
+**`document_templates` — Template dokumen.** 🔑`id` bigint · `document_type` varchar(30) · `name` varchar(80) · ↗`layout_id` bigint · `body_html` text *(F1 kosong = Blade bawaan; editor F2 (A-122))* · `paper` varchar(20) *(paper_size (A-120))* · `is_default` bool · `version` int
   ↳ UK(document_type, name, version)
 
 **`numbering_formats` — Format nomor.** 🔑`id` bigint · ◆`document_type` varchar(30) · `pattern` varchar(80) *({KODE}/{GUDANG}/{TAHUN}/{BULAN}/{URUT})* · `reset_period` enum *(monthly|yearly|never)* · `pad` int *(4)* · `warehouse_segment` enum *(origin|fulfilling|all ([A-43](04-keputusan-dan-asumsi.md#a-43)))*

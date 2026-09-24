@@ -11,6 +11,7 @@ use App\Providers\ReturnServiceProvider;
 use App\Providers\RequestServiceProvider;
 use App\Providers\ShipmentServiceProvider;
 use App\Providers\StockServiceProvider;
+use App\Providers\TemplateServiceProvider;
 use App\Providers\TenancyServiceProvider;
 use App\Providers\TransferServiceProvider;
 use App\Providers\WarehouseServiceProvider;
@@ -30,4 +31,5 @@ return [
     CountServiceProvider::class,
     TransferServiceProvider::class,
     ReturnServiceProvider::class,
+    TemplateServiceProvider::class,
 ];
