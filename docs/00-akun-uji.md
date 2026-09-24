@@ -1,6 +1,6 @@
 # Akun Uji & Data Demo (dev / demo / staging)
 
-**Versi:** 1.4
+**Versi:** 1.5
 **Tanggal:** 24 September 2026
 **Status:** aktif — **hanya untuk dev, demo, dan staging**. Produksi tidak memakai berkas ini: Super Admin produksi dibuat dari `.env` saat instalasi, semua user lain lewat undangan dan mengatur password sendiri ([Blueprint §13](wms/01-blueprint.md#13-autentikasi--sso), [NFR-02](wms/01-blueprint.md#16-kebutuhan-non-fungsional)).
 **Dokumen terkait:** [Blueprint §4](wms/01-blueprint.md#4-pengguna--peran) · [BR-GEN-09](wms/05-aturan-bisnis.md#br-gen) · [Model data pusat & akses](wms/08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) · [Spesifikasi modul Access](wms/10-access.md)
@@ -74,7 +74,7 @@ Nomor WA dummy: `+6281200000001` … `+6281200000014` berurutan sesuai tabel.
 
 ## 5. Aturan approval bawaan demo
 
-> **Sudah diseed** (sejak 24 Sep 2026) oleh `ApprovalDemoSeeder`, dipanggil `DemoSeeder`, untuk jenis dokumen yang sudah tersambung ke mesin approval ([20-approval](wms/20-approval.md)): REQ, RTV, dan — sejak modul Count/Adjustment ([21-opname-penyesuaian](wms/21-opname-penyesuaian.md)) — ADJ dan OPN (enam aturan). Baris PRQ masih rencana dan diseed bersama modulnya. Ubah aturan dari layar *Aturan approval* (Admin Company); coba dulu di *Simulasi approval*.
+> **Sudah diseed** (sejak 24 Sep 2026) oleh `ApprovalDemoSeeder`, dipanggil `DemoSeeder`, untuk jenis dokumen yang sudah tersambung ke mesin approval ([20-approval](wms/20-approval.md)): REQ, RTV, dan — sejak modul Count/Adjustment ([21-opname-penyesuaian](wms/21-opname-penyesuaian.md)) — ADJ dan OPN (enam aturan). Baris PRQ masih rencana dan diseed bersama modulnya. TRF dan RET sudah tersambung ([22-retur-transfer](wms/22-retur-transfer.md)) tetapi **tidak punya aturan demo**: tanpa aturan keduanya disetujui otomatis ([A-08](wms/04-keputusan-dan-asumsi.md#a-08)), yang juga jalur ringan transfer dalam proyek antar KRW1 dan KRW2 ([A-50](wms/04-keputusan-dan-asumsi.md#a-50)). Ubah aturan dari layar *Aturan approval* (Admin Company); coba dulu di *Simulasi approval*.
 
 | Dokumen | Aturan (prioritas) | Kondisi | Lapis | Diseed | Rujukan |
 |---|---|---|---|---|---|

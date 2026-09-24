@@ -322,6 +322,25 @@
         </div>
     @endif
 
+    @if ($transferBackorder->isNotEmpty())
+        <div class="card mb-3">
+            <div class="card-header"><strong>{{ __('Transfer backorder') }}</strong></div>
+            <ul class="list-group list-group-flush small">
+                @foreach ($transferBackorder as $t)
+                    <li class="list-group-item">
+                        @can('view', $t)
+                            <a href="{{ route('transfers.show', $t) }}">{{ $t->number }}</a>
+                        @else
+                            {{ $t->number }}
+                        @endcan
+                        · {{ $t->fromWarehouse?->code }} → {{ $t->toWarehouse?->code }}
+                        · <span class="badge {{ $t->status->badge() }}">{{ $t->status->label() }}</span>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @include('approval.partials.history', ['riwayatApproval' => $riwayatApproval])
 
     <div class="card">

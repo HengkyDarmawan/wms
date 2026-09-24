@@ -30,7 +30,22 @@
                 </select>
             </div>
 
-            @if ($form['receipt_type'] === 'transfer')
+            @if ($form['receipt_type'] === 'return')
+                <div class="col-md-8">
+                    <label class="form-label" for="grn-ret">{{ __('Retur dari proyek (RET)') }} <span class="wajib">*</span></label>
+                    <select class="form-select @error('form.goods_return_id') is-invalid @enderror" id="grn-ret"
+                            wire:model.live="form.goods_return_id" @disabled($receiptId)>
+                        <option value="">{{ __('Pilih retur…') }}</option>
+                        @foreach ($returnDocs as $r)
+                            <option value="{{ $r->id }}">{{ $r->number }} ({{ $r->project?->code }})</option>
+                        @endforeach
+                        @if ($ret && ! $returnDocs->contains('id', $ret->id))
+                            <option value="{{ $ret->id }}">{{ $ret->number }}</option>
+                        @endif
+                    </select>
+                    @error('form.goods_return_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+            @elseif ($form['receipt_type'] === 'transfer')
                 <div class="col-md-8">
                     <label class="form-label" for="grn-sj">{{ __('Surat jalan transfer') }} <span class="wajib">*</span></label>
                     <select class="form-select @error('form.shipment_id') is-invalid @enderror" id="grn-sj"
@@ -95,7 +110,43 @@
         </div>
     </div>
 
-    @if ($form['receipt_type'] === 'transfer')
+    @if ($form['receipt_type'] === 'return')
+        <div class="card mb-3">
+            <div class="card-header"><strong>{{ __('Baris retur') }}</strong> <span class="text-muted small">— {{ __('masuk bin Retur, dipilah dari detail RET') }}</span></div>
+            @if ($ret === null)
+                <div class="card-body text-muted">{{ __('Pilih RET yang sedang diproses.') }}</div>
+            @else
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">{{ __('Item') }}</th>
+                                <th class="text-end" scope="col">{{ __('Dikirim') }}</th>
+                                <th scope="col">{{ __('Diterima di gudang') }} <span class="wajib">*</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($retLines as $b)
+                                <tr wire:key="retl-{{ $b['line']->id }}">
+                                    <td>{{ $b['line']->item?->code }} <div class="small text-muted">{{ $b['line']->item?->name }} {{ $b['line']->trackingLabel() }}</div></td>
+                                    <td class="text-end">{{ number_format($b['max'], 2, ',', '.') }}</td>
+                                    <td>
+                                        @if ($b['max'] > 0)
+                                            <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
+                                                   wire:model="returnQty.{{ $b['line']->id }}">
+                                        @else
+                                            <span class="text-muted small">{{ __('Menunggu selisih pengiriman') }}</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @error('form.qty_received') <div class="text-danger small p-3">{{ $message }}</div> @enderror
+            @endif
+        </div>
+    @elseif ($form['receipt_type'] === 'transfer')
         <div class="card mb-3">
             <div class="card-header"><strong>{{ __('Baris surat jalan') }}</strong></div>
             @if ($sj === null)

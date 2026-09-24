@@ -6,11 +6,13 @@ namespace App\Domain\Receipt\Actions;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
+use App\Domain\Receipt\Enums\ReceiptType;
 use App\Domain\Receipt\Exceptions\ReceiptRuleException;
 use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Receipt\Models\GoodsReceiptLine;
 use App\Domain\Receipt\Models\PutawayTask;
 use App\Domain\Receipt\Support\PutawayPlanner;
+use App\Domain\Transfer\Support\TransferProgress;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -23,12 +25,20 @@ use Illuminate\Support\Facades\DB;
  */
 class CompleteGoodsReceipt
 {
-    public function __construct(private readonly PutawayPlanner $perencana) {}
+    public function __construct(
+        private readonly PutawayPlanner $perencana,
+        private readonly TransferProgress $transfer,
+    ) {}
 
     public function handle(GoodsReceipt $receipt, ?User $actor = null): GoodsReceipt
     {
         if ($receipt->status !== GoodsReceiptStatus::Received) {
             throw ReceiptRuleException::rule('BR-GEN-01', 'Hanya GRN berstatus Diterima yang bisa diselesaikan.');
+        }
+
+        // A-112: GRN retur tidak membuat PUT; ia selesai bersama pemilahan RET-nya.
+        if ($receipt->receipt_type === ReceiptType::Return) {
+            throw ReceiptRuleException::rule('BR-RET-04', 'GRN retur selesai otomatis saat RET-nya dipilah.');
         }
 
         $lines = $receipt->lines()->with('item.category', 'receivingBin')->get();
@@ -50,6 +60,11 @@ class CompleteGoodsReceipt
             ])->save();
 
             $tugas = $this->perencana->planFor($receipt, $lines, $actor);
+
+            // Katalog §2.7: TRF `completed` saat GRN tujuan selesai (A-107).
+            if ($receipt->receipt_type === ReceiptType::Transfer) {
+                $this->transfer->receiptCompleted($receipt, $actor);
+            }
 
             activity('receipt')
                 ->performedOn($receipt)

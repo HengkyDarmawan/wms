@@ -247,6 +247,32 @@
             </div>
         @endcanany
 
+        @canany(['transfer.view', 'return.view'])
+            <div class="nx-menu-section">
+                <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
+                    {{ __('Transfer & retur') }}
+                </div>
+
+                @can('transfer.view')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('transfers.*') ? 'active' : '' }}"
+                           href="{{ route('transfers.index') }}" data-title="{{ __('Transfer') }}">
+                            <i class="bi bi-arrow-left-right"></i><span class="nx-menu-label">{{ __('Transfer') }}</span>
+                        </a>
+                    </div>
+                @endcan
+
+                @can('return.view')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('returns.*') || request()->routeIs('portal.returns.*') ? 'active' : '' }}"
+                           href="{{ route(auth()->user()?->isClient() ? 'portal.returns.index' : 'returns.index') }}" data-title="{{ __('Retur dari proyek') }}">
+                            <i class="bi bi-arrow-counterclockwise"></i><span class="nx-menu-label">{{ __('Retur dari proyek') }}</span>
+                        </a>
+                    </div>
+                @endcan
+            </div>
+        @endcanany
+
         @canany(['count.view', 'count.record', 'adjustment.view'])
             <div class="nx-menu-section">
                 <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">

@@ -191,11 +191,13 @@ class GoodsReceiptTest extends TenantTestCase
     }
 
     #[Test]
-    public function tc_grn_12_sumber_retur_menunggu_modul_retur(): void
+    public function tc_grn_12_sumber_retur_wajib_menyebut_ret(): void
     {
+        // Sejak modul Retur (22-retur-transfer), GRN retur hanya dari RET yang
+        // sedang diproses; rantai penuhnya di tests/Feature/Return (TC-RET-07–14).
         $this->gagal(fn () => app(SaveGoodsReceipt::class)->handle(null, [
             'receipt_type' => 'return', 'warehouse_id' => $this->gudang->id,
-        ], [], $this->makeUser()), 'BR-GEN-10');
+        ], [], $this->makeUser()), 'BR-RET-01');
     }
 
     #[Test]

@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Models\Item;
+use App\Domain\Request\Enums\FulfillmentSource;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Request\Models\MaterialRequestLine;
+use App\Domain\Return\Enums\GoodsReturnStatus;
+use App\Domain\Return\Models\GoodsReturn;
+use App\Domain\Return\Models\GoodsReturnLine;
 use App\Domain\Shipment\Enums\PickTaskStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Models\PickTask;
@@ -15,9 +20,13 @@ use App\Domain\Shipment\Models\PickTaskLine;
 use App\Domain\Stock\Actions\ManageReservation;
 use App\Domain\Stock\Enums\ReservationLevel;
 use App\Domain\Stock\Enums\StockStatus;
+use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockReservation;
 use App\Domain\Stock\Support\DocumentNumber;
+use App\Domain\Transfer\Enums\TransferStatus;
+use App\Domain\Transfer\Models\Transfer;
+use App\Domain\Transfer\Models\TransferLine;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Warehouse;
@@ -25,16 +34,22 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Permission: `pick.create` — membuat tugas picking dari REQ yang disetujui
- * (Katalog Status §2.2).
+ * Permission: `pick.create` — membuat tugas picking dari dokumen niat yang
+ * disetujui (Katalog Status §2.2: "REQ/TRF `approved`").
  *
- * Di sinilah janji berubah menjadi penunjukan: reservasi lunak REQ yang hanya
+ * Di sinilah janji berubah menjadi penunjukan: reservasi lunak yang hanya
  * menyebut item dan gudang dipecah menjadi alokasi **keras** per bin, lot,
  * serial, atau potongan.
  *
- * Satu PCK untuk satu gudang sumber. Baris REQ yang gudangnya berbeda
- * melahirkan PCK sendiri-sendiri, karena yang mengambil adalah orang yang
- * berdiri di gudang itu.
+ * Tiga sumber:
+ * - **REQ** — baris bersumber stok, dan baris bersumber transfer yang barangnya
+ *   sudah tiba dan direservasi ke REQ penunggu (BR-REQ-08, A-108);
+ * - **TRF** — seluruh baris di gudang asal (alur 5 langkah 5, A-107);
+ * - **RET** — SJ balik dari Gudang Site: alokasi persis bin/turunan yang
+ *   disebut baris retur (A-111).
+ *
+ * Satu PCK untuk satu gudang. Baris REQ yang gudangnya berbeda melahirkan PCK
+ * sendiri-sendiri, karena yang mengambil adalah orang yang berdiri di gudang itu.
  */
 class CreatePickTask
 {
@@ -57,7 +72,7 @@ class CreatePickTask
 
         $baris = $request->lines()
             ->open()
-            ->where('fulfillment_source', 'stock')
+            ->whereIn('fulfillment_source', [FulfillmentSource::Stock->value, FulfillmentSource::Transfer->value])
             ->whereNotNull('source_warehouse_id')
             ->with('item')
             ->get();
@@ -69,7 +84,7 @@ class CreatePickTask
             );
         }
 
-        // Baris yang sudah punya PCK tidak diambil dua kali.
+        // Baris bersumber stok yang sudah punya PCK tidak diambil dua kali.
         $sudah = PickTaskLine::query()
             ->whereHas('pickTask', fn (Builder $q) => $q
                 ->withoutGlobalScopes()
@@ -78,17 +93,51 @@ class CreatePickTask
             ->pluck('source_line_id')
             ->all();
 
-        $baris = $baris->reject(fn (MaterialRequestLine $l) => in_array($l->id, $sudah, true));
+        /** @var array<int, array{line: MaterialRequestLine, qty: float}> $rencana */
+        $rencana = [];
 
-        if ($baris->isEmpty()) {
-            throw ShipmentRuleException::rule('BR-SJ-01', 'Seluruh baris REQ ini sudah punya tugas picking.');
+        foreach ($baris as $l) {
+            if ($l->fulfillment_source === FulfillmentSource::Transfer) {
+                // A-108: baris transfer baru bisa dipetik sebesar barang TRF yang
+                // sudah tiba dan direservasi ke baris ini.
+                $qty = $this->reservasiLunakBaris($l);
+
+                if ($qty > 0) {
+                    $rencana[] = ['line' => $l, 'qty' => $qty];
+                }
+
+                continue;
+            }
+
+            if (! in_array($l->id, $sudah, true)) {
+                $rencana[] = ['line' => $l, 'qty' => (float) $l->qty_base];
+            }
         }
 
-        return DB::transaction(function () use ($request, $baris, $actor) {
+        if ($rencana === []) {
+            throw ShipmentRuleException::rule('BR-SJ-01', 'Seluruh baris REQ ini sudah punya tugas picking atau barang transfernya belum tiba.');
+        }
+
+        return DB::transaction(function () use ($request, $rencana, $actor) {
             $hasil = [];
 
-            foreach ($baris->groupBy('source_warehouse_id') as $warehouseId => $kelompok) {
-                $hasil[] = $this->buatSatuTugas($request, (int) $warehouseId, $kelompok->all(), $actor);
+            foreach (collect($rencana)->groupBy(fn (array $r) => $r['line']->source_warehouse_id) as $warehouseId => $kelompok) {
+                $gudang = Warehouse::query()->withoutGlobalScopes()->findOrFail((int) $warehouseId);
+                $tugas = $this->buatTugas($gudang, 'material_request', (int) $request->id);
+
+                foreach ($kelompok as $r) {
+                    /** @var MaterialRequestLine $line */
+                    $line = $r['line'];
+
+                    // BR-STK-04: alokasi keras MENGGANTIKAN janji lunak, tidak
+                    // menumpuk di atasnya.
+                    $this->lepasReservasiLunak('material_request', (int) $line->material_request_id, (int) $line->id, $actor);
+
+                    $this->alokasikan($tugas, $gudang, $line->item, $r['qty'], (int) $line->id, $line->displayName(), $actor);
+                }
+
+                $this->catat($tugas, $actor, ['req' => $request->number, 'baris' => $kelompok->count()]);
+                $hasil[] = $tugas->refresh();
             }
 
             if ($request->status === MaterialRequestStatus::Approved) {
@@ -100,40 +149,173 @@ class CreatePickTask
         });
     }
 
-    /** @param  array<int, MaterialRequestLine>  $lines */
-    private function buatSatuTugas(MaterialRequest $request, int $warehouseId, array $lines, ?User $actor): PickTask
+    /**
+     * TRF `approved` → PCK di gudang asal, TRF `in_progress` (Katalog §2.7,
+     * alur 5 langkah 5). Baris yang sudah teralokasi di PCK yang masih hidup
+     * tidak dialokasikan lagi, sehingga PCK bisa dibuat ulang setelah dibatalkan.
+     */
+    public function forTransfer(Transfer $transfer, ?User $actor = null): PickTask
     {
-        $gudang = Warehouse::query()->withoutGlobalScopes()->findOrFail($warehouseId);
-
-        $tugas = PickTask::create([
-            'number' => $this->nomor->next('PCK', (string) $gudang->code),
-            'warehouse_id' => $gudang->id,
-            'source_type' => 'material_request',
-            'source_id' => $request->id,
-            'status' => PickTaskStatus::Pending,
-        ]);
-
-        foreach ($lines as $baris) {
-            $this->alokasikan($tugas, $gudang, $baris, $actor);
+        if (! in_array($transfer->status, [TransferStatus::Approved, TransferStatus::InProgress], true)) {
+            throw ShipmentRuleException::rule(
+                'BR-SJ-01',
+                'Hanya TRF yang sudah disetujui yang bisa dipetik; TRF ini berstatus '.$transfer->status->label().'.',
+            );
         }
 
+        $gudang = Warehouse::query()->withoutGlobalScopes()->findOrFail($transfer->from_warehouse_id);
+        $baris = $transfer->lines()->with('item')->orderBy('id')->get();
+
+        /** @var array<int, array{line: TransferLine, qty: float}> $rencana */
+        $rencana = [];
+
+        foreach ($baris as $l) {
+            $sisa = round((float) $l->qty_base - $this->sudahDialokasikan('transfer', (int) $transfer->id, (int) $l->id), 4);
+
+            if ($sisa > 0) {
+                $rencana[] = ['line' => $l, 'qty' => $sisa];
+            }
+        }
+
+        if ($rencana === []) {
+            throw ShipmentRuleException::rule('BR-SJ-01', 'Seluruh baris TRF ini sudah punya tugas picking.');
+        }
+
+        return DB::transaction(function () use ($transfer, $gudang, $rencana, $actor) {
+            $tugas = $this->buatTugas($gudang, 'transfer', (int) $transfer->id);
+
+            foreach ($rencana as $r) {
+                /** @var TransferLine $line */
+                $line = $r['line'];
+
+                $this->lepasReservasiLunak('transfer', (int) $transfer->id, (int) $line->id, $actor);
+                $this->alokasikan($tugas, $gudang, $line->item, $r['qty'], (int) $line->id, $line->item->code, $actor);
+            }
+
+            if ($transfer->status === TransferStatus::Approved) {
+                $transfer->forceFill(['status' => TransferStatus::InProgress])->save();
+
+                activity('transfer')->performedOn($transfer)->causedBy($actor)
+                    ->withProperties(['pck' => $tugas->number])
+                    ->log('TRF diproses: tugas picking dibuat');
+            }
+
+            $this->catat($tugas, $actor, ['trf' => $transfer->number, 'baris' => count($rencana)]);
+
+            return $tugas->refresh();
+        });
+    }
+
+    /**
+     * RET `approved` dengan SJ balik → PCK di Gudang Site asal (A-111).
+     *
+     * Alokasinya bukan hasil strategi pengambilan: baris retur sudah menyebut
+     * bin dan lot/serial/potongan yang dikembalikan, jadi itulah yang dipetik.
+     */
+    public function forGoodsReturn(GoodsReturn $return, ?User $actor = null): PickTask
+    {
+        if ($return->status !== GoodsReturnStatus::Approved || $return->self_delivered || $return->from_warehouse_id === null) {
+            throw ShipmentRuleException::rule(
+                'BR-SJ-01',
+                'Tugas picking retur hanya untuk RET disetujui yang dikirim balik dengan SJ dari Gudang Site.',
+            );
+        }
+
+        $gudang = Warehouse::query()->withoutGlobalScopes()->findOrFail($return->from_warehouse_id);
+        $baris = $return->lines()->with('item')->whereNull('split_from_line_id')->orderBy('id')->get();
+
+        if ($this->sudahDialokasikan('goods_return', (int) $return->id, null) > 0) {
+            throw ShipmentRuleException::rule('BR-SJ-01', 'RET ini sudah punya tugas picking.');
+        }
+
+        return DB::transaction(function () use ($return, $gudang, $baris, $actor) {
+            $tugas = $this->buatTugas($gudang, 'goods_return', (int) $return->id);
+
+            // Cadangan keras RET sejak disetujui berpindah ke PCK.
+            $this->reservasi->releaseForDocument('goods_return', (int) $return->id, 'PICK_ALLOCATED', $actor);
+
+            foreach ($baris as $l) {
+                /** @var GoodsReturnLine $l */
+                PickTaskLine::create([
+                    'pick_task_id' => $tugas->id,
+                    'source_line_id' => $l->id,
+                    'item_id' => $l->item_id,
+                    'bin_id' => $l->from_bin_id,
+                    'suggested_bin_id' => $l->from_bin_id,
+                    'lot_id' => $l->lot_id,
+                    'serial_id' => $l->serial_id,
+                    'piece_id' => $l->piece_id,
+                    'qty_allocated' => $l->qty_base,
+                ]);
+
+                $this->cadangkanKeras($l->item, $gudang, (float) $l->qty_base, [
+                    'bin_id' => $l->from_bin_id,
+                    'lot_id' => $l->lot_id,
+                    'serial_id' => $l->serial_id,
+                    'piece_id' => $l->piece_id,
+                ], $tugas, $l->item->code, $actor);
+            }
+
+            $this->catat($tugas, $actor, ['ret' => $return->number, 'baris' => $baris->count()]);
+
+            return $tugas->refresh();
+        });
+    }
+
+    // ---------------------------------------------------------------- privat
+
+    private function buatTugas(Warehouse $gudang, string $sourceType, int $sourceId): PickTask
+    {
+        return PickTask::create([
+            'number' => $this->nomor->next('PCK', (string) $gudang->code),
+            'warehouse_id' => $gudang->id,
+            'source_type' => $sourceType,
+            'source_id' => $sourceId,
+            'status' => PickTaskStatus::Pending,
+        ]);
+    }
+
+    /** @param  array<string, mixed>  $props */
+    private function catat(PickTask $tugas, ?User $actor, array $props): void
+    {
         activity('shipment')
             ->performedOn($tugas)
             ->causedBy($actor)
-            ->withProperties(['req' => $request->number, 'baris' => count($lines)])
+            ->withProperties($props)
             ->log('Tugas picking dibuat');
-
-        return $tugas->refresh();
     }
 
-    /** Melepas reservasi lunak satu baris REQ sebelum alokasi keras dibuat. */
-    private function lepasReservasiLunak(MaterialRequestLine $baris, ?User $actor): void
+    /** Jumlah reservasi lunak aktif satu baris REQ (barang transfer yang sudah tiba). */
+    private function reservasiLunakBaris(MaterialRequestLine $line): float
+    {
+        return round((float) StockReservation::query()
+            ->active()
+            ->where('level', ReservationLevel::Soft->value)
+            ->forDocument('material_request', (int) $line->material_request_id)
+            ->where('document_line_id', $line->id)
+            ->sum('qty_base'), 4);
+    }
+
+    /** Jumlah yang sudah dialokasikan PCK hidup untuk satu dokumen (atau satu barisnya). */
+    private function sudahDialokasikan(string $sourceType, int $sourceId, ?int $sourceLineId): float
+    {
+        return (float) PickTaskLine::query()
+            ->whereHas('pickTask', fn (Builder $q) => $q
+                ->withoutGlobalScopes()
+                ->forSource($sourceType, $sourceId)
+                ->whereNot('status', PickTaskStatus::Cancelled->value))
+            ->when($sourceLineId !== null, fn (Builder $q) => $q->where('source_line_id', $sourceLineId))
+            ->sum('qty_allocated');
+    }
+
+    /** Melepas reservasi lunak satu baris dokumen sebelum alokasi keras dibuat. */
+    private function lepasReservasiLunak(string $documentType, int $documentId, int $lineId, ?User $actor): void
     {
         $reservasi = StockReservation::query()
             ->active()
             ->where('level', ReservationLevel::Soft->value)
-            ->forDocument('material_request', (int) $baris->material_request_id)
-            ->where('document_line_id', $baris->id)
+            ->forDocument($documentType, $documentId)
+            ->where('document_line_id', $lineId)
             ->get();
 
         foreach ($reservasi as $r) {
@@ -142,25 +324,20 @@ class CreatePickTask
     }
 
     /**
-     * Memecah satu baris REQ menjadi alokasi per bin.
+     * Memecah satu baris menjadi alokasi per bin.
      *
      * Bin diambil menurut kode — pendekatan yang cukup untuk Fase 1. Strategi
      * pengambilan sesungguhnya (FEFO, FIFO, potongan terdekat) menyusul di
      * modul yang memilikinya; yang penting sekarang alokasinya benar-benar
      * menunjuk barang yang ada.
      */
-    private function alokasikan(PickTask $tugas, Warehouse $gudang, MaterialRequestLine $baris, ?User $actor): void
+    private function alokasikan(PickTask $tugas, Warehouse $gudang, Item $item, float $qty, int $sourceLineId, string $label, ?User $actor): void
     {
-        $sisa = (float) $baris->qty_base;
-
-        // BR-STK-04: alokasi keras MENGGANTIKAN janji lunak, tidak menumpuk di
-        // atasnya. Tanpa pelepasan ini, barang yang sama terhitung dua kali dan
-        // stok tersedia jadi kurang dari kenyataan.
-        $this->lepasReservasiLunak($baris, $actor);
+        $sisa = $qty;
 
         $saldo = StockBalance::query()->withoutGlobalScopes()
             ->with('bin')
-            ->where('item_id', $baris->item_id)
+            ->where('item_id', $item->id)
             ->where('stock_status', StockStatus::Available->value)
             ->nonZero()
             ->whereHas('bin', fn (Builder $q) => $q->withoutGlobalScopes()
@@ -184,8 +361,8 @@ class CreatePickTask
 
             PickTaskLine::create([
                 'pick_task_id' => $tugas->id,
-                'source_line_id' => $baris->id,
-                'item_id' => $baris->item_id,
+                'source_line_id' => $sourceLineId,
+                'item_id' => $item->id,
                 'bin_id' => $s->bin_id,
                 'suggested_bin_id' => $s->bin_id,
                 'lot_id' => $s->lot_id,
@@ -194,35 +371,36 @@ class CreatePickTask
                 'qty_allocated' => $ambil,
             ]);
 
-            // BR-STK-04: alokasi keras menggantikan janji lunak REQ.
-            $this->reservasi->reserveHard(
-                $baris->item,
-                $gudang,
-                $ambil,
-                array_filter([
-                    'bin_id' => $s->bin_id,
-                    'lot_id' => $s->lot_id,
-                    'serial_id' => $s->serial_id,
-                    'piece_id' => $s->piece_id,
-                ]),
-                'pick_task',
-                (int) $tugas->id,
-                null,
-                $actor,
-            );
+            $this->cadangkanKeras($item, $gudang, $ambil, [
+                'bin_id' => $s->bin_id,
+                'lot_id' => $s->lot_id,
+                'serial_id' => $s->serial_id,
+                'piece_id' => $s->piece_id,
+            ], $tugas, $label, $actor);
 
             $sisa -= $ambil;
         }
 
-        if ($sisa > 0) {
-            // Stok tidak cukup meski REQ menjanjikannya: reservasi lunak dibuat
-            // saat approval dan barangnya berpindah sejak itu. Ini bukan
+        if ($sisa > 0.00005) {
+            // Stok tidak cukup meski dokumen menjanjikannya: reservasi lunak
+            // dibuat saat approval dan barangnya berpindah sejak itu. Ini bukan
             // kesalahan staf, jadi disebut apa adanya.
             throw ShipmentRuleException::rule(
                 'BR-SJ-01',
-                'Stok '.$baris->displayName().' di gudang '.$gudang->code.' tinggal '
-                .((float) $baris->qty_base - $sisa).' dari '.(float) $baris->qty_base.' yang dijanjikan REQ.',
+                'Stok '.$label.' di gudang '.$gudang->code.' tinggal '
+                .round($qty - $sisa, 4).' dari '.round($qty, 4).' yang dijanjikan.',
             );
+        }
+    }
+
+    /** @param  array<string, mixed>  $target */
+    private function cadangkanKeras(Item $item, Warehouse $gudang, float $qty, array $target, PickTask $tugas, string $label, ?User $actor): void
+    {
+        try {
+            // BR-STK-04: alokasi keras menggantikan janji lunak dokumen.
+            $this->reservasi->reserveHard($item, $gudang, $qty, array_filter($target), 'pick_task', (int) $tugas->id, null, $actor);
+        } catch (LedgerException $e) {
+            throw ShipmentRuleException::rule($e->rule, 'Baris '.$label.' tidak bisa dialokasikan: '.$e->getMessage());
         }
     }
 }

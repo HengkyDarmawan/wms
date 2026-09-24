@@ -9,6 +9,7 @@ use App\Domain\Shipment\Actions\CreatePickTask;
 use App\Domain\Shipment\Enums\PickTaskStatus;
 use App\Domain\Shipment\Livewire\Concerns\HandlesShipmentRules;
 use App\Domain\Shipment\Models\PickTask;
+use App\Domain\Stock\Models\StockReservation;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -107,12 +108,23 @@ class PickList extends Component
             ->whereIn('status', ['approved', 'in_progress', 'partially_fulfilled'])
             ->whereHas('lines', fn (Builder $l) => $l
                 ->open()
-                ->where('fulfillment_source', 'stock')
                 ->whereNotNull('source_warehouse_id')
-                ->whereNotIn('id', PickTask::query()
-                    ->whereNot('status', PickTaskStatus::Cancelled->value)
-                    ->join('pick_task_lines as ptl', 'ptl.pick_task_id', '=', 'pick_tasks.id')
-                    ->select('ptl.source_line_id')))
+                ->where(fn (Builder $w) => $w
+                    ->where(fn (Builder $s) => $s
+                        ->where('fulfillment_source', 'stock')
+                        // `source_line_id` dipakai REQ, TRF, dan RET: saring sumbernya.
+                        ->whereNotIn('id', PickTask::query()->withoutGlobalScopes()
+                            ->where('pick_tasks.source_type', 'material_request')
+                            ->whereNot('pick_tasks.status', PickTaskStatus::Cancelled->value)
+                            ->join('pick_task_lines as ptl', 'ptl.pick_task_id', '=', 'pick_tasks.id')
+                            ->select('ptl.source_line_id')))
+                    // A-108: baris bersumber transfer yang barangnya sudah tiba dan direservasi.
+                    ->orWhere(fn (Builder $t) => $t
+                        ->where('fulfillment_source', 'transfer')
+                        ->whereIn('id', StockReservation::query()->active()
+                            ->where('level', 'soft')
+                            ->where('document_type', 'material_request')
+                            ->select('document_line_id')))))
             ->orderBy('required_date')
             ->limit(10)
             ->get();

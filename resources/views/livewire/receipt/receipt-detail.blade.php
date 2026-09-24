@@ -10,6 +10,12 @@
                 @if ($grn->vendor_doc_no) · {{ __('SJ vendor') }} {{ $grn->vendor_doc_no }} @endif
                 @if ($grn->received_at) · {{ __('Diterima') }} {{ $grn->received_at->format('d/m/Y H:i') }} @endif
             </p>
+            @if ($grn->receipt_type->value === 'return' && $grn->goods_return_id)
+                <p class="small mb-0">
+                    {{ __('Retur') }} <a href="{{ route('returns.show', $grn->goods_return_id) }}">{{ $grn->goodsReturn?->number }}</a>
+                    — {{ __('barang masuk bin Retur; GRN selesai otomatis saat barangnya dipilah di detail RET.') }}
+                </p>
+            @endif
         </div>
         <a class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Kembali') }}</a>
     </div>

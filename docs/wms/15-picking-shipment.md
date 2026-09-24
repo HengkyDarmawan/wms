@@ -1,12 +1,12 @@
 # Spesifikasi Modul — `picking` & `shipment` (Picking, Surat Jalan, Bukti Terima, Selisih)
 
-**Versi:** 0.4
+**Versi:** 0.5
 **Tanggal:** 24 September 2026
-**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md)
+**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md))
 **Modul:** `picking`, `shipment`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-SJ](05-aturan-bisnis.md#br-sj) · [Katalog Status §2.2–§2.4](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
-**Ketergantungan modul:** `stock` (satu-satunya pintu tulis saldo), `warehouse` (bin Loading Area dan Dalam Perjalanan), `request` (sumber alokasi dan backorder), `master` (kendaraan, ekspedisi, alasan). Modul `transfer`, `receipt`, dan `return` belum ada; titik sambungnya dibuat stub sesuai [BR-GEN-10](05-aturan-bisnis.md#br-gen).
+**Ketergantungan modul:** `stock` (satu-satunya pintu tulis saldo), `warehouse` (bin Loading Area dan Dalam Perjalanan), `request` (sumber alokasi dan backorder), `master` (kendaraan, ekspedisi, alasan). Modul `receipt` ([19](19-receipt-putaway.md)), `transfer`, dan `return` ([22](22-retur-transfer.md)) sudah ada dan memakai PCK/SJ modul ini.
 
 ---
 
@@ -248,6 +248,22 @@ Picking tinggal di domain `app/Domain/Shipment`, bukan folder `Picking/` seperti
    Perjalanan milik gudang asal, Penerimaan, dan Loading Area — barang transfer yang belum diterima gudang
    tujuan bisa ikut dipetik lagi. Kini hanya bin penyimpanan ([A-84](04-keputusan-dan-asumsi.md#a-84)).
 
+8. **PCK dan SJ untuk TRF dan RET** (v0.5, [22-retur-transfer](22-retur-transfer.md)). `CreatePickTask` kini punya
+   `forTransfer()` (PCK di gudang asal, dibuat otomatis saat TRF disetujui, [A-107](04-keputusan-dan-asumsi.md#a-107)) dan
+   `forGoodsReturn()` (SJ balik dari Gudang Site, alokasi persis bin/turunan baris RET, [A-111](04-keputusan-dan-asumsi.md#a-111));
+   `handle()` juga memetik baris REQ bersumber transfer sebesar reservasi lunaknya ([A-108](04-keputusan-dan-asumsi.md#a-108)).
+   `CreateShipment` menolak SJ yang memuat PCK TRF/RET bila tujuannya bukan gudang tujuan dokumen itu, dan PCK retur tidak
+   digabung dengan PCK lain; SJ balik menandai RET `in_progress`. `ShipShipment` mencatat `qty_shipped` baris TRF.
+   `ConfirmDelivery` tidak menerbitkan `stock_transferred` untuk SJ balik ([A-112](04-keputusan-dan-asumsi.md#a-112)).
+9. **Perbaikan kecil** (v0.5): `PickTaskLine::unshippedQty()` tidak lagi menghitung SJ yang dibatalkan (Katalog §2.3: barang
+   tetap di Loading Area dan boleh dimuat SJ lain); relasi `PickTaskLine::pickTask` dan `ShipmentLine::shipment` dibaca lintas
+   cakupan sehingga penerima di gudang tujuan tetap menemukan asal barisnya; daftar REQ yang menunggu picking kini menyaring
+   `pick_tasks.source_type` (`source_line_id` dipakai REQ, TRF, dan RET); form SJ menerima `?pick_task=` dan gudang tujuan
+   tidak lagi dibatasi cakupan pengirim.
+10. **DSC `returned_to_warehouse` tidak lewat GRN retur** ([A-114](04-keputusan-dan-asumsi.md#a-114)): barang rusak yang
+   dibawa balik tetap dipindah langsung ke bin Retur gudang asal berkondisi Rusak (setara pemilahan `damaged`);
+   `return_receipt_id` tetap titik sambung. Barang rusak yang **ditinggal** ekspedisi (DSC `claimed`) kembali lewat RET.
+
 ### 13.2 Keputusan implementasi
 
 1. **Alokasi keras menggantikan reservasi lunak, tidak menumpuk di atasnya.** Saat PCK dibuat, reservasi
@@ -291,8 +307,8 @@ Uji yang menopangnya ada di `tests/Feature/Shipment`: `PickTaskTest` (TC-PCK-01�
    pemindaian di PWA ([BR-SJ-05](05-aturan-bisnis.md#br-sj)).
 3. **Konfirmasi dan keberatan pemohon** ([BR-REQ-10](05-aturan-bisnis.md#br-req)) — kolomnya sudah ada di
    bukti terima, layarnya menyusul bersama portal pemohon.
-4. **Cross-dock dari GRN** ([BR-SJ-03](05-aturan-bisnis.md#br-sj), [A-83](04-keputusan-dan-asumsi.md#a-83)) dan GRN retur untuk barang rusak yang
-   dibawa balik — modul `receipt` sudah ada ([19](19-receipt-putaway.md)); keduanya menunggu keputusan A-83 dan modul Retur.
+4. **Cross-dock dari GRN** ([BR-SJ-03](05-aturan-bisnis.md#br-sj), [A-83](04-keputusan-dan-asumsi.md#a-83)) — menunggu keputusan A-83. GRN retur
+   untuk barang rusak yang dibawa balik tidak dibuat ([A-114](04-keputusan-dan-asumsi.md#a-114)); modul Retur sudah ada ([22](22-retur-transfer.md)).
 5. **Unggah tanda tangan dan foto** lewat layar; sekarang jalurnya menerima path berkas.
 6. **Mode offline driver** ([BR-SJ-08](05-aturan-bisnis.md#br-sj)) `[F2]`.
 7. **Notifikasi §8** dan **laporan §9** beserta ekspornya — laporan belum dibangun; kerangkanya di [16-shared-laporan-berkas](16-shared-laporan-berkas.md).

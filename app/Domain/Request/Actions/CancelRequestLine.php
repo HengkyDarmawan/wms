@@ -10,6 +10,7 @@ use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Request\Models\MaterialRequestLine;
 use App\Domain\Stock\Actions\ManageReservation;
 use App\Domain\Stock\Models\StockReservation;
+use App\Domain\Transfer\Support\BackorderTransfers;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -82,6 +83,9 @@ class CancelRequestLine
             ])->save();
 
             $this->lepasReservasiBaris($line, 'CANCELLED_BY_CLIENT', $actor);
+
+            // BR-REQ-15: TRF backorder baris ini ikut dilepas bila belum berjalan (A-108).
+            app(BackorderTransfers::class)->releaseForRequestLines([(int) $line->id], $line->cancel_reason_id !== null ? (int) $line->cancel_reason_id : null, $actor);
 
             activity('request')
                 ->performedOn($line->request)

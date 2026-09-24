@@ -1,12 +1,12 @@
 # Spesifikasi Modul — `receipt`, `putaway`, `vendor_return` (Penerimaan, QC, Put-away, Retur ke Vendor)
 
-**Versi:** 0.4
+**Versi:** 0.5
 **Tanggal:** 24 September 2026
-**Status:** selesai Fase 1 — modul ketujuh setelah [Picking & Shipment](15-picking-shipment.md); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-78](04-keputusan-dan-asumsi.md#a-78)–[A-84](04-keputusan-dan-asumsi.md#a-84) (*Perlu validasi*); v0.4: approval RTV lewat mesin approval ([20-approval](20-approval.md), [A-93](04-keputusan-dan-asumsi.md#a-93))
+**Status:** selesai Fase 1 — modul ketujuh setelah [Picking & Shipment](15-picking-shipment.md); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-78](04-keputusan-dan-asumsi.md#a-78)–[A-84](04-keputusan-dan-asumsi.md#a-84) (*Perlu validasi*); v0.4: approval RTV lewat mesin approval ([20-approval](20-approval.md), [A-93](04-keputusan-dan-asumsi.md#a-93)); v0.5: GRN retur dan penyelesaian TRF ([22-retur-transfer](22-retur-transfer.md), [A-112](04-keputusan-dan-asumsi.md#a-112))
 **Modul:** `receipt`, `putaway`, `vendor_return`
 **Fase:** F1 (GRN manual tanpa PO; terhubung PO di Fase 1b, D-29)
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-GRN](05-aturan-bisnis.md#br-grn) · [Katalog Status §2.5, §2.6, §2.16](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data inbound](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 2](07-proses-bisnis.md) dan [alur 5](07a-proses-bisnis-lanjutan.md)
-**Ketergantungan modul:** `stock` (`StockLedger` satu-satunya pintu tulis saldo), `warehouse` (bin Penerimaan, Karantina QC, Dalam Perjalanan), `master` (vendor, item, lot/serial/potongan, alasan), `shipment` (SJ transfer yang diterima). `approval` (sejak v0.4). Modul `purchase_request`, `transfer`, dan `return` belum ada; titik sambungnya stub ([BR-GEN-10](05-aturan-bisnis.md#br-gen)).
+**Ketergantungan modul:** `stock` (`StockLedger` satu-satunya pintu tulis saldo), `warehouse` (bin Penerimaan, Karantina QC, Dalam Perjalanan), `master` (vendor, item, lot/serial/potongan, alasan), `shipment` (SJ transfer yang diterima). `approval` (sejak v0.4). `transfer` dan `return` (sejak v0.5, [22-retur-transfer](22-retur-transfer.md)). Modul `purchase_request` belum ada; titik sambungnya stub ([BR-GEN-10](05-aturan-bisnis.md#br-gen)).
 
 ---
 
@@ -21,7 +21,7 @@ Empat langkah, satu rantai:
 - **PUT** — tugas menaruh barang dari bin Penerimaan ke bin penyimpanan, dengan saran bin.
 - **RTV** — barang ditolak QC dikembalikan ke vendor dari bin Karantina.
 
-Tidak termasuk: GRN dari RET (modul Retur), baris GRN yang merujuk catatan pemesanan PRQ (modul PRQ/Purchasing), cross-dock sungguhan ([A-83](04-keputusan-dan-asumsi.md#a-83)), dan penyelesaian TRF.
+Tidak termasuk: pemilahan retur (modul Retur — GRN retur sendiri dibuat di sini, v0.5), baris GRN yang merujuk catatan pemesanan PRQ (modul PRQ/Purchasing), dan cross-dock sungguhan ([A-83](04-keputusan-dan-asumsi.md#a-83)).
 
 ## 2. Aktor & permission
 
@@ -137,7 +137,7 @@ Satu kelas aksi per permission (menjawab alternatif [A-73](04-keputusan-dan-asum
 | [BR-STK-15](05-aturan-bisnis.md#br-stk), [BR-OPN-02](05-aturan-bisnis.md#br-opn), [BR-WH-06](05-aturan-bisnis.md#br-wh) | Oleh `StockLedger`: periode terkunci, bin beku, kapasitas blokir/peringatan |
 | [BR-REQ-03](05-aturan-bisnis.md#br-req) | Item `provisional`/`inactive` tidak bisa diterima |
 | [BR-GEN-04](05-aturan-bisnis.md#br-gen), [BR-GEN-03](05-aturan-bisnis.md#br-gen) | GRN `received` dan RTV `shipped` tidak bisa dibatalkan |
-| [BR-GEN-10](05-aturan-bisnis.md#br-gen) | `receipt_type = return` ditolak sampai modul Retur ada |
+| [BR-GEN-10](05-aturan-bisnis.md#br-gen) | ~~`receipt_type = return` ditolak sampai modul Retur ada~~ — sejak v0.5 GRN retur hanya dari RET `in_progress` ke gudang tujuannya ([A-112](04-keputusan-dan-asumsi.md#a-112)) |
 | [BR-GEN-11](05-aturan-bisnis.md#br-gen) | Batal GRN/PUT/RTV, tolak RTV, dan QC ditolak menuntut Alasan `*` |
 | [BR-APR-01–09](05-aturan-bisnis.md#br-apr) | Mesin approval ([20-approval §5](20-approval.md#5-aturan-bisnis-yang-berlaku)); pengaju RTV tidak bisa memutus (policy + aksi + mesin) |
 
@@ -193,7 +193,7 @@ Uji di `tests/Feature/Receipt`.
 | TC-GRN-10 | Tanpa QC + lolos + ditolak | selesaikan | satu PUT untuk dua baris pertama | KS 2.6 |
 | TC-GRN-11 | SJ ke gudang BKS, bukti terima 18 baik 2 kurang | GRN transfer | sebelum bukti terima / gudang salah / 19 / GRN kedua ditolak; terima: BKS Penerimaan 18, CKG transit 2, `stock_transferred` | BR-SJ-04, BR-GRN-05, A-81, A-82 |
 | TC-GRN-11b | Stok di Dalam Perjalanan | buat PCK | tidak dialokasikan | A-84 |
-| TC-GRN-12 | — | GRN sumber retur | ditolak | BR-GEN-10 |
+| TC-GRN-12 | — | GRN sumber retur tanpa RET | ditolak (v0.5; sebelumnya BR-GEN-10) | BR-RET-01 |
 | TC-GRN-13 | Periode terkunci hari ini | terima | ditolak, tetap draf | BR-STK-15 |
 | TC-GRN-14 | Baris di Karantina | QC lolos | pindah ke Penerimaan Tersedia, tanpa kejadian | A-78 |
 | TC-GRN-15 | Baris di Karantina | QC ditolak tanpa/dengan alasan | ditolak / kondisi Rusak di Karantina | BR-GEN-11, A-78 |
@@ -241,6 +241,8 @@ Domain `app/Domain/Receipt`: dua belas aksi (`SaveGoodsReceipt`, `ReceiveGoodsRe
 
 **Approval RTV lewat mesin approval (v0.4, [20-approval §13.3](20-approval.md#133-integrasi-req-dan-rtv)).** `CreateVendorReturn` memanggil `ApprovalEngine::submit()` setelah RTV masuk `pending_approval`; `CancelVendorReturn` menghentikan snapshot yang menunggu; `ApproveVendorReturn` mencatat keputusan pemegang tugas lewat `DecideApproval`, dan status `approved`/`rejected` ditulis `VendorReturnApprovalHandler` setelah keputusan akhir. Tanpa aturan RTV langsung disetujui ([A-93](04-keputusan-dan-asumsi.md#a-93), mengganti jalur sementara [A-80](04-keputusan-dan-asumsi.md#a-80)); data demo memasang aturan "RTV — kepala gudang". Detail RTV menampilkan panel *Riwayat approval*. TC-RTV-01, -03–07, -09 memasang aturan satu lapis Kepala Gudang; ID tidak berubah.
 
+**GRN retur dan penyelesaian TRF (v0.5, [22-retur-transfer](22-retur-transfer.md)).** `SaveGoodsReceipt` menerima sumber `return`: RET `in_progress` ke gudang ini, satu GRN aktif per RET, jumlah ≤ jumlah baik bukti terima SJ balik atau ≤ jumlah RET bila tanpa SJ; SJ balik ditolak sebagai GRN transfer. `ReceiveGoodsReceipt` memindahkan barang retur ke bin **Retur** (`ReceiptBins::returnBin`) dari Dalam Perjalanan Gudang Site, dari bin Gudang Site/On-site, atau dari luar, dengan kondisi asalnya dan **tanpa kejadian** — kejadian terbit saat RET dipilah ([A-112](04-keputusan-dan-asumsi.md#a-112)); RET menjadi `received`. `receipt.complete` menolak GRN retur (selesai otomatis saat RET dipilah). GRN transfer mencatat `qty_received` baris TRF; `CompleteGoodsReceipt` menyelesaikan TRF lewat `TransferProgress::receiptCompleted` ([A-107](04-keputusan-dan-asumsi.md#a-107)); `CompletePutaway` mereservasi barang TRF backorder ke REQ penunggu ([A-108](04-keputusan-dan-asumsi.md#a-108)). Form GRN punya sumber *Retur dari proyek* (`?goods_return=`), detail GRN merujuk RET-nya. TC-GRN-12 disesuaikan (ID tetap).
+
 ### 13.1 Penyimpangan dari spesifikasi
 
 1. **Kolom implementasi di luar ERD** (sudah digenerate ulang ke [08b](08b-model-data-stok-dokumen.md)): `number` pada GRN/PUT/RTV; `goods_receipts.received_by`; isian draf `lot_no`, `expiry_date`, `serial_no`, `piece_length`, serta `qc_reason_id`, `notes` pada baris GRN; `from_bin_id`, `override_reason` pada baris PUT; `submitted_by`, `approved_by`, `approved_at`, `reject_reason_id` pada RTV; `bin_id`, `stock_status` pada baris RTV.
@@ -257,8 +259,8 @@ Domain `app/Domain/Receipt`: dua belas aksi (`SaveGoodsReceipt`, `ReceiveGoodsRe
 
 ### 13.3 Sisa pekerjaan
 
-1. **Cross-dock** ([A-83](04-keputusan-dan-asumsi.md#a-83)) dan reservasi otomatis ke REQ penunggu (BR-REQ-08) — menunggu PRQ/TRF dan keputusan cara memuat baris cross-dock ke SJ.
-2. **GRN retur** (`receipt_type = return`) dan GRN barang rusak yang dibawa balik (DSC `return_receipt_id`) — modul Retur.
+1. **Cross-dock** ([A-83](04-keputusan-dan-asumsi.md#a-83)) — menunggu keputusan cara memuat baris cross-dock ke SJ; reservasi ke REQ penunggu sudah ada untuk barang TRF ([A-108](04-keputusan-dan-asumsi.md#a-108)), untuk PRQ menunggu modulnya.
+2. ~~**GRN retur**~~ — **selesai v0.5** ([22-retur-transfer](22-retur-transfer.md)); GRN barang rusak yang dibawa balik (DSC `return_receipt_id`) sengaja tidak dibuat ([A-114](04-keputusan-dan-asumsi.md#a-114)).
 3. **ADJ untuk kelebihan terima** (BR-GRN-05) — modul Adjustment.
 4. **`StockLedger::rebuildFromLedger()` tidak mengenal perubahan kondisi**: kartu stok tidak menyimpan kondisi asal (`fromStockStatus`), sehingga QC dan barang rusak saat terima menghasilkan saldo turunan yang salah per kondisi. Saldo transaksional tetap benar; perlu kolom `from_stock_status` di `stock_movements` (keputusan modul Stock).
 5. ~~**`StockLedger::availableQty()` menghitung semua bin gudang**~~ — **diperbaiki 24 Sep 2026**: hanya bin `storage` ([A-85](04-keputusan-dan-asumsi.md#a-85)); TC-GRN-11b kini membuktikan approval REQ menolak janji atas stok Dalam Perjalanan. Catatan semula: termasuk Penerimaan, Karantina berkondisi Tersedia, dan Dalam Perjalanan; approval REQ bisa menjanjikan barang yang belum di-put-away.

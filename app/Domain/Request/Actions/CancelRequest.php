@@ -12,6 +12,7 @@ use App\Domain\Request\Enums\RequestLineStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Stock\Actions\ManageReservation;
+use App\Domain\Transfer\Support\BackorderTransfers;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -42,6 +43,7 @@ class CancelRequest
                 'cancel_reason_id' => $reasonCodeId,
             ])->save();
 
+            $terbuka = $request->lines()->open()->pluck('id')->all();
             $request->lines()->open()->update(['status' => RequestLineStatus::Cancelled->value]);
 
             // Tugas approval yang masih terbuka ikut dihentikan (20-approval §4).
@@ -54,6 +56,9 @@ class CancelRequest
                 'REQUEST_CANCELLED',
                 $actor,
             );
+
+            // BR-REQ-15, A-108: TRF backorder yang belum berjalan ikut dibatalkan.
+            app(BackorderTransfers::class)->releaseForRequestLines($terbuka, $reasonCodeId, $actor);
 
             activity('request')
                 ->performedOn($request)

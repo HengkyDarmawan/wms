@@ -60,6 +60,40 @@ class ShipmentForm extends Component
         if ($gudang !== null) {
             $this->form['warehouse_id'] = (string) $gudang->id;
         }
+
+        $this->isiDariTugas((int) request()->query('pick_task', 0));
+    }
+
+    /**
+     * `?pick_task=<id>` dari detail TRF/RET: gudang asal, PCK, dan tujuan dokumen
+     * langsung terisi (A-107, A-111). Tujuan tetap diperiksa `CreateShipment`.
+     */
+    private function isiDariTugas(int $id): void
+    {
+        $pck = $id > 0 ? PickTask::query()->find($id) : null;
+
+        if ($pck === null) {
+            return;
+        }
+
+        $this->form['warehouse_id'] = (string) $pck->warehouse_id;
+        $this->pickTaskIds = [(int) $pck->id];
+
+        $dokumen = match ($pck->source_type) {
+            'transfer' => \App\Domain\Transfer\Models\Transfer::withoutGlobalScopes()->find($pck->source_id),
+            'goods_return' => \App\Domain\Return\Models\GoodsReturn::withoutGlobalScopes()->find($pck->source_id),
+            default => null,
+        };
+
+        if ($dokumen === null) {
+            return;
+        }
+
+        $tujuan = Warehouse::query()->withoutGlobalScopes()->with('type')->find($dokumen->to_warehouse_id);
+
+        $this->form['destination_type'] = $tujuan?->isSite() ? 'site_warehouse' : 'warehouse';
+        $this->form['destination_warehouse_id'] = (string) $dokumen->to_warehouse_id;
+        $this->form['destination_project_id'] = (string) ($tujuan?->project_id ?? '');
     }
 
     public function updatedFormWarehouseId(): void
@@ -98,7 +132,7 @@ class ShipmentForm extends Component
             'destinations' => DestinationType::options(),
             'methods' => ShipmentMethod::options(),
             'projects' => Project::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
-            'gudangTujuan' => Warehouse::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
+            'gudangTujuan' => Warehouse::query()->withoutGlobalScopes()->active()->orderBy('code')->get(['id', 'code', 'name']),
             'vendors' => Vendor::query()->orderBy('name')->get(['id', 'name']),
             'vehicles' => Vehicle::query()->where('is_active', true)->orderBy('plate_no')->get(['id', 'plate_no']),
             'carriers' => Carrier::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),

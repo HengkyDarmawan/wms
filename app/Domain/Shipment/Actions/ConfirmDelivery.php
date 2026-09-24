@@ -240,7 +240,12 @@ class ConfirmDelivery
         // Ke gudang lain atau Gudang Site: barang tetap milik gudang asal
         // sampai GRN tujuan mencatatnya, jadi ia menunggu di Dalam Perjalanan.
         if ($shipment->destination_type->staysInTransitUntilReceipt()) {
-            $this->catatKejadian($shipment, $sj, $baik, StockEventType::StockTransferred);
+            // SJ balik RET tidak menerbitkan `stock_transferred`: satu-satunya
+            // kejadian retur adalah `goods_returned`/`asset_returned` saat
+            // dipilah (matriks §14, A-112).
+            if ($sj->pickTaskLine?->pickTask?->source_type !== 'goods_return') {
+                $this->catatKejadian($shipment, $sj, $baik, StockEventType::StockTransferred);
+            }
 
             return;
         }

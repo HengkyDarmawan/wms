@@ -1,8 +1,8 @@
 # Katalog Status & Enum
 
-**Versi:** 0.10
+**Versi:** 0.11
 **Tanggal:** 24 September 2026
-**Status:** nilai divalidasi 23 Sep 2026 bersama [A-29](04-keputusan-dan-asumsi.md#a-29)–[A-49](04-keputusan-dan-asumsi.md#a-49); guard SJ/TRF memuat bagian dari [A-50](04-keputusan-dan-asumsi.md#a-50) (menunggu validasi); v0.5: PRQ `draft`, aksi baris REQ (A-54, A-55, A-56, A-61), `shipment_method`, `spot_check`, enum vendor; v0.6: bukti terima baik/rusak/kurang, keberatan klien, DSC `reship`, `meter_unit`; v0.7: enum yang sudah dipakai kode didaftarkan (`request_line_status`, `fulfillment_source`, `requester_type`, `destination_type`, `ownership_effect`, `proof_channel`, `discrepancy_origin`, `reservation_level`, `reservation_status`, `stock_event_type`, `capacity_mode`, `reason_context`, `uom_category_code`, `scope_type`, `user_status`, `login_result`, `company_status`) — tanpa status baru; v0.8: enum `receipt_type` (sumber GRN, sudah ada di ERD) didaftarkan dan langkah QC GRN diberi permission `receipt.qc` ([A-80](04-keputusan-dan-asumsi.md#a-80)) — tanpa status baru; v0.9: enum mesin approval yang sudah ada di ERD 08c didaftarkan (`approval_document_type`, `approver_type`, `decision_mode`, `approval_snapshot_status`, `approval_task_status`) ditambah `condition_match` ([A-87](04-keputusan-dan-asumsi.md#a-87)); permission approve per dokumen dipakai mesin approval ([A-86](04-keputusan-dan-asumsi.md#a-86)) — tanpa status dokumen baru; v0.10: enum `count_assignment_status` dan `adjustment_origin` (sudah ada di ERD 08c) didaftarkan, ADJ dan OPN tersambung ke mesin approval ([21-opname-penyesuaian](21-opname-penyesuaian.md), [A-95](04-keputusan-dan-asumsi.md#a-95)–[A-97](04-keputusan-dan-asumsi.md#a-97)) — tanpa status baru
+**Status:** nilai divalidasi 23 Sep 2026 bersama [A-29](04-keputusan-dan-asumsi.md#a-29)–[A-49](04-keputusan-dan-asumsi.md#a-49); guard SJ/TRF memuat bagian dari [A-50](04-keputusan-dan-asumsi.md#a-50) (menunggu validasi); v0.5: PRQ `draft`, aksi baris REQ (A-54, A-55, A-56, A-61), `shipment_method`, `spot_check`, enum vendor; v0.6: bukti terima baik/rusak/kurang, keberatan klien, DSC `reship`, `meter_unit`; v0.7: enum yang sudah dipakai kode didaftarkan (`request_line_status`, `fulfillment_source`, `requester_type`, `destination_type`, `ownership_effect`, `proof_channel`, `discrepancy_origin`, `reservation_level`, `reservation_status`, `stock_event_type`, `capacity_mode`, `reason_context`, `uom_category_code`, `scope_type`, `user_status`, `login_result`, `company_status`) — tanpa status baru; v0.8: enum `receipt_type` (sumber GRN, sudah ada di ERD) didaftarkan dan langkah QC GRN diberi permission `receipt.qc` ([A-80](04-keputusan-dan-asumsi.md#a-80)) — tanpa status baru; v0.9: enum mesin approval yang sudah ada di ERD 08c didaftarkan (`approval_document_type`, `approver_type`, `decision_mode`, `approval_snapshot_status`, `approval_task_status`) ditambah `condition_match` ([A-87](04-keputusan-dan-asumsi.md#a-87)); permission approve per dokumen dipakai mesin approval ([A-86](04-keputusan-dan-asumsi.md#a-86)) — tanpa status dokumen baru; v0.10: enum `count_assignment_status` dan `adjustment_origin` (sudah ada di ERD 08c) didaftarkan, ADJ dan OPN tersambung ke mesin approval ([21-opname-penyesuaian](21-opname-penyesuaian.md), [A-95](04-keputusan-dan-asumsi.md#a-95)–[A-97](04-keputusan-dan-asumsi.md#a-97)) — tanpa status baru; v0.11: enum `transfer_origin` dan `return_ownership` (sudah ada di ERD) didaftarkan, TRF dan RET tersambung ke mesin approval, GRN sumber RET aktif ([22-retur-transfer](22-retur-transfer.md), [A-106](04-keputusan-dan-asumsi.md#a-106)–[A-113](04-keputusan-dan-asumsi.md#a-113)) — tanpa status baru
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Glosarium](03-glosarium.md)
 
 Dokumen ini adalah **satu-satunya sumber** nilai status dan enum. UI memakai kolom *Label*, kode memakai kolom *Enum* (`snake_case`, Inggris). Developer dan agen AI **tidak boleh** menambah status di luar katalog ini tanpa menaikkan versi dokumen ini.
@@ -118,6 +118,8 @@ Catatan: GRN `received` tidak bisa dibatalkan; koreksi lewat `ADJ` atau `RTV`. Q
 | `in_progress` | `completed` | otomatis | sistem | GRN tujuan `completed` | — |
 | `submitted`/`pending_approval`/`approved` | `cancelled` | `transfer.cancel` | Pengaju / Kepala Gudang | Belum ada SJ `shipped`; alasan | reservasi dilepas |
 
+Catatan implementasi ([22-retur-transfer](22-retur-transfer.md)): TRF dari backorder REQ dibuat sistem saat REQ disetujui ([A-106](04-keputusan-dan-asumsi.md#a-106)); PCK dibuat otomatis saat disetujui dan TRF selesai saat GRN tujuan selesai ([A-107](04-keputusan-dan-asumsi.md#a-107)); izin melihat `transfer.view` ditambah ([A-109](04-keputusan-dan-asumsi.md#a-109)).
+
 ### 2.8 `RET` Retur dari Proyek — `goods_return` [F1]
 
 | Dari | Ke | Aksi | Aktor | Guard | Efek |
@@ -129,6 +131,8 @@ Catatan: GRN `received` tidak bisa dibatalkan; koreksi lewat `ADJ` atau `RTV`. Q
 | `in_progress` | `received` (Diterima) | otomatis | sistem | GRN jenis retur `received` | ledger masuk ke bin Retur |
 | `received` | `sorted` (Dipilah) | `return.sort` | Staf Gudang | Setiap baris: `good` / `damaged` / `offcut` / `waste` | ledger: bin Retur → bin tujuan; offcut mendapat ID potongan + silsilah; kejadian `goods_returned` (dengan penanda kepemilikan) atau `asset_returned` |
 | `submitted`/`pending_approval`/`approved` | `cancelled` | `return.cancel` | Pengaju | Belum ada SJ `shipped`; alasan | — |
+
+Catatan implementasi ([22-retur-transfer](22-retur-transfer.md)): SJ balik hanya untuk stok Gudang Site ([A-111](04-keputusan-dan-asumsi.md#a-111)); GRN retur tanpa kejadian, kejadian terbit saat dipilah ([A-112](04-keputusan-dan-asumsi.md#a-112)); satu baris boleh dipilah ke beberapa hasil ([A-113](04-keputusan-dan-asumsi.md#a-113)); izin melihat `return.view` ditambah ([A-109](04-keputusan-dan-asumsi.md#a-109)).
 
 ### 2.9 `ISU` Pemakaian Material — `material_issue` [F1] (baru, [A-32](04-keputusan-dan-asumsi.md#a-32))
 
@@ -235,9 +239,11 @@ Penolakan approval tidak mengubah status: sesi tetap `reconciling` dan diajukan 
 | `removal_strategy` | `fifo` · `fefo` · `manual` · `offcut_first` = Sisa potongan dulu |
 | `asset_state` | `available` · `reserved` · `in_transit` · `on_loan` = Dipinjam · `returned` = Dikembalikan · `inspection` = Pemeriksaan · `maintenance` · `damaged` = Rusak · `lost` = Hilang · `written_off` = Dihapuskan |
 | `qc_result` | `passed` = Lolos · `quarantined` = Karantina · `rejected` = Ditolak |
-| `receipt_type` (sumber GRN, [A-33](04-keputusan-dan-asumsi.md#a-33)) | `vendor` = Dari vendor · `transfer` = Transfer masuk (SJ ke gudang) · `return` = Retur dari proyek (titik sambung modul Retur, [BR-GEN-10](05-aturan-bisnis.md#br-gen)) |
+| `receipt_type` (sumber GRN, [A-33](04-keputusan-dan-asumsi.md#a-33)) | `vendor` = Dari vendor · `transfer` = Transfer masuk (SJ ke gudang) · `return` = Retur dari proyek (ke bin Retur, [A-112](04-keputusan-dan-asumsi.md#a-112)) |
 | `condition_grade` | `A` = Baik · `B` = Layak · `C` = Rusak ringan · `D` = Rusak berat |
 | `return_sorting` | `good` = Layak · `damaged` = Rusak · `offcut` = Offcut · `waste` = Waste |
+| `return_ownership` (baris RET, ERD `goods_return_lines.ownership`, [BR-RET-03](05-aturan-bisnis.md#br-ret)) | `sold` = Jual putus (retur penjualan) · `company` = Milik company |
+| `transfer_origin` (asal TRF, ERD `transfers.origin`) | `manual` = Manual · `backorder` = Dari backorder REQ ([A-106](04-keputusan-dan-asumsi.md#a-106)) |
 | `waste_disposition` | `disposed` = Dibuang · `sold_scrap` = Dijual scrap · `reused` = Dipakai ulang |
 | `discrepancy_disposition` | `returned_to_warehouse` = Kembali ke gudang · `adjusted` = Disesuaikan (hilang) · `claimed` = Klaim ekspedisi · `reship` = Kirim pengganti ([A-64](04-keputusan-dan-asumsi.md#a-64)) |
 | `discrepancy_type` ([A-64](04-keputusan-dan-asumsi.md#a-64)) | `missing` = Kurang · `damaged` = Rusak |
@@ -248,7 +254,7 @@ Penolakan approval tidak mengubah status: sesi tetap `reconciling` dan diajukan 
 | `subscription_status` | `trial` · `active` = Aktif · `past_due` = Jatuh Tempo (tenggang) · `suspended` = Ditangguhkan · `terminated` = Diakhiri |
 | `approval_decision` | `approved` = Setuju · `rejected` = Tolak · `delegated` = Didelegasikan · `escalated` = Dieskalasi |
 | `approval_channel` | `web` · `whatsapp` (keputusan); kanal lapis aturan menambah `both` = Web & WhatsApp (ERD 08c; F1 selalu `web`) |
-| `approval_document_type` ([20-approval](20-approval.md)) | Jenis dokumen beraturan approval (alur 9), nilai = nama di kode Glosarium: `material_request` (REQ) · `transfer` (TRF) · `goods_return` (RET) · `conversion` (CNV) · `stock_adjustment` (ADJ) · `waste_disposal` (WST) · `purchase_request` (PRQ) · `vendor_return` (RTV) · `stock_count` (OPN) · `material_issue` (ISU pembalik). F1 tersambung: REQ, RTV, ADJ, OPN |
+| `approval_document_type` ([20-approval](20-approval.md)) | Jenis dokumen beraturan approval (alur 9), nilai = nama di kode Glosarium: `material_request` (REQ) · `transfer` (TRF) · `goods_return` (RET) · `conversion` (CNV) · `stock_adjustment` (ADJ) · `waste_disposal` (WST) · `purchase_request` (PRQ) · `vendor_return` (RTV) · `stock_count` (OPN) · `material_issue` (ISU pembalik). F1 tersambung: REQ, RTV, ADJ, OPN, TRF, RET |
 | `approver_type` (lapis aturan, Blueprint §8.1) | `user` = User tertentu · `position` = Jabatan · `role` = Role (dalam cakupan dokumen) · `direct_manager` = Atasan langsung pemohon · `warehouse_head` = Kepala gudang terkait · `project_pic` = PIC proyek |
 | `decision_mode` (cara putus lapis) | `sequential` = Berurutan · `any` = Cukup salah satu · `all` = Semua harus setuju |
 | `condition_match` ([A-87](04-keputusan-dan-asumsi.md#a-87)) | `all` = Semua kondisi terpenuhi · `any` = Salah satu kondisi terpenuhi |

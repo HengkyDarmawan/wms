@@ -11,7 +11,7 @@ use App\Domain\Warehouse\Models\Warehouse;
 
 /**
  * Bin sistem yang dipakai modul penerimaan (BR-WH-02): Penerimaan, Karantina
- * QC, dan Dalam Perjalanan gudang asal transfer.
+ * QC, Retur, dan Dalam Perjalanan gudang asal transfer.
  *
  * Global scope sengaja dilewati: GRN transfer menarik barang dari bin Dalam
  * Perjalanan milik gudang lain yang biasanya di luar cakupan penerimanya.
@@ -31,6 +31,12 @@ class ReceiptBins
     public function inTransit(Warehouse $warehouse): Bin
     {
         return $this->cari($warehouse, BinType::InTransit);
+    }
+
+    /** Bin Retur gudang penerima GRN retur (BR-RET-04, A-112). */
+    public function returnBin(Warehouse $warehouse): Bin
+    {
+        return $this->cari($warehouse, BinType::Return);
     }
 
     private function cari(Warehouse $warehouse, BinType $type): Bin

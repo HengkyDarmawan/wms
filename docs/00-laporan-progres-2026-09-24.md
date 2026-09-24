@@ -1,8 +1,8 @@
 # Laporan Progres — 24 September 2026
 
-**Versi:** 1.4
+**Versi:** 1.5
 **Tanggal:** 24 September 2026
-**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); diperbarui setiap modul selesai
+**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); diperbarui setiap modul selesai
 **Dokumen terkait:** [README](README.md) · [Setup lokal §5](00-setup-lokal.md#5-skenario-uji-manual) · [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) · [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) · [Keputusan & Asumsi](wms/04-keputusan-dan-asumsi.md)
 
 Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang baru di-seed: delapan skenario uji manual lewat Chrome headless, 321 uji otomatis, dan pencocokan setiap kasus uji `TC-xx` di spesifikasi dengan ujinya. Hasilnya dipakai untuk memetakan seberapa jauh Fase 1 sudah berjalan.
@@ -78,18 +78,18 @@ Sumber baris: [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis). S
 | Integrasi Purchasing & Akuntansi | 🟡 Sebagian | outbox kejadian stok jalan; Purchase Request manual belum |
 | Wizard setup awal company | ⬜ Belum | |
 | Impor data master dari Excel | ⬜ Belum | |
-| Penerimaan (GRN), QC, put-away, RTV | ✅ Selesai | [19-receipt-putaway](wms/19-receipt-putaway.md): GRN vendor manual & transfer masuk, QC per baris, PUT dengan saran bin, RTV; cross-dock masih saran ([A-83](wms/04-keputusan-dan-asumsi.md#a-83)), GRN retur menunggu modul Retur |
+| Penerimaan (GRN), QC, put-away, RTV | ✅ Selesai | [19-receipt-putaway](wms/19-receipt-putaway.md): GRN vendor manual & transfer masuk, QC per baris, PUT dengan saran bin, RTV; cross-dock masih saran ([A-83](wms/04-keputusan-dan-asumsi.md#a-83)); GRN retur sejak modul Retur |
 | Pemakaian material di site (ISU) | ⬜ Belum | |
-| Retur & transfer | ⬜ Belum | |
+| Retur & transfer | ✅ Selesai | [22-retur-transfer](wms/22-retur-transfer.md): TRF antar gudang, antar proyek, dan antar titik dalam proyek (jalur ringan A-50), TRF otomatis dari backorder REQ sampai REQ terpenuhi lewat gudang tujuan, PCK/SJ/GRN transfer, TRF selesai saat GRN tujuan selesai; RET dari Gudang Site, aset On-site, barang terkirim ke klien, dan barang rusak ditinggal ekspedisi, SJ balik dari Gudang Site, GRN retur ke bin Retur, pemilahan layak/rusak/offcut/waste dengan `goods_returned`/`asset_returned`; portal klien; pemeriksaan aset menunggu modul Aset ([A-106](wms/04-keputusan-dan-asumsi.md#a-106)–[A-116](wms/04-keputusan-dan-asumsi.md#a-116)) |
 | Konversi material, offcut, waste | ⬜ Belum | fitur pembeda utama |
 | Aset dipinjamkan | ⬜ Belum | |
-| Approval engine | ✅ Selesai | [20-approval](wms/20-approval.md): aturan per jenis dokumen tanpa nilai uang, lapis & cara putus, SoD, snapshot, delegasi, eskalasi terjadwal + manual, simulasi, riwayat; REQ dan RTV tersambung; WhatsApp stub Fase 2a; notifikasi stub ([A-91](wms/04-keputusan-dan-asumsi.md#a-91)) |
+| Approval engine | ✅ Selesai | [20-approval](wms/20-approval.md): aturan per jenis dokumen tanpa nilai uang, lapis & cara putus, SoD, snapshot, delegasi, eskalasi terjadwal + manual, simulasi, riwayat; REQ, RTV, ADJ, OPN, TRF, dan RET tersambung; WhatsApp stub Fase 2a; notifikasi stub ([A-91](wms/04-keputusan-dan-asumsi.md#a-91)) |
 | Stock opname | ✅ Selesai | [21-opname-penyesuaian](wms/21-opname-penyesuaian.md): sesi bulanan/tahunan/ad-hoc/pemeriksaan mendadak, pembekuan bin, hitung buta di halaman ramah HP, toleransi ganda, hitung ulang orang berbeda, akar masalah, approval tingkat sesi (Auditor untuk tahunan/audit), ADJ per gudang diposting lewat buku besar, kunci periode bulanan, penanda hitung; ADJ manual dua lapis & pembalik; override SJ mendesak dan dashboard tren belum ([A-95](wms/04-keputusan-dan-asumsi.md#a-95)–[A-105](wms/04-keputusan-dan-asumsi.md#a-105)) |
 | Template dokumen & label | ⬜ Belum | |
 | PWA (installable, scan kamera, draf lokal) | ⬜ Belum | |
 | Landing page produk | ⬜ Belum | Part 5 |
 
-Urutan pembangunan berikutnya menurut [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) (Receipt/Putaway, Approval, dan Count/Adjustment sudah selesai): Return/Transfer → Issue → Conversion/Waste → Asset → PurchaseRequest/VendorReturn → Platform.
+Urutan pembangunan berikutnya menurut [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) (Receipt/Putaway, Approval, Count/Adjustment, dan Return/Transfer sudah selesai): Issue → Conversion/Waste → Asset → PurchaseRequest/VendorReturn → Platform.
 
 ## 5. Temuan dari E2E
 

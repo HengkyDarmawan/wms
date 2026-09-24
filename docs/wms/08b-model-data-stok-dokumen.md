@@ -1,8 +1,8 @@
 # Model Data — Stok, outbound, inbound & dokumen niat
 
-**Versi:** 0.10 (Part 3, diselaraskan dengan migrasi modul Access s.d. Count/Adjustment 24 Sep 2026)
+**Versi:** 0.11 (Part 3, diselaraskan dengan migrasi modul Access s.d. Transfer/Retur 24 Sep 2026)
 **Tanggal:** 24 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.10, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.11, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Inti](08a-model-data-inti.md) · [Pendukung](08c-model-data-pendukung.md)
 
 Daftar area lengkap ada di [08a-model-data-inti.md](08a-model-data-inti.md).
@@ -61,7 +61,7 @@ erDiagram
 **`stock_balances` — Saldo stok.** 🔑`id` bigint · ↗`item_id` bigint · ↗`bin_id` bigint · ↗`lot_id` bigint · ↗`serial_id` bigint · ↗`piece_id` bigint · `stock_status` enum *(available|quarantine|damaged)* · `qty_base` decimal(18,4) *(≥ 0 (CHECK))* · `piece_count` int *(untuk piece)* · `version` int *(optimistic lock cadangan)*
   ↳ UK(item_id, bin_id, lot_key, serial_key, piece_key, stock_status) — tiga kolom turunan COALESCE(x,0) karena MySQL tidak membandingkan NULL; dikunci FOR UPDATE saat mutasi
 
-**`stock_reservations` — Reservasi.** 🔑`id` bigint · ↗`item_id` bigint · ↗`warehouse_id` bigint *(lunak)* · ↗`bin_id` bigint *(keras (nullable))* · ↗`lot_id` bigint · ↗`serial_id` bigint · ↗`piece_id` bigint · `qty_base` decimal(18,4) · `level` enum *(soft|hard ([BR-STK-04](05-aturan-bisnis.md#br-stk)))* · `document_type` varchar(30) *(material_request|transfer)* · `document_id` bigint · `document_line_id` bigint · `status` enum *(active|consumed|released)* · `released_reason` varchar(60) *([BR-STK-05](05-aturan-bisnis.md#br-stk))* · `released_at` datetime
+**`stock_reservations` — Reservasi.** 🔑`id` bigint · ↗`item_id` bigint · ↗`warehouse_id` bigint *(lunak)* · ↗`bin_id` bigint *(keras (nullable))* · ↗`lot_id` bigint · ↗`serial_id` bigint · ↗`piece_id` bigint · `qty_base` decimal(18,4) · `level` enum *(soft|hard ([BR-STK-04](05-aturan-bisnis.md#br-stk)))* · `document_type` varchar(30) *(material_request|transfer|pick_task|goods_return (A-111))* · `document_id` bigint · `document_line_id` bigint · `status` enum *(active|consumed|released)* · `released_reason` varchar(60) *([BR-STK-05](05-aturan-bisnis.md#br-stk))* · `released_at` datetime
   ↳ Stok tersedia = Σ balance.available − Σ reservasi active (per item, gudang)
 
 **`stock_events` — Outbox kejadian stok.** 🔑`id` bigint · ◆`event_id` uuid · `schema_version` varchar(10) · `event_type` varchar(40) *(BR §14)* · `occurred_at` datetime · `recorded_at` datetime · `source_type` varchar(30) · `source_id` bigint · `source_number` varchar(40) *(nomor dokumen sumber, disalin)* · ↗`project_id` bigint · `payload` json *(Akuntansi §4.1)* · `reverses_event_id` uuid · `published_at` datetime *(null = belum dikonsumsi)* · `attempts` int · `last_error` text
@@ -225,12 +225,14 @@ erDiagram
   }
   transfers {
     bigint id PK
+    varchar_40 number UK
   }
   transfer_lines {
     bigint id PK
   }
   goods_returns {
     bigint id PK
+    varchar_40 number UK
   }
   goods_return_lines {
     bigint id PK
@@ -267,6 +269,8 @@ erDiagram
   goods_returns ||--o{ goods_return_lines : " "
   shipment_lines ||--o{ goods_return_lines : " "
   pieces ||--o{ goods_return_lines : "offcut baru"
+  goods_return_lines ||--o{ goods_receipt_lines : "GRN retur"
+  bins ||--o{ goods_return_lines : "asal/tujuan pilah"
   projects ||--o{ material_issues : " "
   warehouses ||--o{ material_issues : "site"
   material_issues ||--o{ material_issue_lines : " "
@@ -275,7 +279,7 @@ erDiagram
 
 ### Entitas
 
-**`goods_receipts` — GRN header.** 🔑`id` bigint · ◆`number` varchar(40) *(GRN/<gudang>/<yymm>/<urut>)* · ↗`warehouse_id` bigint *(tujuan)* · `receipt_type` enum *(vendor|transfer|return)* · ↗`vendor_id` bigint · `vendor_doc_no` varchar(60) *(surat jalan vendor)* · `po_ref` varchar(60) *(F3: po_id)* · ↗`shipment_id` bigint *(bila dari SJ)* · ↗`goods_return_id` bigint *(bila dari RET; tanpa FK sampai modul return ada)* · `received_at` datetime · ↗`received_by` bigint *(users; implementasi 19-receipt-putaway)* · `completed_at` datetime
+**`goods_receipts` — GRN header.** 🔑`id` bigint · ◆`number` varchar(40) *(GRN/<gudang>/<yymm>/<urut>)* · ↗`warehouse_id` bigint *(tujuan)* · `receipt_type` enum *(vendor|transfer|return)* · ↗`vendor_id` bigint · `vendor_doc_no` varchar(60) *(surat jalan vendor)* · `po_ref` varchar(60) *(F3: po_id)* · ↗`shipment_id` bigint *(bila dari SJ)* · ↗`goods_return_id` bigint *(bila dari RET (GRN retur, A-112))* · `received_at` datetime · ↗`received_by` bigint *(users; implementasi 19-receipt-putaway)* · `completed_at` datetime
   ↳ kolom header dokumen standar (lihat konvensi); source_type = vendor_return untuk barang pengganti RTV ([BR-GRN-04](05-aturan-bisnis.md#br-grn))
 
 **`goods_receipt_lines` — GRN baris.** 🔑`id` bigint · ↗`goods_receipt_id` bigint · ↗`purchase_request_order_line_id` bigint *(baris catatan pemesanan → baris PRQ ([A-47](04-keputusan-dan-asumsi.md#a-47), [A-51](04-keputusan-dan-asumsi.md#a-51)))* · ↗`shipment_line_id` bigint · ↗`goods_return_line_id` bigint · `lot_no` varchar(60) *(isian draf; lot dibuat saat received)* · `expiry_date` date *(isian draf)* · `serial_no` varchar(80) *(isian draf; satu baris = satu unit)* · `piece_length` decimal(18,4) *(isian draf; potongan dibuat saat received)* · ↗`receiving_bin_id` bigint *(receiving|quarantine|return)* · `qty_received` decimal(18,4) · `qc_result` enum *(passed|quarantined|rejected)* · ↗`qc_by` bigint · `qc_at` datetime · ↗`qc_reason_id` bigint *(reason_codes (reject); wajib bila rejected)* · `qc_note` varchar(255) · `is_cross_dock` bool *([BR-SJ-03](05-aturan-bisnis.md#br-sj); selalu false di F1 ([A-83](04-keputusan-dan-asumsi.md#a-83)))* · `notes` varchar(255) *(opsional)*
@@ -305,16 +309,16 @@ erDiagram
 **`purchase_request_order_lines` — Baris catatan pemesanan.** 🔑`id` bigint · ↗`purchase_request_order_id` bigint · ↗`purchase_request_line_id` bigint · `qty_ordered` decimal(18,4) · `qty_received` decimal(18,4) · `po_line_ref` varchar(60) *(F3)*
   ↳ Satu baris PRQ boleh dipecah ke beberapa vendor ([A-51](04-keputusan-dan-asumsi.md#a-51))
 
-**`transfers` — TRF header.** 🔑`id` bigint · ↗`from_warehouse_id` bigint · ↗`to_warehouse_id` bigint · ↗`from_project_id` bigint *(antar proyek)* · ↗`to_project_id` bigint · `origin` enum *(manual|backorder)* · ↗`approval_snapshot_id` bigint
-  ↳ kolom header dokumen standar (lihat konvensi); fisik lewat PCK/SJ/GRN (source_type = transfer)
+**`transfers` — TRF header.** 🔑`id` bigint · ◆`number` varchar(40) *(TRF/<gudang asal>/<yymm>/<urut> (A-115))* · ↗`from_warehouse_id` bigint · ↗`to_warehouse_id` bigint · ↗`from_project_id` bigint *(antar proyek; turunan Gudang Site asal)* · ↗`to_project_id` bigint *(turunan Gudang Site tujuan ([A-50](04-keputusan-dan-asumsi.md#a-50)))* · `origin` enum *(manual|backorder (transfer_origin))* · `status` enum *(KS 2.7)* · ↗`approval_snapshot_id` bigint · ↗`submitted_by` bigint *(pengaju ([BR-APR-03](05-aturan-bisnis.md#br-apr), A-115))* · ↗`approved_by` bigint · `approved_at` datetime · ↗`reject_reason_id` bigint · `completed_at` datetime *(GRN tujuan selesai (A-107))*
+  ↳ kolom header dokumen standar (lihat konvensi); fisik lewat PCK/SJ/GRN (source_type = transfer); source = material_request bila backorder (A-106)
 
-**`transfer_lines` — TRF baris.** 🔑`id` bigint · ↗`transfer_id` bigint · ↗`material_request_line_id` bigint *(bila dari backorder)* · `qty_base` decimal(18,4) · `qty_shipped` decimal(18,4) · `qty_received` decimal(18,4)
-  ↳ kolom baris standar (lihat konvensi)
+**`transfer_lines` — TRF baris.** 🔑`id` bigint · ↗`transfer_id` bigint · ↗`item_id` bigint · ↗`material_request_line_id` bigint *(bila dari backorder)* · `qty_base` decimal(18,4) · `qty_shipped` decimal(18,4) *(diisi SJ berangkat (A-107))* · `qty_received` decimal(18,4) *(diisi GRN transfer diterima)* · `notes` varchar(255) *(opsional)*
+  ↳ kolom baris standar (lihat konvensi); lot/serial/potongan dipilih saat picking
 
-**`goods_returns` — RET header.** 🔑`id` bigint · ↗`project_id` bigint · ↗`origin_shipment_id` bigint *(SJ asal, nullable)* · ↗`requester_id` bigint · ↗`to_warehouse_id` bigint · `self_delivered` bool *(tanpa SJ balik)* · ↗`return_shipment_id` bigint *(SJ balik)* · ↗`approval_snapshot_id` bigint · `sorted_at` datetime
+**`goods_returns` — RET header.** 🔑`id` bigint · ◆`number` varchar(40) *(RET/<gudang tujuan>/<yymm>/<urut> (A-110))* · ↗`project_id` bigint · ↗`origin_shipment_id` bigint *(SJ asal, nullable)* · ↗`requester_id` bigint *(pengaju ([BR-APR-03](05-aturan-bisnis.md#br-apr)))* · ↗`from_warehouse_id` bigint *(Gudang Site asal stok (A-115))* · ↗`to_warehouse_id` bigint · `self_delivered` bool *(tanpa SJ balik (A-111))* · ↗`return_shipment_id` bigint *(SJ balik)* · `status` enum *(KS 2.8)* · ↗`approval_snapshot_id` bigint · ↗`approved_by` bigint · `approved_at` datetime · ↗`reject_reason_id` bigint · `received_at` datetime *(GRN retur diterima)* · `sorted_at` datetime · ↗`sorted_by` bigint *(A-115)*
   ↳ kolom header dokumen standar (lihat konvensi); nama tabel goods_returns (return = kata kunci PHP)
 
-**`goods_return_lines` — RET baris.** 🔑`id` bigint · ↗`goods_return_id` bigint · ↗`origin_shipment_line_id` bigint · `ownership` enum *(sold|company ([BR-RET-03](05-aturan-bisnis.md#br-ret)))* · `qty_base` decimal(18,4) · `sorting` enum *(good|damaged|offcut|waste)* · `sorted_qty` decimal(18,4) · ↗`new_piece_id` bigint *(offcut hasil pilah)* · ↗`target_bin_id` bigint · ↗`reason_code_id` bigint
+**`goods_return_lines` — RET baris.** 🔑`id` bigint · ↗`goods_return_id` bigint · ↗`item_id` bigint · ↗`lot_id` bigint · ↗`serial_id` bigint · ↗`piece_id` bigint · ↗`from_bin_id` bigint *(bin Gudang Site / On-site asal (A-110))* · ↗`origin_shipment_line_id` bigint · ↗`origin_discrepancy_line_id` bigint *(barang rusak ditinggal ekspedisi ([BR-RET-05](05-aturan-bisnis.md#br-ret), A-110))* · `ownership` enum *(sold|company (return_ownership, [BR-RET-03](05-aturan-bisnis.md#br-ret)))* · `stock_status` enum *(kondisi saat masuk bin Retur (A-112))* · `qty_base` decimal(18,4) *(jumlah diajukan)* · `qty_received` decimal(18,4) *(diterima GRN retur (A-115))* · ↗`split_from_line_id` bigint *(baris hasil pilah tambahan (A-113))* · `sorting` enum *(good|damaged|offcut|waste)* · `sorted_qty` decimal(18,4) · ↗`new_piece_id` bigint *(offcut hasil pilah)* · ↗`target_bin_id` bigint · ↗`reason_code_id` bigint *(rusak/waste ([BR-GEN-11](05-aturan-bisnis.md#br-gen)))* · `notes` varchar(255) *(opsional)*
   ↳ kolom baris standar (lihat konvensi)
 
 **`material_issues` — ISU header.** 🔑`id` bigint · ↗`project_id` bigint · ↗`warehouse_id` bigint *(Gudang Site proyek)* · ↗`issued_by` bigint · `confirmed_at` datetime · ↗`approval_snapshot_id` bigint *(hanya ISU pembalik)*

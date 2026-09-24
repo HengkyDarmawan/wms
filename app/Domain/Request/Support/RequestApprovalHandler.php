@@ -16,6 +16,7 @@ use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Request\Models\MaterialRequestLine;
 use App\Domain\Stock\Actions\ManageReservation;
 use App\Domain\Stock\Exceptions\LedgerException;
+use App\Domain\Transfer\Support\BackorderTransfers;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Database\Eloquent\Model;
 
@@ -122,6 +123,10 @@ class RequestApprovalHandler implements ApprovalHandler
         ])->save();
 
         $this->buatReservasi($document, $actor);
+
+        // BR-REQ-05: baris bersumber transfer melahirkan TRF backorder dari
+        // gudang lain ke gudang sumber baris (A-106); gagal = approval tertahan.
+        app(BackorderTransfers::class)->createFor($document, $actor);
 
         activity('request')->performedOn($document)->causedBy($actor)->log('REQ disetujui');
     }

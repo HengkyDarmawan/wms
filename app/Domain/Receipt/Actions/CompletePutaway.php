@@ -12,6 +12,7 @@ use App\Domain\Receipt\Models\PutawayTaskLine;
 use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Stock\Support\MovementRequest;
 use App\Domain\Stock\Support\StockLedger;
+use App\Domain\Transfer\Support\BackorderTransfers;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Bin;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,10 @@ class CompletePutaway
     /** @var array<int, string> */
     private array $peringatan = [];
 
-    public function __construct(private readonly StockLedger $ledger) {}
+    public function __construct(
+        private readonly StockLedger $ledger,
+        private readonly BackorderTransfers $backorder,
+    ) {}
 
     /**
      * @param  array<int|string, array{bin_id?: int|string|null, override_reason?: ?string}>  $isian  line_id => isian
@@ -107,6 +111,10 @@ class CompletePutaway
                 'completed_at' => now(),
                 'assigned_to' => $task->assigned_to ?? $actor?->id,
             ])->save();
+
+            // BR-REQ-08 (A-108): barang TRF backorder yang sudah di bin penyimpanan
+            // direservasi ke baris REQ penunggunya.
+            $this->backorder->reserveArrivals($task->refresh(), $actor);
 
             activity('receipt')
                 ->performedOn($task)

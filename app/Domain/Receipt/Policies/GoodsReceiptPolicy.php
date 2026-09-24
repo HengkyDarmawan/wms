@@ -6,6 +6,7 @@ namespace App\Domain\Receipt\Policies;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
+use App\Domain\Receipt\Enums\ReceiptType;
 use App\Domain\Receipt\Models\GoodsReceipt;
 
 /**
@@ -48,9 +49,11 @@ class GoodsReceiptPolicy
             && in_array($receipt->status, [GoodsReceiptStatus::Received, GoodsReceiptStatus::Completed], true);
     }
 
+    /** GRN retur selesai bersama pemilahan RET-nya, bukan lewat tombol ini (A-112). */
     public function complete(User $actor, GoodsReceipt $receipt): bool
     {
         return $actor->hasPermission('receipt.complete')
+            && $receipt->receipt_type !== ReceiptType::Return
             && in_array($receipt->status, [GoodsReceiptStatus::Received, GoodsReceiptStatus::Completed], true);
     }
 

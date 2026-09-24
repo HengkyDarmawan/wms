@@ -15,6 +15,7 @@ use App\Domain\Stock\Enums\StockEventType;
 use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Stock\Support\MovementRequest;
 use App\Domain\Stock\Support\StockLedger;
+use App\Domain\Transfer\Support\TransferProgress;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -34,6 +35,7 @@ class ShipShipment
         private readonly StockLedger $ledger,
         private readonly WarehouseBins $bins,
         private readonly RequestFulfillment $pemenuhan,
+        private readonly TransferProgress $transfer,
     ) {}
 
     public function handle(Shipment $shipment, ?string $notes = null, ?User $actor = null): Shipment
@@ -59,6 +61,8 @@ class ShipShipment
                 $this->berangkatkanBaris($shipment, $l, (int) $loading->id, (int) $transit->id, $actor);
                 // Jejak di baris REQ: dasar penjaga pembatalan (Katalog §2.1).
                 $this->pemenuhan->shipped($l);
+                // Jejak di baris TRF (A-107).
+                $this->transfer->shipped($l);
             }
 
             $shipment->forceFill([

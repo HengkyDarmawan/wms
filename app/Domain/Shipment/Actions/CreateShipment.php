@@ -6,6 +6,8 @@ namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Request\Models\MaterialRequestLine;
+use App\Domain\Return\Models\GoodsReturn;
+use App\Domain\Return\Support\ReturnProgress;
 use App\Domain\Shipment\Enums\DestinationType;
 use App\Domain\Shipment\Enums\OwnershipEffect;
 use App\Domain\Shipment\Enums\PickTaskStatus;
@@ -17,6 +19,7 @@ use App\Domain\Shipment\Models\PickTaskLine;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Shipment\Models\ShipmentLine;
 use App\Domain\Stock\Support\DocumentNumber;
+use App\Domain\Transfer\Models\Transfer;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -45,6 +48,7 @@ class CreateShipment
 
         $this->pastikanLengkap($tujuan->requiredFields(), $data, 'BR-SJ-04');
         $this->pastikanLengkap($cara->requiredFields(), $data, 'BR-SJ-07');
+        $this->pastikanTujuanDokumen($tugas, $tujuan, $data);
 
         return DB::transaction(function () use ($tugas, $gudang, $tujuan, $cara, $data, $actor) {
             $sj = Shipment::create([
@@ -97,6 +101,11 @@ class CreateShipment
                 ->causedBy($actor)
                 ->withProperties(['pck' => $tugas->pluck('number')->all(), 'baris' => $dimuat])
                 ->log('Surat jalan disusun');
+
+            // Katalog §2.8: SJ balik disusun → RET `in_progress` (A-111).
+            foreach ($tugas->where('source_type', 'goods_return') as $pck) {
+                app(ReturnProgress::class)->returnShipmentPrepared((int) $pck->source_id, $sj, $actor);
+            }
 
             return $sj->refresh();
         });
@@ -164,6 +173,50 @@ class CreateShipment
         return $tujuan->staysInTransitUntilReceipt()
             ? OwnershipEffect::Transfer
             : OwnershipEffect::Sold;
+    }
+
+    /**
+     * TRF dan RET menentukan sendiri ke mana barangnya pergi (A-107, A-111):
+     * SJ-nya wajib bertujuan gudang tujuan dokumen itu. PCK retur tidak digabung
+     * dengan PCK lain karena satu SJ balik diterima satu GRN retur.
+     *
+     * @param  \Illuminate\Support\Collection<int, PickTask>  $tugas
+     * @param  array<string, mixed>  $data
+     */
+    private function pastikanTujuanDokumen(\Illuminate\Support\Collection $tugas, DestinationType $tujuan, array $data): void
+    {
+        $retur = $tugas->where('source_type', 'goods_return');
+
+        if ($retur->isNotEmpty() && ($retur->count() !== $tugas->count() || $retur->pluck('source_id')->unique()->count() > 1)) {
+            throw ShipmentRuleException::rule(
+                'BR-SJ-09',
+                'Tugas picking retur tidak bisa digabung dengan tugas lain: satu SJ balik untuk satu RET.',
+            );
+        }
+
+        foreach ($tugas as $pck) {
+            $dokumen = match ($pck->source_type) {
+                'transfer' => Transfer::withoutGlobalScopes()->find($pck->source_id),
+                'goods_return' => GoodsReturn::withoutGlobalScopes()->find($pck->source_id),
+                default => null,
+            };
+
+            if ($dokumen === null) {
+                continue;
+            }
+
+            $gudangTujuan = (int) $dokumen->to_warehouse_id;
+
+            if (! $tujuan->staysInTransitUntilReceipt() || (int) ($data['destination_warehouse_id'] ?? 0) !== $gudangTujuan) {
+                $kode = \App\Domain\Warehouse\Models\Warehouse::withoutGlobalScopes()->whereKey($gudangTujuan)->value('code');
+
+                throw ShipmentRuleException::field(
+                    'BR-SJ-09',
+                    'destination_warehouse_id',
+                    'Tugas '.$pck->number.' milik '.$dokumen->number.' harus dikirim ke gudang '.$kode.'.',
+                );
+            }
+        }
     }
 
     /** @param  array<string, mixed>  $data */

@@ -1,12 +1,12 @@
 # Spesifikasi Modul — `approval` (Mesin Approval)
 
-**Versi:** 0.3
+**Versi:** 0.4
 **Tanggal:** 24 September 2026
-**Status:** selesai Fase 1 — modul kedelapan setelah [Receipt/Putaway](19-receipt-putaway.md); REQ dan RTV sudah diputus lewat mesin ini; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-86](04-keputusan-dan-asumsi.md#a-86)–[A-94](04-keputusan-dan-asumsi.md#a-94) (*Perlu validasi*); v0.3: ADJ dan OPN tersambung ([21-opname-penyesuaian](21-opname-penyesuaian.md), [A-96](04-keputusan-dan-asumsi.md#a-96), [A-105](04-keputusan-dan-asumsi.md#a-105))
+**Status:** selesai Fase 1 — modul kedelapan setelah [Receipt/Putaway](19-receipt-putaway.md); REQ dan RTV sudah diputus lewat mesin ini; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-86](04-keputusan-dan-asumsi.md#a-86)–[A-94](04-keputusan-dan-asumsi.md#a-94) (*Perlu validasi*); v0.3: ADJ dan OPN tersambung ([21-opname-penyesuaian](21-opname-penyesuaian.md), [A-96](04-keputusan-dan-asumsi.md#a-96), [A-105](04-keputusan-dan-asumsi.md#a-105)); v0.4: TRF dan RET tersambung ([22-retur-transfer](22-retur-transfer.md))
 **Modul:** `approval`
 **Fase:** F1 (web, delegasi, eskalasi, simulasi); approval via WhatsApp `[F2]` (Fase 2a) sebagai stub
 **Dokumen terkait:** [Blueprint §8](01-blueprint.md#8-approval-engine) · [Aturan Bisnis §BR-APR](05-aturan-bisnis.md#br-apr) · [Katalog Status §3](06-katalog-status-dan-enum.md#3-enum-lain) · [Glosarium §9](03-glosarium.md#9-approval--notifikasi) · [Model data 08c](08c-model-data-pendukung.md#area-approval-engine-tenant) · [Alur 9](07b-proses-bisnis-pendukung.md#alur-9--approval-generik-semua-jenis-dokumen) · [D-17](04-keputusan-dan-asumsi.md#d-17), [D-18](04-keputusan-dan-asumsi.md#d-18), [D-28](04-keputusan-dan-asumsi.md#d-28)
-**Ketergantungan modul:** `access` (user, role × cakupan, atasan langsung, jabatan), `master` (Alasan, kategori item, proyek), `warehouse`. Modul dokumen memasang diri lewat kontrak §3.9: `request`, `receipt` (RTV), `adjustment`, dan `count` sudah; `purchase_request`, `conversion`, `transfer`, `return`, `waste`, `issue`, dan modul Purchasing (PO, D-28) menyusul.
+**Ketergantungan modul:** `access` (user, role × cakupan, atasan langsung, jabatan), `master` (Alasan, kategori item, proyek), `warehouse`. Modul dokumen memasang diri lewat kontrak §3.9: `request`, `receipt` (RTV), `adjustment`, `count`, `transfer`, dan `return` sudah; `purchase_request`, `conversion`, `waste`, `issue`, dan modul Purchasing (PO, D-28) menyusul.
 
 ---
 
@@ -25,8 +25,8 @@ Permission modul disimpan dengan `module = approval`. **Keputusan** tidak memaka
 | Role bawaan | Permission |
 |---|---|
 | Admin Company | semua (5) + semua permission approve dokumen |
-| Manajemen | `approval_rule.view`, `approval.simulate`, `approval.delegate`; `request.approve`, `vendor_return.approve`, `adjustment.approve`, `count.approve` |
-| Kepala Gudang | `approval_rule.view`, `approval.delegate`; `request.approve`, `vendor_return.approve`, `adjustment.approve`, `count.approve` |
+| Manajemen | `approval_rule.view`, `approval.simulate`, `approval.delegate`; `request.approve`, `vendor_return.approve`, `adjustment.approve`, `count.approve`, `transfer.approve`, `return.approve` |
+| Kepala Gudang | `approval_rule.view`, `approval.delegate`; `request.approve`, `vendor_return.approve`, `adjustment.approve`, `count.approve`, `transfer.approve`, `return.approve` |
 | Auditor Internal | `approval_rule.view`; `count.approve` (BR-OPN-09, sejak v0.3) |
 | Staf, Driver, Pemohon Internal, Penindak Lanjut PR, Klien, Auditor Eksternal | — |
 
@@ -96,7 +96,7 @@ Modul dokumen mendaftarkan satu penangan di `ApprovalRegistry` dari service prov
 | `fallbackSteps()` | lapis minimum tanpa aturan — kosong = disetujui otomatis; titik sambung ADJ manual ([A-09](04-keputusan-dan-asumsi.md#a-09)) |
 | `onApproved()`, `onRejected()` | akibat keputusan akhir di modul dokumen |
 
-Terpasang: `material_request` → `Request\Support\RequestApprovalHandler`, `vendor_return` → `Receipt\Support\VendorReturnApprovalHandler`, `stock_adjustment` → `Adjustment\Support\StockAdjustmentApprovalHandler` (lapis minimum Kepala Gudang, A-09), `stock_count` → `Count\Support\StockCountApprovalHandler` (lapis minimum + SoD penghitung, [A-96](04-keputusan-dan-asumsi.md#a-96)).
+Terpasang: `material_request` → `Request\Support\RequestApprovalHandler`, `vendor_return` → `Receipt\Support\VendorReturnApprovalHandler`, `stock_adjustment` → `Adjustment\Support\StockAdjustmentApprovalHandler` (lapis minimum Kepala Gudang, A-09), `stock_count` → `Count\Support\StockCountApprovalHandler` (lapis minimum + SoD penghitung, [A-96](04-keputusan-dan-asumsi.md#a-96)), `transfer` → `Transfer\Support\TransferApprovalHandler` (gudang dokumen = gudang asal; reservasi & PCK saat disetujui, [A-107](04-keputusan-dan-asumsi.md#a-107)), `goods_return` → `Return\Support\GoodsReturnApprovalHandler` (gudang tujuan, kondisi *dari klien*; [A-111](04-keputusan-dan-asumsi.md#a-111)). TRF dan RET tanpa lapis minimum: tanpa aturan disetujui otomatis (A-08); data demo tidak memasang aturan TRF/RET.
 
 ## 4. Mesin status
 
@@ -153,7 +153,7 @@ Semua keputusan lewat POST (aksi Livewire); route hanya GET halaman. Keputusan m
 | `/approval-delegations` | `approval.delegations` | Delegasi yang diberikan/diterima (Admin: semua, dan boleh atas nama orang lain); buat (delegat `*`, mulai `*`, sampai `*`, jenis dokumen, keterangan), akhiri |
 | `/approval-simulation` | `approval.simulation` | Pilih jenis; dari nomor dokumen atau isian manual (gudang, proyek, kategori, kepemilikan, jumlah, pemohon, jenis vendor, klien); hasil: evaluasi tiap aturan, aturan dipakai, approver per lapis dengan catatan SoD/eskalasi |
 
-Panel **Riwayat approval** (`approval.partials.history`) tampil di detail REQ dan RTV: setiap pengajuan, lapis, tugas, dan keputusan. Menu sidebar **Approval** (angka tugas terbuka pada *Tugas approval saya*) dan entri palet Ctrl+K, disaring permission.
+Panel **Riwayat approval** (`approval.partials.history`) tampil di detail REQ, RTV, ADJ, OPN, TRF, dan RET (bukan di portal klien): setiap pengajuan, lapis, tugas, dan keputusan. Menu sidebar **Approval** (angka tugas terbuka pada *Tugas approval saya*) dan entri palet Ctrl+K, disaring permission.
 
 ## 7. Kejadian stok & integrasi
 
@@ -248,7 +248,7 @@ Domain `app/Domain/Approval`: `Contracts\ApprovalHandler`; `Support\ApprovalEngi
 
 ### 13.4 Sisa pekerjaan
 
-1. Penangan PRQ, CNV, TRF, RET, WST, ISU pembalik — bersama modulnya. ADJ dan OPN sudah terpasang (v0.3, [21-opname-penyesuaian](21-opname-penyesuaian.md)).
+1. Penangan PRQ, CNV, WST, ISU pembalik — bersama modulnya. ADJ dan OPN sudah terpasang (v0.3, [21-opname-penyesuaian](21-opname-penyesuaian.md)); TRF dan RET (v0.4, [22-retur-transfer](22-retur-transfer.md)).
 2. Notifikasi in-app/email saat tugas dibuat/dialihkan dan saat dokumen diputus (modul notifikasi); WhatsApp Fase 2a.
 3. Laporan §9.
 4. Tautan dokumen di kotak tugas mengikuti cakupan pembaca: approver di luar cakupan dokumen (mis. "user tertentu") memutus dari kotak tugas tanpa membuka halaman dokumen.

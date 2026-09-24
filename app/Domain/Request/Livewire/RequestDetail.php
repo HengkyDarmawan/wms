@@ -90,6 +90,11 @@ class RequestDetail extends Component
             'alasan' => $this->pilihanAlasan($this->dialog === 'tolak' ? ReasonContext::Reject : ReasonContext::Cancel),
             'riwayat' => $this->riwayat($request),
             'riwayatApproval' => app(ApprovalHistory::class)->for(ApprovalDocumentType::MaterialRequest, (int) $request->id),
+            // BR-REQ-05: TRF backorder untuk baris bersumber transfer (A-106).
+            'transferBackorder' => \App\Domain\Transfer\Models\Transfer::withoutGlobalScopes()
+                ->with('fromWarehouse:id,code', 'toWarehouse:id,code')
+                ->where('source_type', 'material_request')->where('source_id', $request->id)
+                ->orderBy('id')->get(),
             'supplements' => $request->supplements()->orderBy('id')->get(['id', 'number', 'status']),
         ]);
     }

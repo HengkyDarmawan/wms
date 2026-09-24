@@ -16,6 +16,9 @@ use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Receipt\Models\GoodsReceiptLine;
 use App\Domain\Receipt\Models\VendorReturn;
 use App\Domain\Receipt\Support\TrackingRecords;
+use App\Domain\Return\Enums\GoodsReturnStatus;
+use App\Domain\Return\Models\GoodsReturn;
+use App\Domain\Return\Models\GoodsReturnLine;
 use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Shipment\Models\ShipmentLine;
@@ -36,8 +39,10 @@ use Illuminate\Support\Facades\DB;
  *   **baik** yang diterima (BR-GRN-05), karena yang rusak dan kurang masih
  *   menunggu DSC (BR-SJ-10).
  *
- * Sumber `return` adalah titik sambung modul Retur dan ditolak sampai modul itu
- * ada (BR-GEN-10).
+ * - **return** — RET `in_progress` yang gudang tujuannya gudang ini (A-112).
+ *   Barisnya diturunkan dari baris RET; jumlahnya tidak boleh melebihi yang
+ *   dikirim — jumlah **baik** bukti terima SJ balik, atau jumlah RET bila
+ *   diantar sendiri (BR-GRN-05). Satu GRN aktif per RET.
  */
 class SaveGoodsReceipt
 {
@@ -62,18 +67,13 @@ class SaveGoodsReceipt
             throw ReceiptRuleException::field('BR-GRN-01', 'receipt_type', 'Sumber penerimaan wajib dipilih.');
         }
 
-        if ($jenis === ReceiptType::Return) {
-            throw ReceiptRuleException::rule(
-                'BR-GEN-10',
-                'Penerimaan retur dari proyek menunggu modul Retur; belum bisa dibuat.',
-            );
-        }
-
         $gudang = $this->gudang($receipt, $header);
 
-        [$kolom, $baris] = $jenis === ReceiptType::Vendor
-            ? $this->dariVendor($header, $lines)
-            : $this->dariTransfer($receipt, $gudang, $header, $lines);
+        [$kolom, $baris] = match ($jenis) {
+            ReceiptType::Vendor => $this->dariVendor($header, $lines),
+            ReceiptType::Transfer => $this->dariTransfer($receipt, $gudang, $header, $lines),
+            ReceiptType::Return => $this->dariRetur($receipt, $gudang, $header, $lines),
+        };
 
         return DB::transaction(function () use ($receipt, $jenis, $gudang, $kolom, $baris, $header, $actor) {
             $baru = $receipt === null;
@@ -232,6 +232,15 @@ class SaveGoodsReceipt
 
         $this->pastikanSjBisaDiterima($sj, $gudang, $receipt);
 
+        // SJ balik RET diterima lewat GRN retur ke bin Retur, bukan transfer (A-112).
+        if ($sj->lines->contains(fn (ShipmentLine $l) => $l->pickTaskLine?->pickTask?->source_type === 'goods_return')) {
+            throw ReceiptRuleException::field(
+                'BR-RET-01',
+                'shipment_id',
+                'Surat jalan '.$sj->number.' adalah SJ balik retur; terima lewat GRN retur dari RET-nya.',
+            );
+        }
+
         $isian = [];
 
         foreach ($lines as $l) {
@@ -283,6 +292,106 @@ class SaveGoodsReceipt
         }
 
         return [['shipment_id' => $sj->id], $baris];
+    }
+
+    /**
+     * GRN retur (Katalog §2.5 sumber RET, A-112).
+     *
+     * @param  array<string, mixed>  $header
+     * @param  array<int, array<string, mixed>>  $lines  goods_return_line_id, qty_received
+     * @return array{0: array<string, mixed>, 1: array<int, array<string, mixed>>}
+     */
+    private function dariRetur(?GoodsReceipt $receipt, Warehouse $gudang, array $header, array $lines): array
+    {
+        $retId = (int) ($receipt?->goods_return_id ?? ($header['goods_return_id'] ?? 0));
+        $ret = GoodsReturn::query()->withoutGlobalScopes()->find($retId);
+
+        if ($ret === null) {
+            throw ReceiptRuleException::field('BR-RET-01', 'goods_return_id', 'Retur (RET) wajib dipilih.');
+        }
+
+        if ($ret->status !== GoodsReturnStatus::InProgress) {
+            throw ReceiptRuleException::field('BR-RET-01', 'goods_return_id', 'RET '.$ret->number.' berstatus '.$ret->status->label().'; GRN retur hanya untuk RET yang sedang diproses.');
+        }
+
+        if ((int) $ret->to_warehouse_id !== (int) $gudang->id) {
+            throw ReceiptRuleException::field('BR-RET-01', 'goods_return_id', 'RET '.$ret->number.' tidak ditujukan ke gudang '.$gudang->code.'.');
+        }
+
+        $lain = GoodsReceipt::query()->withoutGlobalScopes()
+            ->where('goods_return_id', $ret->id)
+            ->where('status', '!=', GoodsReceiptStatus::Cancelled->value)
+            ->when($receipt !== null, fn ($q) => $q->where('id', '!=', $receipt->id))
+            ->value('number');
+
+        if ($lain !== null) {
+            throw ReceiptRuleException::field('BR-GRN-05', 'goods_return_id', 'RET '.$ret->number.' sudah diterima lewat '.$lain.'.');
+        }
+
+        $sj = null;
+
+        if ($ret->return_shipment_id !== null) {
+            $sj = Shipment::query()->withoutGlobalScopes()->with('lines.pickTaskLine.pickTask')->find($ret->return_shipment_id);
+
+            // A-82 untuk SJ balik: bukti terima dulu, baru GRN.
+            if ($sj === null || ! in_array($sj->status, [ShipmentStatus::Delivered, ShipmentStatus::PartiallyDelivered], true)) {
+                throw ReceiptRuleException::field('BR-SJ-04', 'goods_return_id', 'SJ balik RET '.$ret->number.' belum punya bukti terima; isi bukti terima lebih dulu.');
+            }
+        }
+
+        $isian = [];
+
+        foreach ($lines as $l) {
+            $isian[(int) ($l['goods_return_line_id'] ?? 0)] = $l;
+        }
+
+        $baris = [];
+
+        foreach ($ret->requestedLines()->with('item')->orderBy('id')->get() as $rl) {
+            /** @var GoodsReturnLine $rl */
+            $sjLine = $sj?->lines->first(fn (ShipmentLine $x) => $x->pickTaskLine?->pickTask?->source_type === 'goods_return'
+                && (int) $x->pickTaskLine->source_line_id === (int) $rl->id);
+            $maks = $sj !== null ? (float) ($sjLine?->qty_delivered ?? 0) : (float) $rl->qty_base;
+
+            if ($maks <= 0) {
+                continue;
+            }
+
+            $qty = $isian === [] ? $maks : round((float) ($isian[$rl->id]['qty_received'] ?? 0), 4);
+
+            if ($qty <= 0) {
+                continue;
+            }
+
+            // BR-GRN-05: tidak boleh menerima lebih dari yang dikirim.
+            if ($qty - $maks > 0.00005) {
+                throw ReceiptRuleException::field(
+                    'BR-GRN-05',
+                    'qty_received',
+                    'Baris '.$rl->item->code.': diterima '.$qty.' melebihi yang dikirim ('.$maks.'). Kelebihan dicatat lewat penyesuaian stok, bukan GRN.',
+                );
+            }
+
+            if (($rl->serial_id !== null || $rl->piece_id !== null) && abs($qty - $maks) > 0.00005) {
+                throw ReceiptRuleException::field('BR-LED-03', 'qty_received', 'Baris '.$rl->item->code.': serial dan potongan diterima utuh.');
+            }
+
+            $baris[] = [
+                'item_id' => $rl->item_id,
+                'goods_return_line_id' => $rl->id,
+                'shipment_line_id' => $sjLine?->id,
+                'lot_id' => $rl->lot_id,
+                'serial_id' => $rl->serial_id,
+                'piece_id' => $rl->piece_id,
+                'qty_received' => $qty,
+            ];
+        }
+
+        if ($baris === []) {
+            throw ReceiptRuleException::rule('BR-GRN-05', 'Tidak ada baris retur yang bisa diterima.');
+        }
+
+        return [['goods_return_id' => $ret->id, 'shipment_id' => $sj?->id], $baris];
     }
 
     /** Katalog §2.5: sumber SJ masuk — tujuannya gudang ini dan bukti terimanya sudah ada. */

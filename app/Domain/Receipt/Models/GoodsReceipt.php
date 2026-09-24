@@ -10,6 +10,7 @@ use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Vendor;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Enums\ReceiptType;
+use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,8 +24,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
 /**
  * GRN — penerimaan barang (19-receipt-putaway §3.1).
  *
- * Satu-satunya dokumen masuk (A-33): dari vendor, dari SJ transfer, dan kelak
- * dari RET. Ledger diposting saat `received` (BR-GRN-01).
+ * Satu-satunya dokumen masuk (A-33): dari vendor, dari SJ transfer, dan dari
+ * RET (GRN retur ke bin Retur, A-112). Ledger diposting saat `received` (BR-GRN-01).
  *
  * @property GoodsReceiptStatus $status
  * @property ReceiptType $receipt_type
@@ -75,6 +76,12 @@ class GoodsReceipt extends Model
         return $this->belongsTo(Shipment::class)->withoutGlobalScopes();
     }
 
+    /** RET yang diterima GRN retur (22-retur-transfer, A-112). */
+    public function goodsReturn(): BelongsTo
+    {
+        return $this->belongsTo(GoodsReturn::class, 'goods_return_id')->withoutGlobalScopes();
+    }
+
     public function receiver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by');
@@ -120,7 +127,7 @@ class GoodsReceipt extends Model
         return match ($this->receipt_type) {
             ReceiptType::Vendor => $this->vendor?->name ?? '—',
             ReceiptType::Transfer => $this->shipment?->number ?? '—',
-            ReceiptType::Return => '—',
+            ReceiptType::Return => $this->goodsReturn?->number ?? '—',
         };
     }
 
@@ -128,7 +135,7 @@ class GoodsReceipt extends Model
     {
         return LogOptions::defaults()
             ->useLogName('receipt')
-            ->logOnly(['number', 'status', 'receipt_type', 'vendor_id', 'shipment_id', 'received_at', 'completed_at'])
+            ->logOnly(['number', 'status', 'receipt_type', 'vendor_id', 'shipment_id', 'goods_return_id', 'received_at', 'completed_at'])
             ->logOnlyDirty();
     }
 }

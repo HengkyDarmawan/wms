@@ -9,6 +9,9 @@ use App\Domain\Approval\Exceptions\ApprovalRuleException;
 use App\Domain\Count\Exceptions\CountRuleException;
 use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Receipt\Exceptions\ReceiptRuleException;
+use App\Domain\Return\Exceptions\ReturnRuleException;
+use App\Domain\Shipment\Exceptions\ShipmentRuleException;
+use App\Domain\Transfer\Exceptions\TransferRuleException;
 use App\Domain\Stock\Exceptions\LedgerException;
 
 /**
@@ -31,7 +34,7 @@ trait HandlesApprovalRules
             $aksi();
 
             return true;
-        } catch (ApprovalRuleException|RequestRuleException|ReceiptRuleException|CountRuleException|AdjustmentRuleException $e) {
+        } catch (ApprovalRuleException|RequestRuleException|ReceiptRuleException|CountRuleException|AdjustmentRuleException|TransferRuleException|ReturnRuleException|ShipmentRuleException $e) {
             $this->ruleCode = $e->rule;
             $this->ruleError = $e->getMessage();
 

@@ -1,12 +1,12 @@
 # Spesifikasi Modul — `request` (Permintaan Material)
 
-**Versi:** 0.5
+**Versi:** 0.6
 **Tanggal:** 24 September 2026
-**Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md))
+**Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md)); v0.6: baris bersumber transfer melahirkan TRF backorder ([22-retur-transfer](22-retur-transfer.md))
 **Modul:** `request`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status §2.1](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
-**Ketergantungan modul:** `master` (item, proyek, klien, alasan), `warehouse` (gudang sumber), `stock` (reservasi lunak, stok tersedia). `approval` (sejak v0.5, [20-approval](20-approval.md)); modul `purchase_request` dan `transfer` belum ada, titik sambungnya stub sesuai [BR-GEN-10](05-aturan-bisnis.md#br-gen).
+**Ketergantungan modul:** `master` (item, proyek, klien, alasan), `warehouse` (gudang sumber), `stock` (reservasi lunak, stok tersedia). `approval` (sejak v0.5, [20-approval](20-approval.md)), `transfer` (sejak v0.6, [22-retur-transfer](22-retur-transfer.md)); modul `purchase_request` belum ada, titik sambungnya stub sesuai [BR-GEN-10](05-aturan-bisnis.md#br-gen).
 
 ---
 
@@ -218,6 +218,8 @@ Picking dan pengiriman (modul `picking`); pembuatan PRQ dan TRF dari backorder (
 
 **Approval lewat mesin approval (v0.5, [20-approval](20-approval.md)).** `SubmitRequest` (REQ internal lengkap) dan `ReviewRequest::submitToApproval` kini memanggil `ApprovalEngine::submit()`: aturan yang cocok di-snapshot ke `approval_snapshot_id` dan tugas lapis pertama dikirim; tanpa aturan REQ langsung `approved` beserta reservasinya ([A-08](04-keputusan-dan-asumsi.md#a-08)). `ApproveRequest` tidak lagi menyetujui langsung: ia mencatat keputusan pemegang tugas pada lapis berjalan lewat `DecideApproval`; status `approved` dan reservasi lunak baru terjadi setelah lapis terakhir (`RequestApprovalHandler::onApproved`). `CancelRequest` dan `AddRequestLines` (BR-REQ-12) menghentikan snapshot yang menunggu. Tombol Setujui/Tolak di detail REQ hanya untuk pemegang tugas terbuka; panel *Riwayat approval* menampilkan lapis, tugas, dan keputusan. Uji yang dulu menyetujui langsung kini memasang aturan satu lapis (TC-REQ-05, -11–16, -17, -26d, -26e); uji modul lain mengandalkan persetujuan otomatis tanpa aturan — ID TC tidak berubah.
 
+**TRF backorder (v0.6, [22-retur-transfer](22-retur-transfer.md)).** Baris bersumber `transfer` memakai gudang sumbernya sebagai **gudang pemenuh**. Saat REQ disetujui, `RequestApprovalHandler::onApproved` memanggil `Transfer\Support\BackorderTransfers::createFor()`: satu TRF `backorder` per pasangan gudang asal–tujuan, gudang asal dipilih sistem (induk dulu, lalu stok tersedia terbanyak); tanpa gudang asal yang cukup approval REQ tertahan BR-REQ-05 ([A-106](04-keputusan-dan-asumsi.md#a-106)). Setelah barang TRF di-put-away di gudang pemenuh, jumlahnya direservasi lunak ke baris REQ (`qty_reserved`) dan baris itu dipetik serta dikirim ke proyek seperti baris bersumber stok ([BR-REQ-08](05-aturan-bisnis.md#br-req), [A-108](04-keputusan-dan-asumsi.md#a-108)). `CancelRequest`, `CloseRequestShort`, dan `CancelRequestLine::confirm` membatalkan TRF backorder yang belum punya PCK ([BR-REQ-15](05-aturan-bisnis.md#br-req)). Detail REQ menampilkan TRF backorder-nya. Uji: TC-TRF-10–13.
+
 **Perbaikan 24 Sep 2026 — jejak pemenuhan.** `App\Domain\Request\Support\RequestFulfillment` kini satu-satunya penulis `qty_shipped` dan `qty_received` pada baris REQ. `ShipShipment` memanggil `shipped()`, `ConfirmDelivery` memanggil `received()` (jumlah baik saja), dan `ResolveDiscrepancy` memanggil `refresh()` saat klien memutus *tidak perlu*. Status REQ diturunkan otomatis `in_progress` → `partially_fulfilled` → `completed` ([A-77](04-keputusan-dan-asumsi.md#a-77)). Sebelumnya kolom itu tak pernah terisi di alur nyata, sehingga REQ yang barangnya sudah di site masih bisa dibatalkan; ditemukan lewat E2E ([laporan progres §5.1](../00-laporan-progres-2026-09-24.md#51-pengiriman-tidak-mencatat-balik-ke-baris-req-berat)). Layar REQ dan portal menampilkan kolom *Terkirim / Diterima*. Uji TC-REQ-27–29 menjalankan rantai REQ → PCK → SJ → bukti terima tanpa mengisi kolom REQ secara manual.
 
 Sepuluh aksi domain di `app/Domain/Request/Actions`: `SaveRequest`, `SubmitRequest`, `ReviewRequest`, `ApproveRequest`, `SplitRequestLine`, `AddRequestLines`, `RespondSubstitution`, `CancelRequest`, `CancelRequestLine`, `CloseRequestShort`. (Catatan perubahan v0.15 menyebut sebelas; yang benar sepuluh.) Tenggat keberatan penggantian dibaca dari pengaturan company `substitution_objection_days` dan SLA tinjauan dari `review_sla_days` ([11-master §13.4](11-master.md#134-sisa-pekerjaan-modul-ini)).
@@ -276,10 +278,10 @@ Uji yang menopangnya ada di `tests/Feature/Request`: `RequestFlowTest` (TC-REQ-0
 ### 13.4 Sisa pekerjaan modul ini
 
 1. ~~**Approval berlapis**~~ — **selesai v0.5** lewat mesin approval ([20-approval §13.3](20-approval.md#133-integrasi-req-dan-rtv)).
-2. **Pembuatan TRF dan PRQ otomatis** untuk baris bersumber transfer dan pembelian ([BR-REQ-05](05-aturan-bisnis.md#br-req)) —
-   menunggu modul `transfer` dan `purchase_request`.
-3. **Cross-dock dan reservasi backorder** ([BR-REQ-08](05-aturan-bisnis.md#br-req)) — menunggu modul
-   `receipt`.
+2. **Pembuatan PRQ otomatis** untuk baris bersumber pembelian ([BR-REQ-05](05-aturan-bisnis.md#br-req)) — menunggu modul
+   `purchase_request`. TRF untuk baris bersumber transfer **selesai v0.6** ([22-retur-transfer](22-retur-transfer.md)).
+3. **Cross-dock** ([BR-REQ-08](05-aturan-bisnis.md#br-req)) — masih saran ([A-83](04-keputusan-dan-asumsi.md#a-83)); reservasi
+   backorder untuk barang TRF sudah ada ([A-108](04-keputusan-dan-asumsi.md#a-108)), untuk barang PRQ menunggu modul `purchase_request`.
 4. **Konfirmasi dan keberatan penerimaan** ([BR-REQ-10](05-aturan-bisnis.md#br-req)) — modul `shipment` dan DSC
    sudah ada; permission `request.confirm_receipt` dan `request.dispute_receipt` sudah di-seed ke role Klien, tetapi
    belum dipakai route atau layar mana pun.

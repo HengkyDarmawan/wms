@@ -80,6 +80,7 @@ enum ApprovalDocumentType: string
             self::PurchaseRequest => ['warehouse_ids', 'project_ids', 'category_ids', 'line_count_min', 'line_qty_min', 'vendor_types', 'purchase_request_origins'],
             self::StockCount => ['warehouse_ids', 'count_types'],
             self::StockAdjustment => ['warehouse_ids', 'category_ids', 'ownership_models', 'line_count_min', 'line_qty_min'],
+            self::GoodsReturn => ['warehouse_ids', 'project_ids', 'category_ids', 'ownership_models', 'line_count_min', 'line_qty_min', 'from_client'],
             default => ['warehouse_ids', 'project_ids', 'category_ids', 'ownership_models', 'line_count_min', 'line_qty_min'],
         };
     }

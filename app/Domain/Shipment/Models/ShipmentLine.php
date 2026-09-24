@@ -42,9 +42,10 @@ class ShipmentLine extends Model
         ];
     }
 
+    /** Lintas cakupan: SJ transfer/retur dibaca juga oleh gudang penerimanya. */
     public function shipment(): BelongsTo
     {
-        return $this->belongsTo(Shipment::class);
+        return $this->belongsTo(Shipment::class)->withoutGlobalScopes();
     }
 
     public function pickTaskLine(): BelongsTo

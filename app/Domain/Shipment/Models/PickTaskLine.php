@@ -45,9 +45,10 @@ class PickTaskLine extends Model
         ];
     }
 
+    /** Lintas cakupan: baris hanya terjangkau dari dokumen yang sudah boleh dibaca. */
     public function pickTask(): BelongsTo
     {
-        return $this->belongsTo(PickTask::class);
+        return $this->belongsTo(PickTask::class)->withoutGlobalScopes();
     }
 
     public function item(): BelongsTo
@@ -108,10 +109,16 @@ class PickTaskLine extends Model
             && (int) $this->suggested_bin_id !== (int) $this->bin_id;
     }
 
-    /** Sisa yang belum dimuat ke SJ mana pun. */
+    /**
+     * Sisa yang belum dimuat ke SJ mana pun. SJ yang dibatalkan tidak dihitung:
+     * barangnya tetap di Loading Area dan boleh dimuat SJ lain (Katalog §2.3).
+     */
     public function unshippedQty(): float
     {
-        $dimuat = (float) $this->shipmentLines()->sum('qty_shipped');
+        $dimuat = (float) $this->shipmentLines()
+            ->whereHas('shipment', fn (Builder $q) => $q->withoutGlobalScopes()
+                ->where('status', '!=', \App\Domain\Shipment\Enums\ShipmentStatus::Cancelled->value))
+            ->sum('qty_shipped');
 
         return max(0, (float) $this->qty_picked - $dimuat);
     }

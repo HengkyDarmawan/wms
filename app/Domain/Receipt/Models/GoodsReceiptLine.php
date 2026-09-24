@@ -11,6 +11,7 @@ use App\Domain\Master\Models\Piece;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Serial;
 use App\Domain\Receipt\Enums\QcResult;
+use App\Domain\Return\Models\GoodsReturnLine;
 use App\Domain\Shipment\Models\ShipmentLine;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Warehouse\Enums\BinType;
@@ -87,6 +88,11 @@ class GoodsReceiptLine extends Model
     public function shipmentLine(): BelongsTo
     {
         return $this->belongsTo(ShipmentLine::class);
+    }
+
+    public function returnLine(): BelongsTo
+    {
+        return $this->belongsTo(GoodsReturnLine::class, 'goods_return_line_id');
     }
 
     public function qcUser(): BelongsTo

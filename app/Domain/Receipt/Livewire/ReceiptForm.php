@@ -13,6 +13,9 @@ use App\Domain\Receipt\Enums\VendorReturnStatus;
 use App\Domain\Receipt\Livewire\Concerns\HandlesReceiptRules;
 use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Receipt\Models\VendorReturn;
+use App\Domain\Return\Enums\GoodsReturnStatus;
+use App\Domain\Return\Models\GoodsReturn;
+use App\Domain\Return\Models\GoodsReturnLine;
 use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Warehouse\Models\Warehouse;
@@ -44,6 +47,7 @@ class ReceiptForm extends Component
         'po_ref' => '',
         'shipment_id' => '',
         'vendor_return_id' => '',
+        'goods_return_id' => '',
         'notes' => '',
     ];
 
@@ -52,6 +56,9 @@ class ReceiptForm extends Component
 
     /** @var array<int|string, string> shipment_line_id => jumlah diterima (GRN transfer) */
     public array $transferQty = [];
+
+    /** @var array<int|string, string> goods_return_line_id => jumlah diterima (GRN retur, A-112) */
+    public array $returnQty = [];
 
     public function mount(?GoodsReceipt $goodsReceipt = null): void
     {
@@ -73,6 +80,14 @@ class ReceiptForm extends Component
             $this->form['receipt_type'] = ReceiptType::Transfer->value;
             $this->form['shipment_id'] = (string) $sj;
             $this->updatedFormShipmentId();
+        }
+
+        $ret = (int) request()->query('goods_return', 0);
+
+        if ($ret > 0) {
+            $this->form['receipt_type'] = ReceiptType::Return->value;
+            $this->form['goods_return_id'] = (string) $ret;
+            $this->updatedFormGoodsReturnId();
         }
 
         if ($this->rows === []) {
@@ -109,6 +124,25 @@ class ReceiptForm extends Component
         }
     }
 
+    /** GRN retur: gudang = gudang tujuan RET; jumlah bawaan = yang dikirim (A-112). */
+    public function updatedFormGoodsReturnId(): void
+    {
+        $this->returnQty = [];
+        $ret = $this->ret();
+
+        if ($ret === null) {
+            return;
+        }
+
+        $this->form['warehouse_id'] = (string) $ret->to_warehouse_id;
+
+        foreach ($this->barisRetur($ret) as $b) {
+            if ($b['max'] > 0) {
+                $this->returnQty[$b['line']->id] = (string) $b['max'];
+            }
+        }
+    }
+
     public function simpan(SaveGoodsReceipt $action): void
     {
         $grn = $this->receiptId !== null ? GoodsReceipt::query()->findOrFail($this->receiptId) : null;
@@ -117,9 +151,11 @@ class ReceiptForm extends Component
 
         $this->resetValidation();
 
-        $baris = $this->form['receipt_type'] === ReceiptType::Transfer->value
-            ? collect($this->transferQty)->map(fn ($q, $id) => ['shipment_line_id' => (int) $id, 'qty_received' => (float) $q])->values()->all()
-            : $this->barisVendor();
+        $baris = match ($this->form['receipt_type']) {
+            ReceiptType::Transfer->value => collect($this->transferQty)->map(fn ($q, $id) => ['shipment_line_id' => (int) $id, 'qty_received' => (float) $q])->values()->all(),
+            ReceiptType::Return->value => collect($this->returnQty)->map(fn ($q, $id) => ['goods_return_line_id' => (int) $id, 'qty_received' => (float) $q])->values()->all(),
+            default => $this->barisVendor(),
+        };
 
         $hasil = null;
 
@@ -139,7 +175,7 @@ class ReceiptForm extends Component
         $itemIds = collect($this->rows)->pluck('item_id')->filter()->map(fn ($v) => (int) $v)->all();
 
         return view('livewire.receipt.receipt-form', [
-            'types' => collect(ReceiptType::options())->except(ReceiptType::Return->value)->all(),
+            'types' => ReceiptType::options(),
             'warehouses' => Warehouse::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
             'vendors' => Vendor::query()->where('is_active', true)->orderBy('name')->get(['id', 'code', 'name']),
             'items' => Item::query()->active()->orderBy('code')->get(['id', 'code', 'name', 'tracking_mode', 'has_expiry']),
@@ -147,6 +183,9 @@ class ReceiptForm extends Component
             'incoming' => $this->sjMenunggu(),
             'sj' => $this->sj(),
             'returns' => $this->rtvTerbuka(),
+            'returnDocs' => $this->retMenunggu(),
+            'ret' => $this->ret(),
+            'retLines' => ($r = $this->ret()) === null ? [] : $this->barisRetur($r),
         ]);
     }
 
@@ -200,12 +239,19 @@ class ReceiptForm extends Component
             'po_ref' => (string) ($grn->po_ref ?? ''),
             'shipment_id' => (string) ($grn->shipment_id ?? ''),
             'vendor_return_id' => (string) ($grn->source_type === 'vendor_return' ? $grn->source_id : ''),
+            'goods_return_id' => (string) ($grn->goods_return_id ?? ''),
             'notes' => (string) ($grn->notes ?? ''),
         ];
 
         foreach ($grn->lines()->orderBy('id')->get() as $l) {
             if ($grn->receipt_type === ReceiptType::Transfer) {
                 $this->transferQty[$l->shipment_line_id] = (string) (float) $l->qty_received;
+
+                continue;
+            }
+
+            if ($grn->receipt_type === ReceiptType::Return) {
+                $this->returnQty[$l->goods_return_line_id] = (string) (float) $l->qty_received;
 
                 continue;
             }
@@ -241,6 +287,61 @@ class ReceiptForm extends Component
         return $sj;
     }
 
+    private function ret(): ?GoodsReturn
+    {
+        $id = (int) ($this->form['goods_return_id'] ?? 0);
+
+        if ($id === 0 || $this->form['receipt_type'] !== ReceiptType::Return->value) {
+            return null;
+        }
+
+        $ret = GoodsReturn::query()->withoutGlobalScopes()->with('project:id,code', 'returnShipment.lines.pickTaskLine.pickTask')->find($id);
+
+        // Hanya RET yang gudang tujuannya dalam cakupan user.
+        if ($ret === null || ! Warehouse::query()->whereKey($ret->to_warehouse_id)->exists()) {
+            return null;
+        }
+
+        return $ret;
+    }
+
+    /**
+     * Baris RET beserta jumlah maksimum yang bisa diterima: jumlah baik bukti
+     * terima SJ balik, atau jumlah yang diajukan bila diantar sendiri (BR-GRN-05).
+     *
+     * @return array<int, array{line: GoodsReturnLine, max: float}>
+     */
+    private function barisRetur(GoodsReturn $ret): array
+    {
+        $hasil = [];
+
+        foreach ($ret->requestedLines()->with('item:id,code,name', 'lot', 'serial', 'piece')->orderBy('id')->get() as $l) {
+            $max = $ret->returnShipment === null
+                ? (float) $l->qty_base
+                : (float) $ret->returnShipment->lines
+                    ->filter(fn ($x) => $x->pickTaskLine?->pickTask?->source_type === 'goods_return' && (int) $x->pickTaskLine->source_line_id === (int) $l->id)
+                    ->sum('qty_delivered');
+
+            $hasil[] = ['line' => $l, 'max' => round($max, 4)];
+        }
+
+        return $hasil;
+    }
+
+    /** @return Collection<int, GoodsReturn> RET diproses yang belum punya GRN, ke gudang dalam cakupan. */
+    private function retMenunggu(): Collection
+    {
+        return GoodsReturn::query()->withoutGlobalScopes()
+            ->with('project:id,code')
+            ->where('status', GoodsReturnStatus::InProgress->value)
+            ->whereIn('to_warehouse_id', Warehouse::query()->pluck('id')->all())
+            ->whereNotIn('id', GoodsReceipt::query()->withoutGlobalScopes()->active()->whereNotNull('goods_return_id')
+                ->when($this->receiptId !== null, fn ($q) => $q->where('id', '!=', $this->receiptId))
+                ->select('goods_return_id'))
+            ->orderByDesc('id')
+            ->get(['id', 'number', 'project_id', 'to_warehouse_id']);
+    }
+
     /** @return Collection<int, Shipment> */
     private function sjMenunggu(): Collection
     {
@@ -249,6 +350,8 @@ class ReceiptForm extends Component
             ->whereIn('destination_type', ['warehouse', 'site_warehouse'])
             ->whereIn('destination_warehouse_id', Warehouse::query()->pluck('id')->all())
             ->whereIn('status', [ShipmentStatus::Delivered->value, ShipmentStatus::PartiallyDelivered->value])
+            // SJ balik RET diterima lewat GRN retur (A-112).
+            ->whereNotIn('id', GoodsReturn::query()->withoutGlobalScopes()->whereNotNull('return_shipment_id')->select('return_shipment_id'))
             ->whereNotIn('id', GoodsReceipt::query()->withoutGlobalScopes()->active()->whereNotNull('shipment_id')
                 ->when($this->receiptId !== null, fn ($q) => $q->where('id', '!=', $this->receiptId))
                 ->select('shipment_id'))

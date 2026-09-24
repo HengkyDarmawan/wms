@@ -28,8 +28,10 @@ use App\Http\Controllers\Master\VendorController;
 use App\Http\Controllers\Receipt\ReceiptController;
 use App\Http\Controllers\Request\PortalRequestController;
 use App\Http\Controllers\Request\RequestController;
+use App\Http\Controllers\Return\ReturnController;
 use App\Http\Controllers\Shipment\ShipmentController;
 use App\Http\Controllers\Stock\StockController;
+use App\Http\Controllers\Transfer\TransferController;
 use App\Http\Controllers\Warehouse\BinController;
 use App\Http\Controllers\Warehouse\WarehouseController;
 use App\Http\Controllers\Warehouse\WarehouseTypeController;
@@ -197,6 +199,15 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/adjustments/create', [AdjustmentController::class, 'create'])->name('adjustments.create');
         Route::get('/adjustments/{stockAdjustment}', [AdjustmentController::class, 'show'])->name('adjustments.show');
 
+        // Transfer & retur dari proyek (22-retur-transfer §6). Halaman saja (GET);
+        // semua transisi lewat aksi Livewire (POST).
+        Route::get('/transfers', [TransferController::class, 'index'])->name('transfers.index');
+        Route::get('/transfers/create', [TransferController::class, 'create'])->name('transfers.create');
+        Route::get('/transfers/{transfer}', [TransferController::class, 'show'])->name('transfers.show');
+        Route::get('/returns', [ReturnController::class, 'index'])->name('returns.index');
+        Route::get('/returns/create', [ReturnController::class, 'create'])->name('returns.create');
+        Route::get('/returns/{goodsReturn}', [ReturnController::class, 'show'])->name('returns.show');
+
         // Laporan lintas modul (Access §9, Master §9, Warehouse §9).
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
@@ -208,5 +219,9 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/', PortalDashboardController::class)->name('dashboard');
         Route::get('/requests', [PortalRequestController::class, 'index'])->name('requests.index');
         Route::get('/requests/{materialRequest}', [PortalRequestController::class, 'show'])->name('requests.show');
+        // Retur klien (BR-RET-05): komponen yang sama dengan back-office.
+        Route::get('/returns', [ReturnController::class, 'index'])->name('returns.index');
+        Route::get('/returns/create', [ReturnController::class, 'create'])->name('returns.create');
+        Route::get('/returns/{goodsReturn}', [ReturnController::class, 'show'])->name('returns.show');
     });
 });
