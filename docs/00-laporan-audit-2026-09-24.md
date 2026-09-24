@@ -1,6 +1,6 @@
 # Laporan Audit & Kerja Semalam — 24 September 2026
 
-**Versi:** 1.1
+**Versi:** 1.2
 **Tanggal:** 24 September 2026
 **Status:** selesai; seluruh asumsi baru sudah disetujui pemilik produk (§7)
 **Dokumen terkait:** [README](README.md) · [Keputusan & Asumsi](wms/04-keputusan-dan-asumsi.md) · [Laporan validasi 23 Sep](00-laporan-validasi-2026-09-23.md) · [Modul Warehouse](wms/12-warehouse.md) · [Modul Stock](wms/13-stock.md) · [Modul Request](wms/14-request.md)
@@ -181,6 +181,8 @@ Keempatnya sudah diputuskan [AD-08](wms/08-arsitektur.md) dan [AD-09](wms/08-ars
 ---
 
 ## 9. Yang menunggu keputusan Anda
+
+> **Pembaruan 24 Sep 2026 (sore):** seluruh isi tabel ini sudah **disetujui** — A-50, A-67, A-68 divalidasi; bin On-site per proyek menjadi [A-69](wms/04-keputusan-dan-asumsi.md#a-69), kode huruf besar menjadi [A-70](wms/04-keputusan-dan-asumsi.md#a-70), A-71 disetujui. Tabel di bawah dipertahankan sebagai catatan malam itu. Yang kini menunggu: [A-72–A-76](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) dari pencocokan dokumen dengan kode.
 
 | ID | Isi | Kenapa saya ambil sendiri |
 |---|---|---|

@@ -19,6 +19,7 @@ use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockReservation;
 use App\Domain\Stock\Support\DocumentNumber;
 use App\Domain\Warehouse\Enums\BinStatus;
+use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -164,6 +165,10 @@ class CreatePickTask
             ->nonZero()
             ->whereHas('bin', fn (Builder $q) => $q->withoutGlobalScopes()
                 ->where('warehouse_id', $gudang->id)
+                // Hanya bin penyimpanan: barang di Penerimaan, Karantina,
+                // Loading Area, atau Dalam Perjalanan belum/tidak lagi boleh
+                // dipetik (19-receipt-putaway §13, 15-picking-shipment §13.1).
+                ->where('bin_type', BinType::Storage->value)
                 ->where('bin_status', BinStatus::Active->value))
             ->join('bins as b', 'b.id', '=', 'stock_balances.bin_id')
             ->orderBy('b.code')

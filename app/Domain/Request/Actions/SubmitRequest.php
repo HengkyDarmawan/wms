@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Request\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Request\Models\MaterialRequest;
@@ -20,6 +22,8 @@ use Illuminate\Support\Facades\DB;
  */
 class SubmitRequest
 {
+    public function __construct(private readonly ApprovalEngine $approval) {}
+
     public function handle(MaterialRequest $request, ?User $actor = null): MaterialRequest
     {
         if ($request->status !== MaterialRequestStatus::Draft) {
@@ -44,6 +48,12 @@ class SubmitRequest
                 ->causedBy($actor)
                 ->withProperties(['ke' => $berikutnya->value])
                 ->log('REQ diajukan');
+
+            // Katalog §2.1: submitted → pending_approval → snapshot aturan
+            // approval; tanpa aturan langsung approved (A-08).
+            if ($berikutnya === MaterialRequestStatus::PendingApproval) {
+                $this->approval->submit(ApprovalDocumentType::MaterialRequest, $request, $actor);
+            }
 
             return $request->refresh();
         });

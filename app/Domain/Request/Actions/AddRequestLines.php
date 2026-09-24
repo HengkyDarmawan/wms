@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Request\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Enums\RequestOrigin;
 use App\Domain\Request\Exceptions\RequestRuleException;
@@ -29,7 +31,10 @@ use Illuminate\Support\Facades\DB;
  */
 class AddRequestLines
 {
-    public function __construct(private readonly RequestNumber $nomor) {}
+    public function __construct(
+        private readonly RequestNumber $nomor,
+        private readonly ApprovalEngine $approval,
+    ) {}
 
     /**
      * @param  array<int, array<string, mixed>>  $lines
@@ -79,7 +84,9 @@ class AddRequestLines
             }
 
             // Snapshot approval dibuang: yang akan disetujui bukan lagi dokumen
-            // yang dulu diajukan.
+            // yang dulu diajukan. Tugas terbuka ikut dihentikan (BR-REQ-12).
+            $this->approval->withdraw(ApprovalDocumentType::MaterialRequest, (int) $request->id, 'Klien menambah baris (BR-REQ-12).', $actor);
+
             $request->forceFill([
                 'status' => MaterialRequestStatus::UnderReview,
                 'approval_snapshot_id' => null,

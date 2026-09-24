@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Request\Policies;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Models\MaterialRequest;
 
@@ -74,10 +76,13 @@ class MaterialRequestPolicy
      */
     public function approve(User $actor, MaterialRequest $request): bool
     {
+        // Sejak modul approval: tombol hanya untuk approver yang memegang tugas
+        // terbuka pada lapis yang sedang berjalan (20-approval §13, A-86).
         return $actor->hasPermission('request.approve')
             && $request->status === MaterialRequestStatus::PendingApproval
             && (int) $request->requester_id !== (int) $actor->id
-            && $this->dalamJangkauan($actor, $request);
+            && $this->dalamJangkauan($actor, $request)
+            && app(ApprovalEngine::class)->openTaskFor(ApprovalDocumentType::MaterialRequest, (int) $request->id, $actor) !== null;
     }
 
     public function addLines(User $actor, MaterialRequest $request): bool

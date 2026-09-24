@@ -21,6 +21,59 @@
             </div>
         </div>
 
+        @canany(['approval-inbox', 'approval_rule.view', 'approval_rule.manage', 'approval.delegate', 'approval.simulate'])
+            <div class="nx-menu-section">
+                <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
+                    {{ __('Approval') }}
+                </div>
+
+                @can('approval-inbox')
+                    @php
+                        $tugasApproval = \App\Domain\Approval\Models\ApprovalTask::query()->open()
+                            ->where('approver_user_id', auth()->id())
+                            ->whereHas('snapshot', fn ($q) => $q->where('status', 'pending'))
+                            ->count();
+                    @endphp
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('approval.inbox') ? 'active' : '' }}"
+                           href="{{ route('approval.inbox') }}" data-title="{{ __('Tugas approval saya') }}">
+                            <i class="bi bi-check2-square"></i><span class="nx-menu-label">{{ __('Tugas approval saya') }}</span>
+                            @if ($tugasApproval > 0)
+                                <span class="badge text-bg-warning ms-auto">{{ $tugasApproval }}</span>
+                            @endif
+                        </a>
+                    </div>
+                @endcan
+
+                @canany(['approval_rule.view', 'approval_rule.manage'])
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('approval.rules.*') ? 'active' : '' }}"
+                           href="{{ route('approval.rules.index') }}" data-title="{{ __('Aturan approval') }}">
+                            <i class="bi bi-diagram-3-fill"></i><span class="nx-menu-label">{{ __('Aturan approval') }}</span>
+                        </a>
+                    </div>
+                @endcanany
+
+                @canany(['approval.delegate', 'approval_rule.manage'])
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('approval.delegations') ? 'active' : '' }}"
+                           href="{{ route('approval.delegations') }}" data-title="{{ __('Delegasi approval') }}">
+                            <i class="bi bi-person-check"></i><span class="nx-menu-label">{{ __('Delegasi approval') }}</span>
+                        </a>
+                    </div>
+                @endcanany
+
+                @can('approval.simulate')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('approval.simulation') ? 'active' : '' }}"
+                           href="{{ route('approval.simulation') }}" data-title="{{ __('Simulasi approval') }}">
+                            <i class="bi bi-signpost-2"></i><span class="nx-menu-label">{{ __('Simulasi approval') }}</span>
+                        </a>
+                    </div>
+                @endcan
+            </div>
+        @endcanany
+
         @canany(['user.view', 'role.view', 'org.view', 'support_access.grant'])
             <div class="nx-menu-section">
                 <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
@@ -153,6 +206,76 @@
                         <a class="nx-menu-link {{ request()->routeIs('discrepancies.*') ? 'active' : '' }}"
                            href="{{ route('discrepancies.index') }}" data-title="{{ __('Selisih pengiriman') }}">
                             <i class="bi bi-exclamation-diamond"></i><span class="nx-menu-label">{{ __('Selisih pengiriman') }}</span>
+                        </a>
+                    </div>
+                @endcan
+            </div>
+        @endcanany
+
+        @canany(['receipt.view', 'putaway.view', 'vendor_return.view'])
+            <div class="nx-menu-section">
+                <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
+                    {{ __('Penerimaan') }}
+                </div>
+
+                @can('receipt.view')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('receipts.*') ? 'active' : '' }}"
+                           href="{{ route('receipts.index') }}" data-title="{{ __('Penerimaan barang') }}">
+                            <i class="bi bi-box-arrow-in-down"></i><span class="nx-menu-label">{{ __('Penerimaan barang') }}</span>
+                        </a>
+                    </div>
+                @endcan
+
+                @can('putaway.view')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('putaways.*') ? 'active' : '' }}"
+                           href="{{ route('putaways.index') }}" data-title="{{ __('Tugas put-away') }}">
+                            <i class="bi bi-inboxes"></i><span class="nx-menu-label">{{ __('Tugas put-away') }}</span>
+                        </a>
+                    </div>
+                @endcan
+
+                @can('vendor_return.view')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('vendor-returns.*') ? 'active' : '' }}"
+                           href="{{ route('vendor-returns.index') }}" data-title="{{ __('Retur ke vendor') }}">
+                            <i class="bi bi-arrow-return-left"></i><span class="nx-menu-label">{{ __('Retur ke vendor') }}</span>
+                        </a>
+                    </div>
+                @endcan
+            </div>
+        @endcanany
+
+        @canany(['count.view', 'count.record', 'adjustment.view'])
+            <div class="nx-menu-section">
+                <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
+                    {{ __('Opname & penyesuaian') }}
+                </div>
+
+                @can('count.view')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('counts.*') ? 'active' : '' }}"
+                           href="{{ route('counts.index') }}" data-title="{{ __('Stock opname') }}">
+                            <i class="bi bi-clipboard-data"></i><span class="nx-menu-label">{{ __('Stock opname') }}</span>
+                        </a>
+                    </div>
+                @endcan
+
+                @can('count.record')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('count-tasks.*') ? 'active' : '' }}"
+                           href="{{ route('count-tasks.index') }}" data-title="{{ __('Hitungan saya') }}">
+                            <i class="bi bi-123"></i><span class="nx-menu-label">{{ __('Hitungan saya') }}</span>
+                        </a>
+                    </div>
+                @endcan
+
+                @can('adjustment.view')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('adjustments.*') ? 'active' : '' }}"
+                           href="{{ route('adjustments.index') }}" data-title="{{ __('Penyesuaian stok') }}">
+                            <i class="bi bi-plus-slash-minus"></i><span class="nx-menu-label">{{ __('Penyesuaian stok') }}</span>
                         </a>
                     </div>
                 @endcan

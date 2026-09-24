@@ -6,6 +6,7 @@
 
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
+@import 'simplebar/dist/simplebar.min.css';
 
 @import './nexadash/variables.css';
 @import './nexadash/layout.css';
@@ -15,6 +16,13 @@
 @import './nexadash/dark.css';
 
 /* ---------------------------------------------- penyesuaian WMS */
+
+/* Area scroll sidebar. SimpleBar (globals.js) menggantinya dengan scrollbar tipis;
+   aturan ini cadangan supaya menu tetap bisa di-scroll bila SimpleBar gagal. */
+.nx-sidebar-nav:not([data-simplebar]) {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
 
 /* Alpine: sembunyikan elemen sampai komponen siap. */
 [x-cloak] {

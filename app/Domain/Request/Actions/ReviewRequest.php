@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Request\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Models\CompanySetting;
 use App\Domain\Master\Models\Item;
@@ -29,6 +31,8 @@ class ReviewRequest
 {
     /** Ambang keberatan penggantian item, dalam hari (BR-REQ-13). */
     public const AMBANG_KEBERATAN = 'substitution_objection_days';
+
+    public function __construct(private readonly ApprovalEngine $approval) {}
 
     /**
      * Memetakan baris non-katalog ke item yang ada.
@@ -179,6 +183,9 @@ class ReviewRequest
             ])->save();
 
             activity('request')->performedOn($request)->causedBy($actor)->log('REQ selesai ditinjau');
+
+            // Snapshot aturan approval; tanpa aturan langsung approved (A-08).
+            $this->approval->submit(ApprovalDocumentType::MaterialRequest, $request, $actor);
 
             return $request->refresh();
         });

@@ -6,6 +6,7 @@ namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Master\Models\CompanySetting;
+use App\Domain\Request\Support\RequestFulfillment;
 use App\Domain\Shipment\Enums\DiscrepancyOrigin;
 use App\Domain\Shipment\Enums\DiscrepancyStatus;
 use App\Domain\Shipment\Enums\DiscrepancyType;
@@ -46,6 +47,7 @@ class ConfirmDelivery
         private readonly StockLedger $ledger,
         private readonly WarehouseBins $bins,
         private readonly DocumentNumber $nomor,
+        private readonly RequestFulfillment $pemenuhan,
     ) {}
 
     /**
@@ -108,6 +110,7 @@ class ConfirmDelivery
                 $this->terapkanEfek($shipment, $sj, $baris, $actor);
 
                 $sj->forceFill(['qty_delivered' => $baris['qty_good']])->save();
+                $this->pemenuhan->received($sj, (float) $baris['qty_good'], $actor);
 
                 if ($barisBukti->hasDamage() || (float) $baris['qty_missing'] > 0) {
                     $adaSelisih = true;

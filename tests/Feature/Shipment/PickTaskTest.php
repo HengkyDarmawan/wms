@@ -11,7 +11,6 @@ use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Uom;
-use App\Domain\Request\Actions\ApproveRequest;
 use App\Domain\Request\Actions\SaveRequest;
 use App\Domain\Request\Actions\SubmitRequest;
 use App\Domain\Request\Models\MaterialRequest;
@@ -106,9 +105,8 @@ class PickTaskTest extends TenantTestCase
             'fulfillment_source' => 'stock',
         ])->save();
 
-        $req = app(SubmitRequest::class)->handle($req->refresh(), $pemohon);
-
-        return app(ApproveRequest::class)->handle($req, $this->makeUser('company_admin'));
+        // Tanpa aturan approval, REQ disetujui otomatis saat diajukan (A-08).
+        return app(SubmitRequest::class)->handle($req->refresh(), $pemohon);
     }
 
     private function pckSiap(float $qty = 20): PickTask

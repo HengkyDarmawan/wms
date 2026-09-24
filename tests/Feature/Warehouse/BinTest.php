@@ -138,10 +138,15 @@ class BinTest extends TenantTestCase
             $this->assertSame('BR-GEN-11', $e->rule);
         }
 
-        $bin = $aksi->freeze($bin, 'COUNT_FIX', 42);
+        // Sejak modul Count, frozen_by_count_id ber-FK ke stock_counts (A-104).
+        $sesi = \App\Domain\Count\Models\StockCount::create([
+            'number' => 'OPN/UJI/2609/0001', 'count_type' => 'spot_check', 'scope' => ['warehouse_ids' => [$bin->warehouse_id]],
+        ]);
+
+        $bin = $aksi->freeze($bin, 'COUNT_FIX', $sesi->id);
 
         $this->assertSame(BinStatus::Frozen, $bin->bin_status);
-        $this->assertSame(42, (int) $bin->frozen_by_count_id);
+        $this->assertSame($sesi->id, (int) $bin->frozen_by_count_id);
         $this->assertFalse($bin->acceptsMovement(), 'BR-OPN-02: bin beku menolak dokumen baru.');
 
         // TC-WH-10

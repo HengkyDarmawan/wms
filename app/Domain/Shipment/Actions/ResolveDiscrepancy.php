@@ -7,6 +7,7 @@ namespace App\Domain\Shipment\Actions;
 use App\Domain\Access\Models\User;
 use App\Domain\Request\Enums\RequestLineStatus;
 use App\Domain\Request\Models\MaterialRequestLine;
+use App\Domain\Request\Support\RequestFulfillment;
 use App\Domain\Shipment\Enums\ClientDecision;
 use App\Domain\Shipment\Enums\DiscrepancyDisposition;
 use App\Domain\Shipment\Enums\DiscrepancyStatus;
@@ -37,6 +38,7 @@ class ResolveDiscrepancy
     public function __construct(
         private readonly StockLedger $ledger,
         private readonly WarehouseBins $bins,
+        private readonly RequestFulfillment $pemenuhan,
     ) {}
 
     /**
@@ -250,6 +252,9 @@ class ResolveDiscrepancy
                 'status' => RequestLineStatus::Closed,
                 'qty_backorder' => 0,
             ])->save();
+
+            // Sisa baris ditutup: REQ bisa jadi selesai karenanya.
+            $this->pemenuhan->refresh($baris->request, $actor);
 
             return;
         }

@@ -44,6 +44,12 @@ class DemoSeeder extends Seeder
         $this->seedUsers($units, $positions);
         $this->assignProjectPics();
 
+        // Stok awal dan kendaraan menyusul user: kendaraan menunjuk driver (A-72).
+        $this->call(StockDemoSeeder::class);
+
+        // Aturan approval demo §5 (REQ, RTV); butuh role Manajemen.
+        $this->call(ApprovalDemoSeeder::class);
+
         $this->command?->info('Data demo siap: '.User::count().' user, password '.self::PASSWORD.'.');
     }
 

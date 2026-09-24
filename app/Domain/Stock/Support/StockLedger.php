@@ -85,9 +85,24 @@ class StockLedger
 
     /**
      * BR-LED-05 — membalik pergerakan: asal dan tujuan ditukar, sekali saja.
+     *
+     * Dokumen pembalik yang harus menerbitkan kejadian (matriks §14 "Kejadian
+     * pembalik": jenis sama dengan asal + `reverses_event_id`) menyebut jenis
+     * dan payload-nya; tanpa itu pembalikan tidak menerbitkan kejadian.
+     *
+     * @param  array<string, mixed>  $eventPayload
      */
-    public function reverse(StockMovement $movement, ?int $reasonCodeId = null, ?string $notes = null): StockMovement
-    {
+    public function reverse(
+        StockMovement $movement,
+        ?int $reasonCodeId = null,
+        ?string $notes = null,
+        ?StockEventType $eventType = null,
+        array $eventPayload = [],
+        ?string $documentType = null,
+        ?int $documentId = null,
+        ?int $documentLineId = null,
+        ?string $documentNumber = null,
+    ): StockMovement {
         if ($movement->hasBeenReversed()) {
             throw LedgerException::rule('BR-LED-05', 'Pergerakan ini sudah pernah dibalik.');
         }
@@ -109,12 +124,14 @@ class StockLedger
             serialId: $movement->serial_id,
             pieceId: $movement->piece_id,
             projectId: $movement->project_id,
-            documentType: $movement->document_type,
-            documentId: $movement->document_id,
-            documentLineId: $movement->document_line_id,
-            documentNumber: $movement->document_number,
+            documentType: $documentType ?? $movement->document_type,
+            documentId: $documentId ?? $movement->document_id,
+            documentLineId: $documentLineId ?? $movement->document_line_id,
+            documentNumber: $documentNumber ?? $movement->document_number,
             reasonCodeId: $reasonCodeId ?? $movement->reason_code_id,
             performedBy: auth()->user(),
+            eventType: $eventType,
+            eventPayload: $eventPayload,
             notes: $notes,
             // Ikut saat insert: baris kartu stok tidak pernah di-update (P-01).
             reversesMovementId: (int) $movement->id,
@@ -130,14 +147,19 @@ class StockLedger
     }
 
     /**
-     * Stok tersedia = saldo Tersedia dikurangi reservasi aktif (BR-STK-03).
+     * Stok tersedia = saldo Tersedia di bin penyimpanan dikurangi reservasi aktif (BR-STK-03).
+     *
+     * Hanya bin `storage` yang dihitung — sama dengan sumber alokasi picking (A-84).
+     * Barang di Penerimaan belum di-put-away, di Staging sudah milik tugas picking,
+     * dan di Dalam Perjalanan sedang di truk; tak satu pun boleh dijanjikan ke REQ (A-85).
      */
     public function availableQty(int $itemId, int $warehouseId): float
     {
         $saldo = (float) StockBalance::query()
             ->available()
             ->where('item_id', $itemId)
-            ->whereHas('bin', fn ($q) => $q->where('warehouse_id', $warehouseId))
+            ->whereHas('bin', fn ($q) => $q->where('warehouse_id', $warehouseId)
+                ->where('bin_type', \App\Domain\Warehouse\Enums\BinType::Storage->value))
             ->sum('qty_base');
 
         $reservasi = (float) \App\Domain\Stock\Models\StockReservation::query()
@@ -426,6 +448,8 @@ class StockLedger
             'source_id' => $request->documentId,
             'source_number' => $request->documentNumber,
             'project_id' => $request->projectId,
+            // Kejadian pembalik menunjuk kejadian asalnya (BR-GEN-03, matriks §14).
+            'reverses_event_id' => $request->eventPayload['reverses_event_id'] ?? null,
             'payload' => array_merge([
                 'movement_id' => $movement->id,
                 'item_id' => $request->item->id,

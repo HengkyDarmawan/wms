@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alur Proses WMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:#f4f6f5; --surface:#ffffff; --ink:#1b2430; --muted:#5b6673; --line:#d9dfdc; --accent:#1f6f66;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg:#141a1d; --surface:#1c2428; --ink:#e6ecea; --muted:#9aa7a4; --line:#2e3a3e; --accent:#6cc5b8; color-scheme:dark; }
+}
+:root[data-theme="dark"] { --bg:#141a1d; --surface:#1c2428; --ink:#e6ecea; --muted:#9aa7a4; --line:#2e3a3e; --accent:#6cc5b8; color-scheme:dark; }
+body { background:var(--bg); color:var(--ink); font:15px/1.6 var(--sans); padding-inline:16px; padding-block:32px 64px; }
+.wrap { max-width:1100px; margin:0 auto; display:grid; gap:40px; }
+h1 { font-size:1.9rem; line-height:1.2; margin:0 0 8px; text-wrap:balance; }
+h2 { font-size:1.3rem; line-height:1.3; margin:0; text-wrap:balance; }
+.lede { color:var(--muted); max-width:65ch; margin:0; }
+.mono { font-family:var(--mono); }
+a { color:var(--accent); }
+a:focus-visible, summary:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.toc { list-style:none; padding:0; margin:20px 0 0; display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:6px 20px; }
+.toc a { display:flex; gap:10px; align-items:baseline; text-decoration:none; color:var(--ink); padding:6px 0; border-bottom:1px solid var(--line); }
+.toc a:hover { color:var(--accent); }
+.num { font-family:var(--mono); font-weight:500; color:var(--accent); min-width:1.6em; font-variant-numeric:tabular-nums; }
+.keybox { display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:16px; color:var(--muted); font-size:.85rem; }
+.flow { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:24px 20px; display:grid; gap:16px; scroll-margin-top:16px; }
+.fh { display:grid; gap:8px; }
+.eyebrow { margin:0; font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); font-weight:600; }
+.eyebrow .mono { text-transform:none; letter-spacing:0; }
+.intro { margin:0; color:var(--muted); max-width:75ch; }
+.legend { list-style:none; padding:0; margin:4px 0 0; display:flex; flex-wrap:wrap; gap:6px 16px; font-size:.85rem; }
+.legend li { display:flex; align-items:center; gap:6px; }
+.sw { width:14px; height:14px; border-radius:3px; border:1.5px solid; display:inline-block; }
+.diagram { overflow-x:auto; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:12px; }
+.diagram pre { margin:0; display:flex; justify-content:center; }
+.note { margin:0; font-size:.9rem; color:var(--muted); max-width:85ch; }
+.note b { color:var(--ink); }
+details summary { cursor:pointer; color:var(--accent); font-weight:500; }
+.tw { overflow-x:auto; margin-top:10px; }
+table { border-collapse:collapse; width:100%; font-size:.85rem; }
+th, td { text-align:left; vertical-align:top; padding:6px 8px; border-bottom:1px solid var(--line); }
+th { color:var(--muted); font-weight:600; }
+td.k { white-space:nowrap; color:var(--muted); }
+td.ref { font-family:var(--mono); font-size:.78rem; color:var(--muted); }
+.top { margin:0; font-size:.85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header id="daftar">
+    <h1>Alur Proses WMS</h1>
+    <p class="lede">Sepuluh alur proses bisnis to-be (Part 2, BPMN v0.4) dalam bentuk diagram alir sederhana. Warna kotak menandai siapa yang mengerjakan langkahnya. Data diambil langsung dari <span class="mono">docs/diagram/_generate.py</span>, sumber yang sama dengan berkas <span class="mono">bpmn-*.drawio</span>.</p>
+    <div class="keybox"><span>▭ langkah</span><span>◇ keputusan</span><span>⬭ mulai / selesai</span><span>◯ tunggu waktu</span><span>- - → kembali ke langkah sebelumnya</span></div>
+    <ol class="toc"><li><a href="#alur-1"><span class="num">1</span>Permintaan material sampai bukti terima</a></li><li><a href="#alur-2"><span class="num">2</span>Penerimaan dari vendor, QC, put-away, retur ke vendor</a></li><li><a href="#alur-3"><span class="num">3</span>Pemakaian material di Gudang Site</a></li><li><a href="#alur-4"><span class="num">4</span>Retur dari proyek dan pemilahan</a></li><li><a href="#alur-5"><span class="num">5</span>Transfer antar gudang dan antar proyek</a></li><li><a href="#alur-6"><span class="num">6</span>Konversi material, offcut, dan berita acara waste</a></li><li><a href="#alur-7"><span class="num">7</span>Aset dipinjamkan: keluar, jatuh tempo, kembali, hilang</a></li><li><a href="#alur-8"><span class="num">8</span>Stock opname: sesi, hitung buta, hitung ulang, rekonsiliasi</a></li><li><a href="#alur-9"><span class="num">9</span>Approval generik (semua jenis dokumen)</a></li><li><a href="#alur-10"><span class="num">10</span>Siklus langganan company (platform)</a></li></ol>
+  </header>
+  
+<section id="alur-1" class="flow">
+  <header class="fh">
+    <p class="eyebrow">Alur 1 · <span class="mono">REQ · PCK · SJ · DSC</span></p>
+    <h2>Permintaan material sampai bukti terima</h2>
+    <p class="intro">Alur inti outbound: dari kebutuhan material di proyek sampai barang diterima di tujuan dan REQ selesai. Mencakup tinjauan staf untuk permintaan klien, reservasi dua tahap, picking dengan short pick, pengiriman, bukti terima, dan selisih pengiriman.</p>
+    <ul class="legend"><li><span class="sw" style="background:#e6dcfb;border-color:#7654c4"></span>Pemohon (Internal / Klien)</li><li><span class="sw" style="background:#d6e6fb;border-color:#3b73c4"></span>Staf Gudang</li><li><span class="sw" style="background:#cdeee6;border-color:#2f8f7a"></span>Kepala Gudang</li><li><span class="sw" style="background:#fbe7c2;border-color:#b7801b"></span>Approver</li><li><span class="sw" style="background:#fcdcc8;border-color:#c4632a"></span>Driver / Penerima</li><li><span class="sw" style="background:#e4e7ec;border-color:#8a94a3"></span>Sistem</li></ul>
+  </header>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  classDef sys fill:#e4e7ec,stroke:#8a94a3,stroke-width:1.5px,color:#1b2430
+  classDef kg fill:#cdeee6,stroke:#2f8f7a,stroke-width:1.5px,color:#1b2430
+  classDef sg fill:#d6e6fb,stroke:#3b73c4,stroke-width:1.5px,color:#1b2430
+  classDef apr fill:#fbe7c2,stroke:#b7801b,stroke-width:1.5px,color:#1b2430
+  classDef pem fill:#e6dcfb,stroke:#7654c4,stroke-width:1.5px,color:#1b2430
+  classDef drv fill:#fcdcc8,stroke:#c4632a,stroke-width:1.5px,color:#1b2430
+  classDef pr fill:#dcf1c8,stroke:#5c9a2a,stroke-width:1.5px,color:#1b2430
+  classDef adm fill:#f9d3dc,stroke:#b8445f,stroke-width:1.5px,color:#1b2430
+  n_s(["Kebutuhan material di proyek"]):::pem
+  n_t1["Buat #amp; ajukan REQ (baris katalog / non-katalog, tanggal dibutuhkan)"]:::pem
+  n_g1{"Pemohon klien?"}:::sys
+  n_t2["Tinjau: petakan non-katalog (klien boleh menolak pengganti 1 hari), tetapkan gudang sumber / pecah baris antar gudang, isi tanggal janji"]:::sg
+  n_t3["Snapshot aturan approval; lewati lapis pengaju (SoD)"]:::sys
+  n_g2{"Ada lapis approval?"}:::sys
+  n_t4["Setujui / tolak (alasan) — lihat alur 9"]:::apr
+  n_g3{"Disetujui?"}:::sys
+  n_e_rej(["REQ ditolak"]):::pem
+  n_t5["Reservasi lunak per gudang; kekurangan → TRF (alur 5) / PRQ (alur 2)"]:::sys
+  n_t6["Buat PCK per gudang sumber; alokasi keras bin/lot/serial/potongan"]:::sys
+  n_t7["Picking: scan bin #amp; item → Loading Area; short pick + alasan"]:::sg
+  n_t8["Buat SJ: gabungkan PCK ke tujuan sama (boleh beberapa REQ); cara kirim kendaraan sendiri / ekspedisi / diantar sendiri"]:::sg
+  n_t9["Konfirmasi muat #amp; berangkat"]:::drv
+  n_t10["Bukti terima per baris: baik / rusak (foto wajib) / kurang; per unit untuk serial #amp; potongan; tanda tangan (driver atau tautan bertoken + OTP)"]:::drv
+  n_g4{"Semua baik #amp; lengkap?"}:::sys
+  n_t11["Buat DSC: baris kurang / rusak; kurang #amp; rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik driver"]:::sys
+  n_t12["Selesaikan DSC: kembali ke gudang / disesuaikan / klaim / kirim pengganti; klien masih perlu sisanya?"]:::kg
+  n_t13["Efek stok per tujuan: jual putus keluar (goods_delivered), aset → on_site (asset_checked_out), gudang → GRN tujuan"]:::sys
+  n_t14["Konfirmasi terima atau ajukan keberatan kurang/rusak (otomatis terima setelah 3 hari; otomatis bila pemohon mengisi bukti terima sendiri)"]:::pem
+  n_g6{"Keberatan?"}:::sys
+  n_g5{"Semua baris terpenuhi?"}:::sys
+  n_t15["Tunggu backorder (TRF / PRQ tiba → reservasi otomatis, cross-dock)"]:::sys
+  n_e(["REQ selesai"]):::sys
+  n_s --&gt; n_t1
+  n_t1 --&gt; n_g1
+  n_g1 --&gt;|"ya"| n_t2
+  n_g1 --&gt;|"tidak"| n_t3
+  n_t2 --&gt; n_t3
+  n_t3 --&gt; n_g2
+  n_g2 --&gt;|"ya"| n_t4
+  n_g2 --&gt;|"tidak → otomatis disetujui"| n_t5
+  n_t4 --&gt; n_g3
+  n_g3 --&gt;|"tidak"| n_e_rej
+  n_g3 --&gt;|"ya"| n_t5
+  n_t5 --&gt; n_t6
+  n_t6 --&gt; n_t7
+  n_t7 --&gt; n_t8
+  n_t8 --&gt; n_t9
+  n_t9 --&gt; n_t10
+  n_t10 --&gt; n_g4
+  n_g4 --&gt;|"tidak"| n_t11
+  n_t11 --&gt; n_t12
+  n_t12 --&gt; n_t13
+  n_g4 --&gt;|"ya"| n_t13
+  n_t13 --&gt; n_t14
+  n_t14 --&gt; n_g6
+  n_g6 -.-&gt;|"ya"| n_t11
+  n_g6 --&gt;|"tidak"| n_g5
+  n_g5 --&gt;|"ya"| n_e
+  n_g5 --&gt;|"tidak"| n_t15
+  n_t15 -.-&gt;|"barang tiba"| n_t6
+</pre></div>
+  <p class="note"><b>Catatan:</b> Pembatalan: REQ bisa dibatalkan sampai sebelum ada SJ shipped (reservasi &amp; PCK dilepas); setelah disetujui, klien mengajukan permintaan pembatalan baris yang dikonfirmasi staf (BR-REQ-15). Klien boleh menambah baris sampai disetujui; sesudahnya menjadi REQ Tambahan (BR-REQ-12). closed_short dari partially_fulfilled oleh Kepala Gudang/pemohon melepas sisa backorder; reservasi menggantung &gt; 7 hari diperingatkan (BR-STK-16). Posisi barang rusak: tetap Dalam Perjalanan berkondisi Rusak sampai DSC selesai; kendaraan sendiri membawa balik → GRN retur → pemilahan; ekspedisi → RET + klaim (BR-SJ-10).</p>
+  <details><summary>Detail langkah: status &amp; aturan (24 langkah)</summary>
+    <div class="tw"><table><thead><tr><th>Jenis</th><th>Pelaku</th><th>Langkah</th><th>Status / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Pemohon (Internal / Klien)</td><td>Kebutuhan material di proyek</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Pemohon (Internal / Klien)</td><td>Buat &amp; ajukan REQ (baris katalog / non-katalog, tanggal dibutuhkan)</td><td class="ref">REQ draft → submitted; BR-REQ-01</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Pemohon klien?</td><td class="ref">A-07</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Tinjau: petakan non-katalog (klien boleh menolak pengganti 1 hari), tetapkan gudang sumber / pecah baris antar gudang, isi tanggal janji</td><td class="ref">REQ under_review; BR-REQ-02..04; BR-REQ-13; BR-REQ-14; A-39, A-31, A-55, A-56, A-60</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Snapshot aturan approval; lewati lapis pengaju (SoD)</td><td class="ref">REQ pending_approval; BR-APR-01, BR-APR-03</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Ada lapis approval?</td><td class="ref">A-08</td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui / tolak (alasan) — lihat alur 9</td><td class="ref">BR-APR</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Disetujui?</td><td class="ref"></td></tr><tr><td class="k">Selesai</td><td>Pemohon (Internal / Klien)</td><td>REQ ditolak</td><td class="ref">REQ rejected; notifikasi pemohon</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Reservasi lunak per gudang; kekurangan → TRF (alur 5) / PRQ (alur 2)</td><td class="ref">REQ approved; BR-REQ-05; BR-STK-04; A-30</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Buat PCK per gudang sumber; alokasi keras bin/lot/serial/potongan</td><td class="ref">PCK pending; REQ in_progress; BR-STK-04</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Picking: scan bin &amp; item → Loading Area; short pick + alasan</td><td class="ref">PCK in_progress → completed; BR-SJ-01, BR-SJ-02</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Buat SJ: gabungkan PCK ke tujuan sama (boleh beberapa REQ); cara kirim kendaraan sendiri / ekspedisi / diantar sendiri</td><td class="ref">SJ prepared; BR-SJ-07; BR-SJ-09; A-57</td></tr><tr><td class="k">Langkah</td><td>Driver / Penerima</td><td>Konfirmasi muat &amp; berangkat</td><td class="ref">SJ shipped; ledger → in_transit; goods_shipped</td></tr><tr><td class="k">Langkah</td><td>Driver / Penerima</td><td>Bukti terima per baris: baik / rusak (foto wajib) / kurang; per unit untuk serial &amp; potongan; tanda tangan (driver atau tautan bertoken + OTP)</td><td class="ref">BR-SJ-05; A-41; A-64</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Semua baik &amp; lengkap?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Buat DSC: baris kurang / rusak; kurang &amp; rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik driver</td><td class="ref">SJ partially_delivered; DSC open; BR-SJ-06; A-64; A-65</td></tr><tr><td class="k">Langkah</td><td>Kepala Gudang</td><td>Selesaikan DSC: kembali ke gudang / disesuaikan / klaim / kirim pengganti; klien masih perlu sisanya?</td><td class="ref">DSC resolved; BR-SJ-10; delivery_discrepancy</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Efek stok per tujuan: jual putus keluar (goods_delivered), aset → on_site (asset_checked_out), gudang → GRN tujuan</td><td class="ref">SJ delivered; BR-SJ-04; A-25</td></tr><tr><td class="k">Langkah</td><td>Pemohon (Internal / Klien)</td><td>Konfirmasi terima atau ajukan keberatan kurang/rusak (otomatis terima setelah 3 hari; otomatis bila pemohon mengisi bukti terima sendiri)</td><td class="ref">BR-REQ-10; A-63</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Keberatan?</td><td class="ref">A-63</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Semua baris terpenuhi?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Tunggu backorder (TRF / PRQ tiba → reservasi otomatis, cross-dock)</td><td class="ref">REQ partially_fulfilled; BR-REQ-08</td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>REQ selesai</td><td class="ref">REQ completed; reservasi = 0</td></tr></tbody></table></div>
+  </details>
+  <p class="top"><a href="#daftar">↑ Daftar alur</a></p>
+</section>
+<section id="alur-2" class="flow">
+  <header class="fh">
+    <p class="eyebrow">Alur 2 · <span class="mono">PRQ · GRN · PUT · RTV</span></p>
+    <h2>Penerimaan dari vendor, QC, put-away, retur ke vendor</h2>
+    <p class="intro">Alur inti inbound, dimulai dari siklus PRQ Fase 1 (sumber: backorder REQ, manual Kepala Gudang, draf titik pesan ulang; approval bertingkat tanpa nilai uang; catatan pemesanan per vendor/toko online oleh Penindak Lanjut PR), lalu barang vendor diterima, diposting ke bin Penerimaan/Karantina, diperiksa (QC sebagai langkah), dan di-put-away atau cross-dock. Baris yang ditolak QC diproses lewat RTV.</p>
+    <ul class="legend"><li><span class="sw" style="background:#dcf1c8;border-color:#5c9a2a"></span>Penindak Lanjut PR</li><li><span class="sw" style="background:#d6e6fb;border-color:#3b73c4"></span>Staf Gudang</li><li><span class="sw" style="background:#fbe7c2;border-color:#b7801b"></span>Approver</li><li><span class="sw" style="background:#e4e7ec;border-color:#8a94a3"></span>Sistem</li></ul>
+  </header>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  classDef sys fill:#e4e7ec,stroke:#8a94a3,stroke-width:1.5px,color:#1b2430
+  classDef kg fill:#cdeee6,stroke:#2f8f7a,stroke-width:1.5px,color:#1b2430
+  classDef sg fill:#d6e6fb,stroke:#3b73c4,stroke-width:1.5px,color:#1b2430
+  classDef apr fill:#fbe7c2,stroke:#b7801b,stroke-width:1.5px,color:#1b2430
+  classDef pem fill:#e6dcfb,stroke:#7654c4,stroke-width:1.5px,color:#1b2430
+  classDef drv fill:#fcdcc8,stroke:#c4632a,stroke-width:1.5px,color:#1b2430
+  classDef pr fill:#dcf1c8,stroke:#5c9a2a,stroke-width:1.5px,color:#1b2430
+  classDef adm fill:#f9d3dc,stroke:#b8445f,stroke-width:1.5px,color:#1b2430
+  n_s(["Kebutuhan beli: backorder REQ / manual Kepala Gudang / draf titik pesan ulang"]):::sg
+  n_g0{"Ada lapis approval PRQ?"}:::sys
+  n_t0a["Setujui / tolak PRQ (alur 9)"]:::apr
+  n_t0b["Buat catatan pemesanan per vendor: vendor tetap disarankan; vendor baru = sementara; toko online = no. pesanan + resi; ETA"]:::pr
+  n_w0(("Tunggu barang tiba (ETA; lewat ETA masuk laporan)")):::pr
+  n_t1["Buat GRN; pilih catatan pemesanan #amp; baris yang dipenuhi (bila ada)"]:::sg
+  n_t2["Hitung; isi lot / serial / potongan; Diterima"]:::sg
+  n_t3["Ledger → bin Penerimaan (atau Karantina bila wajib QC); goods_received; PRQ terpenuhi; reservasi ke REQ penunggu"]:::sys
+  n_g1{"QC wajib?"}:::sys
+  n_t4["QC per baris: lolos / karantina / ditolak"]:::sg
+  n_g2{"Hasil QC?"}:::sys
+  n_t5["Tahan di Karantina; putuskan ulang"]:::sg
+  n_g3{"Ditunggu REQ (backorder)?"}:::sys
+  n_t6["Cross-dock: pindah ke Loading Area (lanjut alur 1)"]:::sg
+  n_t7["Buat PUT; saran bin (kategori penyimpanan, kapasitas)"]:::sys
+  n_t8["Put-away: scan bin tujuan"]:::sg
+  n_e1(["Stok tersedia"]):::sys
+  n_t9["Buat RTV dari baris ditolak (Karantina)"]:::sg
+  n_t10["Setujui / tolak RTV"]:::apr
+  n_t11["Kirim ke vendor (surat jalan retur)"]:::sg
+  n_t12["Konfirmasi vendor; barang pengganti → GRN baru merujuk RTV"]:::pr
+  n_e2(["RTV selesai"]):::pr
+  n_s --&gt; n_g0
+  n_g0 --&gt;|"ya"| n_t0a
+  n_g0 --&gt;|"tidak"| n_t0b
+  n_t0a --&gt;|"disetujui"| n_t0b
+  n_t0b --&gt; n_w0
+  n_w0 --&gt; n_t1
+  n_t1 --&gt; n_t2
+  n_t2 --&gt; n_t3
+  n_t3 --&gt; n_g1
+  n_g1 --&gt;|"ya"| n_t4
+  n_g1 --&gt;|"tidak"| n_g3
+  n_t4 --&gt; n_g2
+  n_g2 --&gt;|"lolos"| n_g3
+  n_g2 --&gt;|"karantina"| n_t5
+  n_t5 -.-&gt;|"periksa ulang"| n_t4
+  n_g2 --&gt;|"ditolak"| n_t9
+  n_g3 --&gt;|"ya"| n_t6
+  n_g3 --&gt;|"tidak"| n_t7
+  n_t7 --&gt; n_t8
+  n_t8 --&gt; n_e1
+  n_t6 --&gt; n_e1
+  n_t9 --&gt; n_t10
+  n_t10 --&gt;|"disetujui"| n_t11
+  n_t11 --&gt; n_t12
+  n_t12 --&gt; n_e2
+</pre></div>
+  <p class="note"><b>Catatan:</b> GRN received tidak bisa dibatalkan; koreksi jumlah lewat ADJ. Kelebihan terima dibanding SJ/PRQ dicatat sebagai baris tanpa rujukan dan memicu ADJ (BR-GRN-05). GRN dari SJ (transfer) dan dari RET mengikuti alur 5 dan 4. Satu PRQ boleh dipesan ke beberapa vendor/toko online (A-51); approval berdasarkan nilai uang ada di modul Purchasing dengan mesin approval yang sama (D-28).</p>
+  <details><summary>Detail langkah: status &amp; aturan (22 langkah)</summary>
+    <div class="tw"><table><thead><tr><th>Jenis</th><th>Pelaku</th><th>Langkah</th><th>Status / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Staf Gudang</td><td>Kebutuhan beli: backorder REQ / manual Kepala Gudang / draf titik pesan ulang</td><td class="ref">PRQ draft|submitted; BR-REQ-05; BR-REQ-11</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Ada lapis approval PRQ?</td><td class="ref">BR-APR-07; jumlah / kategori / jenis vendor / asal</td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui / tolak PRQ (alur 9)</td><td class="ref">PRQ approved|rejected</td></tr><tr><td class="k">Langkah</td><td>Penindak Lanjut PR</td><td>Buat catatan pemesanan per vendor: vendor tetap disarankan; vendor baru = sementara; toko online = no. pesanan + resi; ETA</td><td class="ref">PRQ forwarded; A-51; A-52; A-53</td></tr><tr><td class="k">Tunggu</td><td>Penindak Lanjut PR</td><td>Tunggu barang tiba (ETA; lewat ETA masuk laporan)</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Buat GRN; pilih catatan pemesanan &amp; baris yang dipenuhi (bila ada)</td><td class="ref">GRN draft; A-47; A-51</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Hitung; isi lot / serial / potongan; Diterima</td><td class="ref">GRN received; BR-GRN-01</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Ledger → bin Penerimaan (atau Karantina bila wajib QC); goods_received; PRQ terpenuhi; reservasi ke REQ penunggu</td><td class="ref">BR-GRN-01; BR-REQ-08</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>QC wajib?</td><td class="ref">pengaturan item / company</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>QC per baris: lolos / karantina / ditolak</td><td class="ref">qc_result; BR-GRN-02</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Hasil QC?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Tahan di Karantina; putuskan ulang</td><td class="ref">stock_status quarantine</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Ditunggu REQ (backorder)?</td><td class="ref">BR-SJ-03</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Cross-dock: pindah ke Loading Area (lanjut alur 1)</td><td class="ref">GRN completed; tanpa PUT</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Buat PUT; saran bin (kategori penyimpanan, kapasitas)</td><td class="ref">GRN completed; PUT pending; BR-GRN-03</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Put-away: scan bin tujuan</td><td class="ref">PUT completed; ledger Penerimaan → bin</td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Stok tersedia</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Buat RTV dari baris ditolak (Karantina)</td><td class="ref">RTV submitted; BR-GRN-04</td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui / tolak RTV</td><td class="ref">RTV approved / rejected</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Kirim ke vendor (surat jalan retur)</td><td class="ref">RTV shipped; ledger Karantina → keluar; goods_rejected</td></tr><tr><td class="k">Langkah</td><td>Penindak Lanjut PR</td><td>Konfirmasi vendor; barang pengganti → GRN baru merujuk RTV</td><td class="ref">RTV completed</td></tr><tr><td class="k">Selesai</td><td>Penindak Lanjut PR</td><td>RTV selesai</td><td class="ref"></td></tr></tbody></table></div>
+  </details>
+  <p class="top"><a href="#daftar">↑ Daftar alur</a></p>
+</section>
+<section id="alur-3" class="flow">
+  <header class="fh">
+    <p class="eyebrow">Alur 3 · <span class="mono">ISU</span></p>
+    <h2>Pemakaian material di Gudang Site</h2>
+    <p class="intro">Alur baru (A-32): barang habis pakai yang berada di Gudang Site keluar dari stok company saat dipakai proyek, sehingga beban material proyek tercatat dan laporan Material per Proyek punya kolom Terpakai.</p>
+    <ul class="legend"><li><span class="sw" style="background:#d6e6fb;border-color:#3b73c4"></span>Staf Gudang Site / Pemohon Internal</li><li><span class="sw" style="background:#fbe7c2;border-color:#b7801b"></span>Approver</li><li><span class="sw" style="background:#e4e7ec;border-color:#8a94a3"></span>Sistem</li></ul>
+  </header>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  classDef sys fill:#e4e7ec,stroke:#8a94a3,stroke-width:1.5px,color:#1b2430
+  classDef kg fill:#cdeee6,stroke:#2f8f7a,stroke-width:1.5px,color:#1b2430
+  classDef sg fill:#d6e6fb,stroke:#3b73c4,stroke-width:1.5px,color:#1b2430
+  classDef apr fill:#fbe7c2,stroke:#b7801b,stroke-width:1.5px,color:#1b2430
+  classDef pem fill:#e6dcfb,stroke:#7654c4,stroke-width:1.5px,color:#1b2430
+  classDef drv fill:#fcdcc8,stroke:#c4632a,stroke-width:1.5px,color:#1b2430
+  classDef pr fill:#dcf1c8,stroke:#5c9a2a,stroke-width:1.5px,color:#1b2430
+  classDef adm fill:#f9d3dc,stroke:#b8445f,stroke-width:1.5px,color:#1b2430
+  n_s(["Material dipakai di proyek"]):::sg
+  n_t1["Buat ISU: proyek, item habis pakai, jumlah, (foto)"]:::sg
+  n_g1{"Stok tersedia di Gudang Site cukup #amp; bin tidak dibeku?"}:::sys
+  n_t2["Ajukan REQ untuk kekurangan (alur 1)"]:::sg
+  n_t3["Konfirmasi pemakaian"]:::sg
+  n_t4["Ledger: bin Gudang Site → keluar (dipakai proyek); material_consumed → Akuntansi; kolom Terpakai"]:::sys
+  n_e(["Beban proyek tercatat"]):::sys
+  n_g2{"Salah input setelah konfirmasi?"}:::sg
+  n_t5["Buat ISU pembalik (jumlah negatif, alasan)"]:::sg
+  n_t6["Setujui ISU pembalik"]:::apr
+  n_s --&gt; n_t1
+  n_t1 --&gt; n_g1
+  n_g1 --&gt;|"tidak"| n_t2
+  n_g1 --&gt;|"ya"| n_t3
+  n_t3 --&gt; n_t4
+  n_t4 --&gt; n_g2
+  n_g2 --&gt;|"tidak"| n_e
+  n_g2 --&gt;|"ya"| n_t5
+  n_t5 --&gt; n_t6
+  n_t6 -.-&gt;|"kejadian pembalik"| n_t4
+</pre></div>
+  <p class="note"><b>Catatan:</b> ISU hanya untuk item habis pakai; aset tidak pernah &#x27;dipakai habis&#x27; (lihat alur 7). ISU tidak memakai SJ karena tidak ada pergerakan antar lokasi.</p>
+  <details><summary>Detail langkah: status &amp; aturan (10 langkah)</summary>
+    <div class="tw"><table><thead><tr><th>Jenis</th><th>Pelaku</th><th>Langkah</th><th>Status / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Staf Gudang Site / Pemohon Internal</td><td>Material dipakai di proyek</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Staf Gudang Site / Pemohon Internal</td><td>Buat ISU: proyek, item habis pakai, jumlah, (foto)</td><td class="ref">ISU draft; BR-PRJ-08</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Stok tersedia di Gudang Site cukup &amp; bin tidak dibeku?</td><td class="ref">BR-STK-06; BR-OPN-02</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang Site / Pemohon Internal</td><td>Ajukan REQ untuk kekurangan (alur 1)</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Staf Gudang Site / Pemohon Internal</td><td>Konfirmasi pemakaian</td><td class="ref">ISU confirmed</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Ledger: bin Gudang Site → keluar (dipakai proyek); material_consumed → Akuntansi; kolom Terpakai</td><td class="ref">BR §14</td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Beban proyek tercatat</td><td class="ref"></td></tr><tr><td class="k">Keputusan</td><td>Staf Gudang Site / Pemohon Internal</td><td>Salah input setelah konfirmasi?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Staf Gudang Site / Pemohon Internal</td><td>Buat ISU pembalik (jumlah negatif, alasan)</td><td class="ref">reversal_of_id; BR-GEN-03</td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui ISU pembalik</td><td class="ref">BR-GEN-04</td></tr></tbody></table></div>
+  </details>
+  <p class="top"><a href="#daftar">↑ Daftar alur</a></p>
+</section>
+<section id="alur-4" class="flow">
+  <header class="fh">
+    <p class="eyebrow">Alur 4 · <span class="mono">RET · SJ · GRN · AST</span></p>
+    <h2>Retur dari proyek dan pemilahan</h2>
+    <p class="intro">Barang kembali dari proyek atau klien: sisa material, barang jual-putus yang tidak terpakai (A-26), atau aset yang selesai dipinjam. RET adalah dokumen niat; pergerakan fisik lewat SJ balik (opsional) dan GRN jenis retur, lalu dipilah.</p>
+    <ul class="legend"><li><span class="sw" style="background:#e6dcfb;border-color:#7654c4"></span>Pemohon / Klien</li><li><span class="sw" style="background:#fbe7c2;border-color:#b7801b"></span>Approver</li><li><span class="sw" style="background:#fcdcc8;border-color:#c4632a"></span>Driver</li><li><span class="sw" style="background:#d6e6fb;border-color:#3b73c4"></span>Staf Gudang</li><li><span class="sw" style="background:#e4e7ec;border-color:#8a94a3"></span>Sistem</li></ul>
+  </header>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  classDef sys fill:#e4e7ec,stroke:#8a94a3,stroke-width:1.5px,color:#1b2430
+  classDef kg fill:#cdeee6,stroke:#2f8f7a,stroke-width:1.5px,color:#1b2430
+  classDef sg fill:#d6e6fb,stroke:#3b73c4,stroke-width:1.5px,color:#1b2430
+  classDef apr fill:#fbe7c2,stroke:#b7801b,stroke-width:1.5px,color:#1b2430
+  classDef pem fill:#e6dcfb,stroke:#7654c4,stroke-width:1.5px,color:#1b2430
+  classDef drv fill:#fcdcc8,stroke:#c4632a,stroke-width:1.5px,color:#1b2430
+  classDef pr fill:#dcf1c8,stroke:#5c9a2a,stroke-width:1.5px,color:#1b2430
+  classDef adm fill:#f9d3dc,stroke:#b8445f,stroke-width:1.5px,color:#1b2430
+  n_s(["Ada barang / aset yang harus kembali"]):::pem
+  n_t1["Buat RET merujuk SJ asal atau proyek; baris #amp; alasan"]:::pem
+  n_g1{"Ada lapis approval?"}:::sys
+  n_t2["Setujui / tolak (alur 9)"]:::apr
+  n_g2{"Diantar sendiri ke gudang?"}:::sys
+  n_t3["Ambil di site: SJ balik, muat, kirim"]:::drv
+  n_t4["GRN jenis retur: hitung, Diterima"]:::sg
+  n_t5["Pilah per baris: layak / rusak / offcut / waste; aset: pemeriksaan grade + foto"]:::sg
+  n_t6["Ledger bin Retur → bin tujuan; offcut → ID potongan + silsilah; goods_returned (ownership sold / company); aset: asset_returned, usage_days"]:::sys
+  n_g3{"Hasil pilah?"}:::sys
+  n_t7["Put-away barang layak (PUT)"]:::sg
+  n_t8["Rusak → kondisi damaged; waste → bin Waste (alur 6, WST); aset C/D → maintenance / damaged"]:::sys
+  n_e(["Retur selesai"]):::sys
+  n_s --&gt; n_t1
+  n_t1 --&gt; n_g1
+  n_g1 --&gt;|"ya"| n_t2
+  n_g1 --&gt;|"tidak"| n_g2
+  n_t2 --&gt;|"disetujui"| n_g2
+  n_g2 --&gt;|"tidak"| n_t3
+  n_g2 --&gt;|"ya"| n_t4
+  n_t3 --&gt; n_t4
+  n_t4 --&gt; n_t5
+  n_t5 --&gt; n_t6
+  n_t6 --&gt; n_g3
+  n_g3 --&gt;|"layak / offcut"| n_t7
+  n_g3 --&gt;|"rusak / waste / aset C-D"| n_t8
+  n_t7 --&gt; n_e
+  n_t8 --&gt; n_e
+</pre></div>
+  <p class="note"><b>Catatan:</b> Klien hanya bisa mengajukan RET untuk barang berstatus *Terkirim ke Klien* atau aset on_loan di proyeknya (BR-RET-05). Baris jual-putus yang kembali menghasilkan goods_returned dengan ownership = sold (retur penjualan di Akuntansi).</p>
+  <details><summary>Detail langkah: status &amp; aturan (13 langkah)</summary>
+    <div class="tw"><table><thead><tr><th>Jenis</th><th>Pelaku</th><th>Langkah</th><th>Status / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Pemohon / Klien</td><td>Ada barang / aset yang harus kembali</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Pemohon / Klien</td><td>Buat RET merujuk SJ asal atau proyek; baris &amp; alasan</td><td class="ref">RET submitted; BR-RET-03, BR-RET-05</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Ada lapis approval?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui / tolak (alur 9)</td><td class="ref">RET approved / rejected</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Diantar sendiri ke gudang?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Driver</td><td>Ambil di site: SJ balik, muat, kirim</td><td class="ref">SJ prepared → shipped; RET in_progress</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>GRN jenis retur: hitung, Diterima</td><td class="ref">GRN received; RET received; ledger → bin Retur</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Pilah per baris: layak / rusak / offcut / waste; aset: pemeriksaan grade + foto</td><td class="ref">return_sorting; BR-RET-04; BR-AST-03</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Ledger bin Retur → bin tujuan; offcut → ID potongan + silsilah; goods_returned (ownership sold / company); aset: asset_returned, usage_days</td><td class="ref">RET sorted; AST inspected; BR §14</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Hasil pilah?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Put-away barang layak (PUT)</td><td class="ref">PUT</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Rusak → kondisi damaged; waste → bin Waste (alur 6, WST); aset C/D → maintenance / damaged</td><td class="ref"></td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Retur selesai</td><td class="ref"></td></tr></tbody></table></div>
+  </details>
+  <p class="top"><a href="#daftar">↑ Daftar alur</a></p>
+</section>
+<section id="alur-5" class="flow">
+  <header class="fh">
+    <p class="eyebrow">Alur 5 · <span class="mono">TRF · PCK · SJ · GRN · PUT</span></p>
+    <h2>Transfer antar gudang dan antar proyek</h2>
+    <p class="intro">TRF dibuat manual atau otomatis dari backorder REQ. Sebagai dokumen niat, TRF memakai jalur fisik yang sama dengan pengiriman: PCK di gudang asal, SJ, GRN di gudang tujuan, PUT. Transfer antar proyek = transfer antar Gudang Site (atau bin on_site untuk aset). Pemindahan antar titik dalam satu proyek (mis. antar galian pipa) memakai TRF yang sama antar Gudang Site proyek itu dengan jalur ringan: tanpa approval bila tidak ada aturan, SJ boleh diantar sendiri, GRN = konfirmasi PIC titik tujuan (A-50).</p>
+    <ul class="legend"><li><span class="sw" style="background:#d6e6fb;border-color:#3b73c4"></span>Pengaju (Staf / Kepala Gudang)</li><li><span class="sw" style="background:#fbe7c2;border-color:#b7801b"></span>Approver</li><li><span class="sw" style="background:#d6e6fb;border-color:#3b73c4"></span>Staf Gudang Asal</li><li><span class="sw" style="background:#fcdcc8;border-color:#c4632a"></span>Driver</li><li><span class="sw" style="background:#d6e6fb;border-color:#3b73c4"></span>Staf Gudang Tujuan</li><li><span class="sw" style="background:#e4e7ec;border-color:#8a94a3"></span>Sistem</li></ul>
+  </header>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  classDef sys fill:#e4e7ec,stroke:#8a94a3,stroke-width:1.5px,color:#1b2430
+  classDef kg fill:#cdeee6,stroke:#2f8f7a,stroke-width:1.5px,color:#1b2430
+  classDef sg fill:#d6e6fb,stroke:#3b73c4,stroke-width:1.5px,color:#1b2430
+  classDef apr fill:#fbe7c2,stroke:#b7801b,stroke-width:1.5px,color:#1b2430
+  classDef pem fill:#e6dcfb,stroke:#7654c4,stroke-width:1.5px,color:#1b2430
+  classDef drv fill:#fcdcc8,stroke:#c4632a,stroke-width:1.5px,color:#1b2430
+  classDef pr fill:#dcf1c8,stroke:#5c9a2a,stroke-width:1.5px,color:#1b2430
+  classDef adm fill:#f9d3dc,stroke:#b8445f,stroke-width:1.5px,color:#1b2430
+  n_s(["Kebutuhan pindah stok (manual / backorder REQ)"]):::sg
+  n_t1["Buat TRF: gudang/proyek asal #amp; tujuan, baris"]:::sg
+  n_g1{"Ada lapis approval?"}:::sys
+  n_t2["Setujui / tolak (alur 9)"]:::apr
+  n_t3["Reservasi lunak di gudang asal; buat PCK"]:::sys
+  n_t4["Picking → Loading Area; buat SJ tujuan gudang"]:::sg
+  n_g0{"Dalam proyek #amp; diantar sendiri?"}:::sys
+  n_t5["Muat #amp; kirim"]:::drv
+  n_t5b["Antar sendiri ke titik tujuan (SJ self_delivered, nama pembawa)"]:::sg
+  n_t6["GRN dari SJ: hitung, Diterima"]:::sg
+  n_g2{"Jumlah = dikirim?"}:::sys
+  n_t7["DSC untuk selisih (alur 1)"]:::sys
+  n_t8["Put-away"]:::sg
+  n_t9["TRF selesai; bila dari backorder: reservasi ke REQ penunggu, saran cross-dock"]:::sys
+  n_e(["Stok di gudang tujuan"]):::sys
+  n_s --&gt; n_t1
+  n_t1 --&gt; n_g1
+  n_g1 --&gt;|"ya"| n_t2
+  n_g1 --&gt;|"tidak"| n_t3
+  n_t2 --&gt;|"disetujui"| n_t3
+  n_t3 --&gt; n_t4
+  n_t4 --&gt; n_g0
+  n_g0 --&gt;|"tidak"| n_t5
+  n_g0 --&gt;|"ya"| n_t5b
+  n_t5 --&gt; n_t6
+  n_t5b --&gt; n_t6
+  n_t6 --&gt; n_g2
+  n_g2 --&gt;|"tidak"| n_t7
+  n_t7 --&gt; n_t8
+  n_g2 --&gt;|"ya"| n_t8
+  n_t8 --&gt; n_t9
+  n_t9 --&gt; n_e
+</pre></div>
+  <p class="note"><b>Catatan:</b> TRF bisa dibatalkan sampai sebelum SJ shipped; setelah itu koreksi lewat DSC atau TRF balik. Selama in_transit, stok masih dihitung milik gudang asal di laporan saldo. Transfer dalam proyek (A-50): GRN tujuan cukup konfirmasi PIC titik tanpa QC; riwayat lokasi barang terlihat di kartu stok dan sub-tampilan Di Gudang Site per titik.</p>
+  <details><summary>Detail langkah: status &amp; aturan (15 langkah)</summary>
+    <div class="tw"><table><thead><tr><th>Jenis</th><th>Pelaku</th><th>Langkah</th><th>Status / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Pengaju (Staf / Kepala Gudang)</td><td>Kebutuhan pindah stok (manual / backorder REQ)</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Pengaju (Staf / Kepala Gudang)</td><td>Buat TRF: gudang/proyek asal &amp; tujuan, baris</td><td class="ref">TRF submitted; nomor memakai gudang asal (A-43)</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Ada lapis approval?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui / tolak (alur 9)</td><td class="ref">TRF approved / rejected</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Reservasi lunak di gudang asal; buat PCK</td><td class="ref">TRF approved → in_progress; PCK pending; BR-STK-04</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang Asal</td><td>Picking → Loading Area; buat SJ tujuan gudang</td><td class="ref">PCK completed; SJ prepared</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Dalam proyek &amp; diantar sendiri?</td><td class="ref">A-50</td></tr><tr><td class="k">Langkah</td><td>Driver</td><td>Muat &amp; kirim</td><td class="ref">SJ shipped; ledger → in_transit (milik gudang asal); goods_shipped; BR-STK-13</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang Asal</td><td>Antar sendiri ke titik tujuan (SJ self_delivered, nama pembawa)</td><td class="ref">SJ shipped (shipment_method = self_delivered); ledger → in_transit; goods_shipped; BR-SJ-07; A-50; A-57</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang Tujuan</td><td>GRN dari SJ: hitung, Diterima</td><td class="ref">GRN received; SJ delivered; stock_transferred</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Jumlah = dikirim?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>DSC untuk selisih (alur 1)</td><td class="ref">DSC open</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang Tujuan</td><td>Put-away</td><td class="ref">PUT completed</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>TRF selesai; bila dari backorder: reservasi ke REQ penunggu, saran cross-dock</td><td class="ref">TRF completed; BR-REQ-08</td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Stok di gudang tujuan</td><td class="ref"></td></tr></tbody></table></div>
+  </details>
+  <p class="top"><a href="#daftar">↑ Daftar alur</a></p>
+</section>
+<section id="alur-6" class="flow">
+  <header class="fh">
+    <p class="eyebrow">Alur 6 · <span class="mono">CNV · WST</span></p>
+    <h2>Konversi material, offcut, dan berita acara waste</h2>
+    <p class="intro">Pembeda utama produk: pipa/lembar dipotong menjadi item lain; sisa menjadi offcut (kembali ke stok dengan ID baru dan silsilah) atau waste. Waste ditutup lewat Berita Acara Waste dengan disposisi.</p>
+    <ul class="legend"><li><span class="sw" style="background:#d6e6fb;border-color:#3b73c4"></span>Staf Gudang</li><li><span class="sw" style="background:#fbe7c2;border-color:#b7801b"></span>Approver</li><li><span class="sw" style="background:#e4e7ec;border-color:#8a94a3"></span>Sistem</li></ul>
+  </header>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  classDef sys fill:#e4e7ec,stroke:#8a94a3,stroke-width:1.5px,color:#1b2430
+  classDef kg fill:#cdeee6,stroke:#2f8f7a,stroke-width:1.5px,color:#1b2430
+  classDef sg fill:#d6e6fb,stroke:#3b73c4,stroke-width:1.5px,color:#1b2430
+  classDef apr fill:#fbe7c2,stroke:#b7801b,stroke-width:1.5px,color:#1b2430
+  classDef pem fill:#e6dcfb,stroke:#7654c4,stroke-width:1.5px,color:#1b2430
+  classDef drv fill:#fcdcc8,stroke:#c4632a,stroke-width:1.5px,color:#1b2430
+  classDef pr fill:#dcf1c8,stroke:#5c9a2a,stroke-width:1.5px,color:#1b2430
+  classDef adm fill:#f9d3dc,stroke:#b8445f,stroke-width:1.5px,color:#1b2430
+  n_s(["Perlu potong / rakit / bongkar / ganti kemasan"]):::sg
+  n_t1["Buat CNV: proyek (atau Proyek Internal), input potongan / lot"]:::sg
+  n_t2["Isi output, offcut (≥ minimum), waste, kerf"]:::sg
+  n_g1{"Neraca ukuran seimbang?"}:::sys
+  n_g2{"Ada lapis approval?"}:::sys
+  n_t3["Setujui / tolak"]:::apr
+  n_t4["Ledger: input keluar; output #amp; offcut masuk (ID potongan, silsilah); waste → bin Waste; material_converted"]:::sys
+  n_e1(["Konversi selesai"]):::sys
+  n_s2(("Bin Waste perlu ditutup (berkala)")):::sg
+  n_t5["Buat WST: baris dari bin Waste, disposisi dibuang / scrap / dipakai ulang"]:::sg
+  n_t6["Setujui / tolak WST"]:::apr
+  n_t7["Tutup WST dengan bukti (foto / berita acara)"]:::sg
+  n_t8["Ledger bin Waste → keluar (atau kembali ke stok bila dipakai ulang); waste_disposed"]:::sys
+  n_e2(["Waste terdisposisi"]):::sys
+  n_s --&gt; n_t1
+  n_t1 --&gt; n_t2
+  n_t2 --&gt; n_g1
+  n_g1 -.-&gt;|"tidak → perbaiki"| n_t2
+  n_g1 --&gt;|"ya"| n_g2
+  n_g2 --&gt;|"ya"| n_t3
+  n_g2 --&gt;|"tidak"| n_t4
+  n_t3 --&gt;|"disetujui"| n_t4
+  n_t4 --&gt; n_e1
+  n_s2 --&gt; n_t5
+  n_t5 --&gt; n_t6
+  n_t6 --&gt;|"disetujui"| n_t7
+  n_t7 --&gt; n_t8
+  n_t8 --&gt; n_e2
+</pre></div>
+  <p class="note"><b>Catatan:</b> CNV completed hanya bisa dibalik bila semua output &amp; offcut masih di bin dan belum dipakai (BR-CNV-05). Resep konversi (F2) hanya mempercepat pengisian, tidak mengunci hasil nyata.</p>
+  <details><summary>Detail langkah: status &amp; aturan (14 langkah)</summary>
+    <div class="tw"><table><thead><tr><th>Jenis</th><th>Pelaku</th><th>Langkah</th><th>Status / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Staf Gudang</td><td>Perlu potong / rakit / bongkar / ganti kemasan</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Buat CNV: proyek (atau Proyek Internal), input potongan / lot</td><td class="ref">CNV draft; BR-CNV-01</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Isi output, offcut (≥ minimum), waste, kerf</td><td class="ref">BR-CNV-03; A-19</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Neraca ukuran seimbang?</td><td class="ref">BR-CNV-02</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Ada lapis approval?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui / tolak</td><td class="ref">CNV pending_approval</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Ledger: input keluar; output &amp; offcut masuk (ID potongan, silsilah); waste → bin Waste; material_converted</td><td class="ref">CNV completed; BR-CNV-04</td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Konversi selesai</td><td class="ref"></td></tr><tr><td class="k">Tunggu</td><td>Staf Gudang</td><td>Bin Waste perlu ditutup (berkala)</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Buat WST: baris dari bin Waste, disposisi dibuang / scrap / dipakai ulang</td><td class="ref">WST submitted</td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui / tolak WST</td><td class="ref">WST approved</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Tutup WST dengan bukti (foto / berita acara)</td><td class="ref">WST closed</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Ledger bin Waste → keluar (atau kembali ke stok bila dipakai ulang); waste_disposed</td><td class="ref">BR §14</td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Waste terdisposisi</td><td class="ref"></td></tr></tbody></table></div>
+  </details>
+  <p class="top"><a href="#daftar">↑ Daftar alur</a></p>
+</section>
+<section id="alur-7" class="flow">
+  <header class="fh">
+    <p class="eyebrow">Alur 7 · <span class="mono">AST · ADJ</span></p>
+    <h2>Aset dipinjamkan: keluar, jatuh tempo, kembali, hilang</h2>
+    <p class="intro">Siklus aset ber-serial: keluar bersama pengiriman (alur 1), berada di bin virtual On-site Proyek, diingatkan saat lewat jatuh tempo, kembali lewat retur (alur 4) dengan pemeriksaan, atau ditandai hilang dan dihapuskan lewat ADJ.</p>
+    <ul class="legend"><li><span class="sw" style="background:#e6dcfb;border-color:#7654c4"></span>Pemohon / PIC Proyek</li><li><span class="sw" style="background:#d6e6fb;border-color:#3b73c4"></span>Staf Gudang</li><li><span class="sw" style="background:#fcdcc8;border-color:#c4632a"></span>Driver</li><li><span class="sw" style="background:#fbe7c2;border-color:#b7801b"></span>Approver</li><li><span class="sw" style="background:#e4e7ec;border-color:#8a94a3"></span>Sistem</li></ul>
+  </header>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  classDef sys fill:#e4e7ec,stroke:#8a94a3,stroke-width:1.5px,color:#1b2430
+  classDef kg fill:#cdeee6,stroke:#2f8f7a,stroke-width:1.5px,color:#1b2430
+  classDef sg fill:#d6e6fb,stroke:#3b73c4,stroke-width:1.5px,color:#1b2430
+  classDef apr fill:#fbe7c2,stroke:#b7801b,stroke-width:1.5px,color:#1b2430
+  classDef pem fill:#e6dcfb,stroke:#7654c4,stroke-width:1.5px,color:#1b2430
+  classDef drv fill:#fcdcc8,stroke:#c4632a,stroke-width:1.5px,color:#1b2430
+  classDef pr fill:#dcf1c8,stroke:#5c9a2a,stroke-width:1.5px,color:#1b2430
+  classDef adm fill:#f9d3dc,stroke:#b8445f,stroke-width:1.5px,color:#1b2430
+  n_s(["Baris REQ 'Pinjam' disetujui (alur 1)"]):::pem
+  n_t1["Picking serial aset; catat kondisi, foto keluar, pembacaan meter (jam/km); tanggal kembali"]:::sg
+  n_t2["Kirim #amp; bukti terima (alur 1)"]:::drv
+  n_t3["Aset → bin On-site Proyek; state on_loan; asset_checked_out"]:::sys
+  n_g1(("Cek harian: lewat jatuh tempo?")):::sys
+  n_t4["Notifikasi PIC proyek #amp; Kepala Gudang; laporan aset terlambat"]:::sys
+  n_g2{"Aset masih ada?"}:::pem
+  n_t5["Ajukan RET aset (alur 4)"]:::pem
+  n_t6["Pemeriksaan: baca meter kembali; grade A–D + skor kondisi % + foto + catatan komponen"]:::sg
+  n_g3{"Grade?"}:::sys
+  n_t7["State available; asset_returned dengan usage_days, jam pakai, skor; hitung sisa umur %, peringatan bila #lt; ambang"]:::sys
+  n_t8["State maintenance / damaged; asset_lost_or_damaged → Akuntansi (ganti rugi)"]:::sys
+  n_t9["Tandai hilang (alasan) → buat ADJ keluar"]:::sg
+  n_t10["Setujui ADJ"]:::apr
+  n_e1(["Aset tersedia kembali"]):::sys
+  n_e2(["Aset di maintenance / rusak"]):::sys
+  n_e3(["Aset dihapuskan"]):::sys
+  n_s --&gt; n_t1
+  n_t1 --&gt; n_t2
+  n_t2 --&gt; n_t3
+  n_t3 --&gt; n_g1
+  n_g1 --&gt;|"ya"| n_t4
+  n_g1 --&gt;|"proyek selesai / diminta kembali"| n_g2
+  n_t4 --&gt; n_g2
+  n_g2 --&gt;|"ya"| n_t5
+  n_g2 --&gt;|"tidak (hilang)"| n_t9
+  n_t5 --&gt; n_t6
+  n_t6 --&gt; n_g3
+  n_g3 --&gt;|"A / B"| n_t7
+  n_g3 --&gt;|"C / D"| n_t8
+  n_t7 --&gt; n_e1
+  n_t8 --&gt; n_e2
+  n_t9 --&gt; n_t10
+  n_t10 --&gt; n_e3
+</pre></div>
+  <p class="note"><b>Catatan:</b> Peminjaman ke orang (bukan proyek klien) wajib memakai Proyek Internal agar bin on_site selalu punya proyek (BR-AST-02). Aset dalam maintenance tidak bisa dicadangkan (F2). Penyusutan nilai dihitung Akuntansi dari data meter, hari/jam pakai, dan skor kondisi (A-66, D-07).</p>
+  <details><summary>Detail langkah: status &amp; aturan (17 langkah)</summary>
+    <div class="tw"><table><thead><tr><th>Jenis</th><th>Pelaku</th><th>Langkah</th><th>Status / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Pemohon / PIC Proyek</td><td>Baris REQ &#x27;Pinjam&#x27; disetujui (alur 1)</td><td class="ref">line_ownership = loan; A-38</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Picking serial aset; catat kondisi, foto keluar, pembacaan meter (jam/km); tanggal kembali</td><td class="ref">AST; due_return_date; meter_out; BR-STK-08; BR-AST-08</td></tr><tr><td class="k">Langkah</td><td>Driver</td><td>Kirim &amp; bukti terima (alur 1)</td><td class="ref">SJ delivered</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Aset → bin On-site Proyek; state on_loan; asset_checked_out</td><td class="ref">AST checked_out; BR-AST-01</td></tr><tr><td class="k">Tunggu</td><td>Sistem</td><td>Cek harian: lewat jatuh tempo?</td><td class="ref">BR-AST-06</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Notifikasi PIC proyek &amp; Kepala Gudang; laporan aset terlambat</td><td class="ref"></td></tr><tr><td class="k">Keputusan</td><td>Pemohon / PIC Proyek</td><td>Aset masih ada?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Pemohon / PIC Proyek</td><td>Ajukan RET aset (alur 4)</td><td class="ref">RET</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Pemeriksaan: baca meter kembali; grade A–D + skor kondisi % + foto + catatan komponen</td><td class="ref">AST returned → inspected; meter_in; BR-AST-03; BR-AST-08</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Grade?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>State available; asset_returned dengan usage_days, jam pakai, skor; hitung sisa umur %, peringatan bila &lt; ambang</td><td class="ref">BR-AST-05; BR-AST-08; A-66</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>State maintenance / damaged; asset_lost_or_damaged → Akuntansi (ganti rugi)</td><td class="ref">BR-AST-04</td></tr><tr><td class="k">Langkah</td><td>Staf Gudang</td><td>Tandai hilang (alasan) → buat ADJ keluar</td><td class="ref">asset_state lost; asset_lost_or_damaged; ADJ submitted</td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui ADJ</td><td class="ref">ADJ approved → posted; stock_adjusted</td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Aset tersedia kembali</td><td class="ref"></td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Aset di maintenance / rusak</td><td class="ref"></td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Aset dihapuskan</td><td class="ref">asset_state written_off</td></tr></tbody></table></div>
+  </details>
+  <p class="top"><a href="#daftar">↑ Daftar alur</a></p>
+</section>
+<section id="alur-8" class="flow">
+  <header class="fh">
+    <p class="eyebrow">Alur 8 · <span class="mono">OPN · ADJ</span></p>
+    <h2>Stock opname: sesi, hitung buta, hitung ulang, rekonsiliasi</h2>
+    <p class="intro">Sesi opname bulanan/tahunan/ad-hoc dengan pembekuan bin opsional, hitung buta, klasifikasi selisih berdasarkan ambang relatif dan absolut, hitung ulang oleh orang berbeda, dan rekonsiliasi yang menghasilkan satu ADJ per gudang yang disetujui di tingkat sesi.</p>
+    <ul class="legend"><li><span class="sw" style="background:#cdeee6;border-color:#2f8f7a"></span>Kepala Gudang / Auditor</li><li><span class="sw" style="background:#d6e6fb;border-color:#3b73c4"></span>Penghitung (Staf)</li><li><span class="sw" style="background:#fbe7c2;border-color:#b7801b"></span>Approver</li><li><span class="sw" style="background:#e4e7ec;border-color:#8a94a3"></span>Sistem</li></ul>
+  </header>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  classDef sys fill:#e4e7ec,stroke:#8a94a3,stroke-width:1.5px,color:#1b2430
+  classDef kg fill:#cdeee6,stroke:#2f8f7a,stroke-width:1.5px,color:#1b2430
+  classDef sg fill:#d6e6fb,stroke:#3b73c4,stroke-width:1.5px,color:#1b2430
+  classDef apr fill:#fbe7c2,stroke:#b7801b,stroke-width:1.5px,color:#1b2430
+  classDef pem fill:#e6dcfb,stroke:#7654c4,stroke-width:1.5px,color:#1b2430
+  classDef drv fill:#fcdcc8,stroke:#c4632a,stroke-width:1.5px,color:#1b2430
+  classDef pr fill:#dcf1c8,stroke:#5c9a2a,stroke-width:1.5px,color:#1b2430
+  classDef adm fill:#f9d3dc,stroke:#b8445f,stroke-width:1.5px,color:#1b2430
+  n_s(["Jadwal opname / permintaan audit"]):::kg
+  n_t1["Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak"]:::kg
+  n_g1{"Ada PCK berjalan di cakupan (bila pembekuan)?"}:::sys
+  n_t2["Selesaikan atau batalkan PCK dulu"]:::kg
+  n_t3["Bekukan bin; snapshot saldo fisik (termasuk dicadangkan #amp; Loading Area)"]:::sys
+  n_t4["Hitung buta per bin di PWA (scan bin, input jumlah; draf lokal bila offline)"]:::sg
+  n_t5["Klasifikasi selisih per baris: kecil / sedang / besar (ambang relatif #amp; absolut)"]:::sys
+  n_g2{"Kelas selisih?"}:::sys
+  n_t6["Hitung ulang oleh penghitung berbeda"]:::sg
+  n_t7["Isi kategori akar masalah untuk selisih besar"]:::kg
+  n_t8["Rekonsiliasi: tinjau semua baris; draf ADJ per gudang"]:::kg
+  n_t9["Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen)"]:::apr
+  n_t10["ADJ posted; stock_adjusted; buka bin; laporan PDF; dashboard akurasi"]:::sys
+  n_e(["Sesi ditutup"]):::sys
+  n_g3{"SJ mendesak dari bin beku?"}:::kg
+  n_t11["Override dengan alasan; bin ditandai hitung ulang"]:::kg
+  n_s --&gt; n_t1
+  n_t1 --&gt; n_g1
+  n_g1 --&gt;|"ya"| n_t2
+  n_t2 -.-&gt; n_g1
+  n_g1 --&gt;|"tidak"| n_t3
+  n_t3 --&gt; n_t4
+  n_t4 --&gt; n_t5
+  n_t5 --&gt; n_g2
+  n_g2 --&gt;|"sedang"| n_t6
+  n_t6 -.-&gt; n_t5
+  n_g2 --&gt;|"besar"| n_t7
+  n_g2 --&gt;|"kecil"| n_t8
+  n_t7 --&gt; n_t8
+  n_t8 --&gt; n_t9
+  n_t9 --&gt;|"disetujui"| n_t10
+  n_t10 --&gt; n_e
+  n_t3 --&gt;|"selama sesi"| n_g3
+  n_g3 --&gt;|"ya"| n_t11
+  n_t11 -.-&gt; n_t4
+</pre></div>
+  <p class="note"><b>Catatan:</b> Transaksi PWA offline yang tiba saat bin beku masuk antrean tinjauan (F2, BR-OPN-03). Auditor eksternal (F2) memakai akun tamu berbatas gudang &amp; periode. Pemeriksaan mendadak (spot_check) melewati pembekuan dan tidak memposting ADJ sendiri (BR-OPN-10); penutupan sesi bulanan memajukan tanggal kunci stok (BR-STK-15).</p>
+  <details><summary>Detail langkah: status &amp; aturan (16 langkah)</summary>
+    <div class="tw"><table><thead><tr><th>Jenis</th><th>Pelaku</th><th>Langkah</th><th>Status / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Kepala Gudang / Auditor</td><td>Jadwal opname / permintaan audit</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak</td><td class="ref">OPN planned; BR-OPN-10</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Ada PCK berjalan di cakupan (bila pembekuan)?</td><td class="ref">BR-OPN-02</td></tr><tr><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Selesaikan atau batalkan PCK dulu</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Bekukan bin; snapshot saldo fisik (termasuk dicadangkan &amp; Loading Area)</td><td class="ref">OPN in_progress; bin frozen; BR-OPN-01</td></tr><tr><td class="k">Langkah</td><td>Penghitung (Staf)</td><td>Hitung buta per bin di PWA (scan bin, input jumlah; draf lokal bila offline)</td><td class="ref">count_assignment; blind_count</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Klasifikasi selisih per baris: kecil / sedang / besar (ambang relatif &amp; absolut)</td><td class="ref">variance_class; BR-OPN-04</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Kelas selisih?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Penghitung (Staf)</td><td>Hitung ulang oleh penghitung berbeda</td><td class="ref">OPN recount; BR-OPN-05</td></tr><tr><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Isi kategori akar masalah untuk selisih besar</td><td class="ref">root_cause_category; BR-OPN-07</td></tr><tr><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Rekonsiliasi: tinjau semua baris; draf ADJ per gudang</td><td class="ref">OPN reconciling; ADJ submitted</td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen)</td><td class="ref">OPN approved; A-09; BR-OPN-06; BR-OPN-09</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>ADJ posted; stock_adjusted; buka bin; laporan PDF; dashboard akurasi</td><td class="ref">OPN closed</td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Sesi ditutup</td><td class="ref"></td></tr><tr><td class="k">Keputusan</td><td>Kepala Gudang / Auditor</td><td>SJ mendesak dari bin beku?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Override dengan alasan; bin ditandai hitung ulang</td><td class="ref">BR-OPN-02</td></tr></tbody></table></div>
+  </details>
+  <p class="top"><a href="#daftar">↑ Daftar alur</a></p>
+</section>
+<section id="alur-9" class="flow">
+  <header class="fh">
+    <p class="eyebrow">Alur 9 · <span class="mono">(semua dokumen dengan pending_approval)</span></p>
+    <h2>Approval generik (semua jenis dokumen)</h2>
+    <p class="intro">Mesin approval yang dipakai REQ, TRF, RET, CNV, ADJ, WST, PRQ, RTV, dan OPN. Aturan di-snapshot saat diajukan, lapis diproses sesuai cara putus, dengan delegasi, eskalasi, dan pemisahan tugas.</p>
+    <ul class="legend"><li><span class="sw" style="background:#e6dcfb;border-color:#7654c4"></span>Pengaju</li><li><span class="sw" style="background:#e4e7ec;border-color:#8a94a3"></span>Sistem</li><li><span class="sw" style="background:#fbe7c2;border-color:#b7801b"></span>Approver</li><li><span class="sw" style="background:#fbe7c2;border-color:#b7801b"></span>Delegat / Cadangan / Atasan</li></ul>
+  </header>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  classDef sys fill:#e4e7ec,stroke:#8a94a3,stroke-width:1.5px,color:#1b2430
+  classDef kg fill:#cdeee6,stroke:#2f8f7a,stroke-width:1.5px,color:#1b2430
+  classDef sg fill:#d6e6fb,stroke:#3b73c4,stroke-width:1.5px,color:#1b2430
+  classDef apr fill:#fbe7c2,stroke:#b7801b,stroke-width:1.5px,color:#1b2430
+  classDef pem fill:#e6dcfb,stroke:#7654c4,stroke-width:1.5px,color:#1b2430
+  classDef drv fill:#fcdcc8,stroke:#c4632a,stroke-width:1.5px,color:#1b2430
+  classDef pr fill:#dcf1c8,stroke:#5c9a2a,stroke-width:1.5px,color:#1b2430
+  classDef adm fill:#f9d3dc,stroke:#b8445f,stroke-width:1.5px,color:#1b2430
+  n_s(["Dokumen diajukan"]):::pem
+  n_t1["Snapshot aturan yang cocok (jenis, gudang, proyek, kategori, jumlah, klien); lewati lapis yang menunjuk pengaju"]:::sys
+  n_g1{"Ada lapis?"}:::sys
+  n_t2["Setujui otomatis (kecuali ADJ manual: minimal satu lapis)"]:::sys
+  n_t3["Kirim tugas approval lapis n: in-app / email / WhatsApp (F2, token sekali pakai)"]:::sys
+  n_g2{"Approver nonaktif atau delegasi aktif?"}:::sys
+  n_t4["Terima tugas sebagai delegat / cadangan"]:::apr
+  n_t5["Setujui / tolak (+ alasan); via web atau tombol WA"]:::apr
+  n_g3(("Lewat batas waktu (24 jam kalender)?")):::sys
+  n_t6["Eskalasi: cadangan / atasan / Admin Company"]:::apr
+  n_g4{"Keputusan?"}:::sys
+  n_t7["Catat timeline: pelaku, kanal, nomor WA, message_id"]:::sys
+  n_g5{"Cara putus terpenuhi #amp; masih ada lapis berikutnya?"}:::sys
+  n_e1(["Dokumen disetujui"]):::pem
+  n_e2(["Dokumen ditolak"]):::pem
+  n_s --&gt; n_t1
+  n_t1 --&gt; n_g1
+  n_g1 --&gt;|"tidak"| n_t2
+  n_t2 --&gt; n_e1
+  n_g1 --&gt;|"ya"| n_t3
+  n_t3 --&gt; n_g2
+  n_g2 --&gt;|"ya"| n_t4
+  n_t4 --&gt; n_t5
+  n_g2 --&gt;|"tidak"| n_t5
+  n_t5 --&gt; n_g4
+  n_t3 --&gt;|"menunggu"| n_g3
+  n_g3 --&gt;|"ya"| n_t6
+  n_t6 -.-&gt; n_t5
+  n_g4 --&gt;|"tolak"| n_e2
+  n_g4 --&gt;|"setuju"| n_t7
+  n_t7 --&gt; n_g5
+  n_g5 -.-&gt;|"lapis berikutnya"| n_t3
+  n_g5 --&gt;|"selesai"| n_e1
+</pre></div>
+  <p class="note"><b>Catatan:</b> Orang yang sama di dua lapis berurutan cukup menyetujui sekali (BR-APR-04). Simulasi aturan wajib tersedia saat menyusun aturan (BR-APR-11).</p>
+  <details><summary>Detail langkah: status &amp; aturan (15 langkah)</summary>
+    <div class="tw"><table><thead><tr><th>Jenis</th><th>Pelaku</th><th>Langkah</th><th>Status / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Pengaju</td><td>Dokumen diajukan</td><td class="ref">submitted</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Snapshot aturan yang cocok (jenis, gudang, proyek, kategori, jumlah, klien); lewati lapis yang menunjuk pengaju</td><td class="ref">BR-APR-01, BR-APR-03, BR-APR-07</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Ada lapis?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Setujui otomatis (kecuali ADJ manual: minimal satu lapis)</td><td class="ref">approved; BR-APR-02</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Kirim tugas approval lapis n: in-app / email / WhatsApp (F2, token sekali pakai)</td><td class="ref">pending_approval; BR-APR-10</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Approver nonaktif atau delegasi aktif?</td><td class="ref">BR-APR-05, BR-APR-06</td></tr><tr><td class="k">Langkah</td><td>Delegat / Cadangan / Atasan</td><td>Terima tugas sebagai delegat / cadangan</td><td class="ref">approval_decision delegated</td></tr><tr><td class="k">Langkah</td><td>Approver</td><td>Setujui / tolak (+ alasan); via web atau tombol WA</td><td class="ref">BR-APR-09: keputusan pertama menang</td></tr><tr><td class="k">Tunggu</td><td>Sistem</td><td>Lewat batas waktu (24 jam kalender)?</td><td class="ref">BR-APR-08</td></tr><tr><td class="k">Langkah</td><td>Delegat / Cadangan / Atasan</td><td>Eskalasi: cadangan / atasan / Admin Company</td><td class="ref">approval_decision escalated</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Keputusan?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Catat timeline: pelaku, kanal, nomor WA, message_id</td><td class="ref">document_timeline</td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Cara putus terpenuhi &amp; masih ada lapis berikutnya?</td><td class="ref">berurutan / salah satu / semua</td></tr><tr><td class="k">Selesai</td><td>Pengaju</td><td>Dokumen disetujui</td><td class="ref">approved</td></tr><tr><td class="k">Selesai</td><td>Pengaju</td><td>Dokumen ditolak</td><td class="ref">rejected; notifikasi</td></tr></tbody></table></div>
+  </details>
+  <p class="top"><a href="#daftar">↑ Daftar alur</a></p>
+</section>
+<section id="alur-10" class="flow">
+  <header class="fh">
+    <p class="eyebrow">Alur 10 · <span class="mono">subscription_status</span></p>
+    <h2>Siklus langganan company (platform)</h2>
+    <p class="intro">Dari pembuatan company sampai penghentian: provisioning otomatis, trial, tagihan bulanan dengan pembayaran manual, tenggang, penangguhan hanya-baca, dan pengakhiran dengan masa ekspor.</p>
+    <ul class="legend"><li><span class="sw" style="background:#f9d3dc;border-color:#b8445f"></span>Super Admin</li><li><span class="sw" style="background:#f9d3dc;border-color:#b8445f"></span>Admin Company</li><li><span class="sw" style="background:#e4e7ec;border-color:#8a94a3"></span>Sistem</li></ul>
+  </header>
+  <div class="diagram"><pre class="mermaid">
+flowchart TD
+  classDef sys fill:#e4e7ec,stroke:#8a94a3,stroke-width:1.5px,color:#1b2430
+  classDef kg fill:#cdeee6,stroke:#2f8f7a,stroke-width:1.5px,color:#1b2430
+  classDef sg fill:#d6e6fb,stroke:#3b73c4,stroke-width:1.5px,color:#1b2430
+  classDef apr fill:#fbe7c2,stroke:#b7801b,stroke-width:1.5px,color:#1b2430
+  classDef pem fill:#e6dcfb,stroke:#7654c4,stroke-width:1.5px,color:#1b2430
+  classDef drv fill:#fcdcc8,stroke:#c4632a,stroke-width:1.5px,color:#1b2430
+  classDef pr fill:#dcf1c8,stroke:#5c9a2a,stroke-width:1.5px,color:#1b2430
+  classDef adm fill:#f9d3dc,stroke:#b8445f,stroke-width:1.5px,color:#1b2430
+  n_s(["Company baru"]):::adm
+  n_t1["Buat company: subdomain, paket, durasi trial"]:::adm
+  n_t2["Provisioning: buat DB, migrasi, data awal, undangan Admin Company"]:::sys
+  n_t3["Terima undangan; jalankan wizard setup; setujui kebijakan privasi #amp; ketentuan"]:::adm
+  n_g1(("Trial / periode berakhir?")):::sys
+  n_t4["Terbitkan tagihan bulanan; pengingat email / WA"]:::sys
+  n_t5["Unggah bukti transfer"]:::adm
+  n_t6["Verifikasi pembayaran"]:::adm
+  n_g2{"Pembayaran valid sebelum jatuh tempo?"}:::sys
+  n_t7["Aktif; perpanjang masa aktif"]:::sys
+  n_t8["Jatuh tempo: tenggang 7 hari, pengingat"]:::sys
+  n_g3(("Dibayar dalam tenggang?")):::sys
+  n_t9["Ditangguhkan 30 hari: hanya-baca, antrean PWA ditahan, job #amp; token WA berhenti"]:::sys
+  n_g4(("Dibayar dalam 30 hari?")):::sys
+  n_t10["Diakhiri: 90 hari hanya Admin Company login untuk ekspor"]:::sys
+  n_e(["Data dihapus setelah 90 hari"]):::sys
+  n_s --&gt; n_t1
+  n_t1 --&gt; n_t2
+  n_t2 --&gt; n_t3
+  n_t3 --&gt; n_g1
+  n_g1 --&gt;|"ya"| n_t4
+  n_t4 --&gt; n_t5
+  n_t5 --&gt; n_t6
+  n_t6 --&gt; n_g2
+  n_g2 --&gt;|"ya"| n_t7
+  n_t7 -.-&gt;|"periode berikutnya"| n_g1
+  n_g2 --&gt;|"tidak"| n_t8
+  n_t8 --&gt; n_g3
+  n_g3 --&gt;|"ya"| n_t7
+  n_g3 --&gt;|"tidak"| n_t9
+  n_t9 --&gt; n_g4
+  n_g4 --&gt;|"ya"| n_t7
+  n_g4 --&gt;|"tidak"| n_t10
+  n_t10 --&gt; n_e
+</pre></div>
+  <p class="note"><b>Catatan:</b> Super Admin tidak bisa membuka data operasional company tanpa akses dukungan yang diberikan Admin Company (BR-SUB-04). Payment gateway (F3) menggantikan langkah unggah bukti &amp; verifikasi manual.</p>
+  <details><summary>Detail langkah: status &amp; aturan (16 langkah)</summary>
+    <div class="tw"><table><thead><tr><th>Jenis</th><th>Pelaku</th><th>Langkah</th><th>Status / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Super Admin</td><td>Company baru</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Super Admin</td><td>Buat company: subdomain, paket, durasi trial</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Provisioning: buat DB, migrasi, data awal, undangan Admin Company</td><td class="ref">subscription trial; A-11</td></tr><tr><td class="k">Langkah</td><td>Admin Company</td><td>Terima undangan; jalankan wizard setup; setujui kebijakan privasi &amp; ketentuan</td><td class="ref">NFR-11</td></tr><tr><td class="k">Tunggu</td><td>Sistem</td><td>Trial / periode berakhir?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Terbitkan tagihan bulanan; pengingat email / WA</td><td class="ref">subscription_invoice</td></tr><tr><td class="k">Langkah</td><td>Admin Company</td><td>Unggah bukti transfer</td><td class="ref">subscription_payment</td></tr><tr><td class="k">Langkah</td><td>Super Admin</td><td>Verifikasi pembayaran</td><td class="ref"></td></tr><tr><td class="k">Keputusan</td><td>Sistem</td><td>Pembayaran valid sebelum jatuh tempo?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Aktif; perpanjang masa aktif</td><td class="ref">subscription active</td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Jatuh tempo: tenggang 7 hari, pengingat</td><td class="ref">past_due; BR-SUB-01</td></tr><tr><td class="k">Tunggu</td><td>Sistem</td><td>Dibayar dalam tenggang?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Ditangguhkan 30 hari: hanya-baca, antrean PWA ditahan, job &amp; token WA berhenti</td><td class="ref">suspended; BR-SUB-02; A-44</td></tr><tr><td class="k">Tunggu</td><td>Sistem</td><td>Dibayar dalam 30 hari?</td><td class="ref"></td></tr><tr><td class="k">Langkah</td><td>Sistem</td><td>Diakhiri: 90 hari hanya Admin Company login untuk ekspor</td><td class="ref">terminated; BR-SUB-03</td></tr><tr><td class="k">Selesai</td><td>Sistem</td><td>Data dihapus setelah 90 hari</td><td class="ref">A-12</td></tr></tbody></table></div>
+  </details>
+  <p class="top"><a href="#daftar">↑ Daftar alur</a></p>
+</section>
+  <p class="lede">Berkas ini dibuat otomatis — jangan diedit manual. Buat ulang dengan <span class="mono">py -3 docs/diagram/_generate_alur_html.py</span>. Diagram dirender Mermaid dari CDN, jadi perlu koneksi internet.</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js"></script>
+<script>
+  var dark = document.documentElement.getAttribute("data-theme") === "dark" ||
+    (document.documentElement.getAttribute("data-theme") !== "light" &&
+     window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  mermaid.initialize({ startOnLoad: true, theme: dark ? "dark" : "default", flowchart: { useMaxWidth: false } });
+</script>
+</body>
+</html>

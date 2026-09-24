@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Request;
 
+use App\Domain\Access\Models\User;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Enums\ApproverType;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\ProjectStatus;
 use App\Domain\Master\Enums\TrackingMode;
@@ -32,6 +35,7 @@ use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Models\WarehouseType;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Feature\Approval\Concerns\ApprovalFixtures;
 use Tests\TenantTestCase;
 
 /**
@@ -40,6 +44,10 @@ use Tests\TenantTestCase;
  */
 class RequestFlowTest extends TenantTestCase
 {
+    use ApprovalFixtures;
+
+    private User $kepala;
+
     private Project $proyek;
 
     private Warehouse $gudang;
@@ -78,6 +86,12 @@ class RequestFlowTest extends TenantTestCase
             qtyBase: 100,
             toBinId: $bin->id,
         ));
+
+        // Sejak modul approval (20-approval §13): REQ berhenti di
+        // pending_approval hanya bila ada aturan. Satu lapis "kepala gudang
+        // terkait"; Kepala Gudang yang ada saat REQ diajukan ikut menjadi approver.
+        $this->kepala = $this->makeUser('warehouse_head');
+        $this->aturan(ApprovalDocumentType::MaterialRequest, [$this->lapis(ApproverType::WarehouseHead)]);
     }
 
     /** @param  array<int, array<string, mixed>>  $lines */
@@ -294,7 +308,7 @@ class RequestFlowTest extends TenantTestCase
     public function tc_req_11_approval_membuat_reservasi_lunak(): void
     {
         $req = $this->reqMenungguApproval();
-        $approver = $this->makeUser('warehouse_head');
+        $approver = $this->kepala;
 
         $req = app(ApproveRequest::class)->handle($req, $approver);
 
@@ -322,7 +336,7 @@ class RequestFlowTest extends TenantTestCase
         $req->openLines()->first()->forceFill(['fulfillment_source' => null])->save();
 
         try {
-            app(ApproveRequest::class)->handle($req->refresh(), $this->makeUser('warehouse_head'));
+            app(ApproveRequest::class)->handle($req->refresh(), $this->kepala);
             $this->fail('Baris tanpa sumber seharusnya menahan approval.');
         } catch (RequestRuleException $e) {
             $this->assertSame('BR-REQ-05', $e->rule);
@@ -346,7 +360,7 @@ class RequestFlowTest extends TenantTestCase
     #[Test]
     public function tc_req_14_pembatalan_tanpa_alasan_ditolak(): void
     {
-        $req = app(ApproveRequest::class)->handle($this->reqMenungguApproval(), $this->makeUser('warehouse_head'));
+        $req = app(ApproveRequest::class)->handle($this->reqMenungguApproval(), $this->kepala);
 
         try {
             app(CancelRequest::class)->handle($req, null, null, $this->makeUser('warehouse_head'));

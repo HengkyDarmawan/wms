@@ -147,7 +147,11 @@ return [
          * disable asset() helper tenancy and explicitly use tenant_asset() calls in places
          * where you want to use tenant-specific assets (product images, avatars, etc).
          */
-        'asset_helper_tenancy' => true,
+        // Dimatikan: bila aktif, asset() dan @vite di halaman company menunjuk /tenancy/assets/…
+        // yang dilayani dari storage company, sehingga build Vite dan logo 404 dan halaman
+        // tampil tanpa gaya. Aset aplikasi bersifat global (public/); berkas milik company
+        // tidak lewat asset(), melainkan route berotorisasi (A-68).
+        'asset_helper_tenancy' => false,
     ],
 
     /**

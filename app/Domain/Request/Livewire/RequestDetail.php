@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Request\Livewire;
 
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Support\ApprovalHistory;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\Item;
@@ -87,6 +89,7 @@ class RequestDetail extends Component
             'uoms' => Uom::query()->orderBy('code')->get(['id', 'code', 'name']),
             'alasan' => $this->pilihanAlasan($this->dialog === 'tolak' ? ReasonContext::Reject : ReasonContext::Cancel),
             'riwayat' => $this->riwayat($request),
+            'riwayatApproval' => app(ApprovalHistory::class)->for(ApprovalDocumentType::MaterialRequest, (int) $request->id),
             'supplements' => $request->supplements()->orderBy('id')->get(['id', 'number', 'status']),
         ]);
     }
@@ -164,7 +167,9 @@ class RequestDetail extends Component
         $this->authorize('review', $request);
 
         if ($this->jalankan(fn () => $action->submitToApproval($request, auth()->user()))) {
-            $this->dispatch('pesan', teks: __('REQ dikirim ke persetujuan.'));
+            $this->dispatch('pesan', teks: $request->refresh()->status->value === 'approved'
+                ? __('Tidak ada aturan approval: REQ langsung disetujui dan stok direservasi.')
+                : __('REQ dikirim ke persetujuan.'));
         }
     }
 
@@ -177,7 +182,9 @@ class RequestDetail extends Component
         $this->authorize('approve', $request);
 
         if ($this->jalankan(fn () => $action->handle($request, auth()->user()))) {
-            $this->dispatch('pesan', teks: __('REQ disetujui; reservasi dibuat.'));
+            $this->dispatch('pesan', teks: $request->refresh()->status->value === 'approved'
+                ? __('REQ disetujui; reservasi dibuat.')
+                : __('Persetujuan Anda tercatat; REQ menunggu lapis berikutnya.'));
         }
     }
 

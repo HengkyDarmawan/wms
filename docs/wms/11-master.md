@@ -1,7 +1,7 @@
 # Spesifikasi Modul — `master` (Klien, Proyek, Vendor, Item, Satuan, Referensi)
 
-**Versi:** 0.2
-**Tanggal:** 23 September 2026
+**Versi:** 0.3
+**Tanggal:** 24 September 2026
 **Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13
 **Modul:** `master`
 **Fase:** F1 (rencana kebutuhan material `[F2]` hanya stub)
@@ -252,7 +252,7 @@ Gudang & lokasi (modul `warehouse`); saldo, kartu stok, reservasi (modul `stock`
    ([A-06](04-keputusan-dan-asumsi.md#a-06)); tombol ubah status disembunyikan untuk proyek itu.
 5. **Guard penutupan proyek masih ringan.** Urutan status dijaga (`active → closed|cancelled → archived`),
    tetapi pemeriksaan saldo Gudang Site nol, aset sudah kembali, dan DSC selesai
-   ([BR-PRJ-02](05-aturan-bisnis.md#br-prj)) menyusul di modul `stock`.
+   ([BR-PRJ-02](05-aturan-bisnis.md#br-prj)) **belum ada** — modul `stock` sudah selesai tetapi `ChangeProjectStatus` belum memanggil `StockGuard`; lihat §13.4 nomor 7.
 6. **`SaveItem` mempertahankan nilai lama** `min_offcut_length` dan `kerf` bila field-nya tidak dikirim,
    supaya simpan ulang dari layar lain tidak diam-diam menghapus aturan potong.
 7. **Satuan `BATANG`** ditambahkan ke seeder kategori `COUNT` sebagai contoh kemasan untuk item per potong.
@@ -284,3 +284,14 @@ dan `MasterScreenTest` (TC-MST-22–23).
 5. **Rencana kebutuhan material** `[F2]` — tabelnya sudah ada sebagai stub, layarnya belum ([BR-PRJ-09](05-aturan-bisnis.md#br-prj)).
 6. ~~Cakupan gudang pada penugasan role memakai id angka~~ — **selesai 24 Sep 2026** setelah modul Warehouse ada;
    keduanya kini memakai daftar nama.
+7. **Guard penutupan proyek** ([BR-PRJ-02](05-aturan-bisnis.md#br-prj)): saldo Gudang Site nol, aset kembali, DSC selesai — bahan penjaganya (`StockGuard`, DSC) sudah ada, pemanggilannya di `ChangeProjectStatus` belum.
+8. **Layar pengaturan company** — permission `company_setting.view` dan `company_setting.manage` sudah di-seed, tetapi belum ada route atau layar. Enam kunci `company_settings` dibaca kode dengan nilai bawaan dan saat ini hanya bisa diubah langsung di database:
+
+   | Kunci | Bawaan | Dipakai di | Arti |
+   |---|---|---|---|
+   | `review_sla_days` | 1 | `RequestList` ([14-request](14-request.md)) | Batas hari REQ ditinjau sebelum ditandai terlambat |
+   | `substitution_objection_days` | 1 | `ReviewRequest` ([BR-REQ-13](05-aturan-bisnis.md#br-req)) | Tenggat keberatan klien atas penggantian |
+   | `receipt_confirm_days` | 3 | `ConfirmDelivery` ([15-picking-shipment](15-picking-shipment.md)) | Batas konfirmasi terima oleh klien |
+   | `discrepancy_alert_days` | 7 | `DiscrepancyList` ([15-picking-shipment](15-picking-shipment.md)) | Umur DSC terbuka yang ditandai |
+   | `reservation_alert_days` | 7 | `ReservationList` ([13-stock](13-stock.md)) | Umur reservasi yang ditandai menggantung |
+   | `stock_lock_date` | kosong | `LockStockPeriod`, `StockLedger` ([BR-STK-15](05-aturan-bisnis.md#br-stk)) | Tanggal kunci periode stok |

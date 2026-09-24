@@ -1,12 +1,14 @@
 # Indeks Audit Prototipe (`warehouse.sipembantu.com`)
 
-**Versi:** 0.1
-**Tanggal:** 23 September 2026
+**Versi:** 0.2
+**Tanggal:** 24 September 2026
 **Status:** indeks rujukan; dokumen audit lengkap (`00-audit/01`–`04`) disimpan pemilik produk di luar repo ini
 
 Dokumen di folder `wms/` merujuk ID temuan audit prototipe. Folder ini dibuat agar rujukan itu tidak menggantung. **Kolom Keterangan diisi pemilik produk** dengan satu kalimat per temuan (disalin dari dokumen audit asli); sampai terisi, cukup tahu di mana ID itu dipakai.
 
 Lokasi dokumen asli: `……………………………………` *(isi)*
+
+**Bacaan pendukung:** [alur-proses.html](alur-proses.html) menampilkan sepuluh alur proses to-be (BPMN 1–10) sebagai diagram alir sederhana; buka di browser. Berkas ini dibuat oleh `docs/diagram/_generate_alur_html.py`, jadi jangan diedit manual.
 
 ## Temuan yang dirujuk
 

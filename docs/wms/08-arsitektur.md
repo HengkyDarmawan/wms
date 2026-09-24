@@ -1,8 +1,8 @@
 # Arsitektur Sistem
 
-**Versi:** 0.6 (Part 3; verifikasi paket diperbarui saat kerangka dipasang 23 Sep 2026)
-**Tanggal:** 23 September 2026
-**Status:** berlaku (asumsi A-25–A-49 divalidasi 23 Sep 2026; [A-50](04-keputusan-dan-asumsi.md#a-50) menunggu); keputusan arsitektur diberi ID `AD-xx` dan berlaku sampai diganti. Paket diverifikasi terhadap Laravel 13 pada 23 Sep 2026 (menutup [O-01](04-keputusan-dan-asumsi.md#o-01))
+**Versi:** 0.9 (Part 3; §4, §10, §12 diselaraskan dengan kode 24 Sep 2026; §4 mesin approval, [A-92](04-keputusan-dan-asumsi.md#a-92); v0.9: §4 dan §12 modul Count/Adjustment)
+**Tanggal:** 24 September 2026
+**Status:** berlaku (asumsi A-25–A-71 disetujui; [A-73](04-keputusan-dan-asumsi.md#a-73), [A-76](04-keputusan-dan-asumsi.md#a-76) menunggu validasi); keputusan arsitektur diberi ID `AD-xx` dan berlaku sampai diganti. Paket diverifikasi terhadap Laravel 13 pada 23 Sep 2026 (menutup [O-01](04-keputusan-dan-asumsi.md#o-01))
 **Dokumen terkait:** [Blueprint §17](01-blueprint.md#17-stack-teknologi) · [Model data 08a](08a-model-data-inti.md) · [08b](08b-model-data-stok-dokumen.md) · [08c](08c-model-data-pendukung.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Riset §2.8](02-riset-wms-sejenis.md#28-riset-teknis-untuk-part-3)
 
 ---
@@ -106,7 +106,9 @@ database/migrations/{central, tenant}            tests/{Feature/<Modul>, Unit}
 
 Aturan: model tidak berisi logika bisnis; setiap aksi bernama sesuai permission (`request.approve` → `Domain\Request\Actions\ApproveMaterialRequest`). Transisi status hanya lewat `States\<Doc>Transition::apply()` yang memeriksa guard Katalog, menulis timeline, dan memancarkan event Laravel untuk efek samping (notifikasi, job).
 
-**Paket bersama ([D-28](04-keputusan-dan-asumsi.md#d-28)):** domain `Approval` dibangun sebagai paket internal (`packages/approval`) yang dipasang WMS dan, nanti, modul Purchasing untuk PO (`document_type = purchase_order`, kondisi nilai uang hanya di sana). Domain `Purchasing` di WMS Fase 1 hanya berisi PRQ, catatan pemesanan, dan master vendor.
+> **Keadaan kode 24 Sep 2026 (Access s.d. Picking/Shipment):** `States\<Doc>Transition`, trait `HasTimeline`, dan tabel `document_timelines` **belum dibangun**; transisi dijaga di dalam kelas aksi (`SubmitRequest`, `ShipShipment`, …) dengan enum status dari Katalog. Picking tinggal di `Domain/Shipment`, bukan `Picking/`. `Stock` memakai `Support/StockLedger` (bukan `StockLedgerService`) dan `Actions/ManageReservation` (bukan `ReservationService`). `Shared` baru berisi `Reports/` dan `Files/` ([16-shared-laporan-berkas](16-shared-laporan-berkas.md)); `Platform` baru model, enum, dan login Super Admin ([17-platform-login](17-platform-login.md)). Beberapa aksi memegang lebih dari satu permission ([A-73](04-keputusan-dan-asumsi.md#a-73)). `Count/` dan `Adjustment/` dibangun terpisah sesuai pohon di atas ([21-opname-penyesuaian](21-opname-penyesuaian.md)); ADJ hasil opname dibuat dan diposting oleh `Count` lewat model dan `AdjustmentPoster` milik `Adjustment`.
+
+**Paket bersama ([D-28](04-keputusan-dan-asumsi.md#d-28)):** domain `Approval` dibangun sebagai paket internal (`packages/approval`) yang dipasang WMS dan, nanti, modul Purchasing untuk PO (`document_type = purchase_order`, kondisi nilai uang hanya di sana). *Keadaan kode:* di Fase 1 mesin tinggal di `app/Domain/Approval` dengan batas paket berupa kontrak `ApprovalHandler` + `ApprovalRegistry` — mesin tidak mengimpor modul dokumen, tiap modul mendaftarkan penangannya dari service provider; dipindah ke paket saat Purchasing dibangun ([A-92](04-keputusan-dan-asumsi.md#a-92), [20-approval](20-approval.md)). Domain `Purchasing` di WMS Fase 1 hanya berisi PRQ, catatan pemesanan, dan master vendor.
 
 ## 5. Stok: ledger, saldo, reservasi
 
@@ -181,7 +183,8 @@ Belum diverifikasi (ditentukan saat implementasi): paket PWA/Vite plugin, klien 
 
 | Lingkungan | Keterangan |
 |---|---|
-| Pengembangan | **Laragon**: Apache/Nginx + PHP **8.3.33** (`C:\laragon\bin\php\php-8.3.33-Win32-vs16-x64`, alias `php83`; `php` PATH 8.5 tidak dipakai), MySQL **8.4.3 LTS**, Redis via Laragon/Memurai atau Docker, Mailpit; subdomain `*.wms.test` otomatis oleh Laragon; disk `local`; template NexaDash sebagai referensi di `template/` (statis, jQuery) → layout Blade di `resources/views/layouts` |
+| Pengembangan (kantor) | **XAMPP**: PHP 8.3.33 di `C:\xampp\php-8.3.33` (sudah `php` di PATH), **MariaDB 10.4.27** ([A-76](04-keputusan-dan-asumsi.md#a-76)), tanpa Redis (`CACHE_STORE=array`, antrean `database`), `php artisan serve` port 8000 dengan baris hosts manual. Langkah: [00-setup-lokal](../00-setup-lokal.md) |
+| Pengembangan (rumah) | **Laragon**: Apache/Nginx + PHP **8.3.33** (`C:\laragon\bin\php\php-8.3.33-Win32-vs16-x64`, alias `php83`; `php` PATH 8.5 tidak dipakai), MySQL **8.4.3 LTS**, Redis via Laragon/Memurai atau Docker, Mailpit; subdomain `*.wms.test` otomatis oleh Laragon; disk `local`; template NexaDash sebagai referensi di `template/` (statis, jQuery) → layout Blade di `resources/views/layouts` |
 | Staging | Sama dengan produksi, data anonim; tempat uji restore backup |
 | Produksi | Linux, PHP 8.3-FPM, Nginx, MySQL **8.4 LTS** (sama dengan dev), Redis, 2 worker queue, Supervisor; SSL wildcard ([O-05](04-keputusan-dan-asumsi.md#o-05)); S3-compatible ([O-14](04-keputusan-dan-asumsi.md#o-14)) |
 
@@ -199,7 +202,7 @@ Migrasi tenant di produksi: `tenants:migrate` per batch dengan log; gagal di sat
 
 ## 12. Langkah berikutnya (Part 4)
 
-1. A-25–A-49 divalidasi 23 Sep 2026; model data v0.2 dibuat ulang dari `_generate_erd.py`; [A-50](04-keputusan-dan-asumsi.md#a-50) menunggu validasi.
+1. A-25–A-71 disetujui (A-50 divalidasi 24 Sep 2026); model data dibuat ulang dari `_generate_erd.py` (v0.7, 24 Sep 2026). Modul Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, dan Count/Adjustment selesai Fase 1 (model data v0.10; penangan approval ADJ dengan lapis minimum [A-09](04-keputusan-dan-asumsi.md#a-09) dan OPN dengan SoD [A-96](04-keputusan-dan-asumsi.md#a-96)); berikutnya Return/Transfer.
 2. Spesifikasi modul memakai [template](_template-spesifikasi-modul.md), urutan: Access → Master → Warehouse → Stock → Request → Picking/Shipment → Receipt/Putaway → Approval → Count/Adjustment → Return/Transfer → Issue → Conversion/Waste → Asset → PurchaseRequest/VendorReturn → Platform.
 3. Setiap spesifikasi modul menurunkan migrasi dari 08a–08c dan kasus uji dari Katalog & BR.
 4. Urutan rilis mengikuti [D-29](04-keputusan-dan-asumsi.md#d-29): setelah modul Platform, **Purchasing inti** (Fase 1b) dibangun sebagai domain terpisah `app/Domain/Purchasing` yang memakai paket Approval bersama; WhatsApp (2a), PWA offline (2b), SSO (3) menyusul. Persiapan pemilik produk: [00-checklist-persiapan](../00-checklist-persiapan.md).

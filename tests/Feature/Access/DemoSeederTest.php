@@ -70,9 +70,15 @@ class DemoSeederTest extends TenantTestCase
         $this->assertSame(14, (int) ($perModul['request'] ?? 0), 'Jumlah permission modul Request.');
         $this->assertSame(5, (int) ($perModul['picking'] ?? 0), 'Jumlah permission modul Picking.');
         $this->assertSame(7, (int) ($perModul['shipment'] ?? 0), 'Jumlah permission modul Shipment.');
+        $this->assertSame(6, (int) ($perModul['receipt'] ?? 0), 'Jumlah permission modul Receipt.');
+        $this->assertSame(3, (int) ($perModul['putaway'] ?? 0), 'Jumlah permission modul Put-away.');
+        $this->assertSame(6, (int) ($perModul['vendor_return'] ?? 0), 'Jumlah permission modul Retur ke vendor.');
+        $this->assertSame(5, (int) ($perModul['approval'] ?? 0), 'Jumlah permission modul Approval.');
+        $this->assertSame(8, (int) ($perModul['count'] ?? 0), 'Jumlah permission modul Count (stock opname).');
+        $this->assertSame(4, (int) ($perModul['adjustment'] ?? 0), 'Jumlah permission modul Adjustment.');
 
         $akses = collect($perModul)
-            ->except(['master', 'warehouse', 'stock', 'request', 'picking', 'shipment'])
+            ->except(['master', 'warehouse', 'stock', 'request', 'picking', 'shipment', 'receipt', 'putaway', 'vendor_return', 'approval', 'count', 'adjustment'])
             ->sum();
 
         $this->assertSame(22, (int) $akses, 'Jumlah permission modul Access.');

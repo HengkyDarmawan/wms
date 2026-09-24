@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Request\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Enums\RequestLineStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
@@ -21,7 +23,10 @@ use Illuminate\Support\Facades\DB;
  */
 class CancelRequest
 {
-    public function __construct(private readonly ManageReservation $reservasi) {}
+    public function __construct(
+        private readonly ManageReservation $reservasi,
+        private readonly ApprovalEngine $approval,
+    ) {}
 
     public function handle(MaterialRequest $request, ?int $reasonCodeId, ?string $notes = null, ?User $actor = null): MaterialRequest
     {
@@ -38,6 +43,9 @@ class CancelRequest
             ])->save();
 
             $request->lines()->open()->update(['status' => RequestLineStatus::Cancelled->value]);
+
+            // Tugas approval yang masih terbuka ikut dihentikan (20-approval §4).
+            $this->approval->withdraw(ApprovalDocumentType::MaterialRequest, (int) $request->id, 'REQ dibatalkan.', $actor);
 
             // BR-STK-05: reservasi dilepas seluruhnya, dalam transaksi yang sama.
             $this->reservasi->releaseForDocument(
@@ -84,8 +92,8 @@ class CancelRequest
             );
         }
 
-        // Modul `shipment` belum ada; jejak pengiriman dibaca dari baris REQ,
-        // satu-satunya tempat jumlah terkirim dicatat saat ini (BR-GEN-10).
+        // Katalog §2.1: tidak boleh ada SJ `shipped`. ShipShipment mencatat jumlah
+        // terkirim ke baris REQ lewat RequestFulfillment, jadi cukup dibaca dari sini.
         $sudahJalan = $request->lines()->where('qty_shipped', '>', 0)->exists();
 
         if ($sudahJalan) {

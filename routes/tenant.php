@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Access\DeviceController;
+use App\Http\Controllers\Adjustment\AdjustmentController;
+use App\Http\Controllers\Count\CountController;
+use App\Http\Controllers\Approval\ApprovalController;
 use App\Http\Controllers\Access\InvitationController;
 use App\Http\Controllers\Access\LoginController;
 use App\Http\Controllers\Access\OrgController;
@@ -22,6 +25,7 @@ use App\Http\Controllers\Master\ProjectController;
 use App\Http\Controllers\Master\ReferenceController;
 use App\Http\Controllers\Master\UomController;
 use App\Http\Controllers\Master\VendorController;
+use App\Http\Controllers\Receipt\ReceiptController;
 use App\Http\Controllers\Request\PortalRequestController;
 use App\Http\Controllers\Request\RequestController;
 use App\Http\Controllers\Shipment\ShipmentController;
@@ -159,6 +163,39 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/shipments/create', [ShipmentController::class, 'create'])->name('shipments.create');
         Route::get('/shipments/{shipment}', [ShipmentController::class, 'show'])->name('shipments.show');
         Route::get('/discrepancies', [ShipmentController::class, 'discrepancies'])->name('discrepancies.index');
+
+        // Penerimaan, put-away, retur ke vendor (19-receipt-putaway §6). Halaman
+        // saja; semua transisi status lewat aksi Livewire (POST), tidak lewat GET.
+        Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
+        Route::get('/receipts/create', [ReceiptController::class, 'create'])->name('receipts.create');
+        Route::get('/receipts/{goodsReceipt}', [ReceiptController::class, 'show'])->name('receipts.show');
+        Route::get('/receipts/{goodsReceipt}/edit', [ReceiptController::class, 'edit'])->name('receipts.edit');
+        Route::get('/putaways', [ReceiptController::class, 'putaways'])->name('putaways.index');
+        Route::get('/putaways/{putawayTask}', [ReceiptController::class, 'putaway'])->name('putaways.show');
+        Route::get('/vendor-returns', [ReceiptController::class, 'vendorReturns'])->name('vendor-returns.index');
+        Route::get('/vendor-returns/create', [ReceiptController::class, 'createVendorReturn'])->name('vendor-returns.create');
+        Route::get('/vendor-returns/{vendorReturn}', [ReceiptController::class, 'vendorReturn'])->name('vendor-returns.show');
+
+        // Approval (20-approval §6). Halaman saja; keputusan, eskalasi, dan
+        // delegasi lewat aksi Livewire (POST), tidak lewat GET.
+        Route::get('/approvals', [ApprovalController::class, 'inbox'])->name('approval.inbox');
+        Route::get('/approval-rules', [ApprovalController::class, 'rules'])->name('approval.rules.index');
+        Route::get('/approval-rules/create', [ApprovalController::class, 'createRule'])->name('approval.rules.create');
+        Route::get('/approval-rules/{approvalRule}/edit', [ApprovalController::class, 'editRule'])->name('approval.rules.edit');
+        Route::get('/approval-delegations', [ApprovalController::class, 'delegations'])->name('approval.delegations');
+        Route::get('/approval-simulation', [ApprovalController::class, 'simulation'])->name('approval.simulation');
+
+        // Stock opname & penyesuaian stok (21-opname-penyesuaian §6). Halaman dan
+        // laporan PDF saja (GET, baca); semua transisi lewat aksi Livewire (POST).
+        Route::get('/counts', [CountController::class, 'index'])->name('counts.index');
+        Route::get('/counts/create', [CountController::class, 'create'])->name('counts.create');
+        Route::get('/counts/{stockCount}', [CountController::class, 'show'])->name('counts.show');
+        Route::get('/counts/{stockCount}/report', [CountController::class, 'report'])->name('counts.report');
+        Route::get('/count-tasks', [CountController::class, 'tasks'])->name('count-tasks.index');
+        Route::get('/count-tasks/{countAssignment}', [CountController::class, 'task'])->name('count-tasks.show');
+        Route::get('/adjustments', [AdjustmentController::class, 'index'])->name('adjustments.index');
+        Route::get('/adjustments/create', [AdjustmentController::class, 'create'])->name('adjustments.create');
+        Route::get('/adjustments/{stockAdjustment}', [AdjustmentController::class, 'show'])->name('adjustments.show');
 
         // Laporan lintas modul (Access §9, Master §9, Warehouse §9).
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

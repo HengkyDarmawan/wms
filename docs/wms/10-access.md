@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `access` (Akses, Autentikasi, Role & Cakupan, Organisasi)
 
-**Versi:** 0.4
-**Tanggal:** 23 September 2026
-**Status:** **selesai untuk Fase 1** — kerangka aplikasi, autentikasi, seluruh layar §6.1–§6.7, domain, seeder, dan 82 pengujian sudah jalan. Sisa pekerjaan kecil & penyimpangan: §13
+**Versi:** 0.5
+**Tanggal:** 24 September 2026
+**Status:** **selesai untuk Fase 1** — kerangka aplikasi, autentikasi, seluruh layar §6.1–§6.7, domain, seeder, dan 100 pengujian sudah jalan. Sisa pekerjaan kecil & penyimpangan: §13
 **Modul:** `access`
 **Fase:** F1 (SSO F3 dan auditor eksternal F2 hanya stub)
 **Dokumen terkait:** [Blueprint §4](01-blueprint.md#4-pengguna--peran), [§6.2](01-blueprint.md#62-struktur-organisasi--gudang), [§13](01-blueprint.md#13-autentikasi--sso) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium §11](03-glosarium.md#11-role--akses) · [Model data akses](08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant), [pusat](08a-model-data-inti.md#area-database-pusat-platform) · [Arsitektur §3–§4](08-arsitektur.md#3-tenancy--siklus-request) · [Akun uji](../00-akun-uji.md)
@@ -112,7 +112,7 @@ Modul ini tidak punya dokumen berstatus di Katalog. Aturan implementasi yang ber
 | Akun | Aktif ↔ Nonaktif | `DeactivateUser` / `ReactivateUser` | semua sesi & token perangkat dicabut; guard [BR-ACC-02](05-aturan-bisnis.md#br-acc) |
 | Password | diganti (profil / reset) | `ChangePassword` | simpan riwayat; sesi lain dihapus ([BR-ACC-06](05-aturan-bisnis.md#br-acc)); event `PasswordChanged` |
 | Penugasan role | dibuat / diubah / dihapus | `AssignRole`, `RevokeRole` | event `RoleAssignmentChanged` → cache cakupan user dibersihkan; audit log |
-| Akses dukungan | diberikan → berjalan → berakhir / dicabut | `GrantSupportAccess`, `RevokeSupportAccess` | tulis ke `support_accesses` (pusat) + `audit_logs` tenant ([BR-SUB-04](05-aturan-bisnis.md#br-sub)) |
+| Akses dukungan | diberikan → berjalan → berakhir / dicabut | `GrantSupportAccess` (metode `grant()` dan `revoke()`, [A-73](04-keputusan-dan-asumsi.md#a-73)) | tulis ke `support_accesses` (pusat) + `audit_logs` tenant ([BR-SUB-04](05-aturan-bisnis.md#br-sub)) |
 
 Siklus request ([08 §3](08-arsitektur.md#3-tenancy--siklus-request)): middleware `InitializeTenancyBySubdomain` → `EnsureSubscriptionState` (`suspended` → hanya GET; `terminated` → hanya login Admin Company & ekspor, [BR-SUB-02–03](05-aturan-bisnis.md#br-sub)) → `auth` → `EnsureClientPortal` untuk `/portal` → `ScopedToUser`.
 
@@ -157,7 +157,7 @@ Tidak dipakai: `auth/register.html`, `auth/lock-screen.html` (company dibuat Sup
 
 ### 6.2 Profil — `/profile` — `Access\Profile`
 
-Tab **Data diri** (nama `*`, email baca-saja, nomor WA, foto), **Tanda tangan** (unggah PNG/JPG ≤ 1 MB atau gambar di kanvas; dipakai dokumen), **Keamanan** (ganti password: lama `*`, baru `*`, ulangi `*`; 2FA aktif/nonaktif dengan QR + kode pemulihan), **Perangkat** (daftar perangkat, cabut). Portal klien memakai profil yang sama tanpa tab Perangkat.
+Tab **Data diri** (nama `*`, email baca-saja, nomor WA, foto), **Tanda tangan** (unggah PNG/JPG ≤ 5 MB ([A-68](04-keputusan-dan-asumsi.md#a-68)) atau gambar di kanvas; dipakai dokumen), **Keamanan** (ganti password: lama `*`, baru `*`, ulangi `*`; 2FA aktif/nonaktif dengan QR + kode pemulihan), **Perangkat** (daftar perangkat, cabut). Portal klien memakai profil yang sama tanpa tab Perangkat.
 
 ### 6.3 Pengguna — `/users` — `Access\Users\Index`, `Form`, `Show`
 
@@ -265,8 +265,9 @@ SSO NXTG dan pemilih company (F3, modul `platform`/`sso`); manajemen company, pa
 
 ## 13. Catatan implementasi (23 September 2026)
 
-Status: kerangka aplikasi, autentikasi, lapisan domain, seeder, dan pengujian **selesai**;
-layar pengelolaan (Pengguna, Role, Organisasi, Perangkat, Akses Dukungan) **belum dibuat**.
+Status: kerangka aplikasi, autentikasi, lapisan domain, seeder, pengujian, dan seluruh layar pengelolaan (Pengguna, Role, Organisasi, Perangkat, Akses Dukungan) **selesai** — 100 uji per 24 Sep 2026.
+
+Aksi domain yang ada di kode tetapi tidak disebut §4: `InviteUser` (kirim ulang undangan, menaikkan `user_invitations.sent_count`) dan `ManageTwoFactor` (aktifkan, konfirmasi, matikan 2FA, buat ulang kode pemulihan). Pencabutan akses dukungan adalah metode `GrantSupportAccess::revoke()`, bukan kelas `RevokeSupportAccess` ([A-73](04-keputusan-dan-asumsi.md#a-73)). Hasil login (`LoginResult`) terdaftar di [Katalog Status](06-katalog-status-dan-enum.md). Laporan §9 dijelaskan di [16-shared-laporan-berkas](16-shared-laporan-berkas.md).
 
 ### 13.1 Yang sudah ada
 
@@ -337,4 +338,5 @@ Seluruh layar §6 sudah ada. Yang masih terbuka:
 2. ~~Pengaturan 2FA di profil~~ — **selesai 24 Sep 2026**: kode QR, konfirmasi, delapan kode pemulihan sekali pakai, dan pematian yang menuntut password.
 3. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 24 Sep 2026** lewat layar laporan bersama di `/reports`.
 4. ~~Pemilihan gudang/proyek pada cakupan memakai id angka~~ — **selesai 24 Sep 2026**: keduanya kini memakai daftar nama.
-5. ~~Kolom *(impl.)* dimasukkan ke generator ERD~~ — **selesai 24 Sep 2026**; 08a–08c dibuat ulang.
+5. ~~Kolom *(impl.)* dimasukkan ke generator ERD~~ — **selesai 24 Sep 2026**; 08a–08c dibuat ulang. Kolom `users` untuk 2FA, penguncian, dan riwayat password serta tabel `login_attempts` dan `password_histories` baru masuk ERD pada pencocokan 24 Sep 2026 (08a v0.7).
+6. **Kolom `created_by`/`updated_by` dan skema `audit_logs`** berbeda dari ERD — menunggu [A-74](04-keputusan-dan-asumsi.md#a-74) dan [A-75](04-keputusan-dan-asumsi.md#a-75).

@@ -110,6 +110,7 @@
                     <tr>
                         <th scope="col">{{ __('Barang') }}</th>
                         <th class="text-end" scope="col">{{ __('Jumlah') }}</th>
+                        <th class="text-end" scope="col" title="{{ __('Terkirim / diterima baik') }}">{{ __('Terkirim / Diterima') }}</th>
                         <th scope="col">{{ __('Tanggal janji') }}</th>
                         <th scope="col">{{ __('Status') }}</th>
                         <th class="text-end" scope="col">{{ __('Aksi') }}</th>
@@ -136,6 +137,11 @@
                                 @endif
                             </td>
                             <td class="text-end">{{ number_format((float) $l->qty_base, 2, ',', '.') }}</td>
+                            <td class="text-end text-nowrap">
+                                {{ number_format((float) $l->qty_shipped, 2, ',', '.') }}
+                                <span class="text-muted">/</span>
+                                {{ number_format((float) $l->qty_received, 2, ',', '.') }}
+                            </td>
                             <td class="text-nowrap">{{ $l->promised_date?->format('d/m/Y') ?? __('belum dijanjikan') }}</td>
                             <td>
                                 <span class="badge text-bg-light">{{ $l->status->label() }}</span>
@@ -167,7 +173,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-center text-muted py-4" colspan="5">{{ __('Belum ada baris.') }}</td>
+                            <td class="text-center text-muted py-4" colspan="6">{{ __('Belum ada baris.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `warehouse` (Gudang, Zona, Rak, Level, Bin)
 
-**Versi:** 0.3
+**Versi:** 0.5
 **Tanggal:** 24 September 2026
-**Status:** **selesai untuk Fase 1** — empat layar, sebelas aksi domain, dan 28 uji hijau; penyimpangan implementasi dicatat §13
+**Status:** **selesai untuk Fase 1** — empat layar, delapan aksi domain, dan 28 uji hijau; penyimpangan implementasi dicatat §13
 **Modul:** `warehouse`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.2](01-blueprint.md#62-struktur-organisasi--gudang), [§6.3](01-blueprint.md#63-lokasi-rak--bin--wajib) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data gudang](08a-model-data-inti.md#area-gudang--lokasi-tenant) · [Akun uji](../00-akun-uji.md)
@@ -197,7 +197,8 @@ Saldo, kartu stok, reservasi (modul `stock`); saran put-away (modul `receipt`); 
    punya satu bin On-site.
 3. **`bins.freeze_reason` ditambahkan** di luar ERD supaya alasan pembekuan tersimpan bersama binnya,
    bukan hanya di audit log. `frozen_by_count_id` dibuat tanpa foreign key karena `stock_counts` baru
-   lahir di modul `count`.
+   lahir di modul `count`; foreign key-nya dipasang migrasi modul Count/Adjustment (v0.5,
+   [21-opname-penyesuaian](21-opname-penyesuaian.md), [A-104](04-keputusan-dan-asumsi.md#a-104)).
 4. **`zones`, `racks`, dan `rack_levels` diberi kolom `is_active`** yang tidak ada di ERD, supaya
    hierarki lokasi bisa dinonaktifkan tanpa dihapus (P-03) seperti master lainnya.
 5. **Tiga tingkat hierarki lokasi ditangani satu kelas aksi** `SaveLocation`, bukan tiga kelas terpisah,
@@ -239,5 +240,5 @@ Uji yang menopangnya ada di `tests/Feature/Warehouse`: `WarehouseTest` (TC-WH-01
 2. ~~**Penjagaan saldo dan reservasi nol** sebelum menonaktifkan gudang atau bin ([BR-GEN-04](05-aturan-bisnis.md#br-gen))~~ — selesai di modul [`stock`](13-stock.md) lewat `StockGuard`.
 3. **Penutupan Gudang Site otomatis** saat proyek ditutup ([BR-PRJ-04](05-aturan-bisnis.md#br-prj)) — penjagaan saldonya sudah ada, pemicunya menyusul di modul `project`.
 4. **Impor Excel gudang dan bin** — menunggu [O-12](04-keputusan-dan-asumsi.md#o-12).
-5. **Laporan §9** beserta ekspor Excel — dibangun bersama laporan modul Access dan Master.
-6. **`count_flag` menunggu persetujuan** sebagai [A-67](04-keputusan-dan-asumsi.md#a-67).
+5. ~~**Laporan §9** beserta ekspor Excel~~ — **selesai 24 Sep 2026**: *Daftar Gudang* dan *Daftar Bin* di `/reports` ([16-shared-laporan-berkas](16-shared-laporan-berkas.md)).
+6. ~~**`count_flag` menunggu persetujuan**~~ — [A-67](04-keputusan-dan-asumsi.md#a-67) disetujui 24 Sep 2026; kolomnya dipakai modul Picking untuk short pick.

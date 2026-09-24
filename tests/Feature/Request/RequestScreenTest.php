@@ -6,6 +6,8 @@ namespace Tests\Feature\Request;
 
 use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Access\Models\User;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Enums\ApproverType;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
@@ -28,6 +30,7 @@ use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Models\WarehouseType;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Feature\Approval\Concerns\ApprovalFixtures;
 use Tests\TenantTestCase;
 
 /**
@@ -36,6 +39,8 @@ use Tests\TenantTestCase;
  */
 class RequestScreenTest extends TenantTestCase
 {
+    use ApprovalFixtures;
+
     private Project $proyek;
 
     private Warehouse $gudang;
@@ -198,6 +203,11 @@ class RequestScreenTest extends TenantTestCase
     #[Test]
     public function tc_req_26d_layar_detail_menjalankan_tinjau_dan_approval(): void
     {
+        // Sejak modul approval, approver ditentukan aturan (20-approval §13):
+        // satu lapis Kepala Gudang terkait.
+        $kepala = $this->makeUser('warehouse_head');
+        $this->aturan(ApprovalDocumentType::MaterialRequest, [$this->lapis(ApproverType::WarehouseHead)]);
+
         $pemohon = $this->makeUser('internal_requester');
         $req = app(SubmitRequest::class)->handle($this->buatReq(null, $pemohon), $pemohon);
 
@@ -218,13 +228,19 @@ class RequestScreenTest extends TenantTestCase
 
         $this->assertSame('pending_approval', $req->refresh()->status->value);
 
-        // §2: sampai modul approval ada, hanya Admin Company yang memegang
-        // `request.approve`; Kepala Gudang meninjau, bukan menyetujui.
+        // Admin Company memegang `request.approve` tetapi tidak ditugaskan
+        // aturan: tombolnya tidak muncul dan aksinya ditolak (A-86).
         $admin = $this->makeUser('company_admin');
         $admin->forgetPermissionCache();
 
         Livewire::actingAs($admin)
             ->test(RequestDetail::class, ['request' => $req])
+            ->call('setujui')
+            ->assertForbidden();
+
+        Livewire::actingAs($kepala)
+            ->test(RequestDetail::class, ['request' => $req])
+            ->assertSee(__('Riwayat approval'))
             ->call('setujui')
             ->assertSet('ruleError', '');
 
@@ -234,6 +250,8 @@ class RequestScreenTest extends TenantTestCase
     #[Test]
     public function tc_req_26e_staf_tanpa_izin_approve_ditolak_layar(): void
     {
+        $this->aturan(ApprovalDocumentType::MaterialRequest, [$this->lapisUser($this->makeUser('warehouse_head'))]);
+
         $pemohon = $this->makeUser('internal_requester');
         $req = $this->buatReq(null, $pemohon);
 

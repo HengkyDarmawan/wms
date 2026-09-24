@@ -23,10 +23,10 @@
           <mxGeometry y="26" width="260" height="248" as="geometry"/>
         </mxCell>
         <mxCell id="stock_events" value="stock_events" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="40" width="260" height="258" as="geometry"/>
+          <mxGeometry x="1000" y="40" width="260" height="274" as="geometry"/>
         </mxCell>
-        <mxCell id="stock_events_cols" value="🔑 id : bigint&lt;br&gt;◆ event_id : uuid&lt;br&gt;schema_version : varchar(10)&lt;br&gt;event_type : varchar(40)&lt;br&gt;occurred_at : datetime&lt;br&gt;recorded_at : datetime&lt;br&gt;source_type : varchar(30)&lt;br&gt;source_id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;payload : json&lt;br&gt;reverses_event_id : uuid&lt;br&gt;published_at : datetime&lt;br&gt;attempts : int&lt;br&gt;last_error : text" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="stock_events">
-          <mxGeometry y="26" width="260" height="232" as="geometry"/>
+        <mxCell id="stock_events_cols" value="🔑 id : bigint&lt;br&gt;◆ event_id : uuid&lt;br&gt;schema_version : varchar(10)&lt;br&gt;event_type : varchar(40)&lt;br&gt;occurred_at : datetime&lt;br&gt;recorded_at : datetime&lt;br&gt;source_type : varchar(30)&lt;br&gt;source_id : bigint&lt;br&gt;source_number : varchar(40)&lt;br&gt;↗ project_id : bigint&lt;br&gt;payload : json&lt;br&gt;reverses_event_id : uuid&lt;br&gt;published_at : datetime&lt;br&gt;attempts : int&lt;br&gt;last_error : text" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="stock_events">
+          <mxGeometry y="26" width="260" height="248" as="geometry"/>
         </mxCell>
         <mxCell id="bins" value="bins" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
           <mxGeometry x="40" y="428" width="260" height="50" as="geometry"/>

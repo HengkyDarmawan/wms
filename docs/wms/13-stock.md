@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `stock` (Kartu Stok, Saldo, Reservasi, Kejadian)
 
-**Versi:** 0.2
+**Versi:** 0.5
 **Tanggal:** 24 September 2026
-**Status:** terimplementasi (Fase 1) — modul keempat setelah [Warehouse](12-warehouse.md)
+**Status:** terimplementasi (Fase 1) — modul keempat setelah [Warehouse](12-warehouse.md); v0.5: kunci periode otomatis dari sesi opname bulanan dan `reverse()` untuk dokumen pembalik ([21-opname-penyesuaian](21-opname-penyesuaian.md))
 **Modul:** `stock`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.6](01-blueprint.md#66-stok) · [Aturan Bisnis](05-aturan-bisnis.md) · [Matriks kejadian stok](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data stok](08b-model-data-stok-dokumen.md#area-stok-ledger-saldo-reservasi-kejadian-tenant) · [Akuntansi §4](../akuntansi/01-lingkup-dan-integrasi-wms.md)
@@ -194,6 +194,7 @@ Seluruh baris [matriks §14](05-aturan-bisnis.md#14-matriks-kejadian-stok) diter
 | TC-STK-31 | Staf Gudang tanpa `reservation.release` | tekan Lepas | 403; reservasi gudang lain tidak tampil | BR-GEN-09 |
 | TC-STK-32 | Kejadian gagal terkirim | buka outbox | galat terakhir dan jumlah percobaan tampil | AD-05 |
 | TC-STK-33 | Periode terkunci sampai kemarin | kunci mundur seminggu | ditolak dengan kode BR-STK-15; riwayat pemajuan tampil | BR-STK-15 |
+| TC-STK-34 | Company demo baru | jalankan `DemoSeeder` dua kali | saldo empat item contoh terbentuk lewat kartu stok, tiap pergerakan punya kejadian outbox, jalankan ulang tidak menggandakan | P-01, BR-LED-06, A-72 |
 
 ## 11. Di luar lingkup modul ini
 
@@ -212,6 +213,8 @@ Seluruh dokumen (modul masing-masing); saran put-away; sesi opname; pengiriman k
 - [x] Dokumen ini diperbarui bila implementasi menyimpang (versi naik + changelog README)
 
 ## 13. Catatan implementasi (24 September 2026)
+
+Kelas di kode: `StockLedger` (satu-satunya pintu tulis saldo), `MovementRequest`, `StockGuard`, `DocumentNumber` di `Support/`; dua aksi domain `LockStockPeriod` (`stock.lock_period`) dan `ManageReservation` (buat, konsumsi, lepas reservasi; pelepasan manual memeriksa `reservation.release`, [A-71](04-keputusan-dan-asumsi.md#a-71)). Kolom turunan dan trigger di §13.1 juga berjalan di MariaDB 10.4 ([A-76](04-keputusan-dan-asumsi.md#a-76)). Stok awal company demo dimasukkan `StockDemoSeeder` lewat `StockLedger` ([A-72](04-keputusan-dan-asumsi.md#a-72)); uji TC-STK-34. `availableQty()` hanya menjumlah bin `storage` ([A-85](04-keputusan-dan-asumsi.md#a-85)).
 
 ### 13.1 Penyimpangan dari spesifikasi
 
@@ -234,6 +237,15 @@ Seluruh dokumen (modul masing-masing); saran put-away; sesi opname; pengiriman k
    katup darurat untuk pemegang `reservation.release`, selalu dengan Alasan dan tercatat di audit log.
 6. **Riwayat kunci periode dibaca dari log aktivitas**, bukan tabel tersendiri. Pemajuan kunci sudah
    tercatat di sana lengkap dengan pelakunya; menyimpannya dua kali hanya menambah sumber kebenaran kedua.
+7. **Kunci periode juga dimajukan sistem** (sejak modul Count/Adjustment): sesi opname **bulanan** yang
+   `closed` memanggil `LockStockPeriod` dengan tanggal sehari sebelum sesi dimulai, hanya bila lebih maju
+   dari kunci sekarang; pelakunya approver terakhir, tercatat di log dan `stock_counts.lock_date_set`
+   ([BR-STK-15](05-aturan-bisnis.md#br-stk), [A-101](04-keputusan-dan-asumsi.md#a-101)).
+8. **`StockLedger::reverse()` untuk dokumen pembalik.** Parameter opsional baru: jenis dan payload
+   kejadian serta rujukan dokumen pembalik (jenis, id, baris, nomor). ADJ pembalik memakainya supaya
+   pergerakan balik tercatat atas nama ADJ pembalik dan kejadiannya `stock_adjusted` ber-`reverses_event_id`
+   (matriks §14); `emit()` kini mengisi kolom `stock_events.reverses_event_id` dari payload. Pemanggil
+   lama tidak berubah ([A-102](04-keputusan-dan-asumsi.md#a-102)).
 
 ### 13.2 Keputusan implementasi
 
@@ -271,7 +283,7 @@ Uji yang menopangnya ada di `tests/Feature/Stock`: `StockLedgerTest` (TC-STK-01�
 
 1. **Pengiriman kejadian lewat HTTP** ke Akuntansi dan Purchasing — Fase 3; Fase 1 berhenti di tabel outbox.
 2. **Rekonsiliasi saldo terjadwal** memakai `StockLedger::rebuildFromLedger()` — menunggu keputusan jadwal.
-3. **Laporan §9** beserta ekspor Excel — dibangun bersama laporan modul Access, Master, dan Warehouse.
+3. **Laporan §9** beserta ekspor Excel — **belum dibangun**; kerangka laporan bersama sudah ada ([16-shared-laporan-berkas](16-shared-laporan-berkas.md)), tinggal definisi laporannya.
 4. **Penutupan Gudang Site otomatis** saat proyek ditutup ([BR-PRJ-04](05-aturan-bisnis.md#br-prj)) —
    penjagaannya sudah ada, pemicunya menyusul di modul `project`.
 5. **Pemberitahuan §8** (reservasi menggantung, periode dikunci, outbox gagal) — menunggu modul notifikasi.

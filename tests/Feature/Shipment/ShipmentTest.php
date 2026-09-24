@@ -12,7 +12,6 @@ use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Uom;
 use App\Domain\Master\Models\Vehicle;
-use App\Domain\Request\Actions\ApproveRequest;
 use App\Domain\Request\Actions\SaveRequest;
 use App\Domain\Request\Actions\SubmitRequest;
 use App\Domain\Shipment\Actions\ConfirmDelivery;
@@ -111,8 +110,8 @@ class ShipmentTest extends TenantTestCase
             'fulfillment_source' => 'stock',
         ])->save();
 
+        // Tanpa aturan approval, REQ disetujui otomatis saat diajukan (A-08).
         $req = app(SubmitRequest::class)->handle($req->refresh(), $pemohon);
-        $req = app(ApproveRequest::class)->handle($req, $this->makeUser('company_admin'));
 
         $staf = $this->makeUser('warehouse_staff');
         $pck = app(CreatePickTask::class)->handle($req, $this->makeUser('warehouse_head'))[0];

@@ -2,12 +2,9 @@
    WMS Proyek — bundel JavaScript
    jQuery dan Bootstrap dipakai oleh shell template NexaDash serta plugin
    (DataTables, Select2). Logika layar memakai Livewire + Alpine (D-05).
+   Urutan impor penting: modul dievaluasi sesuai urutan ini.
    ============================================================ */
 
-import $ from 'jquery';
-import * as bootstrap from 'bootstrap';
-
-window.$ = window.jQuery = $;
-window.bootstrap = bootstrap;
-
+import './globals.js';
 import './nexadash/app.js';
+import './wms/ui.js';

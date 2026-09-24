@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Request\Support\RequestFulfillment;
 use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Models\Shipment;
@@ -32,6 +33,7 @@ class ShipShipment
     public function __construct(
         private readonly StockLedger $ledger,
         private readonly WarehouseBins $bins,
+        private readonly RequestFulfillment $pemenuhan,
     ) {}
 
     public function handle(Shipment $shipment, ?string $notes = null, ?User $actor = null): Shipment
@@ -55,6 +57,8 @@ class ShipShipment
         return DB::transaction(function () use ($shipment, $lines, $loading, $transit, $notes, $actor) {
             foreach ($lines as $l) {
                 $this->berangkatkanBaris($shipment, $l, (int) $loading->id, (int) $transit->id, $actor);
+                // Jejak di baris REQ: dasar penjaga pembatalan (Katalog §2.1).
+                $this->pemenuhan->shipped($l);
             }
 
             $shipment->forceFill([

@@ -1,8 +1,8 @@
-# Checklist Persiapan Sebelum Part 4 & Coding
+# Checklist Persiapan Pemilik Produk
 
-**Versi:** 1.0
-**Tanggal:** 23 September 2026
-**Status:** aktif; dicentang oleh pemilik produk
+**Versi:** 1.1
+**Tanggal:** 24 September 2026
+**Status:** aktif; dicentang oleh pemilik produk. Part 4 dan coding sudah berjalan (enam modul selesai Fase 1, lihat [README](README.md)); butir yang belum dicentang tetap berlaku untuk fase berikutnya
 **Dokumen terkait:** [README](README.md) · [Keputusan & Asumsi](wms/04-keputusan-dan-asumsi.md) · [Arsitektur §10, §12](wms/08-arsitektur.md#10-lingkungan) · [Blueprint §13, §18](wms/01-blueprint.md#13-autentikasi--sso)
 
 Peta rilis yang disepakati 23 Sep 2026 ([D-29](wms/04-keputusan-dan-asumsi.md#d-29)): **Fase 1** WMS inti → **Fase 1b** Purchasing inti → **Fase 2a** WhatsApp → **Fase 2b** PWA offline penuh → **Fase 3** SSO, Purchasing lengkap, payment gateway, API. Login **lokal dulu** ([D-26](wms/04-keputusan-dan-asumsi.md#d-26)); SSO NXTG menyusul sebagai tombol tambahan di halaman login yang sama.

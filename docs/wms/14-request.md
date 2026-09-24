@@ -1,12 +1,12 @@
 # Spesifikasi Modul — `request` (Permintaan Material)
 
-**Versi:** 0.2
+**Versi:** 0.5
 **Tanggal:** 24 September 2026
-**Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md)
+**Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md))
 **Modul:** `request`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status §2.1](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
-**Ketergantungan modul:** `master` (item, proyek, klien, alasan), `warehouse` (gudang sumber), `stock` (reservasi lunak, stok tersedia). Modul `approval`, `picking`, `purchase_request`, dan `transfer` belum ada; titik sambungnya dibuat sebagai stub sesuai [BR-GEN-10](05-aturan-bisnis.md#br-gen).
+**Ketergantungan modul:** `master` (item, proyek, klien, alasan), `warehouse` (gudang sumber), `stock` (reservasi lunak, stok tersedia). `approval` (sejak v0.5, [20-approval](20-approval.md)); modul `purchase_request` dan `transfer` belum ada, titik sambungnya stub sesuai [BR-GEN-10](05-aturan-bisnis.md#br-gen).
 
 ---
 
@@ -25,8 +25,8 @@ Permission modul ini disimpan dengan `module = request`.
 | Role bawaan | Permission |
 |---|---|
 | Admin Company | semua permission modul ini |
-| Manajemen | `request.view` |
-| Kepala Gudang | `request.view`, `request.review`, `request.split_line`, `request.close_short`, `request.cancel`, `request.confirm_cancel` |
+| Manajemen | `request.view`, `request.approve` |
+| Kepala Gudang | `request.view`, `request.review`, `request.approve`, `request.split_line`, `request.close_short`, `request.cancel`, `request.confirm_cancel` |
 | Staf Gudang | `request.view`, `request.review`, `request.split_line`, `request.confirm_cancel` |
 | Pemohon Internal | `request.view`, `request.create`, `request.submit`, `request.cancel`, `request.close_short`, `request.confirm_receipt`, `request.dispute_receipt` |
 | Klien | `request.view`, `request.create`, `request.submit`, `request.cancel`, `request.add_lines`, `request.respond_substitution`, `request.request_cancel`, `request.confirm_receipt`, `request.dispute_receipt` |
@@ -34,7 +34,7 @@ Permission modul ini disimpan dengan `module = request`.
 
 Daftar: `request.view`, `request.create`, `request.submit`, `request.review`, `request.approve`, `request.split_line`, `request.add_lines`, `request.respond_substitution`, `request.request_cancel`, `request.confirm_cancel`, `request.close_short`, `request.cancel`, `request.confirm_receipt`, `request.dispute_receipt`.
 
-`request.approve` didaftarkan di sini tetapi **dipakai modul `approval`**: yang berhak menyetujui ditentukan aturan approval, bukan role bawaan ([A-08](04-keputusan-dan-asumsi.md#a-08)). Selama modul itu belum ada, REQ `pending_approval` disetujui otomatis oleh sistem, persis seperti bunyi Katalog Status §2.1 untuk company tanpa aturan approval.
+`request.approve` didaftarkan di sini tetapi **dipakai modul `approval`**: yang berhak menyetujui ditentukan aturan approval, bukan role bawaan; approver yang ditunjuk aturan harus memegang permission ini ([A-86](04-keputusan-dan-asumsi.md#a-86)). Tanpa aturan yang cocok, REQ `pending_approval` langsung disetujui sistem ([A-08](04-keputusan-dan-asumsi.md#a-08)).
 
 ## 3. Entitas & data
 
@@ -50,7 +50,7 @@ Daftar: `request.view`, `request.create`, `request.submit`, `request.review`, `r
 | `status` | enum | Katalog §2.1 |
 | `required_date` | date | default tanggal dibutuhkan per baris |
 | `reviewed_by`, `reviewed_at` | FK users, datetime | |
-| `approval_snapshot_id` | bigint | stub sampai modul `approval` ada |
+| `approval_snapshot_id` | FK approval_snapshots | snapshot pengajuan terakhir ([20-approval §3](20-approval.md#3-entitas--data)) |
 | `closed_reason_id` | FK reason_codes | diisi saat `closed_short` |
 | `cancel_reason_id` | FK reason_codes | diisi saat `cancelled` |
 | `origin` | enum | `regular` \| `supplement` ([A-54](04-keputusan-dan-asumsi.md#a-54)) |
@@ -195,6 +195,9 @@ Kejadian outbox: tidak ada yang lahir dari modul ini. `purchase_requested` lahir
 | TC-REQ-24 | Staf mengisi tanggal janji | simpan | tercatat di timeline, tampil di portal | BR-REQ-14 |
 | TC-REQ-25 | Klien proyek lain | buka REQ | 404 | BR-ACC-05 |
 | TC-REQ-26 | User tanpa `request.view` | buka daftar REQ | 403 | BR-GEN-09 |
+| TC-REQ-27 | REQ 50 dipetik lalu SJ berangkat | coba batalkan REQ | baris REQ `qty_shipped` 50, `qty_reserved` 0; pembatalan ditolak | KS §2.1, BR-REQ-09 |
+| TC-REQ-28 | SJ diterima baik 48, kurang 2 | lalu DSC diputus klien *tidak perlu* | REQ `partially_fulfilled` (diterima 48), lalu `completed` | KS §2.1, BR-SJ-10, A-77 |
+| TC-REQ-29 | SJ diterima penuh | isi bukti terima | baris `closed`, REQ `completed` | KS §2.1, A-77 |
 
 ## 11. Di luar lingkup modul ini
 
@@ -212,6 +215,12 @@ Picking dan pengiriman (modul `picking`); pembuatan PRQ dan TRF dari backorder (
 - [x] Dokumen ini diperbarui bila implementasi menyimpang (versi naik + changelog README)
 
 ## 13. Catatan implementasi (24 September 2026)
+
+**Approval lewat mesin approval (v0.5, [20-approval](20-approval.md)).** `SubmitRequest` (REQ internal lengkap) dan `ReviewRequest::submitToApproval` kini memanggil `ApprovalEngine::submit()`: aturan yang cocok di-snapshot ke `approval_snapshot_id` dan tugas lapis pertama dikirim; tanpa aturan REQ langsung `approved` beserta reservasinya ([A-08](04-keputusan-dan-asumsi.md#a-08)). `ApproveRequest` tidak lagi menyetujui langsung: ia mencatat keputusan pemegang tugas pada lapis berjalan lewat `DecideApproval`; status `approved` dan reservasi lunak baru terjadi setelah lapis terakhir (`RequestApprovalHandler::onApproved`). `CancelRequest` dan `AddRequestLines` (BR-REQ-12) menghentikan snapshot yang menunggu. Tombol Setujui/Tolak di detail REQ hanya untuk pemegang tugas terbuka; panel *Riwayat approval* menampilkan lapis, tugas, dan keputusan. Uji yang dulu menyetujui langsung kini memasang aturan satu lapis (TC-REQ-05, -11–16, -17, -26d, -26e); uji modul lain mengandalkan persetujuan otomatis tanpa aturan — ID TC tidak berubah.
+
+**Perbaikan 24 Sep 2026 — jejak pemenuhan.** `App\Domain\Request\Support\RequestFulfillment` kini satu-satunya penulis `qty_shipped` dan `qty_received` pada baris REQ. `ShipShipment` memanggil `shipped()`, `ConfirmDelivery` memanggil `received()` (jumlah baik saja), dan `ResolveDiscrepancy` memanggil `refresh()` saat klien memutus *tidak perlu*. Status REQ diturunkan otomatis `in_progress` → `partially_fulfilled` → `completed` ([A-77](04-keputusan-dan-asumsi.md#a-77)). Sebelumnya kolom itu tak pernah terisi di alur nyata, sehingga REQ yang barangnya sudah di site masih bisa dibatalkan; ditemukan lewat E2E ([laporan progres §5.1](../00-laporan-progres-2026-09-24.md#51-pengiriman-tidak-mencatat-balik-ke-baris-req-berat)). Layar REQ dan portal menampilkan kolom *Terkirim / Diterima*. Uji TC-REQ-27–29 menjalankan rantai REQ → PCK → SJ → bukti terima tanpa mengisi kolom REQ secara manual.
+
+Sepuluh aksi domain di `app/Domain/Request/Actions`: `SaveRequest`, `SubmitRequest`, `ReviewRequest`, `ApproveRequest`, `SplitRequestLine`, `AddRequestLines`, `RespondSubstitution`, `CancelRequest`, `CancelRequestLine`, `CloseRequestShort`. (Catatan perubahan v0.15 menyebut sebelas; yang benar sepuluh.) Tenggat keberatan penggantian dibaca dari pengaturan company `substitution_objection_days` dan SLA tinjauan dari `review_sla_days` ([11-master §13.4](11-master.md#134-sisa-pekerjaan-modul-ini)).
 
 ### 13.1 Penyimpangan dari spesifikasi
 
@@ -241,8 +250,9 @@ Picking dan pengiriman (modul `picking`); pembuatan PRQ dan TRF dari backorder (
    sekadar "stok tidak cukup".
 3. **BR-REQ-07 ditegakkan dua kali** — di policy supaya tombolnya tidak muncul, dan di kelas aksi supaya
    tetap ditolak bila dipanggil langsung.
-4. **`request.approve` hanya dipegang Admin Company** sampai modul `approval` ada. Kepala Gudang
-   meninjau, bukan menyetujui ([BR-GEN-10](05-aturan-bisnis.md#br-gen)).
+4. ~~**`request.approve` hanya dipegang Admin Company** sampai modul `approval` ada.~~ Sejak v0.5
+   `request.approve` juga dipegang Kepala Gudang dan Manajemen, dan hanya berlaku bagi approver yang
+   ditugaskan aturan approval ([A-86](04-keputusan-dan-asumsi.md#a-86)).
 5. **Baris tidak pernah dihapus.** Yang dilepas dari form ditandai `cancelled` (P-03), termasuk apa yang
    dulu diminta klien sebelum diganti staf.
 6. **Klien di luar proyeknya mendapat 404, bukan 403**, sama seperti gudang di modul Warehouse: global
@@ -265,15 +275,15 @@ Uji yang menopangnya ada di `tests/Feature/Request`: `RequestFlowTest` (TC-REQ-0
 
 ### 13.4 Sisa pekerjaan modul ini
 
-1. **Approval berlapis** ([A-08](04-keputusan-dan-asumsi.md#a-08)) — menunggu modul `approval`; sekarang
-   REQ disetujui langsung oleh pemegang `request.approve`.
+1. ~~**Approval berlapis**~~ — **selesai v0.5** lewat mesin approval ([20-approval §13.3](20-approval.md#133-integrasi-req-dan-rtv)).
 2. **Pembuatan TRF dan PRQ otomatis** untuk baris bersumber transfer dan pembelian ([BR-REQ-05](05-aturan-bisnis.md#br-req)) —
    menunggu modul `transfer` dan `purchase_request`.
 3. **Cross-dock dan reservasi backorder** ([BR-REQ-08](05-aturan-bisnis.md#br-req)) — menunggu modul
    `receipt`.
-4. **Konfirmasi dan keberatan penerimaan** ([BR-REQ-10](05-aturan-bisnis.md#br-req)) — permissionnya
-   sudah ada, layarnya menunggu modul `shipment` dan DSC.
+4. **Konfirmasi dan keberatan penerimaan** ([BR-REQ-10](05-aturan-bisnis.md#br-req)) — modul `shipment` dan DSC
+   sudah ada; permission `request.confirm_receipt` dan `request.dispute_receipt` sudah di-seed ke role Klien, tetapi
+   belum dipakai route atau layar mana pun.
 5. **Job penuaan tenggat penggantian dan pengingat SLA** — metodenya sudah ada, penjadwalannya menunggu
    antrean Fase 2.
 6. **Notifikasi §8** — menunggu modul notifikasi.
-7. **Laporan §9** beserta ekspor Excel — dibangun bersama laporan modul lain.
+7. **Laporan §9** beserta ekspor Excel — **belum dibangun**; kerangka di [16-shared-laporan-berkas](16-shared-laporan-berkas.md).

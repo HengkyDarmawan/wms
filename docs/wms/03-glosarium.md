@@ -1,8 +1,8 @@
 # Glosarium
 
-**Versi:** 0.6
-**Tanggal:** 23 September 2026
-**Status:** istilah dari A-29–A-49 berlaku (validasi 23 Sep 2026); istilah yang bergantung pada [A-50](04-keputusan-dan-asumsi.md#a-50) mengikuti status validasinya
+**Versi:** 0.7
+**Tanggal:** 24 September 2026
+**Status:** istilah dari A-29–A-49 berlaku (validasi 23 Sep 2026); istilah yang bergantung pada [A-50](04-keputusan-dan-asumsi.md#a-50) mengikuti status validasinya; v0.7: istilah mesin approval (Tugas Approval, Cara Putus, Jenis Approver, Approver Cadangan, Simulasi Aturan) dari modul [20-approval](20-approval.md)
 **Dokumen terkait:** [Blueprint](01-blueprint.md) · [Katalog Status & Enum](06-katalog-status-dan-enum.md) (nilai status **tidak** diulang di sini) · [Aturan Bisnis](05-aturan-bisnis.md)
 
 Istilah di bawah **wajib dipakai sama persis** di UI, dokumen, dan kode. Kolom *Nama di kode* adalah acuan penamaan tabel/model/variabel (Inggris, `snake_case` untuk tabel; model = bentuk `PascalCase` tunggal). Kolom *Rujukan* menunjuk bagian Blueprint (BP) atau aturan bisnis (BR).
@@ -215,6 +215,11 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Lapis Approval | `approval_step` | Satu tingkat dalam aturan | BP 8.1 |
 | Snapshot Aturan *(baru)* | `approval_snapshot` | Salinan aturan yang melekat pada dokumen saat diajukan | BR-APR-01 |
 | Keputusan Approval *(baru)* | `approval_decision` | Setuju / tolak / didelegasikan / dieskalasi | KS 3 |
+| Tugas Approval *(baru)* | `approval_task` | Satu tugas memutus satu lapis untuk satu approver; tampil di layar *Tugas approval saya* | ERD 08c, [20-approval](20-approval.md) |
+| Cara Putus *(baru)* | `decision_mode` | Berurutan / cukup salah satu / semua harus setuju, per lapis | BP 8.1, KS 3 |
+| Jenis Approver *(baru)* | `approver_type` | User tertentu, jabatan, role, atasan langsung, kepala gudang terkait, PIC proyek | BP 8.1, KS 3 |
+| Approver Cadangan *(baru)* | `backup_approver` | Tujuan pertama eskalasi sebuah lapis | BR-APR-06 |
+| Simulasi Aturan *(baru)* | `approval_simulation` | "Siapa yang akan menyetujui dokumen ini?" tanpa menyimpan apa pun | BR-APR-11 |
 | Delegasi | `approval_delegation` | Pelimpahan hak approve sementara (tidak berantai) | BR-APR-05 |
 | Eskalasi | `escalation` | Pengalihan approval yang melewati batas waktu | BR-APR-06 |
 | Token Approval WA *(baru)* | `approval_token` | Token sekali pakai di pesan WhatsApp [F2] | BR-APR-10 |

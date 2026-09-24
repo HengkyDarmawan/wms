@@ -11,10 +11,10 @@
           <mxGeometry y="26" width="260" height="184" as="geometry"/>
         </mxCell>
         <mxCell id="audit_logs" value="audit_logs" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="40" width="260" height="210" as="geometry"/>
+          <mxGeometry x="360" y="40" width="260" height="242" as="geometry"/>
         </mxCell>
-        <mxCell id="audit_logs_cols" value="🔑 id : bigint&lt;br&gt;table_name : varchar(60)&lt;br&gt;record_id : bigint&lt;br&gt;event : enum&lt;br&gt;old_values : json&lt;br&gt;new_values : json&lt;br&gt;↗ user_id : bigint&lt;br&gt;platform_user_id : bigint&lt;br&gt;ip : varchar(45)&lt;br&gt;user_agent : varchar(255)&lt;br&gt;occurred_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="audit_logs">
-          <mxGeometry y="26" width="260" height="184" as="geometry"/>
+        <mxCell id="audit_logs_cols" value="🔑 id : bigint&lt;br&gt;log_name : varchar(255)&lt;br&gt;description : text&lt;br&gt;subject_type : varchar(255)&lt;br&gt;subject_id : bigint&lt;br&gt;event : varchar(255)&lt;br&gt;causer_type : varchar(255)&lt;br&gt;causer_id : bigint&lt;br&gt;properties : json&lt;br&gt;ip_address : varchar(45)&lt;br&gt;batch_uuid : uuid&lt;br&gt;created_at : datetime&lt;br&gt;updated_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="audit_logs">
+          <mxGeometry y="26" width="260" height="216" as="geometry"/>
         </mxCell>
         <mxCell id="attachments" value="attachments" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="680" y="40" width="260" height="210" as="geometry"/>
@@ -29,67 +29,67 @@
           <mxGeometry y="26" width="260" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="notifications" value="notifications" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="300" width="260" height="178" as="geometry"/>
+          <mxGeometry x="40" y="332" width="260" height="178" as="geometry"/>
         </mxCell>
         <mxCell id="notifications_cols" value="🔑 id : uuid&lt;br&gt;↗ user_id : bigint&lt;br&gt;type : varchar(60)&lt;br&gt;channel : enum&lt;br&gt;data : json&lt;br&gt;document_type : varchar(30)&lt;br&gt;document_id : bigint&lt;br&gt;sent_at : datetime&lt;br&gt;read_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="notifications">
           <mxGeometry y="26" width="260" height="152" as="geometry"/>
         </mxCell>
         <mxCell id="notification_preferences" value="notification_preferences" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="300" width="260" height="114" as="geometry"/>
+          <mxGeometry x="360" y="332" width="260" height="114" as="geometry"/>
         </mxCell>
         <mxCell id="notification_preferences_cols" value="↗ user_id : bigint&lt;br&gt;event_key : varchar(60)&lt;br&gt;in_app : bool&lt;br&gt;email : bool&lt;br&gt;whatsapp : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="notification_preferences">
           <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="document_layouts" value="document_layouts" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="300" width="260" height="162" as="geometry"/>
+          <mxGeometry x="680" y="332" width="260" height="162" as="geometry"/>
         </mxCell>
         <mxCell id="document_layouts_cols" value="🔑 id : bigint&lt;br&gt;name : varchar(80)&lt;br&gt;↗ logo_attachment_id : bigint&lt;br&gt;header_html : text&lt;br&gt;footer_html : text&lt;br&gt;colors : json&lt;br&gt;signature_blocks : json&lt;br&gt;is_default : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_layouts">
           <mxGeometry y="26" width="260" height="136" as="geometry"/>
         </mxCell>
         <mxCell id="document_templates" value="document_templates" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="300" width="260" height="162" as="geometry"/>
+          <mxGeometry x="1000" y="332" width="260" height="162" as="geometry"/>
         </mxCell>
         <mxCell id="document_templates_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;name : varchar(80)&lt;br&gt;↗ layout_id : bigint&lt;br&gt;body_html : text&lt;br&gt;paper : varchar(10)&lt;br&gt;is_default : bool&lt;br&gt;version : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_templates">
           <mxGeometry y="26" width="260" height="136" as="geometry"/>
         </mxCell>
         <mxCell id="numbering_formats" value="numbering_formats" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="528" width="260" height="130" as="geometry"/>
+          <mxGeometry x="40" y="560" width="260" height="130" as="geometry"/>
         </mxCell>
         <mxCell id="numbering_formats_cols" value="🔑 id : bigint&lt;br&gt;◆ document_type : varchar(30)&lt;br&gt;pattern : varchar(80)&lt;br&gt;reset_period : enum&lt;br&gt;pad : int&lt;br&gt;warehouse_segment : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="numbering_formats">
           <mxGeometry y="26" width="260" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="document_sequences" value="document_sequences" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="528" width="260" height="114" as="geometry"/>
+          <mxGeometry x="360" y="560" width="260" height="114" as="geometry"/>
         </mxCell>
         <mxCell id="document_sequences_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;segment : varchar(20)&lt;br&gt;period : varchar(7)&lt;br&gt;last_number : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_sequences">
           <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="import_batches" value="import_batches" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="528" width="260" height="146" as="geometry"/>
+          <mxGeometry x="680" y="560" width="260" height="146" as="geometry"/>
         </mxCell>
         <mxCell id="import_batches_cols" value="🔑 id : bigint&lt;br&gt;target : varchar(30)&lt;br&gt;↗ file_attachment_id : bigint&lt;br&gt;status : enum&lt;br&gt;total_rows : int&lt;br&gt;error_rows : int&lt;br&gt;committed_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="import_batches">
           <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="import_rows" value="import_rows" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="528" width="260" height="130" as="geometry"/>
+          <mxGeometry x="1000" y="560" width="260" height="130" as="geometry"/>
         </mxCell>
         <mxCell id="import_rows_cols" value="🔑 id : bigint&lt;br&gt;↗ import_batch_id : bigint&lt;br&gt;row_no : int&lt;br&gt;data : json&lt;br&gt;errors : json&lt;br&gt;result_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="import_rows">
           <mxGeometry y="26" width="260" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="sync_queue" value="sync_queue" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="724" width="260" height="194" as="geometry"/>
+          <mxGeometry x="40" y="756" width="260" height="194" as="geometry"/>
         </mxCell>
         <mxCell id="sync_queue_cols" value="🔑 id : uuid&lt;br&gt;↗ device_id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;action : varchar(40)&lt;br&gt;payload : json&lt;br&gt;temp_number : varchar(50)&lt;br&gt;status : enum&lt;br&gt;conflict_reason : varchar(255)&lt;br&gt;received_at : datetime&lt;br&gt;processed_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="sync_queue">
           <mxGeometry y="26" width="260" height="168" as="geometry"/>
         </mxCell>
         <mxCell id="devices" value="devices" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="360" y="724" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="756" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="devices_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="devices">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="users" value="users" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="724" width="260" height="50" as="geometry"/>
+          <mxGeometry x="680" y="756" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="users_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="users">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
@@ -97,7 +97,7 @@
         <mxCell id="r0" value="aktor" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="document_timelines">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r1" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="audit_logs">
+        <mxCell id="r1" value="causer" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="audit_logs">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="r2" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="attachments">

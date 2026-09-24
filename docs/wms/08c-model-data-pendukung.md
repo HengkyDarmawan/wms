@@ -1,14 +1,15 @@
 # Model Data — Konversi & aset, opname & penyesuaian, approval, umum
 
-**Versi:** 0.6 (Part 3, diselaraskan dengan implementasi modul Master s.d. Picking/Shipment 24 Sep 2026)
-**Tanggal:** 23 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.4, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026). Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Versi:** 0.10 (Part 3, diselaraskan dengan migrasi modul Access s.d. Count/Adjustment 24 Sep 2026)
+**Tanggal:** 24 September 2026
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.10, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Inti](08a-model-data-inti.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md)
 
 Daftar area lengkap ada di [08a-model-data-inti.md](08a-model-data-inti.md).
 
 **Konvensi yang tidak diulang di setiap tabel:**
 - Semua tabel tenant: `id BIGINT PK`, `created_at`, `updated_at`, `created_by`, `updated_by` (FK `users`). Semua waktu UTC ([BR-GEN-07](05-aturan-bisnis.md#br-gen)).
+- **Belum diimplementasikan:** `created_by`/`updated_by`, `submitted_at`, `cancelled_at`, `reversal_of_id` (header) serta `line_no`, `uom_id`, `qty_input`, `source_line_type` (baris) belum ada di migrasi; jejak pembuat/pengubah diambil dari `audit_logs` dan jumlah baris disimpan dalam satuan dasar saja. Lihat [A-74](04-keputusan-dan-asumsi.md#a-74).
 - Header dokumen: `number` (unik), `status` (enum Katalog), `source_type` + `source_id` (induk polimorfik), `reversal_of_id`, `notes`, `submitted_at`, `cancelled_at`, `cancel_reason_id`.
 - Baris dokumen `<doc>_lines`: `line_no`, `item_id`, `uom_id` (satuan input), `qty_input`, `qty_base DECIMAL(18,4)`, `lot_id`, `serial_id`, `piece_id` (nullable sesuai `tracking_mode`), `source_line_type` + `source_line_id`.
 - Enum memakai nilai dari [Katalog Status & Enum](06-katalog-status-dan-enum.md); di MySQL disimpan sebagai `VARCHAR(30)` + CHECK/validasi aplikasi, bukan tipe ENUM MySQL (agar migrasi per tenant aman).
@@ -109,6 +110,7 @@ Sesi opname menyimpan snapshot saldo fisik per bin saat mulai (BR-OPN-01), hitun
 erDiagram
   stock_counts {
     bigint id PK
+    varchar_40 number UK
   }
   stock_count_warehouses {
   }
@@ -120,6 +122,7 @@ erDiagram
   }
   stock_adjustments {
     bigint id PK
+    varchar_40 number UK
   }
   stock_adjustment_lines {
     bigint id PK
@@ -135,25 +138,28 @@ erDiagram
   stock_adjustments ||--o{ stock_adjustment_lines : " "
   count_lines ||--o{ stock_adjustment_lines : " "
   bins ||--o{ stock_adjustment_lines : " "
+  stock_adjustments ||--o| stock_adjustments : "pembalik"
+  users ||--o{ stock_counts : "pembuat/perekonsiliasi"
+  stock_movements ||--o| stock_adjustment_lines : "posted"
 ```
 
 ### Entitas
 
-**`stock_counts` — OPN sesi.** 🔑`id` bigint · `count_type` enum *(monthly|annual|adhoc|spot_check|cycle_abc ([BR-OPN-10](05-aturan-bisnis.md#br-opn)))* · `freeze_bins` bool · `scope` json *(gudang/zona/bin/item)* · `planned_start` date · `started_at` datetime · `approved_at` datetime · `closed_at` datetime · ↗`report_attachment_id` bigint *(PDF)* · ↗`approval_snapshot_id` bigint
+**`stock_counts` — OPN sesi.** 🔑`id` bigint · ◆`number` varchar(40) *(OPN/<gudang|ALL>/<yymm>/<urut>)* · `count_type` enum *(monthly|annual|adhoc|spot_check|cycle_abc ([BR-OPN-10](05-aturan-bisnis.md#br-opn)))* · `status` enum *(KS 2.13)* · `freeze_bins` bool · `scope` json *(gudang/zona/bin/item)* · `team_user_ids` json *(tim penghitung (A-104))* · `is_audit` bool *(dibuat Auditor ([BR-OPN-09](05-aturan-bisnis.md#br-opn), A-104))* · `planned_start` date · ↗`created_by` bigint *(pembuat)* · `started_at` datetime · ↗`submitted_by` bigint *(perekonsiliasi = pengaju approval (A-104))* · `reconciled_at` datetime · ↗`approved_by` bigint · `approved_at` datetime · ↗`reject_reason_id` bigint *(penolakan terakhir ([A-97](04-keputusan-dan-asumsi.md#a-97)))* · `closed_at` datetime · `lock_date_set` date *(kunci periode yang dimajukan ([BR-STK-15](05-aturan-bisnis.md#br-stk), A-101))* · `report_attachment_id` bigint *(PDF; stub tanpa FK sampai attachments ada (A-101))* · ↗`approval_snapshot_id` bigint · ↗`cancel_reason_id` bigint
   ↳ kolom header dokumen standar (lihat konvensi); nomor memakai gudang atau ALL
 
 **`stock_count_warehouses` — OPN ↔ gudang.** ↗`stock_count_id` bigint · ↗`warehouse_id` bigint · ↗`stock_adjustment_id` bigint *(satu ADJ per gudang ([BR-OPN-06](05-aturan-bisnis.md#br-opn)))*
   ↳ PK(stock_count_id, warehouse_id)
 
-**`count_assignments` — Penugasan penghitung.** 🔑`id` bigint · ↗`stock_count_id` bigint · ↗`bin_id` bigint · ↗`counter_user_id` bigint · `round` int *(1 = pertama, 2 = hitung ulang (orang berbeda))* · `status` enum *(pending|done)*
+**`count_assignments` — Penugasan penghitung.** 🔑`id` bigint · ↗`stock_count_id` bigint · ↗`bin_id` bigint · ↗`counter_user_id` bigint *(kosong = belum ditugaskan)* · `round` int *(1 = pertama, 2 = hitung ulang (orang berbeda))* · `status` enum *(pending|done (count_assignment_status))* · `counted_at` datetime *(A-104)*
   ↳ UK(stock_count_id, bin_id, round)
 
-**`count_lines` — Baris hitung.** 🔑`id` bigint · ↗`stock_count_id` bigint · ↗`bin_id` bigint · ↗`item_id` bigint · ↗`lot_id` bigint · ↗`serial_id` bigint · ↗`piece_id` bigint · `system_qty` decimal(18,4) *(snapshot fisik)* · `counted_qty_r1` decimal(18,4) · `counted_qty_r2` decimal(18,4) · `final_qty` decimal(18,4) · `variance_qty` decimal(18,4) · `variance_pct` decimal(8,4) · `variance_class` enum *(minor|moderate|major)* · `root_cause` enum *(root_cause_category)* · `note` varchar(255) · ↗`device_id` bigint
+**`count_lines` — Baris hitung.** 🔑`id` bigint · ↗`stock_count_id` bigint · ↗`bin_id` bigint · ↗`item_id` bigint · ↗`lot_id` bigint · ↗`serial_id` bigint · ↗`piece_id` bigint · `stock_status` enum *(kondisi saldo yang di-snapshot (A-104))* · `is_unexpected` bool *(temuan di luar snapshot (A-100))* · `system_qty` decimal(18,4) *(snapshot fisik)* · `counted_qty_r1` decimal(18,4) · `counted_qty_r2` decimal(18,4) · `is_recount` bool *(masuk hitung ulang ([A-99](04-keputusan-dan-asumsi.md#a-99)))* · `final_qty` decimal(18,4) · `variance_qty` decimal(18,4) · `variance_pct` decimal(8,4) · `variance_class` enum *(minor|moderate|major)* · `root_cause` enum *(root_cause_category)* · `note` varchar(255) · ↗`device_id` bigint
 
-**`stock_adjustments` — ADJ header.** 🔑`id` bigint · ↗`warehouse_id` bigint · `origin` enum *(manual|count|discrepancy|asset_lost)* · ↗`stock_count_id` bigint · ↗`reason_code_id` bigint · ↗`approval_snapshot_id` bigint *(manual: wajib ([A-09](04-keputusan-dan-asumsi.md#a-09)))* · `posted_at` datetime
+**`stock_adjustments` — ADJ header.** 🔑`id` bigint · ◆`number` varchar(40) *(ADJ/<gudang>/<yymm>/<urut>)* · ↗`warehouse_id` bigint · `origin` enum *(manual|count|discrepancy|asset_lost (adjustment_origin))* · ↗`stock_count_id` bigint · ↗`reversal_of_id` bigint *(ADJ pembalik ([BR-GEN-03](05-aturan-bisnis.md#br-gen)))* · ↗`reason_code_id` bigint · `status` enum *(KS 2.12)* · ↗`submitted_by` bigint *(pengaju ([BR-APR-03](05-aturan-bisnis.md#br-apr), A-104))* · ↗`approval_snapshot_id` bigint *(manual: wajib ([A-09](04-keputusan-dan-asumsi.md#a-09)))* · ↗`approved_by` bigint · `approved_at` datetime · ↗`reject_reason_id` bigint · `posted_at` datetime · ↗`cancel_reason_id` bigint
   ↳ kolom header dokumen standar (lihat konvensi)
 
-**`stock_adjustment_lines` — ADJ baris.** 🔑`id` bigint · ↗`stock_adjustment_id` bigint · ↗`bin_id` bigint · `qty_delta` decimal(18,4) *(±)* · `stock_status` enum · ↗`count_line_id` bigint · ↗`reason_code_id` bigint
+**`stock_adjustment_lines` — ADJ baris.** 🔑`id` bigint · ↗`stock_adjustment_id` bigint · ↗`item_id` bigint · ↗`bin_id` bigint · ↗`lot_id` bigint · ↗`serial_id` bigint · ↗`piece_id` bigint · `lot_no` varchar(60) *(isian lot baru, dibuat saat posted (A-102))* · `expiry_date` date · `serial_no` varchar(80) *(isian serial baru (A-102))* · `piece_length` decimal(18,4) *(potongan baru (A-102))* · `qty_delta` decimal(18,4) *(±)* · `stock_status` enum · ↗`count_line_id` bigint · ↗`reversal_of_line_id` bigint *(baris asal yang dibalik ([BR-LED-05](05-aturan-bisnis.md#br-led)))* · ↗`reason_code_id` bigint · ↗`movement_id` bigint *(pergerakan kartu stok saat posted (A-104))* · `notes` varchar(255)
   ↳ kolom baris standar (lihat konvensi)
 
 ## Area: Approval engine (tenant)
@@ -204,14 +210,14 @@ erDiagram
 
 **`approval_steps` — Lapis aturan.** 🔑`id` bigint · ↗`approval_rule_id` bigint · `step_no` int · `approver_type` enum *(user|position|role|direct_manager|warehouse_head|project_pic)* · `approver_ref_id` bigint · `decision_mode` enum *(sequential|any|all)* · `backup_approver_type` enum · `backup_ref_id` bigint · `timeout_hours` int *(default 24)* · `channel` enum *(web|whatsapp|both)* · `require_pin` bool
 
-**`approval_snapshots` — Snapshot per dokumen.** 🔑`id` bigint · `document_type` varchar(30) · `document_id` bigint · ↗`rule_id` bigint *(asal)* · `steps` json *(salinan lapis yang berlaku setelah SoD)* · `status` enum *(pending|approved|rejected|cancelled)* · `current_step` int · ↗`submitted_by` bigint · `submitted_at` datetime · `decided_at` datetime
+**`approval_snapshots` — Snapshot per dokumen.** 🔑`id` bigint · `document_type` varchar(30) · `document_id` bigint · `document_number` varchar(40) *([A-94](04-keputusan-dan-asumsi.md#a-94))* · ↗`rule_id` bigint *(asal)* · `rule_name` varchar(100) *(nama aturan saat diajukan ([A-94](04-keputusan-dan-asumsi.md#a-94)))* · `context` json *(data dokumen yang dicocokkan ([A-94](04-keputusan-dan-asumsi.md#a-94)))* · `steps` json *(salinan lapis yang berlaku setelah SoD)* · `status` enum *(pending|approved|rejected|cancelled)* · `current_step` int · ↗`submitted_by` bigint · `submitted_at` datetime(6) *(mikrodetik ([A-94](04-keputusan-dan-asumsi.md#a-94)))* · `decided_at` datetime(6)
   ↳ UK(document_type, document_id, submitted_at)
 
 **`approval_tasks` — Tugas approval per lapis.** 🔑`id` bigint · ↗`approval_snapshot_id` bigint · `step_no` int · ↗`approver_user_id` bigint *(resolusi approver_type)* · ↗`delegated_from_user_id` bigint *([BR-APR-05](05-aturan-bisnis.md#br-apr))* · ↗`escalated_from_task_id` bigint *([BR-APR-06](05-aturan-bisnis.md#br-apr))* · `due_at` datetime · `status` enum *(open|decided|superseded|expired)*
 
 **`approval_decisions` — Keputusan.** 🔑`id` bigint · ↗`approval_task_id` bigint · `decision` enum *(approval_decision)* · ↗`decided_by` bigint · `decided_at` datetime · `channel` enum *(web|whatsapp)* · ↗`reason_code_id` bigint · `comment` varchar(255) · `wa_from_number` varchar(20) *([BR-APR-10](05-aturan-bisnis.md#br-apr))* · `wa_message_id` varchar(120) · ↗`approval_token_id` bigint
 
-**`approval_delegations` — Delegasi.** 🔑`id` bigint · ↗`from_user_id` bigint · ↗`to_user_id` bigint · `starts_at` datetime · `ends_at` datetime · `document_types` json *(null = semua)* · `is_active` bool
+**`approval_delegations` — Delegasi.** 🔑`id` bigint · ↗`from_user_id` bigint · ↗`to_user_id` bigint · `starts_at` datetime · `ends_at` datetime · `document_types` json *(null = semua)* · `is_active` bool *(diakhiri, tidak dihapus)* · `notes` varchar(255) *([A-94](04-keputusan-dan-asumsi.md#a-94))*
 
 **`approval_tokens` — Token WA (F2).** 🔑`id` bigint · ↗`approval_task_id` bigint · ◆`token` varchar(64) · `expires_at` datetime · `used_at` datetime · `wa_message_id` varchar(120)
 
@@ -265,7 +271,7 @@ erDiagram
     uuid id PK
   }
   users ||--o{ document_timelines : "aktor"
-  users ||--o{ audit_logs : " "
+  users ||--o{ audit_logs : "causer"
   users ||--o{ attachments : " "
   attachments ||--|| signatures : " "
   users ||--o{ notifications : " "
@@ -281,8 +287,8 @@ erDiagram
 **`document_timelines` — Timeline dokumen.** 🔑`id` bigint · `document_type` varchar(30) · `document_id` bigint · `from_status` varchar(30) · `to_status` varchar(30) · `action` varchar(40) *(permission)* · ↗`actor_id` bigint · `channel` enum *(web|pwa|whatsapp|system|token_link)* · `note` varchar(255) · ↗`reason_code_id` bigint · `occurred_at` datetime
   ↳ append-only; index (document_type, document_id)
 
-**`audit_logs` — Jejak audit teknis.** 🔑`id` bigint · `table_name` varchar(60) · `record_id` bigint · `event` enum *(created|updated|deleted|login|setting|support_access)* · `old_values` json · `new_values` json · ↗`user_id` bigint · `platform_user_id` bigint *(akses dukungan)* · `ip` varchar(45) *(hanya Admin)* · `user_agent` varchar(255) · `occurred_at` datetime
-  ↳ append-only; kandidat paket spatie/laravel-activitylog
+**`audit_logs` — Jejak audit teknis.** 🔑`id` bigint · `log_name` varchar(255) *(kanal log, index)* · `description` text · `subject_type` varchar(255) *(record yang diubah (polimorfik))* · `subject_id` bigint · `event` varchar(255) *(created|updated|deleted|login|setting|support_access)* · `causer_type` varchar(255) *(pelaku: user tenant atau platform_users (akses dukungan))* · `causer_id` bigint · `properties` json *(nilai lama & baru)* · `ip_address` varchar(45) *(hanya Admin)* · `batch_uuid` uuid · `created_at` datetime · `updated_at` datetime
+  ↳ append-only; skema spatie/laravel-activitylog 4.x dengan nama tabel audit_logs + ip_address ([A-75](04-keputusan-dan-asumsi.md#a-75))
 
 **`attachments` — Lampiran.** 🔑`id` bigint · `attachable_type` varchar(40) · `attachable_id` bigint · `kind` enum *(photo|document|signature|report)* · `disk` varchar(20) *(s3|local)* · `path` varchar(255) · `original_name` varchar(150) · `mime` varchar(60) · `size_bytes` int *(≤ 5 MB ([A-23](04-keputusan-dan-asumsi.md#a-23)))* · ↗`uploaded_by` bigint · ↗`device_id` bigint
 

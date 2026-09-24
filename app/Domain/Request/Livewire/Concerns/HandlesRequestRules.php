@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Request\Livewire\Concerns;
 
+use App\Domain\Approval\Exceptions\ApprovalRuleException;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Request\Exceptions\RequestRuleException;
@@ -43,6 +44,12 @@ trait HandlesRequestRules
                 return false;
             }
 
+            $this->ruleError = $e->getMessage();
+
+            return false;
+        } catch (ApprovalRuleException $e) {
+            // Keputusan approval ditolak mesin (SoD, keputusan pertama menang, …).
+            $this->ruleCode = $e->rule;
             $this->ruleError = $e->getMessage();
 
             return false;

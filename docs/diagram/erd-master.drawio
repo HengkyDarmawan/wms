@@ -53,73 +53,73 @@
           <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="item_categories" value="item_categories" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="544" width="260" height="178" as="geometry"/>
+          <mxGeometry x="40" y="544" width="260" height="194" as="geometry"/>
         </mxCell>
-        <mxCell id="item_categories_cols" value="🔑 id : bigint&lt;br&gt;↗ parent_id : bigint&lt;br&gt;◆ code : varchar(30)&lt;br&gt;name : varchar(100)&lt;br&gt;↗ storage_category_id : bigint&lt;br&gt;removal_strategy : enum&lt;br&gt;tolerance_pct : decimal(5,2)&lt;br&gt;tolerance_abs : decimal(18,4)&lt;br&gt;abc_class : char(1)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="item_categories">
-          <mxGeometry y="26" width="260" height="152" as="geometry"/>
+        <mxCell id="item_categories_cols" value="🔑 id : bigint&lt;br&gt;↗ parent_id : bigint&lt;br&gt;◆ code : varchar(30)&lt;br&gt;name : varchar(100)&lt;br&gt;↗ storage_category_id : bigint&lt;br&gt;removal_strategy : enum&lt;br&gt;tolerance_pct : decimal(5,2)&lt;br&gt;tolerance_abs : decimal(18,4)&lt;br&gt;abc_class : char(1)&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="item_categories">
+          <mxGeometry y="26" width="260" height="168" as="geometry"/>
         </mxCell>
         <mxCell id="storage_categories" value="storage_categories" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="544" width="260" height="98" as="geometry"/>
+          <mxGeometry x="360" y="544" width="260" height="114" as="geometry"/>
         </mxCell>
-        <mxCell id="storage_categories_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(30)&lt;br&gt;name : varchar(100)&lt;br&gt;capacity_mode : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="storage_categories">
-          <mxGeometry y="26" width="260" height="72" as="geometry"/>
+        <mxCell id="storage_categories_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(30)&lt;br&gt;name : varchar(100)&lt;br&gt;capacity_mode : enum&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="storage_categories">
+          <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="uom_categories" value="uom_categories" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="544" width="260" height="98" as="geometry"/>
+          <mxGeometry x="680" y="544" width="260" height="114" as="geometry"/>
         </mxCell>
-        <mxCell id="uom_categories_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(20)&lt;br&gt;name : varchar(60)&lt;br&gt;↗ reference_uom_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="uom_categories">
-          <mxGeometry y="26" width="260" height="72" as="geometry"/>
+        <mxCell id="uom_categories_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(20)&lt;br&gt;name : varchar(60)&lt;br&gt;↗ reference_uom_id : bigint&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="uom_categories">
+          <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="uoms" value="uoms" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="544" width="260" height="130" as="geometry"/>
+          <mxGeometry x="1000" y="544" width="260" height="146" as="geometry"/>
         </mxCell>
-        <mxCell id="uoms_cols" value="🔑 id : bigint&lt;br&gt;↗ uom_category_id : bigint&lt;br&gt;◆ code : varchar(15)&lt;br&gt;name : varchar(60)&lt;br&gt;factor_to_reference : decimal(18,8)&lt;br&gt;rounding : decimal(18,4)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="uoms">
-          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        <mxCell id="uoms_cols" value="🔑 id : bigint&lt;br&gt;↗ uom_category_id : bigint&lt;br&gt;◆ code : varchar(15)&lt;br&gt;name : varchar(60)&lt;br&gt;factor_to_reference : decimal(18,8)&lt;br&gt;rounding : decimal(18,4)&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="uoms">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="items" value="items" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="772" width="260" height="402" as="geometry"/>
+          <mxGeometry x="40" y="788" width="260" height="402" as="geometry"/>
         </mxCell>
         <mxCell id="items_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(40)&lt;br&gt;name : varchar(150)&lt;br&gt;↗ item_category_id : bigint&lt;br&gt;status : enum&lt;br&gt;ownership_model : enum&lt;br&gt;default_line_ownership : enum&lt;br&gt;tracking_mode : enum&lt;br&gt;has_expiry : bool&lt;br&gt;↗ base_uom_id : bigint&lt;br&gt;is_cuttable : bool&lt;br&gt;min_offcut_length : decimal(18,4)&lt;br&gt;kerf : decimal(18,4)&lt;br&gt;requires_qc : bool&lt;br&gt;removal_strategy : enum&lt;br&gt;reorder_point : decimal(18,4)&lt;br&gt;min_stock : decimal(18,4)&lt;br&gt;barcode : varchar(64)&lt;br&gt;qr_payload : varchar(120)&lt;br&gt;photo_path : varchar(255)&lt;br&gt;dimensions : json&lt;br&gt;weight : decimal(18,4)&lt;br&gt;↗ weight_uom_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="items">
           <mxGeometry y="26" width="260" height="376" as="geometry"/>
         </mxCell>
         <mxCell id="item_uom_conversions" value="item_uom_conversions" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="772" width="260" height="130" as="geometry"/>
+          <mxGeometry x="360" y="788" width="260" height="130" as="geometry"/>
         </mxCell>
         <mxCell id="item_uom_conversions_cols" value="🔑 id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ uom_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;is_nominal_piece : bool&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="item_uom_conversions">
           <mxGeometry y="26" width="260" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="lots" value="lots" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="772" width="260" height="146" as="geometry"/>
+          <mxGeometry x="680" y="788" width="260" height="146" as="geometry"/>
         </mxCell>
         <mxCell id="lots_cols" value="🔑 id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;lot_no : varchar(60)&lt;br&gt;expiry_date : date&lt;br&gt;received_at : date&lt;br&gt;↗ vendor_id : bigint&lt;br&gt;attributes : json" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="lots">
           <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="serials" value="serials" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="772" width="260" height="290" as="geometry"/>
+          <mxGeometry x="1000" y="788" width="260" height="290" as="geometry"/>
         </mxCell>
         <mxCell id="serials_cols" value="🔑 id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;serial_no : varchar(80)&lt;br&gt;asset_state : enum&lt;br&gt;condition_grade : char(1)&lt;br&gt;↗ lot_id : bigint&lt;br&gt;expiry_date : date&lt;br&gt;rfid_tag : varchar(64)&lt;br&gt;↗ current_project_id : bigint&lt;br&gt;due_return_date : date&lt;br&gt;acquired_at : date&lt;br&gt;meter_unit : enum&lt;br&gt;meter_total : decimal(12,1)&lt;br&gt;expected_life_days : int&lt;br&gt;expected_life_hours : decimal(12,1)&lt;br&gt;condition_score : tinyint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="serials">
           <mxGeometry y="26" width="260" height="264" as="geometry"/>
         </mxCell>
         <mxCell id="pieces" value="pieces" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1224" width="260" height="178" as="geometry"/>
+          <mxGeometry x="40" y="1240" width="260" height="178" as="geometry"/>
         </mxCell>
         <mxCell id="pieces_cols" value="🔑 id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;◆ piece_no : varchar(40)&lt;br&gt;length : decimal(18,4)&lt;br&gt;is_offcut : bool&lt;br&gt;↗ parent_piece_id : bigint&lt;br&gt;origin_type : varchar(30)&lt;br&gt;origin_id : bigint&lt;br&gt;is_consumed : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="pieces">
           <mxGeometry y="26" width="260" height="152" as="geometry"/>
         </mxCell>
         <mxCell id="company_settings" value="company_settings" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="1224" width="260" height="66" as="geometry"/>
+          <mxGeometry x="360" y="1240" width="260" height="66" as="geometry"/>
         </mxCell>
         <mxCell id="company_settings_cols" value="🔑 key : varchar(60)&lt;br&gt;value : json" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="company_settings">
           <mxGeometry y="26" width="260" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="feature_settings" value="feature_settings" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="1224" width="260" height="82" as="geometry"/>
+          <mxGeometry x="680" y="1240" width="260" height="82" as="geometry"/>
         </mxCell>
         <mxCell id="feature_settings_cols" value="🔑 key : varchar(60)&lt;br&gt;enabled : bool&lt;br&gt;config : json" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="feature_settings">
           <mxGeometry y="26" width="260" height="56" as="geometry"/>
         </mxCell>
         <mxCell id="users" value="users" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="1224" width="260" height="50" as="geometry"/>
+          <mxGeometry x="1000" y="1240" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="users_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="users">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>

@@ -6,6 +6,8 @@ namespace Tests\Feature\Request;
 
 use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Access\Models\User;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Models\ApprovalSnapshot;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
@@ -13,7 +15,6 @@ use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Uom;
 use App\Domain\Request\Actions\AddRequestLines;
-use App\Domain\Request\Actions\ApproveRequest;
 use App\Domain\Request\Actions\CancelRequestLine;
 use App\Domain\Request\Actions\RespondSubstitution;
 use App\Domain\Request\Actions\ReviewRequest;
@@ -34,6 +35,7 @@ use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Models\WarehouseType;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Feature\Approval\Concerns\ApprovalFixtures;
 use Tests\TenantTestCase;
 
 /**
@@ -43,6 +45,8 @@ use Tests\TenantTestCase;
  */
 class ClientInteractionTest extends TenantTestCase
 {
+    use ApprovalFixtures;
+
     private Project $proyek;
 
     private Warehouse $gudang;
@@ -141,14 +145,16 @@ class ClientInteractionTest extends TenantTestCase
             $staf,
         );
 
-        $req = app(ReviewRequest::class)->submitToApproval($req->refresh(), $staf);
-
-        return app(ApproveRequest::class)->handle($req, $this->makeUser('warehouse_head'));
+        // Tanpa aturan approval, REQ langsung disetujui dan direservasi (A-08).
+        return app(ReviewRequest::class)->submitToApproval($req->refresh(), $staf);
     }
 
     #[Test]
     public function tc_req_17_klien_menambah_baris_saat_menunggu_approval(): void
     {
+        // Satu lapis supaya REQ benar-benar berhenti di pending_approval.
+        $this->aturan(ApprovalDocumentType::MaterialRequest, [$this->lapisUser($this->makeUser('warehouse_head'))]);
+
         $req = $this->reqKlien();
         $staf = $this->makeUser('warehouse_staff');
 
@@ -177,6 +183,12 @@ class ClientInteractionTest extends TenantTestCase
             'BR-REQ-12: penambahan saat menunggu approval mengembalikan REQ ke tinjau.',
         );
         $this->assertNull($req->reviewed_at, 'Snapshot approval dibuang bersama jejak tinjau.');
+        $this->assertNull($req->approval_snapshot_id);
+        $this->assertSame(
+            'cancelled',
+            ApprovalSnapshot::query()->forDocument(ApprovalDocumentType::MaterialRequest, (int) $req->id)->sole()->status->value,
+            'BR-REQ-12: snapshot lama dihentikan, tugasnya tidak bisa diputus lagi.',
+        );
         $this->assertSame(2, $req->openLines()->count());
     }
 

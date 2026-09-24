@@ -16,9 +16,11 @@
     @include('layouts.partials.palette')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body data-nx-root="{{ url('/') }}">
+{{-- data-nx-layout menyalakan sidebar, filter menu, dan header NexaDash (resources/js/nexadash/app.js). --}}
+<body data-nx-layout="app" data-nx-root="{{ url('/') }}">
 
 @include('layouts.partials.sidebar')
+<div class="nx-sidebar-backdrop" id="nxSidebarBackdrop"></div>
 
 <div class="nx-main">
     @include('layouts.partials.header')

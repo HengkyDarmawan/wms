@@ -11,7 +11,6 @@ use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Uom;
 use App\Domain\Master\Models\Vehicle;
-use App\Domain\Request\Actions\ApproveRequest;
 use App\Domain\Request\Actions\SaveRequest;
 use App\Domain\Request\Actions\SubmitRequest;
 use App\Domain\Request\Enums\RequestLineStatus;
@@ -114,8 +113,8 @@ class DiscrepancyTest extends TenantTestCase
             'fulfillment_source' => 'stock',
         ])->save();
 
-        $req = app(SubmitRequest::class)->handle($req->refresh(), $pemohon);
-        $this->req = app(ApproveRequest::class)->handle($req, $this->makeUser('company_admin'));
+        // Tanpa aturan approval, REQ disetujui otomatis saat diajukan (A-08).
+        $this->req = app(SubmitRequest::class)->handle($req->refresh(), $pemohon);
 
         $staf = $this->makeUser('warehouse_staff');
         $pck = app(CreatePickTask::class)->handle($this->req, $this->makeUser('warehouse_head'))[0];
@@ -345,10 +344,7 @@ class DiscrepancyTest extends TenantTestCase
             'fulfillment_source' => 'stock',
         ])->save();
 
-        $req = app(ApproveRequest::class)->handle(
-            app(SubmitRequest::class)->handle($req->refresh(), $pemohon),
-            $this->makeUser('company_admin'),
-        );
+        $req = app(SubmitRequest::class)->handle($req->refresh(), $pemohon);
 
         $staf = $this->makeUser('warehouse_staff');
         $pck = app(CreatePickTask::class)->handle($req, $this->makeUser('warehouse_head'))[0];

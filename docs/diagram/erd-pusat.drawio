@@ -5,10 +5,10 @@
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <mxCell id="companies" value="companies" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="40" width="260" height="162" as="geometry"/>
+          <mxGeometry x="40" y="40" width="260" height="178" as="geometry"/>
         </mxCell>
-        <mxCell id="companies_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(20)&lt;br&gt;name : varchar(150)&lt;br&gt;◆ subdomain : varchar(63)&lt;br&gt;◆ db_name : varchar(64)&lt;br&gt;timezone : varchar(40)&lt;br&gt;status : enum&lt;br&gt;↗ plan_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="companies">
-          <mxGeometry y="26" width="260" height="136" as="geometry"/>
+        <mxCell id="companies_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(20)&lt;br&gt;name : varchar(150)&lt;br&gt;◆ subdomain : varchar(63)&lt;br&gt;◆ db_name : varchar(64)&lt;br&gt;timezone : varchar(40)&lt;br&gt;status : enum&lt;br&gt;↗ plan_id : bigint&lt;br&gt;data : json" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="companies">
+          <mxGeometry y="26" width="260" height="152" as="geometry"/>
         </mxCell>
         <mxCell id="plans" value="plans" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="360" y="40" width="260" height="146" as="geometry"/>
@@ -35,10 +35,10 @@
           <mxGeometry y="26" width="260" height="152" as="geometry"/>
         </mxCell>
         <mxCell id="platform_users" value="platform_users" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="300" width="260" height="114" as="geometry"/>
+          <mxGeometry x="360" y="300" width="260" height="146" as="geometry"/>
         </mxCell>
-        <mxCell id="platform_users_cols" value="🔑 id : bigint&lt;br&gt;name : varchar(100)&lt;br&gt;◆ email : varchar(150)&lt;br&gt;password : varchar(255)&lt;br&gt;two_factor_secret : text" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="platform_users">
-          <mxGeometry y="26" width="260" height="88" as="geometry"/>
+        <mxCell id="platform_users_cols" value="🔑 id : bigint&lt;br&gt;name : varchar(100)&lt;br&gt;◆ email : varchar(150)&lt;br&gt;password : varchar(255)&lt;br&gt;two_factor_secret : text&lt;br&gt;remember_token : varchar(100)&lt;br&gt;last_login_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="platform_users">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="sso_identities" value="sso_identities" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="680" y="300" width="260" height="130" as="geometry"/>

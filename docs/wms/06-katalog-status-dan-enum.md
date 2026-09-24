@@ -1,8 +1,8 @@
 # Katalog Status & Enum
 
-**Versi:** 0.6
-**Tanggal:** 23 September 2026
-**Status:** nilai divalidasi 23 Sep 2026 bersama [A-29](04-keputusan-dan-asumsi.md#a-29)–[A-49](04-keputusan-dan-asumsi.md#a-49); guard SJ/TRF memuat bagian dari [A-50](04-keputusan-dan-asumsi.md#a-50) (menunggu validasi); v0.5: PRQ `draft`, aksi baris REQ (A-54, A-55, A-56, A-61), `shipment_method`, `spot_check`, enum vendor; v0.6: bukti terima baik/rusak/kurang, keberatan klien, DSC `reship`, `meter_unit`
+**Versi:** 0.10
+**Tanggal:** 24 September 2026
+**Status:** nilai divalidasi 23 Sep 2026 bersama [A-29](04-keputusan-dan-asumsi.md#a-29)–[A-49](04-keputusan-dan-asumsi.md#a-49); guard SJ/TRF memuat bagian dari [A-50](04-keputusan-dan-asumsi.md#a-50) (menunggu validasi); v0.5: PRQ `draft`, aksi baris REQ (A-54, A-55, A-56, A-61), `shipment_method`, `spot_check`, enum vendor; v0.6: bukti terima baik/rusak/kurang, keberatan klien, DSC `reship`, `meter_unit`; v0.7: enum yang sudah dipakai kode didaftarkan (`request_line_status`, `fulfillment_source`, `requester_type`, `destination_type`, `ownership_effect`, `proof_channel`, `discrepancy_origin`, `reservation_level`, `reservation_status`, `stock_event_type`, `capacity_mode`, `reason_context`, `uom_category_code`, `scope_type`, `user_status`, `login_result`, `company_status`) — tanpa status baru; v0.8: enum `receipt_type` (sumber GRN, sudah ada di ERD) didaftarkan dan langkah QC GRN diberi permission `receipt.qc` ([A-80](04-keputusan-dan-asumsi.md#a-80)) — tanpa status baru; v0.9: enum mesin approval yang sudah ada di ERD 08c didaftarkan (`approval_document_type`, `approver_type`, `decision_mode`, `approval_snapshot_status`, `approval_task_status`) ditambah `condition_match` ([A-87](04-keputusan-dan-asumsi.md#a-87)); permission approve per dokumen dipakai mesin approval ([A-86](04-keputusan-dan-asumsi.md#a-86)) — tanpa status dokumen baru; v0.10: enum `count_assignment_status` dan `adjustment_origin` (sudah ada di ERD 08c) didaftarkan, ADJ dan OPN tersambung ke mesin approval ([21-opname-penyesuaian](21-opname-penyesuaian.md), [A-95](04-keputusan-dan-asumsi.md#a-95)–[A-97](04-keputusan-dan-asumsi.md#a-97)) — tanpa status baru
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Glosarium](03-glosarium.md)
 
 Dokumen ini adalah **satu-satunya sumber** nilai status dan enum. UI memakai kolom *Label*, kode memakai kolom *Enum* (`snake_case`, Inggris). Developer dan agen AI **tidak boleh** menambah status di luar katalog ini tanpa menaikkan versi dokumen ini.
@@ -97,7 +97,7 @@ Catatan: SJ setelah `shipped` **tidak bisa dibatalkan**; koreksi lewat `DSC` ata
 | `received` | `completed` (Selesai) | `receipt.complete` | Staf Gudang | Hasil QC per baris terisi (`passed`/`quarantined`/`rejected`) bila QC aktif; PUT dibuat untuk baris `passed` | baris `rejected` tetap di Karantina menunggu `RTV`; cross-dock → langsung Loading Area |
 | `draft` | `cancelled` | `receipt.cancel` | Kepala Gudang | Alasan | — |
 
-Catatan: GRN `received` tidak bisa dibatalkan; koreksi lewat `ADJ` atau `RTV`. QC adalah **langkah** di dalam status `received`, bukan status.
+Catatan: GRN `received` tidak bisa dibatalkan; koreksi lewat `ADJ` atau `RTV`. QC adalah **langkah** di dalam status `received`, bukan status; langkah itu memakai permission `receipt.qc` dan efek stoknya dijelaskan [A-78](04-keputusan-dan-asumsi.md#a-78). Baris yang `quarantined` boleh diputus ulang setelah GRN `completed`; bila lolos, PUT dibuat saat itu ([19-receipt-putaway](19-receipt-putaway.md)).
 
 ### 2.6 `PUT` Tugas Put-away — `putaway_task` [F1]
 
@@ -171,6 +171,8 @@ Aset `lost` / `written_off` diproses lewat `ADJ` ([BR-AST-04](05-aturan-bisnis.m
 | `approved` | `posted` (Diposting) | otomatis | sistem | — | ledger ±; kejadian `stock_adjusted` |
 | `submitted` / `pending_approval` | `cancelled` | `adjustment.cancel` | Pengaju | — | — |
 
+Koreksi ADJ `posted` hanya lewat **ADJ pembalik** (`reversal_of_id`, [BR-GEN-03](05-aturan-bisnis.md#br-gen)) yang melewati mesin status yang sama; izin melihat `adjustment.view` ditambah [A-95](04-keputusan-dan-asumsi.md#a-95).
+
 ### 2.13 `OPN` Sesi Stock Opname — `stock_count` [F1]
 
 | Dari | Ke | Aksi | Aktor | Guard | Efek |
@@ -182,6 +184,8 @@ Aset `lost` / `written_off` diproses lewat `ADJ` ([BR-AST-04](05-aturan-bisnis.m
 | `reconciling` | `approved` | `count.approve` | Approver | Selisih kelas *besar* punya akar masalah; approver bukan penghitung sesi; sesi `annual`/audit disetujui Auditor Internal atau Manajemen ([BR-OPN-09](05-aturan-bisnis.md#br-opn)) | ADJ → `posted` (tidak untuk `spot_check`); bin dibuka |
 | `approved` | `closed` (Ditutup) | otomatis | sistem | Laporan PDF terbit | — |
 | `planned` | `cancelled` | `count.cancel` | Pembuat | — | — |
+
+Penolakan approval tidak mengubah status: sesi tetap `reconciling` dan diajukan ulang lewat `count.reconcile` ([A-97](04-keputusan-dan-asumsi.md#a-97)). Izin `count.view`, `count.assign` (penugasan penghitung), `count.record` (hitung buta) ditambah [A-95](04-keputusan-dan-asumsi.md#a-95).
 
 ### 2.14 `WST` Berita Acara Waste — `waste_disposal` [F1]
 
@@ -231,6 +235,7 @@ Aset `lost` / `written_off` diproses lewat `ADJ` ([BR-AST-04](05-aturan-bisnis.m
 | `removal_strategy` | `fifo` · `fefo` · `manual` · `offcut_first` = Sisa potongan dulu |
 | `asset_state` | `available` · `reserved` · `in_transit` · `on_loan` = Dipinjam · `returned` = Dikembalikan · `inspection` = Pemeriksaan · `maintenance` · `damaged` = Rusak · `lost` = Hilang · `written_off` = Dihapuskan |
 | `qc_result` | `passed` = Lolos · `quarantined` = Karantina · `rejected` = Ditolak |
+| `receipt_type` (sumber GRN, [A-33](04-keputusan-dan-asumsi.md#a-33)) | `vendor` = Dari vendor · `transfer` = Transfer masuk (SJ ke gudang) · `return` = Retur dari proyek (titik sambung modul Retur, [BR-GEN-10](05-aturan-bisnis.md#br-gen)) |
 | `condition_grade` | `A` = Baik · `B` = Layak · `C` = Rusak ringan · `D` = Rusak berat |
 | `return_sorting` | `good` = Layak · `damaged` = Rusak · `offcut` = Offcut · `waste` = Waste |
 | `waste_disposition` | `disposed` = Dibuang · `sold_scrap` = Dijual scrap · `reused` = Dipakai ulang |
@@ -242,11 +247,19 @@ Aset `lost` / `written_off` diproses lewat `ADJ` ([BR-AST-04](05-aturan-bisnis.m
 | `project_status` ([A-40](04-keputusan-dan-asumsi.md#a-40)) | `active` = Aktif · `closed` = Ditutup · `cancelled` = Dibatalkan · `archived` = Diarsipkan |
 | `subscription_status` | `trial` · `active` = Aktif · `past_due` = Jatuh Tempo (tenggang) · `suspended` = Ditangguhkan · `terminated` = Diakhiri |
 | `approval_decision` | `approved` = Setuju · `rejected` = Tolak · `delegated` = Didelegasikan · `escalated` = Dieskalasi |
-| `approval_channel` | `web` · `whatsapp` |
+| `approval_channel` | `web` · `whatsapp` (keputusan); kanal lapis aturan menambah `both` = Web & WhatsApp (ERD 08c; F1 selalu `web`) |
+| `approval_document_type` ([20-approval](20-approval.md)) | Jenis dokumen beraturan approval (alur 9), nilai = nama di kode Glosarium: `material_request` (REQ) · `transfer` (TRF) · `goods_return` (RET) · `conversion` (CNV) · `stock_adjustment` (ADJ) · `waste_disposal` (WST) · `purchase_request` (PRQ) · `vendor_return` (RTV) · `stock_count` (OPN) · `material_issue` (ISU pembalik). F1 tersambung: REQ, RTV, ADJ, OPN |
+| `approver_type` (lapis aturan, Blueprint §8.1) | `user` = User tertentu · `position` = Jabatan · `role` = Role (dalam cakupan dokumen) · `direct_manager` = Atasan langsung pemohon · `warehouse_head` = Kepala gudang terkait · `project_pic` = PIC proyek |
+| `decision_mode` (cara putus lapis) | `sequential` = Berurutan · `any` = Cukup salah satu · `all` = Semua harus setuju |
+| `condition_match` ([A-87](04-keputusan-dan-asumsi.md#a-87)) | `all` = Semua kondisi terpenuhi · `any` = Salah satu kondisi terpenuhi |
+| `approval_snapshot_status` (bukan status dokumen) | `pending` = Menunggu · `approved` = Disetujui · `rejected` = Ditolak · `cancelled` = Dibatalkan (dokumen ditarik/diajukan ulang) |
+| `approval_task_status` | `open` = Terbuka · `decided` = Diputus · `superseded` = Digantikan · `expired` = Dialihkan (eskalasi) |
 | `notification_channel` | `in_app` · `email` · `whatsapp` |
 | `count_type` | `monthly` · `annual` · `adhoc` · `spot_check` = Pemeriksaan mendadak (tanpa pembekuan, [BR-OPN-10](05-aturan-bisnis.md#br-opn)) · `cycle_abc` [F2] |
 | `variance_class` | `minor` = Kecil (auto) · `moderate` = Sedang (hitung ulang) · `major` = Besar (approval + akar masalah) |
 | `root_cause_category` | `mispick` = Salah ambil · `misplaced` = Salah taruh · `wrong_uom` = Salah satuan · `damaged_lost` = Rusak/hilang · `unrecorded_txn` = Transaksi tidak tercatat · `other` |
+| `count_assignment_status` (penugasan penghitung, ERD 08c; bukan status dokumen) | `pending` = Belum dihitung · `done` = Selesai |
+| `adjustment_origin` (asal ADJ, ERD 08c) | `manual` = Manual · `count` = Hasil opname · `discrepancy` = Selisih pengiriman (titik sambung, [A-98](04-keputusan-dan-asumsi.md#a-98)) · `asset_lost` = Aset hilang (titik sambung modul Aset) |
 | `sync_status` (PWA, [F2]) | `queued` · `synced` · `conflict` = Perlu tinjauan · `held` = Ditahan (langganan ditangguhkan) |
 | `item_status` | `active` · `provisional` = Sementara (dibuat dari baris non-katalog) · `inactive` |
 | `vendor_type` ([A-52](04-keputusan-dan-asumsi.md#a-52)) | `company` = Perusahaan · `shop` = Toko · `online_marketplace` = Toko online · `individual` = Perorangan |
@@ -256,6 +269,23 @@ Aset `lost` / `written_off` diproses lewat `ADJ` ([BR-AST-04](05-aturan-bisnis.m
 | `substitution_response` ([A-55](04-keputusan-dan-asumsi.md#a-55)) | `accepted` = Diterima · `rejected` = Ditolak klien · `expired` = Lewat batas (dianggap setuju) |
 | `shipment_method` ([A-57](04-keputusan-dan-asumsi.md#a-57)) | `own_fleet` = Kendaraan sendiri · `carrier` = Ekspedisi · `self_delivered` = Diantar sendiri |
 | `meter_unit` ([A-66](04-keputusan-dan-asumsi.md#a-66)) | `hour` = Jam mesin · `km` = Kilometer · `none` = Tanpa meter |
+| `request_line_status` (baris REQ) | `open` = Terbuka · `closed` = Selesai · `cancelled` = Dibatalkan. Baris tidak pernah dihapus (P-03); baris yang dibatalkan tetap tampil |
+| `requester_type` ([A-07](04-keputusan-dan-asumsi.md#a-07)) | `internal` = Internal · `client` = Klien |
+| `fulfillment_source` (baris REQ, [BR-REQ-05](05-aturan-bisnis.md#br-req)) | `stock` = Stok tersedia · `transfer` = Transfer antar gudang · `purchase` = Pembelian |
+| `destination_type` (tujuan SJ, [BR-SJ-04](05-aturan-bisnis.md#br-sj)) | `project_client` = Proyek klien · `site_warehouse` = Gudang Site · `warehouse` = Gudang lain · `vendor` = Vendor |
+| `ownership_effect` (baris SJ, [BR-SJ-04](05-aturan-bisnis.md#br-sj)) | `sold` = Jual putus · `transfer` = Transfer · `loan` = Pinjam |
+| `proof_channel` (bukti terima, [A-41](04-keputusan-dan-asumsi.md#a-41)) | `driver_pwa` = Aplikasi driver · `token_link` = Tautan bertoken |
+| `discrepancy_origin` (DSC, [A-63](04-keputusan-dan-asumsi.md#a-63)) | `partial_delivery` = Bukti terima sebagian · `client_dispute` = Keberatan klien |
+| `reservation_level` ([BR-STK-04](05-aturan-bisnis.md#br-stk)) | `soft` = Lunak (item & gudang) · `hard` = Keras (alokasi bin) |
+| `reservation_status` | `active` = Aktif · `consumed` = Terpenuhi · `released` = Dilepas. Hanya `active` yang mengurangi stok tersedia ([BR-STK-03](05-aturan-bisnis.md#br-stk)) |
+| `stock_event_type` | Nilai = kolom kejadian di [matriks kejadian stok](05-aturan-bisnis.md#14-matriks-kejadian-stok): `goods_received` · `goods_rejected` · `goods_shipped` · `goods_delivered` · `goods_returned` · `stock_transferred` · `delivery_discrepancy` · `material_consumed` · `material_converted` · `waste_disposed` · `stock_adjusted` · `asset_checked_out` · `asset_returned` · `asset_lost_or_damaged` · `purchase_requested` · `purchase_request_cancelled` |
+| `capacity_mode` (kategori penyimpanan, [A-37](04-keputusan-dan-asumsi.md#a-37)) | `warn` = Peringatan · `block` = Blokir |
+| `reason_context` (master Alasan, [BR-GEN-02](05-aturan-bisnis.md#br-gen)) | `reject` = Penolakan · `cancel` = Pembatalan · `adjustment` = Penyesuaian stok · `waste` = Waste · `damage` = Kerusakan · `short_pick` = Kekurangan pick · `discrepancy` = Selisih pengiriman · `lost` = Kehilangan |
+| `uom_category_code` (kategori satuan bawaan) | `count` = Jumlah · `length` = Panjang · `weight` = Berat · `volume` = Volume · `area` = Luas |
+| `scope_type` (penugasan role, [BR-GEN-09](05-aturan-bisnis.md#br-gen)) | `all` = Semua · `warehouse` = Gudang · `project` = Proyek |
+| `user_status` (nilai turunan, bukan kolom) | `invited` = Diundang · `active` = Aktif · `inactive` = Nonaktif · `locked` = Terkunci — dihitung dari `is_active`, `locked_until`, dan undangan yang belum diterima |
+| `login_result` (catatan login) | `success` = Berhasil · `invalid` = Email atau password salah · `locked` = Akun terkunci · `inactive` = Akun nonaktif · `no_role` = Tanpa penugasan role · `wrong_portal` = Salah pintu masuk · `suspended` = Langganan diakhiri |
+| `company_status` (database pusat; bukan status langganan) | `provisioning` = Disiapkan · `active` = Aktif · `suspended` = Ditangguhkan · `terminated` = Diakhiri |
 
 ## 4. Blok mesin-status untuk prompt & tes
 

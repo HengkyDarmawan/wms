@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `picking` & `shipment` (Picking, Surat Jalan, Bukti Terima, Selisih)
 
-**Versi:** 0.2
+**Versi:** 0.4
 **Tanggal:** 24 September 2026
 **Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md)
 **Modul:** `picking`, `shipment`
@@ -223,6 +223,8 @@ Penerimaan di gudang tujuan (modul `receipt`); retur (modul `return`); transfer 
 
 ## 13. Catatan implementasi (24 September 2026)
 
+Picking tinggal di domain `app/Domain/Shipment`, bukan folder `Picking/` seperti [Arsitektur §4](08-arsitektur.md#4-struktur-kode). Tujuh aksi domain: `CreatePickTask` (`pick.create`), `ProcessPickTask` (`pick.start`, `pick.complete`, `pick.cancel`), `CreateShipment` (`shipment.create`), `ShipShipment` (`shipment.ship`, `shipment.cancel`), `ConfirmDelivery` (`shipment.confirm_delivery`), `IssueDeliveryToken`, `ResolveDiscrepancy` (`discrepancy.resolve`). Dua kelas memegang lebih dari satu permission; tiap metode memeriksa permission-nya sendiri ([A-73](04-keputusan-dan-asumsi.md#a-73)). Short pick menandai bin lewat `ChangeBinStatus::flagForCount()` ([A-67](04-keputusan-dan-asumsi.md#a-67)). Pengaturan company yang dipakai: `receipt_confirm_days` dan `discrepancy_alert_days` ([11-master §13.4](11-master.md#134-sisa-pekerjaan-modul-ini)).
+
 ### 13.1 Penyimpangan dari spesifikasi
 
 1. **Buku besar stok diperluas untuk perubahan kondisi di bin yang sama.** BR-SJ-10 menuntut barang rusak
@@ -241,6 +243,10 @@ Penerimaan di gudang tujuan (modul `receipt`); retur (modul `return`); transfer 
 6. **Pengiriman OTP lewat WhatsApp atau SMS belum ada** ([O-06](04-keputusan-dan-asumsi.md#o-06)).
    Tautan dan OTP-nya sudah berfungsi; kodenya ditampilkan sekali di layar penerbit dan disampaikan
    lisan oleh staf.
+7. **Alokasi picking hanya dari bin `storage`** (v0.4, bersama modul [Receipt/Putaway](19-receipt-putaway.md)).
+   Sebelumnya `CreatePickTask` mengambil saldo Tersedia dari bin apa pun di gudang, termasuk bin Dalam
+   Perjalanan milik gudang asal, Penerimaan, dan Loading Area — barang transfer yang belum diterima gudang
+   tujuan bisa ikut dipetik lagi. Kini hanya bin penyimpanan ([A-84](04-keputusan-dan-asumsi.md#a-84)).
 
 ### 13.2 Keputusan implementasi
 
@@ -285,8 +291,8 @@ Uji yang menopangnya ada di `tests/Feature/Shipment`: `PickTaskTest` (TC-PCK-01�
    pemindaian di PWA ([BR-SJ-05](05-aturan-bisnis.md#br-sj)).
 3. **Konfirmasi dan keberatan pemohon** ([BR-REQ-10](05-aturan-bisnis.md#br-req)) — kolomnya sudah ada di
    bukti terima, layarnya menyusul bersama portal pemohon.
-4. **Cross-dock dari GRN** ([BR-SJ-03](05-aturan-bisnis.md#br-sj)) dan GRN retur untuk barang rusak yang
-   dibawa balik — menunggu modul `receipt`.
+4. **Cross-dock dari GRN** ([BR-SJ-03](05-aturan-bisnis.md#br-sj), [A-83](04-keputusan-dan-asumsi.md#a-83)) dan GRN retur untuk barang rusak yang
+   dibawa balik — modul `receipt` sudah ada ([19](19-receipt-putaway.md)); keduanya menunggu keputusan A-83 dan modul Retur.
 5. **Unggah tanda tangan dan foto** lewat layar; sekarang jalurnya menerima path berkas.
 6. **Mode offline driver** ([BR-SJ-08](05-aturan-bisnis.md#br-sj)) `[F2]`.
-7. **Notifikasi §8** dan **laporan §9** beserta ekspornya.
+7. **Notifikasi §8** dan **laporan §9** beserta ekspornya — laporan belum dibangun; kerangkanya di [16-shared-laporan-berkas](16-shared-laporan-berkas.md).

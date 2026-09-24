@@ -244,14 +244,15 @@
     var sidebarNav = document.getElementById('nxSidebarNav');
     if (sidebarNav && typeof SimpleBar !== 'undefined') new SimpleBar(sidebarNav);
 
-    // Active menu dicocokkan lewat path lengkap yang sudah di-resolve, bukan nama
-    // berkas, karena beberapa rute memakai nama sama (index.html di root dan di plugins/).
-    var current = window.location.pathname.replace(/\/$/, '/index.html');
+    // Active menu dicocokkan lewat path lengkap yang sudah di-resolve. Rute Laravel
+    // tidak memakai index.html; garis miring penutup dibuang kecuali untuk akar.
+    var trim = function (p) { return p.length > 1 ? p.replace(/\/+$/, '') : p; };
+    var current = trim(window.location.pathname);
     var matched = false;
     $('#nxSidebar .nx-menu-link[href]').each(function () {
       var raw = ($(this).attr('href') || '').split('#')[0];
       if (!raw) return;
-      var href = new URL(raw, window.location.href).pathname;
+      var href = trim(new URL(raw, window.location.href).pathname);
       if (href !== current) return;
       matched = true;
       $(this).addClass('active').attr('aria-current', 'page');
