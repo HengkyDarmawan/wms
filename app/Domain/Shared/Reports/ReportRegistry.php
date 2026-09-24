@@ -25,6 +25,7 @@ class ReportRegistry
         Definitions\ProjectListReport::class,
         Definitions\WarehouseListReport::class,
         Definitions\BinListReport::class,
+        Definitions\ProjectMaterialReport::class,
     ];
 
     /** @return Collection<int, Report> */

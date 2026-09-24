@@ -1,8 +1,8 @@
 # Model Data — Stok, outbound, inbound & dokumen niat
 
-**Versi:** 0.11 (Part 3, diselaraskan dengan migrasi modul Access s.d. Transfer/Retur 24 Sep 2026)
+**Versi:** 0.12 (Part 3, diselaraskan dengan migrasi modul Access s.d. Issue 24 Sep 2026)
 **Tanggal:** 24 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.11, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Inti](08a-model-data-inti.md) · [Pendukung](08c-model-data-pendukung.md)
 
 Daftar area lengkap ada di [08a-model-data-inti.md](08a-model-data-inti.md).
@@ -239,6 +239,7 @@ erDiagram
   }
   material_issues {
     bigint id PK
+    varchar_40 number UK
   }
   material_issue_lines {
     bigint id PK
@@ -275,6 +276,7 @@ erDiagram
   warehouses ||--o{ material_issues : "site"
   material_issues ||--o{ material_issue_lines : " "
   bins ||--o{ material_issue_lines : " "
+  material_issues ||--o{ material_issues : "pembalik"
 ```
 
 ### Entitas
@@ -321,8 +323,8 @@ erDiagram
 **`goods_return_lines` — RET baris.** 🔑`id` bigint · ↗`goods_return_id` bigint · ↗`item_id` bigint · ↗`lot_id` bigint · ↗`serial_id` bigint · ↗`piece_id` bigint · ↗`from_bin_id` bigint *(bin Gudang Site / On-site asal (A-110))* · ↗`origin_shipment_line_id` bigint · ↗`origin_discrepancy_line_id` bigint *(barang rusak ditinggal ekspedisi ([BR-RET-05](05-aturan-bisnis.md#br-ret), A-110))* · `ownership` enum *(sold|company (return_ownership, [BR-RET-03](05-aturan-bisnis.md#br-ret)))* · `stock_status` enum *(kondisi saat masuk bin Retur (A-112))* · `qty_base` decimal(18,4) *(jumlah diajukan)* · `qty_received` decimal(18,4) *(diterima GRN retur (A-115))* · ↗`split_from_line_id` bigint *(baris hasil pilah tambahan (A-113))* · `sorting` enum *(good|damaged|offcut|waste)* · `sorted_qty` decimal(18,4) · ↗`new_piece_id` bigint *(offcut hasil pilah)* · ↗`target_bin_id` bigint · ↗`reason_code_id` bigint *(rusak/waste ([BR-GEN-11](05-aturan-bisnis.md#br-gen)))* · `notes` varchar(255) *(opsional)*
   ↳ kolom baris standar (lihat konvensi)
 
-**`material_issues` — ISU header.** 🔑`id` bigint · ↗`project_id` bigint · ↗`warehouse_id` bigint *(Gudang Site proyek)* · ↗`issued_by` bigint · `confirmed_at` datetime · ↗`approval_snapshot_id` bigint *(hanya ISU pembalik)*
-  ↳ kolom header dokumen standar (lihat konvensi); [A-32](04-keputusan-dan-asumsi.md#a-32)
+**`material_issues` — ISU header.** 🔑`id` bigint · ◆`number` varchar(40) *(ISU/<Gudang Site>/<yymm>/<urut> (A-118))* · ↗`project_id` bigint · ↗`warehouse_id` bigint *(Gudang Site proyek)* · `status` enum *(KS 2.9)* · ↗`reversal_of_id` bigint *(ISU pembalik ([BR-GEN-03](05-aturan-bisnis.md#br-gen)))* · ↗`reason_code_id` bigint *(alasan pembalik (A-150))* · ↗`issued_by` bigint *(pembuat)* · ↗`confirmed_by` bigint *(A-118)* · `confirmed_at` datetime · ↗`approval_snapshot_id` bigint *(hanya ISU pembalik)* · ↗`submitted_by` bigint *(pengaju pembalik ([BR-APR-03](05-aturan-bisnis.md#br-apr), A-118))* · `submitted_at` datetime · ↗`approved_by` bigint · `approved_at` datetime · ↗`reject_reason_id` bigint · ↗`cancel_reason_id` bigint · `cancelled_at` datetime
+  ↳ kolom header dokumen standar (lihat konvensi); [A-32](04-keputusan-dan-asumsi.md#a-32); pembalik tetap draft selama approval (A-150)
 
-**`material_issue_lines` — ISU baris.** 🔑`id` bigint · ↗`material_issue_id` bigint · ↗`bin_id` bigint · `qty_base` decimal(18,4) *(negatif pada ISU pembalik)* · `work_note` varchar(255) *(untuk apa dipakai)*
+**`material_issue_lines` — ISU baris.** 🔑`id` bigint · ↗`material_issue_id` bigint · ↗`item_id` bigint · ↗`bin_id` bigint *(bin penyimpanan Gudang Site (A-117))* · ↗`lot_id` bigint · ↗`serial_id` bigint · ↗`piece_id` bigint *(potongan utuh (A-117))* · `qty_base` decimal(18,4) *(negatif pada ISU pembalik)* · `work_note` varchar(255) *(untuk apa dipakai)* · ↗`reversal_of_line_id` bigint *(baris asal pembalik (A-118))* · ↗`movement_id` bigint *(pergerakan kartu stok (A-118))*
   ↳ kolom baris standar (lihat konvensi)

@@ -282,6 +282,21 @@
             </div>
         @endcanany
 
+        @can('issue.view')
+            <div class="nx-menu-section">
+                <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
+                    {{ __('Pemakaian di site') }}
+                </div>
+
+                <div class="nx-menu-item">
+                    <a class="nx-menu-link {{ request()->routeIs('issues.*') ? 'active' : '' }}"
+                       href="{{ route('issues.index') }}" data-title="{{ __('Pemakaian material') }}">
+                        <i class="bi bi-hammer"></i><span class="nx-menu-label">{{ __('Pemakaian material') }}</span>
+                    </a>
+                </div>
+            </div>
+        @endcan
+
         @canany(['count.view', 'count.record', 'adjustment.view'])
             <div class="nx-menu-section">
                 <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">

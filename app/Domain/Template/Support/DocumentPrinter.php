@@ -6,6 +6,7 @@ namespace App\Domain\Template\Support;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Adjustment\Models\StockAdjustment;
+use App\Domain\Issue\Models\MaterialIssue;
 use App\Domain\Receipt\Models\VendorReturn;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Shipment\Models\DeliveryDiscrepancy;
@@ -56,6 +57,7 @@ class DocumentPrinter
             DocumentTemplateType::DeliveryDiscrepancy => DeliveryDiscrepancy::query(),
             DocumentTemplateType::VendorReturn => VendorReturn::query(),
             DocumentTemplateType::StockAdjustment => StockAdjustment::query(),
+            DocumentTemplateType::MaterialIssue => MaterialIssue::query(),
             default => throw new NotFoundHttpException,
         };
 
@@ -95,6 +97,7 @@ class DocumentPrinter
             DocumentTemplateType::DeliveryDiscrepancy => $this->discrepancy($model),
             DocumentTemplateType::VendorReturn => $this->vendorReturn($model),
             DocumentTemplateType::StockAdjustment => $this->adjustment($model),
+            DocumentTemplateType::MaterialIssue => $this->materialIssue($model),
             default => throw new NotFoundHttpException,
         };
 
@@ -126,6 +129,7 @@ class DocumentPrinter
             DocumentTemplateType::PickTask => route('picks.show', $model),
             DocumentTemplateType::VendorReturn => route('vendor-returns.show', $model),
             DocumentTemplateType::StockAdjustment => route('adjustments.show', $model),
+            DocumentTemplateType::MaterialIssue => route('issues.show', $model),
             default => url('/'),
         };
     }
@@ -219,6 +223,15 @@ class DocumentPrinter
         $lines = $adj->lines()->with('bin', 'item.baseUom', 'lot', 'serial', 'piece', 'reason')->orderBy('id')->get();
 
         return ['adj' => $adj, 'lines' => $lines, 'pelaku' => [$adj->submitter, $adj->approver]];
+    }
+
+    /** @return array<string, mixed> */
+    private function materialIssue(MaterialIssue $isu): array
+    {
+        $isu->loadMissing('project.pic', 'warehouse', 'issuer', 'confirmer', 'reason', 'reversalOf');
+        $lines = $isu->lines()->with('bin', 'item.baseUom', 'lot', 'serial', 'piece')->orderBy('id')->get();
+
+        return ['isu' => $isu, 'lines' => $lines, 'pelaku' => [$isu->issuer, $isu->confirmer, $isu->project?->pic]];
     }
 
     /**

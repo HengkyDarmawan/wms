@@ -193,6 +193,16 @@ class ReferenceSeeder extends Seeder
             'return.sort' => 'Pilah barang retur',
             'return.cancel' => 'Batalkan retur dari proyek',
         ],
+        // Modul Issue — pemakaian material di site (23-pemakaian §2). Katalog §2.9
+        // menulis issue.create/confirm/cancel; issue.view dan issue.approve
+        // (keputusan ISU pembalik, BR-GEN-04) ditambah (A-119).
+        'issue' => [
+            'issue.view' => 'Lihat pemakaian material',
+            'issue.create' => 'Catat pemakaian material',
+            'issue.confirm' => 'Konfirmasi pemakaian material',
+            'issue.cancel' => 'Batalkan pemakaian material',
+            'issue.approve' => 'Setujui ISU pembalik',
+        ],
         // Modul Approval (20-approval §2). Keputusan memakai permission approve
         // Katalog per dokumen (`request.approve`, `vendor_return.approve`, A-86).
         'approval' => [
@@ -220,17 +230,17 @@ class ReferenceSeeder extends Seeder
         'management' => [
             'name' => 'Manajemen',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'role.view', 'org.view', 'client.view', 'project.view', 'vendor.view', 'item.view', 'item_category.view', 'uom.view', 'reference.view', 'company_setting.view', 'warehouse.view', 'bin.view', 'warehouse_type.view', 'stock.view', 'reservation.view', 'stock_event.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'request.approve', 'vendor_return.approve', 'approval_rule.view', 'approval.simulate', 'approval.delegate', 'count.view', 'count.approve', 'adjustment.view', 'adjustment.approve', 'transfer.view', 'transfer.approve', 'return.view', 'return.approve'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'role.view', 'org.view', 'client.view', 'project.view', 'vendor.view', 'item.view', 'item_category.view', 'uom.view', 'reference.view', 'company_setting.view', 'warehouse.view', 'bin.view', 'warehouse_type.view', 'stock.view', 'reservation.view', 'stock_event.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'request.approve', 'vendor_return.approve', 'approval_rule.view', 'approval.simulate', 'approval.delegate', 'count.view', 'count.approve', 'adjustment.view', 'adjustment.approve', 'transfer.view', 'transfer.approve', 'return.view', 'return.approve', 'issue.view', 'issue.approve'],
         ],
         'warehouse_head' => [
             'name' => 'Kepala Gudang',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'device.view', 'org.view', 'client.view', 'project.view', 'vendor.view', 'item.view', 'item.update', 'item_category.view', 'uom.view', 'reference.view', 'reference.manage', 'warehouse.view', 'warehouse.update', 'bin.view', 'bin.manage', 'warehouse_type.view', 'stock.view', 'reservation.view', 'reservation.release', 'request.view', 'request.review', 'request.split_line', 'request.close_short', 'request.cancel', 'request.confirm_cancel', 'pick.view', 'pick.create', 'pick.start', 'pick.complete', 'pick.cancel', 'shipment.view', 'shipment.create', 'shipment.ship', 'shipment.cancel', 'discrepancy.view', 'discrepancy.resolve', 'receipt.view', 'receipt.create', 'receipt.receive', 'receipt.qc', 'receipt.complete', 'receipt.cancel', 'putaway.view', 'putaway.complete', 'putaway.cancel', 'vendor_return.view', 'vendor_return.create', 'vendor_return.approve', 'vendor_return.ship', 'vendor_return.complete', 'vendor_return.cancel', 'request.approve', 'approval_rule.view', 'approval.delegate', 'count.view', 'count.create', 'count.start', 'count.assign', 'count.record', 'count.reconcile', 'count.approve', 'count.cancel', 'adjustment.view', 'adjustment.create', 'adjustment.approve', 'adjustment.cancel', 'transfer.view', 'transfer.create', 'transfer.approve', 'transfer.cancel', 'return.view', 'return.create', 'return.approve', 'return.sort', 'return.cancel', 'label.print'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'device.view', 'org.view', 'client.view', 'project.view', 'vendor.view', 'item.view', 'item.update', 'item_category.view', 'uom.view', 'reference.view', 'reference.manage', 'warehouse.view', 'warehouse.update', 'bin.view', 'bin.manage', 'warehouse_type.view', 'stock.view', 'reservation.view', 'reservation.release', 'request.view', 'request.review', 'request.split_line', 'request.close_short', 'request.cancel', 'request.confirm_cancel', 'pick.view', 'pick.create', 'pick.start', 'pick.complete', 'pick.cancel', 'shipment.view', 'shipment.create', 'shipment.ship', 'shipment.cancel', 'discrepancy.view', 'discrepancy.resolve', 'receipt.view', 'receipt.create', 'receipt.receive', 'receipt.qc', 'receipt.complete', 'receipt.cancel', 'putaway.view', 'putaway.complete', 'putaway.cancel', 'vendor_return.view', 'vendor_return.create', 'vendor_return.approve', 'vendor_return.ship', 'vendor_return.complete', 'vendor_return.cancel', 'request.approve', 'approval_rule.view', 'approval.delegate', 'count.view', 'count.create', 'count.start', 'count.assign', 'count.record', 'count.reconcile', 'count.approve', 'count.cancel', 'adjustment.view', 'adjustment.create', 'adjustment.approve', 'adjustment.cancel', 'transfer.view', 'transfer.create', 'transfer.approve', 'transfer.cancel', 'return.view', 'return.create', 'return.approve', 'return.sort', 'return.cancel', 'issue.view', 'issue.create', 'issue.confirm', 'issue.cancel', 'issue.approve', 'label.print'],
         ],
         'warehouse_staff' => [
             'name' => 'Staf Gudang',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'device.manage', 'item.view', 'item_category.view', 'uom.view', 'project.view', 'reference.view', 'warehouse.view', 'bin.view', 'stock.view', 'reservation.view', 'request.view', 'request.review', 'request.split_line', 'request.confirm_cancel', 'pick.view', 'pick.start', 'pick.complete', 'shipment.view', 'shipment.create', 'shipment.ship', 'receipt.view', 'receipt.create', 'receipt.receive', 'receipt.qc', 'receipt.complete', 'putaway.view', 'putaway.complete', 'vendor_return.view', 'vendor_return.create', 'vendor_return.ship', 'vendor_return.cancel', 'count.view', 'count.record', 'adjustment.view', 'adjustment.create', 'adjustment.cancel', 'transfer.view', 'transfer.create', 'transfer.cancel', 'return.view', 'return.create', 'return.sort', 'return.cancel', 'label.print'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'device.manage', 'item.view', 'item_category.view', 'uom.view', 'project.view', 'reference.view', 'warehouse.view', 'bin.view', 'stock.view', 'reservation.view', 'request.view', 'request.review', 'request.split_line', 'request.confirm_cancel', 'pick.view', 'pick.start', 'pick.complete', 'shipment.view', 'shipment.create', 'shipment.ship', 'receipt.view', 'receipt.create', 'receipt.receive', 'receipt.qc', 'receipt.complete', 'putaway.view', 'putaway.complete', 'vendor_return.view', 'vendor_return.create', 'vendor_return.ship', 'vendor_return.cancel', 'count.view', 'count.record', 'adjustment.view', 'adjustment.create', 'adjustment.cancel', 'transfer.view', 'transfer.create', 'transfer.cancel', 'return.view', 'return.create', 'return.sort', 'return.cancel', 'issue.view', 'issue.create', 'issue.confirm', 'issue.cancel', 'label.print'],
         ],
         'driver' => [
             'name' => 'Driver',
@@ -240,7 +250,7 @@ class ReferenceSeeder extends Seeder
         'internal_requester' => [
             'name' => 'Pemohon Internal',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'device.manage', 'item.view', 'project.view', 'warehouse.view', 'stock.view', 'request.view', 'request.create', 'request.submit', 'request.cancel', 'request.close_short', 'request.confirm_receipt', 'request.dispute_receipt', 'return.view', 'return.create', 'return.cancel'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'device.manage', 'item.view', 'project.view', 'warehouse.view', 'stock.view', 'request.view', 'request.create', 'request.submit', 'request.cancel', 'request.close_short', 'request.confirm_receipt', 'request.dispute_receipt', 'return.view', 'return.create', 'return.cancel', 'issue.view', 'issue.create', 'issue.cancel'],
         ],
         'pr_follow_up' => [
             'name' => 'Penindak Lanjut PR',
@@ -250,12 +260,12 @@ class ReferenceSeeder extends Seeder
         'internal_auditor' => [
             'name' => 'Auditor Internal',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'org.view', 'item.view', 'project.view', 'vendor.view', 'client.view', 'item_category.view', 'uom.view', 'reference.view', 'warehouse.view', 'bin.view', 'warehouse_type.view', 'stock.view', 'reservation.view', 'stock_event.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'approval_rule.view', 'count.view', 'count.create', 'count.start', 'count.assign', 'count.record', 'count.reconcile', 'count.approve', 'count.cancel', 'adjustment.view', 'transfer.view', 'return.view'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'org.view', 'item.view', 'project.view', 'vendor.view', 'client.view', 'item_category.view', 'uom.view', 'reference.view', 'warehouse.view', 'bin.view', 'warehouse_type.view', 'stock.view', 'reservation.view', 'stock_event.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'approval_rule.view', 'count.view', 'count.create', 'count.start', 'count.assign', 'count.record', 'count.reconcile', 'count.approve', 'count.cancel', 'adjustment.view', 'transfer.view', 'return.view', 'issue.view'],
         ],
         'external_auditor' => [
             'name' => 'Auditor Eksternal',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'profile.update', 'item.view', 'project.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'count.view', 'count.record', 'adjustment.view', 'transfer.view', 'return.view'],
+            'permissions' => ['auth.login', 'auth.logout', 'profile.update', 'item.view', 'project.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'count.view', 'count.record', 'adjustment.view', 'transfer.view', 'return.view', 'issue.view'],
         ],
         'client_user' => [
             'name' => 'Klien',

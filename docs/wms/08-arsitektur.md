@@ -1,6 +1,6 @@
 # Arsitektur Sistem
 
-**Versi:** 0.10 (Part 3; §4, §10, §12 diselaraskan dengan kode 24 Sep 2026; §4 mesin approval, [A-92](04-keputusan-dan-asumsi.md#a-92); v0.9: §4 dan §12 modul Count/Adjustment; v0.10: §4 dan §12 modul Transfer/Retur)
+**Versi:** 0.11 (Part 3; §4, §10, §12 diselaraskan dengan kode 24 Sep 2026; §4 mesin approval, [A-92](04-keputusan-dan-asumsi.md#a-92); v0.9: §4 dan §12 modul Count/Adjustment; v0.10: §4 dan §12 modul Transfer/Retur; v0.11: §12 modul Issue)
 **Tanggal:** 24 September 2026
 **Status:** berlaku (asumsi A-25–A-71 disetujui; [A-73](04-keputusan-dan-asumsi.md#a-73), [A-76](04-keputusan-dan-asumsi.md#a-76) menunggu validasi); keputusan arsitektur diberi ID `AD-xx` dan berlaku sampai diganti. Paket diverifikasi terhadap Laravel 13 pada 23 Sep 2026 (menutup [O-01](04-keputusan-dan-asumsi.md#o-01))
 **Dokumen terkait:** [Blueprint §17](01-blueprint.md#17-stack-teknologi) · [Model data 08a](08a-model-data-inti.md) · [08b](08b-model-data-stok-dokumen.md) · [08c](08c-model-data-pendukung.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Riset §2.8](02-riset-wms-sejenis.md#28-riset-teknis-untuk-part-3)
@@ -202,7 +202,7 @@ Migrasi tenant di produksi: `tenants:migrate` per batch dengan log; gagal di sat
 
 ## 12. Langkah berikutnya (Part 4)
 
-1. A-25–A-71 disetujui (A-50 divalidasi 24 Sep 2026); model data dibuat ulang dari `_generate_erd.py` (v0.7, 24 Sep 2026). Modul Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, dan Return/Transfer selesai Fase 1 (model data v0.11; penangan approval ADJ dengan lapis minimum [A-09](04-keputusan-dan-asumsi.md#a-09), OPN dengan SoD [A-96](04-keputusan-dan-asumsi.md#a-96), TRF dan RET tanpa lapis minimum); berikutnya Issue.
+1. A-25–A-71 disetujui (A-50 divalidasi 24 Sep 2026); model data dibuat ulang dari `_generate_erd.py` (v0.7, 24 Sep 2026). Modul Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, dan Issue selesai Fase 1 (model data v0.12; penangan approval ADJ dengan lapis minimum [A-09](04-keputusan-dan-asumsi.md#a-09), OPN dengan SoD [A-96](04-keputusan-dan-asumsi.md#a-96), TRF dan RET tanpa lapis minimum, ISU pembalik dengan lapis minimum [A-150](04-keputusan-dan-asumsi.md#a-150)); berikutnya Conversion/Waste.
 2. Spesifikasi modul memakai [template](_template-spesifikasi-modul.md), urutan: Access → Master → Warehouse → Stock → Request → Picking/Shipment → Receipt/Putaway → Approval → Count/Adjustment → Return/Transfer → Issue → Conversion/Waste → Asset → PurchaseRequest/VendorReturn → Platform.
 3. Setiap spesifikasi modul menurunkan migrasi dari 08a–08c dan kasus uji dari Katalog & BR.
 4. Urutan rilis mengikuti [D-29](04-keputusan-dan-asumsi.md#d-29): setelah modul Platform, **Purchasing inti** (Fase 1b) dibangun sebagai domain terpisah `app/Domain/Purchasing` yang memakai paket Approval bersama; WhatsApp (2a), PWA offline (2b), SSO (3) menyusul. Persiapan pemilik produk: [00-checklist-persiapan](../00-checklist-persiapan.md).

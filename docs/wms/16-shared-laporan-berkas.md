@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `shared` (Kerangka Laporan & Penyimpanan Berkas)
 
-**Versi:** 0.2
+**Versi:** 0.3
 **Tanggal:** 24 September 2026
-**Status:** selesai Fase 1 sebagian — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment belum dibangun (§13.4)
+**Status:** selesai Fase 1 sebagian — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment belum dibangun (§13.4); v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9)
 **Modul:** `shared` (`app/Domain/Shared`)
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.9a](01-blueprint.md#69a-laporan-inti-fase-1) · [Arsitektur §2 (AD-09, AD-10)](08-arsitektur.md#2-keputusan-arsitektur) · [Blueprint §16 (NFR-14)](01-blueprint.md#16-kebutuhan-non-fungsional) · [A-68](04-keputusan-dan-asumsi.md#a-68) · [Aturan Bisnis §BR-ACC](05-aturan-bisnis.md#br-acc) · [Glosarium](03-glosarium.md)
@@ -62,6 +62,7 @@ Tidak ada tabel baru. Laporan membaca tabel modul lain lewat model Eloquent, seh
 | `daftar-proyek` | `ProjectListReport` | Daftar proyek | `project.view` | kode, nama, klien (*Proyek Internal* bila internal), PIC, mulai, target selesai, jumlah Gudang Site, status | status, klien | [11-master §9](11-master.md#9-laporan--dashboard) *Proyek* |
 | `daftar-gudang` | `WarehouseListReport` | Daftar gudang | `warehouse.view` | kode, nama, tipe, gudang induk, proyek, kepala gudang, jumlah zona, jumlah bin, status | tipe, status (aktif/nonaktif) | [12-warehouse §9](12-warehouse.md#9-laporan--dashboard) *Daftar gudang* |
 | `daftar-bin` | `BinListReport` | Daftar bin | `bin.view` | kode bin, gudang, jenis, kategori penyimpanan, penegakan kapasitas, kapasitas jumlah, kapasitas berat, proyek, perlu dihitung, status | gudang, jenis, status, kategori penyimpanan | [12-warehouse §9](12-warehouse.md#9-laporan--dashboard) *Daftar bin* |
+| `material-per-proyek` | `ProjectMaterialReport` | Material per proyek | `issue.view` | proyek, kode & nama item, satuan, diminta, terkirim, terpakai, diretur, di Gudang Site, aset di proyek (dibaca dari kartu stok, [A-151](04-keputusan-dan-asumsi.md#a-151)) | proyek (dalam cakupan), item mengandung | [23-pemakaian §9](23-pemakaian.md#9-laporan--dashboard), Blueprint §9 *Material per proyek* |
 
 Tidak ada kolom nilai uang di laporan mana pun ([D-07](04-keputusan-dan-asumsi.md#d-07)).
 
@@ -129,7 +130,7 @@ Uji ada di `tests/Feature/Shared`. ID memakai akhiran huruf untuk varian dalam s
 
 | ID | Given | When | Then | Rujukan |
 |---|---|---|---|---|
-| TC-RPT-01 | Admin Company dan Driver | `ReportRegistry::availableTo` | 7 laporan terdaftar; Admin membuka 7; Driver hanya `daftar-item`, `item-sementara`, `daftar-proyek`, `daftar-gudang` | BR-GEN-09 |
+| TC-RPT-01 | Admin Company dan Driver | `ReportRegistry::availableTo` | 8 laporan terdaftar (v0.3: + *Material per proyek*); Admin membuka 8; Driver hanya `daftar-item`, `item-sementara`, `daftar-proyek`, `daftar-gudang` | BR-GEN-09 |
 | TC-RPT-01b | Driver tanpa `user.view` | buka `/reports`, `/reports/daftar-item`, `/reports/log-login`, `/reports/log-login/export` | dua pertama 200; dua terakhir 403 | BR-GEN-09 |
 | TC-RPT-01c | Kepala Gudang bercakupan gudang CKG | isi `user-role-cakupan` | cakupan tampil sebagai "Gudang: Gudang Utama Cakung", bukan id | — |
 | TC-RPT-01d | Data master demo (4 item) | `daftar-item` dengan `tracking_mode = piece` | 1 baris (`PIPA-PVC-4`) dari 4 | — |
@@ -204,5 +205,7 @@ Laporan §9 berikut **belum** didefinisikan di `ReportRegistry`:
 | [13-stock §9](13-stock.md#9-laporan--dashboard) | Saldo stok · Kartu stok · Reservasi menggantung · Stok di bawah titik pesan ulang |
 | [14-request §9](14-request.md#9-laporan--dashboard) | Daftar REQ · REQ menunggu tinjau · Baris tanpa sumber · Penggantian item menunggu tanggapan |
 | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard) | Daftar pengiriman · Short pick · Posisi barang rusak & selisih · Kinerja pengiriman |
+
+*Material per proyek* ([23-pemakaian §9](23-pemakaian.md#9-laporan--dashboard)) terdaftar sejak modul Issue; kolom *Waste* dan *Rencana* `[F2]`-nya belum.
 
 Juga belum: ekspor PDF (§13.1 no. 1), 404 untuk kunci tidak dikenal (§13.1 no. 3), dan penyaring §9 yang hilang (§13.1 no. 2). Prompt lanjutan: [prompts/16-shared](../prompts/16-shared.md).

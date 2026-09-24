@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `template` (Template Dokumen & Label)
 
-**Versi:** 0.1
+**Versi:** 0.2
 **Tanggal:** 24 September 2026
-**Status:** selesai Fase 1, dibangun paralel dengan modul Retur/Transfer di branch `feat/template-label`. Keputusan yang tidak tertulis di dokumen lain dicatat sebagai [A-120](04-keputusan-dan-asumsi.md#a-120)–[A-126](04-keputusan-dan-asumsi.md#a-126) (*Perlu validasi*).
+**Status:** selesai Fase 1, dibangun paralel dengan modul Retur/Transfer di branch `feat/template-label`. Keputusan yang tidak tertulis di dokumen lain dicatat sebagai [A-120](04-keputusan-dan-asumsi.md#a-120)–[A-126](04-keputusan-dan-asumsi.md#a-126) (*Perlu validasi*). v0.2: dokumen ISU (Bukti Pemakaian Material) dari modul Issue ([23-pemakaian](23-pemakaian.md), [A-152](04-keputusan-dan-asumsi.md#a-152)).
 **Modul:** `template`
 **Fase:** F1: template bawaan dan layout induk per company, cetak PDF dokumen, label barcode/QR untuk bin, item, lot, dan potongan. Editor template penuh `[F2]`.
 **Dokumen terkait:** [Blueprint §6.10, §12, §18](01-blueprint.md#12-template-dokumen) · [D-07](04-keputusan-dan-asumsi.md#d-07), [D-14](04-keputusan-dan-asumsi.md#d-14), [D-25](04-keputusan-dan-asumsi.md#d-25) · [AD-08](08-arsitektur.md) · [Model data 08c](08c-model-data-pendukung.md) (`document_layouts`, `document_templates`) · [BR-WH-01](05-aturan-bisnis.md#br-wh) · [O-09](04-keputusan-dan-asumsi.md#o-09), [O-13](04-keputusan-dan-asumsi.md#o-13)
@@ -21,7 +21,7 @@ Tidak termasuk:
 - verifikasi QR publik tanpa login `[F2]`
 - label aset/serial dan BA Serah Terima Aset (menunggu modul Aset)
 - BA Waste (menunggu modul Konversi/Waste)
-- dokumen modul yang belum dibangun: TRF, RET, ISU, PRQ
+- dokumen modul yang belum dibangun: TRF, RET, PRQ (ISU ditambah v0.2)
 - pencetakan langsung ke printer thermal lewat driver; F1 menghasilkan PDF berukuran label
 
 ## 2. Aktor & permission
@@ -107,6 +107,7 @@ Tidak ada. Layout dan template tidak berstatus; label dan PDF tidak disimpan. Me
 | `delivery_discrepancy` | BA Selisih Pengiriman (DSC) | baris kurang/rusak, disposisi | A4 |
 | `vendor_return` | Surat Retur ke Vendor (RTV) | item, jumlah, alasan QC ([A-80](04-keputusan-dan-asumsi.md#a-80)) | A4 |
 | `stock_adjustment` | BA Penyesuaian (ADJ) | bin, item, ±jumlah, alasan | A4 |
+| `material_issue` | Bukti Pemakaian Material (ISU, v0.2) | bin, item, lot/serial/potongan, jumlah (negatif pada pembalik), keperluan; proyek & Gudang Site di kepala | A4 |
 | `stock_count` | Laporan Stock Opname | tetap `/counts/{id}/report` (modul Count); memakai kop layout induk | A4 lanskap |
 | `asset_handover`, `waste_disposal` | BA Serah Terima Aset, BA Waste | stub sampai modulnya ada | A4 |
 
@@ -122,6 +123,7 @@ Label (§5.3): `label_bin`, `label_item`, `label_lot`, `label_piece`.
   - DSC: Kepala Gudang · Pengemudi
   - RTV: Dibuat oleh · Disetujui · Vendor
   - ADJ: Diajukan · Disetujui
+  - ISU: Dicatat oleh · Dikonfirmasi · PIC proyek (v0.2)
   - OPN: Rekonsiliasi · Disetujui
 
   Nama pelaku yang diketahui ikut tercetak menurut urutan kotak: kotak ke-n memuat pelaku ke-n dari daftar bawaan. Tanda tangan penerima pada bukti terima diambil dari `proofs_of_delivery.signature_path`. Gambar tanda tangan dari profil (`users.signature_path`) dicetak bila ada. Keabsahan hukumnya masih [O-13](04-keputusan-dan-asumsi.md#o-13) ([A-125](04-keputusan-dan-asumsi.md#a-125)).
@@ -186,7 +188,7 @@ Uji di `tests/Feature/Template` (15 uji): `DocumentPrintTest`, `LabelPrintTest`,
 
 ## 11. Di luar lingkup modul ini
 
-Editor template dan variabel `[F2]`; beberapa layout per company `[F2]`; verifikasi QR publik `[F2]`; log cetak/jumlah cetak ulang; label serial/aset dan BA AST (modul Aset); BA WST (modul Konversi/Waste); dokumen TRF/RET/ISU/PRQ (modulnya belum ada); ekspor PDF laporan §9 (16-shared); cetak langsung ke printer (PWA/driver printer).
+Editor template dan variabel `[F2]`; beberapa layout per company `[F2]`; verifikasi QR publik `[F2]`; log cetak/jumlah cetak ulang; label serial/aset dan BA AST (modul Aset); BA WST (modul Konversi/Waste); dokumen TRF/RET/PRQ; ekspor PDF laporan §9 (16-shared); cetak langsung ke printer (PWA/driver printer).
 
 ## 12. Definisi selesai
 
@@ -226,5 +228,5 @@ Di luar domain: provider `TemplateServiceProvider`, controller `Template\PrintCo
 
 1. [O-09](04-keputusan-dan-asumsi.md#o-09): ukuran label final dan printer thermal yang didukung. Ukuran sekarang sementara ([A-120](04-keputusan-dan-asumsi.md#a-120)).
 2. Editor template dan variabel `[F2]`; verifikasi QR publik `[F2]`.
-3. Label serial/aset dan BA AST, BA WST, dokumen TRF/RET/ISU/PRQ: ditambahkan saat modulnya dibangun, dengan menambah kasus di `DocumentTemplateType` dan `DocumentPrinter`.
+3. Label serial/aset dan BA AST, BA WST, dokumen TRF/RET/PRQ: ditambahkan saat modulnya dibangun, dengan menambah kasus di `DocumentTemplateType` dan `DocumentPrinter`. Dokumen ISU sudah ditambah dengan cara itu ([23-pemakaian](23-pemakaian.md) §13.1, uji TC-ISU-17).
 4. Ekspor PDF laporan §9 memakai `print.partials.kop` dan `PdfRenderer` ([16-shared-laporan-berkas](16-shared-laporan-berkas.md) §13).

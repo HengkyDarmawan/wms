@@ -17,6 +17,7 @@ use App\Http\Controllers\Access\TwoFactorController;
 use App\Http\Controllers\Access\TwoFactorSetupController;
 use App\Http\Controllers\Access\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Issue\IssueController;
 use App\Http\Controllers\Master\ClientController;
 use App\Http\Controllers\Master\ItemCategoryController;
 use App\Http\Controllers\Master\ItemController;
@@ -220,6 +221,13 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/returns', [ReturnController::class, 'index'])->name('returns.index');
         Route::get('/returns/create', [ReturnController::class, 'create'])->name('returns.create');
         Route::get('/returns/{goodsReturn}', [ReturnController::class, 'show'])->name('returns.show');
+
+        // Pemakaian material di Gudang Site (23-pemakaian §6). Halaman saja (GET);
+        // konfirmasi, pembalik, approval, dan batal lewat aksi Livewire (POST).
+        Route::get('/issues', [IssueController::class, 'index'])->name('issues.index');
+        Route::get('/issues/create', [IssueController::class, 'create'])->name('issues.create');
+        Route::get('/issues/{materialIssue}', [IssueController::class, 'show'])->name('issues.show');
+        Route::get('/issues/{materialIssue}/edit', [IssueController::class, 'edit'])->name('issues.edit');
 
         // Laporan lintas modul (Access §9, Master §9, Warehouse §9).
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

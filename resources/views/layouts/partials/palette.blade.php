@@ -26,6 +26,8 @@
         ['izin' => 'transfer.create', 'route' => 'transfers.create', 'label' => __('Transfer baru'), 'ikon' => 'bi-plus-square'],
         ['izin' => 'return.view', 'route' => auth()->user()?->isClient() ? 'portal.returns.index' : 'returns.index', 'label' => __('Retur dari proyek'), 'ikon' => 'bi-arrow-counterclockwise'],
         ['izin' => 'return.create', 'route' => auth()->user()?->isClient() ? 'portal.returns.create' : 'returns.create', 'label' => __('Retur baru'), 'ikon' => 'bi-plus-square'],
+        ['izin' => 'issue.view', 'route' => 'issues.index', 'label' => __('Pemakaian material'), 'ikon' => 'bi-hammer'],
+        ['izin' => 'issue.create', 'route' => 'issues.create', 'label' => __('Pemakaian baru'), 'ikon' => 'bi-plus-square'],
         ['izin' => 'approval-inbox', 'route' => 'approval.inbox', 'label' => __('Tugas approval saya'), 'ikon' => 'bi-check2-square'],
         ['izin' => 'approval_rule.view', 'route' => 'approval.rules.index', 'label' => __('Aturan approval'), 'ikon' => 'bi-diagram-3-fill'],
         ['izin' => 'approval_rule.manage', 'route' => 'approval.rules.create', 'label' => __('Aturan approval baru'), 'ikon' => 'bi-plus-square'],

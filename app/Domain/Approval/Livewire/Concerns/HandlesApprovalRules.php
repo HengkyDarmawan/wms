@@ -7,6 +7,7 @@ namespace App\Domain\Approval\Livewire\Concerns;
 use App\Domain\Adjustment\Exceptions\AdjustmentRuleException;
 use App\Domain\Approval\Exceptions\ApprovalRuleException;
 use App\Domain\Count\Exceptions\CountRuleException;
+use App\Domain\Issue\Exceptions\IssueRuleException;
 use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Receipt\Exceptions\ReceiptRuleException;
 use App\Domain\Return\Exceptions\ReturnRuleException;
@@ -34,7 +35,7 @@ trait HandlesApprovalRules
             $aksi();
 
             return true;
-        } catch (ApprovalRuleException|RequestRuleException|ReceiptRuleException|CountRuleException|AdjustmentRuleException|TransferRuleException|ReturnRuleException|ShipmentRuleException $e) {
+        } catch (ApprovalRuleException|RequestRuleException|ReceiptRuleException|CountRuleException|AdjustmentRuleException|TransferRuleException|ReturnRuleException|ShipmentRuleException|IssueRuleException $e) {
             $this->ruleCode = $e->rule;
             $this->ruleError = $e->getMessage();
 

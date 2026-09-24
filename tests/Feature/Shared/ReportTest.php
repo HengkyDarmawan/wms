@@ -28,8 +28,8 @@ class ReportTest extends TenantTestCase
         $admin = $this->makeUser('company_admin');
         $admin->forgetPermissionCache();
 
-        $this->assertCount(7, $registry->all(), 'Tujuh laporan terdaftar.');
-        $this->assertCount(7, $registry->availableTo($admin), 'Admin Company membuka semuanya.');
+        $this->assertCount(8, $registry->all(), 'Delapan laporan terdaftar (Material per proyek sejak modul Issue).');
+        $this->assertCount(8, $registry->availableTo($admin), 'Admin Company membuka semuanya.');
 
         // Driver hanya punya item.view dan project.view.
         $driver = $this->makeUser('driver');

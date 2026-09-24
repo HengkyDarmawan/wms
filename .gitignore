@@ -32,3 +32,8 @@ Thumbs.db
 
 # Keluaran sementara
 /.skeleton
+
+# Disk per company (stancl FilesystemTenancyBootstrapper) — termasuk artefak uji
+/storage/tenant*/
+/tests/e2e/*.png
+/tests/e2e/e2e-hasil.json

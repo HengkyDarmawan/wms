@@ -89,16 +89,16 @@
           <mxGeometry y="26" width="260" height="328" as="geometry"/>
         </mxCell>
         <mxCell id="material_issues" value="material_issues" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="1012" width="260" height="130" as="geometry"/>
+          <mxGeometry x="680" y="1012" width="260" height="322" as="geometry"/>
         </mxCell>
-        <mxCell id="material_issues_cols" value="🔑 id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ issued_by : bigint&lt;br&gt;confirmed_at : datetime&lt;br&gt;↗ approval_snapshot_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="material_issues">
-          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        <mxCell id="material_issues_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ project_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;status : enum&lt;br&gt;↗ reversal_of_id : bigint&lt;br&gt;↗ reason_code_id : bigint&lt;br&gt;↗ issued_by : bigint&lt;br&gt;↗ confirmed_by : bigint&lt;br&gt;confirmed_at : datetime&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;↗ submitted_by : bigint&lt;br&gt;submitted_at : datetime&lt;br&gt;↗ approved_by : bigint&lt;br&gt;approved_at : datetime&lt;br&gt;↗ reject_reason_id : bigint&lt;br&gt;↗ cancel_reason_id : bigint&lt;br&gt;cancelled_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="material_issues">
+          <mxGeometry y="26" width="260" height="296" as="geometry"/>
         </mxCell>
         <mxCell id="material_issue_lines" value="material_issue_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="1012" width="260" height="114" as="geometry"/>
+          <mxGeometry x="1000" y="1012" width="260" height="210" as="geometry"/>
         </mxCell>
-        <mxCell id="material_issue_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ material_issue_id : bigint&lt;br&gt;↗ bin_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;work_note : varchar(255)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="material_issue_lines">
-          <mxGeometry y="26" width="260" height="88" as="geometry"/>
+        <mxCell id="material_issue_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ material_issue_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ bin_id : bigint&lt;br&gt;↗ lot_id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ piece_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;work_note : varchar(255)&lt;br&gt;↗ reversal_of_line_id : bigint&lt;br&gt;↗ movement_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="material_issue_lines">
+          <mxGeometry y="26" width="260" height="184" as="geometry"/>
         </mxCell>
         <mxCell id="bins" value="bins" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
           <mxGeometry x="40" y="1416" width="260" height="50" as="geometry"/>
@@ -242,6 +242,9 @@
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="r31" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="bins" target="material_issue_lines">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r32" value="pembalik" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="material_issues" target="material_issues">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
       </root>

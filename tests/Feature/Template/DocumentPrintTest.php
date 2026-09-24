@@ -70,6 +70,9 @@ class DocumentPrintTest extends TenantTestCase
 
     private function tanpaHarga(string $html): void
     {
+        // Gambar QR/logo base64 dibuang dulu: urutan acaknya (bergantung id dokumen) bisa memuat "Rp".
+        $html = (string) preg_replace('#data:image/[a-z]+;base64,[A-Za-z0-9+/=]+#', '', $html);
+
         foreach (['Rp', 'harga', 'Harga', 'Total', 'total harga'] as $kata) {
             $this->assertStringNotContainsString($kata, $html, 'Cetakan tidak boleh memuat nilai uang (D-07).');
         }

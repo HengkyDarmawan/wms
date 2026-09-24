@@ -16,6 +16,7 @@ enum DocumentTemplateType: string
     case DeliveryDiscrepancy = 'delivery_discrepancy';
     case VendorReturn = 'vendor_return';
     case StockAdjustment = 'stock_adjustment';
+    case MaterialIssue = 'material_issue';
     case StockCount = 'stock_count';
     case AssetHandover = 'asset_handover';
     case WasteDisposal = 'waste_disposal';
@@ -33,6 +34,7 @@ enum DocumentTemplateType: string
             self::DeliveryDiscrepancy => __('BA Selisih Pengiriman'),
             self::VendorReturn => __('Surat Retur ke Vendor'),
             self::StockAdjustment => __('BA Penyesuaian Stok'),
+            self::MaterialIssue => __('Bukti Pemakaian Material'),
             self::StockCount => __('Laporan Stock Opname'),
             self::AssetHandover => __('BA Serah Terima Aset'),
             self::WasteDisposal => __('BA Waste'),
@@ -78,6 +80,7 @@ enum DocumentTemplateType: string
             self::DeliveryDiscrepancy => ['Kepala Gudang', 'Pengemudi'],
             self::VendorReturn => ['Dibuat oleh', 'Disetujui', 'Vendor'],
             self::StockAdjustment => ['Diajukan', 'Disetujui'],
+            self::MaterialIssue => ['Dicatat oleh', 'Dikonfirmasi', 'PIC proyek'],
             self::StockCount => ['Rekonsiliasi', 'Disetujui'],
             self::AssetHandover, self::WasteDisposal => ['Diserahkan', 'Diterima'],
             default => [],

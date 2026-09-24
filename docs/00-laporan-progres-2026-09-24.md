@@ -1,8 +1,8 @@
 # Laporan Progres — 24 September 2026
 
-**Versi:** 1.6
+**Versi:** 1.7
 **Tanggal:** 24 September 2026
-**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau)
+**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); v1.7: modul Issue (pemakaian material di site) selesai (493 uji hijau); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau)
 **Dokumen terkait:** [README](README.md) · [Setup lokal §5](00-setup-lokal.md#5-skenario-uji-manual) · [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) · [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) · [Keputusan & Asumsi](wms/04-keputusan-dan-asumsi.md)
 
 Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang baru di-seed: delapan skenario uji manual lewat Chrome headless, 321 uji otomatis, dan pencocokan setiap kasus uji `TC-xx` di spesifikasi dengan ujinya. Hasilnya dipakai untuk memetakan seberapa jauh Fase 1 sudah berjalan.
@@ -16,9 +16,9 @@ Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang
 | Skenario E2E [00-setup-lokal §5](00-setup-lokal.md#5-skenario-uji-manual) | **9 dari 9 langkah lulus**, 0 error console |
 | Uji otomatis | **321 lulus / 1.836 asersi**, 0 gagal (MariaDB 10.4) |
 | Kasus uji `TC-xx` di spesifikasi 10–17 | **178 dari 178 punya uji otomatis**, semuanya lulus |
-| Butir Fase 1 di [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) | **10 selesai · 6 sebagian · 7 belum dibangun** (dari 23, satu 'selesai' berupa stub; v1.2 Penerimaan/QC/put-away/RTV; v1.3 Approval engine; v1.4 Stock opname; v1.5 Retur & transfer; v1.6 Template dokumen & label) |
+| Butir Fase 1 di [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) | **11 selesai · 6 sebagian · 6 belum dibangun** (dari 23, satu 'selesai' berupa stub; v1.2 Penerimaan/QC/put-away/RTV; v1.3 Approval engine; v1.4 Stock opname; v1.5 Retur & transfer; v1.6 Template dokumen & label; v1.7 Pemakaian material di site) |
 | Bug baru dari E2E | **1 berat** (§5.1), 1 ringan (§5.2) |
-| Asumsi menunggu validasi | A-72–A-94 |
+| Asumsi menunggu validasi | A-72–A-126, A-150–A-152 (v1.7) |
 
 Singkatnya: alur keluar **REQ → approval → picking → surat jalan → bukti terima → selisih** berjalan dari ujung ke ujung. Separuh besar Fase 1 lainnya belum dibangun: barang masuk (GRN), approval berlapis, opname, retur/transfer, pemakaian, konversi, dan aset.
 
@@ -74,12 +74,12 @@ Sumber baris: [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis). S
 | Kartu stok, reservasi dua tahap, strategi pengambilan | 🟡 Sebagian | ledger dan reservasi selesai; alokasi picking masih urut kode bin, **FEFO/FIFO/potongan terdekat belum** (`CreatePickTask::alokasikan`) |
 | Permintaan (internal + portal, non-katalog, gudang sumber) | 🟡 Sebagian | alur jalan; bug §5.1 diperbaiki; konfirmasi/keberatan terima klien belum; approval berlapis lewat mesin approval (v1.3) |
 | Notifikasi in-app & email | 🟡 Sebagian | hanya undangan dan akun terkunci |
-| Laporan & dashboard | 🟡 Sebagian | 7 dari 19 laporan §9; ekspor PDF belum; Beranda masih kartu statis (§5.2) |
+| Laporan & dashboard | 🟡 Sebagian | 8 dari 19 laporan §9 (v1.7: Material per proyek); ekspor PDF belum; Beranda masih kartu statis (§5.2) |
 | Integrasi Purchasing & Akuntansi | 🟡 Sebagian | outbox kejadian stok jalan; Purchase Request manual belum |
 | Wizard setup awal company | ⬜ Belum | |
 | Impor data master dari Excel | ⬜ Belum | |
 | Penerimaan (GRN), QC, put-away, RTV | ✅ Selesai | [19-receipt-putaway](wms/19-receipt-putaway.md): GRN vendor manual & transfer masuk, QC per baris, PUT dengan saran bin, RTV; cross-dock masih saran ([A-83](wms/04-keputusan-dan-asumsi.md#a-83)); GRN retur sejak modul Retur |
-| Pemakaian material di site (ISU) | ⬜ Belum | |
+| Pemakaian material di site (ISU) | ✅ Selesai | [23-pemakaian](wms/23-pemakaian.md): ISU dari bin penyimpanan Gudang Site (habis pakai saja), konfirmasi → `material_consumed`, ISU pembalik dengan approval lapis minimum, laporan Material per Proyek dari kartu stok, cetak Bukti Pemakaian; foto pemakaian menunggu lampiran ([A-117](wms/04-keputusan-dan-asumsi.md#a-117)–[A-119](wms/04-keputusan-dan-asumsi.md#a-119), [A-150](wms/04-keputusan-dan-asumsi.md#a-150)–[A-152](wms/04-keputusan-dan-asumsi.md#a-152)) |
 | Retur & transfer | ✅ Selesai | [22-retur-transfer](wms/22-retur-transfer.md): TRF antar gudang, antar proyek, dan antar titik dalam proyek (jalur ringan A-50), TRF otomatis dari backorder REQ sampai REQ terpenuhi lewat gudang tujuan, PCK/SJ/GRN transfer, TRF selesai saat GRN tujuan selesai; RET dari Gudang Site, aset On-site, barang terkirim ke klien, dan barang rusak ditinggal ekspedisi, SJ balik dari Gudang Site, GRN retur ke bin Retur, pemilahan layak/rusak/offcut/waste dengan `goods_returned`/`asset_returned`; portal klien; pemeriksaan aset menunggu modul Aset ([A-106](wms/04-keputusan-dan-asumsi.md#a-106)–[A-116](wms/04-keputusan-dan-asumsi.md#a-116)) |
 | Konversi material, offcut, waste | ⬜ Belum | fitur pembeda utama |
 | Aset dipinjamkan | ⬜ Belum | |
@@ -89,7 +89,7 @@ Sumber baris: [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis). S
 | PWA (installable, scan kamera, draf lokal) | ⬜ Belum | |
 | Landing page produk | ⬜ Belum | Part 5 |
 
-Urutan pembangunan berikutnya menurut [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) (Receipt/Putaway, Approval, Count/Adjustment, dan Return/Transfer sudah selesai): Issue → Conversion/Waste → Asset → PurchaseRequest/VendorReturn → Platform.
+Urutan pembangunan berikutnya menurut [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) (Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, dan Issue sudah selesai): Conversion/Waste → Asset → PurchaseRequest/VendorReturn → Platform.
 
 ## 5. Temuan dari E2E
 

@@ -1,6 +1,6 @@
 # Akun Uji & Data Demo (dev / demo / staging)
 
-**Versi:** 1.5
+**Versi:** 1.6
 **Tanggal:** 24 September 2026
 **Status:** aktif — **hanya untuk dev, demo, dan staging**. Produksi tidak memakai berkas ini: Super Admin produksi dibuat dari `.env` saat instalasi, semua user lain lewat undangan dan mengatur password sendiri ([Blueprint §13](wms/01-blueprint.md#13-autentikasi--sso), [NFR-02](wms/01-blueprint.md#16-kebutuhan-non-fungsional)).
 **Dokumen terkait:** [Blueprint §4](wms/01-blueprint.md#4-pengguna--peran) · [BR-GEN-09](wms/05-aturan-bisnis.md#br-gen) · [Model data pusat & akses](wms/08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) · [Spesifikasi modul Access](wms/10-access.md)
@@ -86,6 +86,7 @@ Nomor WA dummy: `+6281200000001` … `+6281200000014` berurutan sesuai tabel.
 | PRQ | — | jenis vendor `online_marketplace` | 1. Kepala gudang tujuan → 2. Manajemen | menunggu modul PRQ | [A-52](wms/04-keputusan-dan-asumsi.md#a-52) |
 | OPN | OPN tahunan & pemeriksaan mendadak (10) | jenis `annual` / `spot_check` | 1. Auditor Internal (cukup salah satu) | ✔ | [BR-OPN-09](wms/05-aturan-bisnis.md#br-opn) |
 | OPN | — (tanpa aturan) | jenis `monthly` / `adhoc` | lapis minimum: Kepala gudang cakupan; sesi audit (dibuat Auditor) ke Auditor Internal; cadangan Manajemen | bawaan kode | [A-96](wms/04-keputusan-dan-asumsi.md#a-96) |
+| ISU pembalik | — (tanpa aturan) | pembalikan pemakaian material ([BR-GEN-04](wms/05-aturan-bisnis.md#br-gen)) | lapis minimum: Kepala gudang Gudang Site; tanpa Kepala Gudang site → cadangan Manajemen (di demo: Budi Direktur) | bawaan kode | [A-150](wms/04-keputusan-dan-asumsi.md#a-150) |
 
 Contoh uji: Indra (pemohon PRJ-001) mengajukan REQ Genset dari CKG → tugas ke Andi (Kepala Gudang CKG) lalu Budi (Manajemen); REQ Baut dari CKG → Andi saja. Sari (Kepala Gudang BKS) tidak mendapat tugas REQ dari CKG. Opname: Andi membuat sesi tahunan CKG dengan tim Dedi & Eko → selisih sedang dihitung ulang oleh orang lain → Andi merekonsiliasi → tugas ke Kartika (Auditor Internal); Andi, Dedi, dan Sari tidak bisa menyetujui (BR-OPN-09). ADJ: Dedi mengajukan −150 Baut CKG → Andi lalu Budi; +20 → Andi saja.
 

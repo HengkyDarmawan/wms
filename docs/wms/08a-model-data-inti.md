@@ -1,8 +1,8 @@
 # Model Data — Pusat, akses & organisasi, master, gudang & lokasi
 
-**Versi:** 0.11 (Part 3, diselaraskan dengan migrasi modul Access s.d. Transfer/Retur 24 Sep 2026)
+**Versi:** 0.12 (Part 3, diselaraskan dengan migrasi modul Access s.d. Issue 24 Sep 2026)
 **Tanggal:** 24 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.11, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md) · [Pendukung](08c-model-data-pendukung.md)
 
 Daftar area (114 tabel):
