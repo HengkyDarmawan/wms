@@ -1,8 +1,8 @@
 # Prompt: melanjutkan WMS di rumah (XAMPP3)
 
-**Versi:** 2.0
+**Versi:** 2.1
 **Tanggal:** 25 September 2026
-**Status:** aktif — serah terima dari sesi kantor (XAMPP + MariaDB 10.4.27) ke sesi rumah (XAMPP3 + MariaDB 10.4.32). v1.x (arsip) adalah serah terima 24 Sep yang semua butirnya sudah selesai; arah sebaliknya: [00-lanjutkan-di-kantor.md](00-lanjutkan-di-kantor.md) (arsip)
+**Status:** arsip — butir 2a–2f selesai sesi rumah 25 Sep 2026 malam (2e SJ balik dan 2f transfer aset antar proyek menunggu keputusan pemilik); lanjutan di kantor: [00-lanjutkan-di-kantor.md](00-lanjutkan-di-kantor.md) v2.0 (aktif). Semula: serah terima sesi kantor 25 Sep ke sesi rumah
 **Dokumen terkait:** [README](../README.md) · [Laporan progres](../00-laporan-progres-2026-09-24.md) · [Setup lokal](../00-setup-lokal.md) · [Tinjauan asumsi](../00-tinjauan-asumsi-2026-09-25.md) · [Keputusan & Asumsi](../wms/04-keputusan-dan-asumsi.md) · [`../../CLAUDE.md`](../../CLAUDE.md)
 
 Cara pakai: di rumah, `git pull`, buka Claude Code di `C:\xampp3\htdocs\wms`, lalu tempel **seluruh blok prompt di §2**. Bagian §1 dan §3 untuk dibaca manusia.
