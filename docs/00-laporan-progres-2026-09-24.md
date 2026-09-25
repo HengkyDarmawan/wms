@@ -169,7 +169,7 @@ Belum: keputusan pemilik produk atas kolom *Keputusan* di [tinjauan asumsi](00-t
 | Pengaturan company | ambang hari/persen, saklar fitur (peringatan *dipakai n item*), zona waktu; hanya kunci yang berubah ditulis | A-230, TC-MST-27 |
 | Laporan & cetak | 11 laporan §9 Stock/Request/Shipment dengan `PeriodFilter`; cetak TRF/RET/PRQ/GRN | A-232, TC-RPT-06, TC-TPL-15/16 |
 
-Verifikasi 25 Sep 2026 sore (XAMPP kantor): **__SUITE__ uji hijau / __ASERSI__ asersi**; `_verify.py` OK; E2E pada demo segar __E2E__.
+Verifikasi 25 Sep 2026 sore (XAMPP kantor): **616 uji hijau / 6.744 asersi**; `_verify.py` OK; E2E pada demo segar `alur-req-sj` 10/10, `alur-pendukung` 9/9, `ui-check` 87 cek — 0 error console.
 
 Temuan teknis yang layak diingat: (1) Livewire menjalankan semua hook `updated*` **setelah** seluruh properti dalam satu permintaan diset — `set()` massal dari E2E yang menyentuh `warehouse_id` dan `batang` sekaligus dibatalkan `kosongkanInput()`, jadi E2E mengirimnya dalam dua permintaan; (2) kunci kandidat stok di form Livewire memakai `_` (bukan `:`) karena kunci array Livewire tidak boleh memuat `:`; (3) server dev satu proses melambat saat mesin sibuk — helper `go()` E2E kini menunggu `readyState`/Livewire dan langkah yang menulis DB memantau barisnya, bukan tidur tetap; (4) `pint <direktori>` menyentuh berkas asing — hanya berkas yang diubah yang boleh di-Pint.
 
