@@ -62,6 +62,30 @@ class PutawayDetail extends Component
         ]);
     }
 
+    /**
+     * Bin tujuan dipindai (Katalog §put-away "Bin tujuan dipindai", A-201):
+     * kode bin penyimpanan gudang ini → isian baris; kode lain ditolak.
+     */
+    public function pindaiBin(int $lineId, string $kode): void
+    {
+        $kode = mb_strtoupper(trim($kode));
+
+        if ($kode === '' || ! array_key_exists($lineId, $this->isian)) {
+            return;
+        }
+
+        $bin = app(PutawaySuggester::class)->storageBins($this->task()->warehouse)->first(fn ($b) => mb_strtoupper((string) $b->code) === $kode);
+
+        if ($bin === null) {
+            $this->addError('pindai.'.$lineId, __('Bin ":kode" bukan bin penyimpanan gudang ini.', ['kode' => $kode]));
+
+            return;
+        }
+
+        $this->resetErrorBag('pindai.'.$lineId);
+        $this->isian[$lineId]['bin_id'] = (string) $bin->id;
+    }
+
     public function selesaikan(CompletePutaway $action): void
     {
         $task = $this->task();

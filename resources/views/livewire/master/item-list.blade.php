@@ -8,9 +8,14 @@
         </div>
 
         @can('create', \App\Domain\Master\Models\Item::class)
-            <a class="btn btn-primary" href="{{ route('items.create') }}">
-                <i class="bi bi-plus-lg"></i> {{ __('Tambah item') }}
-            </a>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
+                </a>
+                <a class="btn btn-primary" href="{{ route('items.create') }}">
+                    <i class="bi bi-plus-lg"></i> {{ __('Tambah item') }}
+                </a>
+            </div>
         @endcan
     </div>
 
@@ -51,7 +56,7 @@
             <div class="col-lg-4">
                 <label class="form-label" for="cari-item">{{ __('Cari item') }}</label>
                 <input class="form-control" id="cari-item" type="search"
-                       wire:model.live.debounce.400ms="search" placeholder="{{ __('Nama, kode, atau barcode…') }}">
+                       wire:model.live.debounce.400ms="search" data-scan placeholder="{{ __('Nama, kode, atau barcode…') }}">
             </div>
             <div class="col-lg-2">
                 <label class="form-label" for="filter-kategori-item">{{ __('Kategori') }}</label>

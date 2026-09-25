@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `transfer`, `return` (Transfer & Retur dari Proyek)
 
-**Versi:** 0.2
+**Versi:** 0.4
 **Tanggal:** 24 September 2026
 **Status:** selesai Fase 1 — modul kesepuluh setelah [Count/Adjustment](21-opname-penyesuaian.md); TRF dan RET diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-106](04-keputusan-dan-asumsi.md#a-106)–[A-116](04-keputusan-dan-asumsi.md#a-116) (*Perlu validasi*)
 **Modul:** `transfer` (TRF), `return` (RET)
@@ -137,7 +137,7 @@ Menu sidebar **Transfer & retur** (Transfer · Retur dari proyek; klien ke porta
 | `stock_transferred` (`phase = goods_receipt`) | GRN transfer: Dalam Perjalanan → Penerimaan gudang tujuan | [19-receipt-putaway §7](19-receipt-putaway.md#7-kejadian-stok--integrasi) |
 | — | GRN retur: → bin Retur (tanpa kejadian) | A-112 |
 | `goods_returned` | pemilahan: bin Retur → bin hasil; payload `return_number`, `ownership` (`sold` = retur penjualan), `sorting`, `source`, `origin_shipment_line_id`; offcut/waste potongan membawa `parent_piece_id` | matriks §14, [BR-RET-03](05-aturan-bisnis.md#br-ret) |
-| `asset_returned` | pemilahan baris aset On-site; `inspection = null` sampai modul Aset | [A-116](04-keputusan-dan-asumsi.md#a-116) |
+| `asset_returned` | pemilahan baris aset On-site sesudah diperiksa; `inspection` berisi hasil pemeriksaan, hari & meter pakai (v0.4, [25-aset](25-aset.md)) | [A-116](04-keputusan-dan-asumsi.md#a-116), [A-164](04-keputusan-dan-asumsi.md#a-164) |
 
 Reservasi: TRF memakai `document_type = transfer` (lunak, gudang asal); RET `goods_return` (keras, bin Gudang Site); keduanya diganti alokasi keras `pick_task` saat PCK dibuat.
 
@@ -187,7 +187,7 @@ Uji di `tests/Feature/Transfer` (16 uji) dan `tests/Feature/Return` (17 uji). Fi
 | TC-RET-10 | 20 terkirim ke klien | RET 5, RET 16, GRN, pilah layak | sisa calon 15; BR-RET-03; dari luar ke bin Retur; `goods_returned` `sold` + baris SJ asal | BR-RET-03, A-26 |
 | TC-RET-11 | SJ ekspedisi, 2 rusak, DSC `claimed` | RET klaim → GRN → waste tanpa/dengan alasan | calon 2; masuk Rusak; BR-GEN-11; bin Waste Rusak, `sorting = waste` | BR-RET-05, BR-SJ-10 |
 | TC-RET-12 | Pipa 6 m terkirim, min offcut 1 | pilah offcut 0,5 / 7 / 2,5 | BR-CNV-03 / BR-STK-09; potongan baru 2,5 bersilsilah, asal terpakai, sisa 3,5 di bin Waste; kejadian `offcut` + `waste` | BR-RET-04, BR-CNV-03/04 |
-| TC-RET-13 | Genset dipinjam ke proyek (On-site) | RET aset → GRN → pilah layak | keluar dari On-site; `asset_returned` dengan `inspection` | A-116 |
+| TC-RET-13 | Genset dipinjam ke proyek (On-site) | RET aset → GRN → pilah sebelum/sesudah diperiksa | keluar dari On-site; BR-AST-03 sebelum diperiksa; `asset_returned` dengan hasil pemeriksaan (v0.4) | A-116, A-164 |
 | TC-RET-14 | RET diproses / diterima | pilah sebelum diterima, jumlah kurang, rusak tanpa alasan, layak ke Karantina/gudang lain, offcut bukan potongan, kosong | ditolak BR-RET-04/BR-GEN-11; stok tetap di bin Retur | BR-RET-04 |
 | TC-RET-15 | Role & portal | buka layar internal/portal | 200/403 sesuai §2; klien di portal tanpa *Riwayat approval*, area internal dipulangkan, RET proyek lain 404; menu ke portal | BR-GEN-09, BR-PRJ-06 |
 | TC-RET-16 | Layar | form (melebihi lalu benar) → *Terima retur (GRN)* → form GRN retur → terima → pemilahan 8 + 2 (tanpa lalu dengan alasan) | BR-RET-03; draf GRN berjumlah bawaan; BR-GEN-11; `sorted`, saldo sesuai; detail GRN merujuk RET | §6 |
@@ -197,7 +197,7 @@ TC-GRN-12 ([19-receipt-putaway](19-receipt-putaway.md)) kini menguji GRN retur t
 
 ## 11. Di luar lingkup modul ini
 
-Pemeriksaan aset saat kembali, state aset, meter & hari pakai (modul Aset, [A-116](04-keputusan-dan-asumsi.md#a-116)); transfer aset On-site → On-site antar proyek; WST untuk isi bin Waste; retur ke vendor dari barang rusak di bin Retur (RTV hanya dari Karantina, [BR-GRN-04](05-aturan-bisnis.md#br-grn)); notifikasi in-app/email; laporan §9; SJ balik untuk barang di tangan klien (butuh SJ tanpa PCK).
+Pemeriksaan aset saat kembali, state aset, meter & hari pakai (modul Aset, [A-116](04-keputusan-dan-asumsi.md#a-116)); transfer aset On-site → On-site antar proyek; WST untuk isi bin Waste (modul Konversi & Waste, [24-konversi-waste](24-konversi-waste.md)); retur ke vendor dari barang rusak di bin Retur (RTV hanya dari Karantina, [BR-GRN-04](05-aturan-bisnis.md#br-grn)); notifikasi in-app/email; laporan §9; SJ balik untuk barang di tangan klien (butuh SJ tanpa PCK).
 
 ## 12. Definisi selesai
 
@@ -221,6 +221,7 @@ Domain `app/Domain/Transfer` (3 aksi: `CreateTransfer`, `ApproveTransfer`, `Canc
 2. **Receipt** ([19 §13](19-receipt-putaway.md#13-catatan-implementasi-24-september-2026)): GRN sumber `return` aktif (`SaveGoodsReceipt`, `ReceiveGoodsReceipt`, form GRN); GRN transfer mencatat `qty_received` dan menyelesaikan TRF; `receipt.complete` menolak GRN retur; PUT selesai mereservasi barang TRF backorder ke REQ penunggu.
 3. **Request** ([14 §13](14-request.md#13-catatan-implementasi-24-september-2026)): `RequestApprovalHandler` membuat TRF backorder; `CancelRequest`, `CloseRequestShort`, `CancelRequestLine::confirm` melepas TRF backorder; detail REQ menampilkan TRF-nya.
 4. **Approval** ([20 §13](20-approval.md#13-catatan-implementasi-24-september-2026)): TRF & RET tersambung; kondisi RET termasuk *dari klien*; layar approval menerjemahkan penolakan TRF/RET/pengiriman.
+5. **Master** (v0.3, modul Konversi & Waste): potongan offcut/waste hasil pilah memakai `Piece::nextPieceNo()` bersama GRN, ADJ, dan CNV; isi bin Waste hasil pilah ditutup lewat WST dan terhitung di kolom *Waste* laporan Material per proyek ([A-161](04-keputusan-dan-asumsi.md#a-161)).
 
 ### 13.2 Keputusan implementasi
 
@@ -231,7 +232,7 @@ Domain `app/Domain/Transfer` (3 aksi: `CreateTransfer`, `ApproveTransfer`, `Canc
 
 ### 13.3 Sisa pekerjaan
 
-1. Pemeriksaan aset saat kembali (grade, skor, meter, hari pakai) dan state aset — modul Aset; transfer aset On-site antar proyek ([A-116](04-keputusan-dan-asumsi.md#a-116)).
+1. ~~Pemeriksaan aset saat kembali dan state aset~~ — selesai di modul Aset (v0.4, [25-aset](25-aset.md)): GRN retur aset menandai AST `returned`, aset dipilah sesudah diperiksa sesuai grade. Sisa: transfer aset On-site antar proyek ([A-116](04-keputusan-dan-asumsi.md#a-116)).
 2. SJ balik untuk barang di tangan klien — butuh SJ yang tidak berangkat dari PCK.
 3. Cross-dock barang TRF ke REQ penunggu tetap saran ([A-83](04-keputusan-dan-asumsi.md#a-83)).
 4. Short pick PCK TRF tidak menambah backorder REQ penunggu; sisa baris REQ bersumber transfer dipenuhi ulang secara manual (TRF baru atau pecah baris).

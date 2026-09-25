@@ -12,7 +12,7 @@
                 @if ($ret->originShipment) · {{ __('SJ asal') }} {{ $ret->originShipment->number }} @endif
                 · {{ __('Diajukan') }} {{ $ret->requester?->name }}
                 @if ($ret->approver) · {{ __('Diputus') }} {{ $ret->approver->name }} @endif
-                @if ($ret->sorted_at) · {{ __('Dipilah') }} {{ $ret->sorter?->name }} {{ $ret->sorted_at->format('d/m/Y H:i') }} @endif
+                @if ($ret->sorted_at) · {{ __('Dipilah') }} {{ $ret->sorter?->name }} {{ $ret->sorted_at->lokal()->format('d/m/Y H:i') }} @endif
             </p>
             @if ($ret->notes) <p class="small mb-0">{{ $ret->notes }}</p> @endif
             @if ($ret->rejectReason) <p class="text-danger small mb-0">{{ __('Ditolak') }}: {{ $ret->rejectReason->label }}</p> @endif
@@ -140,7 +140,13 @@
             <div class="card-body">
                 @foreach ($lines->reject->isSplit()->filter(fn ($l) => (float) $l->qty_received > 0) as $l)
                     <div class="border-bottom pb-2 mb-3" wire:key="pilah-{{ $l->id }}">
-                        <div class="mb-2"><strong>{{ $l->item?->code }}</strong> {{ $l->trackingLabel() }} · {{ __('diterima') }} {{ number_format((float) $l->qty_received, 2, ',', '.') }}</div>
+                        <div class="mb-2"><strong>{{ $l->item?->code }}</strong> {{ $l->trackingLabel() }} · {{ __('diterima') }} {{ number_format((float) $l->qty_received, 2, ',', '.') }}
+                            @if ($l->source() === \App\Domain\Return\Enums\ReturnSource::OnSiteAsset && ($ast = \App\Domain\Asset\Models\AssetHandover::query()->withoutGlobalScopes()->where('goods_return_line_id', $l->id)->latest('id')->first()))
+                                · <a href="{{ route('asset-handovers.show', $ast->id) }}">{{ $ast->number }}</a>
+                                <span class="badge {{ $ast->status->badge() }}">{{ $ast->status->label() }}</span>
+                                @if ($ast->status->value !== 'inspected') <span class="small text-danger">{{ __('periksa aset dulu sebelum dipilah') }}</span> @endif
+                            @endif
+                        </div>
                         @foreach ($pilah[$l->id] ?? [] as $i => $p)
                             <div class="row g-2 align-items-end mb-1" wire:key="pilah-{{ $l->id }}-{{ $i }}">
                                 <div class="col-md-2">
@@ -215,7 +221,7 @@
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $r)
-                <li class="list-group-item">{{ $r->created_at?->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
+                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
             @endforelse

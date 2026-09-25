@@ -1,6 +1,6 @@
 # Arsitektur Sistem
 
-**Versi:** 0.11 (Part 3; §4, §10, §12 diselaraskan dengan kode 24 Sep 2026; §4 mesin approval, [A-92](04-keputusan-dan-asumsi.md#a-92); v0.9: §4 dan §12 modul Count/Adjustment; v0.10: §4 dan §12 modul Transfer/Retur; v0.11: §12 modul Issue)
+**Versi:** 0.16 (Part 3; §4, §10, §12 diselaraskan dengan kode 24 Sep 2026; §4 mesin approval, [A-92](04-keputusan-dan-asumsi.md#a-92); v0.9: §4 dan §12 modul Count/Adjustment; v0.10: §4 dan §12 modul Transfer/Retur; v0.16: §7 job konfirmasi otomatis & pengingat harian, §12 Pendukung F1; v0.15: §3 langkah 5, §7 siklus langganan, §12 modul Platform penuh; v0.14: §7 job titik pesan ulang, §12 modul PurchaseRequest; v0.13: §12 modul Asset; v0.12: §10 profil rumah XAMPP3 (A-162), §12 modul Conversion/Waste; v0.11: §12 modul Issue)
 **Tanggal:** 24 September 2026
 **Status:** berlaku (asumsi A-25–A-71 disetujui; [A-73](04-keputusan-dan-asumsi.md#a-73), [A-76](04-keputusan-dan-asumsi.md#a-76) menunggu validasi); keputusan arsitektur diberi ID `AD-xx` dan berlaku sampai diganti. Paket diverifikasi terhadap Laravel 13 pada 23 Sep 2026 (menutup [O-01](04-keputusan-dan-asumsi.md#o-01))
 **Dokumen terkait:** [Blueprint §17](01-blueprint.md#17-stack-teknologi) · [Model data 08a](08a-model-data-inti.md) · [08b](08b-model-data-stok-dokumen.md) · [08c](08c-model-data-pendukung.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Riset §2.8](02-riset-wms-sejenis.md#28-riset-teknis-untuk-part-3)
@@ -81,7 +81,7 @@ Prinsip: satu aplikasi Laravel melayani database pusat dan semua database tenant
 2. `auth.wms-domain.id` (pusat) hanya melayani: login Super Admin, callback SSO ([A-28](04-keputusan-dan-asumsi.md#a-28)), pemilih company ([A-48](04-keputusan-dan-asumsi.md#a-48)), landing page.
 3. Portal klien = route group `/portal` di subdomain company, guard `web` yang sama, dibatasi role Klien ([BR-PRJ-07](05-aturan-bisnis.md#br-prj)).
 4. Job antrean & scheduler: `stancl/tenancy` membungkus job dengan `tenant_id`; scheduler memanggil `tenants:run` untuk perintah harian (eskalasi approval, aset jatuh tempo, pengingat opname, langganan).
-5. Provisioning company (Super Admin): `CreateTenant` action → buat DB → `tenants:migrate --tenants=<id>` → `tenants:seed` (role bawaan, satuan, tipe gudang, bin virtual, alasan, template) → kirim `user_invitations`.
+5. Provisioning company (Super Admin): `Platform\Actions\CreateCompany` → simpan `companies` (TenantCreated: buat DB + `tenants:migrate`) → `ProvisionCompany`: `TenantDatabaseSeeder` (role bawaan, satuan, tipe gudang, bin virtual, alasan, template) → Admin Company + `user_invitations` → company `active`; gagal → tetap `provisioning`, bisa dilanjutkan ([17-platform-login](17-platform-login.md), [A-176](04-keputusan-dan-asumsi.md#a-176)). Database company tidak pernah dihapus otomatis ([A-179](04-keputusan-dan-asumsi.md#a-179)).
 
 ## 4. Struktur kode
 
@@ -131,9 +131,10 @@ Aturan: model tidak berisi logika bisnis; setiap aksi bernama sesuai permission 
 |---|---|---|---|
 | `PublishStockEvents` | events | tiap menit | outbox → konsumen |
 | `EscalateApprovals` | default | tiap 15 menit | tugas lewat `due_at` → eskalasi ([BR-APR-06..08](05-aturan-bisnis.md#br-apr)) |
-| `AssetOverdueReport` | notifications | harian 07:00 zona company | aset lewat `due_return_date` ([BR-AST-06](05-aturan-bisnis.md#br-ast)) |
-| `AutoConfirmReceipts` | default | harian | konfirmasi terima otomatis 3 hari ([BR-REQ-10](05-aturan-bisnis.md#br-req)) |
-| `SubscriptionLifecycle` | default (central) | harian | trial habis, tagihan, tenggang, penangguhan, pengakhiran, purge ([BR-SUB-01](05-aturan-bisnis.md#br-sub)) |
+| `purchase-requests:reorder` | default | harian 06:00 | draf PRQ titik pesan ulang per company ([BR-REQ-11](05-aturan-bisnis.md#br-req), [A-175](04-keputusan-dan-asumsi.md#a-175)) |
+| `notifications:daily` (dulu `AssetOverdueReport`) | notifications | harian 07:00 | pengingat aset lewat `due_return_date` ([BR-AST-06](05-aturan-bisnis.md#br-ast), [A-189](04-keputusan-dan-asumsi.md#a-189)) |
+| `deliveries:auto-confirm` | default | harian 01:00 | konfirmasi terima otomatis lewat `receipt_confirm_days` ([BR-REQ-10](05-aturan-bisnis.md#br-req), [A-188](04-keputusan-dan-asumsi.md#a-188)) |
+| `subscriptions:cycle` (`SubscriptionLifecycle`) | default (central) | harian 00:30 | tagihan H-7, jatuh tempo + tenggang, penangguhan, pengakhiran; purge hanya ditandai ([BR-SUB-01](05-aturan-bisnis.md#br-sub), [A-177](04-keputusan-dan-asumsi.md#a-177), [A-179](04-keputusan-dan-asumsi.md#a-179)) |
 | `SendNotification` | notifications | on-demand | in-app/email; WA F2 dengan kuota per company |
 | `ProcessImportBatch` | imports | on-demand | validasi & commit impor Excel |
 | `ProcessSyncQueue` | sync | on-demand (F2) | transaksi offline → validasi → ledger atau `conflict` |
@@ -184,7 +185,7 @@ Belum diverifikasi (ditentukan saat implementasi): paket PWA/Vite plugin, klien 
 | Lingkungan | Keterangan |
 |---|---|
 | Pengembangan (kantor) | **XAMPP**: PHP 8.3.33 di `C:\xampp\php-8.3.33` (sudah `php` di PATH), **MariaDB 10.4.27** ([A-76](04-keputusan-dan-asumsi.md#a-76)), tanpa Redis (`CACHE_STORE=array`, antrean `database`), `php artisan serve` port 8000 dengan baris hosts manual. Langkah: [00-setup-lokal](../00-setup-lokal.md) |
-| Pengembangan (rumah) | **Laragon**: Apache/Nginx + PHP **8.3.33** (`C:\laragon\bin\php\php-8.3.33-Win32-vs16-x64`, alias `php83`; `php` PATH 8.5 tidak dipakai), MySQL **8.4.3 LTS**, Redis via Laragon/Memurai atau Docker, Mailpit; subdomain `*.wms.test` otomatis oleh Laragon; disk `local`; template NexaDash sebagai referensi di `template/` (statis, jQuery) → layout Blade di `resources/views/layouts` |
+| Pengembangan (rumah) | **XAMPP3** sejak 24 Sep 2026 ([A-162](04-keputusan-dan-asumsi.md#a-162)): repo `C:\xampp3\htdocs\wms`, PHP 8.3.33 di `C:\xampp3\php` (sudah `php` di PATH), **MariaDB 10.4.32**, tanpa Redis (`CACHE_STORE=array`), `php artisan serve` port 8000 dengan baris hosts manual (Apache XAMPP3 memegang port 80); Laragon + MySQL 8.4.3 tidak dipakai lagi; disk `local`; template NexaDash sebagai referensi di `template/` (statis, jQuery) → layout Blade di `resources/views/layouts` |
 | Staging | Sama dengan produksi, data anonim; tempat uji restore backup |
 | Produksi | Linux, PHP 8.3-FPM, Nginx, MySQL **8.4 LTS** (sama dengan dev), Redis, 2 worker queue, Supervisor; SSL wildcard ([O-05](04-keputusan-dan-asumsi.md#o-05)); S3-compatible ([O-14](04-keputusan-dan-asumsi.md#o-14)) |
 
@@ -202,7 +203,7 @@ Migrasi tenant di produksi: `tenants:migrate` per batch dengan log; gagal di sat
 
 ## 12. Langkah berikutnya (Part 4)
 
-1. A-25–A-71 disetujui (A-50 divalidasi 24 Sep 2026); model data dibuat ulang dari `_generate_erd.py` (v0.7, 24 Sep 2026). Modul Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, dan Issue selesai Fase 1 (model data v0.12; penangan approval ADJ dengan lapis minimum [A-09](04-keputusan-dan-asumsi.md#a-09), OPN dengan SoD [A-96](04-keputusan-dan-asumsi.md#a-96), TRF dan RET tanpa lapis minimum, ISU pembalik dengan lapis minimum [A-150](04-keputusan-dan-asumsi.md#a-150)); berikutnya Conversion/Waste.
+1. A-25–A-71 disetujui (A-50 divalidasi 24 Sep 2026); model data dibuat ulang dari `_generate_erd.py` (v0.7, 24 Sep 2026). Modul Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue, Conversion/Waste, Asset, PurchaseRequest, Platform penuh, dan Pendukung F1 ([27-pendukung-f1](27-pendukung-f1.md)) selesai Fase 1 (model data v0.17; penangan approval ADJ dengan lapis minimum [A-09](04-keputusan-dan-asumsi.md#a-09), OPN dengan SoD [A-96](04-keputusan-dan-asumsi.md#a-96), TRF dan RET tanpa lapis minimum, ISU pembalik dengan lapis minimum [A-150](04-keputusan-dan-asumsi.md#a-150), CNV hanya bila ada aturan [A-153](04-keputusan-dan-asumsi.md#a-153), WST otomatis tanpa aturan, ADJ aset hilang dengan lapis minimum ADJ, PRQ otomatis tanpa aturan — semua jenis dokumen Katalog tersambung); berikutnya penutup (E2E alur panjang, tinjauan asumsi).
 2. Spesifikasi modul memakai [template](_template-spesifikasi-modul.md), urutan: Access → Master → Warehouse → Stock → Request → Picking/Shipment → Receipt/Putaway → Approval → Count/Adjustment → Return/Transfer → Issue → Conversion/Waste → Asset → PurchaseRequest/VendorReturn → Platform.
 3. Setiap spesifikasi modul menurunkan migrasi dari 08a–08c dan kasus uji dari Katalog & BR.
 4. Urutan rilis mengikuti [D-29](04-keputusan-dan-asumsi.md#d-29): setelah modul Platform, **Purchasing inti** (Fase 1b) dibangun sebagai domain terpisah `app/Domain/Purchasing` yang memakai paket Approval bersama; WhatsApp (2a), PWA offline (2b), SSO (3) menyusul. Persiapan pemilik produk: [00-checklist-persiapan](../00-checklist-persiapan.md).

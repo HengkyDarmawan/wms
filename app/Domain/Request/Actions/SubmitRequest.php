@@ -7,6 +7,8 @@ namespace App\Domain\Request\Actions;
 use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalEngine;
+use App\Domain\Master\Enums\ProjectStatus;
+use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Request\Models\MaterialRequest;
@@ -33,6 +35,12 @@ class SubmitRequest
             );
         }
 
+        // BR-PRJ-01: draf yang dibuat sebelum proyek ditutup/dibatalkan tidak
+        // boleh diajukan sesudahnya (checklist penutupan tidak menghitung draf).
+        if ($request->project()->withoutGlobalScopes()->first()?->status !== ProjectStatus::Active) {
+            throw RequestRuleException::rule('BR-PRJ-01', 'Proyek REQ ini sudah tidak aktif; draf tidak bisa diajukan.');
+        }
+
         // BR-REQ-01: REQ tanpa baris tidak menyatakan kebutuhan apa pun.
         if ($request->openLines()->count() === 0) {
             throw RequestRuleException::rule('BR-REQ-01', 'REQ harus punya minimal satu baris.');
@@ -40,7 +48,7 @@ class SubmitRequest
 
         $berikutnya = $this->statusBerikutnya($request);
 
-        return DB::transaction(function () use ($request, $berikutnya, $actor) {
+        $hasil = DB::transaction(function () use ($request, $berikutnya, $actor) {
             $request->forceFill(['status' => $berikutnya])->save();
 
             activity('request')
@@ -57,6 +65,12 @@ class SubmitRequest
 
             return $request->refresh();
         });
+
+        if ($hasil->status === MaterialRequestStatus::UnderReview) {
+            app(DomainNotifications::class)->requestUnderReview($hasil, $actor);
+        }
+
+        return $hasil;
     }
 
     /**

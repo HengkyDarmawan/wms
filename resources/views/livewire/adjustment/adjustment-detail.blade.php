@@ -12,7 +12,7 @@
                 · {{ __('Alasan') }}: {{ $adj->reason?->label }}
                 · {{ __('Diajukan') }} {{ $adj->submitter?->name }}
                 @if ($adj->approver) · {{ __('Diputus') }} {{ $adj->approver->name }} @endif
-                @if ($adj->posted_at) · {{ __('Diposting') }} {{ $adj->posted_at->format('d/m/Y H:i') }} @endif
+                @if ($adj->posted_at) · {{ __('Diposting') }} {{ $adj->posted_at->lokal()->format('d/m/Y H:i') }} @endif
             </p>
             @if ($adj->notes) <p class="small mb-0">{{ $adj->notes }}</p> @endif
             @if ($adj->rejectReason) <p class="text-danger small mb-0">{{ __('Ditolak') }}: {{ $adj->rejectReason->label }}</p> @endif
@@ -112,7 +112,7 @@
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $r)
-                <li class="list-group-item">{{ $r->created_at?->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
+                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
             @endforelse

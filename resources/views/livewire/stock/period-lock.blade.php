@@ -68,7 +68,7 @@
                         <tbody>
                             @forelse ($riwayat as $log)
                                 <tr>
-                                    <td class="text-nowrap">{{ $log->created_at?->format('d/m/Y H:i') }}</td>
+                                    <td class="text-nowrap">{{ $log->created_at?->lokal()->format('d/m/Y H:i') }}</td>
                                     <td>{{ $log->properties['dari'] ?? __('belum ada') }}</td>
                                     <td>{{ $log->properties['ke'] ?? '—' }}</td>
                                     <td>{{ $log->causer?->name ?? __('Sistem') }}</td>

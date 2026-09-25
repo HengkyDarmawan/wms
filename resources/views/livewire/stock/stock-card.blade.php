@@ -99,7 +99,7 @@
                 <tbody>
                     @forelse ($pergerakan as $m)
                         <tr @class(['table-warning' => $m->reverses_movement_id !== null])>
-                            <td class="text-nowrap">{{ $m->occurred_at?->format('d/m/Y H:i') }}</td>
+                            <td class="text-nowrap">{{ $m->occurred_at?->lokal()->format('d/m/Y H:i') }}</td>
                             <td>{{ $m->fromBin?->code ?? __('Luar') }}</td>
                             <td>{{ $m->toBin?->code ?? __('Luar') }}</td>
                             <td class="text-end">{{ number_format((float) $m->qty_base, 2, ',', '.') }}</td>

@@ -95,6 +95,22 @@ class LivewireEndpointTest extends TenantTestCase
     }
 
     #[Test]
+    public function tc_acc_28g_mode_hanya_baca_meloloskan_cari_dan_halaman_livewire(): void
+    {
+        // A-196: cari/filter/pindah halaman boleh, aksi komponen tetap ditolak.
+        $this->setSubscriptionStatus(SubscriptionStatus::Suspended);
+        $komponen = fn (string $metode) => ['components' => [[
+            'snapshot' => '{}', 'updates' => ['search' => 'baut'], 'calls' => [['method' => $metode, 'params' => []]],
+        ]]];
+
+        $this->postJson($this->updateUrl(), $komponen('simpan'), ['X-Livewire' => 'true'])->assertForbidden();
+
+        $baca = $this->postJson($this->updateUrl(), $komponen('gotoPage'), ['X-Livewire' => 'true']);
+        $this->assertStringNotContainsString(__('Langganan ditangguhkan: perubahan data tidak diizinkan.'), (string) $baca->getContent());
+        $this->assertNotSame(403, $baca->status(), 'Pindah halaman tidak boleh ditolak gerbang langganan.');
+    }
+
+    #[Test]
     public function tc_acc_28e_subdomain_tidak_dikenal_ditolak_di_endpoint_livewire(): void
     {
         $path = app(HandleRequests::class)->getUpdateUri();

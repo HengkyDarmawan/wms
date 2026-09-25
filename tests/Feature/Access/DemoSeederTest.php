@@ -80,9 +80,14 @@ class DemoSeederTest extends TenantTestCase
         $this->assertSame(5, (int) ($perModul['return'] ?? 0), 'Jumlah permission modul Retur dari proyek.');
         $this->assertSame(2, (int) ($perModul['template'] ?? 0), 'Jumlah permission modul Template.');
         $this->assertSame(5, (int) ($perModul['issue'] ?? 0), 'Jumlah permission modul Issue (pemakaian material).');
+        $this->assertSame(6, (int) ($perModul['conversion'] ?? 0), 'Jumlah permission modul Konversi material.');
+        $this->assertSame(5, (int) ($perModul['waste'] ?? 0), 'Jumlah permission modul Berita acara waste.');
+        $this->assertSame(4, (int) ($perModul['asset'] ?? 0), 'Jumlah permission modul Aset dipinjamkan.');
+        $this->assertSame(6, (int) ($perModul['purchase_request'] ?? 0), 'Jumlah permission modul Purchase Request.');
+        $this->assertSame(2, (int) ($perModul['billing'] ?? 0), 'Jumlah permission tagihan langganan.');
 
         $akses = collect($perModul)
-            ->except(['master', 'warehouse', 'stock', 'request', 'picking', 'shipment', 'receipt', 'putaway', 'vendor_return', 'approval', 'count', 'adjustment', 'transfer', 'return', 'template', 'issue'])
+            ->except(['master', 'warehouse', 'stock', 'request', 'picking', 'shipment', 'receipt', 'putaway', 'vendor_return', 'approval', 'count', 'adjustment', 'transfer', 'return', 'template', 'issue', 'conversion', 'waste', 'asset', 'purchase_request', 'billing'])
             ->sum();
 
         $this->assertSame(22, (int) $akses, 'Jumlah permission modul Access.');

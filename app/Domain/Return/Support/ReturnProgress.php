@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Domain\Return\Support;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Asset\Support\AssetCustody;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Return\Enums\GoodsReturnStatus;
+use App\Domain\Return\Enums\ReturnSource;
 use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Return\Models\GoodsReturnLine;
 use App\Domain\Shipment\Models\Shipment;
@@ -59,6 +61,11 @@ class ReturnProgress
             $baris = GoodsReturnLine::query()->find($l->goods_return_line_id);
 
             $baris?->forceFill(['qty_received' => (float) $baris->qty_received + (float) $l->qty_received])->save();
+
+            // Aset On-site kembali: AST `returned`, menunggu pemeriksaan (Katalog §2.11).
+            if ($baris !== null && $baris->source() === ReturnSource::OnSiteAsset && (float) $l->qty_received > 0) {
+                app(AssetCustody::class)->returned($baris, $actor);
+            }
         }
 
         // Barang sudah pindah dari bin Gudang Site; janjinya tidak diperlukan lagi.

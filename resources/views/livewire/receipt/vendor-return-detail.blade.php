@@ -107,7 +107,7 @@
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $a)
-                <li class="list-group-item">{{ $a->created_at?->format('d/m/Y H:i') }} · {{ $a->causer?->name ?? __('Sistem') }} · {{ $a->description }}</li>
+                <li class="list-group-item">{{ $a->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $a->causer?->name ?? __('Sistem') }} · {{ $a->description }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
             @endforelse

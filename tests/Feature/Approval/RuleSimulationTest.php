@@ -122,7 +122,8 @@ class RuleSimulationTest extends TenantTestCase
         $kepala = $this->makeUser('warehouse_head');
         $data = ['document_type' => 'material_request', 'name' => 'Aturan A', 'priority' => 50, 'is_active' => true, 'conditions' => []];
 
-        $this->gagal(fn () => $save->handle(null, ['document_type' => 'waste_disposal'] + $data, [$this->lapisUser($kepala)]), 'BR-GEN-10');
+        // Semua jenis Katalog sudah tersambung sejak modul PRQ; jenis di luar katalog tetap ditolak.
+        $this->gagal(fn () => $save->handle(null, ['document_type' => 'purchase_order'] + $data, [$this->lapisUser($kepala)]), 'BR-GEN-10');
         $this->gagal(fn () => $save->handle(null, $data, []), 'D-17');
         $this->gagal(fn () => $save->handle(null, $data, [['approver_type' => 'user', 'decision_mode' => 'any', 'timeout_hours' => 24]]), 'BR-GEN-11');
         $this->gagal(fn () => $save->handle(null, $data, [$this->lapisUser($kepala, DecisionMode::Any, ['timeout_hours' => 0])]), 'BR-APR-08');

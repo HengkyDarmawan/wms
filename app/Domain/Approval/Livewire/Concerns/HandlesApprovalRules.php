@@ -6,14 +6,17 @@ namespace App\Domain\Approval\Livewire\Concerns;
 
 use App\Domain\Adjustment\Exceptions\AdjustmentRuleException;
 use App\Domain\Approval\Exceptions\ApprovalRuleException;
+use App\Domain\Conversion\Exceptions\ConversionRuleException;
 use App\Domain\Count\Exceptions\CountRuleException;
 use App\Domain\Issue\Exceptions\IssueRuleException;
-use App\Domain\Request\Exceptions\RequestRuleException;
+use App\Domain\PurchaseRequest\Exceptions\PurchaseRequestRuleException;
 use App\Domain\Receipt\Exceptions\ReceiptRuleException;
+use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Return\Exceptions\ReturnRuleException;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
-use App\Domain\Transfer\Exceptions\TransferRuleException;
 use App\Domain\Stock\Exceptions\LedgerException;
+use App\Domain\Transfer\Exceptions\TransferRuleException;
+use App\Domain\Waste\Exceptions\WasteRuleException;
 
 /**
  * Menerjemahkan penolakan aturan approval — dan penolakan dokumen yang
@@ -35,7 +38,7 @@ trait HandlesApprovalRules
             $aksi();
 
             return true;
-        } catch (ApprovalRuleException|RequestRuleException|ReceiptRuleException|CountRuleException|AdjustmentRuleException|TransferRuleException|ReturnRuleException|ShipmentRuleException|IssueRuleException $e) {
+        } catch (ApprovalRuleException|RequestRuleException|ReceiptRuleException|CountRuleException|AdjustmentRuleException|TransferRuleException|ReturnRuleException|ShipmentRuleException|IssueRuleException|ConversionRuleException|WasteRuleException|PurchaseRequestRuleException $e) {
             $this->ruleCode = $e->rule;
             $this->ruleError = $e->getMessage();
 

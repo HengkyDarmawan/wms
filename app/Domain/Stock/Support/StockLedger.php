@@ -12,8 +12,10 @@ use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockEvent;
 use App\Domain\Stock\Models\StockMovement;
+use App\Domain\Stock\Models\StockReservation;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Bin;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -63,6 +65,9 @@ class StockLedger
                 'piece_id' => $request->pieceId,
                 'qty_base' => $request->qtyBase,
                 'stock_status' => $request->stockStatus,
+                // A-194: kondisi asal hanya dicatat bila berbeda (perubahan kondisi).
+                'from_stock_status' => $request->fromBinId !== null && $request->sourceStatus() !== $request->stockStatus
+                    ? $request->sourceStatus() : null,
                 'project_id' => $request->projectId,
                 'document_type' => $request->documentType,
                 'document_id' => $request->documentId,
@@ -119,7 +124,9 @@ class StockLedger
             // Ditukar: yang tadinya keluar sekarang masuk.
             fromBinId: $movement->to_bin_id,
             toBinId: $movement->from_bin_id,
-            stockStatus: $movement->stock_status,
+            // Perubahan kondisi dibalik juga: kondisi asal menjadi tujuan (A-194).
+            stockStatus: $movement->from_stock_status ?? $movement->stock_status,
+            fromStockStatus: $movement->from_stock_status !== null ? $movement->stock_status : null,
             lotId: $movement->lot_id,
             serialId: $movement->serial_id,
             pieceId: $movement->piece_id,
@@ -159,10 +166,10 @@ class StockLedger
             ->available()
             ->where('item_id', $itemId)
             ->whereHas('bin', fn ($q) => $q->where('warehouse_id', $warehouseId)
-                ->where('bin_type', \App\Domain\Warehouse\Enums\BinType::Storage->value))
+                ->where('bin_type', BinType::Storage->value))
             ->sum('qty_base');
 
-        $reservasi = (float) \App\Domain\Stock\Models\StockReservation::query()
+        $reservasi = (float) StockReservation::query()
             ->active()
             ->where('item_id', $itemId)
             ->where('warehouse_id', $warehouseId)
@@ -189,7 +196,7 @@ class StockLedger
             ->chunk(500, function ($baris) use (&$hasil): void {
                 foreach ($baris as $movement) {
                     if ($movement->from_bin_id !== null) {
-                        $kunci = $this->kunci($movement, (int) $movement->from_bin_id);
+                        $kunci = $this->kunci($movement, (int) $movement->from_bin_id, $movement->from_stock_status ?? $movement->stock_status);
                         $hasil[$kunci] = ($hasil[$kunci] ?? 0) - (float) $movement->qty_base;
                     }
 
@@ -265,7 +272,7 @@ class StockLedger
     }
 
     /** BR-STK-15: periode yang sudah dikunci menolak mutasi apa pun. */
-    private function assertPeriodOpen(\Carbon\CarbonInterface $occurredAt): void
+    private function assertPeriodOpen(CarbonInterface $occurredAt): void
     {
         $kunci = CompanySetting::get('stock_lock_date');
 
@@ -496,7 +503,7 @@ class StockLedger
         }
     }
 
-    private function kunci(StockMovement $movement, int $binId): string
+    private function kunci(StockMovement $movement, int $binId, ?StockStatus $status = null): string
     {
         return implode('|', [
             $movement->item_id,
@@ -504,7 +511,7 @@ class StockLedger
             $movement->lot_id ?? 0,
             $movement->serial_id ?? 0,
             $movement->piece_id ?? 0,
-            $movement->stock_status->value,
+            ($status ?? $movement->stock_status)->value,
         ]);
     }
 }

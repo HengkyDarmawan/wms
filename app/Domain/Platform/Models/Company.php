@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Domain\Platform\Models;
 
 use App\Domain\Platform\Enums\CompanyStatus;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
@@ -15,7 +17,7 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
  * Company = tenant (D-02, D-03). Tabel `companies` di database pusat; setiap company
  * punya database sendiri yang namanya disimpan di kolom `db_name`.
  *
- * @property int    $id
+ * @property int $id
  * @property string $code
  * @property string $name
  * @property string $subdomain
@@ -58,7 +60,7 @@ class Company extends BaseTenant implements TenantWithDatabase
         ];
     }
 
-    public function plan(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
     }
@@ -87,6 +89,23 @@ class Company extends BaseTenant implements TenantWithDatabase
     public function host(): string
     {
         return $this->subdomain.'.'.config('tenancy.central_domains.0', 'wms.test');
+    }
+
+    public function invoices(): HasManyThrough
+    {
+        return $this->hasManyThrough(SubscriptionInvoice::class, Subscription::class);
+    }
+
+    /**
+     * Atribut tambahan di kolom JSON `data` (VirtualColumn): `admin_name`,
+     * `admin_email` (Admin Company pertama), `provisioning_error`,
+     * `provisioned_at`, `status_reason` (A-176, A-179).
+     */
+    public function provisioningError(): ?string
+    {
+        $pesan = $this->getAttribute('provisioning_error');
+
+        return is_string($pesan) && $pesan !== '' ? $pesan : null;
     }
 
     public function isFeatureEnabled(string $key): bool

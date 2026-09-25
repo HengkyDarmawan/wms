@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `picking` & `shipment` (Picking, Surat Jalan, Bukti Terima, Selisih)
 
-**Versi:** 0.5
-**Tanggal:** 24 September 2026
-**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md))
+**Versi:** 0.8
+**Tanggal:** 25 September 2026
+**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188))
 **Modul:** `picking`, `shipment`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-SJ](05-aturan-bisnis.md#br-sj) · [Katalog Status §2.2–§2.4](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
@@ -120,7 +120,7 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 | Aturan | Ditegakkan di mana |
 |---|---|
 | [BR-SJ-01](05-aturan-bisnis.md#br-sj) | Picking hanya dari bin yang menyimpan alokasi; penggantian bin menuntut alasan |
-| [BR-SJ-02](05-aturan-bisnis.md#br-sj) | Short pick: alasan wajib, bin ditandai hitung, sisa jadi backorder REQ |
+| [BR-SJ-02](05-aturan-bisnis.md#br-sj) | Short pick: alasan wajib, bin ditandai hitung, sisa jadi backorder REQ; PCK berikutnya memetik sisa terhitung (`Shipment\Support\RequestLineOutstanding`, [A-204](04-keputusan-dan-asumsi.md#a-204)) |
 | [BR-SJ-04](05-aturan-bisnis.md#br-sj) | Efek `delivered` berbeda per tujuan dan kepemilikan |
 | [BR-SJ-05](05-aturan-bisnis.md#br-sj) | Satu bukti terima per SJ; foto wajib bila ada yang rusak |
 | [BR-SJ-06](05-aturan-bisnis.md#br-sj) | Baik < dikirim → SJ `partially_delivered` dan DSC `open` |
@@ -186,6 +186,9 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 | TC-PCK-06 | Fisik kurang, alasan diisi | selesaikan | sisa jadi backorder REQ, bin ditandai hitung | BR-SJ-02 |
 | TC-PCK-07 | PCK `completed` | batalkan | ditolak | — |
 | TC-PCK-08 | PCK `in_progress` | batalkan dengan alasan | alokasi dilepas, tidak ada stok pindah | — |
+| TC-PCK-17 | REQ 20, PCK pertama diambil 15 (kurang, beralasan) | buat PCK lagi (2×) | PCK baru 5; yang ketiga ditolak selama PCK kedua berjalan | [A-204](04-keputusan-dan-asumsi.md#a-204), BR-SJ-02 |
+| TC-PCK-18 | item ber-lot, PCK berjalan | pindai kode item; pindai nomor lot (huruf kecil) | ditolak; baris tercatat | [A-203](04-keputusan-dan-asumsi.md#a-203) |
+| TC-PCK-16 | PCK `in_progress`, item ber-barcode | pindai kode asing; pindai kode bin; pindai barcode item; selesaikan | galat tanpa pencatatan; bin aktif; baris tercatat sejumlah alokasi & disorot; PCK `completed` | [A-203](04-keputusan-dan-asumsi.md#a-203) |
 | TC-SJ-01 | Dua PCK `completed` tujuan sama | buat SJ | satu SJ memuat keduanya | BR-SJ-09 |
 | TC-SJ-02 | PCK tujuan berbeda | buat satu SJ | ditolak | BR-SJ-09 |
 | TC-SJ-03 | `own_fleet` tanpa kendaraan | buat SJ | ditolak | BR-SJ-07 |
@@ -309,6 +312,7 @@ Uji yang menopangnya ada di `tests/Feature/Shipment`: `PickTaskTest` (TC-PCK-01�
    bukti terima, layarnya menyusul bersama portal pemohon.
 4. **Cross-dock dari GRN** ([BR-SJ-03](05-aturan-bisnis.md#br-sj), [A-83](04-keputusan-dan-asumsi.md#a-83)) — menunggu keputusan A-83. GRN retur
    untuk barang rusak yang dibawa balik tidak dibuat ([A-114](04-keputusan-dan-asumsi.md#a-114)); modul Retur sudah ada ([22](22-retur-transfer.md)).
+5. **Aset dipinjamkan** (v0.6): `ConfirmDelivery` memanggil `Asset\Support\AssetCustody::checkOut` untuk baris `loan` berserial sebelum memindahkannya ke bin On-site; state aset (`reserved` → `in_transit` → `on_loan`) diperbarui observer kartu stok modul Aset ([25-aset §13](25-aset.md)).
 5. **Unggah tanda tangan dan foto** lewat layar; sekarang jalurnya menerima path berkas.
 6. **Mode offline driver** ([BR-SJ-08](05-aturan-bisnis.md#br-sj)) `[F2]`.
 7. **Notifikasi §8** dan **laporan §9** beserta ekspornya — laporan belum dibangun; kerangkanya di [16-shared-laporan-berkas](16-shared-laporan-berkas.md).

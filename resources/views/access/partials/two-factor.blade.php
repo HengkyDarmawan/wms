@@ -3,8 +3,10 @@
 
     Tiga keadaan: belum diatur, rahasia sudah dibuat tetapi belum dikonfirmasi,
     dan sudah aktif. Kode pemulihan hanya ditampilkan sekali, tepat setelah
-    dikonfirmasi atau diganti.
+    dikonfirmasi atau diganti. `$rute` = awalan nama route aksi: profil tenant
+    (bawaan) atau Keamanan akun Super Admin (`platform.two-factor`, A-200).
 --}}
+@php($rute ??= 'profile.two-factor')
 <div class="card mb-3">
     <div class="card-body">
         <h2 class="h6 text-uppercase text-muted mb-3">{{ __('Verifikasi dua langkah') }}</h2>
@@ -40,7 +42,7 @@
             </p>
 
             <div class="d-flex flex-wrap gap-2">
-                <form method="POST" action="{{ route('profile.two-factor.regenerate') }}">
+                <form method="POST" action="{{ route($rute.'.regenerate') }}">
                     @csrf
                     <button class="btn btn-outline-secondary btn-sm" type="submit">
                         {{ __('Ganti kode pemulihan') }}
@@ -50,7 +52,7 @@
 
             <hr>
 
-            <form method="POST" action="{{ route('profile.two-factor.disable') }}" novalidate>
+            <form method="POST" action="{{ route($rute.'.disable') }}" novalidate>
                 @csrf
                 <label class="form-label" for="disable_password">
                     {{ __('Matikan dua langkah — masukkan password Anda') }} <span class="wajib">*</span>
@@ -75,7 +77,7 @@
                 <code>{{ session('access.2fa.setup_secret') }}</code>
             </p>
 
-            <form method="POST" action="{{ route('profile.two-factor.confirm') }}" novalidate>
+            <form method="POST" action="{{ route($rute.'.confirm') }}" novalidate>
                 @csrf
                 <label class="form-label" for="two_factor_code">
                     {{ __('Kode verifikasi') }} <span class="wajib">*</span>
@@ -89,7 +91,7 @@
                 @error('code')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </form>
 
-            <form class="mt-2" method="POST" action="{{ route('profile.two-factor.cancel') }}">
+            <form class="mt-2" method="POST" action="{{ route($rute.'.cancel') }}">
                 @csrf
                 <button class="btn btn-link btn-sm px-0" type="submit">{{ __('Batalkan pengaturan') }}</button>
             </form>
@@ -98,7 +100,7 @@
                 {{ __('Menambah satu lapis keamanan: setelah password benar, Anda diminta kode dari aplikasi autentikator di ponsel.') }}
             </p>
 
-            <form method="POST" action="{{ route('profile.two-factor.begin') }}">
+            <form method="POST" action="{{ route($rute.'.begin') }}">
                 @csrf
                 <button class="btn btn-outline-primary" type="submit">{{ __('Atur dua langkah') }}</button>
             </form>

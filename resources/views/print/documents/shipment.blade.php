@@ -7,7 +7,7 @@
             <td class="k">{{ __('Dari gudang') }}</td>
             <td>{{ $sj->warehouse?->code }} — {{ $sj->warehouse?->name }}</td>
             <td class="k">{{ __('Tanggal berangkat') }}</td>
-            <td>{{ $sj->shipped_at?->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $sj->shipped_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Tujuan') }}</td>

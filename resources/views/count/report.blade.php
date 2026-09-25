@@ -21,10 +21,10 @@
         {{ __('Gudang') }}: {{ $count->warehouses->pluck('code')->implode(', ') }} ·
         {{ $count->freeze_bins ? __('bin dibeku') : __('tanpa pembekuan') }}<br>
         {{ __('Dibuat') }}: {{ $count->creator?->name }} ·
-        {{ __('Mulai') }}: {{ $count->started_at?->format('d/m/Y H:i') }} ·
-        {{ __('Rekonsiliasi') }}: {{ $count->submitter?->name }} {{ $count->reconciled_at?->format('d/m/Y H:i') }} ·
-        {{ __('Disetujui') }}: {{ $count->approver?->name ?? __('sistem') }} {{ $count->approved_at?->format('d/m/Y H:i') }} ·
-        {{ __('Ditutup') }}: {{ $count->closed_at?->format('d/m/Y H:i') }}
+        {{ __('Mulai') }}: {{ $count->started_at?->lokal()->format('d/m/Y H:i') }} ·
+        {{ __('Rekonsiliasi') }}: {{ $count->submitter?->name }} {{ $count->reconciled_at?->lokal()->format('d/m/Y H:i') }} ·
+        {{ __('Disetujui') }}: {{ $count->approver?->name ?? __('sistem') }} {{ $count->approved_at?->lokal()->format('d/m/Y H:i') }} ·
+        {{ __('Ditutup') }}: {{ $count->closed_at?->lokal()->format('d/m/Y H:i') }}
         @if ($count->lock_date_set) · {{ __('Periode stok dikunci sampai') }} {{ $count->lock_date_set->format('d/m/Y') }} @endif
     </div>
 

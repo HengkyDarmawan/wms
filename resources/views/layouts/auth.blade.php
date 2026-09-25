@@ -6,6 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', __('Masuk')) &middot; {{ config('app.name') }}</title>
     <link rel="icon" href="{{ asset('img/logo.svg') }}">
+    {{-- PWA installable (Blueprint §11, A-193). --}}
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="/img/icons/icon-192.png">
     {{-- Tema dipasang sebelum paint agar tidak berkedip (NexaDash theme-init). --}}
     <script>
         (function () {

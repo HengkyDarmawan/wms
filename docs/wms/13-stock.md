@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `stock` (Kartu Stok, Saldo, Reservasi, Kejadian)
 
-**Versi:** 0.5
-**Tanggal:** 24 September 2026
-**Status:** terimplementasi (Fase 1) — modul keempat setelah [Warehouse](12-warehouse.md); v0.5: kunci periode otomatis dari sesi opname bulanan dan `reverse()` untuk dokumen pembalik ([21-opname-penyesuaian](21-opname-penyesuaian.md))
+**Versi:** 0.8
+**Tanggal:** 25 September 2026
+**Status:** terimplementasi (Fase 1) — modul keempat setelah [Warehouse](12-warehouse.md); v0.5: kunci periode otomatis dari sesi opname bulanan dan `reverse()` untuk dokumen pembalik ([21-opname-penyesuaian](21-opname-penyesuaian.md)); v0.6: `Stock\Support\RemovalOrder` — urutan alokasi FIFO/FEFO/sisa potongan/manual untuk PCK ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185)); v0.7: kolom `stock_movements.from_stock_status` — perubahan kondisi bisa dibangun ulang & dibalik dengan benar ([A-194](04-keputusan-dan-asumsi.md#a-194))
 **Modul:** `stock`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.6](01-blueprint.md#66-stok) · [Aturan Bisnis](05-aturan-bisnis.md) · [Matriks kejadian stok](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data stok](08b-model-data-stok-dokumen.md#area-stok-ledger-saldo-reservasi-kejadian-tenant) · [Akuntansi §4](../akuntansi/01-lingkup-dan-integrasi-wms.md)
@@ -187,7 +187,7 @@ Seluruh baris [matriks §14](05-aturan-bisnis.md#14-matriks-kejadian-stok) diter
 | TC-STK-24 | Item per potong | lihat saldo | jumlah potongan dan total panjang keduanya tampil | BR-STK-09 |
 | TC-STK-25 | Saldo dibangun ulang dari kartu stok | bandingkan dengan tabel saldo | sama persis | BR-STK-01 |
 | TC-STK-26 | User tanpa `stock.view` | buka layar saldo | 403 | BR-GEN-09 |
-| TC-STK-27 | Saldo 20, reservasi aktif 5 | buka layar saldo | kolom Tersedia menunjukkan 15, Dicadangkan 5 | BR-STK-03 |
+| TC-STK-27 | Saldo 20, reservasi aktif 5 | buka layar saldo; cari dengan barcode item | kolom Tersedia menunjukkan 15, Dicadangkan 5; barcode cocok menampilkan item, barcode lain tidak | BR-STK-03, [A-201](04-keputusan-dan-asumsi.md#a-201) |
 | TC-STK-28 | Item punya saldo dan pergerakan | buka kartu stok | saldo per bin dan riwayat tampil, baris pembalik ditandai | BR-STK-01 |
 | TC-STK-29 | Item bersaldo di dua gudang | saring kartu stok per gudang | hanya bin gudang itu yang tampil | BR-ACC-05 |
 | TC-STK-30 | Reservasi aktif | lepas dari layar tanpa alasan | ditolak; dengan alasan berhasil | BR-GEN-11 |

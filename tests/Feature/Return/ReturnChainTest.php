@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Return;
 
+use App\Domain\Asset\Actions\InspectAsset;
+use App\Domain\Asset\Models\AssetHandover;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\Piece;
 use App\Domain\Master\Models\Serial;
@@ -15,13 +17,16 @@ use App\Domain\Return\Enums\ReturnSorting;
 use App\Domain\Return\Exceptions\ReturnRuleException;
 use App\Domain\Shipment\Actions\CreateShipment;
 use App\Domain\Shipment\Actions\ResolveDiscrepancy;
-use App\Domain\Shipment\Actions\ShipShipment;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Models\StockEvent;
+use App\Domain\Stock\Models\StockReservation;
 use App\Domain\Warehouse\Actions\EnsureSystemBins;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Bin;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\Return\Concerns\ReturnFixtures;
 use Tests\TenantTestCase;
@@ -47,7 +52,7 @@ class ReturnChainTest extends TenantTestCase
         return $this->binSistem($this->gudang, BinType::Return);
     }
 
-    private function kejadianRetur(int $retId): \Illuminate\Support\Collection
+    private function kejadianRetur(int $retId): Collection
     {
         return StockEvent::query()->where('source_type', 'goods_return')->where('source_id', $retId)->orderBy('id')->get();
     }
@@ -63,7 +68,7 @@ class ReturnChainTest extends TenantTestCase
         $this->assertSame(10.0, $this->saldo($this->binKrw1, $this->baut), 'Keluar dari bin Gudang Site.');
         $this->assertSame(10.0, $this->saldo($this->binRetur(), $this->baut), 'Masuk bin Retur gudang tujuan.');
         $this->assertSame(0, StockEvent::query()->where('source_type', 'goods_receipt')->where('source_id', $grn->id)->count(), 'A-112: kejadian saat dipilah.');
-        $this->assertSame(0, \App\Domain\Stock\Models\StockReservation::query()->active()->forDocument('goods_return', $ret->id)->count());
+        $this->assertSame(0, StockReservation::query()->active()->forDocument('goods_return', $ret->id)->count());
 
         $ret = $this->pilah($ret, [$ret->lines()->sole()->id => [
             ['sorting' => 'good', 'qty' => 7, 'target_bin_id' => $this->binB->id],
@@ -261,12 +266,26 @@ class ReturnChainTest extends TenantTestCase
         $this->grnRetur($ret);
         $this->assertSame(0.0, $this->saldo($onSite, $this->genset));
 
-        $this->pilah($ret, [$ret->lines()->sole()->id => [['sorting' => 'good', 'qty' => 1, 'target_bin_id' => $this->binB->id]]]);
+        // Sejak modul Aset (25-aset): aset diperiksa dulu sebelum dipilah (BR-AST-03).
+        $baris = [$ret->lines()->sole()->id => [['sorting' => 'good', 'qty' => 1, 'target_bin_id' => $this->binB->id]]];
+        try {
+            $this->pilah($ret, $baris);
+            $this->fail('Aset belum diperiksa seharusnya ditolak.');
+        } catch (ReturnRuleException $e) {
+            $this->assertSame('BR-AST-03', $e->rule);
+        }
+
+        Storage::fake('local');
+        $ast = AssetHandover::query()->where('serial_id', $serial->id)->sole();
+        app(InspectAsset::class)->handle($ast, ['condition_grade' => 'A', 'condition_score' => 90, 'component_notes' => 'Mesin: normal'],
+            UploadedFile::fake()->image('periksa.jpg'), $this->makeUser('warehouse_staff'));
+
+        $this->pilah($ret, $baris);
         $this->assertSame(1.0, $this->saldo($this->binB, $this->genset));
 
         $k = $this->kejadianRetur($ret->id)->sole();
         $this->assertSame('asset_returned', $k->event_type->value, 'Matriks §14: aset kembali.');
-        $this->assertArrayHasKey('inspection', $k->payload);
+        $this->assertSame('A', $k->payload['inspection']['condition_grade'], 'Hasil pemeriksaan ikut kejadian (menggantikan inspection = null, A-116).');
     }
 
     #[Test]

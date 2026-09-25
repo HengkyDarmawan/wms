@@ -7,7 +7,7 @@
             <td class="k">{{ __('Surat jalan') }}</td>
             <td>{{ $sj->number }}</td>
             <td class="k">{{ __('Diterima') }}</td>
-            <td>{{ $proof->confirmed_at?->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $proof->confirmed_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Tujuan') }}</td>

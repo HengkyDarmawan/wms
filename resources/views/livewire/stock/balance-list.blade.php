@@ -12,8 +12,8 @@
         <div class="card-body row g-3 align-items-end">
             <div class="col-lg-5">
                 <label class="form-label" for="cari-stok">{{ __('Cari item') }}</label>
-                <input class="form-control" id="cari-stok" type="search"
-                       wire:model.live.debounce.400ms="search" placeholder="{{ __('Kode atau nama item') }}">
+                <input class="form-control" id="cari-stok" type="search" data-scan
+                       wire:model.live.debounce.400ms="search" placeholder="{{ __('Kode, nama, atau barcode item') }}">
             </div>
             <div class="col-lg-4">
                 <label class="form-label" for="filter-gudang-stok">{{ __('Gudang') }}</label>

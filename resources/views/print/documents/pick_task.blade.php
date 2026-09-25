@@ -13,7 +13,7 @@
             <td class="k">{{ __('Picker') }}</td>
             <td>{{ $pck->assignee?->name ?? '—' }}</td>
             <td class="k">{{ __('Mulai') }}</td>
-            <td>{{ $pck->started_at?->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $pck->started_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
         </tr>
     </table>
 

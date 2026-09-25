@@ -165,7 +165,7 @@ class LoginController extends Controller
             return false;
         }
 
-        return app(EnsureSubscriptionState::class)->statusOf($company) === SubscriptionStatus::Terminated;
+        return app(EnsureSubscriptionState::class)->effectiveStatus($company) === SubscriptionStatus::Terminated;
     }
 
     private function invalidCredentials(): ValidationException

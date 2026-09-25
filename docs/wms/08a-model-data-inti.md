@@ -1,13 +1,13 @@
 # Model Data — Pusat, akses & organisasi, master, gudang & lokasi
 
-**Versi:** 0.12 (Part 3, diselaraskan dengan migrasi modul Access s.d. Issue 24 Sep 2026)
-**Tanggal:** 24 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Versi:** 0.19 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026)
+**Tanggal:** 25 September 2026
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md) · [Pendukung](08c-model-data-pendukung.md)
 
-Daftar area (114 tabel):
+Daftar area (116 tabel):
 
-- [Database pusat (platform)](08a-model-data-inti.md#area-database-pusat-platform) — 11 tabel
+- [Database pusat (platform)](08a-model-data-inti.md#area-database-pusat-platform) — 13 tabel
 - [User, role, cakupan, struktur organisasi (tenant)](08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) — 11 tabel
 - [Master data (tenant)](08a-model-data-inti.md#area-master-data-tenant) — 19 tabel
 - [Gudang & lokasi (tenant)](08a-model-data-inti.md#area-gudang--lokasi-tenant) — 6 tabel
@@ -61,6 +61,12 @@ erDiagram
     bigint id PK
     varchar_150 email UK
   }
+  platform_login_attempts {
+    bigint id PK
+  }
+  audit_logs {
+    bigint id PK
+  }
   sso_identities {
     bigint id PK
   }
@@ -86,23 +92,30 @@ erDiagram
   companies ||--o{ feature_flags : " "
   companies ||--o{ support_accesses : " "
   platform_users ||--o{ support_accesses : " "
+  platform_users ||--o{ platform_login_attempts : " "
   companies ||--o{ tenant_migration_runs : " "
   companies ||--o{ wa_message_logs : " "
 ```
 
 ### Entitas
 
-**`companies` — Company (tenant).** 🔑`id` bigint · ◆`code` varchar(20) *(kode pendek, dipakai di nomor dokumen)* · `name` varchar(150) · ◆`subdomain` varchar(63) *([A-01](04-keputusan-dan-asumsi.md#a-01))* · ◆`db_name` varchar(64) *(database tenant)* · `timezone` varchar(40) *(Asia/Jakarta)* · `status` enum *(provisioning|active|suspended|terminated)* · ↗`plan_id` bigint · `data` json *(kolom implementasi stancl/tenancy (atribut tambahan))*
+**`companies` — Company (tenant).** 🔑`id` bigint · ◆`code` varchar(20) *(kode pendek, dipakai di nomor dokumen)* · `name` varchar(150) · ◆`subdomain` varchar(63) *([A-01](04-keputusan-dan-asumsi.md#a-01))* · ◆`db_name` varchar(64) *(database tenant)* · `timezone` varchar(40) *(Asia/Jakarta)* · `status` enum *(provisioning|active|suspended|terminated)* · ↗`plan_id` bigint · `data` json *(kolom implementasi stancl/tenancy; admin_name, admin_email, provisioning_error, provisioned_at, status_reason (A-176, A-179, A-184))*
 
-**`plans` — Paket.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(80) · `monthly_price` decimal(14,2) *(hanya di pusat (bukan WMS))* · `wa_quota` int *(pesan/bulan, O-04)* · `storage_quota_mb` int · `is_active` bool
+**`plans` — Paket.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(80) · `monthly_price` decimal(14,2) *(hanya di pusat (bukan WMS))* · `trial_days` smallint *(bawaan 14 ([A-11](04-keputusan-dan-asumsi.md#a-11), A-184))* · `wa_quota` int *(pesan/bulan, O-04)* · `storage_quota_mb` int · `is_active` bool
 
 **`subscriptions` — Langganan.** 🔑`id` bigint · ↗`company_id` bigint · ↗`plan_id` bigint · `status` enum *(subscription_status)* · `trial_ends_at` datetime *([A-11](04-keputusan-dan-asumsi.md#a-11))* · `current_period_start` date · `current_period_end` date · `grace_ends_at` datetime *([A-12](04-keputusan-dan-asumsi.md#a-12))* · `suspended_at` datetime · `terminated_at` datetime · `purge_after` date *(+90 hari)*
 
-**`subscription_invoices` — Tagihan langganan.** 🔑`id` bigint · ↗`subscription_id` bigint · ◆`number` varchar(40) · `period_start` date · `period_end` date · `amount` decimal(14,2) · `due_date` date · `status` enum *(open|paid|overdue|void)*
+**`subscription_invoices` — Tagihan langganan.** 🔑`id` bigint · ↗`subscription_id` bigint · ◆`number` varchar(40) · `period_start` date · `period_end` date · `amount` decimal(14,2) · `due_date` date · `status` enum *(subscription_invoice_status: open|paid|overdue|void)* · `paid_at` datetime *(A-184)*
 
-**`subscription_payments` — Bukti bayar langganan.** 🔑`id` bigint · ↗`invoice_id` bigint · ↗`uploaded_by` bigint *(user tenant (id + company_id))* · `proof_path` varchar(255) · `amount` decimal(14,2) · `paid_at` date · ↗`verified_by` bigint *(platform_users)* · `verified_at` datetime · `status` enum *(pending|verified|rejected)*
+**`subscription_payments` — Bukti bayar langganan.** 🔑`id` bigint · ↗`invoice_id` bigint · ↗`uploaded_by` bigint *(user tenant (id + company_id))* · `uploaded_by_name` varchar(100) *(A-184)* · `proof_path` varchar(255) · `amount` decimal(14,2) · `paid_at` date · ↗`verified_by` bigint *(platform_users)* · `verified_at` datetime · `status` enum *(subscription_payment_status: pending|verified|rejected)* · `notes` varchar(255) *(A-184)* · `reject_reason` varchar(255) *(wajib bila rejected (A-178, A-184))*
 
-**`platform_users` — Super Admin.** 🔑`id` bigint · `name` varchar(100) · ◆`email` varchar(150) · `password` varchar(255) · `two_factor_secret` text *(opsional)* · `remember_token` varchar(100) *(sesi ingat saya)* · `last_login_at` datetime
+**`platform_users` — Super Admin.** 🔑`id` bigint · `name` varchar(100) · ◆`email` varchar(150) · `password` varchar(255) · `two_factor_secret` text *(opsional)* · `two_factor_recovery_codes` text *(A-200)* · `two_factor_confirmed_at` datetime *(A-200)* · `two_factor_last_step` bigint *(A-205)* · `remember_token` varchar(100) *(sesi ingat saya)* · `failed_login_count` smallint *(A-182, A-184)* · `locked_until` datetime *(A-182, A-184)* · `last_login_at` datetime
+
+**`platform_login_attempts` — Percobaan masuk Super Admin.** 🔑`id` bigint · `email` varchar(150) · ↗`platform_user_id` bigint · `result` enum *(login_result)* · `ip_address` varchar(45) · `attempted_at` datetime
+  ↳ NFR-04, A-182, A-184
+
+**`audit_logs` — Jejak tindakan platform.** 🔑`id` bigint · `log_name` varchar(255) *(platform)* · `description` text · `subject_type` varchar(255) · `subject_id` bigint · `causer_type` varchar(255) · `causer_id` bigint *(platform_users)* · `properties` json · `ip_address` varchar(45)
+  ↳ Skema sama dengan audit_logs tenant (spatie/activitylog); NFR-03, A-184
 
 **`sso_identities` — Pemetaan identitas SSO.** 🔑`id` bigint · `provider` varchar(30) *(nxtg)* · `sub` varchar(191) *(ID user di SSO)* · ↗`company_id` bigint · `tenant_user_id` bigint *(user di DB tenant)* · `last_login_at` datetime
   ↳ UK(provider, sub, company_id); satu sub bisa terpeta ke banyak company → pemilih company ([A-48](04-keputusan-dan-asumsi.md#a-48))
@@ -110,8 +123,8 @@ erDiagram
 **`feature_flags` — Feature flag per company.** 🔑`id` bigint · ↗`company_id` bigint · `key` varchar(60) *(mis. whatsapp, offline_sync, rfid)* · `enabled` bool · `config` json
   ↳ UK(company_id, key)
 
-**`support_accesses` — Akses dukungan.** 🔑`id` bigint · ↗`company_id` bigint · ↗`platform_user_id` bigint · `granted_by_tenant_user_id` bigint · `starts_at` datetime · `ends_at` datetime · `reason` varchar(255) · `revoked_at` datetime
-  ↳ [A-27](04-keputusan-dan-asumsi.md#a-27), [BR-SUB-04](05-aturan-bisnis.md#br-sub); setiap akses tercatat di audit_logs tenant
+**`support_accesses` — Akses dukungan.** 🔑`id` bigint · ↗`company_id` bigint · ↗`platform_user_id` bigint · `granted_by_tenant_user_id` bigint · `starts_at` datetime · `ends_at` datetime · `reason` varchar(255) · `link_nonce_hash` varchar(64) *(A-199)* · `link_used_at` datetime *(A-199)* · `revoked_at` datetime
+  ↳ [A-27](04-keputusan-dan-asumsi.md#a-27), [BR-SUB-04](05-aturan-bisnis.md#br-sub); setiap akses tercatat di audit_logs tenant; tautan masuk sekali pakai (A-199)
 
 **`tenant_migration_runs` — Log migrasi per tenant.** 🔑`id` bigint · ↗`company_id` bigint · `batch` varchar(40) · `migration` varchar(191) · `status` enum *(ok|failed)* · `error` text · `ran_at` datetime
 
@@ -183,7 +196,7 @@ erDiagram
 
 ### Entitas
 
-**`users` — User.** 🔑`id` bigint · `name` varchar(100) · ◆`email` varchar(150) · `phone` varchar(20) *(WA untuk approval/OTP)* · `password` varchar(255) *(nullable bila hanya SSO)* · ↗`client_id` bigint *(terisi = user klien)* · ↗`org_unit_id` bigint · ↗`position_id` bigint · ↗`manager_id` bigint *(atasan langsung (self))* · `signature_path` varchar(255) · `is_active` bool · `locked_until` datetime *(kunci akun)* · `failed_login_count` tinyint *(reset saat login berhasil (NFR-04))* · `two_factor_secret` text · `two_factor_recovery_codes` text · `two_factor_confirmed_at` datetime · ◆`sso_sub` varchar(191) *(nullable)* · `email_verified_at` datetime · `last_login_at` datetime · `password_changed_at` datetime · `remember_token` varchar(100)
+**`users` — User.** 🔑`id` bigint · `name` varchar(100) · ◆`email` varchar(150) · `phone` varchar(20) *(WA untuk approval/OTP)* · `password` varchar(255) *(nullable bila hanya SSO)* · ↗`client_id` bigint *(terisi = user klien)* · ↗`org_unit_id` bigint · ↗`position_id` bigint · ↗`manager_id` bigint *(atasan langsung (self))* · `signature_path` varchar(255) · `is_active` bool · `locked_until` datetime *(kunci akun)* · `failed_login_count` tinyint *(reset saat login berhasil (NFR-04))* · `two_factor_secret` text · `two_factor_recovery_codes` text · `two_factor_confirmed_at` datetime · `two_factor_last_step` bigint *(A-205)* · ◆`sso_sub` varchar(191) *(nullable)* · `email_verified_at` datetime · `last_login_at` datetime · `password_changed_at` datetime · `remember_token` varchar(100)
 
 **`roles` — Role.** 🔑`id` bigint · ◆`code` varchar(40) *(warehouse_head, …)* · `name` varchar(80) · `guard_name` varchar(30) *(wajib spatie/laravel-permission)* · `is_builtin` bool *(template bawaan)* · `is_client_role` bool *(tidak bisa digabung role internal)* · `is_active` bool
   ↳ UK(name, guard_name)

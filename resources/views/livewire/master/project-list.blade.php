@@ -8,9 +8,14 @@
         </div>
 
         @can('create', \App\Domain\Master\Models\Project::class)
-            <button class="btn btn-primary" type="button" wire:click="buat">
-                <i class="bi bi-plus-lg"></i> {{ __('Tambah proyek') }}
-            </button>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
+                </a>
+                <button class="btn btn-primary" type="button" wire:click="buat">
+                    <i class="bi bi-plus-lg"></i> {{ __('Tambah proyek') }}
+                </button>
+            </div>
         @endcan
     </div>
 

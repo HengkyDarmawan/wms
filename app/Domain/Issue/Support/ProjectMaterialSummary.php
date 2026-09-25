@@ -28,8 +28,12 @@ use Illuminate\Support\Facades\DB;
  * - *Terpakai* — pergerakan ISU (keluar) dikurangi ISU pembalik.
  * - *Diretur*  — GRN retur ber-proyek yang masuk bin Retur (A-112).
  * - *Di Gudang Site* / *Aset di Proyek* — saldo sekarang (BR-PRJ-05).
+ * - *Dikonversi* / *Hasil konversi* — input CNV keluar / output + offcut CNV
+ *   masuk, dikurangi CNV pembalik (A-161).
+ * - *Waste* — waste CNV dan pilah RET ke bin Waste ber-proyek, dikurangi pembalik.
+ * - *Waste didisposisi* — isi bin Waste yang ditutup WST `closed` (A-161).
  *
- * Kolom *Waste* (modul Konversi/Waste) dan *Rencana* `[F2]` (BR-PRJ-09) belum.
+ * Kolom *Rencana* `[F2]` (BR-PRJ-09) belum.
  */
 class ProjectMaterialSummary
 {
@@ -123,6 +127,46 @@ class ProjectMaterialSummary
                 ->each(fn ($r) => $tambah((int) $r->project_id, (int) $r->item_id, 'diretur', (float) $r->jumlah));
         }
 
+        // Konversi & waste (A-161): dibaca dari kartu stok CNV, pilah RET, dan WST.
+        $binWaste = array_flip(Bin::query()->withoutGlobalScopes()->where('bin_type', BinType::Waste->value)->pluck('id')->map(fn ($id) => (int) $id)->all());
+
+        StockMovement::query()
+            ->where('document_type', 'conversion')
+            ->whereIn('project_id', $pids)
+            ->get(['project_id', 'item_id', 'from_bin_id', 'to_bin_id', 'qty_base', 'reverses_movement_id'])
+            ->each(function (StockMovement $m) use ($binWaste, $tambah): void {
+                $tanda = $m->reverses_movement_id === null ? 1 : -1;
+                // Arah asli: pembalik menukar asal dan tujuan.
+                $keluar = $tanda === 1 ? $m->to_bin_id === null : $m->from_bin_id === null;
+                $binHasil = $tanda === 1 ? $m->to_bin_id : $m->from_bin_id;
+                $kolom = match (true) {
+                    $keluar => 'dikonversi',
+                    isset($binWaste[(int) $binHasil]) => 'waste',
+                    default => 'hasil_konversi',
+                };
+
+                $tambah((int) $m->project_id, (int) $m->item_id, $kolom, $tanda * (float) $m->qty_base);
+            });
+
+        if ($binWaste !== []) {
+            StockMovement::query()
+                ->where('document_type', 'goods_return')
+                ->whereIn('project_id', $pids)
+                ->whereIn('to_bin_id', array_keys($binWaste))
+                ->groupBy('project_id', 'item_id')
+                ->selectRaw('project_id, item_id, sum(qty_base) as jumlah')
+                ->get()
+                ->each(fn ($r) => $tambah((int) $r->project_id, (int) $r->item_id, 'waste', (float) $r->jumlah));
+        }
+
+        StockMovement::query()
+            ->where('document_type', 'waste_disposal')
+            ->whereIn('project_id', $pids)
+            ->groupBy('project_id', 'item_id')
+            ->selectRaw('project_id, item_id, sum(qty_base) as jumlah')
+            ->get()
+            ->each(fn ($r) => $tambah((int) $r->project_id, (int) $r->item_id, 'waste_didisposisi', (float) $r->jumlah));
+
         // Posisi sekarang.
         foreach (['di_site' => $binSite, 'aset_proyek' => $binOnSite] as $kolom => $bins) {
             if ($bins === []) {
@@ -162,6 +206,10 @@ class ProjectMaterialSummary
                     'diretur' => $nilai['diretur'] ?? 0.0,
                     'di_site' => $nilai['di_site'] ?? 0.0,
                     'aset_proyek' => $nilai['aset_proyek'] ?? 0.0,
+                    'dikonversi' => $nilai['dikonversi'] ?? 0.0,
+                    'hasil_konversi' => $nilai['hasil_konversi'] ?? 0.0,
+                    'waste' => $nilai['waste'] ?? 0.0,
+                    'waste_didisposisi' => $nilai['waste_didisposisi'] ?? 0.0,
                 ]);
             }
         }

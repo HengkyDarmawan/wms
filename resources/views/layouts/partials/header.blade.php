@@ -8,6 +8,37 @@
             <i class="bi bi-moon-stars"></i>
         </button>
 
+        @auth
+            @php($belumDibaca = \App\Domain\Notification\Models\Notification::query()->inApp()->unread()->where('user_id', auth()->id())->latest()->limit(5)->get())
+            @php($jumlahBelum = \App\Domain\Notification\Models\Notification::query()->inApp()->unread()->where('user_id', auth()->id())->count())
+            <div class="dropdown">
+                <button class="nx-icon-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                        aria-label="{{ __('Notifikasi') }}{{ $jumlahBelum > 0 ? ' ('.$jumlahBelum.' '.__('belum dibaca').')' : '' }}">
+                    <i class="bi bi-bell"></i>
+                    @if ($jumlahBelum > 0)
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger">{{ $jumlahBelum > 99 ? '99+' : $jumlahBelum }}</span>
+                    @endif
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-0" style="min-width:320px">
+                    <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
+                        <strong class="small">{{ __('Notifikasi') }}</strong>
+                        <a class="small" href="{{ route('notifications.index') }}">{{ __('Lihat semua') }}</a>
+                    </div>
+                    @forelse ($belumDibaca as $n)
+                        <form method="POST" action="{{ route('notifications.open', $n->id) }}">
+                            @csrf
+                            <button class="dropdown-item text-wrap small py-2" type="submit">
+                                <span class="fw-semibold d-block">{{ $n->title }}</span>
+                                @if ($n->body) <span class="text-muted">{{ \Illuminate\Support\Str::limit($n->body, 90) }}</span> @endif
+                            </button>
+                        </form>
+                    @empty
+                        <div class="px-3 py-3 small text-muted">{{ __('Tidak ada notifikasi baru.') }}</div>
+                    @endforelse
+                </div>
+            </div>
+        @endauth
+
         <div class="dropdown">
             <a class="nx-header-user" href="#" role="button" data-bs-toggle="dropdown"
                aria-expanded="false" aria-label="{{ __('Menu pengguna') }}">

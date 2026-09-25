@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalRegistry;
+use App\Domain\Request\Console\AutoConfirmReceiptsCommand;
 use App\Domain\Request\Livewire\PortalRequestDetail;
 use App\Domain\Request\Livewire\PortalRequestList;
 use App\Domain\Request\Livewire\RequestDetail;
@@ -23,6 +24,10 @@ class RequestServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->commands([AutoConfirmReceiptsCommand::class]);
+        }
+
         Gate::policy(MaterialRequest::class, MaterialRequestPolicy::class);
 
         // REQ diputus lewat mesin approval (20-approval §13, D-28).

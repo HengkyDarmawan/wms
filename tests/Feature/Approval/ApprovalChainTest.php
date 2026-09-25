@@ -113,8 +113,8 @@ class ApprovalChainTest extends TenantTestCase
     {
         (new DemoSeeder)->run();
 
-        // REQ ×2, RTV, ADJ ×2, OPN (00-akun-uji §5; ADJ/OPN sejak modul Count/Adjustment).
-        $this->assertSame(6, ApprovalRule::count());
+        // REQ ×2, RTV, ADJ ×2, OPN, PRQ (00-akun-uji §5; ADJ/OPN sejak modul Count/Adjustment, PRQ sejak modul PRQ).
+        $this->assertSame(7, ApprovalRule::count());
 
         $besar = ApprovalRule::query()->where('name', ApprovalDemoSeeder::REQ_BESAR)->with('steps')->sole();
         $this->assertSame(ApprovalDocumentType::MaterialRequest, $besar->document_type);
@@ -124,8 +124,13 @@ class ApprovalChainTest extends TenantTestCase
         $this->assertSame(1, ApprovalRule::query()->where('name', ApprovalDemoSeeder::REQ_LAINNYA)->sole()->steps()->count());
         $this->assertSame(ApprovalDocumentType::VendorReturn, ApprovalRule::query()->where('name', ApprovalDemoSeeder::RTV)->sole()->document_type);
 
+        $prq = ApprovalRule::query()->where('name', ApprovalDemoSeeder::PRQ_ONLINE)->with('steps')->sole();
+        $this->assertSame(ApprovalDocumentType::PurchaseRequest, $prq->document_type);
+        $this->assertSame(['match' => 'all', 'vendor_types' => ['online_marketplace']], $prq->conditions);
+        $this->assertSame([ApproverType::WarehouseHead, ApproverType::Role], $prq->steps->pluck('approver_type')->all());
+
         (new ApprovalDemoSeeder)->run();
-        $this->assertSame(6, ApprovalRule::count(), 'Seeder aman dijalankan ulang.');
+        $this->assertSame(7, ApprovalRule::count(), 'Seeder aman dijalankan ulang.');
         $this->assertSame(2, $besar->steps()->count());
     }
 }

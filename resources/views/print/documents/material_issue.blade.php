@@ -11,7 +11,7 @@
         </tr>
         <tr>
             <td class="k">{{ __('Dikonfirmasi') }}</td>
-            <td>{{ $isu->confirmer?->name ?? '—' }} {{ $isu->confirmed_at?->format('d/m/Y H:i') }}</td>
+            <td>{{ $isu->confirmer?->name ?? '—' }} {{ $isu->confirmed_at?->lokal()->format('d/m/Y H:i') }}</td>
             <td class="k">{{ __('Jenis') }}</td>
             <td>
                 @if ($isu->reversalOf)

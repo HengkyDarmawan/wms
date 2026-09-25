@@ -8,7 +8,7 @@
             <p class="text-muted mb-0">
                 {{ $grn->receipt_type->label() }}: {{ $grn->sourceLabel() }} → {{ $grn->warehouse?->code }}
                 @if ($grn->vendor_doc_no) · {{ __('SJ vendor') }} {{ $grn->vendor_doc_no }} @endif
-                @if ($grn->received_at) · {{ __('Diterima') }} {{ $grn->received_at->format('d/m/Y H:i') }} @endif
+                @if ($grn->received_at) · {{ __('Diterima') }} {{ $grn->received_at->lokal()->format('d/m/Y H:i') }} @endif
             </p>
             @if ($grn->receipt_type->value === 'return' && $grn->goods_return_id)
                 <p class="small mb-0">
@@ -217,7 +217,7 @@
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $a)
                 <li class="list-group-item">
-                    {{ $a->created_at?->format('d/m/Y H:i') }} · {{ $a->causer?->name ?? __('Sistem') }} · {{ $a->description }}
+                    {{ $a->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $a->causer?->name ?? __('Sistem') }} · {{ $a->description }}
                 </li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>

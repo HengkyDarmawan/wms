@@ -17,6 +17,7 @@ use App\Domain\Shipment\Enums\PickTaskStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Models\PickTask;
 use App\Domain\Shipment\Models\PickTaskLine;
+use App\Domain\Shipment\Support\RequestLineOutstanding;
 use App\Domain\Stock\Actions\ManageReservation;
 use App\Domain\Stock\Enums\ReservationLevel;
 use App\Domain\Stock\Enums\StockStatus;
@@ -24,6 +25,7 @@ use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockReservation;
 use App\Domain\Stock\Support\DocumentNumber;
+use App\Domain\Stock\Support\RemovalOrder;
 use App\Domain\Transfer\Enums\TransferStatus;
 use App\Domain\Transfer\Models\Transfer;
 use App\Domain\Transfer\Models\TransferLine;
@@ -56,10 +58,11 @@ class CreatePickTask
     public function __construct(
         private readonly DocumentNumber $nomor,
         private readonly ManageReservation $reservasi,
+        private readonly RequestLineOutstanding $sisa,
     ) {}
 
     /**
-     * @return array<int, PickTask>  satu PCK per gudang sumber
+     * @return array<int, PickTask> satu PCK per gudang sumber
      */
     public function handle(MaterialRequest $request, ?User $actor = null): array
     {
@@ -84,15 +87,6 @@ class CreatePickTask
             );
         }
 
-        // Baris bersumber stok yang sudah punya PCK tidak diambil dua kali.
-        $sudah = PickTaskLine::query()
-            ->whereHas('pickTask', fn (Builder $q) => $q
-                ->withoutGlobalScopes()
-                ->forSource('material_request', (int) $request->id)
-                ->whereNot('status', PickTaskStatus::Cancelled->value))
-            ->pluck('source_line_id')
-            ->all();
-
         /** @var array<int, array{line: MaterialRequestLine, qty: float}> $rencana */
         $rencana = [];
 
@@ -109,8 +103,13 @@ class CreatePickTask
                 continue;
             }
 
-            if (! in_array($l->id, $sudah, true)) {
-                $rencana[] = ['line' => $l, 'qty' => (float) $l->qty_base];
+            // A-204: hanya sisa yang belum dipetik/berjalan — baris yang sudah
+            // punya PCK tidak diambil dua kali, tetapi short pick, `reship`, dan
+            // keberatan "masih dibutuhkan" bisa dipetik ulang.
+            $sisa = $this->sisa->qty($l);
+
+            if ($sisa > 0) {
+                $rencana[] = ['line' => $l, 'qty' => $sisa];
             }
         }
 
@@ -337,9 +336,9 @@ class CreatePickTask
 
         $saldo = StockBalance::query()->withoutGlobalScopes()
             ->with('bin')
-            ->where('item_id', $item->id)
-            ->where('stock_status', StockStatus::Available->value)
-            ->nonZero()
+            ->where('stock_balances.item_id', $item->id)
+            ->where('stock_balances.stock_status', StockStatus::Available->value)
+            ->where('stock_balances.qty_base', '>', 0)
             ->whereHas('bin', fn (Builder $q) => $q->withoutGlobalScopes()
                 ->where('warehouse_id', $gudang->id)
                 // Hanya bin penyimpanan: barang di Penerimaan, Karantina,
@@ -348,16 +347,32 @@ class CreatePickTask
                 ->where('bin_type', BinType::Storage->value)
                 ->where('bin_status', BinStatus::Active->value))
             ->join('bins as b', 'b.id', '=', 'stock_balances.bin_id')
-            ->orderBy('b.code')
-            ->select('stock_balances.*')
-            ->get();
+            ->select('stock_balances.*');
+
+        $saldo = app(RemovalOrder::class)->apply($saldo, $item)->get();
+
+        // Baris saldo yang sudah dialokasikan keras ke PCK lain tidak boleh
+        // dijanjikan dua kali; ketersediaan per gudang saja tidak cukup (BR-STK-03).
+        $terpakai = StockReservation::query()->active()
+            ->where('level', ReservationLevel::Hard->value)
+            ->where('item_id', $item->id)
+            ->where('warehouse_id', $gudang->id)
+            ->get(['bin_id', 'lot_id', 'serial_id', 'piece_id', 'qty_base'])
+            ->groupBy(fn ($r) => $r->bin_id.'|'.$r->lot_id.'|'.$r->serial_id.'|'.$r->piece_id)
+            ->map(fn ($g) => (float) $g->sum('qty_base'));
 
         foreach ($saldo as $s) {
             if ($sisa <= 0) {
                 break;
             }
 
-            $ambil = min($sisa, (float) $s->qty_base);
+            $bebas = (float) $s->qty_base - (float) ($terpakai[$s->bin_id.'|'.$s->lot_id.'|'.$s->serial_id.'|'.$s->piece_id] ?? 0);
+
+            if ($bebas <= 0.00005) {
+                continue;
+            }
+
+            $ambil = min($sisa, $bebas);
 
             PickTaskLine::create([
                 'pick_task_id' => $tugas->id,

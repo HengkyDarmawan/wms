@@ -95,6 +95,19 @@ for (const url of links) {
   cek(`halaman ${new URL(url).pathname}`, errors.length === sebelum, errors.slice(sebelum).join(' | ') || st);
 }
 
+// 7. Layar Super Admin di domain pusat (akun dari docs/00-akun-uji.md)
+const PUSAT = process.env.WMS_CENTRAL || BASE.replace('://demo.', '://');
+await go(`${PUSAT}/admin/login`);
+await ev(`document.getElementById("email").value="superadmin@wms.test"; document.getElementById("password").value="Wms#2026!Admin"; document.querySelector("form").submit();`);
+await sleep(2500);
+cek('Super Admin: login', (await ev('location.pathname')) === '/admin', await ev('location.href'));
+for (const path of ['/admin', '/admin/payments', '/admin/plans', '/admin/security', '/admin/companies/1']) {
+  const sebelum = errors.length;
+  await go(`${PUSAT}${path}`);
+  const judul = await ev('document.querySelector("h1")?.textContent?.trim() || document.title');
+  cek(`Super Admin ${path}`, errors.length === sebelum && !/404|403|500|Server Error/.test(judul), errors.slice(sebelum).join(' | ') || judul);
+}
+
 console.log(hasil.join('\n'));
 console.log(`\nError console total: ${errors.length}`);
 errors.slice(0, 10).forEach((e) => console.log('  ' + e));

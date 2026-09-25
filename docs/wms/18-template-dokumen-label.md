@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `template` (Template Dokumen & Label)
 
-**Versi:** 0.2
+**Versi:** 0.4
 **Tanggal:** 24 September 2026
-**Status:** selesai Fase 1, dibangun paralel dengan modul Retur/Transfer di branch `feat/template-label`. Keputusan yang tidak tertulis di dokumen lain dicatat sebagai [A-120](04-keputusan-dan-asumsi.md#a-120)–[A-126](04-keputusan-dan-asumsi.md#a-126) (*Perlu validasi*). v0.2: dokumen ISU (Bukti Pemakaian Material) dari modul Issue ([23-pemakaian](23-pemakaian.md), [A-152](04-keputusan-dan-asumsi.md#a-152)).
+**Status:** selesai Fase 1, dibangun paralel dengan modul Retur/Transfer di branch `feat/template-label`. Keputusan yang tidak tertulis di dokumen lain dicatat sebagai [A-120](04-keputusan-dan-asumsi.md#a-120)–[A-126](04-keputusan-dan-asumsi.md#a-126) (*Perlu validasi*). v0.2: dokumen ISU (Bukti Pemakaian Material) dari modul Issue ([23-pemakaian](23-pemakaian.md), [A-152](04-keputusan-dan-asumsi.md#a-152)). v0.3: Bukti Konversi Material (jenis `conversion` baru) dan BA Waste aktif dari modul Konversi & Waste ([24-konversi-waste](24-konversi-waste.md), [A-160](04-keputusan-dan-asumsi.md#a-160)). v0.4: BA Serah Terima Aset aktif dari modul Aset ([25-aset](25-aset.md)); tidak ada lagi jenis stub.
 **Modul:** `template`
 **Fase:** F1: template bawaan dan layout induk per company, cetak PDF dokumen, label barcode/QR untuk bin, item, lot, dan potongan. Editor template penuh `[F2]`.
 **Dokumen terkait:** [Blueprint §6.10, §12, §18](01-blueprint.md#12-template-dokumen) · [D-07](04-keputusan-dan-asumsi.md#d-07), [D-14](04-keputusan-dan-asumsi.md#d-14), [D-25](04-keputusan-dan-asumsi.md#d-25) · [AD-08](08-arsitektur.md) · [Model data 08c](08c-model-data-pendukung.md) (`document_layouts`, `document_templates`) · [BR-WH-01](05-aturan-bisnis.md#br-wh) · [O-09](04-keputusan-dan-asumsi.md#o-09), [O-13](04-keputusan-dan-asumsi.md#o-13)
@@ -19,8 +19,8 @@ Semua cetakan **tanpa harga atau nilai uang** (D-07).
 Tidak termasuk:
 - editor template penuh dengan variabel `{nomor_dokumen}` dan sejenisnya `[F2]`
 - verifikasi QR publik tanpa login `[F2]`
-- label aset/serial dan BA Serah Terima Aset (menunggu modul Aset)
-- BA Waste (menunggu modul Konversi/Waste)
+- label aset/serial (BA Serah Terima Aset ditambah v0.4)
+- BA Waste dan Bukti Konversi Material (ditambah v0.3)
 - dokumen modul yang belum dibangun: TRF, RET, PRQ (ISU ditambah v0.2)
 - pencetakan langsung ke printer thermal lewat driver; F1 menghasilkan PDF berukuran label
 
@@ -93,7 +93,7 @@ Tidak ada. Layout dan template tidak berstatus; label dan PDF tidak disimpan. Me
 | [D-07](04-keputusan-dan-asumsi.md#d-07) | Template tidak memuat kolom harga/nilai; uji memastikan tidak ada kata "harga", "Rp", atau "total" di PDF |
 | [BR-WH-01](05-aturan-bisnis.md#br-wh) | Label bin mencetak `bins.code` yang tidak bisa diubah |
 | [BR-ACC-05](05-aturan-bisnis.md#br-acc), [BR-GEN-09](05-aturan-bisnis.md#br-gen) | Cetak dokumen memakai policy `view` dokumen asal, jadi di luar cakupan = 403 |
-| [BR-GEN-10](05-aturan-bisnis.md#br-gen) | Template AST/WST dan editor `[F2]` berupa stub yang menjawab "belum tersedia" |
+| [BR-GEN-10](05-aturan-bisnis.md#br-gen) | Template AST dan editor `[F2]` berupa stub yang menjawab "belum tersedia" |
 | [BR-GEN-05](05-aturan-bisnis.md#br-gen) | Perubahan layout dicatat di log aktivitas `template` |
 | NFR-14 | Logo ≤ 5 MB, PNG/JPEG, tipe dibaca dari isi berkas |
 
@@ -109,7 +109,9 @@ Tidak ada. Layout dan template tidak berstatus; label dan PDF tidak disimpan. Me
 | `stock_adjustment` | BA Penyesuaian (ADJ) | bin, item, ±jumlah, alasan | A4 |
 | `material_issue` | Bukti Pemakaian Material (ISU, v0.2) | bin, item, lot/serial/potongan, jumlah (negatif pada pembalik), keperluan; proyek & Gudang Site di kepala | A4 |
 | `stock_count` | Laporan Stock Opname | tetap `/counts/{id}/report` (modul Count); memakai kop layout induk | A4 lanskap |
-| `asset_handover`, `waste_disposal` | BA Serah Terima Aset, BA Waste | stub sampai modulnya ada | A4 |
+| `conversion` | Bukti Konversi Material (CNV, v0.3) | input (bin, item, lot/potongan, jumlah) dan hasil (jenis, bin, potongan baru, dari potongan induk), neraca input = output + offcut + waste + kerf | A4 |
+| `waste_disposal` | BA Waste (WST, v0.3) | bin Waste, item, lot/serial/potongan, kondisi, jumlah, alasan; disposisi dan bukti di kepala | A4 |
+| `asset_handover` | BA Serah Terima Aset (AST, v0.4) | aset & serial, proyek, gudang, SJ/RET; tabel keluar vs kembali (tanggal, jatuh tempo/hari pakai, kondisi, meter); catatan komponen pemeriksaan; blok *Diserahkan · Diterima · Dikembalikan* | A4 |
 
 Label (§5.3): `label_bin`, `label_item`, `label_lot`, `label_piece`.
 
@@ -124,6 +126,7 @@ Label (§5.3): `label_bin`, `label_item`, `label_lot`, `label_piece`.
   - RTV: Dibuat oleh · Disetujui · Vendor
   - ADJ: Diajukan · Disetujui
   - ISU: Dicatat oleh · Dikonfirmasi · PIC proyek (v0.2)
+  - CNV: Dikerjakan oleh · Disetujui · PIC proyek; WST: Dibuat oleh · Disetujui · Saksi (v0.3)
   - OPN: Rekonsiliasi · Disetujui
 
   Nama pelaku yang diketahui ikut tercetak menurut urutan kotak: kotak ke-n memuat pelaku ke-n dari daftar bawaan. Tanda tangan penerima pada bukti terima diambil dari `proofs_of_delivery.signature_path`. Gambar tanda tangan dari profil (`users.signature_path`) dicetak bila ada. Keabsahan hukumnya masih [O-13](04-keputusan-dan-asumsi.md#o-13) ([A-125](04-keputusan-dan-asumsi.md#a-125)).
@@ -173,7 +176,7 @@ Uji di `tests/Feature/Template` (15 uji): `DocumentPrintTest`, `LabelPrintTest`,
 | TC-TPL-01 | Rantai GRN → REQ → PCK → SJ berangkat → bukti terima kurang (DSC) | cetak SJ, bukti terima, PCK, DSC | `200 application/pdf`; teks memuat nomor dokumen, kode item, jumlah; tanpa "Rp"/"harga" | §5.1, D-07 |
 | TC-TPL-02 | RTV dan ADJ | cetak | PDF dengan nomor dan baris | §5.1 |
 | TC-TPL-03 | SJ gudang CKG; staf bercakupan gudang lain; klien (tanpa `pick.view`) | cetak SJ / PCK | SJ tidak terlihat (403/404); PCK 403; staf CKG 200 | BR-ACC-05, BR-GEN-09 |
-| TC-TPL-04 | Jenis tidak dikenal, label, OPN, id tak ada / AST / WST | cetak | 404 / 501 "belum tersedia" (stub) | BR-GEN-10 |
+| TC-TPL-04 | Jenis tidak dikenal, label, OPN, id tak ada, WST tak ada / AST | cetak | 404 / 501 "belum tersedia" (stub) | BR-GEN-10 |
 | TC-TPL-05 | SJ dibatalkan | cetak | tanda air "DIBATALKAN" | A-126 |
 | TC-TPL-06 | Layout dengan teks kop, footer, logo PNG, blok tanda tangan SJ diubah | cetak SJ | kop, footer, dan label blok baru tercetak; teks `<b>` tampil sebagai teks | §5.2, A-122 |
 | TC-TPL-07 | Admin Company | simpan layout (warna bukan hex, blok > 4, kertas dokumen untuk label) | ditolak validasi tanpa simpan sebagian; yang sah tersimpan, blok sama dengan bawaan tidak disimpan, log `template` | BR-GEN-05, A-125 |
@@ -188,7 +191,7 @@ Uji di `tests/Feature/Template` (15 uji): `DocumentPrintTest`, `LabelPrintTest`,
 
 ## 11. Di luar lingkup modul ini
 
-Editor template dan variabel `[F2]`; beberapa layout per company `[F2]`; verifikasi QR publik `[F2]`; log cetak/jumlah cetak ulang; label serial/aset dan BA AST (modul Aset); BA WST (modul Konversi/Waste); dokumen TRF/RET/PRQ; ekspor PDF laporan §9 (16-shared); cetak langsung ke printer (PWA/driver printer).
+Editor template dan variabel `[F2]`; beberapa layout per company `[F2]`; verifikasi QR publik `[F2]`; log cetak/jumlah cetak ulang; label serial/aset; dokumen TRF/RET/PRQ; ekspor PDF laporan §9 (16-shared); cetak langsung ke printer (PWA/driver printer).
 
 ## 12. Definisi selesai
 
@@ -228,5 +231,5 @@ Di luar domain: provider `TemplateServiceProvider`, controller `Template\PrintCo
 
 1. [O-09](04-keputusan-dan-asumsi.md#o-09): ukuran label final dan printer thermal yang didukung. Ukuran sekarang sementara ([A-120](04-keputusan-dan-asumsi.md#a-120)).
 2. Editor template dan variabel `[F2]`; verifikasi QR publik `[F2]`.
-3. Label serial/aset dan BA AST, BA WST, dokumen TRF/RET/PRQ: ditambahkan saat modulnya dibangun, dengan menambah kasus di `DocumentTemplateType` dan `DocumentPrinter`. Dokumen ISU sudah ditambah dengan cara itu ([23-pemakaian](23-pemakaian.md) §13.1, uji TC-ISU-17).
+3. Label serial/aset dan BA AST, BA WST, dokumen TRF/RET/PRQ: ditambahkan saat modulnya dibangun, dengan menambah kasus di `DocumentTemplateType` dan `DocumentPrinter`. Dokumen ISU sudah ditambah dengan cara itu ([23-pemakaian](23-pemakaian.md) §13.1, uji TC-ISU-17), begitu juga CNV dan WST ([24-konversi-waste](24-konversi-waste.md) §13.1, uji TC-CNV-13).
 4. Ekspor PDF laporan §9 memakai `print.partials.kop` dan `PdfRenderer` ([16-shared-laporan-berkas](16-shared-laporan-berkas.md) §13).

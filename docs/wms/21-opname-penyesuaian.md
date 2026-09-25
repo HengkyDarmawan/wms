@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `count`, `adjustment` (Stock Opname & Penyesuaian Stok)
 
-**Versi:** 0.2
+**Versi:** 0.3
 **Tanggal:** 24 September 2026
-**Status:** selesai Fase 1 — modul kesembilan setelah [Approval](20-approval.md); OPN dan ADJ manual diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-95](04-keputusan-dan-asumsi.md#a-95)–[A-105](04-keputusan-dan-asumsi.md#a-105) (*Perlu validasi*)
+**Status:** selesai Fase 1 — modul kesembilan setelah [Approval](20-approval.md); OPN dan ADJ manual diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-95](04-keputusan-dan-asumsi.md#a-95)–[A-105](04-keputusan-dan-asumsi.md#a-105) (*Perlu validasi*); v0.3: asal `asset_lost` tersambung dari modul Aset ([25-aset](25-aset.md), [A-167](04-keputusan-dan-asumsi.md#a-167))
 **Modul:** `count` (OPN), `adjustment` (ADJ)
 **Fase:** F1 (sesi bulanan/tahunan/ad-hoc/pemeriksaan mendadak, hitung buta, hitung ulang, approval sesi, ADJ manual & pembalik); cycle count ABC, PWA luring, auditor eksternal berbatas periode `[F2]`
 **Dokumen terkait:** [Blueprint §9](01-blueprint.md#9-stock-opname--audit) · [Aturan Bisnis §BR-OPN](05-aturan-bisnis.md#br-opn), [§BR-LED](05-aturan-bisnis.md#br-led) · [Katalog Status §2.12, §2.13, §3](06-katalog-status-dan-enum.md) · [Glosarium §8](03-glosarium.md#8-stock-opname) · [Model data 08c](08c-model-data-pendukung.md#area-stock-opname--penyesuaian-tenant) · [Alur 8](07b-proses-bisnis-pendukung.md#alur-8--stock-opname-sesi-hitung-buta-hitung-ulang-rekonsiliasi) · [D-22](04-keputusan-dan-asumsi.md#d-22), [D-23](04-keputusan-dan-asumsi.md#d-23), [A-09](04-keputusan-dan-asumsi.md#a-09), [A-42](04-keputusan-dan-asumsi.md#a-42), [A-46](04-keputusan-dan-asumsi.md#a-46), [A-67](04-keputusan-dan-asumsi.md#a-67)
@@ -48,7 +48,7 @@ Penugasan: `bin_id`, `counter_user_id` (kosong = belum ditugaskan), `round` (1/2
 
 ### 3.3 `stock_adjustments`, `stock_adjustment_lines` — ADJ
 
-Header: `number` (`ADJ/<gudang>/<yymm>/<urut>`), `warehouse_id`, `origin` (`manual`/`count`; `discrepancy`/`asset_lost` stub), `stock_count_id`, `reversal_of_id`, `reason_code_id` (konteks `adjustment`), `status`, `submitted_by`, `approval_snapshot_id`, `approved_by/at`, `reject_reason_id`, `posted_at`, `cancel_reason_id`, `notes`. Baris: `bin_id`, `item_id`, `lot_id/serial_id/piece_id`, isian turunan baru `lot_no`, `expiry_date`, `serial_no`, `piece_length` (dibuat saat posting), `qty_delta` (±), `stock_status`, `count_line_id`, `reversal_of_line_id`, `reason_code_id`, `movement_id`, `notes`.
+Header: `number` (`ADJ/<gudang>/<yymm>/<urut>`), `warehouse_id`, `origin` (`manual`/`count`/`asset_lost`; `discrepancy` stub), `stock_count_id`, `reversal_of_id`, `reason_code_id` (konteks `adjustment`), `status`, `submitted_by`, `approval_snapshot_id`, `approved_by/at`, `reject_reason_id`, `posted_at`, `cancel_reason_id`, `notes`. Baris: `bin_id`, `item_id`, `lot_id/serial_id/piece_id`, isian turunan baru `lot_no`, `expiry_date`, `serial_no`, `piece_length` (dibuat saat posting), `qty_delta` (±), `stock_status`, `count_line_id`, `reversal_of_line_id`, `reason_code_id`, `movement_id`, `notes`.
 
 ```mermaid
 erDiagram
@@ -235,3 +235,4 @@ Domain `app/Domain/Count` (7 aksi, `Support\CountScope`, `VarianceClassifier`, `
 3. Laporan PDF disimpan sebagai lampiran (`report_attachment_id`) setelah modul lampiran ada.
 4. Stok awal demo masih lewat `StockDemoSeeder` ([A-72](04-keputusan-dan-asumsi.md#a-72)); bisa dipindah ke ADJ bila A-72 diputuskan.
 5. PWA luring, pemindaian barcode bin di halaman hitung, auditor eksternal berbatas periode `[F2]`.
+6. **Aset hilang** (v0.3): `CreateStockAdjustment::forLostAsset` membuat ADJ asal `asset_lost` satu serial — boleh dari bin On-site yang ditolak ADJ manual — dengan alasan kehilangan, lewat approval yang sama (A-09); diposting → aset `written_off` ([25-aset](25-aset.md), [A-167](04-keputusan-dan-asumsi.md#a-167)).

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Asset\Support\AssetCustody;
 use App\Domain\Master\Models\CompanySetting;
+use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\Request\Support\RequestFulfillment;
 use App\Domain\Shipment\Enums\DiscrepancyOrigin;
 use App\Domain\Shipment\Enums\DiscrepancyStatus;
@@ -27,6 +29,7 @@ use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Stock\Support\DocumentNumber;
 use App\Domain\Stock\Support\MovementRequest;
 use App\Domain\Stock\Support\StockLedger;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -76,7 +79,7 @@ class ConfirmDelivery
         $barisSj = $shipment->lines()->with('pickTaskLine.item')->get()->keyBy('id');
         $isian = $this->periksaIsian($barisSj, $lines);
 
-        return DB::transaction(function () use ($shipment, $proof, $isian, $barisSj, $penerima, $actor) {
+        $hasil = DB::transaction(function () use ($shipment, $proof, $isian, $barisSj, $penerima, $actor) {
             $bukti = ProofOfDelivery::create([
                 'shipment_id' => $shipment->id,
                 'received_by_name' => $penerima,
@@ -135,6 +138,13 @@ class ConfirmDelivery
 
             return $bukti->refresh();
         });
+
+        // Blueprint §10: pemohon diminta konfirmasi (BR-REQ-10); DSC baru ke penyelesai.
+        $notif = app(DomainNotifications::class);
+        $notif->deliveryReceived($hasil, $actor);
+        $shipment->discrepancies()->where('status', 'open')->get()->each(fn ($dsc) => $notif->discrepancyOpened($dsc, $actor));
+
+        return $hasil;
     }
 
     public function ambangKonfirmasi(): int
@@ -148,11 +158,11 @@ class ConfirmDelivery
      * BR-SJ-05: ketiga jumlah harus berjumlah persis sebanyak yang dikirim, dan
      * kerusakan wajib berfoto.
      *
-     * @param  \Illuminate\Support\Collection<int, ShipmentLine>  $barisSj
+     * @param  Collection<int, ShipmentLine>  $barisSj
      * @param  array<int, array<string, mixed>>  $lines
      * @return array<int, array<string, mixed>>
      */
-    private function periksaIsian(\Illuminate\Support\Collection $barisSj, array $lines): array
+    private function periksaIsian(Collection $barisSj, array $lines): array
     {
         $hasil = [];
         $terisi = [];
@@ -254,7 +264,11 @@ class ConfirmDelivery
         if ($sj->ownership_effect === OwnershipEffect::Loan && $shipment->destinationProject !== null) {
             $tujuan = $this->bins->onSite($shipment->destinationProject);
 
-            $this->pindahkan($shipment, $sj, $baik, (int) $transit->id, (int) $tujuan->id, StockEventType::AssetCheckedOut, $actor);
+            // AST lahir di sini supaya kejadian `asset_checked_out` membawa serial,
+            // tanggal kembali, dan meter keluar (matriks §14, 25-aset).
+            $aset = app(AssetCustody::class)->checkOut($shipment, $sj, $actor);
+
+            $this->pindahkan($shipment, $sj, $baik, (int) $transit->id, (int) $tujuan->id, StockEventType::AssetCheckedOut, $actor, $aset);
 
             return;
         }
@@ -309,6 +323,7 @@ class ConfirmDelivery
         ?int $toBinId,
         StockEventType $event,
         ?User $actor,
+        array $tambahan = [],
     ): void {
         $asal = $sj->pickTaskLine;
 
@@ -334,7 +349,7 @@ class ConfirmDelivery
                     'ownership_effect' => $sj->ownership_effect->value,
                     'item_code' => $asal->item?->code,
                     'qty_base' => $qty,
-                ],
+                ] + $tambahan,
             ));
         } catch (LedgerException $e) {
             throw ShipmentRuleException::rule($e->rule, 'Gagal mencatat penerimaan: '.$e->getMessage());
@@ -355,13 +370,13 @@ class ConfirmDelivery
 
     /**
      * @param  array<int, array<string, mixed>>  $isian
-     * @param  \Illuminate\Support\Collection<int, ShipmentLine>  $barisSj
+     * @param  Collection<int, ShipmentLine>  $barisSj
      */
     private function bukaSelisih(
         Shipment $shipment,
         ProofOfDelivery $bukti,
         array $isian,
-        \Illuminate\Support\Collection $barisSj,
+        Collection $barisSj,
         ?User $actor,
     ): DeliveryDiscrepancy {
         $dsc = DeliveryDiscrepancy::create([

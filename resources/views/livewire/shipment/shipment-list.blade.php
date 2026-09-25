@@ -92,7 +92,7 @@
                             <td>
                                 <span class="badge {{ $sj->status->badge() }}">{{ $sj->status->label() }}</span>
                                 @if ($sj->shipped_at)
-                                    <div class="small text-muted">{{ $sj->shipped_at->format('d/m/Y H:i') }}</div>
+                                    <div class="small text-muted">{{ $sj->shipped_at->lokal()->format('d/m/Y H:i') }}</div>
                                 @endif
                             </td>
                         </tr>

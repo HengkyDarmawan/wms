@@ -13,7 +13,7 @@
             <td class="k">{{ __('Tujuan') }}</td>
             <td>{{ $sj->destination_type->label() }}: {{ $sj->destinationLabel() }}</td>
             <td class="k">{{ __('Diselesaikan') }}</td>
-            <td>{{ $dsc->resolver?->name ?? '—' }} {{ $dsc->resolved_at?->format('d/m/Y H:i') }}</td>
+            <td>{{ $dsc->resolver?->name ?? '—' }} {{ $dsc->resolved_at?->lokal()->format('d/m/Y H:i') }}</td>
         </tr>
     </table>
 

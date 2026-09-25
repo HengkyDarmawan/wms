@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Shipment;
 
-use App\Domain\Access\Models\User;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
@@ -258,6 +257,26 @@ class PickTaskTest extends TenantTestCase
                 ->value('qty_base'),
             'Hanya yang benar-benar diambil yang berpindah.',
         );
+    }
+
+    #[Test]
+    public function tc_pck_17_sisa_short_pick_bisa_dipetik_ulang_tanpa_ganda(): void
+    {
+        $staf = $this->makeUser('warehouse_staff');
+        $kepala = $this->makeUser('warehouse_head');
+        $req = $this->reqDisetujui();
+        $pck = app(CreatePickTask::class)->handle($req, $kepala)[0];
+        app(ProcessPickTask::class)->start($pck, $staf);
+        app(ProcessPickTask::class)->recordLine($pck->lines()->first(), 15, null, null, $this->alasanId(), $staf);
+        app(ProcessPickTask::class)->complete($pck->refresh(), $staf);
+
+        // A-204: PCK baru hanya untuk sisa 5; selama PCK itu berjalan tidak ada PCK ketiga.
+        $ulang = app(CreatePickTask::class)->handle($req->refresh(), $kepala)[0];
+        $this->assertNotSame($pck->id, $ulang->id);
+        $this->assertSame(5.0, (float) $ulang->lines()->sum('qty_allocated'));
+
+        $this->expectException(ShipmentRuleException::class);
+        app(CreatePickTask::class)->handle($req->refresh(), $kepala);
     }
 
     #[Test]

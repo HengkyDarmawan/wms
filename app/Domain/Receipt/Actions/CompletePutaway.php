@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Receipt\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\PurchaseRequest\Support\BackorderPurchases;
 use App\Domain\Receipt\Enums\PutawayTaskStatus;
 use App\Domain\Receipt\Exceptions\ReceiptRuleException;
 use App\Domain\Receipt\Models\PutawayTask;
@@ -115,6 +116,8 @@ class CompletePutaway
             // BR-REQ-08 (A-108): barang TRF backorder yang sudah di bin penyimpanan
             // direservasi ke baris REQ penunggunya.
             $this->backorder->reserveArrivals($task->refresh(), $actor);
+            // BR-REQ-08: barang PRQ backorder juga direservasi ke REQ penunggunya (A-171).
+            app(BackorderPurchases::class)->reserveArrivals($task->refresh(), $actor);
 
             activity('receipt')
                 ->performedOn($task)

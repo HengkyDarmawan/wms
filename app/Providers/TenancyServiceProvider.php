@@ -49,12 +49,11 @@ class TenancyServiceProvider extends ServiceProvider
                     ->shouldBeQueued(false),
             ],
 
-            Events\TenantDeleted::class => [
-                JobPipeline::make([
-                    Jobs\DeleteDatabase::class,
-                ])->send(fn (Events\TenantDeleted $event) => $event->tenant)
-                    ->shouldBeQueued(false),
-            ],
+            // Database company TIDAK dihapus otomatis saat baris company dihapus:
+            // data diakhiri disimpan 90 hari (BR-SUB-01) dan tidak ada hapus fisik
+            // data yang sudah dipakai (P-03). Penghapusan setelah purge_after
+            // menjadi tindakan terpisah (A-179).
+            Events\TenantDeleted::class => [],
 
             // Siklus tenancy.
             Events\TenancyInitialized::class => [

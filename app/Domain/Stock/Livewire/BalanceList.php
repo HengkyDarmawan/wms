@@ -83,7 +83,9 @@ class BalanceList extends Component
             ->when($this->search !== '', fn (Builder $q) => $q
                 ->where(fn (Builder $w) => $w
                     ->where('items.code', 'like', '%'.$this->search.'%')
-                    ->orWhere('items.name', 'like', '%'.$this->search.'%')))
+                    ->orWhere('items.name', 'like', '%'.$this->search.'%')
+                    // Hasil pindai barcode item (A-201).
+                    ->orWhere('items.barcode', $this->search)))
             ->unless($this->tampilkanNol, fn (Builder $q) => $q->havingRaw('SUM(stock_balances.qty_base) <> 0'))
             ->groupBy(
                 'stock_balances.item_id', 'bins.warehouse_id',

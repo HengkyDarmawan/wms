@@ -48,6 +48,22 @@
         </div>
     @endif
 
+    @if ($task->status->value === 'in_progress')
+        <div class="card mb-3">
+            <div class="card-body">
+                <label class="form-label" for="pck-pindai">{{ __('Pindai bin lalu item') }}</label>
+                <input class="form-control @error('kodePindai') is-invalid @enderror" id="pck-pindai" type="text" data-scan
+                       autocomplete="off" wire:model="kodePindai" wire:keydown.enter.prevent="pindai"
+                       placeholder="{{ __('Kode bin, kode item, atau barcode item') }}">
+                @error('kodePindai') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                <div class="form-text">
+                    {{ __('Bin aktif') }}: {{ $binPindai ? ($bins->firstWhere('id', $binPindai)?->code ?? '—') : '—' }} ·
+                    {{ __('Item yang dipindai dicatat sejumlah isian barisnya; ubah jumlah lalu Catat bila kurang.') }}
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="card mb-3">
         <div class="card-header"><strong>{{ __('Baris alokasi') }}</strong></div>
         <div class="table-responsive">
@@ -65,7 +81,7 @@
                 <tbody>
                     @forelse ($lines as $l)
                         <tr wire:key="pck-baris-{{ $l->id }}"
-                            @class(['table-warning' => $l->scanned_at !== null && $l->isShort()])>
+                            @class(['table-warning' => $l->scanned_at !== null && $l->isShort(), 'table-info' => $sorot === $l->id && ! $l->isShort()])>
                             <td>
                                 {{ $l->item?->code }}
                                 <div class="small text-muted">{{ $l->item?->name }}</div>

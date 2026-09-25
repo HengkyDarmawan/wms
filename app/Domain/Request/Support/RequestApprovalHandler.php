@@ -10,6 +10,7 @@ use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Models\ApprovalSnapshot;
 use App\Domain\Approval\Support\ApprovalContext;
 use App\Domain\Master\Models\Item;
+use App\Domain\PurchaseRequest\Support\BackorderPurchases;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Request\Models\MaterialRequest;
@@ -127,6 +128,9 @@ class RequestApprovalHandler implements ApprovalHandler
         // BR-REQ-05: baris bersumber transfer melahirkan TRF backorder dari
         // gudang lain ke gudang sumber baris (A-106); gagal = approval tertahan.
         app(BackorderTransfers::class)->createFor($document, $actor);
+
+        // BR-REQ-05: baris bersumber pembelian melahirkan PRQ backorder (A-171).
+        app(BackorderPurchases::class)->createFor($document, $actor);
 
         activity('request')->performedOn($document)->causedBy($actor)->log('REQ disetujui');
     }

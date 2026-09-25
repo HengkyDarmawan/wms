@@ -8,14 +8,17 @@ use App\Domain\Access\Models\User;
 use App\Domain\Master\Enums\ProjectStatus;
 use App\Domain\Master\Exceptions\MasterRuleException;
 use App\Domain\Master\Models\Project;
+use App\Domain\Master\Support\ProjectClosureChecklist;
+use App\Domain\Warehouse\Enums\BinStatus;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Permission: `project.close` — menutup, membatalkan, atau mengarsipkan proyek
  * (11-master §4). Transisi lewat POST, tidak pernah lewat GET.
  *
- * Guard penuh BR-PRJ-02 (saldo Gudang Site nol, aset sudah kembali, DSC selesai)
- * ditambahkan modul `stock`; di modul ini hanya urutan status yang dijaga.
+ * Menutup atau membatalkan proyek menuntut checklist BR-PRJ-02 bersih
+ * ({@see ProjectClosureChecklist}); saat ditutup, setiap Gudang Site proyek
+ * dinonaktifkan (BR-PRJ-04).
  */
 class ChangeProjectStatus
 {
@@ -56,7 +59,17 @@ class ChangeProjectStatus
             );
         }
 
-        DB::transaction(function () use ($project, $target, $reasonCode, $notes): void {
+        DB::transaction(function () use ($project, $target, $reasonCode, $notes, $actor): void {
+            // Checklist di dalam transaksi dengan baris proyek terkunci (A-187).
+            if (in_array($target, [ProjectStatus::Closed, ProjectStatus::Cancelled], true)) {
+                $project->newQuery()->whereKey($project->id)->lockForUpdate()->first();
+                $butir = app(ProjectClosureChecklist::class)->blockers($project);
+
+                if ($butir !== []) {
+                    throw MasterRuleException::rule('BR-PRJ-02', 'Proyek '.$project->code.' belum bisa '.($target === ProjectStatus::Closed ? 'ditutup' : 'dibatalkan').': '.implode(' ', $butir));
+                }
+            }
+
             $project->forceFill([
                 'status' => $target,
                 'closed_at' => $target === ProjectStatus::Archived
@@ -64,6 +77,20 @@ class ChangeProjectStatus
                     : now(),
                 'close_reason' => trim($reasonCode.($notes ? ' — '.$notes : '')),
             ])->save();
+
+            // BR-PRJ-04: Gudang Site proyek yang sudah kosong dinonaktifkan.
+            if ($target === ProjectStatus::Closed) {
+                // Sama dengan efek DeactivateWarehouse (bin ikut nonaktif + jejak),
+                // tanpa syarat bin kosong-aktif: checklist sudah memastikan saldo nol.
+                app(ProjectClosureChecklist::class)->siteWarehouses($project)
+                    ->each(function ($gudang) use ($project, $actor): void {
+                        $gudang->forceFill(['is_active' => false])->save();
+                        $gudang->bins()->update(['bin_status' => BinStatus::Inactive->value]);
+                        activity('warehouse')->performedOn($gudang)->causedBy($actor)
+                            ->withProperties(['project' => $project->code])
+                            ->log('Gudang Site dinonaktifkan karena proyek ditutup');
+                    });
+            }
         });
 
         activity('master')

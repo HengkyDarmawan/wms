@@ -408,4 +408,50 @@ class StockLedgerTest extends TenantTestCase
         $this->assertSame(7.0, $this->saldo($this->binA));
         $this->assertSame(10.0, $this->saldo($this->binB));
     }
+
+    /** Saldo per kondisi, disusun seperti kunci `rebuildFromLedger`. */
+    private function perKondisi(): array
+    {
+        $hasil = StockBalance::query()->where('item_id', $this->item->id)->where('qty_base', '!=', 0)->get()
+            ->mapWithKeys(fn (StockBalance $b) => [implode('|', [$b->item_id, $b->bin_id, 0, 0, 0, $b->stock_status->value]) => round((float) $b->qty_base, 4)])
+            ->all();
+        ksort($hasil);
+
+        return $hasil;
+    }
+
+    private function dariKartu(): array
+    {
+        $hasil = array_filter($this->ledger->rebuildFromLedger((int) $this->item->id), fn ($n) => abs($n) > 0.00005);
+        ksort($hasil);
+
+        return $hasil;
+    }
+
+    #[Test]
+    public function tc_stk_26_perubahan_kondisi_tercatat_dan_bisa_dibalik(): void
+    {
+        $this->masuk(10, $this->binA, []);
+        $this->ledger->post(new MovementRequest(item: $this->item, qtyBase: 10, toBinId: $this->binB->id, stockStatus: StockStatus::Quarantine));
+
+        // QC lolos: Karantina → Tersedia di bin yang sama (A-194).
+        $lolos = $this->ledger->post(new MovementRequest(
+            item: $this->item, qtyBase: 4, fromBinId: $this->binB->id, toBinId: $this->binB->id,
+            stockStatus: StockStatus::Available, fromStockStatus: StockStatus::Quarantine,
+        ));
+        $this->assertSame(StockStatus::Quarantine, $lolos->from_stock_status);
+        $this->assertSame($this->perKondisi(), $this->dariKartu(), 'Perubahan kondisi bisa dibangun ulang dari kartu stok.');
+
+        // Pembalik mengembalikan kondisi asal, bukan menambah Tersedia.
+        $balik = $this->ledger->reverse($lolos);
+        $this->assertSame(StockStatus::Quarantine, $balik->stock_status);
+        $this->assertSame(StockStatus::Available, $balik->from_stock_status);
+        $this->assertSame(10.0, (float) StockBalance::query()->where('bin_id', $this->binB->id)->where('stock_status', 'quarantine')->sum('qty_base'));
+        $this->assertSame(0.0, (float) StockBalance::query()->where('bin_id', $this->binB->id)->where('stock_status', 'available')->sum('qty_base'));
+        $this->assertSame($this->perKondisi(), $this->dariKartu());
+
+        // Pergerakan biasa tidak mencatat kondisi asal.
+        $pindah = $this->ledger->post(new MovementRequest(item: $this->item, qtyBase: 1, fromBinId: $this->binA->id, toBinId: $this->binB->id));
+        $this->assertNull($pindah->from_stock_status);
+    }
 }

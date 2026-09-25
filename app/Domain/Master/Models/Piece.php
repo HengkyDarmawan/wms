@@ -61,6 +61,21 @@ class Piece extends Model
         return $query->orderByDesc('is_offcut')->orderBy('length')->orderBy('id');
     }
 
+    /**
+     * Nomor potongan berikutnya `P-000123` (Blueprint §6.7). Satu tempat untuk
+     * GRN, ADJ, pilah RET, dan CNV supaya formatnya tidak pernah berbeda.
+     */
+    public static function nextPieceNo(): string
+    {
+        $urut = static::query()->count() + 1;
+
+        do {
+            $nomor = sprintf('P-%06d', $urut++);
+        } while (static::query()->where('piece_no', $nomor)->exists());
+
+        return $nomor;
+    }
+
     /** BR-CNV-03: potongan di bawah panjang minimum dibuang sebagai waste. */
     public function isUsableOffcut(): bool
     {

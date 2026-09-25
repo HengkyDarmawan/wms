@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Enums\RequestLineStatus;
 use App\Domain\Request\Models\MaterialRequestLine;
 use App\Domain\Request\Support\RequestFulfillment;
 use App\Domain\Shipment\Enums\ClientDecision;
 use App\Domain\Shipment\Enums\DiscrepancyDisposition;
+use App\Domain\Shipment\Enums\DiscrepancyOrigin;
 use App\Domain\Shipment\Enums\DiscrepancyStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Models\DeliveryDiscrepancy;
@@ -20,6 +22,7 @@ use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Stock\Support\MovementRequest;
 use App\Domain\Stock\Support\StockLedger;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -54,6 +57,18 @@ class ResolveDiscrepancy
         $keputusan = $this->periksaKeputusan($baris, $decisions);
 
         return DB::transaction(function () use ($dsc, $baris, $keputusan, $notes, $actor) {
+            // Kirim ganda/dua tab: kunci lalu periksa ulang, dan pastikan tidak ada
+            // baris keberatan baru yang masuk sejak keputusan diisi.
+            $kunci = DeliveryDiscrepancy::query()->lockForUpdate()->findOrFail($dsc->id);
+
+            if ($kunci->status !== DiscrepancyStatus::Open) {
+                throw ShipmentRuleException::rule('BR-SJ-10', 'Selisih ini sudah diselesaikan.');
+            }
+
+            if ($kunci->lines()->count() !== $baris->count()) {
+                throw ShipmentRuleException::rule('BR-SJ-10', 'Ada baris selisih baru sejak layar dibuka; muat ulang lalu putuskan semua baris.');
+            }
+
             foreach ($keputusan as $k) {
                 /** @var DeliveryDiscrepancyLine $l */
                 $l = $baris[$k['line_id']];
@@ -100,11 +115,11 @@ class ResolveDiscrepancy
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, DeliveryDiscrepancyLine>  $baris
+     * @param  Collection<int, DeliveryDiscrepancyLine>  $baris
      * @param  array<int, array<string, mixed>>  $decisions
      * @return array<int, array<string, mixed>>
      */
-    private function periksaKeputusan(\Illuminate\Support\Collection $baris, array $decisions): array
+    private function periksaKeputusan(Collection $baris, array $decisions): array
     {
         $hasil = [];
         $terisi = [];
@@ -185,6 +200,12 @@ class ResolveDiscrepancy
             return;
         }
 
+        // Keberatan pemohon (BR-REQ-10, A-188): barang sudah di tangan penerima
+        // dan sudah keluar dari kartu stok; disposisinya dicatat tanpa pergerakan.
+        if ($dsc->origin === DiscrepancyOrigin::ClientDispute) {
+            return;
+        }
+
         $sj = $dsc->shipment;
         $asal = $line->shipmentLine?->pickTaskLine;
 
@@ -259,8 +280,38 @@ class ResolveDiscrepancy
             return;
         }
 
+        if ($line->discrepancy?->origin === DiscrepancyOrigin::ClientDispute) {
+            $this->kembalikanKebutuhanKeberatan($baris, $line, $actor);
+
+            return;
+        }
+
         $baris->forceFill([
             'qty_backorder' => (float) $baris->qty_backorder + (float) $line->qty_base,
         ])->save();
+    }
+
+    /**
+     * Keberatan klien (A-198): jumlahnya sudah tercatat diterima saat bukti
+     * terima, jadi `still_needed` mengurangi `qty_received` dan membuka lagi
+     * barisnya supaya bisa diambil ulang. REQ yang sudah `completed`
+     * (terminal) tidak dibuka lagi — kebutuhan pengganti lewat REQ baru.
+     */
+    private function kembalikanKebutuhanKeberatan(MaterialRequestLine $baris, DeliveryDiscrepancyLine $line, ?User $actor): void
+    {
+        $req = $baris->request;
+
+        if (! in_array($req?->status, [MaterialRequestStatus::InProgress, MaterialRequestStatus::PartiallyFulfilled], true)) {
+            throw ShipmentRuleException::rule('BR-SJ-10', 'Permintaan '.$req?->number.' sudah '.mb_strtolower((string) $req?->status->label()).'; pilih "tidak dibutuhkan" dan buat permintaan baru bila barang masih diperlukan.');
+        }
+
+        $qty = (float) $line->qty_base;
+        $baris->forceFill([
+            'qty_received' => max(0.0, round((float) $baris->qty_received - $qty, 4)),
+            'qty_backorder' => (float) $baris->qty_backorder + $qty,
+            'status' => $baris->status === RequestLineStatus::Cancelled ? $baris->status : RequestLineStatus::Open,
+        ])->save();
+
+        $this->pemenuhan->refresh($req, $actor);
     }
 }

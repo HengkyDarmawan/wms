@@ -13,7 +13,10 @@ use App\Domain\Adjustment\Models\StockAdjustmentLine;
 use App\Domain\Adjustment\Support\AdjustmentLines;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalEngine;
+use App\Domain\Master\Models\Serial;
+use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Support\DocumentNumber;
+use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
 
@@ -128,6 +131,46 @@ class CreateStockAdjustment
             activity('adjustment')->performedOn($adj)->causedBy($actor)
                 ->withProperties(['pembalik_dari' => $original->number])
                 ->log('ADJ pembalik diajukan');
+
+            return $this->ajukan($adj, $actor);
+        });
+    }
+
+    /**
+     * ADJ asal `asset_lost` (BR-AST-04, A-167): satu serial keluar dari bin
+     * tempatnya berada — termasuk bin virtual On-site proyek, yang ditolak ADJ
+     * manual — dengan Alasan kehilangan. Tetap lewat mesin approval (A-09);
+     * saat diposting aset menjadi `written_off`.
+     */
+    public function forLostAsset(Serial $serial, StockBalance $saldo, int $lostReasonId, ?string $notes = null, ?User $actor = null): StockAdjustment
+    {
+        $bin = Bin::withoutGlobalScopes()->with('warehouse')->findOrFail($saldo->bin_id);
+
+        return DB::transaction(function () use ($serial, $saldo, $bin, $lostReasonId, $notes, $actor) {
+            $adj = StockAdjustment::create([
+                'number' => $this->nomor->next('ADJ', (string) $bin->warehouse->code),
+                'warehouse_id' => $bin->warehouse_id,
+                'origin' => AdjustmentOrigin::AssetLost,
+                'reason_code_id' => $lostReasonId,
+                'status' => StockAdjustmentStatus::Submitted,
+                'submitted_by' => $actor?->id,
+                'notes' => $this->teks($notes) ?? 'Aset hilang '.$serial->serial_no,
+            ]);
+
+            StockAdjustmentLine::create([
+                'stock_adjustment_id' => $adj->id,
+                'item_id' => $serial->item_id,
+                'bin_id' => $bin->id,
+                'serial_id' => $serial->id,
+                'stock_status' => $saldo->stock_status->value,
+                'qty_delta' => -1 * (float) $saldo->qty_base,
+                'reason_code_id' => $lostReasonId,
+                'notes' => 'Aset '.$serial->serial_no.' ditandai hilang',
+            ]);
+
+            activity('adjustment')->performedOn($adj)->causedBy($actor)
+                ->withProperties(['serial' => $serial->serial_no])
+                ->log('ADJ aset hilang diajukan');
 
             return $this->ajukan($adj, $actor);
         });

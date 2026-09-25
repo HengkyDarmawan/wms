@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Domain\Master\Models;
 
+use App\Domain\Asset\Models\AssetHandover;
+use App\Domain\Asset\Models\AssetInspection;
 use App\Domain\Master\Enums\AssetState;
 use App\Domain\Master\Enums\MeterUnit;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -85,7 +88,7 @@ class Serial extends Model
     {
         return $this->asset_state === AssetState::OnLoan
             && $this->due_return_date !== null
-            && $this->due_return_date->isPast();
+            && $this->due_return_date->lt(now()->startOfDay());
     }
 
     /** Aset ini masih bisa dipinjamkan? (BR-AST-01) */
@@ -95,23 +98,24 @@ class Serial extends Model
     }
 
     /**
-     * Pemakaian terpakai dalam persen (A-66). Dihitung dari meter bila item
-     * punya meter, kalau tidak dari umur kalender. null bila umur rencana kosong.
+     * Pemakaian terpakai dalam persen (A-66, BR-AST-08): yang terbesar antara
+     * umur kalender sejak diperoleh / umur hari dan meter terpakai / umur jam.
+     * null bila tidak ada umur rencana yang bisa dipakai.
      */
     public function usagePercent(): ?float
     {
+        $rasio = [];
+
         if ($this->meter_unit !== MeterUnit::None && $this->expected_life_hours !== null
             && (float) $this->expected_life_hours > 0) {
-            return round((float) $this->meter_total / (float) $this->expected_life_hours * 100, 1);
+            $rasio[] = (float) $this->meter_total / (float) $this->expected_life_hours;
         }
 
         if ($this->expected_life_days !== null && $this->expected_life_days > 0 && $this->acquired_at !== null) {
-            $terpakai = $this->acquired_at->startOfDay()->diffInDays(now()->startOfDay());
-
-            return round($terpakai / $this->expected_life_days * 100, 1);
+            $rasio[] = $this->acquired_at->startOfDay()->diffInDays(now()->startOfDay()) / $this->expected_life_days;
         }
 
-        return null;
+        return $rasio === [] ? null : round(max($rasio) * 100, 1);
     }
 
     /** Sisa masa pakai dalam persen; 0 bila sudah lewat umur rencana. */
@@ -122,14 +126,36 @@ class Serial extends Model
         return $terpakai === null ? null : max(0.0, round(100 - $terpakai, 1));
     }
 
-    /** BR-AST-08: aset yang perlu diperiksa sebelum dipinjamkan lagi. */
-    public function needsAttention(): bool
+    /** Ambang peringatan sisa umur (company setting `asset_life_alert_pct`, bawaan 20 %). */
+    public static function lifeAlertPercent(): float
+    {
+        $nilai = CompanySetting::get('asset_life_alert_pct');
+
+        return is_numeric($nilai) ? (float) $nilai : 20.0;
+    }
+
+    /** BR-AST-08: sisa umur di bawah ambang. */
+    public function isLifeAlert(): bool
     {
         $sisa = $this->remainingLifePercent();
 
-        return $this->isOverdue()
-            || ($this->condition_score !== null && $this->condition_score <= 2)
-            || ($sisa !== null && $sisa <= 10);
+        return $sisa !== null && $sisa < self::lifeAlertPercent();
+    }
+
+    /** BR-AST-06/08: aset yang perlu perhatian — lewat jatuh tempo atau sisa umur di bawah ambang. */
+    public function needsAttention(): bool
+    {
+        return $this->isOverdue() || $this->isLifeAlert();
+    }
+
+    public function handovers(): HasMany
+    {
+        return $this->hasMany(AssetHandover::class)->withoutGlobalScopes();
+    }
+
+    public function inspections(): HasMany
+    {
+        return $this->hasMany(AssetInspection::class);
     }
 
     public function stateBadge(): string

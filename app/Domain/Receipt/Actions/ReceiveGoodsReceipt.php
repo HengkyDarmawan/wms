@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Receipt\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\PurchaseRequest\Support\PurchaseReceipts;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Enums\ReceiptType;
 use App\Domain\Receipt\Exceptions\ReceiptRuleException;
@@ -91,7 +92,8 @@ class ReceiveGoodsReceipt
             match ($receipt->receipt_type) {
                 ReceiptType::Transfer => $this->transfer->received($receipt),
                 ReceiptType::Return => $this->retur->received($receipt, $actor),
-                default => null,
+                // Katalog §2.15: PRQ sebagian terpenuhi / dipenuhi dari GRN yang merujuknya.
+                ReceiptType::Vendor => app(PurchaseReceipts::class)->received($receipt, $actor),
             };
 
             // BR-GRN-04: GRN pengganti menutup rantai RTV-nya.
@@ -143,7 +145,7 @@ class ReceiveGoodsReceipt
                 'vendor_doc_no' => $receipt->vendor_doc_no,
                 'po_ref' => $receipt->po_ref,
                 'qc_required' => $wajibQc,
-            ],
+            ] + app(PurchaseReceipts::class)->eventPayload($line),
         ));
     }
 

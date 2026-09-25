@@ -1,4 +1,4 @@
-<div class="mx-auto" style="max-width: 40rem">
+<div class="mx-auto" style="max-width: 40rem" data-draft="count-task-{{ $tugas->id }}-r{{ $tugas->round }}">
     <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
         <div>
             <h1 class="h4 mb-1">{{ __('Bin') }} {{ $tugas->bin?->code }}</h1>
@@ -18,6 +18,7 @@
     @endif
 
     <p class="small text-muted">{{ __('Hitung buta: angka sistem tidak ditampilkan. Isi 0 bila barang tidak ada.') }}</p>
+    <div class="alert alert-warning py-2 small d-none" role="status" data-draft-status></div>
 
     @forelse ($lines as $l)
         <div class="card mb-2" wire:key="hitung-{{ $l->id }}">
@@ -64,7 +65,7 @@
                     </div>
                     <div class="col-6">
                         <label class="form-label" for="temuan-lot">{{ __('Nomor lot') }}</label>
-                        <input class="form-control" id="temuan-lot" type="text" wire:model="temuan.lot_no" placeholder="{{ __('Bila ber-lot') }}">
+                        <input class="form-control" id="temuan-lot" type="text" data-scan wire:model="temuan.lot_no" placeholder="{{ __('Bila ber-lot') }}">
                         @error('temuan.lot_no') <div class="text-danger small">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-6">

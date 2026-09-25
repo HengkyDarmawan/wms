@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `approval` (Mesin Approval)
 
-**Versi:** 0.5
-**Tanggal:** 24 September 2026
-**Status:** selesai Fase 1 — modul kedelapan setelah [Receipt/Putaway](19-receipt-putaway.md); REQ dan RTV sudah diputus lewat mesin ini; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-86](04-keputusan-dan-asumsi.md#a-86)–[A-94](04-keputusan-dan-asumsi.md#a-94) (*Perlu validasi*); v0.3: ADJ dan OPN tersambung ([21-opname-penyesuaian](21-opname-penyesuaian.md), [A-96](04-keputusan-dan-asumsi.md#a-96), [A-105](04-keputusan-dan-asumsi.md#a-105)); v0.4: TRF dan RET tersambung ([22-retur-transfer](22-retur-transfer.md)); v0.5: ISU pembalik tersambung dengan lapis minimum ([23-pemakaian](23-pemakaian.md), [A-150](04-keputusan-dan-asumsi.md#a-150))
+**Versi:** 0.8
+**Tanggal:** 25 September 2026
+**Status:** selesai Fase 1 — modul kedelapan setelah [Receipt/Putaway](19-receipt-putaway.md); REQ dan RTV sudah diputus lewat mesin ini; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-86](04-keputusan-dan-asumsi.md#a-86)–[A-94](04-keputusan-dan-asumsi.md#a-94) (*Perlu validasi*); v0.3: ADJ dan OPN tersambung ([21-opname-penyesuaian](21-opname-penyesuaian.md), [A-96](04-keputusan-dan-asumsi.md#a-96), [A-105](04-keputusan-dan-asumsi.md#a-105)); v0.4: TRF dan RET tersambung ([22-retur-transfer](22-retur-transfer.md)); v0.5: ISU pembalik tersambung dengan lapis minimum ([23-pemakaian](23-pemakaian.md), [A-150](04-keputusan-dan-asumsi.md#a-150)); v0.6: CNV (hanya bila ada aturan) dan WST (otomatis tanpa aturan) tersambung ([24-konversi-waste](24-konversi-waste.md), [A-153](04-keputusan-dan-asumsi.md#a-153)); v0.7: penangan PRQ — semua jenis dokumen Katalog tersambung ([26-purchase-request](26-purchase-request.md), [A-173](04-keputusan-dan-asumsi.md#a-173)); v0.8: `ApprovalNotifier` mengirim notifikasi in-app/email tugas & keputusan ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189))
 **Modul:** `approval`
 **Fase:** F1 (web, delegasi, eskalasi, simulasi); approval via WhatsApp `[F2]` (Fase 2a) sebagai stub
 **Dokumen terkait:** [Blueprint §8](01-blueprint.md#8-approval-engine) · [Aturan Bisnis §BR-APR](05-aturan-bisnis.md#br-apr) · [Katalog Status §3](06-katalog-status-dan-enum.md#3-enum-lain) · [Glosarium §9](03-glosarium.md#9-approval--notifikasi) · [Model data 08c](08c-model-data-pendukung.md#area-approval-engine-tenant) · [Alur 9](07b-proses-bisnis-pendukung.md#alur-9--approval-generik-semua-jenis-dokumen) · [D-17](04-keputusan-dan-asumsi.md#d-17), [D-18](04-keputusan-dan-asumsi.md#d-18), [D-28](04-keputusan-dan-asumsi.md#d-28)
@@ -197,19 +197,19 @@ Uji di `tests/Feature/Approval`; TC-REQ dan TC-RTV yang menyentuh approval dises
 | TC-APR-14 | Tugas terbuka | eskalasi manual staf / Admin; tanpa tujuan | ditolak BR-GEN-09 / ke atasan / BR-APR-06 | A-90 |
 | TC-APR-15 | REQ menunggu | dibatalkan | snapshot `cancelled`, tugas `superseded`, keputusan ditolak | BR-APR-09 |
 | TC-APR-16 | Aturan tersimpan | simulasi dokumen, manual, draf | sama dengan hasil pengajuan; tidak menulis apa pun | BR-APR-11 |
-| TC-APR-17 | Form aturan | jenis belum tersambung, tanpa lapis, rujukan kosong, batas waktu 0, ganti jenis; nonaktifkan | ditolak; tidak dihapus | D-17, P-03, BR-GEN-10 |
+| TC-APR-17 | Form aturan | jenis di luar katalog/belum tersambung, tanpa lapis, rujukan kosong, batas waktu 0, ganti jenis; nonaktifkan | ditolak; tidak dihapus | D-17, P-03, BR-GEN-10 |
 | TC-APR-18 | RTV | tanpa aturan / dengan aturan / tolak / batal | otomatis / kepala gudang / `rejected` / snapshot `cancelled` | A-80, A-93 |
 | TC-APR-19 | Data demo | Indra ajukan REQ Genset | Andi lalu Budi; Sari & Indra ditolak; reservasi; PCK | alur 1 + 9 |
 | TC-APR-20 | Role berbeda | buka lima halaman | 200/403 sesuai §2; menu & angka tugas | BR-GEN-09 |
 | TC-APR-20b | Kotak tugas | setujui, tolak tanpa/dengan alasan, orang lain, eskalasi Admin | sesuai | §6 |
 | TC-APR-20c | Form aturan | simulasi draf lalu simpan; nonaktifkan | aturan tersimpan tanpa kondisi kosong | BR-APR-11 |
 | TC-APR-20d | Delegasi & simulasi | buat/akhiri; simulasi nomor & manual; detail REQ | panel Riwayat approval tampil | §6 |
-| TC-APR-21 | DemoSeeder | jalankan dua kali | tiga aturan persis 00-akun-uji §5 | 00-akun-uji |
+| TC-APR-21 | DemoSeeder | jalankan dua kali | tujuh aturan persis 00-akun-uji §5 (REQ ×2, RTV, ADJ ×2, OPN, PRQ) | 00-akun-uji |
 | TC-APR-22 | Role bawaan | periksa permission; aturan menunjuk staf | Kepala Gudang/Manajemen memegang approve; staf tak berizin dialihkan ke atasannya | A-86 |
 
 ## 11. Di luar lingkup modul ini
 
-Approval via WhatsApp, token, PIN (Fase 2a); notifikasi in-app/email (modul notifikasi); approval berbasis nilai (Purchasing, D-28); penangan PRQ/CNV/WST (modul masing-masing; ADJ, OPN, TRF, RET, ISU sudah terpasang, termasuk lapis minimum ADJ manual A-09 dan SoD penghitung opname BR-OPN-09); laporan §9; kondisi "melebihi rencana proyek" `[F2]`.
+Approval via WhatsApp, token, PIN (Fase 2a); notifikasi in-app/email (modul notifikasi); approval berbasis nilai (Purchasing, D-28); penangan PRQ (modul PRQ; ADJ, OPN, TRF, RET, ISU, CNV, WST sudah terpasang, termasuk lapis minimum ADJ manual A-09 dan SoD penghitung opname BR-OPN-09); laporan §9; kondisi "melebihi rencana proyek" `[F2]`.
 
 ## 12. Definisi selesai
 
@@ -248,7 +248,7 @@ Domain `app/Domain/Approval`: `Contracts\ApprovalHandler`; `Support\ApprovalEngi
 
 ### 13.4 Sisa pekerjaan
 
-1. Penangan PRQ, CNV, WST — bersama modulnya. ADJ dan OPN sudah terpasang (v0.3, [21-opname-penyesuaian](21-opname-penyesuaian.md)); TRF dan RET (v0.4, [22-retur-transfer](22-retur-transfer.md)); ISU pembalik (v0.5, [23-pemakaian](23-pemakaian.md): `Issue\Support\MaterialIssueApprovalHandler`, lapis minimum Kepala Gudang Gudang Site → Manajemen, dokumen tetap `draft` selama menunggu, [A-150](04-keputusan-dan-asumsi.md#a-150)).
-2. Notifikasi in-app/email saat tugas dibuat/dialihkan dan saat dokumen diputus (modul notifikasi); WhatsApp Fase 2a.
+1. ~~Penangan PRQ~~ — **selesai v0.7** ([26-purchase-request](26-purchase-request.md): `PurchaseRequest\Support\PurchaseRequestApprovalHandler`, approval opsional — tanpa aturan disetujui otomatis; kondisi `vendor_types` membaca vendor tetap item sebelum ada catatan pemesanan [A-173](04-keputusan-dan-asumsi.md#a-173); aturan demo *PRQ toko online*). Semua jenis `approval_document_type` kini tersambung; contoh jenis belum tersambung di TC-APR-17 diganti jenis di luar katalog (`purchase_order`). ADJ dan OPN sudah terpasang (v0.3, [21-opname-penyesuaian](21-opname-penyesuaian.md)); TRF dan RET (v0.4, [22-retur-transfer](22-retur-transfer.md)); ISU pembalik (v0.5, [23-pemakaian](23-pemakaian.md): `Issue\Support\MaterialIssueApprovalHandler`, lapis minimum Kepala Gudang Gudang Site → Manajemen, dokumen tetap `draft` selama menunggu, [A-150](04-keputusan-dan-asumsi.md#a-150)); CNV dan WST (v0.6, [24-konversi-waste](24-konversi-waste.md): `ConversionApprovalHandler` tanpa lapis minimum — `conversion.submit` hanya bila ada aturan dan ditolak kembali `draft` [A-153](04-keputusan-dan-asumsi.md#a-153); `WasteDisposalApprovalHandler` disetujui otomatis tanpa aturan, ditolak `rejected`). 
+2. ~~Notifikasi in-app/email saat tugas dibuat dan saat dokumen diputus~~ — **selesai v0.8** ([27-pendukung-f1](27-pendukung-f1.md)); notifikasi saat tugas dialihkan (delegasi/eskalasi) dan WhatsApp Fase 2a belum.
 3. Laporan §9.
 4. Tautan dokumen di kotak tugas mengikuti cakupan pembaca: approver di luar cakupan dokumen (mis. "user tertentu") memutus dari kotak tugas tanpa membuka halaman dokumen.

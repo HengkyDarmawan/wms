@@ -8,6 +8,7 @@ use App\Domain\Access\Models\User;
 use App\Domain\Master\Enums\VendorStatus;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Vendor;
+use App\Domain\PurchaseRequest\Support\PurchaseReceipts;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Enums\ReceiptType;
 use App\Domain\Receipt\Enums\VendorReturnStatus;
@@ -33,7 +34,8 @@ use Illuminate\Support\Facades\DB;
  * Dua sumber di Fase 1:
  *
  * - **vendor** — manual tanpa PO (Purchasing baru di Fase 1b, D-29). Baris
- *   diisi item, jumlah, dan isian pelacakan sesuai mode item.
+ *   diisi item, jumlah, dan isian pelacakan sesuai mode item; boleh merujuk
+ *   baris catatan pemesanan PRQ (A-51, 26-purchase-request).
  * - **transfer** — SJ yang tujuannya gudang ini dan sudah punya bukti terima.
  *   Barisnya diturunkan dari baris SJ; jumlahnya tidak boleh melebihi jumlah
  *   **baik** yang diterima (BR-GRN-05), karena yang rusak dan kurang masih
@@ -70,7 +72,7 @@ class SaveGoodsReceipt
         $gudang = $this->gudang($receipt, $header);
 
         [$kolom, $baris] = match ($jenis) {
-            ReceiptType::Vendor => $this->dariVendor($header, $lines),
+            ReceiptType::Vendor => $this->dariVendor($receipt, $gudang, $header, $lines),
             ReceiptType::Transfer => $this->dariTransfer($receipt, $gudang, $header, $lines),
             ReceiptType::Return => $this->dariRetur($receipt, $gudang, $header, $lines),
         };
@@ -134,7 +136,7 @@ class SaveGoodsReceipt
      * @param  array<int, array<string, mixed>>  $lines
      * @return array{0: array<string, mixed>, 1: array<int, array<string, mixed>>}
      */
-    private function dariVendor(array $header, array $lines): array
+    private function dariVendor(?GoodsReceipt $receipt, Warehouse $gudang, array $header, array $lines): array
     {
         $vendor = Vendor::query()->find((int) ($header['vendor_id'] ?? 0));
 
@@ -155,6 +157,7 @@ class SaveGoodsReceipt
         $items = Item::query()->whereIn('id', array_map(fn ($l) => (int) ($l['item_id'] ?? 0), $lines))->get()->keyBy('id');
         $baris = [];
         $serial = [];
+        $pesanan = [];
 
         foreach (array_values($lines) as $i => $l) {
             $item = $items->get((int) ($l['item_id'] ?? 0));
@@ -164,6 +167,16 @@ class SaveGoodsReceipt
             }
 
             $b = $this->pelacakan->normalize($item, $l, $i);
+
+            // A-51: baris boleh merujuk baris catatan pemesanan PRQ (26-purchase-request).
+            $ref = is_numeric($l['purchase_request_order_line_id'] ?? null) ? (int) $l['purchase_request_order_line_id'] : 0;
+
+            if ($ref > 0) {
+                // Jumlah kumulatif baris yang merujuk catatan yang sama (serial = satu baris per unit).
+                $pesanan[$ref] = ($pesanan[$ref] ?? 0) + (float) $b['qty_received'];
+                app(PurchaseReceipts::class)->guard($ref, (int) $gudang->id, (int) $vendor->id, (int) $item->id, $pesanan[$ref], $receipt?->id, 'Baris '.($i + 1).' ('.$item->code.')');
+                $b['purchase_request_order_line_id'] = $ref;
+            }
 
             if ($b['serial_no'] !== null) {
                 $kunci = $item->id.'|'.$b['serial_no'];

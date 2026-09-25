@@ -23,14 +23,28 @@ class PlatformUser extends Authenticatable
 
     protected $guarded = [];
 
-    protected $hidden = ['password', 'remember_token', 'two_factor_secret'];
+    protected $hidden = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'];
 
     protected function casts(): array
     {
         return [
             'password' => 'hashed',
             'last_login_at' => 'datetime',
+            'locked_until' => 'datetime',
+            'failed_login_count' => 'integer',
+            'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function isLocked(): bool
+    {
+        return $this->locked_until !== null && $this->locked_until->isFuture();
+    }
+
+    /** 2FA Super Admin (A-200), sama dengan user tenant. */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_secret !== null && $this->two_factor_confirmed_at !== null;
     }
 
     /** Akses dukungan yang sedang berlaku untuk satu company. */

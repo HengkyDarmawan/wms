@@ -26,6 +26,9 @@ class Plan extends Model
     {
         return [
             'monthly_price' => 'decimal:2',
+            'trial_days' => 'integer',
+            'wa_quota' => 'integer',
+            'storage_quota_mb' => 'integer',
             'is_active' => 'boolean',
         ];
     }

@@ -28,17 +28,17 @@ class ReportTest extends TenantTestCase
         $admin = $this->makeUser('company_admin');
         $admin->forgetPermissionCache();
 
-        $this->assertCount(8, $registry->all(), 'Delapan laporan terdaftar (Material per proyek sejak modul Issue).');
-        $this->assertCount(8, $registry->availableTo($admin), 'Admin Company membuka semuanya.');
+        $this->assertCount(14, $registry->all(), 'Empat belas laporan terdaftar (Material per proyek sejak modul Issue, Aset dipinjamkan sejak modul Aset, lima laporan inti Blueprint §6.9a sejak Pendukung F1).');
+        $this->assertCount(14, $registry->availableTo($admin), 'Admin Company membuka semuanya.');
 
-        // Driver hanya punya item.view dan project.view.
+        // Driver hanya punya item.view, project.view, warehouse.view, dan stock.view.
         $driver = $this->makeUser('driver');
         $driver->forgetPermissionCache();
 
         $kunci = $registry->availableTo($driver)->map(fn ($r) => $r->key())->all();
 
         $this->assertEqualsCanonicalizing(
-            ['daftar-item', 'item-sementara', 'daftar-proyek', 'daftar-gudang'],
+            ['daftar-item', 'item-sementara', 'daftar-proyek', 'daftar-gudang', 'saldo-stok', 'mutasi-periode'],
             $kunci,
         );
     }

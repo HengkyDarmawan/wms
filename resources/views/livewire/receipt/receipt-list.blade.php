@@ -93,7 +93,7 @@
                             <td>
                                 <span class="badge {{ $grn->status->badge() }}">{{ $grn->status->label() }}</span>
                                 @if ($grn->received_at)
-                                    <div class="small text-muted">{{ $grn->received_at->format('d/m/Y H:i') }}</div>
+                                    <div class="small text-muted">{{ $grn->received_at->lokal()->format('d/m/Y H:i') }}</div>
                                 @endif
                             </td>
                         </tr>

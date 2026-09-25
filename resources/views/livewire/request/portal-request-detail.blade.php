@@ -131,7 +131,7 @@
                                         @if ($l->substitution_response)
                                             · {{ $l->substitution_response->label() }}
                                         @elseif ($l->substitution_deadline_at)
-                                            · {{ __('tanggapi sebelum :tgl', ['tgl' => $l->substitution_deadline_at->format('d/m/Y H:i')]) }}
+                                            · {{ __('tanggapi sebelum :tgl', ['tgl' => $l->substitution_deadline_at->lokal()->format('d/m/Y H:i')]) }}
                                         @endif
                                     </div>
                                 @endif
@@ -180,6 +180,8 @@
             </table>
         </div>
     </div>
+
+    @include('request.partials.deliveries', ['req' => $req])
 
     @if ($supplements->isNotEmpty())
         <div class="card">

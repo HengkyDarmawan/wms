@@ -77,6 +77,11 @@
                             <td>{{ $l->suggestedBin?->code ?? '—' }}</td>
                             <td>
                                 @if ($task->status->value === 'pending')
+                                    <input class="form-control form-control-sm mb-1" type="text" data-scan
+                                           aria-label="{{ __('Pindai kode bin') }}" placeholder="{{ __('Pindai kode bin') }}"
+                                           wire:change="pindaiBin({{ $l->id }}, $event.target.value)"
+                                           wire:keydown.enter.prevent="pindaiBin({{ $l->id }}, $event.target.value)">
+                                    @error('pindai.'.$l->id) <div class="small text-danger">{{ $message }}</div> @enderror
                                     <select class="form-select form-select-sm" wire:model="isian.{{ $l->id }}.bin_id">
                                         <option value="">{{ __('Pilih bin…') }}</option>
                                         @foreach ($bins as $b)

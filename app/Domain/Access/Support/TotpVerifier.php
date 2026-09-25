@@ -32,10 +32,19 @@ class TotpVerifier
 
     public function verify(string $secret, string $code, ?int $timestamp = null): bool
     {
+        return $this->matchedStep($secret, $code, $timestamp) !== null;
+    }
+
+    /**
+     * Langkah waktu (counter) yang cocok dengan kode, atau null. Disimpan
+     * pemanggil supaya kode yang sama tidak bisa dipakai ulang di jendelanya.
+     */
+    public function matchedStep(string $secret, string $code, ?int $timestamp = null): ?int
+    {
         $code = preg_replace('/\D/', '', $code) ?? '';
 
         if (strlen($code) !== $this->digits) {
-            return false;
+            return null;
         }
 
         $timestamp ??= time();
@@ -43,11 +52,11 @@ class TotpVerifier
 
         for ($offset = -$this->window; $offset <= $this->window; $offset++) {
             if (hash_equals($this->codeAt($secret, $counter + $offset), $code)) {
-                return true;
+                return $counter + $offset;
             }
         }
 
-        return false;
+        return null;
     }
 
     public function codeAt(string $secret, int $counter): string

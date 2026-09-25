@@ -36,6 +36,13 @@ class PickDetail extends Component
      */
     public array $isian = [];
 
+    /** Kolom pindai item/bin (A-203). */
+    public string $kodePindai = '';
+
+    public ?int $binPindai = null;
+
+    public ?int $sorot = null;
+
     /** '' atau 'batal' */
     public string $dialog = '';
 
@@ -103,6 +110,68 @@ class PickDetail extends Component
         if ($berhasil) {
             $this->dispatch('pesan', teks: __('Baris dicatat.'));
         }
+    }
+
+    /**
+     * Alur pindai (A-203): pindai kode bin → bin aktif; pindai barcode/kode
+     * item (atau nomor lot/serial/potongan untuk item berlacak) → baris itu
+     * yang belum tercatat (utamakan yang di bin aktif) dicatat dengan jumlah
+     * di isiannya. Kurang ambil tetap lewat isian + Catat.
+     */
+    public function pindai(ProcessPickTask $action): void
+    {
+        $task = $this->task();
+        $this->authorize('complete', $task);
+
+        $kode = mb_strtoupper(trim($this->kodePindai));
+        $this->kodePindai = '';
+        $this->resetErrorBag('kodePindai');
+
+        if ($kode === '') {
+            return;
+        }
+
+        $bin = Bin::query()->where('warehouse_id', $task->warehouse_id)->active()->get(['id', 'code'])
+            ->first(fn (Bin $b) => mb_strtoupper((string) $b->code) === $kode);
+
+        if ($bin !== null) {
+            $this->binPindai = (int) $bin->id;
+            $this->dispatch('pesan', teks: __('Bin :kode dipilih; pindai item.', ['kode' => $bin->code]));
+
+            return;
+        }
+
+        $belum = $task->lines()->with('item:id,code,barcode', 'lot:id,lot_no', 'serial:id,serial_no', 'piece:id,piece_no')
+            ->whereNull('scanned_at')->orderBy('id')->get();
+        $cocokItem = fn (PickTaskLine $l) => mb_strtoupper((string) $l->item?->code) === $kode || mb_strtoupper((string) $l->item?->barcode) === $kode;
+        $berlacak = fn (PickTaskLine $l) => $l->lot_id !== null || $l->serial_id !== null || $l->piece_id !== null;
+
+        // Baris berlacak harus dipindai dengan nomor lot/serial/potongan yang
+        // dialokasikan, supaya yang tercatat memang yang diambil (A-203).
+        $baris = $belum->filter(fn (PickTaskLine $l) => $berlacak($l)
+                ? in_array($kode, array_map(fn ($v) => mb_strtoupper((string) $v), array_filter([$l->lot?->lot_no, $l->serial?->serial_no, $l->piece?->piece_no])), true)
+                : $cocokItem($l))
+            ->sortByDesc(fn (PickTaskLine $l) => (int) ($this->isian[$l->id]['bin_id'] ?? 0) === $this->binPindai)
+            ->first();
+
+        if ($baris === null && $belum->contains(fn (PickTaskLine $l) => $berlacak($l) && $cocokItem($l))) {
+            $this->addError('kodePindai', __('Item ini berlacak; pindai nomor lot/serial/potongan yang tertera di baris.'));
+
+            return;
+        }
+
+        if ($baris === null) {
+            $this->addError('kodePindai', __('":kode" bukan bin gudang ini dan tidak cocok dengan baris yang belum dicatat.', ['kode' => $kode]));
+
+            return;
+        }
+
+        if ($this->binPindai !== null) {
+            $this->isian[$baris->id]['bin_id'] = (string) $this->binPindai;
+        }
+
+        $this->sorot = (int) $baris->id;
+        $this->catat((int) $baris->id, $action);
     }
 
     public function selesaikan(ProcessPickTask $action): void

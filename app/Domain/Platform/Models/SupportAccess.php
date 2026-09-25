@@ -29,6 +29,7 @@ class SupportAccess extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'revoked_at' => 'datetime',
+            'link_used_at' => 'datetime',
         ];
     }
 

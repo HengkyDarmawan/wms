@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Domain\Platform\Actions\ProvisionCompany;
+use Database\Seeders\Tenant\TenantDatabaseSeeder;
 use Illuminate\Database\Seeder;
 
 /**
@@ -15,8 +17,9 @@ use Illuminate\Database\Seeder;
  * Jalankan: `php83 artisan db:seed --class=Database\Seeders\ProductionSeeder`
  *
  * Data acuan tenant (permission, role bawaan, satuan, alasan, kategori
- * penyimpanan) dibuat otomatis saat company baru lahir lewat
- * {@see \Database\Seeders\Tenant\TenantDatabaseSeeder}.
+ * penyimpanan) diisi saat Super Admin membuat company lewat
+ * {@see ProvisionCompany}, yang menjalankan
+ * {@see TenantDatabaseSeeder}.
  */
 class ProductionSeeder extends Seeder
 {

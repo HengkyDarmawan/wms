@@ -12,8 +12,8 @@
                     <strong>{{ $s->wasAutoApproved() ? __('Disetujui otomatis — tidak ada aturan (A-08)') : ($s->rule_name ?? __('Lapis minimum')) }}</strong>
                 </div>
                 <div class="text-muted">
-                    {{ __('Diajukan') }} {{ $s->submitter?->name ?? __('Sistem') }} · {{ $s->submitted_at?->format('d/m/Y H:i') }}
-                    @if ($s->decided_at) · {{ __('Selesai') }} {{ $s->decided_at->format('d/m/Y H:i') }} @endif
+                    {{ __('Diajukan') }} {{ $s->submitter?->name ?? __('Sistem') }} · {{ $s->submitted_at?->lokal()->format('d/m/Y H:i') }}
+                    @if ($s->decided_at) · {{ __('Selesai') }} {{ $s->decided_at->lokal()->format('d/m/Y H:i') }} @endif
                 </div>
             </div>
             @foreach ($s->steps ?? [] as $l)
@@ -35,13 +35,13 @@
                                 @if ($t->delegatedFrom) <span class="text-muted">({{ __('delegasi dari') }} {{ $t->delegatedFrom->name }})</span> @endif
                                 <span class="badge {{ $t->status->badge() }}">{{ $t->status->label() }}</span>
                                 @if ($t->status->value === 'open' && $t->due_at)
-                                    <span class="text-muted">{{ __('batas') }} {{ $t->due_at->format('d/m/Y H:i') }}</span>
+                                    <span class="text-muted">{{ __('batas') }} {{ $t->due_at->lokal()->format('d/m/Y H:i') }}</span>
                                     @if ($t->isOverdue()) <span class="badge text-bg-danger">{{ __('Lewat batas') }}</span> @endif
                                 @endif
                                 @foreach ($t->decisions as $d)
                                     <div class="text-muted">
                                         <span class="badge {{ $d->decision->badge() }}">{{ $d->decision->label() }}</span>
-                                        {{ $d->decided_at?->format('d/m/Y H:i') }} · {{ $d->decider?->name ?? __('Sistem') }}
+                                        {{ $d->decided_at?->lokal()->format('d/m/Y H:i') }} · {{ $d->decider?->name ?? __('Sistem') }}
                                         @if ($d->reason) · {{ $d->reason->label }} @endif
                                         @if ($d->comment) · {{ $d->comment }} @endif
                                     </div>

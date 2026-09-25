@@ -11,8 +11,10 @@ use Illuminate\Support\Collection;
 
 /**
  * Laporan Blueprint §9 *Material per proyek* (23-pemakaian §9, A-151):
- * diminta vs terkirim vs **terpakai** vs diretur vs posisi on-site, per proyek
- * × item, satuan dasar, tanpa nilai uang (D-07). Proyek dibatasi cakupan.
+ * diminta vs terkirim vs **terpakai** vs diretur vs posisi on-site, ditambah
+ * dikonversi, hasil konversi, waste, dan waste didisposisi (24-konversi-waste §9,
+ * A-161), per proyek × item, satuan dasar, tanpa nilai uang (D-07). Proyek
+ * dibatasi cakupan.
  */
 class ProjectMaterialReport extends Report
 {
@@ -33,7 +35,7 @@ class ProjectMaterialReport extends Report
 
     public function description(): string
     {
-        return 'Per proyek dan item: jumlah diminta, terkirim, terpakai (ISU), diretur, sisa di Gudang Site, dan aset di proyek — dibaca dari kartu stok.';
+        return 'Per proyek dan item: jumlah diminta, terkirim, terpakai (ISU), diretur, sisa di Gudang Site, aset di proyek, dikonversi, hasil konversi, waste, dan waste didisposisi — dibaca dari kartu stok.';
     }
 
     public function columns(): array
@@ -49,6 +51,10 @@ class ProjectMaterialReport extends Report
             'diretur' => 'Diretur',
             'di_site' => 'Di Gudang Site',
             'aset_proyek' => 'Aset di proyek',
+            'dikonversi' => 'Dikonversi',
+            'hasil_konversi' => 'Hasil konversi',
+            'waste' => 'Waste',
+            'waste_didisposisi' => 'Waste didisposisi',
         ];
     }
 
@@ -79,6 +85,10 @@ class ProjectMaterialReport extends Report
                 'diretur' => $r['diretur'],
                 'di_site' => $r['di_site'],
                 'aset_proyek' => $r['aset_proyek'],
+                'dikonversi' => $r['dikonversi'],
+                'hasil_konversi' => $r['hasil_konversi'],
+                'waste' => $r['waste'],
+                'waste_didisposisi' => $r['waste_didisposisi'],
             ]);
     }
 

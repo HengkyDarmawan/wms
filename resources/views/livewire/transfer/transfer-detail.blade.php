@@ -12,7 +12,7 @@
                 @if ($req) · <a href="{{ route('requests.show', $req) }}">{{ $req->number }}</a> @endif
                 · {{ __('Diajukan') }} {{ $trf->submitter?->name ?? __('Sistem') }}
                 @if ($trf->approver) · {{ __('Diputus') }} {{ $trf->approver->name }} @endif
-                @if ($trf->completed_at) · {{ __('Selesai') }} {{ $trf->completed_at->format('d/m/Y H:i') }} @endif
+                @if ($trf->completed_at) · {{ __('Selesai') }} {{ $trf->completed_at->lokal()->format('d/m/Y H:i') }} @endif
             </p>
             @if ($trf->notes) <p class="small mb-0">{{ $trf->notes }}</p> @endif
             @if ($trf->rejectReason) <p class="text-danger small mb-0">{{ __('Ditolak') }}: {{ $trf->rejectReason->label }}</p> @endif
@@ -128,7 +128,7 @@
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $r)
-                <li class="list-group-item">{{ $r->created_at?->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
+                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
             @endforelse

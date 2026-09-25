@@ -1,7 +1,7 @@
 # Akun Uji & Data Demo (dev / demo / staging)
 
-**Versi:** 1.6
-**Tanggal:** 24 September 2026
+**Versi:** 1.10
+**Tanggal:** 25 September 2026
 **Status:** aktif — **hanya untuk dev, demo, dan staging**. Produksi tidak memakai berkas ini: Super Admin produksi dibuat dari `.env` saat instalasi, semua user lain lewat undangan dan mengatur password sendiri ([Blueprint §13](wms/01-blueprint.md#13-autentikasi--sso), [NFR-02](wms/01-blueprint.md#16-kebutuhan-non-fungsional)).
 **Dokumen terkait:** [Blueprint §4](wms/01-blueprint.md#4-pengguna--peran) · [BR-GEN-09](wms/05-aturan-bisnis.md#br-gen) · [Model data pusat & akses](wms/08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) · [Spesifikasi modul Access](wms/10-access.md)
 
@@ -13,7 +13,7 @@ Berkas ini adalah **satu-satunya sumber** daftar akun seed. Seeder `DemoSeeder` 
 
 | Email | Nama | Peran | Password dev | Catatan |
 |---|---|---|---|---|
-| `superadmin@wms.test` | Super Admin Platform | Super Admin ([Blueprint §4.1](wms/01-blueprint.md#41-level-platform-database-pusat)) | `Wms#2026!Admin` | Membuat company, verifikasi bayar; tidak bisa membuka data company tanpa akses dukungan ([A-27](wms/04-keputusan-dan-asumsi.md#a-27)) |
+| `superadmin@wms.test` | Super Admin Platform | Super Admin ([Blueprint §4.1](wms/01-blueprint.md#41-level-platform-database-pusat)) | `Wms#2026!Admin` | `http://wms.test:8000/admin`: membuat company, paket, verifikasi bukti bayar, tangguhkan; membuka data company hanya lewat akses dukungan yang diberikan Admin Company ([A-27](wms/04-keputusan-dan-asumsi.md#a-27), [A-180](wms/04-keputusan-dan-asumsi.md#a-180)) |
 
 ## 2. Company demo
 
@@ -74,7 +74,7 @@ Nomor WA dummy: `+6281200000001` … `+6281200000014` berurutan sesuai tabel.
 
 ## 5. Aturan approval bawaan demo
 
-> **Sudah diseed** (sejak 24 Sep 2026) oleh `ApprovalDemoSeeder`, dipanggil `DemoSeeder`, untuk jenis dokumen yang sudah tersambung ke mesin approval ([20-approval](wms/20-approval.md)): REQ, RTV, dan — sejak modul Count/Adjustment ([21-opname-penyesuaian](wms/21-opname-penyesuaian.md)) — ADJ dan OPN (enam aturan). Baris PRQ masih rencana dan diseed bersama modulnya. TRF dan RET sudah tersambung ([22-retur-transfer](wms/22-retur-transfer.md)) tetapi **tidak punya aturan demo**: tanpa aturan keduanya disetujui otomatis ([A-08](wms/04-keputusan-dan-asumsi.md#a-08)), yang juga jalur ringan transfer dalam proyek antar KRW1 dan KRW2 ([A-50](wms/04-keputusan-dan-asumsi.md#a-50)). Ubah aturan dari layar *Aturan approval* (Admin Company); coba dulu di *Simulasi approval*.
+> **Sudah diseed** (sejak 24 Sep 2026) oleh `ApprovalDemoSeeder`, dipanggil `DemoSeeder`, untuk jenis dokumen yang sudah tersambung ke mesin approval ([20-approval](wms/20-approval.md)): REQ, RTV, — sejak modul Count/Adjustment ([21-opname-penyesuaian](wms/21-opname-penyesuaian.md)) — ADJ dan OPN, dan — sejak modul PRQ ([26-purchase-request](wms/26-purchase-request.md)) — PRQ (tujuh aturan). TRF dan RET sudah tersambung ([22-retur-transfer](wms/22-retur-transfer.md)) tetapi **tidak punya aturan demo**: tanpa aturan keduanya disetujui otomatis ([A-08](wms/04-keputusan-dan-asumsi.md#a-08)), yang juga jalur ringan transfer dalam proyek antar KRW1 dan KRW2 ([A-50](wms/04-keputusan-dan-asumsi.md#a-50)). CNV dan WST ([24-konversi-waste](wms/24-konversi-waste.md)) juga **tanpa aturan demo**: CNV diselesaikan langsung oleh staf, WST disetujui otomatis lalu ditutup dengan bukti. Aset ([25-aset](wms/25-aset.md)): Genset dipinjamkan lewat REQ pinjam; AST lahir saat SJ diterima; aset hilang membuat ADJ `asset_lost` yang ikut lapis minimum ADJ (Kepala Gudang lokasi aset, cadangan Manajemen). Ubah aturan dari layar *Aturan approval* (Admin Company); coba dulu di *Simulasi approval*.
 
 | Dokumen | Aturan (prioritas) | Kondisi | Lapis | Diseed | Rujukan |
 |---|---|---|---|---|---|
@@ -83,12 +83,14 @@ Nomor WA dummy: `+6281200000001` … `+6281200000014` berurutan sesuai tabel.
 | RTV | RTV — kepala gudang (100) | — | 1. Kepala gudang (cukup salah satu) | ✔ | [A-93](wms/04-keputusan-dan-asumsi.md#a-93) |
 | ADJ manual | ADJ di atas 100 unit (10) | jumlah satuan dasar per baris > 100 (`line_qty_min` 100,0001, [A-105](wms/04-keputusan-dan-asumsi.md#a-105)) | 1. Kepala gudang (cukup salah satu) → 2. Manajemen | ✔ | [A-09](wms/04-keputusan-dan-asumsi.md#a-09) |
 | ADJ manual | ADJ lainnya (100) | — | 1. Kepala gudang (cukup salah satu). Tanpa aturan pun tetap satu lapis Kepala Gudang (lapis minimum) | ✔ | [A-09](wms/04-keputusan-dan-asumsi.md#a-09) |
-| PRQ | — | jenis vendor `online_marketplace` | 1. Kepala gudang tujuan → 2. Manajemen | menunggu modul PRQ | [A-52](wms/04-keputusan-dan-asumsi.md#a-52) |
+| PRQ | PRQ toko online (10) | jenis vendor `online_marketplace` (vendor tetap item sebelum dipesan, [A-173](wms/04-keputusan-dan-asumsi.md#a-173)) | 1. Kepala gudang tujuan (cukup salah satu) → 2. Manajemen; PRQ lain tanpa aturan = disetujui otomatis | ✔ | [A-52](wms/04-keputusan-dan-asumsi.md#a-52) |
 | OPN | OPN tahunan & pemeriksaan mendadak (10) | jenis `annual` / `spot_check` | 1. Auditor Internal (cukup salah satu) | ✔ | [BR-OPN-09](wms/05-aturan-bisnis.md#br-opn) |
 | OPN | — (tanpa aturan) | jenis `monthly` / `adhoc` | lapis minimum: Kepala gudang cakupan; sesi audit (dibuat Auditor) ke Auditor Internal; cadangan Manajemen | bawaan kode | [A-96](wms/04-keputusan-dan-asumsi.md#a-96) |
 | ISU pembalik | — (tanpa aturan) | pembalikan pemakaian material ([BR-GEN-04](wms/05-aturan-bisnis.md#br-gen)) | lapis minimum: Kepala gudang Gudang Site; tanpa Kepala Gudang site → cadangan Manajemen (di demo: Budi Direktur) | bawaan kode | [A-150](wms/04-keputusan-dan-asumsi.md#a-150) |
+| CNV | — (tanpa aturan) | — | tanpa lapis: *Selesaikan konversi* langsung; *Ajukan ke approval* baru muncul bila Admin menambah aturan CNV | — | [A-153](wms/04-keputusan-dan-asumsi.md#a-153) |
+| WST | — (tanpa aturan) | — | disetujui otomatis saat diajukan | — | [A-08](wms/04-keputusan-dan-asumsi.md#a-08) |
 
-Contoh uji: Indra (pemohon PRJ-001) mengajukan REQ Genset dari CKG → tugas ke Andi (Kepala Gudang CKG) lalu Budi (Manajemen); REQ Baut dari CKG → Andi saja. Sari (Kepala Gudang BKS) tidak mendapat tugas REQ dari CKG. Opname: Andi membuat sesi tahunan CKG dengan tim Dedi & Eko → selisih sedang dihitung ulang oleh orang lain → Andi merekonsiliasi → tugas ke Kartika (Auditor Internal); Andi, Dedi, dan Sari tidak bisa menyetujui (BR-OPN-09). ADJ: Dedi mengajukan −150 Baut CKG → Andi lalu Budi; +20 → Andi saja.
+Contoh uji: Indra (pemohon PRJ-001) mengajukan REQ Genset dari CKG → tugas ke Andi (Kepala Gudang CKG) lalu Budi (Manajemen); REQ Baut dari CKG → Andi saja. Sari (Kepala Gudang BKS) tidak mendapat tugas REQ dari CKG. Opname: Andi membuat sesi tahunan CKG dengan tim Dedi & Eko → selisih sedang dihitung ulang oleh orang lain → Andi merekonsiliasi → tugas ke Kartika (Auditor Internal); Andi, Dedi, dan Sari tidak bisa menyetujui (BR-OPN-09). ADJ: Dedi mengajukan −150 Baut CKG → Andi lalu Budi; +20 → Andi saja. PRQ: Joko (Penindak Lanjut PR) mencatat pemesanan PRQ yang sudah disetujui; PRQ Genset 5 kVA (vendor tetap Tokopedia Toko Alat) ke CKG menunggu Andi lalu Budi; PRQ Semen/Pipa langsung disetujui. Job titik pesan ulang membuat draf PRQ tiap pagi 06:00; di DEMO sudah dijalankan sekali (dua draf).
 
 ## 6. Cara pakai
 
@@ -106,4 +108,4 @@ php artisan db:seed --class="Database\Seeders\PlatformDemoSeeder"
 php artisan tenants:seed --tenants=1 --class="Database\Seeders\Tenant\DemoSeeder"
 ```
 
-Seeder produksi (`ProductionSeeder`) hanya membuat paket langganan dan Super Admin dari `.env` di database pusat; tidak pernah menjalankan `DemoSeeder`. Data acuan tenant (permission, role bawaan, satuan, alasan, tipe gudang) **belum** dibuat otomatis saat company lahir: `TenancyServiceProvider` hanya membuat dan memigrasi database tenant. Sampai aksi `CreateTenant` ada ([17-platform-login §13](wms/17-platform-login.md)), company non-demo perlu `php artisan tenants:seed --tenants=<id>` (tanpa `--class`, menjalankan `TenantDatabaseSeeder`).
+Seeder produksi (`ProductionSeeder`) hanya membuat paket langganan dan Super Admin dari `.env` di database pusat; tidak pernah menjalankan `DemoSeeder`. Company baru dibuat Super Admin dari `/admin/companies/create`: database, data acuan tenant (permission, role bawaan, satuan, alasan, tipe gudang, template), dan Admin Company pertama + undangan dibuat otomatis ([17-platform-login](wms/17-platform-login.md), [A-176](wms/04-keputusan-dan-asumsi.md#a-176)). Company DEMO tetap lahir dari `PlatformDemoSeeder` + `DemoSeeder` seperti di atas.

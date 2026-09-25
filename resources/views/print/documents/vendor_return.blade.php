@@ -13,7 +13,7 @@
             <td class="k">{{ __('Dari gudang') }}</td>
             <td>{{ $rtv->warehouse?->code }} — {{ $rtv->warehouse?->name }}</td>
             <td class="k">{{ __('Dikirim') }}</td>
-            <td>{{ $rtv->shipped_at?->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $rtv->shipped_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
         </tr>
     </table>
 

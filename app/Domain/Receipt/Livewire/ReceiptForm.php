@@ -7,6 +7,8 @@ namespace App\Domain\Receipt\Livewire;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Vendor;
+use App\Domain\PurchaseRequest\Models\PurchaseRequestOrderLine;
+use App\Domain\PurchaseRequest\Support\PurchaseReceipts;
 use App\Domain\Receipt\Actions\SaveGoodsReceipt;
 use App\Domain\Receipt\Enums\ReceiptType;
 use App\Domain\Receipt\Enums\VendorReturnStatus;
@@ -97,7 +99,26 @@ class ReceiptForm extends Component
 
     public function tambahBaris(): void
     {
-        $this->rows[] = ['item_id' => '', 'qty' => '', 'lot_no' => '', 'expiry_date' => '', 'units' => '', 'notes' => ''];
+        $this->rows[] = ['item_id' => '', 'qty' => '', 'lot_no' => '', 'expiry_date' => '', 'units' => '', 'notes' => '', 'order_line_id' => ''];
+    }
+
+    /** A-174: tambah baris yang merujuk baris catatan pemesanan PRQ; jumlah bawaan = sisa pesanan. */
+    public function pakaiPesanan(int $orderLineId): void
+    {
+        $ol = $this->pesananTerbuka()->firstWhere('id', $orderLineId);
+
+        if (! $ol instanceof PurchaseRequestOrderLine) {
+            return;
+        }
+
+        $baris = ['item_id' => (string) $ol->line->item_id, 'qty' => (string) $ol->outstandingQty(), 'lot_no' => '', 'expiry_date' => '', 'units' => '', 'notes' => '', 'order_line_id' => (string) $ol->id];
+        $kosong = collect($this->rows)->search(fn ($r) => ($r['item_id'] ?? '') === '' && ($r['qty'] ?? '') === '');
+
+        if ($kosong === false) {
+            $this->rows[] = $baris;
+        } else {
+            $this->rows[$kosong] = $baris;
+        }
     }
 
     public function hapusBaris(int $index): void
@@ -186,6 +207,7 @@ class ReceiptForm extends Component
             'returnDocs' => $this->retMenunggu(),
             'ret' => $this->ret(),
             'retLines' => ($r = $this->ret()) === null ? [] : $this->barisRetur($r),
+            'openOrders' => $this->pesananTerbuka(),
         ]);
     }
 
@@ -206,6 +228,7 @@ class ReceiptForm extends Component
                 'lot_no' => $r['lot_no'] ?? '',
                 'expiry_date' => $r['expiry_date'] ?? '',
                 'notes' => $r['notes'] ?? '',
+                'purchase_request_order_line_id' => $r['order_line_id'] ?? '',
             ];
 
             $unit = collect(preg_split('/[\r\n,;]+/', (string) ($r['units'] ?? '')) ?: [])
@@ -263,8 +286,19 @@ class ReceiptForm extends Component
                 'expiry_date' => (string) ($l->expiry_date?->toDateString() ?? ''),
                 'units' => (string) ($l->serial_no ?? ($l->piece_length !== null ? (float) $l->piece_length : '')),
                 'notes' => (string) ($l->notes ?? ''),
+                'order_line_id' => (string) ($l->purchase_request_order_line_id ?? ''),
             ];
         }
+    }
+
+    /** @return Collection<int, PurchaseRequestOrderLine> catatan pemesanan PRQ yang menunggu barang dari vendor ini (A-174). */
+    private function pesananTerbuka(): Collection
+    {
+        if ($this->form['receipt_type'] !== ReceiptType::Vendor->value || $this->form['vendor_id'] === '' || $this->form['warehouse_id'] === '') {
+            return collect();
+        }
+
+        return app(PurchaseReceipts::class)->openLines((int) $this->form['warehouse_id'], (int) $this->form['vendor_id']);
     }
 
     private function sj(): ?Shipment

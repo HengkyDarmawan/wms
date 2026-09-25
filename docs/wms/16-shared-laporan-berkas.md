@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `shared` (Kerangka Laporan & Penyimpanan Berkas)
 
-**Versi:** 0.3
-**Tanggal:** 24 September 2026
-**Status:** selesai Fase 1 sebagian — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment belum dibangun (§13.4); v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9)
+**Versi:** 0.6
+**Tanggal:** 25 September 2026
+**Status:** selesai Fase 1 sebagian — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment belum dibangun (§13.4); v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9); v0.4: laporan itu menambah kolom konversi & waste ([24-konversi-waste](24-konversi-waste.md) §9, [A-161](04-keputusan-dan-asumsi.md#a-161)); unggah bukti BA waste memakai `StoreUpload`; v0.5: laporan kesembilan *Aset dipinjamkan* ([25-aset](25-aset.md) §9); v0.6: Beranda antrean pekerjaan, lima laporan inti Blueprint §6.9a (total 14), ekspor PDF semua laporan ([27-pendukung-f1](27-pendukung-f1.md), [A-186](04-keputusan-dan-asumsi.md#a-186), [A-190](04-keputusan-dan-asumsi.md#a-190))
 **Modul:** `shared` (`app/Domain/Shared`)
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.9a](01-blueprint.md#69a-laporan-inti-fase-1) · [Arsitektur §2 (AD-09, AD-10)](08-arsitektur.md#2-keputusan-arsitektur) · [Blueprint §16 (NFR-14)](01-blueprint.md#16-kebutuhan-non-fungsional) · [A-68](04-keputusan-dan-asumsi.md#a-68) · [Aturan Bisnis §BR-ACC](05-aturan-bisnis.md#br-acc) · [Glosarium](03-glosarium.md)
@@ -63,6 +63,7 @@ Tidak ada tabel baru. Laporan membaca tabel modul lain lewat model Eloquent, seh
 | `daftar-gudang` | `WarehouseListReport` | Daftar gudang | `warehouse.view` | kode, nama, tipe, gudang induk, proyek, kepala gudang, jumlah zona, jumlah bin, status | tipe, status (aktif/nonaktif) | [12-warehouse §9](12-warehouse.md#9-laporan--dashboard) *Daftar gudang* |
 | `daftar-bin` | `BinListReport` | Daftar bin | `bin.view` | kode bin, gudang, jenis, kategori penyimpanan, penegakan kapasitas, kapasitas jumlah, kapasitas berat, proyek, perlu dihitung, status | gudang, jenis, status, kategori penyimpanan | [12-warehouse §9](12-warehouse.md#9-laporan--dashboard) *Daftar bin* |
 | `material-per-proyek` | `ProjectMaterialReport` | Material per proyek | `issue.view` | proyek, kode & nama item, satuan, diminta, terkirim, terpakai, diretur, di Gudang Site, aset di proyek (dibaca dari kartu stok, [A-151](04-keputusan-dan-asumsi.md#a-151)) | proyek (dalam cakupan), item mengandung | [23-pemakaian §9](23-pemakaian.md#9-laporan--dashboard), Blueprint §9 *Material per proyek* |
+| `aset-dipinjamkan` | `LoanedAssetReport` | Aset dipinjamkan | `asset.view` | AST, proyek, item, serial, keluar, jatuh tempo, lewat (hari), hari pakai, meter keluar, status | proyek, hanya lewat jatuh tempo | [25-aset §9](25-aset.md#9-laporan--dashboard), BR-AST-06 |
 
 Tidak ada kolom nilai uang di laporan mana pun ([D-07](04-keputusan-dan-asumsi.md#d-07)).
 
@@ -206,6 +207,6 @@ Laporan §9 berikut **belum** didefinisikan di `ReportRegistry`:
 | [14-request §9](14-request.md#9-laporan--dashboard) | Daftar REQ · REQ menunggu tinjau · Baris tanpa sumber · Penggantian item menunggu tanggapan |
 | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard) | Daftar pengiriman · Short pick · Posisi barang rusak & selisih · Kinerja pengiriman |
 
-*Material per proyek* ([23-pemakaian §9](23-pemakaian.md#9-laporan--dashboard)) terdaftar sejak modul Issue; kolom *Waste* dan *Rencana* `[F2]`-nya belum.
+*Material per proyek* ([23-pemakaian §9](23-pemakaian.md#9-laporan--dashboard)) terdaftar sejak modul Issue; kolom *Dikonversi*, *Hasil konversi*, *Waste*, *Waste didisposisi* ditambah modul Konversi & Waste; *Rencana* `[F2]`-nya belum.
 
 Juga belum: ekspor PDF (§13.1 no. 1), 404 untuk kunci tidak dikenal (§13.1 no. 3), dan penyaring §9 yang hilang (§13.1 no. 2). Prompt lanjutan: [prompts/16-shared](../prompts/16-shared.md).

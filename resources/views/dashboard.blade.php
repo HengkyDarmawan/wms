@@ -11,6 +11,33 @@
         <span class="badge text-bg-{{ $user->status()->badge() }}">{{ $user->status()->label() }}</span>
     </div>
 
+    @if ($setup)
+        <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
+            <span><i class="bi bi-rocket-takeoff"></i> {{ __('Setup awal company: :done dari :total langkah selesai.', ['done' => $setup['done'], 'total' => $setup['total']]) }}</span>
+            <a class="btn btn-sm btn-info" href="{{ route('setup.index') }}">{{ __('Lanjutkan setup') }}</a>
+        </div>
+    @endif
+
+    <h2 class="h6 text-uppercase text-muted mb-2">{{ __('Pekerjaan menunggu') }}</h2>
+    <div class="row g-3 mb-4">
+        @forelse ($cards as $c)
+            <div class="col-6 col-md-4 col-xl-3">
+                <a class="card h-100 text-decoration-none" href="{{ $c['url'] }}">
+                    <div class="card-body d-flex align-items-start gap-3">
+                        <i class="bi {{ $c['icon'] }} fs-3 text-{{ $c['count'] > 0 ? $c['tone'] : 'secondary' }}" aria-hidden="true"></i>
+                        <div>
+                            <div class="fs-4 fw-semibold text-body">{{ number_format($c['count'], 0, ',', '.') }}</div>
+                            <div class="fw-semibold text-body">{{ $c['label'] }}</div>
+                            <div class="small text-muted">{{ $c['hint'] }}</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        @empty
+            <div class="col-12"><p class="text-muted mb-0">{{ __('Tidak ada antrean pekerjaan untuk peran Anda.') }}</p></div>
+        @endforelse
+    </div>
+
     <div class="row g-3">
         <div class="col-12 col-lg-6">
             <div class="card h-100">
@@ -32,20 +59,5 @@
             </div>
         </div>
 
-        <div class="col-12 col-lg-6">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h2 class="h6 text-uppercase text-muted mb-3">{{ __('Modul berikutnya') }}</h2>
-                    <p class="text-muted mb-2">
-                        {{ __('Modul Access sudah aktif. Master, Gudang, Stok, dan seterusnya dibangun berurutan sesuai Arsitektur §12.') }}
-                    </p>
-                    <ol class="small text-muted mb-0">
-                        <li>{{ __('Master data (klien, proyek, item, satuan, vendor)') }}</li>
-                        <li>{{ __('Gudang & lokasi (zona, rak, bin)') }}</li>
-                        <li>{{ __('Stok: kartu stok, saldo, reservasi') }}</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
     </div>
 @endsection

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Receipt;
 
 use App\Domain\Access\Enums\ScopeType;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Enums\ApproverType;
 use App\Domain\Receipt\Actions\CompleteGoodsReceipt;
 use App\Domain\Receipt\Enums\QcResult;
 use App\Domain\Receipt\Livewire\PutawayDetail;
@@ -17,8 +19,6 @@ use App\Domain\Receipt\Livewire\VendorReturnForm;
 use App\Domain\Receipt\Livewire\VendorReturnList;
 use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Receipt\Models\VendorReturn;
-use App\Domain\Approval\Enums\ApprovalDocumentType;
-use App\Domain\Approval\Enums\ApproverType;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\Approval\Concerns\ApprovalFixtures;
@@ -140,7 +140,12 @@ class ReceiptScreenTest extends TenantTestCase
             ->test(PutawayDetail::class, ['putawayTask' => $put])
             ->assertOk()
             ->assertSet('isian.'.$baris->id.'.bin_id', (string) $this->binA->id)
-            ->set('isian.'.$baris->id.'.bin_id', (string) $this->binB->id)
+            // Bin tujuan dipindai (A-201): kode asing ditolak, kode bin gudang ini mengisi baris.
+            ->call('pindaiBin', $baris->id, 'TIDAK-ADA')
+            ->assertHasErrors('pindai.'.$baris->id)
+            ->call('pindaiBin', $baris->id, mb_strtolower((string) $this->binB->code))
+            ->assertHasNoErrors()
+            ->assertSet('isian.'.$baris->id.'.bin_id', (string) $this->binB->id)
             ->call('selesaikan')
             ->assertSet('ruleCode', 'BR-GRN-03')
             ->set('isian.'.$baris->id.'.override_reason', 'Dekat pintu')

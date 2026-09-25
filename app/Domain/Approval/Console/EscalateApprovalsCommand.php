@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Approval\Console;
 
 use App\Domain\Approval\Actions\EscalateApprovalTask;
-use App\Domain\Platform\Models\Company;
+use App\Domain\Platform\Support\OperatingCompanies;
 use Illuminate\Console\Command;
 
 /**
@@ -33,9 +33,9 @@ class EscalateApprovalsCommand extends Command
 
         $ids = $this->option('tenants') ?: null;
 
-        tenancy()->runForMultiple($ids ?? Company::query()->pluck('id')->all(), function ($company) use ($action) {
+        OperatingCompanies::each($ids, function ($company) {
             $this->laporkan((string) $company->getTenantKey(), app(EscalateApprovalTask::class)->runScheduled());
-        });
+        }, $this);
 
         return self::SUCCESS;
     }

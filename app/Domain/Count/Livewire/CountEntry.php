@@ -68,6 +68,8 @@ class CountEntry extends Component
 
         if ($this->jalankan(fn () => $action->save($tugas, $this->qty, auth()->user()), 'qty')) {
             $this->dispatch('pesan', teks: __('Hitungan disimpan.'));
+            // A-193: draf di perangkat sudah terkirim ke server.
+            $this->dispatch('draft-clear', key: 'count-task-'.$tugas->id.'-r'.$tugas->round);
         }
     }
 
@@ -82,6 +84,7 @@ class CountEntry extends Component
         }, 'qty');
 
         if ($ok) {
+            $this->dispatch('draft-clear', key: 'count-task-'.$tugas->id.'-r'.$tugas->round);
             $this->redirectRoute('count-tasks.index', navigate: true);
         }
     }

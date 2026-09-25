@@ -182,8 +182,10 @@ class DocumentPrintTest extends TenantTestCase
         $this->actingAs($admin)->get($this->tenantUrl('print/label-bin/1'))->assertNotFound();
         $this->actingAs($admin)->get($this->tenantUrl('print/stock-count/1'))->assertNotFound();
         $this->actingAs($admin)->get($this->tenantUrl('print/shipment/999999'))->assertNotFound();
-        $this->actingAs($admin)->get($this->tenantUrl('print/asset-handover/1'))->assertStatus(501);
-        $this->actingAs($admin)->get($this->tenantUrl('print/waste-disposal/1'))->assertStatus(501);
+        // BA Waste (modul Konversi & Waste, A-160) dan BA Serah Terima Aset (modul Aset)
+        // sudah aktif: dokumen yang tidak ada = 404, bukan lagi 501.
+        $this->actingAs($admin)->get($this->tenantUrl('print/asset-handover/999999'))->assertNotFound();
+        $this->actingAs($admin)->get($this->tenantUrl('print/waste-disposal/999999'))->assertNotFound();
     }
 
     #[Test]

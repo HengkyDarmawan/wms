@@ -74,7 +74,7 @@
             </div>
         @endcanany
 
-        @canany(['user.view', 'role.view', 'org.view', 'support_access.grant', 'document_layout.manage'])
+        @canany(['user.view', 'role.view', 'org.view', 'support_access.grant', 'document_layout.manage', 'billing.view', 'company_setting.manage'])
             <div class="nx-menu-section">
                 <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
                     {{ __('Administrasi') }}
@@ -112,6 +112,24 @@
                         <a class="nx-menu-link {{ request()->routeIs('support-access.*') ? 'active' : '' }}"
                            href="{{ route('support-access.index') }}" data-title="{{ __('Akses dukungan') }}">
                             <i class="bi bi-life-preserver"></i><span class="nx-menu-label">{{ __('Akses dukungan') }}</span>
+                        </a>
+                    </div>
+                @endcan
+
+                @can('company_setting.manage')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('setup.*') ? 'active' : '' }}"
+                           href="{{ route('setup.index') }}" data-title="{{ __('Setup awal') }}">
+                            <i class="bi bi-rocket-takeoff"></i><span class="nx-menu-label">{{ __('Setup awal') }}</span>
+                        </a>
+                    </div>
+                @endcan
+
+                @can('billing.view')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('billing.*') ? 'active' : '' }}"
+                           href="{{ route('billing.index') }}" data-title="{{ __('Tagihan langganan') }}">
+                            <i class="bi bi-receipt"></i><span class="nx-menu-label">{{ __('Tagihan langganan') }}</span>
                         </a>
                     </div>
                 @endcan
@@ -292,6 +310,69 @@
                     <a class="nx-menu-link {{ request()->routeIs('issues.*') ? 'active' : '' }}"
                        href="{{ route('issues.index') }}" data-title="{{ __('Pemakaian material') }}">
                         <i class="bi bi-hammer"></i><span class="nx-menu-label">{{ __('Pemakaian material') }}</span>
+                    </a>
+                </div>
+            </div>
+        @endcan
+
+        @canany(['conversion.view', 'waste.view'])
+            <div class="nx-menu-section">
+                <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
+                    {{ __('Konversi & waste') }}
+                </div>
+
+                @can('conversion.view')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('conversions.*') ? 'active' : '' }}"
+                           href="{{ route('conversions.index') }}" data-title="{{ __('Konversi material') }}">
+                            <i class="bi bi-scissors"></i><span class="nx-menu-label">{{ __('Konversi material') }}</span>
+                        </a>
+                    </div>
+                @endcan
+
+                @can('waste.view')
+                    <div class="nx-menu-item">
+                        <a class="nx-menu-link {{ request()->routeIs('waste-disposals.*') ? 'active' : '' }}"
+                           href="{{ route('waste-disposals.index') }}" data-title="{{ __('Berita acara waste') }}">
+                            <i class="bi bi-trash3"></i><span class="nx-menu-label">{{ __('Berita acara waste') }}</span>
+                        </a>
+                    </div>
+                @endcan
+            </div>
+        @endcanany
+
+        @can('asset.view')
+            <div class="nx-menu-section">
+                <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
+                    {{ __('Aset dipinjamkan') }}
+                </div>
+
+                <div class="nx-menu-item">
+                    <a class="nx-menu-link {{ request()->routeIs('assets.*') ? 'active' : '' }}"
+                       href="{{ route('assets.index') }}" data-title="{{ __('Aset') }}">
+                        <i class="bi bi-truck-front"></i><span class="nx-menu-label">{{ __('Aset') }}</span>
+                    </a>
+                </div>
+
+                <div class="nx-menu-item">
+                    <a class="nx-menu-link {{ request()->routeIs('asset-handovers.*') ? 'active' : '' }}"
+                       href="{{ route('asset-handovers.index') }}" data-title="{{ __('Serah terima aset') }}">
+                        <i class="bi bi-clipboard-check"></i><span class="nx-menu-label">{{ __('Serah terima aset') }}</span>
+                    </a>
+                </div>
+            </div>
+        @endcan
+
+        @can('pr.view')
+            <div class="nx-menu-section">
+                <div class="nx-menu-group-text px-3 pt-3 pb-1 small text-uppercase text-muted">
+                    {{ __('Pembelian') }}
+                </div>
+
+                <div class="nx-menu-item">
+                    <a class="nx-menu-link {{ request()->routeIs('purchase-requests.*') ? 'active' : '' }}"
+                       href="{{ route('purchase-requests.index') }}" data-title="{{ __('Purchase Request') }}">
+                        <i class="bi bi-cart3"></i><span class="nx-menu-label">{{ __('Purchase Request') }}</span>
                     </a>
                 </div>
             </div>

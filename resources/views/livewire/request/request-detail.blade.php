@@ -341,6 +341,8 @@
         </div>
     @endif
 
+    @include('request.partials.deliveries', ['req' => $req])
+
     @include('approval.partials.history', ['riwayatApproval' => $riwayatApproval])
 
     <div class="card">
@@ -350,7 +352,7 @@
                 <li class="list-group-item">
                     <div class="d-flex justify-content-between">
                         <span>{{ $log->description }}</span>
-                        <span class="text-muted small">{{ $log->created_at?->format('d/m/Y H:i') }}</span>
+                        <span class="text-muted small">{{ $log->created_at?->lokal()->format('d/m/Y H:i') }}</span>
                     </div>
                     <div class="small text-muted">{{ $log->causer?->name ?? __('Sistem') }}</div>
                 </li>

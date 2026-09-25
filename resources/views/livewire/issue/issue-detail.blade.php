@@ -11,7 +11,7 @@
                 @if ($isu->reversalOf) · {{ __('Pembalik') }} <a href="{{ route('issues.show', $isu->reversal_of_id) }}">{{ $isu->reversalOf->number }}</a> @endif
                 · {{ __('Dibuat') }} {{ $isu->issuer?->name }}
                 @if ($isu->submitter) · {{ __('Diajukan') }} {{ $isu->submitter->name }} @endif
-                @if ($isu->confirmed_at) · {{ __('Dikonfirmasi') }} {{ $isu->confirmer?->name }} {{ $isu->confirmed_at->format('d/m/Y H:i') }} @endif
+                @if ($isu->confirmed_at) · {{ __('Dikonfirmasi') }} {{ $isu->confirmer?->name }} {{ $isu->confirmed_at->lokal()->format('d/m/Y H:i') }} @endif
                 @if ($isu->approver && $isu->status->value === 'confirmed') · {{ __('Disetujui') }} {{ $isu->approver->name }} @endif
             </p>
             @if ($isu->reason) <p class="small mb-0">{{ __('Alasan pembalikan') }}: {{ $isu->reason->label }}</p> @endif
@@ -146,7 +146,7 @@
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $r)
-                <li class="list-group-item">{{ $r->created_at?->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
+                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
             @endforelse

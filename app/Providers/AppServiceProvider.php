@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Domain\Shared\Livewire\ReportViewer;
 use App\Http\Middleware\EnsureClientPortal;
 use App\Http\Middleware\EnsureInternalArea;
 use App\Http\Middleware\EnsureSubscriptionState;
 use App\Http\Middleware\InitializeTenancyBySubdomain;
-use App\Domain\Shared\Livewire\ReportViewer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -28,6 +29,13 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // BR-GEN-07 / NFR-07: waktu disimpan UTC, ditampilkan di zona company.
+        // Dipakai di view: `$model->created_at?->lokal()->format('d/m/Y H:i')`.
+        Carbon::macro('lokal', function () {
+            /** @var Carbon $this */
+            return $this->copy()->timezone(tenant()?->timezone ?? 'Asia/Jakarta');
+        });
+
         // Paginasi memakai markup Bootstrap 5 agar serasi dengan template NexaDash (D-05).
         Paginator::useBootstrapFive();
 

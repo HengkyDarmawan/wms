@@ -84,7 +84,7 @@
                 <tbody>
                     @forelse ($kejadian as $k)
                         <tr @class(['table-danger' => ! $k->isPublished() && $k->attempts >= 3])>
-                            <td class="text-nowrap">{{ $k->occurred_at?->format('d/m/Y H:i') }}</td>
+                            <td class="text-nowrap">{{ $k->occurred_at?->lokal()->format('d/m/Y H:i') }}</td>
                             <td>{{ $k->event_type->label() }}</td>
                             <td class="small">
                                 {{ $k->source_type ?? '—' }}
@@ -96,7 +96,7 @@
                             <td>
                                 @if ($k->isPublished())
                                     <span class="badge text-bg-success">{{ __('Terkirim') }}</span>
-                                    <div class="small text-muted">{{ $k->published_at?->format('d/m/Y H:i') }}</div>
+                                    <div class="small text-muted">{{ $k->published_at?->lokal()->format('d/m/Y H:i') }}</div>
                                 @else
                                     <span class="badge text-bg-secondary">{{ __('Belum terkirim') }}</span>
                                     @if ($k->attempts > 0)

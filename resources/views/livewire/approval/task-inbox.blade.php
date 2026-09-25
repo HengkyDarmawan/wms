@@ -95,14 +95,14 @@
                             </td>
                             <td>
                                 {{ $s->submitter?->name ?? __('Sistem') }}
-                                <div class="small text-muted">{{ $s->submitted_at?->format('d/m/Y H:i') }}</div>
+                                <div class="small text-muted">{{ $s->submitted_at?->lokal()->format('d/m/Y H:i') }}</div>
                             </td>
                             <td>
                                 @if ($tab === 'semua')
                                     {{ $t->approver?->name }}
                                 @endif
                                 <div class="{{ $tab === 'semua' ? 'small text-muted' : '' }}">
-                                    {{ $t->due_at?->format('d/m/Y H:i') }}
+                                    {{ $t->due_at?->lokal()->format('d/m/Y H:i') }}
                                     @if ($t->isOverdue()) <span class="badge text-bg-danger">{{ __('Lewat batas') }}</span> @endif
                                 </div>
                                 @if ($t->delegatedFrom) <div class="small text-muted">{{ __('Delegasi dari') }} {{ $t->delegatedFrom->name }}</div> @endif

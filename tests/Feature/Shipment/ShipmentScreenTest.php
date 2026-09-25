@@ -13,6 +13,7 @@ use App\Domain\Master\Models\Uom;
 use App\Domain\Master\Models\Vehicle;
 use App\Domain\Request\Actions\SaveRequest;
 use App\Domain\Request\Actions\SubmitRequest;
+use App\Domain\Shipment\Actions\ConfirmDelivery;
 use App\Domain\Shipment\Actions\CreatePickTask;
 use App\Domain\Shipment\Actions\CreateShipment;
 use App\Domain\Shipment\Actions\ProcessPickTask;
@@ -273,6 +274,40 @@ class ShipmentScreenTest extends TenantTestCase
     }
 
     #[Test]
+    public function tc_pck_16_pindai_bin_lalu_item_mencatat_baris(): void
+    {
+        $pck = app(CreatePickTask::class)->handle($this->reqDisetujui(), $this->makeUser('warehouse_head'))[0];
+        $staf = $this->makeUser('warehouse_staff');
+        $staf->forgetPermissionCache();
+        $baris = $pck->lines()->with('item', 'bin')->first();
+        $baris->item->forceFill(['barcode' => '8991112223334'])->save();
+
+        Livewire::actingAs($staf)
+            ->test(PickDetail::class, ['pickTask' => $pck])
+            ->call('mulai')
+            // Kode asing ditolak tanpa mencatat apa pun.
+            ->set('kodePindai', 'TIDAK-ADA')
+            ->call('pindai')
+            ->assertHasErrors('kodePindai')
+            // Bin lalu barcode item (A-203).
+            ->set('kodePindai', mb_strtolower((string) $baris->bin->code))
+            ->call('pindai')
+            ->assertSet('binPindai', (int) $baris->bin_id)
+            ->set('kodePindai', '8991112223334')
+            ->call('pindai')
+            ->assertHasNoErrors()
+            ->assertSet('sorot', (int) $baris->id)
+            ->assertSet('kodePindai', '')
+            ->call('selesaikan')
+            ->assertSet('ruleError', '');
+
+        $baris->refresh();
+        $this->assertNotNull($baris->scanned_at);
+        $this->assertSame((float) $baris->qty_allocated, (float) $baris->qty_picked);
+        $this->assertSame('completed', $pck->refresh()->status->value);
+    }
+
+    #[Test]
     public function tc_sj_15_layar_susun_sj_menolak_cara_kirim_tidak_lengkap(): void
     {
         $pck = $this->pckSelesai();
@@ -349,7 +384,7 @@ class ShipmentScreenTest extends TenantTestCase
         $sj = app(ShipShipment::class)->handle($this->sjSiap(), null, $this->makeUser('driver'));
         $baris = $sj->lines()->first();
 
-        app(\App\Domain\Shipment\Actions\ConfirmDelivery::class)->handle(
+        app(ConfirmDelivery::class)->handle(
             $sj,
             ['received_by_name' => 'Pak Budi'],
             [[
@@ -386,7 +421,7 @@ class ShipmentScreenTest extends TenantTestCase
     {
         $sj = app(ShipShipment::class)->handle($this->sjSiap(), null, $this->makeUser('driver'));
 
-        app(\App\Domain\Shipment\Actions\ConfirmDelivery::class)->handle(
+        app(ConfirmDelivery::class)->handle(
             $sj,
             ['received_by_name' => 'Pak Budi'],
             [['shipment_line_id' => $sj->lines()->first()->id, 'qty_good' => 18, 'qty_missing' => 2]],

@@ -17,8 +17,9 @@ use App\Domain\Platform\Models\Company;
 use App\Domain\Platform\Models\Plan;
 use App\Domain\Platform\Models\Subscription;
 use Database\Seeders\Tenant\MasterReferenceSeeder;
-use Database\Seeders\Tenant\WarehouseReferenceSeeder;
 use Database\Seeders\Tenant\ReferenceSeeder;
+use Database\Seeders\Tenant\WarehouseReferenceSeeder;
+use Illuminate\Foundation\Testing\DatabaseTransactionsManager;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -55,8 +56,15 @@ abstract class TenantTestCase extends TestCase
 
         tenancy()->initialize($this->company);
 
-        DB::connection('central')->beginTransaction();
-        DB::connection('tenant')->beginTransaction();
+        // Seperti trait DatabaseTransactions: transaksi pembungkus uji tidak
+        // dihitung, sehingga callback DB::afterCommit tetap berjalan.
+        $manager = new DatabaseTransactionsManager(['central', 'tenant']);
+        $this->app->instance('db.transactions', $manager);
+
+        foreach (['central', 'tenant'] as $koneksi) {
+            DB::connection($koneksi)->setTransactionManager($manager);
+            DB::connection($koneksi)->beginTransaction();
+        }
     }
 
     protected function tearDown(): void

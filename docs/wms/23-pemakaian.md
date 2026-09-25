@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `issue` (Pemakaian Material di Site)
 
-**Versi:** 0.2
+**Versi:** 0.3
 **Tanggal:** 24 September 2026
 **Status:** selesai Fase 1 — modul kesebelas setelah [Transfer/Retur](22-retur-transfer.md) dan [Template dokumen & label](18-template-dokumen-label.md); ISU pembalik diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-117](04-keputusan-dan-asumsi.md#a-117)–[A-119](04-keputusan-dan-asumsi.md#a-119) dan [A-150](04-keputusan-dan-asumsi.md#a-150)–[A-152](04-keputusan-dan-asumsi.md#a-152) (*Perlu validasi*)
 **Modul:** `issue` (ISU)
@@ -160,7 +160,7 @@ Matriks [§14](05-aturan-bisnis.md#14-matriks-kejadian-stok) "Gudang Site → di
 | Diretur | GRN retur ber-proyek ke bin Retur ([A-112](04-keputusan-dan-asumsi.md#a-112)) |
 | Di Gudang Site, Aset di proyek | saldo sekarang ([BR-PRJ-05](05-aturan-bisnis.md#br-prj)) |
 
-Belum: kolom *Waste* (modul Konversi/Waste), *Rencana* `[F2]` ([BR-PRJ-09](05-aturan-bisnis.md#br-prj)), tab *Pemakaian* di detail proyek (layar detail proyek belum ada).
+Kolom *Dikonversi*, *Hasil konversi*, *Waste*, *Waste didisposisi* ditambah modul Konversi & Waste ([24-konversi-waste §9](24-konversi-waste.md#9-laporan--dashboard), v0.3). Belum: *Rencana* `[F2]` ([BR-PRJ-09](05-aturan-bisnis.md#br-prj)), tab *Pemakaian* di detail proyek (layar detail proyek belum ada).
 
 ## 10. Kasus uji (Given / When / Then)
 
@@ -224,5 +224,5 @@ Domain `app/Domain/Issue` ([Arsitektur §4](08-arsitektur.md#4-struktur-kode) `I
 ### 13.3 Sisa pekerjaan
 
 1. Foto pemakaian (lampiran), notifikasi §8, tanggal pakai mundur.
-2. Kolom *Waste* dan *Rencana* `[F2]` di laporan; tab *Pemakaian* di detail proyek; checklist penutupan proyek (BR-PRJ-02).
+2. Kolom *Rencana* `[F2]` di laporan (kolom waste sudah, v0.3); tab *Pemakaian* di detail proyek; checklist penutupan proyek (BR-PRJ-02).
 3. ISU dari bin non-penyimpanan (mis. langsung dari bin Penerimaan site tanpa PUT) menunggu validasi [A-117](04-keputusan-dan-asumsi.md#a-117).

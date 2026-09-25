@@ -51,10 +51,18 @@ class TwoFactorTest extends TenantTestCase
         $this->assertGuest();
 
         // Kode benar menyelesaikan login.
-        $this->post($this->tenantUrl('/two-factor'), ['code' => $totp->currentCode($secret)])
+        $kode = $totp->currentCode($secret);
+        $this->post($this->tenantUrl('/two-factor'), ['code' => $kode])
             ->assertRedirect($this->tenantUrl('/'));
 
         $this->assertAuthenticatedAs($user->fresh());
+
+        // A-205: kode yang sama tidak bisa dipakai ulang di jendelanya.
+        $this->app['auth']->forgetGuards();
+        $this->flushSession();
+        $this->post($this->tenantUrl('/login'), ['email' => $user->email, 'password' => self::PASSWORD]);
+        $this->post($this->tenantUrl('/two-factor'), ['code' => $kode])->assertSessionHasErrors('code');
+        $this->assertGuest();
     }
 
     #[Test]

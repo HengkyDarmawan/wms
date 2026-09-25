@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `access` (Akses, Autentikasi, Role & Cakupan, Organisasi)
 
-**Versi:** 0.5
+**Versi:** 0.6
 **Tanggal:** 24 September 2026
 **Status:** **selesai untuk Fase 1** — kerangka aplikasi, autentikasi, seluruh layar §6.1–§6.7, domain, seeder, dan 100 pengujian sudah jalan. Sisa pekerjaan kecil & penyimpangan: §13
 **Modul:** `access`
@@ -51,6 +51,7 @@ Semua tabel di database **tenant** kecuali disebut *pusat*. Konvensi kolom umum 
 | `is_active` | bool | — | nonaktif = tidak bisa login, data tetap |
 | `locked_until` | datetime | ya | kunci akun (NFR-04) |
 | `two_factor_secret`, `two_factor_recovery_codes` | text | ya | TOTP; dienkripsi |
+| `two_factor_last_step` | bigint | ya | langkah waktu TOTP terakhir yang dipakai; kode tidak bisa dipakai ulang ([A-205](04-keputusan-dan-asumsi.md#a-205), migrasi tenant `000180`) |
 | `sso_sub` | varchar(191) | ya | unik; stub F3 |
 | `email_verified_at`, `last_login_at`, `password_changed_at` *(impl.)* | datetime | ya | |
 | `failed_login_count` *(impl.)* | tinyint | — | direset saat login sukses |

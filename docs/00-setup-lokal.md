@@ -1,8 +1,8 @@
 # Setup Lokal — menjalankan dan mengetes aplikasi
 
-**Versi:** 1.4
+**Versi:** 1.5
 **Tanggal:** 24 September 2026
-**Status:** aktif — dua profil mesin dev: **rumah** (Laragon + MySQL 8.4) dan **kantor** (XAMPP + MariaDB 10.4, [A-76](wms/04-keputusan-dan-asumsi.md#a-76)); v1.4: skenario §5 langkah 3 memakai mesin approval ([20-approval](wms/20-approval.md))
+**Status:** aktif — dua profil mesin dev: **rumah** (XAMPP3 + MariaDB 10.4) dan **kantor** (XAMPP + MariaDB 10.4), keduanya [A-76](wms/04-keputusan-dan-asumsi.md#a-76) / [A-162](wms/04-keputusan-dan-asumsi.md#a-162); v1.5: mesin rumah pindah dari Laragon ke `C:\xampp3`
 **Dokumen terkait:** [Akun uji](00-akun-uji.md) · [Arsitektur §10](wms/08-arsitektur.md#10-lingkungan) · [README](README.md) · [`../CLAUDE.md`](../CLAUDE.md)
 
 Panduan dari klon bersih sampai bisa login dan mencoba alur REQ → PCK → SJ di browser. Semua akun dan password berasal dari [00-akun-uji](00-akun-uji.md). Semua database berprefiks `wms_`; MySQL/MariaDB lokal dipakai bersama proyek lain, jadi **jangan menyentuh database lain**.
@@ -11,15 +11,16 @@ Panduan dari klon bersih sampai bisa login dan mencoba alur REQ → PCK → SJ d
 
 ## 1. Profil mesin
 
-| Hal | Rumah (Laragon) | Kantor (XAMPP) |
+| Hal | Rumah (XAMPP3) | Kantor (XAMPP) |
 |---|---|---|
-| PHP 8.3.33 | `C:\laragon\bin\php\php-8.3.33-Win32-vs16-x64\php.exe`, alias `php83`. `php` di PATH = 8.5, **jangan dipakai** | `C:\xampp\php-8.3.33\php.exe`, sudah paling depan di PATH jadi `php` = 8.3.33. `C:\xampp\php\php.exe` = 7.4, **jangan dipakai** |
-| Database | MySQL 8.4 LTS, `127.0.0.1:3306`, `root` | MariaDB 10.4.27 bawaan XAMPP, `127.0.0.1:3306`, `root` tanpa password |
-| Web | Laragon auto virtual host `*.wms.test` | `php artisan serve` port 8000 (Apache XAMPP tidak diubah) |
+| Repo | `C:\xampp3\htdocs\wms` | `C:\xampp\htdocs\wms` |
+| PHP 8.3.33 | `C:\xampp3\php\php.exe`, sudah `php` di PATH | `C:\xampp\php-8.3.33\php.exe`, sudah paling depan di PATH jadi `php` = 8.3.33. `C:\xampp\php\php.exe` = 7.4, **jangan dipakai** |
+| Database | MariaDB 10.4.32 bawaan XAMPP3, `127.0.0.1:3306`, `root` tanpa password | MariaDB 10.4.27 bawaan XAMPP, `127.0.0.1:3306`, `root` tanpa password |
+| Web | `php artisan serve` port 8000 (Apache XAMPP3 memegang port 80, tidak diubah) | `php artisan serve` port 8000 (Apache XAMPP tidak diubah) |
 | Node · Composer | Node 22 · Composer 2.8 | Node 24 · Composer 2.9 |
-| Redis | opsional (Laragon/Memurai) | tidak ada |
+| Redis | tidak ada | tidak ada |
 
-Di bawah, `php` berarti PHP 8.3.33 sesuai profil (`php83` di rumah).
+Di bawah, `php` berarti PHP 8.3.33 sesuai profil. Laragon (MySQL 8.4, klon lama `C:\laragon\www\wms`) tidak dipakai lagi; MySQL 8.4 tetap standar produksi ([08 §10](wms/08-arsitektur.md#10-lingkungan)).
 
 ## 2. Instalasi pertama
 
@@ -35,12 +36,12 @@ Isi `.env`:
 
 | Kunci | Nilai | Catatan |
 |---|---|---|
-| `APP_URL` | `http://wms.test` (rumah) · `http://wms.test:8000` (kantor) | |
+| `APP_URL` | `http://wms.test:8000` (kedua profil) | |
 | `DB_PASSWORD` | sesuai server | kosong di XAMPP |
 | `CACHE_STORE` | `array` (atau `redis` bila ada) | **Jangan `database`/`file`:** stancl/tenancy memisahkan cache per company dengan *tag*, dan penyimpan tanpa tag membuat setiap halaman tenant galat *This cache store does not support tagging*. Produksi memakai Redis ([AD-11](wms/08-arsitektur.md#2-keputusan-arsitektur)) |
 | `PLATFORM_ADMIN_PASSWORD` | `Wms#2026!Admin` | hanya dev ([00-akun-uji §1](00-akun-uji.md#1-platform-database-pusat)) |
 
-Berkas hosts `C:\Windows\System32\drivers\etc\hosts` (buka Notepad **sebagai Administrator**), hanya perlu di profil kantor karena Laragon mengurusnya sendiri:
+Berkas hosts `C:\Windows\System32\drivers\etc\hosts` (buka Notepad **sebagai Administrator**), perlu di kedua profil:
 
 ```
 127.0.0.1  wms.test
@@ -65,18 +66,17 @@ php artisan tenants:seed --tenants=1 --class="Database\Seeders\Tenant\DemoSeeder
 - `--tenants=` menerima **id** company (`companies.id`), bukan kodenya. Company DEMO ber-id 1 pada instalasi bersih; `--tenants=demo` gagal. Tanpa opsi `--tenants`, seeder berjalan di semua company.
 - `DemoSeeder` memanggil seeder acuan, master, gudang, akun, organisasi, lalu `StockDemoSeeder` (stok awal dan kendaraan, [A-72](wms/04-keputusan-dan-asumsi.md#a-72)). Semua aman dijalankan ulang; stok tidak berlipat.
 - Mulai dari nol: `php artisan migrate:fresh` hanya mengosongkan pusat. Hapus juga `wms_tenant_demo` secara manual sebelum `PlatformDemoSeeder` dijalankan lagi.
-- Di XAMPP, `mysql` ada di `C:\xampp\mysql\bin\mysql.exe`.
+- `mysql` ada di `C:\xampp3\mysql\bin\mysql.exe` (rumah) atau `C:\xampp\mysql\bin\mysql.exe` (kantor).
 
 ## 4. Menjalankan
 
 | Profil | Perintah | Alamat |
 |---|---|---|
-| Rumah | (Laragon menyala) | `http://wms.test` · `http://demo.wms.test` |
-| Kantor | `php artisan serve --host=127.0.0.1 --port=8000` | `http://wms.test:8000` · `http://demo.wms.test:8000` |
+| Rumah & kantor | `php artisan serve --host=127.0.0.1 --port=8000` | `http://wms.test:8000` · `http://demo.wms.test:8000` |
 
 Identifikasi company memakai host tanpa port, jadi `:8000` tidak mengganggu. Sesi melekat pada host, jadi login di `demo.wms.test` tidak berlaku di `wms.test`.
 
-| Halaman | Alamat (kantor) | Akun |
+| Halaman | Alamat | Akun |
 |---|---|---|
 | Super Admin | `wms.test:8000/admin/login` | `superadmin@wms.test` / `Wms#2026!Admin` |
 | Back-office company | `demo.wms.test:8000/login` | akun [00-akun-uji §3](00-akun-uji.md#3-akun-tenant-demowmstest), password `Demo#2026!` |
@@ -105,7 +105,7 @@ Hasil terakhir dijalankan otomatis: [laporan progres](00-laporan-progres-2026-09
 
 ```bash
 mysql -uroot -e "CREATE DATABASE IF NOT EXISTS wms_central_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-php artisan test                    # 321 uji; database tenant uji wms_tenant_test_* dibuat & dihapus sendiri
+php artisan test                    # 513 uji; database tenant uji wms_tenant_test_* dibuat & dihapus sendiri
 py -3 docs/diagram/_verify.py       # link, anchor, ID, batas 450 baris
 ```
 

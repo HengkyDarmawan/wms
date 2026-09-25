@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * bergantung pada satu lapisan saja.
  *
  * @property StockStatus $stock_status
+ * @property StockStatus|null $from_stock_status kondisi di bin asal bila berbeda (A-194)
  */
 class StockMovement extends Model
 {
@@ -41,6 +42,7 @@ class StockMovement extends Model
     {
         return [
             'stock_status' => StockStatus::class,
+            'from_stock_status' => StockStatus::class,
             'qty_base' => 'decimal:4',
             'occurred_at' => 'datetime',
         ];

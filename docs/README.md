@@ -1,8 +1,8 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.30
-**Tanggal:** 24 September 2026
-**Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, dan Issue (pemakaian material di site) selesai untuk Fase 1** (493 uji hijau di MariaDB 10.4). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Modul berikutnya: Conversion/Waste. D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; **[A-72–A-76](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) dan [A-77–A-116](wms/04-keputusan-dan-asumsi.md#26-baru-dari-pembangunan-modul-lanjutan--24-sep-2026), [A-120–A-126](wms/04-keputusan-dan-asumsi.md#27-baru-dari-modul-template-dokumen--label--24-sep-2026), [A-117–A-119 dan A-150–A-152](wms/04-keputusan-dan-asumsi.md#28-baru-dari-modul-issue-pemakaian-material-di-site--24-sep-2026) menunggu validasi** (lahir dari pencocokan dokumen dengan kode dan dari pembangunan modul). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
+**Versi:** 0.36
+**Tanggal:** 25 September 2026
+**Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (579 uji hijau di MariaDB 10.4). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep, [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md)); berikutnya: validasi asumsi oleh pemilik produk, lalu landing page (Part 5). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; **[A-72–A-76](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) dan [A-77–A-116](wms/04-keputusan-dan-asumsi.md#26-baru-dari-pembangunan-modul-lanjutan--24-sep-2026), [A-120–A-126](wms/04-keputusan-dan-asumsi.md#27-baru-dari-modul-template-dokumen--label--24-sep-2026), [A-117–A-119 dan A-150–A-152](wms/04-keputusan-dan-asumsi.md#28-baru-dari-modul-issue-pemakaian-material-di-site--24-sep-2026), [A-153–A-162](wms/04-keputusan-dan-asumsi.md#29-baru-dari-modul-konversi--waste--24-sep-2026), [A-163–A-169](wms/04-keputusan-dan-asumsi.md#210-baru-dari-modul-aset-dipinjamkan--24-sep-2026), [A-170–A-175](wms/04-keputusan-dan-asumsi.md#211-baru-dari-modul-purchase-request--25-sep-2026), [A-176–A-184](wms/04-keputusan-dan-asumsi.md#212-baru-dari-modul-platform-penuh--25-sep-2026), [A-185–A-194](wms/04-keputusan-dan-asumsi.md#213-baru-dari-pendukung-fase-1--25-sep-2026), [A-195–A-205](wms/04-keputusan-dan-asumsi.md#214-baru-dari-tinjauan-kode-pendukung--platform--25-sep-2026) menunggu validasi** (lahir dari pencocokan dokumen dengan kode dan dari pembangunan modul). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
 Dokumentasi ini adalah acuan tunggal untuk membangun WMS baru dari nol. Prototipe lama (`warehouse.sipembantu.com`) hanya referensi; indeks temuan auditnya ada di [00-audit](00-audit/README.md).
 
@@ -19,6 +19,7 @@ docs/
 ├── 00-checklist-persiapan.md              ← checklist pemilik produk sebelum Part 4 & coding; peta rilis D-29; halaman login; WhatsApp
 ├── 00-akun-uji.md                         ← SATU-SATUNYA daftar akun seed/demo (Super Admin, company DEMO, 14 akun tenant, org, stok awal, aturan approval demo)
 ├── 00-laporan-progres-2026-09-24.md     ← hasil E2E skenario §5, cakupan TC 178/178, peta progres Fase 1, bug pengiriman ↔ REQ
+├── 00-tinjauan-asumsi-2026-09-25.md     ← daftar kerja 100 asumsi *Perlu validasi* (A-72–A-194) untuk pemilik produk, ⚠ = paling berdampak
 ├── 00-setup-lokal.md                      ← instalasi & menjalankan aplikasi: profil rumah (Laragon) dan kantor (XAMPP + MariaDB), hosts, seed, skenario uji manual
 ├── 00-audit/README.md                     ← indeks ID temuan prototipe (BUG/UX/SEC/T) yang dirujuk
 ├── 00-audit/alur-proses.html              ← bacaan cepat: 10 alur BPMN sebagai diagram alir sederhana — DIBUAT OTOMATIS dari diagram/_generate_alur_html.py
@@ -43,15 +44,19 @@ docs/
 │   ├── 14-request.md                      ← Part 4: modul Request (REQ permintaan material, portal klien) — v0.5, §13 status & catatan implementasi
 │   ├── 15-picking-shipment.md             ← Part 4: modul Picking & Shipment (PCK, SJ, bukti terima, DSC) — v0.3, §13 status & catatan implementasi
 │   ├── 16-shared-laporan-berkas.md        ← Part 4: kerangka laporan bersama + ekspor Excel, 7 laporan, unggah berkas, aset global — v0.2 (mendokumentasikan kode yang sudah ada)
-│   ├── 17-platform-login.md               ← Part 4: Platform Fase 1 — login Super Admin, gerbang langganan, seeder pusat — v0.1
+│   ├── 17-platform-login.md               ← Part 4: modul Platform — company & provisioning, paket & trial, tagihan & bukti bayar, siklus langganan, akses dukungan, gerbang langganan — v0.2
 │   ├── 18-template-dokumen-label.md       ← Part 4: modul Template dokumen & label (layout induk, cetak PDF dokumen, label barcode/QR) — v0.1, §13 catatan implementasi
 │   ├── 19-receipt-putaway.md              ← Part 4: modul Receipt/Putaway (GRN vendor & transfer, QC, PUT, RTV) — v0.4, §13 status & catatan implementasi
 │   ├── 20-approval.md                     ← Part 4: mesin approval bersama (aturan, lapis, SoD, delegasi, eskalasi, simulasi; REQ, RTV, ADJ, OPN tersambung) — v0.3, §13 status & catatan implementasi
 │   ├── 21-opname-penyesuaian.md           ← Part 4: modul Count/Adjustment (sesi opname, hitung buta, hitung ulang, approval sesi, ADJ manual & pembalik) — v0.2, §13 status & catatan implementasi
 │   ├── 22-retur-transfer.md               ← Part 4: modul Transfer/Return (TRF antar gudang/proyek/titik, TRF backorder REQ, RET dari proyek, SJ balik, GRN retur, pemilahan) — v0.2, §13 status & catatan implementasi
-│   ├── 23-pemakaian.md                    ← Part 4: modul Issue (ISU pemakaian material di Gudang Site, ISU pembalik dengan approval, laporan Material per Proyek, cetak Bukti Pemakaian) — v0.2, §13 catatan implementasi
+│   ├── 23-pemakaian.md                    ← Part 4: modul Issue (ISU pemakaian material di Gudang Site, ISU pembalik dengan approval, laporan Material per Proyek, cetak Bukti Pemakaian) — v0.3, §13 catatan implementasi
+│   ├── 24-konversi-waste.md               ← Part 4: modul Conversion/Waste (CNV potong/rakit/bongkar/kemas dengan silsilah & neraca, CNV pembalik, BA waste dengan bukti, cetak) — v0.2, §13 catatan implementasi
+│   ├── 25-aset.md                         ← Part 4: modul Asset (AST otomatis dari SJ/RET, pemeriksaan grade+skor+foto, state aset dari kartu stok, aset hilang → ADJ, laporan aset dipinjamkan) — v0.2, §13 catatan implementasi
+│   ├── 26-purchase-request.md             ← Part 4: modul PurchaseRequest (PRQ backorder REQ / titik pesan ulang / manual, approval opsional jenis vendor, catatan pemesanan per vendor, GRN merujuk catatan, reservasi ke REQ) — v0.1, §13 catatan implementasi
+│   ├── 27-pendukung-f1.md                 ← Part 4: Pendukung Fase 1 (strategi pengambilan, konfirmasi terima, penutupan proyek, notifikasi, laporan inti + PDF, Beranda, wizard setup, impor Excel, PWA) — v0.1
 │   └── _template-spesifikasi-modul.md     ← template Part 4
-├── prompts/                               ← paket prompt Part 6 per modul, plus prompt audit lama dan 00-lanjutkan-di-rumah.md (serah terima kantor → rumah)
+├── prompts/                               ← paket prompt Part 6 per modul, plus prompt audit lama dan serah terima 00-lanjutkan-di-kantor.md (rumah → kantor, aktif) / 00-lanjutkan-di-rumah.md (arsip)
 ├── akuntansi/01-lingkup-dan-integrasi-wms.md
 ├── purchasing/01-lingkup-dan-integrasi-wms.md
 └── diagram/
@@ -69,8 +74,8 @@ docs/
 |---|---|---|---|
 | 1 | Blueprint, riset, glosarium, keputusan & asumsi, aturan bisnis, katalog status | `wms/01`–`06`, `akuntansi/01`, `purchasing/01` | **Selesai** — tiap berkas punya versinya sendiri (blueprint 0.7, glosarium 0.6, keputusan 0.13, aturan 0.10, katalog 0.8). A-25–A-49 divalidasi dan A-51–A-66 disetujui 23 Sep 2026; A-50–A-71 disetujui 24 Sep 2026; [A-72–A-84](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) menunggu validasi |
 | 2 | Proses bisnis to-be (BPMN 2.0) | `diagram/bpmn-*.drawio` + `wms/07`, `07a`, `07b` (teks per lane + tabel langkah + Mermaid), dari satu sumber `diagram/_generate.py` | **v0.4** — final; alur 1/2/7/8 diperluas (A-51–A-66, BR-OPN-09–10); alur 5 memuat varian transfer dalam proyek (A-50) |
-| 3 | Arsitektur & ERD (DB pusat + DB per company), verifikasi paket | `wms/08-arsitektur.md` + `08a`–`08c` (Mermaid `erDiagram`) + `diagram/erd-*.drawio`, dari `diagram/_generate_erd.py` | **Arsitektur v0.11, model data v0.12** — 114 tabel, 15 keputusan AD-xx, paket terverifikasi (O-01 ✔); 24 Sep 2026 diselaraskan dengan implementasi (`projects.site_warehouse_id` dihapus per A-40, kolom implementasi modul Master s.d. Issue masuk) |
-| 4 | Spesifikasi modul BE (per modul, dari template) | `wms/10-…` s.d. `wms/2x-…` | **Berjalan** — [10-access](wms/10-access.md) v0.5, [11-master](wms/11-master.md) v0.3, [12-warehouse](wms/12-warehouse.md) v0.4, [13-stock](wms/13-stock.md) v0.3, [14-request](wms/14-request.md) v0.5, [15-picking-shipment](wms/15-picking-shipment.md) v0.4, [19-receipt-putaway](wms/19-receipt-putaway.md) v0.4, [20-approval](wms/20-approval.md) v0.5, [21-opname-penyesuaian](wms/21-opname-penyesuaian.md) v0.2, [22-retur-transfer](wms/22-retur-transfer.md) v0.2, [18-template-dokumen-label](wms/18-template-dokumen-label.md) v0.2, dan [23-pemakaian](wms/23-pemakaian.md) v0.2 **selesai Fase 1**; [16-shared-laporan-berkas](wms/16-shared-laporan-berkas.md) dan [17-platform-login](wms/17-platform-login.md) v0.1 mendokumentasikan kode bersama yang dibangun tanpa spesifikasi (16 v0.3 menambah laporan Material per Proyek); berikutnya modul Conversion/Waste. Pola per modul: spesifikasi → prompt → kode |
+| 3 | Arsitektur & ERD (DB pusat + DB per company), verifikasi paket | `wms/08-arsitektur.md` + `08a`–`08c` (Mermaid `erDiagram`) + `diagram/erd-*.drawio`, dari `diagram/_generate_erd.py` | **Arsitektur v0.13, model data v0.14** — 114 tabel, 15 keputusan AD-xx, paket terverifikasi (O-01 ✔); 24 Sep 2026 diselaraskan dengan implementasi (`projects.site_warehouse_id` dihapus per A-40, kolom implementasi modul Master s.d. Asset masuk) |
+| 4 | Spesifikasi modul BE (per modul, dari template) | `wms/10-…` s.d. `wms/2x-…` | **Berjalan** — [10-access](wms/10-access.md) v0.5, [11-master](wms/11-master.md) v0.3, [12-warehouse](wms/12-warehouse.md) v0.4, [13-stock](wms/13-stock.md) v0.3, [14-request](wms/14-request.md) v0.7, [15-picking-shipment](wms/15-picking-shipment.md) v0.6, [19-receipt-putaway](wms/19-receipt-putaway.md) v0.7, [20-approval](wms/20-approval.md) v0.7, [21-opname-penyesuaian](wms/21-opname-penyesuaian.md) v0.3, [22-retur-transfer](wms/22-retur-transfer.md) v0.4, [18-template-dokumen-label](wms/18-template-dokumen-label.md) v0.4, [23-pemakaian](wms/23-pemakaian.md) v0.3, [24-konversi-waste](wms/24-konversi-waste.md) v0.2, [25-aset](wms/25-aset.md) v0.2, dan [26-purchase-request](wms/26-purchase-request.md) v0.1 **selesai Fase 1**; [17-platform-login](wms/17-platform-login.md) v0.2 **selesai Fase 1**; [16-shared-laporan-berkas](wms/16-shared-laporan-berkas.md) mendokumentasikan kode bersama yang dibangun tanpa spesifikasi (16 v0.5: laporan Material per Proyek dengan kolom konversi & waste, laporan Aset dipinjamkan); [27-pendukung-f1](wms/27-pendukung-f1.md) v0.1 **selesai Fase 1**; berikutnya penutup. Pola per modul: spesifikasi → prompt → kode |
 | 5 | FE landing page (gaya indonesia.travel) | `wms/30-landing-page.md` | — |
 | 6 | Paket prompt Claude Code (per modul) | `prompts/*.md` | **Berjalan** — [prompts/10-access.md](prompts/10-access.md), [prompts/11-master.md](prompts/11-master.md), [prompts/12-warehouse.md](prompts/12-warehouse.md), [prompts/13-stock.md](prompts/13-stock.md), [prompts/14-request.md](prompts/14-request.md), [prompts/15-picking-shipment.md](prompts/15-picking-shipment.md), [prompts/16-shared.md](prompts/16-shared.md), [prompts/17-platform-login.md](prompts/17-platform-login.md), [prompts/18-template-label.md](prompts/18-template-label.md). Prompt 13–15 menyebut dirinya "Part 7–9"; itu nomor sesi, bukan Part rencana ini |
 
@@ -96,11 +101,108 @@ docs/
 
 ## Catatan perubahan
 
+### v0.36 — 25 September 2026 (tinjauan kode Pendukung & Platform)
+- **Perbaikan hasil tinjauan kode** (tanpa status/enum baru):
+  - email notifikasi dikirim setelah commit, galat SMTP tidak membatalkan aksi (A-199; TC-NTF-05);
+  - bayar terlambat memulai periode satu bulan dari hari verifikasi (A-195; TC-PLT-12);
+  - update Livewire cari/filter/halaman lolos di mode hanya-baca (A-196; TC-ACC-28g);
+  - tautan akses dukungan sekali pakai — migrasi pusat `000030` `support_accesses.link_nonce_hash`, `link_used_at` (A-199; TC-PLT-11);
+  - keberatan terima hanya atas baris REQ sendiri + kunci kirim ganda (A-197); `still_needed` keberatan membuka lagi baris REQ (A-198; TC-REQ-33);
+  - checklist penutupan proyek: REQ menunggu keputusan & SJ `prepared` menghalangi, diperiksa dalam transaksi (A-187 diperluas; TC-MST-20).
+- Notifikasi tugas approval menyebut asal tugas (delegasi/eskalasi; TC-NTF-06).
+- **Pengingat tagihan langganan** ke company: kejadian ke-9 `subscription.billing` (lonceng + email) saat tagihan terbit, jatuh tempo, ditangguhkan (A-202; TC-PLT-04 diperluas).
+- **Pindai** di pencarian Item, Saldo stok (barcode item) & Aset, dan kolom *Pindai kode bin* di Put-away (A-201; TC-PUT-08, TC-STK-27 diperluas) dan alur *pindai bin lalu item* di layar PCK (A-203; TC-PCK-16; `wms/15-picking-shipment.md` → v0.8; `wms/19-receipt-putaway.md` → v0.8, `wms/13-stock.md` → v0.8).
+- **Tinjauan kode kedua** (malam yang sama): sisa baris REQ (kurang ambil, `reship`, keberatan) bisa dipetik ulang (A-204; TC-PCK-17); DSC & konfirmasi otomatis dikunci; draf REQ proyek tertutup tidak bisa diajukan + bin Gudang Site ikut nonaktif (A-187; TC-MST-20); kode 2FA Super Admin salah ikut kunci akun (A-200; TC-PLT-13); pindai PCK item berlacak wajib nomor lot/serial (A-203; TC-PCK-18); job harian per company melewati company `provisioning`/`terminated` dan tidak berhenti karena galat satu company (`Platform\Support\OperatingCompanies`).
+- **Pengetatan 2FA** tenant & Super Admin: kode TOTP tidak bisa dipakai ulang (migrasi tenant `000180`, pusat `000050` — `two_factor_last_step`), kode salah ikut kunci akun, kode pemulihan tidak peka huruf besar-kecil (A-205; TC-ACC-09, TC-PLT-13 diperluas). `wms/10-access.md` → v0.6; model data `08a`–`08c` → v0.19 (kolom 2FA `platform_users`, `support_accesses.link_*`).
+- **2FA Super Admin** opsional: *Keamanan akun* `/admin/security`, langkah kode `/admin/two-factor`, migrasi pusat `000040`; `ManageTwoFactor` & partial 2FA dipakai bersama tenant (A-200; TC-PLT-13).
+- **Asumsi baru [A-195](wms/04-keputusan-dan-asumsi.md#a-195)–[A-205](wms/04-keputusan-dan-asumsi.md#a-205)** (*Perlu validasi*, `04` → v0.26, §2.14); A-187 diperluas.
+- **Uji:** 10 uji baru (TC-NTF-05/06, TC-PLT-12/13, TC-ACC-28g, TC-REQ-33, TC-PCK-16/17/18 + TC-MST-20, TC-PLT-04/11, TC-PUT-08, TC-STK-27 diperluas). **579 uji hijau**; `ui-check.mjs` 67 cek (+ layar Super Admin), `alur-req-sj.mjs` 9/9, `alur-pendukung.mjs` 7/7, 0 error console. `TenantTestCase` memakai manajer transaksi uji Laravel (callback `afterCommit` berjalan di uji).
+- **Prompt serah terima baru** [`prompts/00-lanjutkan-di-kantor.md`](prompts/00-lanjutkan-di-kantor.md) v1.0 (rumah → kantor: langkah 0, jatah A-206, terapkan keputusan tinjauan asumsi); `prompts/00-lanjutkan-di-rumah.md` → v1.9 (arsip).
+- `wms/17-platform-login.md` → v0.4 (§5.1, §5.2, §10 TC-PLT-12/13, §13); `wms/27-pendukung-f1.md` → v0.3 (§5, §10 TC-REQ-33, TC-NTF-05/06, §13.1 butir 11, §13.2); `00-tinjauan-asumsi-2026-09-25.md` → v1.1.
+
+### v0.35 — 25 September 2026 (Pendukung Fase 1 selesai)
+- **Berkas baru `wms/27-pendukung-f1.md` v0.1.** Migrasi tenant `000160` (`notifications`, `notification_preferences`).
+  - **Strategi pengambilan** (`Stock\Support\RemovalOrder`): FIFO/FEFO/sisa potongan/manual, lot kedaluwarsa dilewati; alokasi keras tidak lagi menjanjikan baris saldo yang sama dua kali (A-185).
+  - **Beranda** antrean pekerjaan per izin & cakupan (A-186); **guard penutupan proyek** BR-PRJ-02/04 (A-187).
+  - **Konfirmasi & keberatan terima** BR-REQ-10 di layar REQ & portal, `deliveries:auto-confirm`; DSC `client_dispute` tanpa pergerakan stok (A-188).
+  - **Notifikasi** in-app & email: lonceng, halaman, preferensi, 8 kejadian, `notifications:daily` (A-189).
+  - **Laporan inti** saldo stok, mutasi periode, permintaan terbuka & barang rusak, konversi & waste, akurasi stok (total 14) + **ekspor PDF** semua laporan (A-190).
+  - **Wizard setup awal** (A-191), **impor item & proyek (+klien) dari Excel** (A-192), **PWA** installable + pindai kamera + draf lokal (A-193).
+- **Asumsi baru [A-185](wms/04-keputusan-dan-asumsi.md#a-185)–[A-194](wms/04-keputusan-dan-asumsi.md#a-194)** (*Perlu validasi*, `04` → v0.25, §2.13).
+- **Model data** 08a–08c → v0.18 (kolom `notifications.title/body/url`, A-189; `stock_movements.from_stock_status`, A-194).
+- **Modul lain:** `11-master` → v0.4, `13-stock` → v0.6, `14-request` → v0.8, `15-picking-shipment` → v0.7, `16-shared-laporan-berkas` → v0.6, `17-platform-login` → v0.3, `20-approval` → v0.8, `25-aset` → v0.3, `26-purchase-request` → v0.2, `08-arsitektur` → v0.16, laporan progres → v1.12, `prompts/00-lanjutkan-di-rumah.md` → v1.7, `cek.md`.
+- **Perbaikan tampilan waktu (BR-GEN-07):** 62 tampilan tanggal-jam di 34 view memakai jam UTC; kini macro `lokal()` → zona company.
+- **Temuan & perbaikan kartu stok ([A-194](wms/04-keputusan-dan-asumsi.md#a-194), migrasi tenant `000170`):** uji rantai penuh baru TC-E2E-01 (`tests/Feature/FullLifecycleTest.php`: GRN → QC → put-away → REQ → SJ → konfirmasi → site → ISU → retur → CNV → OPN → ADJ → aset) menunjukkan perubahan kondisi (Karantina → Tersedia, Rusak) tidak bisa dibangun ulang dari kartu stok dan pembaliknya salah kondisi. `stock_movements.from_stock_status` ditambahkan; `13-stock` naik versi, `04` → v0.25, model data → v0.18.
+- **Berkas baru `00-tinjauan-asumsi-2026-09-25.md`:** tabel ringkas semua asumsi *Perlu validasi* (A-72–A-194) dengan kolom keputusan (butir Penutup).
+- **E2E:** `alur-req-sj.mjs` membaca saldo awal dari database; skrip baru `alur-pendukung.mjs` (P1–P6). Pada data demo segar: 9/9 + 6/6 lulus, 0 error console; `ui-check.mjs` 61 pemeriksaan OK.
+- **Uji:** 23 uji baru (TC-PCK-12–15, TC-DSH-01, TC-MST-20–22, TC-REQ-30–32, TC-NTF-01–04, TC-RPT-02–05, TC-PWA-01, TC-GEN-07, TC-STK-26, TC-E2E-01); TC-RPT-01 (14 laporan) disesuaikan. **569 uji hijau** (MariaDB 10.4.32, XAMPP3).
+
+### v0.34 — 25 September 2026 (modul Platform penuh selesai Fase 1)
+- **`wms/17-platform-login.md` → v0.2 (selesai Fase 1).** Domain `app/Domain/Platform`, migrasi pusat `000020` (tanpa tabel tenant baru).
+  - **Buat company** dari layar Super Admin: database → migrasi → `TenantDatabaseSeeder` → Admin Company + undangan → `active`; gagal → tetap `provisioning`, bisa dilanjutkan (A-176).
+  - **Paket & trial** (durasi trial per paket), **tagihan** H-7 `INV/<yymm>/<urut>`, **bukti bayar** diunggah Admin Company (`/billing`, juga saat ditangguhkan) dan diverifikasi/ditolak Super Admin (A-177, A-178).
+  - **Siklus harian** `subscriptions:cycle` 00:30: `trial/active → past_due` (tenggang 7 hari) `→ suspended` (30 hari) `→ terminated` (simpan 90 hari) (BR-SUB-01).
+  - **Penangguhan manual** company, **flag fitur** stub, **masuk lewat akses dukungan** hanya-baca atas nama Admin pemberi izin (A-179, A-180, A-183).
+  - Gerbang: status company ikut menentukan; `terminated` hanya Beranda/Laporan/Tagihan/Profil (A-181); login Super Admin terkunci setelah gagal berulang + `platform_login_attempts` + `audit_logs` pusat (A-182).
+  - Temuan v0.1 §13.2 diselesaikan: data acuan company baru, `TenantDeleted` tidak lagi menghapus database, docblock `ProductionSeeder`.
+- **Asumsi baru [A-176](wms/04-keputusan-dan-asumsi.md#a-176)–[A-184](wms/04-keputusan-dan-asumsi.md#a-184)** (*Perlu validasi*, `04` → v0.23, §2.12).
+- **Permission baru** modul `billing` (2): `billing.view`, `billing.pay` (Admin Company).
+- **Katalog** `06` → v0.17: enum `subscription_invoice_status`, `subscription_payment_status` didaftarkan (nilai ERD) — **tanpa status baru**.
+- **Model data** 08a–08c → v0.16 (digenerate ulang): kolom & tabel pusat A-184.
+- **Modul lain:** `08-arsitektur` → v0.15 (§3 langkah 5, §7, §12), `00-akun-uji` → v1.10, laporan progres → v1.11, `prompts/00-lanjutkan-di-rumah.md` → v1.6, `cek.md`.
+- **Uji:** 9 uji baru TC-PLT-03–11 (termasuk pembuatan database company sungguhan). TC-ACC-27b (2 permission `billing`) disesuaikan. **546 uji hijau** (MariaDB 10.4.32, XAMPP3).
+
+### v0.33 — 25 September 2026 (modul Purchase Request selesai Fase 1)
+- **Berkas baru `wms/26-purchase-request.md` v0.1 (selesai Fase 1).** Domain `app/Domain/PurchaseRequest`, migrasi tenant `000150` (`purchase_requests`, `purchase_request_lines`, `purchase_request_orders`, `purchase_request_order_lines`; indeks `goods_receipt_lines.purchase_request_order_line_id`).
+  - PRQ dari tiga asal (KS §2.15): **backorder** baris REQ bersumber pembelian saat REQ disetujui (BR-REQ-05), **titik pesan ulang** (job harian 06:00 `purchase-requests:reorder`, draf, BR-REQ-11), **manual** (`pr.create`). Kejadian `purchase_requested` / `purchase_request_cancelled`.
+  - Approval opsional lewat mesin approval (tanpa aturan = disetujui); kondisi jenis vendor & asal (BR-APR-07). Semua jenis `approval_document_type` kini tersambung.
+  - **Catatan pemesanan** per vendor oleh Penindak Lanjut PR (`pr.order`, A-51): PO eksternal, nomor pesanan toko online, resi, ETA; baris boleh dipecah ke beberapa vendor; vendor tetap item disarankan; vendor baru sementara (A-53).
+  - **GRN vendor** merujuk baris catatan (BR-GRN-01/05); PRQ `partially_fulfilled`/`fulfilled`; `goods_received` membawa nomor PRQ & PO; barang backorder yang ditaruh direservasi ke REQ penunggu (BR-REQ-08). REQ batal/tutup → PRQ yang belum diteruskan ikut batal (BR-REQ-09/15).
+  - Layar daftar/form/detail PRQ, kartu *Pesanan PRQ ke vendor ini* di form GRN, menu **Pembelian**, palet.
+- **Asumsi baru [A-170](wms/04-keputusan-dan-asumsi.md#a-170)–[A-175](wms/04-keputusan-dan-asumsi.md#a-175)** (*Perlu validasi*, `04` → v0.22, §2.11): permission & cakupan, PRQ backorder, kolom di luar ERD, jenis vendor untuk aturan, sambungan GRN, job titik pesan ulang.
+- **Permission baru** modul `purchase_request` (6): `pr.view`, `pr.create`, `pr.submit`, `pr.approve`, `pr.order`, `pr.cancel`. Aturan demo **PRQ toko online** (00-akun-uji §5).
+- **Katalog** `06` → v0.16: catatan §2.15 — **tanpa status baru**.
+- **Model data** 08a–08c → v0.15 (digenerate ulang): kolom implementasi PRQ (A-172).
+- **Modul lain:** `14-request` → v0.7, `19-receipt-putaway` → v0.7, `20-approval` → v0.7, `08-arsitektur` → v0.14 (§7 job, §12), `00-akun-uji` → v1.9, laporan progres → v1.10 (PRQ ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.5.
+- **Uji:** 12 uji TC-PRQ-01–12 (termasuk rantai REQ pembelian → PRQ → catatan pemesanan → GRN → put-away → reservasi → PCK → SJ). TC-ACC-27b (6 permission), TC-APR-17 (jenis di luar katalog), TC-APR-21 (7 aturan demo) disesuaikan. **537 uji hijau** (MariaDB 10.4.32, XAMPP3).
+
+### v0.32 — 24 September 2026 (modul Aset dipinjamkan selesai Fase 1)
+- **Berkas baru `wms/25-aset.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Asset`, migrasi tenant `000140` (`asset_handovers`, `asset_inspections`, `maintenance_schedules` stub F2).
+  - AST lahir otomatis saat SJ aset diterima proyek (jatuh tempo bawaan = target selesai proyek, meter keluar = pembacaan terakhir), `returned` saat GRN retur diterima (hari pakai BR-AST-05), `inspected` lewat pemeriksaan grade + skor + catatan komponen + foto (BR-AST-03/08).
+  - State aset mengikuti lokasi & kondisi dari kartu stok dan reservasi (BR-AST-01) lewat observer — `reserved`, `in_transit`, `on_loan`, `returned`, hasil pemeriksaan, `written_off`.
+  - Aset dipilah dari bin Retur setelah diperiksa, sesuai grade; `asset_returned` membawa hasil pemeriksaan (melengkapi stub A-116). Grade C/D dan aset hilang menerbitkan `asset_lost_or_damaged`.
+  - Aset hilang → ADJ asal `asset_lost` lewat approval → `written_off`; ditemukan kembali bila ADJ ditolak.
+  - Layar *Aset*, *Serah terima aset*, cetak **BA Serah Terima Aset**, laporan **Aset dipinjamkan** (lewat jatuh tempo, hari pakai), peringatan sisa umur.
+- **Asumsi baru [A-163](wms/04-keputusan-dan-asumsi.md#a-163)–[A-169](wms/04-keputusan-dan-asumsi.md#a-169)** (*Perlu validasi*, `04` → v0.21, §2.10): AST mengikuti SJ/RET, sinkron state, kolom di luar ERD, guard pemeriksaan, aset hilang, permission & cakupan, jatuh tempo tanpa notifikasi.
+- **Permission baru** modul `asset` (4): `asset.view`, `asset.manage`, `asset.inspect`, `asset.mark_lost`.
+- **Katalog** `06` → v0.15: catatan §2.11, `asset_handover` tidak lagi stub, `adjustment_origin = asset_lost` tersambung — **tanpa status baru**.
+- **Model data** 08a–08c → v0.14 (digenerate ulang): kolom implementasi `asset_handovers`, `asset_inspections` (A-165).
+- **Modul lain:** `15-picking-shipment` → v0.6 (AST dari SJ), `21-opname-penyesuaian` → v0.3 (ADJ `asset_lost`), `22-retur-transfer` → v0.4 (pemeriksaan sebelum pilah), `18-template-dokumen-label` → v0.4, `16-shared-laporan-berkas` → v0.5 (laporan kesembilan), `08-arsitektur` → v0.13, `00-akun-uji` → v1.8, laporan progres → v1.9 (Aset ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.4. Master: `Serial::usagePercent` memakai max(hari, meter) dan ambang `asset_life_alert_pct`.
+- **Uji:** 12 uji TC-AST-01–12 (termasuk rantai REQ pinjam → PCK → SJ → RET → GRN → periksa → pilah → pinjam lagi, dan aset hilang diputus dari kotak tugas approval). TC-RET-13 kini memeriksa aset dulu; TC-TPL-04, TC-ACC-27b (4 permission `asset`), TC-RPT-01 (9 laporan) disesuaikan. **525 uji hijau** (MariaDB 10.4.32, XAMPP3).
+
+### v0.31 — 24 September 2026 (modul Konversi & Waste selesai Fase 1, mesin rumah XAMPP3)
+- **Berkas baru `wms/24-konversi-waste.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Conversion` dan `app/Domain/Waste`, migrasi tenant `000130` (dari branch `wip/konversi-waste`, digabung lalu diselesaikan; berkas rencana WIP dihapus).
+  - CNV potong/rakit/bongkar/ganti kemasan di satu gudang untuk satu proyek: input dari bin penyimpanan (potongan utuh, item *Bisa dipotong/dikonversi*), hasil output/offcut/waste/kerf dengan neraca ukuran (BR-CNV-02), offcut di bawah minimum otomatis waste (BR-CNV-03), potongan baru bersilsilah (BR-CNV-04), kejadian `material_converted`.
+  - Approval opsional: *Ajukan* hanya bila ada aturan, *Selesaikan* hanya bila tidak; ditolak kembali Draf. **CNV pembalik** hanya bila semua hasil masih utuh (BR-CNV-05).
+  - WST (Berita Acara Waste): baris dari bin Waste, disposisi dibuang/dijual scrap/dipakai ulang, disetujui otomatis tanpa aturan, ditutup dengan foto atau nomor BA; kejadian `waste_disposed`.
+  - Cetak **Bukti Konversi Material** (jenis baru) dan **BA Waste** (tidak lagi stub); menu *Konversi & waste* dan palet Ctrl+K; laporan Material per proyek menambah kolom *Dikonversi*, *Hasil konversi*, *Waste*, *Waste didisposisi*.
+- **Asumsi baru [A-153](wms/04-keputusan-dan-asumsi.md#a-153)–[A-162](wms/04-keputusan-dan-asumsi.md#a-162)** (*Perlu validasi*, `04` → v0.20, §2.9).
+  - A-153: approval CNV opsional tanpa status baru. A-154: input & baris CNV. A-155: kolom di luar ERD. A-156: neraca per jenis konversi.
+  - A-157: CNV pembalik. A-158: permission & cakupan. A-159: baris & alur WST. A-160: bukti tutup WST dan cetak. A-161: kolom laporan.
+  - A-162: mesin dev rumah pindah ke XAMPP3 + MariaDB 10.4.32 (A-76 kini berlaku di kedua mesin).
+- **Permission baru** modul `conversion` (6) dan `waste` (5); Staf Gudang tanpa `approve`, Manajemen `view/approve`, Auditor `view`.
+- **Katalog** `06` → v0.14: enum `conversion_type`, `conversion_output_kind`; `document_template_type` + `conversion`, `waste_disposal` aktif; CNV & WST tersambung ke mesin approval; catatan §2.10 dan §2.14 — **tanpa status baru**.
+- **Model data** 08a–08c → v0.13 (digenerate ulang): kolom implementasi `conversions`, `conversion_inputs`, `conversion_outputs`, `waste_disposals`, `waste_disposal_lines` (A-155).
+- **Modul lain:** `Piece::nextPieceNo()` dipakai GRN, ADJ, pilah RET, dan CNV; `20-approval` → v0.6, `18-template-dokumen-label` → v0.3, `22-retur-transfer` → v0.3, `23-pemakaian` → v0.3, `16-shared-laporan-berkas` → v0.4, `08-arsitektur` → v0.12 (§10 profil rumah XAMPP3, §12), `00-akun-uji` → v1.7 (CNV/WST tanpa aturan demo), laporan progres → v1.8 (Konversi ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.3.
+- **Uji:** 20 uji TC-CNV-01–14 dan TC-WST-01–06 (termasuk rantai RET waste → CNV lewat kotak tugas approval → CNV pembalik → WST → laporan). TC-ACC-27b menghitung 6 + 5 permission baru; TC-APR-17 memakai `purchase_request` sebagai jenis belum tersambung; TC-TPL-04 tidak lagi mengharap 501 untuk BA Waste. **513 uji hijau** (MariaDB 10.4.32, XAMPP3); E2E langkah 0 di mesin rumah: `ui-check` 0 error console, `alur-req-sj` 9/9.
+
 ### v0.30 — 24 September 2026 (serah terima kantor → rumah)
 - **Berkas baru [prompts/00-lanjutkan-di-rumah.md](prompts/00-lanjutkan-di-rumah.md):** keadaan saat serah terima, langkah setup Laragon + MySQL 8.4 setelah pull, cara kerja per modul, jatah nomor (asumsi berikutnya A-153; A-120–A-149 milik modul Template), dan urutan sisa: Konversi/Waste (branch `wip/konversi-waste`, setengah jadi), Aset, Purchase Request, Platform penuh, pendukung F1, penutup.
 - **Uji browser masuk repo:** `tests/e2e/ui-check.mjs` dan `tests/e2e/alur-req-sj.mjs` (langkah approval kini oleh Kepala Gudang CKG sesuai aturan demo 20-approval), dapat diatur lewat `WMS_BASE`, `CHROME_PATH`, `MYSQL_BIN`.
 - **`.gitignore`:** `/storage/tenant*/` (disk per company, termasuk artefak uji yang sempat ter-commit) dan keluaran E2E.
 - **Pengujian:** 493 uji hijau (MariaDB 10.4); alur E2E 9/9 lulus.
+- **prompts/00-lanjutkan-di-rumah.md v1.1:** versi database rumah dikoreksi MySQL 8.3 → 8.4 LTS (selaras CLAUDE.md, 00-setup-lokal, 08-arsitektur); PHP 8.3.33 tetap.
+- **Profil mesin rumah pindah ke XAMPP3** (`C:\xampp3`, PHP 8.3.33 = `php`, MariaDB 10.4.32, `php artisan serve` :8000; Laragon tidak dipakai lagi, A-76 berlaku di kedua mesin — dicatat sebagai [A-162](wms/04-keputusan-dan-asumsi.md#a-162) di v0.31): prompts/00-lanjutkan-di-rumah.md v1.2, 00-setup-lokal v1.5 §1–§4, `CLAUDE.md` *Lingkungan lokal*, `tests/e2e/README.md`.
 
 ### v0.29 — 24 September 2026 (modul Issue — pemakaian material di site — selesai Fase 1)
 - **Berkas baru `wms/23-pemakaian.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Issue`, migrasi tenant `000120`.

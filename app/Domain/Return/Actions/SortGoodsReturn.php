@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Return\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Asset\Support\AssetCustody;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Piece;
 use App\Domain\Master\Models\ReasonCode;
@@ -150,6 +151,12 @@ class SortGoodsReturn
         // Serial dan potongan dipilah per unit utuh.
         if (($l->serial_id !== null || $l->piece_id !== null) && count($hasil) > 1) {
             throw ReturnRuleException::field('BR-LED-03', 'sorting', $label.': serial dan potongan dipilah utuh ke satu hasil.');
+        }
+
+        // Aset dipilah setelah diperiksa, sesuai hasil pemeriksaannya (BR-AST-03, 25-aset).
+        if ($l->source() === ReturnSource::OnSiteAsset
+            && ($masalah = app(AssetCustody::class)->sortProblem($l, $hasil[0]['sorting'])) !== null) {
+            throw ReturnRuleException::field('BR-AST-03', 'sorting', $masalah);
         }
 
         return $hasil;
@@ -375,15 +382,9 @@ class SortGoodsReturn
     /** Potongan hasil pilah dengan silsilah ke potongan asal (BR-CNV-04). */
     private function potonganBaru(GoodsReturn $ret, GoodsReturnLine $asal, float $panjang, bool $offcut): Piece
     {
-        $urut = Piece::query()->count() + 1;
-
-        do {
-            $nomor = sprintf('P-%06d', $urut++);
-        } while (Piece::query()->where('piece_no', $nomor)->exists());
-
         return Piece::create([
             'item_id' => $asal->item_id,
-            'piece_no' => $nomor,
+            'piece_no' => Piece::nextPieceNo(),
             'length' => $panjang,
             'is_offcut' => $offcut,
             'parent_piece_id' => $asal->piece_id,
@@ -407,8 +408,8 @@ class SortGoodsReturn
             'item_code' => $asal->item?->code,
             'qty_base' => $qty,
         ] + ($asal->source() === ReturnSource::OnSiteAsset
-            // Pemeriksaan aset (grade, skor, meter, hari pakai) menunggu modul Aset (BR-GEN-10).
-            ? ['inspection' => null, 'serial_id' => $asal->serial_id]
+            // Hasil pemeriksaan, hari & meter pakai dari AST (matriks §14, 25-aset).
+            ? app(AssetCustody::class)->returnPayload($asal)
             : []);
     }
 

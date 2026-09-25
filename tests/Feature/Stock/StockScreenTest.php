@@ -9,6 +9,7 @@ use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Uom;
+use App\Domain\Stock\Actions\LockStockPeriod;
 use App\Domain\Stock\Actions\ManageReservation;
 use App\Domain\Stock\Enums\ReservationStatus;
 use App\Domain\Stock\Enums\StockEventType;
@@ -102,6 +103,15 @@ class StockScreenTest extends TenantTestCase
             // 20 saldo − 5 reservasi = 15 tersedia, ditulis dengan format Indonesia.
             ->assertSee('15,00')
             ->assertSee('5,00');
+
+        // Hasil pindai barcode item menemukan saldonya (A-201).
+        $this->item->forceFill(['barcode' => '8991234567890'])->save();
+        Livewire::actingAs($admin)
+            ->test(BalanceList::class)
+            ->set('search', '8991234567890')
+            ->assertSee('BAUT-M12')
+            ->set('search', '8990000000000')
+            ->assertDontSee('BAUT-M12');
     }
 
     #[Test]
@@ -297,7 +307,7 @@ class StockScreenTest extends TenantTestCase
             ->call('kunci')
             ->assertSet('ruleCode', 'BR-STK-15');
 
-        $this->assertSame($kemarin, app(\App\Domain\Stock\Actions\LockStockPeriod::class)->current());
+        $this->assertSame($kemarin, app(LockStockPeriod::class)->current());
 
         // Riwayat pemajuan terbaca dari log aktivitas.
         $komponen->assertSee('Tutup buku September');

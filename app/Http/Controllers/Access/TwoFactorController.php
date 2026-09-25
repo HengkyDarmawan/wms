@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Access;
 
+use App\Domain\Access\Actions\ManageTwoFactor;
+use App\Domain\Access\Actions\RecordFailedLogin;
 use App\Domain\Access\Models\User;
-use App\Domain\Access\Support\TotpVerifier;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -20,8 +20,9 @@ use Illuminate\View\View;
 class TwoFactorController extends Controller
 {
     public function __construct(
-        private readonly TotpVerifier $totp,
+        private readonly ManageTwoFactor $twoFactor,
         private readonly LoginController $login,
+        private readonly RecordFailedLogin $failedLogin,
     ) {}
 
     public function show(Request $request): View|RedirectResponse
@@ -54,6 +55,14 @@ class TwoFactorController extends Controller
             return redirect()->route('login');
         }
 
+        // Kunci akun berlaku juga di langkah kode (A-205), supaya login ulang
+        // tidak menjadi jalan menebak kode tanpa batas.
+        if ($user->isLocked()) {
+            $request->session()->forget(['access.2fa.user_id', 'access.2fa.remember', 'access.2fa.portal', 'access.2fa.attempts']);
+
+            throw ValidationException::withMessages(['code' => __('Akun terkunci. Coba lagi nanti.')]);
+        }
+
         $attempts = (int) $request->session()->get('access.2fa.attempts', 0) + 1;
         $max = (int) config('access.two_factor.max_attempts', 5);
 
@@ -65,9 +74,9 @@ class TwoFactorController extends Controller
             ]);
         }
 
-        $secret = Crypt::decryptString($user->two_factor_secret);
-
-        if (! $this->totp->verify($secret, $data['code']) && ! $this->consumeRecoveryCode($user, $data['code'])) {
+        // TOTP (tidak bisa dipakai ulang, A-205) atau kode pemulihan sekali pakai.
+        if (! $this->twoFactor->verifyLogin($user, $data['code'])) {
+            $this->failedLogin->handle($user, $user->email, $request->ip());
             $request->session()->put('access.2fa.attempts', $attempts);
 
             throw ValidationException::withMessages([
@@ -81,27 +90,5 @@ class TwoFactorController extends Controller
         $request->session()->forget(['access.2fa.user_id', 'access.2fa.remember', 'access.2fa.portal', 'access.2fa.attempts']);
 
         return $this->login->completeLogin($request, $user, $portal, $remember);
-    }
-
-    private function consumeRecoveryCode(User $user, string $code): bool
-    {
-        if ($user->two_factor_recovery_codes === null) {
-            return false;
-        }
-
-        $codes = json_decode(Crypt::decryptString($user->two_factor_recovery_codes), true) ?: [];
-        $index = array_search($code, $codes, true);
-
-        if ($index === false) {
-            return false;
-        }
-
-        unset($codes[$index]);
-
-        $user->forceFill([
-            'two_factor_recovery_codes' => Crypt::encryptString(json_encode(array_values($codes))),
-        ])->save();
-
-        return true;
     }
 }

@@ -11,6 +11,7 @@ use App\Domain\Shipment\Actions\IssueDeliveryToken;
 use App\Domain\Shipment\Actions\ShipShipment;
 use App\Domain\Shipment\Livewire\Concerns\HandlesShipmentRules;
 use App\Domain\Shipment\Models\Shipment;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -181,6 +182,8 @@ class ShipmentDetail extends Component
 
         $this->tutupDialog();
         $this->dispatch('pesan', teks: __('Bukti terima tersimpan.'));
+        // A-193: draf bukti terima di perangkat sudah terkirim.
+        $this->dispatch('draft-clear', key: 'pod-'.$this->shipmentId);
     }
 
     /**
@@ -236,8 +239,8 @@ class ShipmentDetail extends Component
             ->findOrFail($this->shipmentId);
     }
 
-    /** @return \Illuminate\Support\Collection<int, Activity> */
-    private function riwayat(Shipment $sj): \Illuminate\Support\Collection
+    /** @return Collection<int, Activity> */
+    private function riwayat(Shipment $sj): Collection
     {
         return Activity::query()
             ->with('causer:id,name')

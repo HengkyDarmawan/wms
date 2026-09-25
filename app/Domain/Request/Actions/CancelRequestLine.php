@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Request\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\PurchaseRequest\Support\BackorderPurchases;
 use App\Domain\Request\Enums\RequestLineStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Request\Models\MaterialRequestLine;
@@ -86,6 +87,7 @@ class CancelRequestLine
 
             // BR-REQ-15: TRF backorder baris ini ikut dilepas bila belum berjalan (A-108).
             app(BackorderTransfers::class)->releaseForRequestLines([(int) $line->id], $line->cancel_reason_id !== null ? (int) $line->cancel_reason_id : null, $actor);
+            app(BackorderPurchases::class)->releaseForRequestLines([(int) $line->id], $line->cancel_reason_id !== null ? (int) $line->cancel_reason_id : null, $actor);
 
             activity('request')
                 ->performedOn($line->request)

@@ -7,6 +7,7 @@ namespace App\Domain\Request\Actions;
 use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalEngine;
+use App\Domain\PurchaseRequest\Support\BackorderPurchases;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Enums\RequestLineStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
@@ -59,6 +60,8 @@ class CancelRequest
 
             // BR-REQ-15, A-108: TRF backorder yang belum berjalan ikut dibatalkan.
             app(BackorderTransfers::class)->releaseForRequestLines($terbuka, $reasonCodeId, $actor);
+            // BR-REQ-15: PRQ backorder yang belum diteruskan ikut dibatalkan (A-171).
+            app(BackorderPurchases::class)->releaseForRequestLines($terbuka, $reasonCodeId, $actor);
 
             activity('request')
                 ->performedOn($request)

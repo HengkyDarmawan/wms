@@ -5,22 +5,22 @@
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <mxCell id="conversions" value="conversions" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="40" width="260" height="226" as="geometry"/>
+          <mxGeometry x="40" y="40" width="260" height="434" as="geometry"/>
         </mxCell>
-        <mxCell id="conversions_cols" value="🔑 id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;conversion_type : enum&lt;br&gt;↗ recipe_id : bigint&lt;br&gt;total_input : decimal(18,4)&lt;br&gt;total_output : decimal(18,4)&lt;br&gt;total_offcut : decimal(18,4)&lt;br&gt;total_waste : decimal(18,4)&lt;br&gt;total_kerf : decimal(18,4)&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;completed_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="conversions">
-          <mxGeometry y="26" width="260" height="200" as="geometry"/>
+        <mxCell id="conversions_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ project_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;conversion_type : enum&lt;br&gt;↗ recipe_id : bigint&lt;br&gt;status : enum&lt;br&gt;↗ reversal_of_id : bigint&lt;br&gt;↗ reason_code_id : bigint&lt;br&gt;total_input : decimal(18,4)&lt;br&gt;total_output : decimal(18,4)&lt;br&gt;total_offcut : decimal(18,4)&lt;br&gt;total_waste : decimal(18,4)&lt;br&gt;total_kerf : decimal(18,4)&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;↗ prepared_by : bigint&lt;br&gt;↗ submitted_by : bigint&lt;br&gt;submitted_at : datetime&lt;br&gt;↗ approved_by : bigint&lt;br&gt;approved_at : datetime&lt;br&gt;↗ reject_reason_id : bigint&lt;br&gt;↗ completed_by : bigint&lt;br&gt;completed_at : datetime&lt;br&gt;↗ cancel_reason_id : bigint&lt;br&gt;cancelled_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="conversions">
+          <mxGeometry y="26" width="260" height="408" as="geometry"/>
         </mxCell>
         <mxCell id="conversion_inputs" value="conversion_inputs" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="40" width="260" height="146" as="geometry"/>
+          <mxGeometry x="360" y="40" width="260" height="178" as="geometry"/>
         </mxCell>
-        <mxCell id="conversion_inputs_cols" value="🔑 id : bigint&lt;br&gt;↗ conversion_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ bin_id : bigint&lt;br&gt;↗ lot_id : bigint&lt;br&gt;↗ piece_id : bigint&lt;br&gt;qty_base : decimal(18,4)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="conversion_inputs">
-          <mxGeometry y="26" width="260" height="120" as="geometry"/>
+        <mxCell id="conversion_inputs_cols" value="🔑 id : bigint&lt;br&gt;↗ conversion_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ bin_id : bigint&lt;br&gt;↗ lot_id : bigint&lt;br&gt;↗ piece_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;↗ reversal_of_line_id : bigint&lt;br&gt;↗ movement_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="conversion_inputs">
+          <mxGeometry y="26" width="260" height="152" as="geometry"/>
         </mxCell>
         <mxCell id="conversion_outputs" value="conversion_outputs" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="40" width="260" height="162" as="geometry"/>
+          <mxGeometry x="680" y="40" width="260" height="274" as="geometry"/>
         </mxCell>
-        <mxCell id="conversion_outputs_cols" value="🔑 id : bigint&lt;br&gt;↗ conversion_id : bigint&lt;br&gt;output_kind : enum&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ bin_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;↗ new_piece_id : bigint&lt;br&gt;↗ parent_input_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="conversion_outputs">
-          <mxGeometry y="26" width="260" height="136" as="geometry"/>
+        <mxCell id="conversion_outputs_cols" value="🔑 id : bigint&lt;br&gt;↗ conversion_id : bigint&lt;br&gt;output_kind : enum&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ bin_id : bigint&lt;br&gt;stock_status : enum&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;lot_no : varchar(60)&lt;br&gt;↗ lot_id : bigint&lt;br&gt;↗ new_piece_id : bigint&lt;br&gt;↗ parent_input_id : bigint&lt;br&gt;↗ reason_code_id : bigint&lt;br&gt;auto_waste : bool&lt;br&gt;↗ reversal_of_line_id : bigint&lt;br&gt;↗ movement_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="conversion_outputs">
+          <mxGeometry y="26" width="260" height="248" as="geometry"/>
         </mxCell>
         <mxCell id="conversion_recipes" value="conversion_recipes" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="1000" y="40" width="260" height="114" as="geometry"/>
@@ -29,73 +29,85 @@
           <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="waste_disposals" value="waste_disposals" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="316" width="260" height="146" as="geometry"/>
+          <mxGeometry x="40" y="524" width="260" height="338" as="geometry"/>
         </mxCell>
-        <mxCell id="waste_disposals_cols" value="🔑 id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;disposition : enum&lt;br&gt;↗ evidence_attachment_id : bigint&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;closed_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="waste_disposals">
-          <mxGeometry y="26" width="260" height="120" as="geometry"/>
+        <mxCell id="waste_disposals_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;disposition : enum&lt;br&gt;↗ target_bin_id : bigint&lt;br&gt;status : enum&lt;br&gt;evidence_attachment_id : bigint&lt;br&gt;evidence_path : varchar(255)&lt;br&gt;evidence_note : varchar(255)&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;↗ submitted_by : bigint&lt;br&gt;↗ approved_by : bigint&lt;br&gt;approved_at : datetime&lt;br&gt;↗ reject_reason_id : bigint&lt;br&gt;↗ closed_by : bigint&lt;br&gt;closed_at : datetime&lt;br&gt;↗ cancel_reason_id : bigint&lt;br&gt;cancelled_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="waste_disposals">
+          <mxGeometry y="26" width="260" height="312" as="geometry"/>
         </mxCell>
         <mxCell id="waste_disposal_lines" value="waste_disposal_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="316" width="260" height="114" as="geometry"/>
+          <mxGeometry x="360" y="524" width="260" height="210" as="geometry"/>
         </mxCell>
-        <mxCell id="waste_disposal_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ waste_disposal_id : bigint&lt;br&gt;↗ bin_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;↗ reason_code_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="waste_disposal_lines">
-          <mxGeometry y="26" width="260" height="88" as="geometry"/>
-        </mxCell>
-        <mxCell id="asset_handovers" value="asset_handovers" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="316" width="260" height="274" as="geometry"/>
-        </mxCell>
-        <mxCell id="asset_handovers_cols" value="🔑 id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;↗ shipment_line_id : bigint&lt;br&gt;↗ goods_return_line_id : bigint&lt;br&gt;checked_out_at : datetime&lt;br&gt;due_return_date : date&lt;br&gt;condition_out : char(1)&lt;br&gt;↗ photo_out_id : bigint&lt;br&gt;returned_at : datetime&lt;br&gt;usage_days : int&lt;br&gt;meter_out : decimal(12,1)&lt;br&gt;meter_in : decimal(12,1)&lt;br&gt;usage_hours : decimal(12,1)&lt;br&gt;status : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="asset_handovers">
-          <mxGeometry y="26" width="260" height="248" as="geometry"/>
-        </mxCell>
-        <mxCell id="asset_inspections" value="asset_inspections" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="316" width="260" height="210" as="geometry"/>
-        </mxCell>
-        <mxCell id="asset_inspections_cols" value="🔑 id : bigint&lt;br&gt;↗ asset_handover_id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ inspected_by : bigint&lt;br&gt;inspected_at : datetime&lt;br&gt;condition_grade : char(1)&lt;br&gt;condition_score : tinyint&lt;br&gt;component_notes : json&lt;br&gt;↗ photo_id : bigint&lt;br&gt;notes : varchar(255)&lt;br&gt;resulting_state : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="asset_inspections">
+        <mxCell id="waste_disposal_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ waste_disposal_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ bin_id : bigint&lt;br&gt;↗ lot_id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ piece_id : bigint&lt;br&gt;stock_status : enum&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;↗ reason_code_id : bigint&lt;br&gt;↗ movement_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="waste_disposal_lines">
           <mxGeometry y="26" width="260" height="184" as="geometry"/>
         </mxCell>
+        <mxCell id="asset_handovers" value="asset_handovers" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="524" width="260" height="434" as="geometry"/>
+        </mxCell>
+        <mxCell id="asset_handovers_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ shipment_id : bigint&lt;br&gt;↗ shipment_line_id : bigint&lt;br&gt;↗ goods_return_id : bigint&lt;br&gt;↗ goods_return_line_id : bigint&lt;br&gt;status : enum&lt;br&gt;checked_out_at : datetime&lt;br&gt;due_return_date : date&lt;br&gt;condition_out : char(1)&lt;br&gt;photo_out_id : bigint&lt;br&gt;meter_out : decimal(12,1)&lt;br&gt;returned_at : datetime&lt;br&gt;usage_days : int&lt;br&gt;meter_in : decimal(12,1)&lt;br&gt;usage_hours : decimal(12,1)&lt;br&gt;usage_km : decimal(12,1)&lt;br&gt;lost_at : datetime&lt;br&gt;↗ lost_reason_id : bigint&lt;br&gt;↗ stock_adjustment_id : bigint&lt;br&gt;↗ updated_by : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="asset_handovers">
+          <mxGeometry y="26" width="260" height="408" as="geometry"/>
+        </mxCell>
+        <mxCell id="asset_inspections" value="asset_inspections" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="524" width="260" height="258" as="geometry"/>
+        </mxCell>
+        <mxCell id="asset_inspections_cols" value="🔑 id : bigint&lt;br&gt;↗ asset_handover_id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ inspected_by : bigint&lt;br&gt;inspected_at : datetime&lt;br&gt;condition_grade : char(1)&lt;br&gt;condition_score : tinyint&lt;br&gt;component_notes : json&lt;br&gt;photo_id : bigint&lt;br&gt;photo_path : varchar(255)&lt;br&gt;meter_in : decimal(12,1)&lt;br&gt;meter_reset_reason : varchar(255)&lt;br&gt;notes : varchar(255)&lt;br&gt;resulting_state : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="asset_inspections">
+          <mxGeometry y="26" width="260" height="232" as="geometry"/>
+        </mxCell>
         <mxCell id="maintenance_schedules" value="maintenance_schedules" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="640" width="260" height="146" as="geometry"/>
+          <mxGeometry x="40" y="1008" width="260" height="146" as="geometry"/>
         </mxCell>
         <mxCell id="maintenance_schedules_cols" value="🔑 id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;scheduled_at : date&lt;br&gt;interval_days : int&lt;br&gt;performed_at : date&lt;br&gt;notes : varchar(255)&lt;br&gt;status : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="maintenance_schedules">
           <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="bins" value="bins" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="360" y="640" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="1008" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="bins_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="bins">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="goods_return_lines" value="goods_return_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="640" width="260" height="50" as="geometry"/>
+          <mxGeometry x="680" y="1008" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="goods_return_lines_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="goods_return_lines">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
+        <mxCell id="items" value="items" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="1008" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="items_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="items">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
         <mxCell id="pieces" value="pieces" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="640" width="260" height="50" as="geometry"/>
+          <mxGeometry x="40" y="1204" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="pieces_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="pieces">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="projects" value="projects" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="40" y="836" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="1204" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="projects_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="projects">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="serials" value="serials" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="360" y="836" width="260" height="50" as="geometry"/>
+          <mxGeometry x="680" y="1204" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="serials_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="serials">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="shipment_lines" value="shipment_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="836" width="260" height="50" as="geometry"/>
+          <mxGeometry x="1000" y="1204" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="shipment_lines_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="shipment_lines">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
+        <mxCell id="stock_adjustments" value="stock_adjustments" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1304" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="stock_adjustments_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="stock_adjustments">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
         <mxCell id="warehouses" value="warehouses" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="836" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="1304" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="warehouses_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="warehouses">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
@@ -130,22 +142,37 @@
         <mxCell id="r9" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="bins" target="waste_disposal_lines">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r10" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="serials" target="asset_handovers">
+        <mxCell id="r10" value="pembalik" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="conversions" target="conversions">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r11" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="projects" target="asset_handovers">
+        <mxCell id="r11" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="warehouses" target="waste_disposals">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r12" value="keluar" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="shipment_lines" target="asset_handovers">
+        <mxCell id="r12" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="projects" target="waste_disposals">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r13" value="kembali" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="goods_return_lines" target="asset_handovers">
+        <mxCell id="r13" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="items" target="waste_disposal_lines">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r14" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="asset_handovers" target="asset_inspections">
+        <mxCell id="r14" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="serials" target="asset_handovers">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r15" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="serials" target="maintenance_schedules">
+        <mxCell id="r15" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="projects" target="asset_handovers">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r16" value="keluar" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="shipment_lines" target="asset_handovers">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r17" value="kembali" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="goods_return_lines" target="asset_handovers">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r18" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="asset_handovers" target="asset_inspections">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r19" value="aset hilang" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToOne;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="stock_adjustments" target="asset_handovers">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r20" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="serials" target="maintenance_schedules">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
       </root>

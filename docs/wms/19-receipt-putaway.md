@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `receipt`, `putaway`, `vendor_return` (Penerimaan, QC, Put-away, Retur ke Vendor)
 
-**Versi:** 0.6
-**Tanggal:** 24 September 2026
-**Status:** selesai Fase 1 — modul ketujuh setelah [Picking & Shipment](15-picking-shipment.md); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-78](04-keputusan-dan-asumsi.md#a-78)–[A-84](04-keputusan-dan-asumsi.md#a-84) (*Perlu validasi*); v0.4: approval RTV lewat mesin approval ([20-approval](20-approval.md), [A-93](04-keputusan-dan-asumsi.md#a-93)); v0.5: GRN retur dan penyelesaian TRF ([22-retur-transfer](22-retur-transfer.md), [A-112](04-keputusan-dan-asumsi.md#a-112)); v0.6: surat retur RTV dicetak lewat modul Template ([18](18-template-dokumen-label.md))
+**Versi:** 0.8
+**Tanggal:** 25 September 2026
+**Status:** selesai Fase 1 — modul ketujuh setelah [Picking & Shipment](15-picking-shipment.md); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-78](04-keputusan-dan-asumsi.md#a-78)–[A-84](04-keputusan-dan-asumsi.md#a-84) (*Perlu validasi*); v0.4: approval RTV lewat mesin approval ([20-approval](20-approval.md), [A-93](04-keputusan-dan-asumsi.md#a-93)); v0.5: GRN retur dan penyelesaian TRF ([22-retur-transfer](22-retur-transfer.md), [A-112](04-keputusan-dan-asumsi.md#a-112)); v0.6: surat retur RTV dicetak lewat modul Template ([18](18-template-dokumen-label.md)); v0.7: baris GRN vendor merujuk catatan pemesanan PRQ ([26-purchase-request](26-purchase-request.md), [A-174](04-keputusan-dan-asumsi.md#a-174))
 **Modul:** `receipt`, `putaway`, `vendor_return`
 **Fase:** F1 (GRN manual tanpa PO; terhubung PO di Fase 1b, D-29)
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-GRN](05-aturan-bisnis.md#br-grn) · [Katalog Status §2.5, §2.6, §2.16](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data inbound](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 2](07-proses-bisnis.md) dan [alur 5](07a-proses-bisnis-lanjutan.md)
@@ -65,7 +65,8 @@ Migrasi: `database/migrations/tenant/2026_01_01_000080_create_receipt_tables.php
 | `lot_no`, `expiry_date`, `serial_no`, `piece_length` | isian draf; turunannya dibuat saat `received` |
 | `lot_id`, `serial_id`, `piece_id` | diisi saat `received` (vendor) atau disalin dari baris PCK (transfer) |
 | `shipment_line_id` | baris SJ yang diterima (transfer) |
-| `purchase_request_order_line_id`, `goods_return_line_id` | stub tanpa FK |
+| `purchase_request_order_line_id` | baris catatan pemesanan PRQ (GRN vendor, opsional, berindeks; [A-174](04-keputusan-dan-asumsi.md#a-174)) |
+| `goods_return_line_id` | baris RET (GRN retur) |
 | `receiving_bin_id` | bin Penerimaan atau Karantina QC |
 | `qc_result`, `qc_by`, `qc_at`, `qc_reason_id`, `qc_note` | langkah QC |
 | `is_cross_dock` | selalu `false` di F1 ([A-83](04-keputusan-dan-asumsi.md#a-83)) |
@@ -210,7 +211,7 @@ Uji di `tests/Feature/Receipt`.
 | TC-PUT-05 | Bin blokir / peringatan kapasitas | selesaikan | ditolak / tersimpan + peringatan | BR-WH-06 |
 | TC-PUT-06 | PUT menunggu | batal tanpa/dengan alasan, lalu buat ulang | ditolak / barang tetap di Penerimaan / PUT baru | BR-GEN-11 |
 | TC-PUT-07 | Bin berkapasitas kecil | saran | dilewati; semua penuh = tanpa saran | A-84 |
-| TC-PUT-08 | Staf | layar detail PUT | ganti bin tanpa alasan ditolak; dengan alasan selesai | §6 |
+| TC-PUT-08 | Staf | layar detail PUT | pindai kode bin asing ditolak, kode bin gudang mengisi baris ([A-201](04-keputusan-dan-asumsi.md#a-201)); ganti bin tanpa alasan ditolak; dengan alasan selesai | §6 |
 | TC-RTV-01 | Baris ditolak QC | ajukan RTV | `pending_approval`, kondisi Rusak, alasan diwarisi | KS 2.16, A-80 |
 | TC-RTV-02 | Baris tanpa QC / melebihi sisa | ajukan | ditolak | BR-GRN-04 |
 | TC-RTV-03 | Pengaju = pemutus | setujui | ditolak; orang lain `approved` | BR-APR-03 |
@@ -223,7 +224,7 @@ Uji di `tests/Feature/Receipt`.
 
 ## 11. Di luar lingkup modul ini
 
-GRN dari RET dan pemilahan retur (modul `return`); baris GRN yang merujuk catatan pemesanan dan reservasi otomatis backorder ke REQ penunggu ([BR-REQ-08](05-aturan-bisnis.md#br-req)) — modul `purchase_request`; penyelesaian TRF (modul `transfer`); ADJ untuk kelebihan terima; pemindaian PWA `[F2]`; label barcode.
+GRN dari RET dan pemilahan retur (modul `return`); status PRQ dan reservasi backorder PRQ ke REQ penunggu ([BR-REQ-08](05-aturan-bisnis.md#br-req)) — modul `purchase_request` ([26](26-purchase-request.md)); penyelesaian TRF (modul `transfer`); ADJ untuk kelebihan terima; pemindaian PWA `[F2]`; label barcode.
 
 ## 12. Definisi selesai
 
@@ -243,6 +244,8 @@ Domain `app/Domain/Receipt`: dua belas aksi (`SaveGoodsReceipt`, `ReceiveGoodsRe
 
 **GRN retur dan penyelesaian TRF (v0.5, [22-retur-transfer](22-retur-transfer.md)).** `SaveGoodsReceipt` menerima sumber `return`: RET `in_progress` ke gudang ini, satu GRN aktif per RET, jumlah ≤ jumlah baik bukti terima SJ balik atau ≤ jumlah RET bila tanpa SJ; SJ balik ditolak sebagai GRN transfer. `ReceiveGoodsReceipt` memindahkan barang retur ke bin **Retur** (`ReceiptBins::returnBin`) dari Dalam Perjalanan Gudang Site, dari bin Gudang Site/On-site, atau dari luar, dengan kondisi asalnya dan **tanpa kejadian** — kejadian terbit saat RET dipilah ([A-112](04-keputusan-dan-asumsi.md#a-112)); RET menjadi `received`. `receipt.complete` menolak GRN retur (selesai otomatis saat RET dipilah). GRN transfer mencatat `qty_received` baris TRF; `CompleteGoodsReceipt` menyelesaikan TRF lewat `TransferProgress::receiptCompleted` ([A-107](04-keputusan-dan-asumsi.md#a-107)); `CompletePutaway` mereservasi barang TRF backorder ke REQ penunggu ([A-108](04-keputusan-dan-asumsi.md#a-108)). Form GRN punya sumber *Retur dari proyek* (`?goods_return=`), detail GRN merujuk RET-nya. TC-GRN-12 disesuaikan (ID tetap).
 
+**Sambungan PRQ (v0.7, [26-purchase-request](26-purchase-request.md)).** `SaveGoodsReceipt` menerima `purchase_request_order_line_id` per baris GRN vendor dan menjaganya lewat `PurchaseRequest\Support\PurchaseReceipts::guard` (gudang = tujuan PRQ, vendor = vendor catatan, item sama, jumlah kumulatif ≤ sisa pesanan dikurangi draf GRN lain — BR-GRN-01/05). `ReceiveGoodsReceipt` mencatat jumlah diterima ke catatan & baris PRQ (PRQ `partially_fulfilled`/`fulfilled`) dan menambah `purchase_request_number`, `external_po_no` ke payload `goods_received`. `CompletePutaway` mereservasi barang PRQ backorder ke REQ penunggu. Form GRN vendor menampilkan kartu *Pesanan PRQ ke vendor ini* dengan tombol *Tambah* ([A-174](04-keputusan-dan-asumsi.md#a-174)).
+
 ### 13.1 Penyimpangan dari spesifikasi
 
 1. **Kolom implementasi di luar ERD** (sudah digenerate ulang ke [08b](08b-model-data-stok-dokumen.md)): `number` pada GRN/PUT/RTV; `goods_receipts.received_by`; isian draf `lot_no`, `expiry_date`, `serial_no`, `piece_length`, serta `qc_reason_id`, `notes` pada baris GRN; `from_bin_id`, `override_reason` pada baris PUT; `submitted_by`, `approved_by`, `approved_at`, `reject_reason_id` pada RTV; `bin_id`, `stock_status` pada baris RTV.
@@ -259,7 +262,7 @@ Domain `app/Domain/Receipt`: dua belas aksi (`SaveGoodsReceipt`, `ReceiveGoodsRe
 
 ### 13.3 Sisa pekerjaan
 
-1. **Cross-dock** ([A-83](04-keputusan-dan-asumsi.md#a-83)) — menunggu keputusan cara memuat baris cross-dock ke SJ; reservasi ke REQ penunggu sudah ada untuk barang TRF ([A-108](04-keputusan-dan-asumsi.md#a-108)), untuk PRQ menunggu modulnya.
+1. **Cross-dock** ([A-83](04-keputusan-dan-asumsi.md#a-83)) — menunggu keputusan cara memuat baris cross-dock ke SJ; reservasi ke REQ penunggu sudah ada untuk barang TRF ([A-108](04-keputusan-dan-asumsi.md#a-108)) dan PRQ ([A-171](04-keputusan-dan-asumsi.md#a-171)).
 2. ~~**GRN retur**~~ — **selesai v0.5** ([22-retur-transfer](22-retur-transfer.md)); GRN barang rusak yang dibawa balik (DSC `return_receipt_id`) sengaja tidak dibuat ([A-114](04-keputusan-dan-asumsi.md#a-114)).
 3. **ADJ untuk kelebihan terima** (BR-GRN-05) — modul Adjustment.
 4. **`StockLedger::rebuildFromLedger()` tidak mengenal perubahan kondisi**: kartu stok tidak menyimpan kondisi asal (`fromStockStatus`), sehingga QC dan barang rusak saat terima menghasilkan saldo turunan yang salah per kondisi. Saldo transaksional tetap benar; perlu kolom `from_stock_status` di `stock_movements` (keputusan modul Stock).

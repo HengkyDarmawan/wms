@@ -6,6 +6,8 @@ namespace App\Domain\Template\Support;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Adjustment\Models\StockAdjustment;
+use App\Domain\Asset\Models\AssetHandover;
+use App\Domain\Conversion\Models\Conversion;
 use App\Domain\Issue\Models\MaterialIssue;
 use App\Domain\Receipt\Models\VendorReturn;
 use App\Domain\Request\Models\MaterialRequest;
@@ -15,6 +17,7 @@ use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Template\Enums\DocumentTemplateType;
 use App\Domain\Template\Models\DocumentLayout;
 use App\Domain\Template\Models\DocumentTemplate;
+use App\Domain\Waste\Models\WasteDisposal;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
@@ -58,6 +61,9 @@ class DocumentPrinter
             DocumentTemplateType::VendorReturn => VendorReturn::query(),
             DocumentTemplateType::StockAdjustment => StockAdjustment::query(),
             DocumentTemplateType::MaterialIssue => MaterialIssue::query(),
+            DocumentTemplateType::Conversion => Conversion::query(),
+            DocumentTemplateType::WasteDisposal => WasteDisposal::query(),
+            DocumentTemplateType::AssetHandover => AssetHandover::query(),
             default => throw new NotFoundHttpException,
         };
 
@@ -98,6 +104,9 @@ class DocumentPrinter
             DocumentTemplateType::VendorReturn => $this->vendorReturn($model),
             DocumentTemplateType::StockAdjustment => $this->adjustment($model),
             DocumentTemplateType::MaterialIssue => $this->materialIssue($model),
+            DocumentTemplateType::Conversion => $this->conversion($model),
+            DocumentTemplateType::WasteDisposal => $this->wasteDisposal($model),
+            DocumentTemplateType::AssetHandover => $this->assetHandover($model),
             default => throw new NotFoundHttpException,
         };
 
@@ -130,6 +139,9 @@ class DocumentPrinter
             DocumentTemplateType::VendorReturn => route('vendor-returns.show', $model),
             DocumentTemplateType::StockAdjustment => route('adjustments.show', $model),
             DocumentTemplateType::MaterialIssue => route('issues.show', $model),
+            DocumentTemplateType::Conversion => route('conversions.show', $model),
+            DocumentTemplateType::WasteDisposal => route('waste-disposals.show', $model),
+            DocumentTemplateType::AssetHandover => route('asset-handovers.show', $model),
             default => url('/'),
         };
     }
@@ -232,6 +244,34 @@ class DocumentPrinter
         $lines = $isu->lines()->with('bin', 'item.baseUom', 'lot', 'serial', 'piece')->orderBy('id')->get();
 
         return ['isu' => $isu, 'lines' => $lines, 'pelaku' => [$isu->issuer, $isu->confirmer, $isu->project?->pic]];
+    }
+
+    /** @return array<string, mixed> */
+    private function conversion(Conversion $cnv): array
+    {
+        $cnv->loadMissing('project.pic', 'warehouse', 'preparer', 'completer', 'approver', 'reason', 'reversalOf');
+        $inputs = $cnv->inputs()->with('bin', 'item.baseUom', 'lot', 'piece')->orderBy('id')->get();
+        $outputs = $cnv->outputs()->with('bin', 'item.baseUom', 'lot', 'newPiece', 'parentInput.piece', 'reason')->orderBy('id')->get();
+
+        return ['cnv' => $cnv, 'inputs' => $inputs, 'outputs' => $outputs, 'pelaku' => [$cnv->completer ?? $cnv->preparer, $cnv->approver, $cnv->project?->pic]];
+    }
+
+    /** @return array<string, mixed> */
+    private function wasteDisposal(WasteDisposal $wst): array
+    {
+        $wst->loadMissing('project', 'warehouse', 'targetBin', 'submitter', 'approver');
+        $lines = $wst->lines()->with('bin', 'item.baseUom', 'lot', 'serial', 'piece', 'reason')->orderBy('id')->get();
+
+        return ['wst' => $wst, 'lines' => $lines, 'pelaku' => [$wst->submitter, $wst->approver, null]];
+    }
+
+    /** @return array<string, mixed> */
+    private function assetHandover(AssetHandover $ast): array
+    {
+        $ast->loadMissing('serial', 'item.baseUom', 'project.pic', 'warehouse', 'shipment.driver', 'goodsReturn', 'updater');
+        $periksa = $ast->inspections()->with('inspector')->latest('id')->first();
+
+        return ['ast' => $ast, 'periksa' => $periksa, 'pelaku' => [$ast->updater ?? $ast->shipment?->driver, $ast->project?->pic, $periksa?->inspector]];
     }
 
     /**

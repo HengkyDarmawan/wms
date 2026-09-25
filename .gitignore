@@ -37,3 +37,8 @@ Thumbs.db
 /storage/tenant*/
 /tests/e2e/*.png
 /tests/e2e/e2e-hasil.json
+# Keluaran skrip E2E yang dijalankan dari root repo
+/e2e-*.png
+/e2f-*.png
+/e2e-hasil.json
+/e2f-hasil.json

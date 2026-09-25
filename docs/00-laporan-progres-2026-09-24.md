@@ -1,8 +1,8 @@
 # Laporan Progres — 24 September 2026
 
-**Versi:** 1.7
-**Tanggal:** 24 September 2026
-**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); v1.7: modul Issue (pemakaian material di site) selesai (493 uji hijau); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau)
+**Versi:** 1.13
+**Tanggal:** 25 September 2026
+**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); v1.7: modul Issue (pemakaian material di site) selesai (493 uji hijau); v1.8: modul Konversi & Waste selesai di mesin rumah XAMPP3 (513 uji hijau); v1.9: modul Aset dipinjamkan selesai (525 uji hijau); v1.10: modul Purchase Request selesai (537 uji hijau); v1.11: modul Platform penuh selesai (546 uji hijau); v1.12: Pendukung Fase 1 selesai (569 uji hijau); v1.13: tinjauan kode + 2FA Super Admin, pindai, pengingat tagihan (579 uji hijau, §5.4); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau)
 **Dokumen terkait:** [README](README.md) · [Setup lokal §5](00-setup-lokal.md#5-skenario-uji-manual) · [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) · [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) · [Keputusan & Asumsi](wms/04-keputusan-dan-asumsi.md)
 
 Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang baru di-seed: delapan skenario uji manual lewat Chrome headless, 321 uji otomatis, dan pencocokan setiap kasus uji `TC-xx` di spesifikasi dengan ujinya. Hasilnya dipakai untuk memetakan seberapa jauh Fase 1 sudah berjalan.
@@ -16,9 +16,9 @@ Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang
 | Skenario E2E [00-setup-lokal §5](00-setup-lokal.md#5-skenario-uji-manual) | **9 dari 9 langkah lulus**, 0 error console |
 | Uji otomatis | **321 lulus / 1.836 asersi**, 0 gagal (MariaDB 10.4) |
 | Kasus uji `TC-xx` di spesifikasi 10–17 | **178 dari 178 punya uji otomatis**, semuanya lulus |
-| Butir Fase 1 di [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) | **11 selesai · 6 sebagian · 6 belum dibangun** (dari 23, satu 'selesai' berupa stub; v1.2 Penerimaan/QC/put-away/RTV; v1.3 Approval engine; v1.4 Stock opname; v1.5 Retur & transfer; v1.6 Template dokumen & label; v1.7 Pemakaian material di site) |
+| Butir Fase 1 di [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) | **13 selesai · 6 sebagian · 4 belum dibangun** (dari 23, satu 'selesai' berupa stub; v1.2 Penerimaan/QC/put-away/RTV; v1.3 Approval engine; v1.4 Stock opname; v1.5 Retur & transfer; v1.6 Template dokumen & label; v1.7 Pemakaian material di site; v1.8 Konversi material, offcut, waste; v1.9 Aset dipinjamkan; v1.10 Purchase Request manual; v1.11 Platform, trial, tagihan manual; v1.12 strategi pengambilan, notifikasi, laporan & dashboard, wizard, impor Excel, PWA) |
 | Bug baru dari E2E | **1 berat** (§5.1), 1 ringan (§5.2) |
-| Asumsi menunggu validasi | A-72–A-126, A-150–A-152 (v1.7) |
+| Asumsi menunggu validasi | A-72–A-126, A-150–A-205 (v1.13) — [daftar kerja](00-tinjauan-asumsi-2026-09-25.md) |
 
 Singkatnya: alur keluar **REQ → approval → picking → surat jalan → bukti terima → selisih** berjalan dari ujung ke ujung. Separuh besar Fase 1 lainnya belum dibangun: barang masuk (GRN), approval berlapis, opname, retur/transfer, pemakaian, konversi, dan aset.
 
@@ -65,31 +65,31 @@ Sumber baris: [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis). S
 
 | Butir Fase 1 | Status | Keterangan |
 |---|---|---|
-| Login lokal, user, role & permission, cakupan | ✅ Selesai | [10-access](wms/10-access.md); 2FA, perangkat, akses dukungan |
+| Login lokal, user, role & permission, cakupan | ✅ Selesai | [10-access](wms/10-access.md); 2FA (juga Super Admin, A-200), perangkat, akses dukungan (tautan sekali pakai, A-199) |
 | Struktur organisasi | ✅ Selesai | [10-access](wms/10-access.md) |
 | Master data, UoM dinamis, gudang & lokasi rak/bin | ✅ Selesai | [11-master](wms/11-master.md), [12-warehouse](wms/12-warehouse.md); label barcode selesai (18), ukuran final menunggu O-09 |
 | Picking, pengiriman, bukti terima, DSC | ✅ Selesai | [15-picking-shipment](wms/15-picking-shipment.md); halaman penerima bertoken belum (O-06) |
 | Rencana kebutuhan material (stub) | ✅ Stub | tabel ada, layar Fase 2 |
-| Platform, tenancy, trial, tagihan manual | 🟡 Sebagian | tenancy, login Super Admin, gerbang langganan; **belum** buat company (`CreateTenant`) dan tagihan ([17-platform-login](wms/17-platform-login.md)) |
-| Kartu stok, reservasi dua tahap, strategi pengambilan | 🟡 Sebagian | ledger dan reservasi selesai; alokasi picking masih urut kode bin, **FEFO/FIFO/potongan terdekat belum** (`CreatePickTask::alokasikan`) |
-| Permintaan (internal + portal, non-katalog, gudang sumber) | 🟡 Sebagian | alur jalan; bug §5.1 diperbaiki; konfirmasi/keberatan terima klien belum; approval berlapis lewat mesin approval (v1.3) |
-| Notifikasi in-app & email | 🟡 Sebagian | hanya undangan dan akun terkunci |
-| Laporan & dashboard | 🟡 Sebagian | 8 dari 19 laporan §9 (v1.7: Material per proyek); ekspor PDF belum; Beranda masih kartu statis (§5.2) |
-| Integrasi Purchasing & Akuntansi | 🟡 Sebagian | outbox kejadian stok jalan; Purchase Request manual belum |
-| Wizard setup awal company | ⬜ Belum | |
-| Impor data master dari Excel | ⬜ Belum | |
+| Platform, tenancy, trial, tagihan manual | ✅ Selesai | [17-platform-login](wms/17-platform-login.md) v0.2: buat company otomatis (DB, data acuan, undangan Admin), paket & trial, tagihan H-7 + bukti bayar + verifikasi, siklus harian jatuh tempo/tangguh/akhir, penangguhan manual, flag fitur (stub), masuk lewat akses dukungan hanya-baca; pengingat tagihan menunggu notifikasi, 2FA Super Admin belum |
+| Kartu stok, reservasi dua tahap, strategi pengambilan | ✅ Selesai | ledger dan reservasi; alokasi PCK FIFO/FEFO/sisa potongan/manual, lot kedaluwarsa dilewati, alokasi keras tidak ganda ([27-pendukung-f1](wms/27-pendukung-f1.md), A-185) |
+| Permintaan (internal + portal, non-katalog, gudang sumber) | ✅ Selesai | alur jalan; approval berlapis; konfirmasi/keberatan terima pemohon + konfirmasi otomatis ([27-pendukung-f1](wms/27-pendukung-f1.md), A-188) |
+| Notifikasi in-app & email | ✅ Selesai | lonceng, halaman & preferensi per kejadian, email opsional, 9 kejadian (termasuk pengingat tagihan langganan, A-202), pengingat harian ([27-pendukung-f1](wms/27-pendukung-f1.md), A-189); WhatsApp [F2] |
+| Laporan & dashboard | ✅ Selesai | 14 laporan termasuk laporan inti Blueprint §6.9a, ekspor Excel & PDF, Beranda antrean pekerjaan ([27-pendukung-f1](wms/27-pendukung-f1.md), A-186, A-190); grafik/tren [F2] |
+| Integrasi Purchasing & Akuntansi | 🟡 Sebagian | outbox kejadian stok jalan; **Purchase Request manual selesai** ([26-purchase-request](wms/26-purchase-request.md): PRQ dari backorder REQ / titik pesan ulang / manual, approval opsional, catatan pemesanan per vendor, GRN merujuk catatan, reservasi ke REQ penunggu); endpoint masuk Purchasing `[F3]` belum |
+| Wizard setup awal company | ✅ Selesai | 8 langkah dari data + persetujuan ketentuan sementara (O-11) ([27-pendukung-f1](wms/27-pendukung-f1.md), A-191) |
+| Impor data master dari Excel | ✅ Selesai (lingkup F1) | item dan proyek + klien baru (semua-atau-tidak); bin/vendor belum ([27-pendukung-f1](wms/27-pendukung-f1.md), A-192) |
 | Penerimaan (GRN), QC, put-away, RTV | ✅ Selesai | [19-receipt-putaway](wms/19-receipt-putaway.md): GRN vendor manual & transfer masuk, QC per baris, PUT dengan saran bin, RTV; cross-dock masih saran ([A-83](wms/04-keputusan-dan-asumsi.md#a-83)); GRN retur sejak modul Retur |
 | Pemakaian material di site (ISU) | ✅ Selesai | [23-pemakaian](wms/23-pemakaian.md): ISU dari bin penyimpanan Gudang Site (habis pakai saja), konfirmasi → `material_consumed`, ISU pembalik dengan approval lapis minimum, laporan Material per Proyek dari kartu stok, cetak Bukti Pemakaian; foto pemakaian menunggu lampiran ([A-117](wms/04-keputusan-dan-asumsi.md#a-117)–[A-119](wms/04-keputusan-dan-asumsi.md#a-119), [A-150](wms/04-keputusan-dan-asumsi.md#a-150)–[A-152](wms/04-keputusan-dan-asumsi.md#a-152)) |
 | Retur & transfer | ✅ Selesai | [22-retur-transfer](wms/22-retur-transfer.md): TRF antar gudang, antar proyek, dan antar titik dalam proyek (jalur ringan A-50), TRF otomatis dari backorder REQ sampai REQ terpenuhi lewat gudang tujuan, PCK/SJ/GRN transfer, TRF selesai saat GRN tujuan selesai; RET dari Gudang Site, aset On-site, barang terkirim ke klien, dan barang rusak ditinggal ekspedisi, SJ balik dari Gudang Site, GRN retur ke bin Retur, pemilahan layak/rusak/offcut/waste dengan `goods_returned`/`asset_returned`; portal klien; pemeriksaan aset menunggu modul Aset ([A-106](wms/04-keputusan-dan-asumsi.md#a-106)–[A-116](wms/04-keputusan-dan-asumsi.md#a-116)) |
-| Konversi material, offcut, waste | ⬜ Belum | fitur pembeda utama |
-| Aset dipinjamkan | ⬜ Belum | |
-| Approval engine | ✅ Selesai | [20-approval](wms/20-approval.md): aturan per jenis dokumen tanpa nilai uang, lapis & cara putus, SoD, snapshot, delegasi, eskalasi terjadwal + manual, simulasi, riwayat; REQ, RTV, ADJ, OPN, TRF, dan RET tersambung; WhatsApp stub Fase 2a; notifikasi stub ([A-91](wms/04-keputusan-dan-asumsi.md#a-91)) |
+| Konversi material, offcut, waste | ✅ Selesai | [24-konversi-waste](wms/24-konversi-waste.md): CNV potong/rakit/bongkar/ganti kemasan dengan neraca ukuran, offcut < minimum otomatis waste, potongan baru bersilsilah, approval opsional (hanya bila ada aturan), CNV pembalik (BR-CNV-05); BA waste dibuang/dijual scrap/dipakai ulang dengan bukti foto atau nomor BA; cetak Bukti Konversi & BA Waste; kolom konversi & waste di laporan Material per proyek. Resep `[F2]` stub |
+| Aset dipinjamkan | ✅ Selesai | [25-aset](wms/25-aset.md): AST otomatis dari SJ aset & GRN retur, jatuh tempo & meter keluar, pemeriksaan grade + skor + catatan komponen + foto sebelum dipilah, state aset mengikuti kartu stok (BR-AST-01), aset hilang → ADJ `asset_lost` → dihapuskan, laporan aset dipinjamkan & sisa umur, cetak BA Serah Terima Aset. Jadwal maintenance `[F2]` stub; notifikasi jatuh tempo menunggu modul notifikasi |
+| Approval engine | ✅ Selesai | [20-approval](wms/20-approval.md): aturan per jenis dokumen tanpa nilai uang, lapis & cara putus, SoD, snapshot, delegasi, eskalasi terjadwal + manual, simulasi, riwayat; REQ, RTV, ADJ, OPN, TRF, dan RET tersambung — sejak v1.10 semua jenis dokumen Katalog (termasuk ISU, CNV, WST, PRQ); WhatsApp stub Fase 2a; notifikasi stub ([A-91](wms/04-keputusan-dan-asumsi.md#a-91)) |
 | Stock opname | ✅ Selesai | [21-opname-penyesuaian](wms/21-opname-penyesuaian.md): sesi bulanan/tahunan/ad-hoc/pemeriksaan mendadak, pembekuan bin, hitung buta di halaman ramah HP, toleransi ganda, hitung ulang orang berbeda, akar masalah, approval tingkat sesi (Auditor untuk tahunan/audit), ADJ per gudang diposting lewat buku besar, kunci periode bulanan, penanda hitung; ADJ manual dua lapis & pembalik; override SJ mendesak dan dashboard tren belum ([A-95](wms/04-keputusan-dan-asumsi.md#a-95)–[A-105](wms/04-keputusan-dan-asumsi.md#a-105)) |
 | Template dokumen & label | ✅ Selesai | [18-template-dokumen-label](wms/18-template-dokumen-label.md); editor template [F2]; ukuran label menunggu O-09 (A-120) |
-| PWA (installable, scan kamera, draf lokal) | ⬜ Belum | |
+| PWA (installable, scan kamera, draf lokal) | ✅ Selesai | manifest + service worker + halaman offline, pindai kamera (BarcodeDetector), draf hitung opname & bukti terima ([27-pendukung-f1](wms/27-pendukung-f1.md), A-193); pindai di pencarian item/saldo/aset, bin tujuan put-away (A-201) dan bin → item di PCK (A-203); offline penuh [F2] |
 | Landing page produk | ⬜ Belum | Part 5 |
 
-Urutan pembangunan berikutnya menurut [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) (Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, dan Issue sudah selesai): Conversion/Waste → Asset → PurchaseRequest/VendorReturn → Platform.
+Urutan pembangunan berikutnya menurut [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) (Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Issue, Conversion/Waste, Asset, PurchaseRequest, Platform, dan Pendukung F1 sudah selesai; RTV sudah ada sejak Receipt): penutup (E2E alur panjang, tinjauan asumsi).
 
 ## 5. Temuan dari E2E
 
@@ -116,6 +116,33 @@ Dua belas selisih kode dengan aturan di [16-shared §13](wms/16-shared-laporan-b
 - menghapus company ikut menghapus database-nya (BR-SUB-01, P-03);
 - login Super Admin tanpa log percobaan, penguncian, dan 2FA;
 - guard penutupan proyek BR-PRJ-02 belum ada ([11-master §13.4](wms/11-master.md#134-sisa-pekerjaan-modul-ini)).
+
+### 5.4 Tinjauan kode 25 Sep 2026 (malam)
+
+Tinjauan baca-kode atas berkas berisiko Platform & Pendukung. Semua temuan diperbaiki dengan uji; pilihan perilaku dicatat sebagai asumsi *Perlu validasi*.
+
+| Temuan | Perbaikan | Rujukan |
+|---|---|---|
+| Galat SMTP saat notifikasi approval membatalkan keputusan approval | email dikirim setelah commit, galat hanya dicatat | A-199, TC-NTF-05 |
+| Bayar setelah ditangguhkan → tagihan berikutnya langsung jatuh tempo | periode baru mulai hari verifikasi; jatuh tempo tagihan tidak pernah di masa lalu | A-195, TC-PLT-12 |
+| Mode hanya-baca (ditangguhkan/diakhiri/akses dukungan) memblokir cari & halaman Livewire | update properti & pindah halaman lolos, aksi tetap 403 | A-196, TC-ACC-28g |
+| Tautan akses dukungan bisa dipakai ulang 5 menit | nonce sekali pakai | A-199, TC-PLT-11 |
+| Keberatan pada SJ gabungan bisa menyentuh baris REQ lain; kirim ganda | baris dibatasi ke REQ sendiri + kunci | A-197 |
+| `still_needed` keberatan klien hilang diam-diam | baris REQ dibuka lagi; REQ `completed` → REQ baru | A-198, TC-REQ-33 |
+| Checklist penutupan proyek melewatkan REQ menunggu keputusan & SJ disiapkan | diperluas, diperiksa dalam transaksi | A-187, TC-MST-20 |
+
+Tinjauan kedua atas perbaikan malam itu:
+
+| Temuan | Perbaikan | Rujukan |
+|---|---|---|
+| Baris REQ yang pernah punya PCK tidak pernah dipetik lagi (kurang ambil, `reship`, keberatan) → REQ tertahan | PCK memakai sisa terhitung | A-204, TC-PCK-17 |
+| Kode 2FA Super Admin bisa ditebak dengan login ulang | kode salah ikut hitungan kunci akun | A-200, TC-PLT-13 |
+| DSC bisa diselesaikan dua kali; konfirmasi otomatis bisa menimpa keberatan | kunci + periksa ulang | A-197 |
+| Draf REQ proyek tertutup bisa diajukan; bin Gudang Site tetap aktif | tolak BR-PRJ-01; bin ikut nonaktif | A-187, TC-MST-20 |
+| Pindai PCK item berlacak tidak memeriksa lot/serial | wajib nomor lot/serial/potongan | A-203, TC-PCK-18 |
+| Satu company tanpa database menghentikan job harian semua company | lewati `provisioning`/`terminated`, galat per company | `OperatingCompanies` |
+
+Sisa: `from_stock_status` baris lama tidak diisi balik (belum ada data produksi, A-194); kode TOTP yang dipakai ulang kini ditolak dan kode 2FA salah ikut kunci akun, juga untuk user tenant (A-205).
 
 ## 6. Cara mengulang
 

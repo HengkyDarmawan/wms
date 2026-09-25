@@ -24,7 +24,7 @@ Repo ini berisi **dokumentasi desain** WMS SaaS multi-company (Bahasa Indonesia)
 ## Lingkungan lokal
 
 - **Dua profil mesin**, langkah lengkap di `docs/00-setup-lokal.md`. **Kantor = XAMPP:** PHP 8.3.33 di `C:\xampp\php-8.3.33` (sudah `php` di PATH; `C:\xampp\php\php.exe` 7.4 **tidak boleh dipakai**), MariaDB 10.4.27 ([A-76](docs/wms/04-keputusan-dan-asumsi.md#a-76)), web via `php artisan serve --port=8000` (`demo.wms.test:8000`, baris hosts manual). Di mesin kantor, baca `php83` di bawah sebagai `php`. `CACHE_STORE` wajib `array`/`redis` (stancl butuh cache bertag).
-- **Rumah = Laragon** di `C:\laragon`. PHP proyek = **8.3.33**: `C:\laragon\bin\php\php-8.3.33-Win32-vs16-x64\php.exe` (alias `php83`); `php` di PATH adalah 8.5.10 dan **tidak boleh dipakai** untuk composer/artisan. MySQL **8.4 LTS** (standar dev & produksi), Composer 2.8, Node 22; subdomain lokal `*.wms.test` otomatis oleh Laragon. Generator dokumen: `py -3`.
+- **Rumah = XAMPP3** di `C:\xampp3` (repo `C:\xampp3\htdocs\wms`): PHP **8.3.33** = `C:\xampp3\php\php.exe` (sudah `php` di PATH), MariaDB 10.4.32 (A-76), Composer 2.8, Node 22; web via `php artisan serve --port=8000` (Apache XAMPP3 memegang port 80), baris hosts manual. Laragon (`C:\laragon`, klon lama) **tidak dipakai lagi**. MySQL **8.4 LTS** tetap standar produksi. Generator dokumen: `py -3`. Di kedua mesin, baca `php83` di bawah sebagai `php`.
 - Aplikasi Laravel ada di root repo (`app/`, `routes/`, `resources/`, `database/`). Semua perintah PHP memakai `php83`:
   `php83 artisan migrate` (pusat) · `php83 artisan tenants:migrate` (semua company) · `php83 artisan db:seed` (pusat + company DEMO) ·
   `php83 artisan tenants:seed --class="Database\Seeders\Tenant\DemoSeeder"` · `php83 artisan test` · `npm run build`.

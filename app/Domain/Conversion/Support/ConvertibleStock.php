@@ -94,6 +94,7 @@ class ConvertibleStock
                     'max' => round(max(0, (float) $s->qty_base - $keras), 4),
                     'frozen' => $bin !== null && ! $bin->acceptsMovement(),
                     'asset' => $item?->isAsset() ?? false,
+                    'cuttable' => (bool) $item?->is_cuttable,
                     'min_offcut' => $item?->min_offcut_length === null ? null : (float) $item->min_offcut_length,
                     'kerf' => $item?->kerf === null ? null : (float) $item->kerf,
                 ];
@@ -102,10 +103,10 @@ class ConvertibleStock
             ->keyBy('key');
     }
 
-    /** Calon yang boleh dipilih di layar: bukan aset. */
+    /** Calon yang boleh dipilih di layar: bukan aset, dan item ditandai Bisa dipotong/dikonversi. */
     public function selectable(Warehouse $gudang): Collection
     {
-        return $this->forWarehouse($gudang)->reject(fn (array $c) => $c['asset']);
+        return $this->forWarehouse($gudang)->reject(fn (array $c) => $c['asset'] || ! $c['cuttable']);
     }
 
     /**
@@ -202,6 +203,11 @@ class ConvertibleStock
     {
         if ($c['asset']) {
             throw ConversionRuleException::field('BR-STK-08', 'inputs', 'Item '.$c['item_code'].' adalah aset; aset tidak dikonversi.');
+        }
+
+        // Master item "Bisa dipotong/dikonversi" (Blueprint §6.4, A-154).
+        if (! $c['cuttable']) {
+            throw ConversionRuleException::field('BR-CNV-03', 'inputs', 'Item '.$c['item_code'].' tidak ditandai Bisa dipotong/dikonversi di master item.');
         }
 
         if ($c['frozen']) {

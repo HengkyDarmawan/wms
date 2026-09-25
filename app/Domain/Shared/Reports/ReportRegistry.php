@@ -26,6 +26,12 @@ class ReportRegistry
         Definitions\WarehouseListReport::class,
         Definitions\BinListReport::class,
         Definitions\ProjectMaterialReport::class,
+        Definitions\LoanedAssetReport::class,
+        Definitions\StockBalanceReport::class,
+        Definitions\StockMovementPeriodReport::class,
+        Definitions\OpenRequestReport::class,
+        Definitions\ConversionWasteReport::class,
+        Definitions\StockAccuracyReport::class,
     ];
 
     /** @return Collection<int, Report> */

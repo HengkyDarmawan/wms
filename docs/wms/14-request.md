@@ -1,12 +1,12 @@
 # Spesifikasi Modul — `request` (Permintaan Material)
 
-**Versi:** 0.6
-**Tanggal:** 24 September 2026
-**Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md)); v0.6: baris bersumber transfer melahirkan TRF backorder ([22-retur-transfer](22-retur-transfer.md))
+**Versi:** 0.8
+**Tanggal:** 25 September 2026
+**Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md)); v0.6: baris bersumber transfer melahirkan TRF backorder ([22-retur-transfer](22-retur-transfer.md)); v0.7: baris bersumber pembelian melahirkan PRQ backorder ([26-purchase-request](26-purchase-request.md), [A-171](04-keputusan-dan-asumsi.md#a-171)); v0.8: konfirmasi & keberatan terima pemohon (BR-REQ-10) di layar REQ & portal, konfirmasi otomatis harian; notifikasi REQ perlu ditinjau ([27-pendukung-f1](27-pendukung-f1.md), [A-188](04-keputusan-dan-asumsi.md#a-188), [A-189](04-keputusan-dan-asumsi.md#a-189))
 **Modul:** `request`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status §2.1](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
-**Ketergantungan modul:** `master` (item, proyek, klien, alasan), `warehouse` (gudang sumber), `stock` (reservasi lunak, stok tersedia). `approval` (sejak v0.5, [20-approval](20-approval.md)), `transfer` (sejak v0.6, [22-retur-transfer](22-retur-transfer.md)); modul `purchase_request` belum ada, titik sambungnya stub sesuai [BR-GEN-10](05-aturan-bisnis.md#br-gen).
+**Ketergantungan modul:** `master` (item, proyek, klien, alasan), `warehouse` (gudang sumber), `stock` (reservasi lunak, stok tersedia). `approval` (sejak v0.5, [20-approval](20-approval.md)), `transfer` (sejak v0.6, [22-retur-transfer](22-retur-transfer.md)); `purchase_request` (sejak v0.7, [26-purchase-request](26-purchase-request.md)).
 
 ---
 
@@ -278,14 +278,14 @@ Uji yang menopangnya ada di `tests/Feature/Request`: `RequestFlowTest` (TC-REQ-0
 ### 13.4 Sisa pekerjaan modul ini
 
 1. ~~**Approval berlapis**~~ — **selesai v0.5** lewat mesin approval ([20-approval §13.3](20-approval.md#133-integrasi-req-dan-rtv)).
-2. **Pembuatan PRQ otomatis** untuk baris bersumber pembelian ([BR-REQ-05](05-aturan-bisnis.md#br-req)) — menunggu modul
-   `purchase_request`. TRF untuk baris bersumber transfer **selesai v0.6** ([22-retur-transfer](22-retur-transfer.md)).
+2. ~~**Pembuatan PRQ otomatis**~~ untuk baris bersumber pembelian ([BR-REQ-05](05-aturan-bisnis.md#br-req)) — **selesai v0.7**
+   ([26-purchase-request](26-purchase-request.md), [A-171](04-keputusan-dan-asumsi.md#a-171)); pembatalan/penutupan REQ ikut membatalkan PRQ yang
+   belum diteruskan. TRF untuk baris bersumber transfer **selesai v0.6** ([22-retur-transfer](22-retur-transfer.md)).
 3. **Cross-dock** ([BR-REQ-08](05-aturan-bisnis.md#br-req)) — masih saran ([A-83](04-keputusan-dan-asumsi.md#a-83)); reservasi
-   backorder untuk barang TRF sudah ada ([A-108](04-keputusan-dan-asumsi.md#a-108)), untuk barang PRQ menunggu modul `purchase_request`.
-4. **Konfirmasi dan keberatan penerimaan** ([BR-REQ-10](05-aturan-bisnis.md#br-req)) — modul `shipment` dan DSC
-   sudah ada; permission `request.confirm_receipt` dan `request.dispute_receipt` sudah di-seed ke role Klien, tetapi
-   belum dipakai route atau layar mana pun.
+   backorder untuk barang TRF ([A-108](04-keputusan-dan-asumsi.md#a-108)) dan PRQ ([A-171](04-keputusan-dan-asumsi.md#a-171)) sudah ada.
+4. ~~**Konfirmasi dan keberatan penerimaan**~~ ([BR-REQ-10](05-aturan-bisnis.md#br-req)) — **selesai v0.8**
+   ([27-pendukung-f1](27-pendukung-f1.md), [A-188](04-keputusan-dan-asumsi.md#a-188)); [A-77](04-keputusan-dan-asumsi.md#a-77) tetap berlaku.
 5. **Job penuaan tenggat penggantian dan pengingat SLA** — metodenya sudah ada, penjadwalannya menunggu
    antrean Fase 2.
-6. **Notifikasi §8** — menunggu modul notifikasi.
+6. **Notifikasi §8** — sebagian selesai v0.8 (REQ perlu ditinjau, barang diterima, keputusan approval); SLA tinjau, pengganti item, perubahan tanggal janji belum.
 7. **Laporan §9** beserta ekspor Excel — **belum dibangun**; kerangka di [16-shared-laporan-berkas](16-shared-laporan-berkas.md).

@@ -3,9 +3,6 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Access\DeviceController;
-use App\Http\Controllers\Adjustment\AdjustmentController;
-use App\Http\Controllers\Count\CountController;
-use App\Http\Controllers\Approval\ApprovalController;
 use App\Http\Controllers\Access\InvitationController;
 use App\Http\Controllers\Access\LoginController;
 use App\Http\Controllers\Access\OrgController;
@@ -16,31 +13,44 @@ use App\Http\Controllers\Access\SupportAccessController;
 use App\Http\Controllers\Access\TwoFactorController;
 use App\Http\Controllers\Access\TwoFactorSetupController;
 use App\Http\Controllers\Access\UserController;
+use App\Http\Controllers\Adjustment\AdjustmentController;
+use App\Http\Controllers\Approval\ApprovalController;
+use App\Http\Controllers\Asset\AssetController;
+use App\Http\Controllers\Conversion\ConversionController;
+use App\Http\Controllers\Count\CountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Issue\IssueController;
 use App\Http\Controllers\Master\ClientController;
+use App\Http\Controllers\Master\ImportController;
 use App\Http\Controllers\Master\ItemCategoryController;
 use App\Http\Controllers\Master\ItemController;
 use App\Http\Controllers\Master\ItemPhotoController;
 use App\Http\Controllers\Master\ProjectController;
 use App\Http\Controllers\Master\ReferenceController;
+use App\Http\Controllers\Master\SetupController;
 use App\Http\Controllers\Master\UomController;
 use App\Http\Controllers\Master\VendorController;
+use App\Http\Controllers\Notification\NotificationController;
+use App\Http\Controllers\Platform\BillingController;
+use App\Http\Controllers\Platform\SupportSessionController;
+use App\Http\Controllers\Portal\PortalDashboardController;
+use App\Http\Controllers\PurchaseRequest\PurchaseRequestController;
 use App\Http\Controllers\Receipt\ReceiptController;
+use App\Http\Controllers\Request\DeliveryReceiptController;
 use App\Http\Controllers\Request\PortalRequestController;
 use App\Http\Controllers\Request\RequestController;
 use App\Http\Controllers\Return\ReturnController;
+use App\Http\Controllers\Shared\FileController;
+use App\Http\Controllers\Shared\ReportController;
 use App\Http\Controllers\Shipment\ShipmentController;
 use App\Http\Controllers\Stock\StockController;
+use App\Http\Controllers\Template\DocumentLayoutController;
+use App\Http\Controllers\Template\PrintController;
 use App\Http\Controllers\Transfer\TransferController;
 use App\Http\Controllers\Warehouse\BinController;
 use App\Http\Controllers\Warehouse\WarehouseController;
 use App\Http\Controllers\Warehouse\WarehouseTypeController;
-use App\Http\Controllers\Portal\PortalDashboardController;
-use App\Http\Controllers\Shared\FileController;
-use App\Http\Controllers\Shared\ReportController;
-use App\Http\Controllers\Template\DocumentLayoutController;
-use App\Http\Controllers\Template\PrintController;
+use App\Http\Controllers\Waste\WasteDisposalController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -87,11 +97,29 @@ Route::post('/two-factor', [TwoFactorController::class, 'store'])
 
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
+// Akses dukungan Super Admin (BR-SUB-04, A-180): tautan bertanda tangan dari
+// layar Super Admin; GET menampilkan konfirmasi, POST membuka sesi hanya-baca.
+Route::middleware('signed')->group(function (): void {
+    Route::get('/support/enter/{supportAccess}', [SupportSessionController::class, 'show'])->whereNumber('supportAccess')->name('support.enter');
+    Route::post('/support/enter/{supportAccess}', [SupportSessionController::class, 'store'])->whereNumber('supportAccess')->name('support.enter.store');
+});
+
 Route::middleware('auth')->group(function (): void {
+    // Notifikasi in-app untuk semua user, termasuk klien (Blueprint §10).
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('/notifications/{notification}/open', [NotificationController::class, 'open'])->name('notifications.open');
+    Route::get('/notifications/preferences', [NotificationController::class, 'preferences'])->name('notifications.preferences');
+    Route::post('/notifications/preferences', [NotificationController::class, 'savePreferences'])->name('notifications.preferences.save');
+
     // Back-office (user internal)
     Route::middleware('internal')->group(function (): void {
         Route::get('/', DashboardController::class)->name('dashboard');
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        // Wizard setup awal company (A-191).
+        Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
+        Route::post('/setup/terms', [SetupController::class, 'acceptTerms'])->name('setup.terms');
+        Route::post('/setup/complete', [SetupController::class, 'complete'])->name('setup.complete');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
@@ -145,6 +173,10 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/vendors', [VendorController::class, 'index'])->name('vendors.index');
 
         Route::get('/items', [ItemController::class, 'index'])->name('items.index');
+        // Impor item dari Excel (A-192).
+        Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
+        Route::get('/imports/{type}/template', [ImportController::class, 'template'])->whereIn('type', ['items', 'projects'])->name('imports.template');
+        Route::post('/imports/{type}', [ImportController::class, 'store'])->whereIn('type', ['items', 'projects'])->name('imports.store');
         Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
         Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
         Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
@@ -171,6 +203,9 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/requests/create', [RequestController::class, 'create'])->name('requests.create');
         Route::get('/requests/{materialRequest}', [RequestController::class, 'show'])->name('requests.show');
         Route::get('/requests/{materialRequest}/edit', [RequestController::class, 'edit'])->name('requests.edit');
+        // BR-REQ-10: tanggapan pemohon atas bukti terima (POST, membawa foto).
+        Route::post('/requests/{materialRequest}/receipts/{proof}/confirm', [DeliveryReceiptController::class, 'confirm'])->whereNumber('proof')->name('requests.receipt.confirm');
+        Route::post('/requests/{materialRequest}/receipts/{proof}/dispute', [DeliveryReceiptController::class, 'dispute'])->whereNumber('proof')->name('requests.receipt.dispute');
 
         // Picking & pengiriman (15-picking-shipment §6).
         Route::get('/picks', [ShipmentController::class, 'picks'])->name('picks.index');
@@ -229,10 +264,46 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/issues/{materialIssue}', [IssueController::class, 'show'])->name('issues.show');
         Route::get('/issues/{materialIssue}/edit', [IssueController::class, 'edit'])->name('issues.edit');
 
+        // Konversi material & berita acara waste (24-konversi-waste §6). Halaman
+        // lewat GET; transisi lewat Livewire (POST), penutupan WST lewat POST
+        // form unggah bukti.
+        Route::get('/conversions', [ConversionController::class, 'index'])->name('conversions.index');
+        Route::get('/conversions/create', [ConversionController::class, 'create'])->name('conversions.create');
+        Route::get('/conversions/{conversion}', [ConversionController::class, 'show'])->name('conversions.show');
+        Route::get('/conversions/{conversion}/edit', [ConversionController::class, 'edit'])->name('conversions.edit');
+        Route::get('/waste-disposals', [WasteDisposalController::class, 'index'])->name('waste-disposals.index');
+        Route::get('/waste-disposals/create', [WasteDisposalController::class, 'create'])->name('waste-disposals.create');
+        Route::get('/waste-disposals/{wasteDisposal}', [WasteDisposalController::class, 'show'])->name('waste-disposals.show');
+        Route::get('/waste-disposals/{wasteDisposal}/evidence', [WasteDisposalController::class, 'evidence'])->name('waste-disposals.evidence');
+        Route::post('/waste-disposals/{wasteDisposal}/close', [WasteDisposalController::class, 'close'])->name('waste-disposals.close');
+
+        // Aset dipinjamkan (25-aset §6). Halaman lewat GET; pemeriksaan aset
+        // lewat POST form unggah foto; aksi lain lewat Livewire (POST).
+        Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
+        Route::get('/assets/{serial}', [AssetController::class, 'show'])->name('assets.show');
+        Route::get('/asset-handovers', [AssetController::class, 'handovers'])->name('asset-handovers.index');
+        Route::get('/asset-handovers/{assetHandover}', [AssetController::class, 'handover'])->name('asset-handovers.show');
+        Route::post('/asset-handovers/{assetHandover}/inspect', [AssetController::class, 'inspect'])->name('asset-handovers.inspect');
+        Route::get('/asset-inspections/{assetInspection}/photo', [AssetController::class, 'photo'])->name('asset-inspections.photo');
+
+        // Purchase Request (26-purchase-request §6). Halaman lewat GET; ajukan,
+        // approval, catatan pemesanan, dan batal lewat aksi Livewire (POST).
+        Route::get('/purchase-requests', [PurchaseRequestController::class, 'index'])->name('purchase-requests.index');
+        Route::get('/purchase-requests/create', [PurchaseRequestController::class, 'create'])->name('purchase-requests.create');
+        Route::get('/purchase-requests/{purchaseRequest}', [PurchaseRequestController::class, 'show'])->name('purchase-requests.show');
+        Route::get('/purchase-requests/{purchaseRequest}/edit', [PurchaseRequestController::class, 'edit'])->name('purchase-requests.edit');
+
+        // Tagihan langganan Admin Company (17-platform-login §6.2). Unggah bukti
+        // bayar tetap boleh saat langganan ditangguhkan (BR-SUB-02).
+        Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+        Route::post('/billing/invoices/{invoice}/payments', [BillingController::class, 'store'])->whereNumber('invoice')->name('billing.payment.store');
+        Route::get('/billing/payments/{payment}/proof', [BillingController::class, 'proof'])->whereNumber('payment')->name('billing.payment.proof');
+
         // Laporan lintas modul (Access §9, Master §9, Warehouse §9).
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
         Route::get('/reports/{report}/export', [ReportController::class, 'export'])->name('reports.export');
+        Route::get('/reports/{report}/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
     });
 
     // Portal klien
@@ -240,6 +311,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/', PortalDashboardController::class)->name('dashboard');
         Route::get('/requests', [PortalRequestController::class, 'index'])->name('requests.index');
         Route::get('/requests/{materialRequest}', [PortalRequestController::class, 'show'])->name('requests.show');
+        Route::post('/requests/{materialRequest}/receipts/{proof}/confirm', [DeliveryReceiptController::class, 'confirm'])->whereNumber('proof')->name('requests.receipt.confirm');
+        Route::post('/requests/{materialRequest}/receipts/{proof}/dispute', [DeliveryReceiptController::class, 'dispute'])->whereNumber('proof')->name('requests.receipt.dispute');
         // Retur klien (BR-RET-05): komponen yang sama dengan back-office.
         Route::get('/returns', [ReturnController::class, 'index'])->name('returns.index');
         Route::get('/returns/create', [ReturnController::class, 'create'])->name('returns.create');

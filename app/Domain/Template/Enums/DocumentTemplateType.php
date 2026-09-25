@@ -17,6 +17,7 @@ enum DocumentTemplateType: string
     case VendorReturn = 'vendor_return';
     case StockAdjustment = 'stock_adjustment';
     case MaterialIssue = 'material_issue';
+    case Conversion = 'conversion';
     case StockCount = 'stock_count';
     case AssetHandover = 'asset_handover';
     case WasteDisposal = 'waste_disposal';
@@ -35,6 +36,7 @@ enum DocumentTemplateType: string
             self::VendorReturn => __('Surat Retur ke Vendor'),
             self::StockAdjustment => __('BA Penyesuaian Stok'),
             self::MaterialIssue => __('Bukti Pemakaian Material'),
+            self::Conversion => __('Bukti Konversi Material'),
             self::StockCount => __('Laporan Stock Opname'),
             self::AssetHandover => __('BA Serah Terima Aset'),
             self::WasteDisposal => __('BA Waste'),
@@ -50,10 +52,10 @@ enum DocumentTemplateType: string
         return str_starts_with($this->value, 'label_');
     }
 
-    /** BR-GEN-10: modul pemiliknya belum dibangun, jadi template ini masih stub. */
+    /** BR-GEN-10: modul pemiliknya belum dibangun, jadi template ini masih stub. Sejak modul Aset tidak ada lagi. */
     public function isStub(): bool
     {
-        return $this === self::AssetHandover || $this === self::WasteDisposal;
+        return false;
     }
 
     public function defaultPaper(): PaperSize
@@ -81,8 +83,10 @@ enum DocumentTemplateType: string
             self::VendorReturn => ['Dibuat oleh', 'Disetujui', 'Vendor'],
             self::StockAdjustment => ['Diajukan', 'Disetujui'],
             self::MaterialIssue => ['Dicatat oleh', 'Dikonfirmasi', 'PIC proyek'],
+            self::Conversion => ['Dikerjakan oleh', 'Disetujui', 'PIC proyek'],
+            self::WasteDisposal => ['Dibuat oleh', 'Disetujui', 'Saksi'],
             self::StockCount => ['Rekonsiliasi', 'Disetujui'],
-            self::AssetHandover, self::WasteDisposal => ['Diserahkan', 'Diterima'],
+            self::AssetHandover => ['Diserahkan', 'Diterima', 'Dikembalikan'],
             default => [],
         };
     }

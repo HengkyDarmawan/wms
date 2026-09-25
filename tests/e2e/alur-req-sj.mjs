@@ -70,14 +70,22 @@ const cek = async (no, langkah, fn) => {
 };
 const angka = (s) => Number(String(s).replace(/\./g, '').replace(',', '.'));
 
+// Saldo awal dibaca dari data demo (StockDemoSeeder sudah memuat satu alur contoh REQ → SJ).
+const saldoBin = (kode) => Number(sql(`SELECT COALESCE(SUM(sb.qty_base),0) FROM stock_balances sb JOIN bins b ON b.id=sb.bin_id JOIN items i ON i.id=sb.item_id WHERE i.code='BAUT-M12' AND b.code ${kode}`));
+const rupa = (n) => n.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Layar Saldo stok menampilkan per gudang (termasuk Dalam Perjalanan milik CKG, BR-STK-13).
+const bautCkgAwal = saldoBin("LIKE 'CKG-%'");
+const cadangan = () => Number(sql("SELECT COALESCE(SUM(r.qty_base),0) FROM stock_reservations r JOIN items i ON i.id=r.item_id JOIN warehouses w ON w.id=r.warehouse_id WHERE i.code='BAUT-M12' AND w.code='CKG' AND r.status='active'"));
+const transitAwal = saldoBin("= 'CKG-TRANSIT'");
+
 // ---------------------------------------------------------------- 1
 const admin = await page();
 await cek(1, 'admin login & buka Stok', async () => {
   const p = await admin.login('admin@demo.wms.test');
   await admin.go('/stock'); await admin.shot('e2e-1-stok.png');
   const t = await admin.text();
-  const ok = p === '/' && ['BAUT-M12', 'SEMEN-PCC-50', 'PIPA-PVC-4', 'GENSET-5KVA'].every((k) => t.includes(k)) && t.includes('1.000,00');
-  return { ok, bukti: 'e2e-1-stok.png; 4 item tampil, BAUT CKG 1.000' };
+  const ok = p === '/' && ['BAUT-M12', 'SEMEN-PCC-50', 'PIPA-PVC-4', 'GENSET-5KVA'].every((k) => t.includes(k)) && t.includes(rupa(bautCkgAwal));
+  return { ok, bukti: `e2e-1-stok.png; 4 item tampil, BAUT CKG ${rupa(bautCkgAwal)}` };
 });
 
 // ---------------------------------------------------------------- 2
@@ -125,7 +133,8 @@ await cek(3, 'kepala gudang CKG setujui REQ (aturan approval demo, 20-approval);
   const res = sql(`SELECT COUNT(*) FROM stock_reservations WHERE document_id=${reqId} AND status='active'`);
   await admin.go('/stock'); await admin.shot('e2e-3-stok.png');
   const t = await admin.text();
-  return { ok: s === 'approved' && Number(res) >= 1 && t.includes('950,00'), bukti: `e2e-3-setuju.png, e2e-3-stok.png; status=${s}; reservasi aktif=${res}; tersedia CKG 950 tampil=${t.includes('950,00')}` };
+  const harap = rupa(bautCkgAwal - cadangan());
+  return { ok: s === 'approved' && Number(res) >= 1 && t.includes(harap), bukti: `e2e-3-setuju.png, e2e-3-stok.png; status=${s}; reservasi aktif=${res}; tersedia CKG ${harap} tampil=${t.includes(harap)}` };
 });
 
 // ---------------------------------------------------------------- 4
@@ -173,7 +182,7 @@ await cek(5, 'kepala gudang susun & berangkatkan SJ (kendaraan B 9001 XX)', asyn
   await kagudang.shot('e2e-5-sj.png');
   const [no, s] = sql(`SELECT number, status FROM shipments WHERE id=${sjId}`).split('\t');
   const trn = sql(`SELECT COALESCE(SUM(sb.qty_base),0) FROM stock_balances sb JOIN bins b ON b.id=sb.bin_id WHERE b.code='CKG-TRANSIT'`);
-  return { ok: s === 'shipped' && Number(trn) === 50, bukti: `e2e-5-sj.png; ${no} status=${s}; metode=${metode.join('/')}; saldo CKG-TRANSIT=${trn}` };
+  return { ok: s === 'shipped' && Number(trn) === transitAwal + 50, bukti: `e2e-5-sj.png; ${no} status=${s}; metode=${metode.join('/')}; saldo CKG-TRANSIT=${trn}` };
 });
 
 // ---------------------------------------------------------------- 6

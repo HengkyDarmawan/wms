@@ -11,6 +11,10 @@
                href="{{ route('reports.export', ['report' => $laporan->key(), 'filters' => $filters]) }}">
                 <i class="bi bi-download"></i> {{ __('Ekspor Excel') }}
             </a>
+            <a class="btn btn-outline-primary" target="_blank" rel="noopener"
+               href="{{ route('reports.pdf', ['report' => $laporan->key(), 'filters' => $filters]) }}">
+                <i class="bi bi-file-earmark-pdf"></i> {{ __('Ekspor PDF') }}
+            </a>
         </div>
     </div>
 

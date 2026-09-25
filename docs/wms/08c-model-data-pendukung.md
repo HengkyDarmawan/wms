@@ -1,8 +1,8 @@
 # Model Data — Konversi & aset, opname & penyesuaian, approval, umum
 
-**Versi:** 0.12 (Part 3, diselaraskan dengan migrasi modul Access s.d. Issue 24 Sep 2026)
-**Tanggal:** 24 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Versi:** 0.19 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026)
+**Tanggal:** 25 September 2026
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Inti](08a-model-data-inti.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md)
 
 Daftar area lengkap ada di [08a-model-data-inti.md](08a-model-data-inti.md).
@@ -29,6 +29,7 @@ Konversi memakai tabel input dan output terpisah agar neraca ukuran bisa divalid
 erDiagram
   conversions {
     bigint id PK
+    varchar_40 number UK
   }
   conversion_inputs {
     bigint id PK
@@ -42,12 +43,14 @@ erDiagram
   }
   waste_disposals {
     bigint id PK
+    varchar_40 number UK
   }
   waste_disposal_lines {
     bigint id PK
   }
   asset_handovers {
     bigint id PK
+    varchar_40 number UK
   }
   asset_inspections {
     bigint id PK
@@ -65,36 +68,41 @@ erDiagram
   conversion_recipes ||--o{ conversions : " "
   waste_disposals ||--o{ waste_disposal_lines : " "
   bins ||--o{ waste_disposal_lines : " "
+  conversions ||--o{ conversions : "pembalik"
+  warehouses ||--o{ waste_disposals : " "
+  projects ||--o{ waste_disposals : " "
+  items ||--o{ waste_disposal_lines : " "
   serials ||--o{ asset_handovers : " "
   projects ||--o{ asset_handovers : " "
   shipment_lines ||--o{ asset_handovers : "keluar"
   goods_return_lines ||--o{ asset_handovers : "kembali"
   asset_handovers ||--o{ asset_inspections : " "
+  stock_adjustments ||--o| asset_handovers : "aset hilang"
   serials ||--o{ maintenance_schedules : " "
 ```
 
 ### Entitas
 
-**`conversions` — CNV header.** 🔑`id` bigint · ↗`project_id` bigint *([BR-CNV-01](05-aturan-bisnis.md#br-cnv))* · ↗`warehouse_id` bigint · `conversion_type` enum *(cut|assemble|disassemble|repack)* · ↗`recipe_id` bigint *(F2)* · `total_input` decimal(18,4) · `total_output` decimal(18,4) · `total_offcut` decimal(18,4) · `total_waste` decimal(18,4) · `total_kerf` decimal(18,4) · ↗`approval_snapshot_id` bigint · `completed_at` datetime
+**`conversions` — CNV header.** 🔑`id` bigint · ◆`number` varchar(40) *(CNV/<gudang>/<yymm>/<urut> (A-155))* · ↗`project_id` bigint *([BR-CNV-01](05-aturan-bisnis.md#br-cnv))* · ↗`warehouse_id` bigint *(satu gudang; Gudang Site hanya proyek pemilik (A-154))* · `conversion_type` enum *(cut|assemble|disassemble|repack)* · ↗`recipe_id` bigint *(F2)* · `status` enum *(KS 2.10)* · ↗`reversal_of_id` bigint *(CNV pembalik (A-157))* · ↗`reason_code_id` bigint *(alasan pembalik (A-157))* · `total_input` decimal(18,4) · `total_output` decimal(18,4) · `total_offcut` decimal(18,4) · `total_waste` decimal(18,4) · `total_kerf` decimal(18,4) · ↗`approval_snapshot_id` bigint *(hanya bila ada aturan (A-153))* · ↗`prepared_by` bigint *(pembuat (A-155))* · ↗`submitted_by` bigint *(pengaju ([BR-APR-03](05-aturan-bisnis.md#br-apr)))* · `submitted_at` datetime · ↗`approved_by` bigint · `approved_at` datetime · ↗`reject_reason_id` bigint *(ditolak = kembali draft (A-153))* · ↗`completed_by` bigint · `completed_at` datetime · ↗`cancel_reason_id` bigint · `cancelled_at` datetime
   ↳ kolom header dokumen standar (lihat konvensi)
 
-**`conversion_inputs` — CNV input.** 🔑`id` bigint · ↗`conversion_id` bigint · ↗`item_id` bigint · ↗`bin_id` bigint · ↗`lot_id` bigint · ↗`piece_id` bigint · `qty_base` decimal(18,4)
+**`conversion_inputs` — CNV input.** 🔑`id` bigint · ↗`conversion_id` bigint · ↗`item_id` bigint · ↗`bin_id` bigint *(bin penyimpanan (A-154))* · ↗`lot_id` bigint · ↗`piece_id` bigint *(potongan dipakai utuh (A-154))* · `qty_base` decimal(18,4) · ↗`reversal_of_line_id` bigint *(baris asal pembalik (A-155))* · ↗`movement_id` bigint *(pergerakan kartu stok (A-155))*
 
-**`conversion_outputs` — CNV output / offcut / waste.** 🔑`id` bigint · ↗`conversion_id` bigint · `output_kind` enum *(output|offcut|waste|kerf)* · ↗`item_id` bigint *(output bisa item lain)* · ↗`bin_id` bigint *(waste → bin Waste)* · `qty_base` decimal(18,4) · ↗`new_piece_id` bigint *(potongan baru (silsilah via pieces.parent_piece_id))* · ↗`parent_input_id` bigint *(conversion_inputs (silsilah))*
+**`conversion_outputs` — CNV output / offcut / waste.** 🔑`id` bigint · ↗`conversion_id` bigint · `output_kind` enum *(output|offcut|waste|kerf)* · ↗`item_id` bigint *(output bisa item lain)* · ↗`bin_id` bigint *(waste → bin Waste; kerf kosong)* · `stock_status` enum *(Tersedia; waste Rusak (A-155))* · `qty_base` decimal(18,4) *(item per potong: panjang satu potongan)* · `lot_no` varchar(60) *(output berlot baru (A-154))* · ↗`lot_id` bigint *(warisan input atau dibuat saat selesai)* · ↗`new_piece_id` bigint *(potongan baru (silsilah via pieces.parent_piece_id))* · ↗`parent_input_id` bigint *(conversion_inputs (silsilah))* · ↗`reason_code_id` bigint *(alasan waste)* · `auto_waste` bool *(offcut < minimum → waste ([BR-CNV-03](05-aturan-bisnis.md#br-cnv)))* · ↗`reversal_of_line_id` bigint *(A-155)* · ↗`movement_id` bigint *(A-155)*
 
 **`conversion_recipes` — Resep konversi (F2).** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(100) · `definition` json *(input → output + sisa)* · `is_active` bool
 
-**`waste_disposals` — WST header.** 🔑`id` bigint · ↗`warehouse_id` bigint · ↗`project_id` bigint · `disposition` enum *(waste_disposition)* · ↗`evidence_attachment_id` bigint · ↗`approval_snapshot_id` bigint · `closed_at` datetime
+**`waste_disposals` — WST header.** 🔑`id` bigint · ◆`number` varchar(40) *(WST/<gudang>/<yymm>/<urut> (A-155))* · ↗`warehouse_id` bigint · ↗`project_id` bigint *(wajib (A-159))* · `disposition` enum *(waste_disposition)* · ↗`target_bin_id` bigint *(dipakai ulang → bin penyimpanan (A-159))* · `status` enum *(KS 2.14)* · `evidence_attachment_id` bigint *(tabel lampiran belum ada ([A-68](04-keputusan-dan-asumsi.md#a-68)))* · `evidence_path` varchar(255) *(foto BA (A-160))* · `evidence_note` varchar(255) *(nomor BA bertanda tangan (A-160))* · ↗`approval_snapshot_id` bigint · ↗`submitted_by` bigint *(pengaju)* · ↗`approved_by` bigint · `approved_at` datetime · ↗`reject_reason_id` bigint · ↗`closed_by` bigint · `closed_at` datetime · ↗`cancel_reason_id` bigint · `cancelled_at` datetime
   ↳ kolom header dokumen standar (lihat konvensi)
 
-**`waste_disposal_lines` — WST baris.** 🔑`id` bigint · ↗`waste_disposal_id` bigint · ↗`bin_id` bigint *(bin Waste)* · `qty_base` decimal(18,4) · ↗`reason_code_id` bigint
+**`waste_disposal_lines` — WST baris.** 🔑`id` bigint · ↗`waste_disposal_id` bigint · ↗`item_id` bigint · ↗`bin_id` bigint *(bin Waste)* · ↗`lot_id` bigint · ↗`serial_id` bigint · ↗`piece_id` bigint *(potongan utuh (A-159))* · `stock_status` enum *(kondisi di bin Waste (A-155))* · `qty_base` decimal(18,4) · ↗`reason_code_id` bigint *(opsional, konteks Waste)* · ↗`movement_id` bigint *(A-155)*
   ↳ kolom baris standar (lihat konvensi)
 
-**`asset_handovers` — AST serah terima.** 🔑`id` bigint · ↗`serial_id` bigint · ↗`project_id` bigint · ↗`shipment_line_id` bigint *(keluar)* · ↗`goods_return_line_id` bigint *(kembali)* · `checked_out_at` datetime · `due_return_date` date · `condition_out` char(1) · ↗`photo_out_id` bigint *(attachments)* · `returned_at` datetime · `usage_days` int *([BR-AST-05](05-aturan-bisnis.md#br-ast))* · `meter_out` decimal(12,1) *([A-66](04-keputusan-dan-asumsi.md#a-66))* · `meter_in` decimal(12,1) *(≥ meter_out ([BR-AST-08](05-aturan-bisnis.md#br-ast)))* · `usage_hours` decimal(12,1) *(meter_in − meter_out bila hour)* · `status` enum *(checked_out|returned|inspected)*
+**`asset_handovers` — AST serah terima.** 🔑`id` bigint · ◆`number` varchar(40) *(AST/<gudang>/<yymm>/<urut> (A-165))* · ↗`serial_id` bigint · ↗`item_id` bigint *(A-165)* · ↗`project_id` bigint · ↗`warehouse_id` bigint *(gudang asal SJ (A-165))* · ↗`shipment_id` bigint *(A-165)* · ↗`shipment_line_id` bigint *(keluar)* · ↗`goods_return_id` bigint *(A-165)* · ↗`goods_return_line_id` bigint *(kembali)* · `status` enum *(checked_out|returned|inspected)* · `checked_out_at` datetime · `due_return_date` date *(bawaan target selesai proyek (A-163))* · `condition_out` char(1) · `photo_out_id` bigint *(attachments ([A-68](04-keputusan-dan-asumsi.md#a-68)))* · `meter_out` decimal(12,1) *([A-66](04-keputusan-dan-asumsi.md#a-66))* · `returned_at` datetime · `usage_days` int *([BR-AST-05](05-aturan-bisnis.md#br-ast))* · `meter_in` decimal(12,1) *(≥ meter_out ([BR-AST-08](05-aturan-bisnis.md#br-ast)))* · `usage_hours` decimal(12,1) *(meter jam)* · `usage_km` decimal(12,1) *(meter km (A-165))* · `lost_at` datetime *(asset.mark_lost (A-167))* · ↗`lost_reason_id` bigint · ↗`stock_adjustment_id` bigint *(ADJ asset_lost (A-167))* · ↗`updated_by` bigint
   ↳ kolom header dokumen standar (lihat konvensi)
 
-**`asset_inspections` — Pemeriksaan aset.** 🔑`id` bigint · ↗`asset_handover_id` bigint · ↗`serial_id` bigint · ↗`inspected_by` bigint · `inspected_at` datetime · `condition_grade` char(1) *(A–D)* · `condition_score` tinyint *(0–100 % wajib ([BR-AST-08](05-aturan-bisnis.md#br-ast)))* · `component_notes` json *(catatan per komponen)* · ↗`photo_id` bigint · `notes` varchar(255) · `resulting_state` enum *(available|maintenance|damaged)*
-  ↳ Riwayat kondisi aset ([A-66](04-keputusan-dan-asumsi.md#a-66))
+**`asset_inspections` — Pemeriksaan aset.** 🔑`id` bigint · ↗`asset_handover_id` bigint · ↗`serial_id` bigint · ↗`inspected_by` bigint · `inspected_at` datetime · `condition_grade` char(1) *(A–D)* · `condition_score` tinyint *(0–100 % wajib ([BR-AST-08](05-aturan-bisnis.md#br-ast)))* · `component_notes` json *(catatan per komponen)* · `photo_id` bigint *(attachments ([A-68](04-keputusan-dan-asumsi.md#a-68)))* · `photo_path` varchar(255) *(foto wajib (A-166))* · `meter_in` decimal(12,1) *(A-165)* · `meter_reset_reason` varchar(255) *(meter diganti (A-166))* · `notes` varchar(255) · `resulting_state` enum *(available|maintenance|damaged)*
+  ↳ Riwayat kondisi aset ([A-66](04-keputusan-dan-asumsi.md#a-66)); grade → state (A-164)
 
 **`maintenance_schedules` — Jadwal maintenance (F2).** 🔑`id` bigint · ↗`serial_id` bigint · `scheduled_at` date · `interval_days` int · `performed_at` date · `notes` varchar(255) · `status` enum *(planned|in_progress|done)*
 
@@ -294,7 +302,7 @@ erDiagram
 
 **`signatures` — Tanda tangan.** 🔑`id` bigint · ↗`user_id` bigint *(null bila penerima tanpa akun)* · `signer_name` varchar(100) · ↗`attachment_id` bigint · `captured_at` datetime · `source` enum *(profile|device)*
 
-**`notifications` — Notifikasi.** 🔑`id` uuid · ↗`user_id` bigint · `type` varchar(60) · `channel` enum *(in_app|email|whatsapp)* · `data` json · `document_type` varchar(30) · `document_id` bigint · `sent_at` datetime · `read_at` datetime
+**`notifications` — Notifikasi.** 🔑`id` uuid · ↗`user_id` bigint · `type` varchar(60) *(kunci kejadian (A-189))* · `channel` enum *(in_app|email|whatsapp)* · `title` varchar(150) *(A-189)* · `body` varchar(500) *(A-189)* · `url` varchar(255) *(relatif ke subdomain company (A-189))* · `data` json · `document_type` varchar(30) · `document_id` bigint · `sent_at` datetime · `read_at` datetime
 
 **`notification_preferences` — Preferensi kanal.** ↗`user_id` bigint · `event_key` varchar(60) · `in_app` bool · `email` bool · `whatsapp` bool *(dibatasi Admin Company)*
   ↳ PK(user_id, event_key)

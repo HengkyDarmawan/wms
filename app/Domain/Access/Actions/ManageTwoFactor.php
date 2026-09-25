@@ -7,7 +7,10 @@ namespace App\Domain\Access\Actions;
 use App\Domain\Access\Exceptions\AccessRuleException;
 use App\Domain\Access\Models\User;
 use App\Domain\Access\Support\TotpVerifier;
+use App\Domain\Platform\Models\PlatformUser;
+use App\Domain\Platform\Support\PlatformAudit;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -21,6 +24,8 @@ use Illuminate\Support\Str;
  *
  * Rahasia dan kode pemulihan disimpan terenkripsi; keduanya tidak pernah
  * ditampilkan lagi setelah dikonfirmasi.
+ *
+ * Dipakai juga untuk Super Admin (`PlatformUser`, A-200); jejaknya ke audit log pusat.
  */
 class ManageTwoFactor
 {
@@ -34,7 +39,7 @@ class ManageTwoFactor
      *
      * @return array{secret: string, uri: string}
      */
-    public function begin(User $user): array
+    public function begin(User|PlatformUser $user): array
     {
         if ($user->hasTwoFactorEnabled()) {
             throw new AccessRuleException('Verifikasi dua langkah sudah aktif.');
@@ -60,7 +65,7 @@ class ManageTwoFactor
      *
      * @return array<int, string>
      */
-    public function confirm(User $user, string $code): array
+    public function confirm(User|PlatformUser $user, string $code): array
     {
         if ($user->two_factor_secret === null) {
             throw new AccessRuleException('Mulai pengaturan dua langkah dulu.');
@@ -72,7 +77,9 @@ class ManageTwoFactor
 
         $secret = Crypt::decryptString($user->two_factor_secret);
 
-        if (! $this->totp->verify($secret, trim($code))) {
+        $langkah = $this->totp->matchedStep($secret, trim($code));
+
+        if ($langkah === null) {
             throw new AccessRuleException('Kode verifikasi tidak cocok. Periksa jam perangkat Anda.');
         }
 
@@ -80,19 +87,18 @@ class ManageTwoFactor
 
         $user->forceFill([
             'two_factor_confirmed_at' => now(),
+            // Kode konfirmasi tidak bisa dipakai lagi untuk masuk (A-205).
+            'two_factor_last_step' => $langkah,
             'two_factor_recovery_codes' => Crypt::encryptString(json_encode($kode)),
         ])->save();
 
-        activity('access')
-            ->performedOn($user)
-            ->causedBy($user)
-            ->log('Verifikasi dua langkah diaktifkan');
+        $this->catat($user, 'Verifikasi dua langkah diaktifkan');
 
         return $kode;
     }
 
     /** Membatalkan pengaturan yang belum dikonfirmasi. */
-    public function cancel(User $user): void
+    public function cancel(User|PlatformUser $user): void
     {
         if ($user->two_factor_confirmed_at !== null) {
             throw new AccessRuleException('Verifikasi dua langkah sudah aktif; matikan lewat aksi tersendiri.');
@@ -105,13 +111,13 @@ class ManageTwoFactor
     }
 
     /** Mematikan 2FA menuntut password, bukan sekadar sesi yang sedang terbuka. */
-    public function disable(User $user, string $currentPassword): void
+    public function disable(User|PlatformUser $user, string $currentPassword): void
     {
         if (! $user->hasTwoFactorEnabled()) {
             throw new AccessRuleException('Verifikasi dua langkah belum aktif.');
         }
 
-        if (! \Illuminate\Support\Facades\Hash::check($currentPassword, (string) $user->password)) {
+        if (! Hash::check($currentPassword, (string) $user->password)) {
             throw new AccessRuleException('Password salah.');
         }
 
@@ -119,12 +125,10 @@ class ManageTwoFactor
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
+            'two_factor_last_step' => null,
         ])->save();
 
-        activity('access')
-            ->performedOn($user)
-            ->causedBy($user)
-            ->log('Verifikasi dua langkah dimatikan');
+        $this->catat($user, 'Verifikasi dua langkah dimatikan');
     }
 
     /**
@@ -132,7 +136,7 @@ class ManageTwoFactor
      *
      * @return array<int, string>
      */
-    public function regenerateRecoveryCodes(User $user): array
+    public function regenerateRecoveryCodes(User|PlatformUser $user): array
     {
         if (! $user->hasTwoFactorEnabled()) {
             throw new AccessRuleException('Verifikasi dua langkah belum aktif.');
@@ -144,16 +148,13 @@ class ManageTwoFactor
             'two_factor_recovery_codes' => Crypt::encryptString(json_encode($kode)),
         ])->save();
 
-        activity('access')
-            ->performedOn($user)
-            ->causedBy($user)
-            ->log('Kode pemulihan dua langkah diganti');
+        $this->catat($user, 'Kode pemulihan dua langkah diganti');
 
         return $kode;
     }
 
     /** Sisa kode pemulihan yang belum terpakai. */
-    public function remainingRecoveryCodes(User $user): int
+    public function remainingRecoveryCodes(User|PlatformUser $user): int
     {
         if ($user->two_factor_recovery_codes === null) {
             return 0;
@@ -162,6 +163,64 @@ class ManageTwoFactor
         $kode = json_decode(Crypt::decryptString($user->two_factor_recovery_codes), true);
 
         return is_array($kode) ? count($kode) : 0;
+    }
+
+    /** Kode saat masuk: TOTP, atau kode pemulihan yang langsung dihabiskan. */
+    public function verifyLogin(User|PlatformUser $user, string $code): bool
+    {
+        if (! $user->hasTwoFactorEnabled()) {
+            return false;
+        }
+
+        $code = trim($code);
+
+        // Baris user dikunci: kode TOTP tidak bisa dipakai ulang di jendelanya
+        // (A-205) dan kode pemulihan tidak terpakai dua kali oleh permintaan bersamaan.
+        return $user->getConnection()->transaction(function () use ($user, $code): bool {
+            $segar = $user->newQuery()->lockForUpdate()->find($user->getKey());
+
+            if ($segar === null) {
+                return false;
+            }
+
+            $langkah = $this->totp->matchedStep(Crypt::decryptString($segar->two_factor_secret), $code);
+
+            if ($langkah !== null) {
+                if ($segar->two_factor_last_step !== null && $langkah <= (int) $segar->two_factor_last_step) {
+                    return false;
+                }
+
+                $segar->forceFill(['two_factor_last_step' => $langkah])->save();
+                $user->setRawAttributes($segar->getAttributes(), true);
+
+                return true;
+            }
+
+            // Kode pemulihan tidak peka huruf besar-kecil.
+            $kode = $segar->two_factor_recovery_codes === null ? [] : (json_decode(Crypt::decryptString($segar->two_factor_recovery_codes), true) ?: []);
+            $indeks = array_search(mb_strtoupper($code), array_map(fn ($k) => mb_strtoupper((string) $k), $kode), true);
+
+            if ($indeks === false) {
+                return false;
+            }
+
+            unset($kode[$indeks]);
+            $segar->forceFill(['two_factor_recovery_codes' => Crypt::encryptString(json_encode(array_values($kode)))])->save();
+            $user->setRawAttributes($segar->getAttributes(), true);
+
+            return true;
+        });
+    }
+
+    private function catat(User|PlatformUser $user, string $pesan): void
+    {
+        if ($user instanceof PlatformUser) {
+            PlatformAudit::record($pesan.' (Super Admin)', $user, $user);
+
+            return;
+        }
+
+        activity('access')->performedOn($user)->causedBy($user)->log($pesan);
     }
 
     /** @return array<int, string> */

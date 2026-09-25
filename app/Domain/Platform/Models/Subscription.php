@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Domain\Platform\Models;
 
 use App\Domain\Platform\Enums\SubscriptionStatus;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Siklus langganan company — BR-SUB-01, A-11, A-12.
@@ -44,6 +46,20 @@ class Subscription extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(SubscriptionInvoice::class);
+    }
+
+    /**
+     * Akhir masa berjalan: akhir periode berbayar, atau akhir trial bila belum
+     * pernah dibayar (A-177).
+     */
+    public function periodEnd(): ?CarbonInterface
+    {
+        return $this->current_period_end ?? $this->trial_ends_at?->copy()->startOfDay();
     }
 
     public function allowsWrite(): bool

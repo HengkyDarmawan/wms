@@ -11,7 +11,7 @@
                 · {{ $count->freeze_bins ? __('bin dibeku') : __('tanpa pembekuan') }}
                 @if ($count->is_audit) · {{ __('sesi audit') }} @endif
                 · {{ __('Dibuat') }} {{ $count->creator?->name }}
-                @if ($count->started_at) · {{ __('Mulai') }} {{ $count->started_at->format('d/m/Y H:i') }} @endif
+                @if ($count->started_at) · {{ __('Mulai') }} {{ $count->started_at->lokal()->format('d/m/Y H:i') }} @endif
                 @if ($count->submitter) · {{ __('Rekonsiliasi') }} {{ $count->submitter->name }} @endif
                 @if ($count->approver) · {{ __('Disetujui') }} {{ $count->approver->name }} @endif
                 @if ($count->lock_date_set) · {{ __('Periode stok dikunci sampai') }} {{ $count->lock_date_set->format('d/m/Y') }} @endif
@@ -227,7 +227,7 @@
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $r)
-                <li class="list-group-item">{{ $r->created_at?->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
+                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
             @endforelse

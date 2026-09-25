@@ -9,7 +9,7 @@
                 {{ $sj->warehouse?->code }} → {{ $sj->destinationLabel() }} ·
                 {{ $sj->shipment_method->label() }}: {{ $sj->carrierLabel() }}
                 @if ($sj->shipped_at)
-                    · {{ __('Berangkat') }} {{ $sj->shipped_at->format('d/m/Y H:i') }}
+                    · {{ __('Berangkat') }} {{ $sj->shipped_at->lokal()->format('d/m/Y H:i') }}
                 @endif
             </p>
         </div>
@@ -80,8 +80,9 @@
     @endif
 
     @if ($dialog === 'terima')
-        <div class="card border-success mb-3">
+        <div class="card border-success mb-3" data-draft="pod-{{ $sj->id }}">
             <div class="card-header"><strong>{{ __('Bukti terima') }}</strong></div>
+            <div class="alert alert-warning py-2 small m-2 d-none" role="status" data-draft-status></div>
             <div class="card-body">
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
@@ -222,13 +223,13 @@
             <div class="card-body">
                 <p class="mb-1">
                     {{ __('Diterima oleh') }}: <strong>{{ $bukti->received_by_name }}</strong>
-                    · {{ $bukti->confirmed_at?->format('d/m/Y H:i') }}
+                    · {{ $bukti->confirmed_at?->lokal()->format('d/m/Y H:i') }}
                     · {{ $bukti->channel->label() }}
                 </p>
                 @if ($bukti->confirm_deadline_at)
                     <p class="text-muted small mb-0">
                         {{ __('Pemohon bisa mengajukan keberatan sampai :tgl', [
-                            'tgl' => $bukti->confirm_deadline_at->format('d/m/Y H:i'),
+                            'tgl' => $bukti->confirm_deadline_at->lokal()->format('d/m/Y H:i'),
                         ]) }}
                     </p>
                 @endif
@@ -292,7 +293,7 @@
                 <li class="list-group-item">
                     <div class="d-flex justify-content-between">
                         <span>{{ $log->description }}</span>
-                        <span class="text-muted small">{{ $log->created_at?->format('d/m/Y H:i') }}</span>
+                        <span class="text-muted small">{{ $log->created_at?->lokal()->format('d/m/Y H:i') }}</span>
                     </div>
                     <div class="small text-muted">{{ $log->causer?->name ?? __('Sistem') }}</div>
                 </li>

@@ -17,8 +17,8 @@ use RuntimeException;
  * Aturan approval demo company DEMO — sumber kebenaran: docs/00-akun-uji.md §5.
  * HANYA untuk dev, demo, dan staging.
  *
- * Jenis dokumen yang sudah tersambung ke mesin approval (REQ, RTV, ADJ, OPN)
- * diseed; baris PRQ di §5 menunggu modulnya (BR-GEN-10).
+ * Jenis dokumen yang sudah tersambung ke mesin approval (REQ, RTV, ADJ, OPN,
+ * PRQ) diseed.
  * Aman dijalankan berulang (dicari lewat jenis + nama).
  */
 class ApprovalDemoSeeder extends Seeder
@@ -34,6 +34,8 @@ class ApprovalDemoSeeder extends Seeder
     public const ADJ_LAINNYA = 'ADJ lainnya';
 
     public const OPN_AUDIT = 'OPN tahunan & pemeriksaan mendadak';
+
+    public const PRQ_ONLINE = 'PRQ toko online';
 
     public function run(): void
     {
@@ -92,6 +94,16 @@ class ApprovalDemoSeeder extends Seeder
             ['match' => 'all', 'count_types' => ['annual', 'spot_check']],
             [
                 [ApproverType::Role, $auditor->id, DecisionMode::Any],
+            ],
+        );
+
+        // §5 baris PRQ: jenis vendor toko online → kepala gudang tujuan → Manajemen (A-52).
+        // PRQ lain tanpa aturan = disetujui otomatis (A-08).
+        $this->aturan(ApprovalDocumentType::PurchaseRequest, self::PRQ_ONLINE, 10,
+            ['match' => 'all', 'vendor_types' => ['online_marketplace']],
+            [
+                [ApproverType::WarehouseHead, null, DecisionMode::Any],
+                [ApproverType::Role, $manajemen->id, DecisionMode::Any],
             ],
         );
 

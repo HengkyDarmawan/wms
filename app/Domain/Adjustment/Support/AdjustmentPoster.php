@@ -152,15 +152,9 @@ class AdjustmentPoster
         }
 
         if ($pieceId === null && $line->piece_length !== null && (float) $line->qty_delta > 0) {
-            $urut = Piece::query()->count() + 1;
-
-            do {
-                $nomor = sprintf('P-%06d', $urut++);
-            } while (Piece::query()->where('piece_no', $nomor)->exists());
-
             $pieceId = Piece::create([
                 'item_id' => $line->item_id,
-                'piece_no' => $nomor,
+                'piece_no' => Piece::nextPieceNo(),
                 'length' => (float) $line->piece_length,
                 'is_offcut' => false,
                 'origin_type' => 'stock_adjustment',

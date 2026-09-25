@@ -185,6 +185,23 @@
             @endif
         </div>
     @else
+        @if ($openOrders->isNotEmpty())
+            <div class="card mb-3 border-info">
+                <div class="card-header"><strong>{{ __('Pesanan PRQ ke vendor ini') }}</strong> <span class="small text-muted">{{ __('pilih untuk menambah baris yang merujuk catatan pemesanan') }}</span></div>
+                <ul class="list-group list-group-flush small">
+                    @foreach ($openOrders as $ol)
+                        <li class="list-group-item d-flex justify-content-between align-items-center gap-2" wire:key="grn-po-{{ $ol->id }}">
+                            <span>
+                                <strong>{{ $ol->order?->purchaseRequest?->number }}</strong> · {{ $ol->order?->reference() }}
+                                · {{ $ol->line?->item?->code }} — {{ $ol->line?->item?->name }}
+                                · {{ __('sisa') }} {{ number_format($ol->outstandingQty(), 2, ',', '.') }}
+                            </span>
+                            <button class="btn btn-sm btn-outline-info" type="button" wire:click="pakaiPesanan({{ $ol->id }})">{{ __('Tambah') }}</button>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <strong>{{ __('Baris barang') }}</strong>
@@ -198,8 +215,10 @@
                     @php($mode = $modes[(int) ($r['item_id'] ?: 0)] ?? null)
                     <div class="row g-2 align-items-end border-bottom pb-2 mb-2" wire:key="grn-row-{{ $i }}">
                         <div class="col-md-3">
-                            <label class="form-label small" for="row-item-{{ $i }}">{{ __('Item') }} <span class="wajib">*</span></label>
-                            <select class="form-select form-select-sm" id="row-item-{{ $i }}" wire:model.live="rows.{{ $i }}.item_id">
+                            <label class="form-label small" for="row-item-{{ $i }}">{{ __('Item') }} <span class="wajib">*</span>
+                                @if (($r['order_line_id'] ?? '') !== '') <span class="badge text-bg-info">{{ __('PRQ') }}</span> @endif
+                            </label>
+                            <select class="form-select form-select-sm" id="row-item-{{ $i }}" wire:model.live="rows.{{ $i }}.item_id" @disabled(($r['order_line_id'] ?? '') !== '')>
                                 <option value="">{{ __('Pilih item…') }}</option>
                                 @foreach ($items as $it)
                                     <option value="{{ $it->id }}">{{ $it->code }} — {{ $it->name }}</option>
@@ -216,7 +235,7 @@
                         @if ($mode?->value === 'lot')
                             <div class="col-md-2">
                                 <label class="form-label small" for="row-lot-{{ $i }}">{{ __('No. lot') }} <span class="wajib">*</span></label>
-                                <input class="form-control form-control-sm" id="row-lot-{{ $i }}" type="text" wire:model="rows.{{ $i }}.lot_no">
+                                <input class="form-control form-control-sm" id="row-lot-{{ $i }}" type="text" data-scan wire:model="rows.{{ $i }}.lot_no">
                             </div>
                         @endif
                         @if (in_array($mode?->value, ['lot', 'serial'], true))
