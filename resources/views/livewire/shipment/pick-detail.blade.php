@@ -11,6 +11,12 @@
                     · {{ __('Petugas') }}: {{ $task->assignee->name }}
                 @endif
             </p>
+            @if ($task->hasFreezeOverride())
+                <p class="small text-warning-emphasis mb-0">
+                    <i class="bi bi-unlock" aria-hidden="true"></i>
+                    {{ __('Override bin beku') }} · {{ $task->freezeOverrider?->name }} · {{ $task->freeze_override_at->lokal()->format('d/m/Y H:i') }} — {{ $task->freeze_override_reason }}
+                </p>
+            @endif
         </div>
         <div class="d-flex flex-wrap gap-2">
             @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::PickTask, 'id' => $task->id, 'teks' => __('Cetak picklist')])
@@ -43,6 +49,23 @@
             </div>
             <div class="card-footer d-flex gap-2">
                 <button class="btn btn-warning" type="button" wire:click="batalkan">{{ __('Batalkan') }}</button>
+                <button class="btn btn-outline-secondary" type="button" wire:click="tutupDialog">{{ __('Tutup') }}</button>
+            </div>
+        </div>
+    @endif
+
+    @if ($dialog === 'override')
+        <div class="card border-warning mb-3">
+            <div class="card-header"><strong>{{ __('Override bin beku untuk SJ mendesak') }}</strong></div>
+            <div class="card-body">
+                <p class="small text-muted">{{ __('Picking boleh mengambil dari bin yang sedang dihitung opname. Angka sesi opname bin itu disesuaikan dengan jumlah yang diambil dan bin ditandai perlu dihitung ulang.') }}</p>
+                <label class="form-label" for="pck-override">{{ __('Alasan') }} <span class="wajib">*</span></label>
+                <input class="form-control @error('alasanOverride') is-invalid @enderror" id="pck-override" type="text" maxlength="255"
+                       wire:model="alasanOverride" placeholder="{{ __('mis. SJ darurat pengecoran besok pagi') }}">
+                @error('alasanOverride') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <button class="btn btn-warning" type="button" wire:click="override">{{ __('Izinkan picking') }}</button>
                 <button class="btn btn-outline-secondary" type="button" wire:click="tutupDialog">{{ __('Tutup') }}</button>
             </div>
         </div>
@@ -157,6 +180,10 @@
         <div class="card-footer d-flex flex-wrap gap-2">
             @can('start', $task)
                 <button class="btn btn-primary" type="button" wire:click="mulai">{{ __('Mulai picking') }}</button>
+            @endcan
+
+            @can('overrideFreeze', $task)
+                <button class="btn btn-outline-warning" type="button" wire:click="mintaOverride">{{ __('Override bin beku') }}</button>
             @endcan
 
             @can('complete', $task)

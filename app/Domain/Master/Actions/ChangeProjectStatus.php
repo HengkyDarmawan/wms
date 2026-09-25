@@ -9,6 +9,7 @@ use App\Domain\Master\Enums\ProjectStatus;
 use App\Domain\Master\Exceptions\MasterRuleException;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Support\ProjectClosureChecklist;
+use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\Warehouse\Enums\BinStatus;
 use Illuminate\Support\Facades\DB;
 
@@ -98,6 +99,10 @@ class ChangeProjectStatus
             ->causedBy($actor)
             ->withProperties(['status' => $target->value, 'reason_code' => $reasonCode, 'notes' => $notes])
             ->log('Status proyek diubah menjadi '.$target->label());
+
+        if (in_array($target, [ProjectStatus::Closed, ProjectStatus::Cancelled], true)) {
+            app(DomainNotifications::class)->projectClosed($project->refresh(), $actor);
+        }
 
         return $project->refresh();
     }

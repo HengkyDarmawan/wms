@@ -19,7 +19,11 @@ use App\Domain\Count\Support\VarianceClassifier;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\CompanySetting;
 use App\Domain\Master\Models\ItemCategory;
+use App\Domain\Shipment\Actions\OverrideFrozenBinPick;
+use App\Domain\Shipment\Actions\ProcessPickTask;
 use App\Domain\Shipment\Enums\PickTaskStatus;
+use App\Domain\Shipment\Exceptions\ShipmentRuleException;
+use App\Domain\Shipment\Livewire\PickDetail;
 use App\Domain\Shipment\Models\PickTask;
 use App\Domain\Shipment\Models\PickTaskLine;
 use App\Domain\Stock\Exceptions\LedgerException;
@@ -30,6 +34,7 @@ use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\WarehouseType;
+use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\Count\Concerns\CountFixtures;
 use Tests\TenantTestCase;
@@ -164,9 +169,62 @@ class StockCountTest extends TenantTestCase
         PickTaskLine::create(['pick_task_id' => $pck->id, 'source_line_id' => 1, 'item_id' => $this->baut->id, 'bin_id' => $this->binA->id, 'qty_allocated' => 5]);
 
         try {
-            app(\App\Domain\Shipment\Actions\ProcessPickTask::class)->start($pck, $this->staf1);
+            app(ProcessPickTask::class)->start($pck, $this->staf1);
             $this->fail('PCK dari bin beku harus ditolak.');
-        } catch (\App\Domain\Shipment\Exceptions\ShipmentRuleException $e) {
+        } catch (ShipmentRuleException $e) {
+            $this->assertSame('BR-OPN-02', $e->rule);
+        }
+    }
+
+    #[Test]
+    public function tc_opn_21_override_bin_beku_untuk_sj_mendesak(): void
+    {
+        $sesi = $this->sesiBerjalan(['bin_ids' => [$this->binA->id]]);
+        $awal = $this->saldoBin($this->binA, $this->baut);
+        $baris = $this->baris($sesi, $this->baut, $this->binA);
+        $sistem = (float) $baris->system_qty;
+        // Hitungan yang sudah masuk sebelum pengambilan ikut digeser (A-240).
+        $baris->forceFill(['counted_qty_r1' => $sistem])->save();
+
+        $pck = PickTask::create(['number' => 'PCK/CKG/2609/0097', 'warehouse_id' => $this->gudang->id,
+            'source_type' => 'material_request', 'source_id' => 1, 'status' => PickTaskStatus::Pending]);
+        PickTaskLine::create(['pick_task_id' => $pck->id, 'source_line_id' => 1, 'item_id' => $this->baut->id, 'bin_id' => $this->binA->id, 'qty_allocated' => 5]);
+
+        $this->assertFalse($this->staf1->can('overrideFreeze', $pck), 'Staf tanpa bin.manage tidak boleh override.');
+        $this->assertTrue($this->kepala->can('overrideFreeze', $pck));
+
+        try {
+            app(OverrideFrozenBinPick::class)->handle($pck, '  ', $this->kepala);
+            $this->fail('Override tanpa alasan harus ditolak.');
+        } catch (ShipmentRuleException $e) {
+            $this->assertSame('BR-GEN-11', $e->rule);
+        }
+
+        Livewire::actingAs($this->kepala)->test(PickDetail::class, ['pickTask' => $pck])
+            ->call('mintaOverride')->set('alasanOverride', 'SJ darurat pengecoran')->call('override')
+            ->assertSet('ruleError', '')->assertSee(__('Override bin beku'));
+        $this->assertTrue($pck->refresh()->hasFreezeOverride());
+        $this->assertFalse($this->kepala->can('overrideFreeze', $pck), 'Override hanya sekali.');
+
+        $aksi = app(ProcessPickTask::class);
+        $aksi->start($pck, $this->staf1);
+        $aksi->recordLine($pck->lines()->sole(), 5, null, null, null, $this->staf1);
+        $aksi->complete($pck->refresh(), $this->staf1);
+
+        // Stok pindah, bin tetap beku dan ditandai hitung ulang; angka sesi digeser −5.
+        $this->assertSame($awal - 5, $this->saldoBin($this->binA, $this->baut));
+        $this->binA->refresh();
+        $this->assertSame(BinStatus::Frozen, $this->binA->bin_status);
+        $this->assertTrue($this->binA->count_flag);
+        $baris->refresh();
+        $this->assertSame($sistem - 5, (float) $baris->system_qty);
+        $this->assertSame($sistem - 5, (float) $baris->counted_qty_r1);
+
+        // Pergerakan lain dari bin beku tetap ditolak.
+        try {
+            app(StockLedger::class)->post(new MovementRequest(item: $this->baut, qtyBase: 1, fromBinId: $this->binA->id));
+            $this->fail('Bin beku tetap menolak pergerakan tanpa override.');
+        } catch (LedgerException $e) {
             $this->assertSame('BR-OPN-02', $e->rule);
         }
     }

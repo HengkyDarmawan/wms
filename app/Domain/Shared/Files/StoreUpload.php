@@ -114,6 +114,20 @@ class StoreUpload
         return $path;
     }
 
+    /**
+     * Isi yang dibuat sistem (mis. PDF laporan opname, A-238) — bukan unggahan
+     * user, jadi tidak dibatasi 5 MB.
+     *
+     * @return string path relatif di dalam disk tenant
+     */
+    public function putContent(string $content, string $folder, string $name, string $extension): string
+    {
+        $path = trim($folder, '/').'/'.$name.'.'.$extension;
+        Storage::disk(self::DISK)->put($path, $content);
+
+        return $path;
+    }
+
     public function delete(?string $path): void
     {
         if ($path === null || $path === '') {
@@ -134,5 +148,11 @@ class StoreUpload
     public function stream(string $path): StreamedResponse
     {
         return Storage::disk(self::DISK)->response($path);
+    }
+
+    /** Seperti stream(), tetapi sebagai unduhan bernama. */
+    public function download(string $path, string $name): StreamedResponse
+    {
+        return Storage::disk(self::DISK)->download($path, $name);
     }
 }

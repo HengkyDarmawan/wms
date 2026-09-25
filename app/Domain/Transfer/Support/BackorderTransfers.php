@@ -28,6 +28,7 @@ use App\Domain\Transfer\Models\Transfer;
 use App\Domain\Transfer\Models\TransferLine;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Sambungan REQ ↔ TRF (BR-REQ-05, BR-REQ-08, BR-REQ-15; A-106, A-108).
@@ -165,6 +166,65 @@ class BackorderTransfers
     }
 
     /**
+     * BR-SJ-02 + BR-REQ-08 (A-242): short pick PCK TRF yang melayani baris REQ
+     * penunggu — kekurangannya dikembalikan ke REQ sebagai TRF backorder baru
+     * dari gudang lain. Gudang asal TRF yang kurang tidak dipilih lagi karena
+     * pembukuannya terbukti meleset (binnya sudah ⚑). Tanpa gudang yang
+     * cukup, sisa baris REQ ditindaklanjuti manual dan hanya dicatat.
+     *
+     * Dipanggil di dalam transaksi penyelesaian PCK; kegagalan membuat TRF
+     * tidak membatalkan picking (savepoint + catat).
+     */
+    public function shortPicked(TransferLine $trfLine, float $short, ?User $actor = null): ?Transfer
+    {
+        if ($short <= 0 || $trfLine->material_request_line_id === null) {
+            return null;
+        }
+
+        $reqLine = MaterialRequestLine::query()->with('request', 'item')->find($trfLine->material_request_line_id);
+
+        if ($reqLine === null || $reqLine->item === null || ! $this->menunggu($reqLine)) {
+            return null;
+        }
+
+        $trfLama = Transfer::withoutGlobalScopes()->find($trfLine->transfer_id);
+        $tujuan = Warehouse::query()->withoutGlobalScopes()->with('type')->find($reqLine->source_warehouse_id);
+        $asal = $tujuan === null ? null : $this->pilihAsal($reqLine->item, $tujuan, $short, [], (int) $trfLama?->from_warehouse_id);
+        $qty = round($short, 4);
+
+        if ($asal === null) {
+            activity('request')->performedOn($reqLine->request)->causedBy($actor)
+                ->withProperties(['baris' => $reqLine->id, 'qty' => $qty, 'trf' => $trfLama?->number])
+                ->log('Short pick TRF: tidak ada gudang lain dengan stok cukup; sisa perlu ditindaklanjuti manual');
+
+            return null;
+        }
+
+        try {
+            $trf = DB::transaction(fn () => $this->buat->handle(
+                ['from_warehouse_id' => $asal->id, 'to_warehouse_id' => $tujuan->id,
+                    'notes' => 'Backorder '.$reqLine->request->number.' — sisa short pick '.$trfLama?->number],
+                [['item_id' => $reqLine->item_id, 'qty_base' => $qty, 'material_request_line_id' => $reqLine->id]],
+                $actor,
+                TransferOrigin::Backorder,
+                $reqLine->request,
+            ));
+        } catch (TransferRuleException|RequestRuleException $e) {
+            activity('request')->performedOn($reqLine->request)->causedBy($actor)
+                ->withProperties(['baris' => $reqLine->id, 'qty' => $qty, 'galat' => $e->getMessage()])
+                ->log('Short pick TRF: TRF backorder pengganti gagal dibuat');
+
+            return null;
+        }
+
+        activity('request')->performedOn($reqLine->request)->causedBy($actor)
+            ->withProperties(['baris' => $reqLine->id, 'qty' => $qty, 'trf_lama' => $trfLama?->number, 'trf_baru' => $trf->number])
+            ->log('Short pick TRF: sisa dibackorder ulang lewat '.$trf->number);
+
+        return $trf;
+    }
+
+    /**
      * BR-REQ-15 (A-108): TRF backorder yang seluruh baris REQ-nya tidak lagi
      * terbuka dibatalkan bila masih bisa; yang sudah berjalan diteruskan dan
      * barangnya menjadi stok biasa gudang tujuan.
@@ -213,12 +273,13 @@ class BackorderTransfers
      *
      * @param  array<string, float>  $terpakai
      */
-    private function pilihAsal(Item $item, Warehouse $tujuan, float $qty, array $terpakai): ?Warehouse
+    private function pilihAsal(Item $item, Warehouse $tujuan, float $qty, array $terpakai, ?int $kecuali = null): ?Warehouse
     {
         /** @var Collection<int, Warehouse> $calon */
         $calon = Warehouse::query()->withoutGlobalScopes()->with('type')
             ->where('is_active', true)
             ->where('id', '!=', $tujuan->id)
+            ->when($kecuali !== null, fn ($q) => $q->where('id', '!=', $kecuali))
             ->orderBy('code')
             ->get()
             ->reject(fn (Warehouse $w) => $w->isSite());

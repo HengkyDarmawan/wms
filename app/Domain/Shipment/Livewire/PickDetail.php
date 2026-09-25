@@ -6,6 +6,7 @@ namespace App\Domain\Shipment\Livewire;
 
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Shipment\Actions\OverrideFrozenBinPick;
 use App\Domain\Shipment\Actions\ProcessPickTask;
 use App\Domain\Shipment\Livewire\Concerns\HandlesShipmentRules;
 use App\Domain\Shipment\Models\PickTask;
@@ -43,10 +44,12 @@ class PickDetail extends Component
 
     public ?int $sorot = null;
 
-    /** '' atau 'batal' */
+    /** '', 'batal', atau 'override' */
     public string $dialog = '';
 
     public string $reasonCode = '';
+
+    public string $alasanOverride = '';
 
     public function mount(PickTask $pickTask): void
     {
@@ -193,6 +196,36 @@ class PickDetail extends Component
         $this->reasonCode = '';
         $this->ruleError = '';
         $this->resetValidation();
+    }
+
+    public function mintaOverride(): void
+    {
+        $this->authorize('overrideFreeze', $this->task());
+
+        $this->dialog = 'override';
+        $this->alasanOverride = '';
+        $this->ruleError = '';
+        $this->resetValidation();
+    }
+
+    /** A-240: override bin beku untuk SJ mendesak (BR-OPN-02). */
+    public function override(OverrideFrozenBinPick $action): void
+    {
+        $task = $this->task();
+
+        $this->authorize('overrideFreeze', $task);
+
+        $this->validate(
+            ['alasanOverride' => ['required', 'string', 'max:255']],
+            attributes: ['alasanOverride' => __('Alasan')],
+        );
+
+        if (! $this->jalankan(fn () => $action->handle($task, $this->alasanOverride, auth()->user()))) {
+            return;
+        }
+
+        $this->tutupDialog();
+        $this->dispatch('pesan', teks: __('Override disimpan; picking dari bin beku diizinkan.'));
     }
 
     public function tutupDialog(): void

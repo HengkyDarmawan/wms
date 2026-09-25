@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace App\Domain\Notification\Support;
 
 use App\Domain\Access\Models\User;
-use App\Domain\Master\Models\Serial;
+use App\Domain\Approval\Models\ApprovalSnapshot;
+use App\Domain\Master\Models\Item;
+use App\Domain\Master\Models\Project;
 use App\Domain\PurchaseRequest\Models\PurchaseRequest;
 use App\Domain\Request\Models\MaterialRequest;
+use App\Domain\Request\Models\MaterialRequestLine;
 use App\Domain\Shipment\Models\DeliveryDiscrepancy;
 use App\Domain\Shipment\Models\ProofOfDelivery;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 
 /**
  * Penerima dan isi notifikasi per kejadian modul (Blueprint §10, A-189).
@@ -87,22 +92,145 @@ class DomainNotifications
         ));
     }
 
-    /** Pengingat harian aset lewat jatuh tempo (BR-AST-06). */
-    public function assetsOverdue(): int
+    /** Item `provisional` lahir dari baris non-katalog: Admin Company melengkapinya (11 §8, BR-REQ-03). */
+    public function provisionalItemCreated(Item $item, MaterialRequest $req, ?User $actor = null): void
     {
-        $jumlah = 0;
+        $this->aman(fn () => $this->notifier->send(
+            $this->notifier->recipients('item.create'),
+            'item.provisional_created', 'Item sementara '.$item->code.' dibuat dari '.$req->number,
+            'Lengkapi data item sebelum penerimaan pertama.', route('items.show', $item->id, false),
+            'item', (int) $item->id, [], $actor,
+        ));
+    }
 
-        foreach (Serial::query()->overdue()->with('item:id,code')->get() as $aset) {
-            $proyek = $aset->current_project_id !== null ? (int) $aset->current_project_id : null;
-            $jumlah += $this->notifier->send(
-                $this->notifier->recipients('asset.manage', null, $proyek),
-                'asset.overdue', 'Aset '.$aset->item?->code.' '.$aset->serial_no.' lewat jatuh tempo',
-                'Seharusnya kembali '.$aset->due_return_date?->format('d/m/Y').'.', route('assets.show', $aset->id, false),
-                'serial', (int) $aset->id,
-            );
-        }
+    /** Proyek ditutup/dibatalkan: PIC dan Kepala Gudang yang mencakup proyek (11 §8, BR-PRJ-02). */
+    public function projectClosed(Project $project, ?User $actor = null): void
+    {
+        $this->aman(function () use ($project, $actor) {
+            $penerima = $this->notifier->recipients('warehouse.update', null, (int) $project->id);
 
-        return $jumlah;
+            if ($project->pic_user_id !== null && ($pic = User::query()->find($project->pic_user_id)) !== null) {
+                $penerima->push($pic);
+            }
+
+            $this->notifier->send($penerima, 'project.closed',
+                'Proyek '.$project->code.' '.mb_strtolower($project->status->label()),
+                $project->close_reason, route('projects.show', $project->id, false),
+                'project', (int) $project->id, [], $actor);
+        });
+    }
+
+    /** Tanggal kunci periode stok maju: Admin Company & semua Kepala Gudang (13 §8, BR-STK-15). */
+    public function stockPeriodLocked(string $date, ?User $actor = null): void
+    {
+        $this->aman(fn () => $this->notifier->send(
+            $this->notifier->recipients('warehouse.update'),
+            'stock.period_locked', 'Periode stok dikunci sampai '.Carbon::parse($date)->format('d/m/Y'),
+            'Mutasi bertanggal pada atau sebelum tanggal itu ditolak; koreksi diposting di periode berjalan.',
+            route('stock.period', [], false), null, null, [], $actor,
+        ));
+    }
+
+    /** REQ diputus — ditolak saat tinjau atau keputusan akhir approval — ke pemohon (14 §8). */
+    public function requestDecided(MaterialRequest $req, ?User $actor = null): void
+    {
+        $this->aman(function () use ($req, $actor) {
+            $pemohon = User::query()->find($req->requester_id);
+
+            // Pengaju approval sudah menerima `approval.decided`; jangan dobel.
+            $pengaju = $req->approval_snapshot_id !== null
+                ? ApprovalSnapshot::query()->whereKey($req->approval_snapshot_id)->value('submitted_by')
+                : null;
+
+            if ($pemohon === null || ($pengaju !== null && (int) $pengaju === (int) $pemohon->id)) {
+                return;
+            }
+
+            $this->notifier->send($pemohon, 'request.decided',
+                'REQ '.$req->number.' '.mb_strtolower($req->status->label()), null,
+                $this->tautanReq($pemohon, $req), 'material_request', (int) $req->id, [], $actor);
+        });
+    }
+
+    /** Baris dipetakan ke item lain: klien punya tenggat keberatan (14 §8, BR-REQ-13). */
+    public function lineSubstituted(MaterialRequestLine $line, ?User $actor = null): void
+    {
+        $this->aman(function () use ($line, $actor) {
+            $req = $line->request;
+            $pemohon = User::query()->find($req->requester_id);
+
+            if ($pemohon === null) {
+                return;
+            }
+
+            $this->notifier->send($pemohon, 'request.line_substituted',
+                'Barang di '.$req->number.' diganti '.$line->item?->code,
+                'Semula: '.$line->original_item_text.'. Ajukan keberatan sebelum '.$this->jam($line->substitution_deadline_at).'.',
+                $this->tautanReq($pemohon, $req), 'material_request_line', (int) $line->id, [], $actor);
+        });
+    }
+
+    /** Tanggal janji baris ditetapkan atau berubah (14 §8, BR-REQ-14). */
+    public function promiseChanged(MaterialRequestLine $line, ?User $actor = null): void
+    {
+        $this->aman(function () use ($line, $actor) {
+            $req = $line->request;
+            $pemohon = User::query()->find($req->requester_id);
+
+            if ($pemohon === null) {
+                return;
+            }
+
+            $line->loadMissing('item');
+            $this->notifier->send($pemohon, 'request.promise_changed',
+                'Tanggal janji '.$req->number.' berubah',
+                $line->displayName().': '.($line->promised_date?->format('d/m/Y') ?? 'belum ditetapkan').'.',
+                $this->tautanReq($pemohon, $req), 'material_request_line', (int) $line->id, [], $actor);
+        });
+    }
+
+    /** Klien meminta pembatalan baris: staf/Kepala Gudang yang boleh mengonfirmasi (14 §8, BR-REQ-15). */
+    public function lineCancelRequested(MaterialRequestLine $line, ?User $actor = null): void
+    {
+        $this->aman(function () use ($line, $actor) {
+            $req = $line->request;
+            $line->loadMissing('item');
+
+            $this->notifier->send($this->notifier->recipients('request.confirm_cancel', null, (int) $req->project_id),
+                'request.line_cancel_requested', 'Permintaan batal baris '.$req->number,
+                $line->displayName().' — pastikan belum berjalan, lalu konfirmasi atau tolak.',
+                route('requests.show', $req->id, false), 'material_request_line', (int) $line->id, [], $actor);
+        });
+    }
+
+    /** Hasil permintaan pembatalan baris kembali ke pemohon (A-61). */
+    public function lineCancelDecided(MaterialRequestLine $line, bool $confirmed, ?User $actor = null): void
+    {
+        $this->aman(function () use ($line, $confirmed, $actor) {
+            $req = $line->request;
+            $pemohon = User::query()->find($req->requester_id);
+
+            if ($pemohon === null) {
+                return;
+            }
+
+            $line->loadMissing('item');
+            $this->notifier->send($pemohon, 'request.line_cancel_decided',
+                'Pembatalan baris '.$req->number.' '.($confirmed ? 'dikonfirmasi' : 'ditolak'),
+                $line->displayName().($confirmed ? ' dibatalkan.' : ' tetap diproses.'),
+                $this->tautanReq($pemohon, $req), 'material_request_line', (int) $line->id, [], $actor);
+        });
+    }
+
+    /** Klien membuka REQ lewat portal; pengguna internal lewat layar staf. */
+    public function tautanReq(User $user, MaterialRequest $req): string
+    {
+        return route($user->isClient() ? 'portal.requests.show' : 'requests.show', $req->id, false);
+    }
+
+    private function jam(?CarbonInterface $waktu): string
+    {
+        return $waktu?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d/m/Y H:i') ?? '-';
     }
 
     private function aman(callable $kirim): void

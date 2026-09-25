@@ -58,6 +58,11 @@ class MovementRequest
          * penunjuk ke baris asal harus ikut saat insert, bukan ditulis belakangan.
          */
         public readonly ?int $reversesMovementId = null,
+        /**
+         * Bin ASAL boleh berstatus dibeku — hanya untuk PCK yang mendapat
+         * override Kepala Gudang (BR-OPN-02, A-240). Bin tujuan tetap dijaga.
+         */
+        public readonly bool $allowFrozenSource = false,
     ) {}
 
     /** Kondisi tujuan boleh berbeda dari kondisi asal, mis. saat QC menolak barang. */
@@ -69,7 +74,7 @@ class MovementRequest
             $this->documentType, $this->documentId, $this->documentLineId,
             $this->documentNumber, $this->reasonCodeId, $this->occurredAt,
             $this->performedBy, $this->eventType, $this->eventPayload, $this->notes,
-            $this->reversesMovementId,
+            $this->reversesMovementId, $this->allowFrozenSource,
         );
     }
 

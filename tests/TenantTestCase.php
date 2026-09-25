@@ -23,6 +23,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactionsManager;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Basis uji modul tenant.
@@ -72,6 +73,12 @@ abstract class TenantTestCase extends TestCase
         // Rollback tidak boleh bergantung pada tenancy masih aktif: satu uji
         // yang memanggil tenancy()->end() dulu membuat transaksi tenant tidak
         // pernah dibatalkan, sehingga datanya bocor ke uji berikutnya.
+        // Lampiran yang dibuat sistem (mis. arsip PDF opname, A-238) ikut dibuang
+        // supaya disk company uji tidak menumpuk berkas antaruji.
+        if (tenancy()->initialized) {
+            Storage::disk('local')->deleteDirectory('attachments');
+        }
+
         foreach (['tenant', 'central'] as $koneksi) {
             $db = DB::connection($koneksi);
 

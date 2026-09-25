@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Asset;
 
+use App\Domain\Asset\Actions\AttachHandoverPhotoOut;
 use App\Domain\Asset\Actions\InspectAsset;
 use App\Domain\Asset\Exceptions\AssetRuleException;
 use App\Domain\Asset\Models\AssetHandover;
@@ -70,6 +71,24 @@ class AssetController extends Controller
         }
 
         return redirect()->route('asset-handovers.show', $assetHandover)->with('pesan', __('Pemeriksaan aset disimpan.'));
+    }
+
+    /** Foto serah terima keluar (`photo_out_id`, A-238). */
+    public function photoOut(Request $request, AssetHandover $assetHandover, AttachHandoverPhotoOut $action): RedirectResponse
+    {
+        $this->authorize('update', $assetHandover);
+
+        $request->validate([
+            'photo_out' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ], attributes: ['photo_out' => __('Foto serah terima')]);
+
+        try {
+            $action->handle($assetHandover, $request->file('photo_out'), $request->user());
+        } catch (AssetRuleException|\RuntimeException $e) {
+            return back()->withErrors(['photo_out' => $e->getMessage()]);
+        }
+
+        return redirect()->route('asset-handovers.show', $assetHandover)->with('pesan', __('Foto serah terima keluar disimpan.'));
     }
 
     public function photo(AssetInspection $assetInspection, StoreUpload $files): StreamedResponse

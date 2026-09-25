@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `request` (Permintaan Material)
 
-**Versi:** 0.9
+**Versi:** 0.11
 **Tanggal:** 25 September 2026
 **Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md)); v0.6: baris bersumber transfer melahirkan TRF backorder ([22-retur-transfer](22-retur-transfer.md)); v0.7: baris bersumber pembelian melahirkan PRQ backorder ([26-purchase-request](26-purchase-request.md), [A-171](04-keputusan-dan-asumsi.md#a-171)); v0.8: konfirmasi & keberatan terima pemohon (BR-REQ-10) di layar REQ & portal, konfirmasi otomatis harian; notifikasi REQ perlu ditinjau ([27-pendukung-f1](27-pendukung-f1.md), [A-188](04-keputusan-dan-asumsi.md#a-188), [A-189](04-keputusan-dan-asumsi.md#a-189))
 **Modul:** `request`
@@ -147,14 +147,14 @@ Kejadian outbox: tidak ada yang lahir dari modul ini. `purchase_requested` lahir
 
 ## 8. Notifikasi
 
-| Kejadian | Penerima | Kanal |
-|---|---|---|
-| REQ klien masuk `under_review` | Staf Gudang, Kepala Gudang | in-app |
-| SLA tinjau terlampaui | Staf, Kepala Gudang | in-app, diulang harian |
-| Baris diganti item lain | Klien | in-app + portal |
-| REQ `approved` / `rejected` | Pemohon | in-app |
-| Permintaan pembatalan baris | Staf, Kepala Gudang | in-app |
-| Tanggal janji berubah | Klien | in-app |
+| Kejadian | Penerima | Kanal | Keadaan |
+|---|---|---|---|
+| REQ klien masuk `under_review` | Staf Gudang, Kepala Gudang | in-app | `request.under_review` |
+| SLA tinjau terlampaui | Staf, Kepala Gudang | in-app, diulang harian | `request.review_overdue` lewat `notifications:daily`, hari kalender ([A-235](04-keputusan-dan-asumsi.md#a-235)) |
+| Baris diganti item lain | Klien | in-app + portal | `request.line_substituted`, tautan portal |
+| REQ `approved` / `rejected` | Pemohon | in-app | `request.decided` (tinjau & approval akhir; pengaju approval memakai `approval.decided`, [A-234](04-keputusan-dan-asumsi.md#a-234)) |
+| Permintaan pembatalan baris | Staf, Kepala Gudang | in-app | `request.line_cancel_requested`; hasilnya ke pemohon `request.line_cancel_decided` |
+| Tanggal janji berubah | Klien | in-app | `request.promise_changed` (penetapan & perubahan di tinjauan) |
 
 ## 9. Laporan & dashboard
 
@@ -285,7 +285,7 @@ Uji yang menopangnya ada di `tests/Feature/Request`: `RequestFlowTest` (TC-REQ-0
    backorder untuk barang TRF ([A-108](04-keputusan-dan-asumsi.md#a-108)) dan PRQ ([A-171](04-keputusan-dan-asumsi.md#a-171)) sudah ada.
 4. ~~**Konfirmasi dan keberatan penerimaan**~~ ([BR-REQ-10](05-aturan-bisnis.md#br-req)) — **selesai v0.8**
    ([27-pendukung-f1](27-pendukung-f1.md), [A-188](04-keputusan-dan-asumsi.md#a-188)); [A-77](04-keputusan-dan-asumsi.md#a-77) tetap berlaku.
-5. **Job penuaan tenggat penggantian dan pengingat SLA** — metodenya sudah ada, penjadwalannya menunggu
-   antrean Fase 2.
-6. **Notifikasi §8** — sebagian selesai v0.8 (REQ perlu ditinjau, barang diterima, keputusan approval); SLA tinjau, pengganti item, perubahan tanggal janji belum.
+5. ~~Job penuaan tenggat penggantian dan pengingat SLA~~ — selesai 25 Sep 2026: `requests:expire-substitutions` tiap jam
+   ([A-239](04-keputusan-dan-asumsi.md#a-239), TC-REQ-20) dan SLA tinjau lewat `notifications:daily` ([A-235](04-keputusan-dan-asumsi.md#a-235)).
+6. ~~Notifikasi §8~~ — selesai 25 Sep 2026: SLA tinjau, pengganti item, tanggal janji, keputusan REQ, pembatalan baris ([A-234](04-keputusan-dan-asumsi.md#a-234)).
 7. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 25 Sep 2026**: *Daftar REQ*, *REQ menunggu tinjau*, *Baris tanpa sumber*, *Penggantian item menunggu tanggapan* di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-232](04-keputusan-dan-asumsi.md#a-232)).

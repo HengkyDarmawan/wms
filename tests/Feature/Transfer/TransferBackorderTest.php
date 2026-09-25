@@ -16,6 +16,7 @@ use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Shipment\Actions\CreatePickTask;
 use App\Domain\Shipment\Actions\CreateShipment;
+use App\Domain\Shipment\Actions\ProcessPickTask;
 use App\Domain\Shipment\Actions\ShipShipment;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Stock\Enums\ReservationLevel;
@@ -24,14 +25,19 @@ use App\Domain\Stock\Support\StockLedger;
 use App\Domain\Transfer\Enums\TransferOrigin;
 use App\Domain\Transfer\Enums\TransferStatus;
 use App\Domain\Transfer\Models\Transfer;
+use App\Domain\Warehouse\Actions\SaveWarehouse;
+use App\Domain\Warehouse\Enums\BinType;
+use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\Warehouse\Models\WarehouseType;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\Activitylog\Models\Activity;
 use Tests\Feature\Approval\Concerns\ApprovalFixtures;
 use Tests\Feature\Transfer\Concerns\TransferFixtures;
 use Tests\TenantTestCase;
 
 /**
- * TC-TRF-10 s.d. TC-TRF-13 — TRF dari backorder REQ (BR-REQ-05, BR-REQ-08,
+ * TC-TRF-10 s.d. TC-TRF-13 dan TC-TRF-17 — TRF dari backorder REQ (BR-REQ-05, BR-REQ-08,
  * BR-REQ-15, A-106, A-108): REQ bersumber transfer → TRF → PCK/SJ di gudang
  * asal → bukti terima → GRN gudang tujuan → put-away → reservasi ke REQ →
  * PCK/SJ ke proyek → REQ selesai.
@@ -171,5 +177,47 @@ class TransferBackorderTest extends TenantTestCase
 
         $this->assertSame(TransferStatus::Cancelled, $trf->refresh()->status, 'BR-REQ-15 / A-108.');
         $this->assertSame(0, StockReservation::query()->active()->forDocument('transfer', $trf->id)->count());
+    }
+
+    #[Test]
+    public function tc_trf_17_short_pick_trf_dikembalikan_ke_req_penunggu(): void
+    {
+        // Gudang lain dengan stok 10 — calon asal TRF pengganti (A-242).
+        $jkt = app(SaveWarehouse::class)->handle(null, ['code' => 'JKT', 'name' => 'Gudang Jakarta',
+            'warehouse_type_id' => WarehouseType::query()->where('code', WarehouseType::MAIN)->value('id')]);
+        $this->stok(Bin::create(['warehouse_id' => $jkt->id, 'code' => 'JKT-A-R01-L1-B01', 'bin_type' => BinType::Storage]), $this->baut, 10);
+
+        $req = $this->reqTransfer(30);
+        $baris = $req->lines()->first();
+        $trf = Transfer::query()->where('source_type', 'material_request')->where('source_id', $req->id)->sole();
+        $this->assertSame((int) $this->gudang->id, (int) $trf->from_warehouse_id);
+
+        // CKG hanya mendapat 25 dari 30.
+        $this->pckKurang($trf, 25);
+
+        $baru = Transfer::query()->where('source_type', 'material_request')->where('source_id', $req->id)->whereKeyNot($trf->id)->sole();
+        $this->assertSame(TransferOrigin::Backorder, $baru->origin);
+        $this->assertSame((int) $jkt->id, (int) $baru->from_warehouse_id, 'Gudang asal yang kurang tidak dipilih lagi.');
+        $this->assertSame((int) $this->bks->id, (int) $baru->to_warehouse_id);
+        $barisBaru = $baru->lines()->sole();
+        $this->assertSame(5.0, (float) $barisBaru->qty_base);
+        $this->assertSame((int) $baris->id, (int) $barisBaru->material_request_line_id);
+
+        // Tanpa gudang lain yang cukup: tidak ada TRF baru, hanya dicatat untuk tindak lanjut manual.
+        $req2 = $this->reqTransfer(30);
+        $trf2 = Transfer::query()->where('source_type', 'material_request')->where('source_id', $req2->id)->sole();
+        $this->pckKurang($trf2, 10);
+
+        $this->assertSame(1, Transfer::query()->where('source_type', 'material_request')->where('source_id', $req2->id)->count());
+        $this->assertTrue(Activity::query()->where('subject_id', $req2->id)->where('description', 'like', '%manual%')->exists());
+    }
+
+    private function pckKurang(Transfer $trf, float $diambil): void
+    {
+        $staf = $this->makeUser('warehouse_staff');
+        $aksi = app(ProcessPickTask::class);
+        $pck = $aksi->start($this->pckTrf($trf), $staf);
+        $aksi->recordLine($pck->lines()->sole(), $diambil, null, null, $this->alasan(ReasonContext::ShortPick), $staf);
+        $aksi->complete($pck->refresh(), $staf);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Count\Support\FrozenBinPickShift;
 use App\Domain\Request\Models\MaterialRequestLine;
 use App\Domain\Shipment\Enums\PickTaskStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
@@ -15,6 +16,8 @@ use App\Domain\Stock\Actions\ManageReservation;
 use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Stock\Support\MovementRequest;
 use App\Domain\Stock\Support\StockLedger;
+use App\Domain\Transfer\Models\TransferLine;
+use App\Domain\Transfer\Support\BackorderTransfers;
 use App\Domain\Warehouse\Actions\ChangeBinStatus;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Models\Bin;
@@ -46,8 +49,9 @@ class ProcessPickTask
             );
         }
 
-        // BR-OPN-02: bin yang sedang dihitung tidak boleh diambil isinya.
-        $beku = $task->lines()
+        // BR-OPN-02: bin yang sedang dihitung tidak boleh diambil isinya,
+        // kecuali Kepala Gudang memberi override untuk SJ mendesak (A-240).
+        $beku = $task->hasFreezeOverride() ? null : $task->lines()
             ->whereHas('bin', fn ($q) => $q->withoutGlobalScopes()->where('bin_status', BinStatus::Frozen->value))
             ->with('bin:id,code')
             ->first();
@@ -223,6 +227,10 @@ class ProcessPickTask
             return;
         }
 
+        // A-240: PCK ber-override boleh mengambil dari bin yang dibeku opname.
+        $asal = Bin::query()->withoutGlobalScopes()->find($line->bin_id);
+        $dariBeku = $task->hasFreezeOverride() && $asal?->bin_status === BinStatus::Frozen;
+
         try {
             $this->ledger->post(new MovementRequest(
                 item: $line->item,
@@ -237,12 +245,17 @@ class ProcessPickTask
                 documentLineId: (int) $line->id,
                 documentNumber: $task->number,
                 performedBy: $actor,
+                allowFrozenSource: $dariBeku,
             ));
         } catch (LedgerException $e) {
             throw ShipmentRuleException::rule(
                 $e->rule,
                 'Baris '.$line->item?->code.' gagal dipindahkan: '.$e->getMessage(),
             );
+        }
+
+        if ($dariBeku) {
+            app(FrozenBinPickShift::class)->apply($asal, (int) $line->item_id, $line->lot_id, $line->serial_id, $line->piece_id, (float) $line->qty_picked, $actor);
         }
     }
 
@@ -271,6 +284,15 @@ class ProcessPickTask
                 $baris->forceFill([
                     'qty_backorder' => (float) $baris->qty_backorder + $line->shortQty(),
                 ])->save();
+            }
+        }
+
+        // A-242: kekurangan PCK TRF yang melayani REQ kembali ke REQ penunggu.
+        if ($task->source_type === 'transfer') {
+            $trfLine = TransferLine::query()->find($line->source_line_id);
+
+            if ($trfLine !== null) {
+                app(BackorderTransfers::class)->shortPicked($trfLine, $line->shortQty(), $actor);
             }
         }
 

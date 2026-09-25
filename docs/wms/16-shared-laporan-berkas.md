@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `shared` (Kerangka Laporan & Penyimpanan Berkas)
 
-**Versi:** 0.9
+**Versi:** 0.11
 **Tanggal:** 25 September 2026
-**Status:** selesai Fase 1 — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment selesai 25 Sep 2026 ([A-232](04-keputusan-dan-asumsi.md#a-232), §3.2); yang belum: laporan modul 19–22 dan penyaring §9 yang hilang (§13.1 no. 2); v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9); v0.4: laporan itu menambah kolom konversi & waste ([24-konversi-waste](24-konversi-waste.md) §9, [A-161](04-keputusan-dan-asumsi.md#a-161)); unggah bukti BA waste memakai `StoreUpload`; v0.5: laporan kesembilan *Aset dipinjamkan* ([25-aset](25-aset.md) §9); v0.6: Beranda antrean pekerjaan, lima laporan inti Blueprint §6.9a (total 14), ekspor PDF semua laporan ([27-pendukung-f1](27-pendukung-f1.md), [A-186](04-keputusan-dan-asumsi.md#a-186), [A-190](04-keputusan-dan-asumsi.md#a-190))
+**Status:** selesai Fase 1 — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment selesai 25 Sep 2026 ([A-232](04-keputusan-dan-asumsi.md#a-232), §3.2); laporan modul 19–22 selesai 25 Sep 2026 (16 laporan, [A-241](04-keputusan-dan-asumsi.md#a-241)); total 41 laporan terdaftar; v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9); v0.4: laporan itu menambah kolom konversi & waste ([24-konversi-waste](24-konversi-waste.md) §9, [A-161](04-keputusan-dan-asumsi.md#a-161)); unggah bukti BA waste memakai `StoreUpload`; v0.5: laporan kesembilan *Aset dipinjamkan* ([25-aset](25-aset.md) §9); v0.6: Beranda antrean pekerjaan, lima laporan inti Blueprint §6.9a (total 14), ekspor PDF semua laporan ([27-pendukung-f1](27-pendukung-f1.md), [A-186](04-keputusan-dan-asumsi.md#a-186), [A-190](04-keputusan-dan-asumsi.md#a-190))
 **Modul:** `shared` (`app/Domain/Shared`)
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.9a](01-blueprint.md#69a-laporan-inti-fase-1) · [Arsitektur §2 (AD-09, AD-10)](08-arsitektur.md#2-keputusan-arsitektur) · [Blueprint §16 (NFR-14)](01-blueprint.md#16-kebutuhan-non-fungsional) · [A-68](04-keputusan-dan-asumsi.md#a-68) · [Aturan Bisnis §BR-ACC](05-aturan-bisnis.md#br-acc) · [Glosarium](03-glosarium.md)
@@ -17,7 +17,7 @@ Modul ini bukan modul bisnis; ia menyediakan dua layanan bersama yang dipakai mo
 - **Kerangka laporan.** Setiap laporan di §9 spesifikasi modul berbentuk sama: tabel, beberapa penyaring, tombol ekspor. Laporan didefinisikan sebagai **data** (satu kelas turunan `Report`), lalu satu layar dan satu jalur ekspor Excel melayani semuanya. Menambah laporan tidak menambah layar.
 - **Penyimpanan berkas.** Satu kelas `StoreUpload` untuk menyimpan, menghapus, dan mengalirkan berkas unggahan (tanda tangan, foto item) di disk privat per company, disajikan lewat route berotorisasi.
 
-**Tidak termasuk:** dashboard/grafik, ekspor PDF (§13.1), impor Excel (`import_batches`, AD-09), tabel `attachments` generik, penyimpanan S3 produksi ([O-14](04-keputusan-dan-asumsi.md#o-14)).
+**Tidak termasuk:** dashboard/grafik, ekspor PDF (§13.1), impor Excel (`import_batches`, AD-09), penyimpanan S3 produksi ([O-14](04-keputusan-dan-asumsi.md#o-14)).
 
 ## 2. Aktor & permission
 
@@ -37,7 +37,7 @@ Berkas: tanda tangan sendiri selalu boleh dibuka; tanda tangan orang lain menunt
 
 ## 3. Entitas & data
 
-Tidak ada tabel baru. Laporan membaca tabel modul lain lewat model Eloquent, sehingga global scope `ScopedToUser` ([BR-ACC-05](05-aturan-bisnis.md#br-acc)) ikut berlaku — model `Warehouse` dan `Bin` memakainya. Berkas disimpan sebagai **path** di kolom model pemiliknya (`users.signature_path`, `items.photo_path`), bukan di tabel `attachments` ERD (tabel itu belum ada).
+Tidak ada tabel baru. Laporan membaca tabel modul lain lewat model Eloquent, sehingga global scope `ScopedToUser` ([BR-ACC-05](05-aturan-bisnis.md#br-acc)) ikut berlaku — model `Warehouse` dan `Bin` memakainya. Berkas disimpan sebagai **path** di kolom model pemiliknya (`users.signature_path`, `items.photo_path`), bukan di tabel `attachments` ERD. Sejak 25 Sep 2026 tabel `attachments` ada untuk lampiran dokumen (foto ISU, foto serah terima AST keluar, arsip PDF opname) lewat `Shared\Attachments\Support\AttachmentStore` dan `GET /attachments/{id}` berizin dokumen pemiliknya ([A-238](04-keputusan-dan-asumsi.md#a-238)).
 
 ### 3.1 Kelas inti
 
@@ -75,7 +75,23 @@ Tidak ada tabel baru. Laporan membaca tabel modul lain lewat model Eloquent, seh
 | `daftar-pengiriman` | `ShipmentListReport` | Daftar pengiriman | `shipment.view` | nomor, gudang, tujuan, cara kirim, status, tanggal kirim, diterima, penerima | status, tujuan, cara kirim, gudang, rentang tanggal | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard) |
 | `short-pick` | `ShortPickReport` | Short pick | `pick.view` | PCK, gudang, selesai, item, bin, dialokasikan, diambil, selisih, alasan | gudang, rentang tanggal | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard), BR-SJ-01 |
 | `posisi-rusak-selisih` | `DamagedGoodsPositionReport` | Posisi barang rusak & selisih | `shipment.view` | DSC, SJ, gudang, proyek, item, jenis, jumlah, disposisi, status DSC, umur | gudang, umur minimal, termasuk yang selesai | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard), BR-SJ-06/10 |
-| `kinerja-pengiriman` | `DeliveryPerformanceReport` | Kinerja pengiriman | `shipment.view` | per gudang (+ total): dikirim, diterima utuh, bersisa, masih di jalan, dibatalkan, rata-rata hari, utuh (%) | gudang, rentang tanggal (berangkat) | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard) |
+| `kinerja-pengiriman` | `DeliveryPerformanceReport` | Kinerja pengiriman | `shipment.view` | per gudang (+ total): dikirim, diterima utuh, bersisa, masih di jalan, dibatalkan, rata-rata hari, utuh (%) | gudang, rentang tanggal (berangkat) | [15-picking-shipment §9](15-p| `penerimaan-vendor` | `VendorReceiptReport` | Penerimaan per vendor | `receipt.view` | GRN, vendor, gudang, tanggal terima, SJ vendor, jumlah baris, total diterima, status | gudang, vendor, rentang tanggal (terima) | [19 §9](19-receipt-putaway.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `karantina-umur` | `QuarantineAgeReport` | Barang di Karantina menurut umur | `receipt.view` | gudang, bin, item, lot/serial/potongan, jumlah, satuan, dokumen masuk, masuk, umur | gudang, umur minimal | [19 §9](19-receipt-putaway.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `put-tertunda` | `PendingPutawayReport` | Put-away tertunda | `putaway.view` | PUT, GRN, gudang, petugas, dibuat, umur, jumlah baris, status | gudang | [19 §9](19-receipt-putaway.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `rtv-terbuka` | `OpenVendorReturnReport` | Retur ke vendor terbuka | `vendor_return.view` | RTV, vendor, gudang, GRN asal, jumlah, status, diajukan, umur | gudang | [19 §9](19-receipt-putaway.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `tugas-approval-terbuka` | `OpenApprovalTaskReport` | Tugas approval terbuka | `approval_rule.view` | approver, jenis dokumen, nomor, lapis, delegasi dari, ditugaskan, umur (jam), tenggat, lewat tenggat | gudang, jenis dokumen | [20 §9](20-approval.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `dokumen-menunggu-approval` | `PendingApprovalDocumentReport` | Dokumen menunggu approval | `approval_rule.view` | per jenis: dokumen menunggu, tugas terbuka, lewat tenggat, dokumen tertua, umur tertua | gudang | [20 §9](20-approval.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `waktu-putus-approval` | `ApprovalDecisionTimeReport` | Waktu putus approval | `approval_rule.view` | jenis dokumen, lapis, keputusan, setuju, tolak, rata-rata (jam), maksimum (jam) | gudang, jenis dokumen, rentang tanggal (putus) | [20 §9](20-approval.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `eskalasi-approval` | `ApprovalEscalationReport` | Eskalasi approval | `approval_rule.view` | waktu, jenis dokumen, nomor, lapis, dari approver, ke approver, oleh, sebab | gudang, jenis dokumen, rentang tanggal | [20 §9](20-approval.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `tren-akurasi` | `AccuracyTrendReport` | Tren akurasi stok | `count.view` | bulan, gudang, sesi, baris dihitung, baris cocok, akurasi %, selisih besar | gudang, rentang tanggal (bawaan 12 bulan) | [21 §9](21-opname-penyesuaian.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `top-selisih` | `TopVarianceReport` | Selisih opname terbesar | `count.view` | OPN, gudang, bin, item, lot/serial/potongan, sistem, hitung, selisih, selisih %, kelas, akar masalah (100 teratas) | gudang, rentang tanggal | [21 §9](21-opname-penyesuaian.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `akar-masalah` | `RootCauseReport` | Akar masalah selisih | `count.view` | akar masalah, jumlah baris, sesi, total kurang, total lebih, total selisih | gudang, rentang tanggal | [21 §9](21-opname-penyesuaian.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `adj-per-alasan` | `AdjustmentByReasonReport` | Penyesuaian per alasan | `adjustment.view` | alasan, jumlah ADJ, jumlah baris, total masuk, total keluar (jumlah, tanpa nilai uang) | gudang, rentang tanggal (posting) | [21 §9](21-opname-penyesuaian.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `trf-terbuka` | `OpenTransferReport` | Transfer terbuka | `transfer.view` | TRF, dari, ke, status, diminta, dikirim, diterima, diajukan, umur | gudang (asal atau tujuan) | [22 §9](22-retur-transfer.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `barang-dalam-perjalanan` | `InTransitStockReport` | Barang dalam perjalanan | `transfer.view` | gudang asal, item, lot/serial/potongan, kondisi, jumlah, satuan, SJ, tujuan, TRF, umur | gudang asal | [22 §9](22-retur-transfer.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `retur-per-proyek` | `ReturnByProjectReport` | Retur per proyek | `return.view` | proyek, RET, tanggal, status, item, diajukan, diterima, layak, rusak, offcut (panjang), waste | proyek, rentang tanggal (RET dibuat) | [22 §9](22-retur-transfer.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+| `rusak-bin-retur` | `DamagedReturnBinReport` | Barang rusak di bin Retur | `return.view` | gudang, bin, item, lot/serial/potongan, jumlah, satuan, dokumen masuk, masuk, umur | gudang | [22 §9](22-retur-transfer.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
+icking-shipment.md#9-laporan--dashboard) |
 
 Tidak ada kolom nilai uang di laporan mana pun ([D-07](04-keputusan-dan-asumsi.md#d-07)).
 
@@ -162,7 +178,7 @@ Uji ada di `tests/Feature/Shared`. ID memakai akhiran huruf untuk varian dalam s
 
 ## 11. Di luar lingkup modul ini
 
-Grafik/dashboard per peran; ekspor PDF; impor Excel dan pratinjau `import_batches` (AD-09); tabel `attachments` untuk lampiran dokumen; kompresi foto sisi klien di PWA (AD-10); penyimpanan S3 produksi ([O-14](04-keputusan-dan-asumsi.md#o-14)); laporan yang memerlukan data modul yang belum dibangun (receipt, transfer, return, issue, conversion, asset, count).
+Grafik/dashboard per peran; ekspor PDF; impor Excel dan pratinjau `import_batches` (AD-09); kompresi foto sisi klien di PWA (AD-10); penyimpanan S3 produksi ([O-14](04-keputusan-dan-asumsi.md#o-14)); laporan yang memerlukan data modul yang belum dibangun (receipt, transfer, return, issue, conversion, asset, count).
 
 ## 12. Definisi selesai
 
@@ -189,7 +205,7 @@ Kode modul ini dibangun lebih dulu daripada dokumennya, bersamaan dengan modul A
    - *Daftar gudang* ([12-warehouse §9](12-warehouse.md#9-laporan--dashboard)) meminta penyaring proyek; kode hanya tipe dan status.
    - *Daftar bin* menambah kolom penegakan kapasitas, kapasitas berat, proyek, dan penanda hitung.
 3. **Kunci laporan tidak dikenal menghasilkan 500, bukan 404.** `ReportRegistry::find()` melempar `InvalidArgumentException` dan tidak dipetakan di `bootstrap/app.php`.
-4. **Berkas disimpan sebagai path di model pemilik**, bukan lewat tabel `attachments` ERD.
+4. **Berkas disimpan sebagai path di model pemilik** untuk berkas lama (tanda tangan, foto item, bukti terima, WST); lampiran dokumen baru memakai tabel `attachments` ([A-238](04-keputusan-dan-asumsi.md#a-238)).
 
 ### 13.2 Keputusan implementasi
 

@@ -138,6 +138,14 @@
         </div>
     </div>
 
+    @include('partials.attachments', [
+        'judul' => __('Foto pemakaian'),
+        'lampiran' => $foto,
+        'aksi' => auth()->user()->can('attachPhoto', $isu) ? route('issues.photos.store', $isu) : null,
+        'field' => 'photo',
+        'kosong' => __('Belum ada foto pemakaian.'),
+    ])
+
     @if ($isu->isReversal())
         @include('approval.partials.history', ['riwayatApproval' => $riwayatApproval])
     @endif

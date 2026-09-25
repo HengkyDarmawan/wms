@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Count;
 
 use App\Domain\Count\Models\CountAssignment;
-use App\Domain\Count\Models\CountLine;
 use App\Domain\Count\Models\StockCount;
+use App\Domain\Count\Support\CountReportArchive;
+use App\Domain\Shared\Files\StoreUpload;
 use App\Http\Controllers\Controller;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -39,21 +39,24 @@ class CountController extends Controller
         return view('count.show', ['count' => $stockCount]);
     }
 
-    /** Laporan PDF sesi (Katalog §2.13 "Laporan PDF terbit"), dibuat saat diminta (A-101). */
-    public function report(StockCount $stockCount): Response
+    /**
+     * Laporan PDF sesi (Katalog §2.13 "Laporan PDF terbit"): arsip lampiran bila
+     * sesi sudah ditutup (A-238), selain itu dibuat saat diminta (A-101).
+     */
+    public function report(StockCount $stockCount, CountReportArchive $laporan, StoreUpload $files): Response
     {
         $this->authorize('report', $stockCount);
 
-        $stockCount->load('warehouses:id,code,name', 'creator:id,name', 'submitter:id,name', 'approver:id,name');
+        $arsip = $laporan->archived($stockCount);
 
-        $pdf = Pdf::loadView('count.report', [
-            'count' => $stockCount,
-            'lines' => CountLine::query()->with('bin:id,code', 'item:id,code,name', 'lot', 'serial', 'piece')
-                ->where('stock_count_id', $stockCount->id)->orderBy('bin_id')->orderBy('id')->get(),
-            'adjustments' => $stockCount->adjustments()->orderBy('id')->get(),
-        ])->setPaper('a4', 'landscape');
+        if ($arsip !== null && $files->exists($arsip->path)) {
+            return $files->download($arsip->path, $laporan->fileName($stockCount));
+        }
 
-        return $pdf->download(str_replace('/', '-', $stockCount->number).'.pdf');
+        return response($laporan->render($stockCount), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$laporan->fileName($stockCount).'"',
+        ]);
     }
 
     public function tasks(): View

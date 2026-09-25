@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Request\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\PurchaseRequest\Support\BackorderPurchases;
 use App\Domain\Request\Enums\RequestLineStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
@@ -61,7 +62,9 @@ class CancelRequestLine
             ->withProperties(['baris' => $line->id, 'reason_code_id' => $reasonCodeId])
             ->log('Klien meminta pembatalan baris REQ');
 
-        return $line->refresh();
+        app(DomainNotifications::class)->lineCancelRequested($line->refresh(), $actor);
+
+        return $line;
     }
 
     /** Langkah 2a — staf menyetujui: baris dibatalkan dan reservasinya dilepas. */
@@ -76,7 +79,7 @@ class CancelRequestLine
             );
         }
 
-        return DB::transaction(function () use ($line, $actor) {
+        $hasil = DB::transaction(function () use ($line, $actor) {
             $line->forceFill([
                 'status' => RequestLineStatus::Cancelled,
                 'cancel_confirmed_by' => $actor?->id,
@@ -97,6 +100,10 @@ class CancelRequestLine
 
             return $line->refresh();
         });
+
+        app(DomainNotifications::class)->lineCancelDecided($hasil, true, $actor);
+
+        return $hasil;
     }
 
     /**
@@ -120,7 +127,9 @@ class CancelRequestLine
             ->withProperties(['baris' => $line->id, 'notes' => $notes])
             ->log('Permintaan pembatalan baris REQ ditolak');
 
-        return $line->refresh();
+        app(DomainNotifications::class)->lineCancelDecided($line->refresh(), false, $actor);
+
+        return $line;
     }
 
     private function pastikanAdaPermintaan(MaterialRequestLine $line): void

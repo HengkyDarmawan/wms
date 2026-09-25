@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `approval` (Mesin Approval)
 
-**Versi:** 0.10
+**Versi:** 0.11
 **Tanggal:** 25 September 2026
 **Status:** selesai Fase 1 — modul kedelapan setelah [Receipt/Putaway](19-receipt-putaway.md); REQ dan RTV sudah diputus lewat mesin ini; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-86](04-keputusan-dan-asumsi.md#a-86)–[A-94](04-keputusan-dan-asumsi.md#a-94) (*Perlu validasi*); v0.3: ADJ dan OPN tersambung ([21-opname-penyesuaian](21-opname-penyesuaian.md), [A-96](04-keputusan-dan-asumsi.md#a-96), [A-105](04-keputusan-dan-asumsi.md#a-105)); v0.4: TRF dan RET tersambung ([22-retur-transfer](22-retur-transfer.md)); v0.5: ISU pembalik tersambung dengan lapis minimum ([23-pemakaian](23-pemakaian.md), [A-150](04-keputusan-dan-asumsi.md#a-150)); v0.6: CNV (hanya bila ada aturan) dan WST (otomatis tanpa aturan) tersambung ([24-konversi-waste](24-konversi-waste.md), [A-153](04-keputusan-dan-asumsi.md#a-153)); v0.7: penangan PRQ — semua jenis dokumen Katalog tersambung ([26-purchase-request](26-purchase-request.md), [A-173](04-keputusan-dan-asumsi.md#a-173)); v0.8: `ApprovalNotifier` mengirim notifikasi in-app/email tugas & keputusan ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189))
 **Modul:** `approval`
@@ -169,7 +169,7 @@ Mesin approval tidak menyentuh stok. Akibat stok keputusan akhir ada di penangan
 
 ## 9. Laporan & dashboard
 
-Belum dibangun (kerangka [16-shared-laporan-berkas](16-shared-laporan-berkas.md)): tugas terbuka per approver dan umur, dokumen menunggu per jenis, rata-rata waktu putus per lapis, eskalasi per periode.
+Selesai 25 Sep 2026 di kerangka [16 §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-241](04-keputusan-dan-asumsi.md#a-241)): `tugas-approval-terbuka`, `dokumen-menunggu-approval`, `waktu-putus-approval`, `eskalasi-approval`; izin `approval_rule.view`, cakupan dari gudang di konteks snapshot.
 
 ## 10. Kasus uji (Given / When / Then)
 
@@ -250,6 +250,6 @@ Domain `app/Domain/Approval`: `Contracts\ApprovalHandler`; `Support\ApprovalEngi
 
 1. ~~Penangan PRQ~~ — **selesai v0.7** ([26-purchase-request](26-purchase-request.md): `PurchaseRequest\Support\PurchaseRequestApprovalHandler`, approval opsional — tanpa aturan disetujui otomatis; kondisi `vendor_types` membaca vendor tetap item sebelum ada catatan pemesanan [A-173](04-keputusan-dan-asumsi.md#a-173); aturan demo *PRQ toko online*). Semua jenis `approval_document_type` kini tersambung; contoh jenis belum tersambung di TC-APR-17 diganti jenis di luar katalog (`purchase_order`). ADJ dan OPN sudah terpasang (v0.3, [21-opname-penyesuaian](21-opname-penyesuaian.md)); TRF dan RET (v0.4, [22-retur-transfer](22-retur-transfer.md)); ISU pembalik (v0.5, [23-pemakaian](23-pemakaian.md): `Issue\Support\MaterialIssueApprovalHandler`, lapis minimum Kepala Gudang Gudang Site → Manajemen, dokumen tetap `draft` selama menunggu, [A-150](04-keputusan-dan-asumsi.md#a-150)); CNV dan WST (v0.6, [24-konversi-waste](24-konversi-waste.md): `ConversionApprovalHandler` tanpa lapis minimum — `conversion.submit` hanya bila ada aturan dan ditolak kembali `draft` [A-153](04-keputusan-dan-asumsi.md#a-153); `WasteDisposalApprovalHandler` disetujui otomatis tanpa aturan, ditolak `rejected`). 
 2. ~~Notifikasi in-app/email saat tugas dibuat dan saat dokumen diputus~~ — **selesai v0.8** ([27-pendukung-f1](27-pendukung-f1.md)); notifikasi saat tugas dialihkan (delegasi/eskalasi) dan WhatsApp Fase 2a belum.
-3. Laporan §9 (kerangka di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md); laporan approval belum didefinisikan).
+3. ~~Laporan §9~~ — selesai 25 Sep 2026 ([A-241](04-keputusan-dan-asumsi.md#a-241)).
 5. ~~Penangan `purchase_order`~~ — **selesai v0.9** ([purchasing/02](../purchasing/02-purchasing-inti.md)): `Purchasing\Support\PurchaseOrderApprovalHandler`; kunci kondisi baru `order_value_min` (**Nilai PO ≥**, satu-satunya kondisi uang, hanya muncul untuk jenis PO) dan `ApprovalContext::orderValue`; tanpa aturan PO disetujui otomatis ([A-212](04-keputusan-dan-asumsi.md#a-212)); kotak tugas menangkap `PurchasingRuleException`. TC-APR-17 kini memakai jenis di luar katalog `sales_order`; TC-APR-21 memeriksa 8 aturan demo termasuk *PO bernilai ≥ Rp 50 juta*.
 4. Tautan dokumen di kotak tugas mengikuti cakupan pembaca: approver di luar cakupan dokumen (mis. "user tertentu") memutus dari kotak tugas tanpa membuka halaman dokumen.

@@ -14,6 +14,7 @@ use App\Domain\Issue\Enums\MaterialIssueStatus;
 use App\Domain\Issue\Livewire\Concerns\HandlesIssueRules;
 use App\Domain\Issue\Models\MaterialIssue;
 use App\Domain\Master\Enums\ReasonContext;
+use App\Domain\Shared\Attachments\Models\Attachment;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -58,6 +59,7 @@ class IssueDetail extends Component
             'sudahDibalik' => $sudahDibalik,
             'menunggu' => $isu->isAwaitingApproval(),
             'pembalik' => $isu->reversals()->orderBy('id')->get(['id', 'number', 'status']),
+            'foto' => Attachment::query()->for($isu)->with('uploader:id,name')->orderBy('id')->get(),
             'alasanTolak' => $this->pilihanAlasan(ReasonContext::Reject),
             'alasanBatal' => $this->pilihanAlasan(ReasonContext::Cancel),
             'riwayat' => Activity::query()->with('causer:id,name')->where('log_name', 'issue')

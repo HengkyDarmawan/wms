@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.45
+**Versi:** 0.49
 **Tanggal:** 25 September 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (579 uji hijau di MariaDB 10.4). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep, [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md)); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai; berikutnya: validasi asumsi A-72–A-225 oleh pemilik produk. D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; **[A-72–A-76](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) dan [A-77–A-116](wms/04-keputusan-dan-asumsi.md#26-baru-dari-pembangunan-modul-lanjutan--24-sep-2026), [A-120–A-126](wms/04-keputusan-dan-asumsi.md#27-baru-dari-modul-template-dokumen--label--24-sep-2026), [A-117–A-119 dan A-150–A-152](wms/04-keputusan-dan-asumsi.md#28-baru-dari-modul-issue-pemakaian-material-di-site--24-sep-2026), [A-153–A-162](wms/04-keputusan-dan-asumsi.md#29-baru-dari-modul-konversi--waste--24-sep-2026), [A-163–A-169](wms/04-keputusan-dan-asumsi.md#210-baru-dari-modul-aset-dipinjamkan--24-sep-2026), [A-170–A-175](wms/04-keputusan-dan-asumsi.md#211-baru-dari-modul-purchase-request--25-sep-2026), [A-176–A-184](wms/04-keputusan-dan-asumsi.md#212-baru-dari-modul-platform-penuh--25-sep-2026), [A-185–A-194](wms/04-keputusan-dan-asumsi.md#213-baru-dari-pendukung-fase-1--25-sep-2026), [A-195–A-205](wms/04-keputusan-dan-asumsi.md#214-baru-dari-tinjauan-kode-pendukung--platform--25-sep-2026) menunggu validasi** (lahir dari pencocokan dokumen dengan kode dan dari pembangunan modul). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -20,7 +20,7 @@ docs/
 ├── 00-akun-uji.md                         ← SATU-SATUNYA daftar akun seed/demo (Super Admin, company DEMO, 14 akun tenant, org, stok awal, aturan approval demo)
 ├── 00-laporan-progres-2026-09-24.md     ← hasil E2E skenario §5, cakupan TC 178/178, peta progres Fase 1, bug pengiriman ↔ REQ
 ├── 00-tinjauan-asumsi-2026-09-25.md     ← daftar kerja 100 asumsi *Perlu validasi* (A-72–A-194) untuk pemilik produk, ⚠ = paling berdampak
-├── 00-catatan-perubahan-arsip.md         ← catatan perubahan README v0.2–v0.6 (dipindah agar README ≤ 450 baris)
+├── 00-catatan-perubahan-arsip.md         ← catatan perubahan README v0.2–v0.9 (dipindah agar README ≤ 450 baris)
 ├── 00-setup-lokal.md                      ← instalasi & menjalankan aplikasi: profil rumah (Laragon) dan kantor (XAMPP + MariaDB), hosts, seed, skenario uji manual
 ├── 00-audit/README.md                     ← indeks ID temuan prototipe (BUG/UX/SEC/T) yang dirujuk
 ├── 00-audit/alur-proses.html              ← bacaan cepat: 10 alur BPMN sebagai diagram alir sederhana — DIBUAT OTOMATIS dari diagram/_generate_alur_html.py
@@ -106,6 +106,22 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.49 — 25 September 2026 (sesi rumah: laporan §9 modul 19–22, short pick TRF)
+- **16 laporan §9** modul 19–22 (`penerimaan-vendor` … `rusak-bin-retur`, total 41 laporan) + `Reports\Concerns\{LatestInbound, ApprovalScope}` — [A-241](wms/04-keputusan-dan-asumsi.md#a-241), uji TC-RPT-07–10; **short pick PCK TRF → TRF backorder pengganti** untuk REQ penunggu — [A-242](wms/04-keputusan-dan-asumsi.md#a-242), TC-TRF-17. SJ balik barang di tangan klien menunggu keputusan pemilik ([A-111](wms/04-keputusan-dan-asumsi.md#a-111)).
+- Spesifikasi [16](wms/16-shared-laporan-berkas.md) v0.11 (§3.2 +16 baris), [19](wms/19-receipt-putaway.md) v0.10, [20](wms/20-approval.md) v0.11, [21](wms/21-opname-penyesuaian.md) §9/§13, [22](wms/22-retur-transfer.md) v0.6; 04 v0.37; tinjauan asumsi v1.11; laporan progres v1.19; arsip changelog v1.3 (blok v0.9 dipindah).
+
+### v0.48 — 25 September 2026 (sesi rumah: override bin beku, penuaan penggantian)
+- **Override SJ mendesak dari bin beku** (BR-OPN-02): migrasi tenant `000230_add_freeze_override_to_pick_tasks`, `OverrideFrozenBinPick` (`bin.manage`), `MovementRequest::allowFrozenSource`, `FrozenBinPickShift` (angka sesi −X, bin ⚑) — [A-240](wms/04-keputusan-dan-asumsi.md#a-240), TC-OPN-21; **`requests:expire-substitutions`** tiap jam (BR-REQ-13) — [A-239](wms/04-keputusan-dan-asumsi.md#a-239), TC-REQ-20.
+- Spesifikasi [14](wms/14-request.md) v0.11, [15](wms/15-picking-shipment.md) v0.12, [21](wms/21-opname-penyesuaian.md) v0.6; model data (`pick_tasks.freeze_override_*`); 04 v0.36; tinjauan asumsi v1.10; laporan progres v1.18.
+
+### v0.47 — 25 September 2026 (sesi rumah: lampiran generik)
+- **Lampiran generik** (Sisa Fase 1 butir 2b): migrasi tenant `000220_create_attachments_table`, `Shared\Attachments` (model, `AttachmentStore`), `GET /attachments/{id}` berizin; foto pemakaian ISU (`POST /issues/{id}/photos`), foto serah terima keluar AST (`POST /asset-handovers/{id}/photo-out`), arsip PDF laporan opname saat sesi ditutup — [A-238](wms/04-keputusan-dan-asumsi.md#a-238); uji TC-ISU-18, TC-AST-13, TC-OPN-20.
+- Katalog v0.20 (`attachment_kind`); model data v0.21 (`attachments`, `photo_out_id`, `report_attachment_id`); spesifikasi [16](wms/16-shared-laporan-berkas.md) v0.10, [21](wms/21-opname-penyesuaian.md) v0.5, [23](wms/23-pemakaian.md) v0.5, [25](wms/25-aset.md) v0.6; 04 v0.35; tinjauan asumsi v1.9; laporan progres v1.17; arsip changelog v1.2 (blok v0.8 dipindah).
+
+### v0.46 — 25 September 2026 (sesi rumah: notifikasi §8 Sisa Fase 1)
+- **Notifikasi §8** 11/13/14/25: 11 kunci kejadian baru (`item.provisional_created`, `project.closed`, `stock.period_locked`, `stock.reservation_stale`, `request.review_overdue`, `request.decided`, `request.line_substituted`, `request.promise_changed`, `request.line_cancel_requested`, `request.line_cancel_decided`, `asset.life_alert`); `notifications:daily` memakai `DailyReminders` (SLA tinjau, reservasi menggantung, aset jatuh tempo + PIC, sisa umur); job harian melewati company ditangguhkan — [A-233–A-237](wms/04-keputusan-dan-asumsi.md#a-233); uji TC-NTF-07–11.
+- Spesifikasi [11](wms/11-master.md) v0.7, [13](wms/13-stock.md) v0.11, [14](wms/14-request.md) v0.10, [17](wms/17-platform-login.md) v0.6, [25](wms/25-aset.md) v0.5, [26](wms/26-purchase-request.md) v0.4, [27](wms/27-pendukung-f1.md) v0.5 (§8, §13); 04 v0.34; [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) v1.8 (+A-233–A-237); laporan progres v1.16 (§5.7: 621 uji hijau); arsip changelog v1.1 (blok v0.7 dipindah).
 
 ### v0.45 — 25 September 2026 (penutup putaran)
 - Laporan progres v1.15 (§4 baris navigasi/hub/konversi/pengaturan/laporan; §5.6 putaran 25 Sep sore: 616 uji, E2E `alur-req-sj` 10/10, `alur-pendukung` 9/9, `ui-check` 87 cek — 0 error console); prompt serah terima **[00-lanjutkan-di-rumah](prompts/00-lanjutkan-di-rumah.md) v2.0** (kantor → rumah, XAMPP3: langkah 0, jatah A-233, daftar selesai/belum) dan [00-lanjutkan-di-kantor](prompts/00-lanjutkan-di-kantor.md) v1.1 (arsip); E2E `go()` menunggu kesiapan halaman, P5 memantau baris preferensi; [27-pendukung-f1](wms/27-pendukung-f1.md) E2E P1–P9. **Sapuan §13**: butir sisa yang sudah terbangun dicoret — 12-warehouse v0.8, 13-stock v0.10, 15-picking-shipment v0.11, 16-shared v0.9 (Status), 17-platform v0.5, 18-template v0.7, 19-receipt v0.9, 20-approval v0.10, 21-opname v0.4, 22-retur-transfer v0.5, 23-pemakaian v0.4, 24-konversi v0.4, 25-aset v0.4 (BR-PRJ-04, BR-REQ-10, A-187/A-188/A-191/A-207/A-228/A-232).
@@ -428,19 +444,3 @@ docs/
 - **Aksi domain baru:** `CreateUser`, `UpdateUser`, `ReactivateUser`, `SendPasswordReset`, `SaveRole`, `DeactivateRole`; menegakkan BR-ACC-01 (wajib punya penugasan), BR-ACC-02 (Admin Company terakhir), BR-ACC-03 (role Klien eksklusif), BR-ACC-04 (cakupan `all`).
 - **Menu Administrasi** di sidebar tampil sesuai permission; pesan aksi memakai event Livewire + Alpine.
 - **Pengujian:** 40 → **60 uji / 414 asersi**, semua hijau (TC-ACC-UI-01–11 dan TC-ACC-UI-20–27 baru). `wms/10-access.md` → v0.3 (§13.3 daftar layar yang sudah ada, §13.4 sisa pekerjaan).
-
-### v0.9 — 23 September 2026 (kerangka aplikasi & modul Access terbangun)
-- **Kode aplikasi masuk repo:** Laravel **13.33** di atas **PHP 8.3.33** (Laragon), MySQL **8.4.3**. Paket: `stancl/tenancy` 3.10.1 (AD-01), `spatie/laravel-permission` 8.3.0 (AD-06), `spatie/laravel-activitylog` **4.12.3** (AD-07; 5.x butuh PHP 8.4), `livewire/livewire` 4.4.6. Front-end di-bundle Vite tanpa CDN (Bootstrap 5.3 + NexaDash dari `template/`, font Inter di-host sendiri).
-- **Tenancy jalan:** company = tenant, identifikasi lewat `companies.subdomain`, database per company (`wms_tenant_<kode>`); migrasi pusat 2 berkas, migrasi tenant 3 berkas; `wms_tenant_demo` terbentuk dari seeder.
-- **Modul Access:** login lokal, undangan, lupa/atur ulang password, 2FA TOTP (ditulis sendiri), kunci akun, profil, portal klien, gerbang langganan, akses dukungan; domain `app/Domain/{Platform,Access}`; halaman error bermerek (NFR-01). **40 uji / 285 asersi hijau** (TC-ACC).
-- **Dokumen:** `wms/10-access.md` → v0.2 (§13 catatan implementasi & penyimpangan), `wms/08-arsitektur.md` → v0.6 (§9 paket terpasang), `prompts/10-access.md` baru, `00-akun-uji.md` disesuaikan (klien2 → proyek PRJ-002).
-- **Belum dikerjakan di modul ini:** layar pengelolaan Pengguna/Role/Organisasi/Perangkat/Akses Dukungan (Livewire), unggah tanda tangan, pengaturan 2FA di profil, laporan §9 — tercatat di 10-access §13.3.
-
-### v0.8 — 23 September 2026 (mulai Part 4)
-- **Lingkungan:** Laragon, PHP **8.3.33** (`php83`), MySQL **8.4 LTS** standar dev & produksi, Composer 2.8, Node 22 — CLAUDE.md dan 08-arsitektur §10 (v0.5) diperbarui dari XAMPP.
-- **Baru:** `00-akun-uji.md` (akun seed/demo satu berkas: Super Admin, company DEMO, 14 akun tenant, organisasi, aturan approval demo); `wms/10-access.md` spesifikasi modul Access v0.1 (27 kasus uji TC-ACC).
-- **Aturan v0.7:** bagian baru `BR-ACC` (BR-ACC-01–06) untuk login, Admin terakhir, role Klien eksklusif, cakupan `all`, global scope, sesi & password.
-
-### v0.7 — 23 September 2026 (peta rilis & persiapan)
-- **D-29** peta rilis: Fase 1 WMS inti → 1b Purchasing inti → 2a WhatsApp → 2b PWA offline → 3 SSO & Purchasing lengkap; login lokal dulu (D-26) ditegaskan. **Baru:** `00-checklist-persiapan.md` (keputusan O-12/O-13/O-15/A-50, bahan & akses, pemetaan halaman auth template, checklist WhatsApp Cloud API, urutan mulai).
-- O-03 target → awal Fase 2a; O-12/O-13/O-15 merujuk checklist. Blueprint §13, §18, §20; purchasing/01 v0.3 (§4 inti vs lengkap); 08-arsitektur v0.4 (§10 template `template/`, §12 langkah 4). Template NexaDash tersedia di `template/` (referensi UI, tidak di-deploy).

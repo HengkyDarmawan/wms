@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `count`, `adjustment` (Stock Opname & Penyesuaian Stok)
 
-**Versi:** 0.4
+**Versi:** 0.6
 **Tanggal:** 24 September 2026
 **Status:** selesai Fase 1 — modul kesembilan setelah [Approval](20-approval.md); OPN dan ADJ manual diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-95](04-keputusan-dan-asumsi.md#a-95)–[A-105](04-keputusan-dan-asumsi.md#a-105) (*Perlu validasi*); v0.3: asal `asset_lost` tersambung dari modul Aset ([25-aset](25-aset.md), [A-167](04-keputusan-dan-asumsi.md#a-167))
 **Modul:** `count` (OPN), `adjustment` (ADJ)
@@ -40,7 +40,7 @@ Migrasi: `database/migrations/tenant/2026_01_01_000100_create_count_adjustment_t
 
 ### 3.1 `stock_counts` — OPN
 
-`number` (`OPN/<gudang|ALL>/<yymm>/<urut>`, BR-GEN-06), `count_type`, `status`, `freeze_bins` (selalu `false` untuk `spot_check`), `scope` json `{warehouse_ids, zone_ids, bin_ids, item_ids}`, `team_user_ids` json, `is_audit` (dibuat Auditor), `planned_start`, `created_by`, `started_at`, `submitted_by` + `reconciled_at` (perekonsiliasi = pengaju approval), `approved_by/at`, `reject_reason_id` (penolakan terakhir), `closed_at`, `lock_date_set`, `report_attachment_id` (stub), `approval_snapshot_id`, `cancel_reason_id`, `notes`. Gudang cakupan juga di `stock_count_warehouses` (PK sesi × gudang, `stock_adjustment_id` = ADJ gudang itu).
+`number` (`OPN/<gudang|ALL>/<yymm>/<urut>`, BR-GEN-06), `count_type`, `status`, `freeze_bins` (selalu `false` untuk `spot_check`), `scope` json `{warehouse_ids, zone_ids, bin_ids, item_ids}`, `team_user_ids` json, `is_audit` (dibuat Auditor), `planned_start`, `created_by`, `started_at`, `submitted_by` + `reconciled_at` (perekonsiliasi = pengaju approval), `approved_by/at`, `reject_reason_id` (penolakan terakhir), `closed_at`, `lock_date_set`, `report_attachment_id` (arsip PDF saat ditutup, [A-238](04-keputusan-dan-asumsi.md#a-238)), `approval_snapshot_id`, `cancel_reason_id`, `notes`. Gudang cakupan juga di `stock_count_warehouses` (PK sesi × gudang, `stock_adjustment_id` = ADJ gudang itu).
 
 ### 3.2 `count_assignments`, `count_lines`
 
@@ -97,7 +97,7 @@ Tabel transisi di Katalog §2.12–§2.13; di sini hanya implementasinya. Semua 
 | Aturan | Ditegakkan di mana |
 |---|---|
 | [BR-OPN-01](05-aturan-bisnis.md#br-opn) | Snapshot = `stock_balances` > 0 di bin fisik cakupan, termasuk Loading Area dan yang dicadangkan ([A-100](04-keputusan-dan-asumsi.md#a-100)) |
-| [BR-OPN-02](05-aturan-bisnis.md#br-opn) | `StartStockCount` menolak bila ada PCK `in_progress` di bin cakupan atau bin dibeku sesi lain; bin beku menolak pergerakan (`StockLedger`), PCK mulai (`ProcessPickTask`), dan ADJ baru. Override SJ mendesak belum ada (§13.3) |
+| [BR-OPN-02](05-aturan-bisnis.md#br-opn) | `StartStockCount` menolak bila ada PCK `in_progress` di bin cakupan atau bin dibeku sesi lain; bin beku menolak pergerakan (`StockLedger`), PCK mulai (`ProcessPickTask`), dan ADJ baru. Override SJ mendesak: `OverrideFrozenBinPick` + `FrozenBinPickShift` ([A-240](04-keputusan-dan-asumsi.md#a-240)) |
 | [BR-OPN-04](05-aturan-bisnis.md#br-opn), [A-42](04-keputusan-dan-asumsi.md#a-42) | `VarianceClassifier`: kecil ≤ ambang relatif **dan** absolut (1 % / 1 unit), sedang ≤ 5 %, selebihnya besar; ambang kategori menang ([A-99](04-keputusan-dan-asumsi.md#a-99)) |
 | [BR-OPN-05](05-aturan-bisnis.md#br-opn) | Putaran 2 otomatis ke anggota tim lain; `AssignCounter` menolak penghitung pertama; hanya penghitung yang ditugaskan yang bisa mengisi |
 | [BR-OPN-06](05-aturan-bisnis.md#br-opn), [A-09](04-keputusan-dan-asumsi.md#a-09) | Satu ADJ per gudang berselisih; ADJ opname tidak diajukan sendiri, diposting saat sesi disetujui |
@@ -149,7 +149,7 @@ DSC `adjusted` tetap memposting sendiri dengan `delivery_discrepancy` ([A-98](04
 
 ## 9. Laporan & dashboard
 
-F1: ringkasan dan akurasi per sesi di `/counts`, laporan PDF per sesi. Belum: dashboard tren akurasi, top selisih, akar masalah per periode, laporan ADJ per alasan (kerangka [16-shared-laporan-berkas](16-shared-laporan-berkas.md)).
+F1: ringkasan dan akurasi per sesi di `/counts`, laporan PDF per sesi. Sejak 25 Sep 2026 di kerangka [16 §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-241](04-keputusan-dan-asumsi.md#a-241)): `tren-akurasi`, `top-selisih`, `akar-masalah`, `adj-per-alasan`.
 
 ## 10. Kasus uji (Given / When / Then)
 
@@ -177,6 +177,8 @@ Uji di `tests/Feature/Count` (36 uji). Fixture `Concerns\CountFixtures`: gudang 
 | TC-OPN-16 | Sesi ad-hoc Auditor | rekonsiliasi Auditor | ke Manajemen, disetujui, saldo terkoreksi | BR-OPN-08, BR-OPN-09 |
 | TC-OPN-17 | Data demo | sesi tahunan CKG: Dedi & Eko hitung, hitung ulang orang lain, Andi rekonsiliasi | aturan demo → Kartika; Andi/Dedi BR-APR-03, Sari BR-APR-01; Kartika setuju → ditutup, saldo terkoreksi lewat ledger & kejadian | alur 8 + 9 |
 | TC-OPN-18 | Role berbeda | buka halaman; PDF sebelum/sesudah | 200/403 sesuai §2; PDF 403 lalu `application/pdf` | BR-GEN-09 |
+| TC-OPN-20 | Sesi disetujui → ditutup | unduh laporan | lampiran `report` (PDF) tersimpan, `report_attachment_id` terisi; unduhan = isi arsip | A-238 |
+| TC-OPN-21 | Bin A dibeku sesi berjalan, PCK `pending` dari bin A, hitungan r1 sudah masuk | staf mencoba override; Kepala Gudang override tanpa alasan lalu dengan alasan; PCK dimulai & diselesaikan 5 | staf tidak boleh; tanpa alasan BR-GEN-11; stok bin A −5, bin tetap beku & ⚑, `system_qty` dan `counted_qty_r1` −5; pergerakan lain dari bin A tetap BR-OPN-02 | BR-OPN-02, A-240 |
 | TC-OPN-18b | Layar | form → detail mulai → ganti penghitung → hitung HP (tanpa angka) → rekonsiliasi (akar masalah) → setuju | berjalan dari layar; angka tersembunyi bagi penghitung | §6 |
 | TC-OPN-18c | Layar | batal & tolak lewat dialog; staf setujui | Alasan wajib; 403 | BR-GEN-11 |
 | TC-OPN-19 | Kepala Gudang / staf / driver | buka beranda | menu & palet sesuai izin | §6 |
@@ -216,7 +218,7 @@ Domain `app/Domain/Count` (7 aksi, `Support\CountScope`, `VarianceClassifier`, `
 ### 13.1 Penyimpangan dari spesifikasi
 
 1. **Permission tambahan** `count.view`, `count.assign`, `count.record`, `adjustment.view` ([A-95](04-keputusan-dan-asumsi.md#a-95)).
-2. **Kolom di luar ERD** ([A-104](04-keputusan-dan-asumsi.md#a-104)), digenerate ulang ke [08c](08c-model-data-pendukung.md); `report_attachment_id` tanpa FK (tabel lampiran belum ada).
+2. **Kolom di luar ERD** ([A-104](04-keputusan-dan-asumsi.md#a-104)), digenerate ulang ke [08c](08c-model-data-pendukung.md); `report_attachment_id` tanpa FK, diisi arsip PDF saat sesi ditutup ([A-238](04-keputusan-dan-asumsi.md#a-238)).
 3. **OPN tanpa `rejected`**: penolakan mengembalikan ke perekonsiliasi dalam `reconciling` ([A-97](04-keputusan-dan-asumsi.md#a-97)).
 4. **ADJ dari DSC tidak dibuat**; DSC tetap memposting sendiri ([A-98](04-keputusan-dan-asumsi.md#a-98)).
 5. **`StockLedger::reverse()` diperluas** (jenis & payload kejadian, rujukan dokumen pembalik) dan `emit()` mengisi kolom `stock_events.reverses_event_id`; kontrak `post()` tetap.
@@ -230,9 +232,9 @@ Domain `app/Domain/Count` (7 aksi, `Support\CountScope`, `VarianceClassifier`, `
 
 ### 13.3 Sisa pekerjaan
 
-1. **Override SJ mendesak** dari bin beku ([BR-OPN-02](05-aturan-bisnis.md#br-opn)): belum ada aksi; bin beku sampai sesi disetujui.
-2. Dashboard opname lengkap (tren akurasi, top selisih, akar masalah) dan laporan ADJ per alasan.
-3. Laporan PDF disimpan sebagai lampiran (`report_attachment_id`) setelah modul lampiran ada.
+1. ~~Override SJ mendesak~~ dari bin beku ([BR-OPN-02](05-aturan-bisnis.md#br-opn)) — selesai 25 Sep 2026: tombol *Override bin beku* di detail PCK, angka sesi digeser −X, bin ⚑ ([A-240](04-keputusan-dan-asumsi.md#a-240), TC-OPN-21).
+2. ~~Dashboard opname lengkap dan laporan ADJ per alasan~~ — selesai sebagai laporan ([A-241](04-keputusan-dan-asumsi.md#a-241)); grafik tetap di luar Fase 1.
+3. ~~Laporan PDF disimpan sebagai lampiran~~ — selesai 25 Sep 2026: saat sesi `closed`, `CountReportArchive` menyimpan PDF akhir (lampiran `report`) dan mengisi `report_attachment_id`; `/counts/{id}/report` mengunduh arsip itu, sebelum ditutup tetap dibuat saat diminta ([A-238](04-keputusan-dan-asumsi.md#a-238), TC-OPN-20).
 4. Stok awal **company sungguhan** kini lewat impor Excel → ADJ beralasan *Saldo awal* ([A-207](04-keputusan-dan-asumsi.md#a-207), [27-pendukung-f1](27-pendukung-f1.md)); hanya data demo yang masih lewat `StockDemoSeeder` ([A-72](04-keputusan-dan-asumsi.md#a-72)).
 5. PWA luring, pemindaian barcode bin di halaman hitung, auditor eksternal berbatas periode `[F2]`.
 6. **Aset hilang** (v0.3): `CreateStockAdjustment::forLostAsset` membuat ADJ asal `asset_lost` satu serial — boleh dari bin On-site yang ditolak ADJ manual — dengan alasan kehilangan, lewat approval yang sama (A-09); diposting → aset `written_off` ([25-aset](25-aset.md), [A-167](04-keputusan-dan-asumsi.md#a-167)).

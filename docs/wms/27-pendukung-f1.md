@@ -1,6 +1,6 @@
 # Spesifikasi Modul — Pendukung Fase 1
 
-**Versi:** 0.4
+**Versi:** 0.5
 **Tanggal:** 25 September 2026
 **Status:** selesai Fase 1 — kumpulan pekerjaan pendukung setelah modul [Platform](17-platform-login.md) (urutan prompt serah terima §2 butir 5); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-185](04-keputusan-dan-asumsi.md#a-185)–[A-193](04-keputusan-dan-asumsi.md#a-193) (*Perlu validasi*); v0.4: pindai di form REQ & ISU ([A-206](04-keputusan-dan-asumsi.md#a-206)), impor vendor & saldo awal ([A-207](04-keputusan-dan-asumsi.md#a-207))
 **Modul:** lintas modul — `stock` (strategi pengambilan), `shared` (Beranda, laporan, PDF), `master` (penutupan proyek, wizard setup, impor Excel), `request` (konfirmasi & keberatan terima), `notification` (baru), PWA
@@ -76,7 +76,7 @@ Tanpa status baru. Perubahan perilaku:
 | [BR-PRJ-02](05-aturan-bisnis.md#br-prj), BR-PRJ-03, BR-PRJ-04 | `Master\Support\ProjectClosureChecklist` (REQ `submitted` s.d. `partially_fulfilled`, SJ `prepared`/`shipped`, DSC `open`, aset `on_loan`, saldo Gudang Site); barang jual putus terkirim tidak dihitung; `ChangeProjectStatus` menonaktifkan Gudang Site saat `closed` |
 | [BR-REQ-10](05-aturan-bisnis.md#br-req), [A-63](04-keputusan-dan-asumsi.md#a-63) | `Request\Actions\RespondDeliveryReceipt`: hanya dalam `receipt_confirm_days`; keberatan per baris ≤ jumlah baik, rusak wajib foto, hanya baris REQ si pemohon; tanggapan satu per SJ dengan kunci baris ([A-197](04-keputusan-dan-asumsi.md#a-197)); lewat batas → `deliveries:auto-confirm` (harian 01:00) |
 | [BR-SJ-10](05-aturan-bisnis.md#br-sj) | keberatan membuka DSC `client_dispute` (atau menambah baris ke DSC keberatan yang masih terbuka); `ResolveDiscrepancy` tidak memindah stok untuk DSC ini; `still_needed` mengurangi `qty_received` dan membuka lagi baris REQ yang masih berjalan, ditolak bila REQ sudah `completed` ([A-198](04-keputusan-dan-asumsi.md#a-198)) |
-| Blueprint §10 | `Notification\Support\Notifier`: in-app bawaan nyala, email bawaan hanya tugas approval; pelaku & user nonaktif dilewati; pengingat yang sama belum dibaca tidak digandakan; email dikirim setelah commit dan galatnya tidak membatalkan aksi ([A-199](04-keputusan-dan-asumsi.md#a-199)) |
+| Blueprint §10 | `Notification\Support\Notifier`: in-app bawaan nyala, email bawaan hanya tugas approval, tagihan, dan aset lewat jatuh tempo; pelaku & user nonaktif dilewati; pengingat yang sama belum dibaca tidak digandakan; email dikirim setelah commit dan galatnya tidak membatalkan aksi ([A-199](04-keputusan-dan-asumsi.md#a-199)) |
 | Blueprint §6.9a, UX-11/12 | laporan terdaftar di `ReportRegistry`; ekspor PDF A4 mendatar lewat `PdfRenderer`; cakupan gudang/proyek pengguna ([A-190](04-keputusan-dan-asumsi.md#a-190)) |
 | NFR-11 | wizard mewajibkan persetujuan ketentuan layanan & kebijakan privasi (naskah sementara sampai O-11) |
 | [BR-MST-01](05-aturan-bisnis.md#br-mst), BR-MST-04, BR-STK-11 | impor lewat `SaveItem` / `SaveProject` / `SaveClient` (`Master\Support\ExcelRows`, `ImportBatch`); kode ganda, klien tak dikenal & kombinasi tidak sah ditolak per baris ([A-192](04-keputusan-dan-asumsi.md#a-192)); vendor lewat `SaveVendor` (A-52, A-53); saldo awal lewat `AdjustmentLines` lalu `CreateStockAdjustment` — satu ADJ manual per gudang beralasan *Saldo awal* (`OPENING`), tetap approval A-09, stok baru bergerak saat diposting (P-01, [A-207](04-keputusan-dan-asumsi.md#a-207)) |
@@ -99,7 +99,7 @@ Tanpa status baru. Perubahan perilaku:
 
 ## 7. Kejadian stok & integrasi
 
-Tidak ada kejadian stok baru. Job terjadwal baru: `deliveries:auto-confirm` (01:00), `notifications:daily` (07:00, aset lewat jatuh tempo).
+Tidak ada kejadian stok baru. Job terjadwal baru: `deliveries:auto-confirm` (01:00), `notifications:daily` (07:00: SLA tinjau REQ, reservasi menggantung, aset lewat jatuh tempo, sisa umur aset — `Notification\Support\DailyReminders`, [A-235](04-keputusan-dan-asumsi.md#a-235)). Semua job harian melewati company yang ditangguhkan ([A-236](04-keputusan-dan-asumsi.md#a-236)).
 
 ## 8. Notifikasi
 
@@ -112,7 +112,16 @@ Tidak ada kejadian stok baru. Job terjadwal baru: `deliveries:auto-confirm` (01:
 | `discrepancy.opened` | pemegang `discrepancy.resolve` di gudang SJ | tidak |
 | `purchase_request.approved` | pemegang `pr.order` di gudang tujuan | tidak |
 | `purchase_request.reorder_draft` | pemegang `pr.submit` di gudang | tidak |
-| `asset.overdue` | pemegang `asset.manage` di proyek aset (harian) | tidak |
+| `asset.overdue` | pemegang `asset.manage` di proyek aset + PIC proyek (harian) | ya |
+| `asset.life_alert` | pemegang `asset.manage` (harian, sisa umur < ambang) | tidak |
+| `item.provisional_created` | pemegang `item.create` | tidak |
+| `project.closed` | PIC proyek + pemegang `warehouse.update` di proyek | tidak |
+| `stock.period_locked` | pemegang `warehouse.update` | tidak |
+| `stock.reservation_stale` | pemegang `reservation.release` di gudang + pemohon REQ (harian) | tidak |
+| `request.review_overdue` | pemegang `request.review` di proyek (harian) | tidak |
+| `request.decided` | pemohon REQ (bila bukan pengaju approval) | tidak |
+| `request.line_substituted` · `request.promise_changed` · `request.line_cancel_decided` | pemohon REQ (klien → tautan portal) | tidak |
+| `request.line_cancel_requested` | pemegang `request.confirm_cancel` di proyek | tidak |
 | `subscription.billing` | pemegang `billing.view` (tagihan terbit, jatuh tempo, ditangguhkan — [A-202](04-keputusan-dan-asumsi.md#a-202)) | ya |
 
 ## 9. Laporan & dashboard

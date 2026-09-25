@@ -16,8 +16,12 @@ use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Piece;
 use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Shared\Attachments\Enums\AttachmentKind;
+use App\Domain\Shared\Attachments\Models\Attachment;
 use App\Domain\Template\Enums\DocumentTemplateType;
 use App\Domain\Template\Support\DocumentPrinter;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\Issue\Concerns\IssueFixtures;
@@ -270,5 +274,35 @@ class IssueScreenTest extends TenantTestCase
 
         Livewire::actingAs($staf)->test(IssueDetail::class, ['materialIssue' => $isu])
             ->assertSee(route('print.document', ['type' => 'material-issue', 'id' => $isu->id]));
+    }
+
+    #[Test]
+    public function tc_isu_18_foto_pemakaian_disimpan_sebagai_lampiran_berizin(): void
+    {
+        Storage::fake('local');
+        $staf = $this->stafSite();
+        $isu = $this->konfirmasi($this->isu([['key' => $this->kunciIsu($this->binKrw1, $this->baut), 'qty_base' => 2]], [], $staf), $staf);
+
+        $this->actingAs($staf)->post($this->tenantUrl('issues/'.$isu->id.'/photos'), ['photo' => UploadedFile::fake()->image('pasang.jpg', 400, 300)])
+            ->assertRedirect(route('issues.show', $isu, false))->assertSessionHasNoErrors();
+        $foto = Attachment::query()->for($isu)->sole();
+        $this->assertSame(AttachmentKind::Photo, $foto->kind);
+        $this->assertSame('pasang.jpg', $foto->original_name);
+        Storage::disk('local')->assertExists($foto->path);
+
+        // Dibuka lewat route berizin; dokumen di luar cakupan = 404 (BR-ACC-05).
+        $this->actingAs($staf)->get($this->tenantUrl('attachments/'.$foto->id))->assertOk();
+        $stafCkg = $this->makeUser('warehouse_staff', ScopeType::Warehouse, $this->gudang->id);
+        $this->actingAs($stafCkg)->get($this->tenantUrl('attachments/'.$foto->id))->assertNotFound();
+
+        // Bukan gambar ditolak; tanpa izin buat ISU tidak bisa mengunggah.
+        $this->actingAs($staf)->post($this->tenantUrl('issues/'.$isu->id.'/photos'), ['photo' => UploadedFile::fake()->create('daftar.pdf', 10, 'application/pdf')])
+            ->assertSessionHasErrors('photo');
+        $this->actingAs($this->makeUser('management'))->post($this->tenantUrl('issues/'.$isu->id.'/photos'), ['photo' => UploadedFile::fake()->image('x.jpg')])
+            ->assertForbidden();
+        $this->assertSame(1, Attachment::query()->for($isu)->count());
+
+        Livewire::actingAs($staf)->test(IssueDetail::class, ['materialIssue' => $isu])
+            ->assertSee(__('Foto pemakaian'))->assertSee(route('attachments.show', $foto));
     }
 }

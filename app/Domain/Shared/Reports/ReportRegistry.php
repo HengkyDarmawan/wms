@@ -44,6 +44,23 @@ class ReportRegistry
         Definitions\ShortPickReport::class,
         Definitions\DamagedGoodsPositionReport::class,
         Definitions\DeliveryPerformanceReport::class,
+        // Sisa Fase 1 2d: §9 modul 19–22 (A-241).
+        Definitions\VendorReceiptReport::class,
+        Definitions\QuarantineAgeReport::class,
+        Definitions\PendingPutawayReport::class,
+        Definitions\OpenVendorReturnReport::class,
+        Definitions\OpenApprovalTaskReport::class,
+        Definitions\PendingApprovalDocumentReport::class,
+        Definitions\ApprovalDecisionTimeReport::class,
+        Definitions\ApprovalEscalationReport::class,
+        Definitions\AccuracyTrendReport::class,
+        Definitions\TopVarianceReport::class,
+        Definitions\RootCauseReport::class,
+        Definitions\AdjustmentByReasonReport::class,
+        Definitions\OpenTransferReport::class,
+        Definitions\InTransitStockReport::class,
+        Definitions\ReturnByProjectReport::class,
+        Definitions\DamagedReturnBinReport::class,
     ];
 
     /** @return Collection<int, Report> */

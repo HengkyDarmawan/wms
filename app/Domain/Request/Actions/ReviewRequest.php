@@ -10,6 +10,7 @@ use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Models\CompanySetting;
 use App\Domain\Master\Models\Item;
+use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\Request\Enums\FulfillmentSource;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
@@ -47,7 +48,9 @@ class ReviewRequest
         $item = Item::query()->findOrFail($itemId);
         $itemLama = $line->item_id;
 
-        return DB::transaction(function () use ($line, $item, $itemLama, $actor) {
+        $diganti = $this->adalahPenggantian($line, $itemLama, (int) $item->id);
+
+        $hasil = DB::transaction(function () use ($line, $item, $itemLama, $diganti, $actor) {
             $atribut = [
                 'item_id' => $item->id,
                 'mapped_by' => $actor?->id,
@@ -56,7 +59,7 @@ class ReviewRequest
 
             // Penggantian hanya berlaku untuk REQ klien: pemohon internal yang
             // salah pilih item cukup mengubahnya sendiri.
-            if ($this->adalahPenggantian($line, $itemLama, $item->id)) {
+            if ($diganti) {
                 $atribut += [
                     'original_item_text' => $this->teksAsli($line),
                     'substituted_at' => now(),
@@ -75,6 +78,12 @@ class ReviewRequest
 
             return $line->refresh();
         });
+
+        if ($diganti) {
+            app(DomainNotifications::class)->lineSubstituted($hasil, $actor);
+        }
+
+        return $hasil;
     }
 
     /**
@@ -103,7 +112,10 @@ class ReviewRequest
             'base_uom_id' => $baseUomId,
         ]));
 
-        return $this->mapLine($line, (int) $item->id, $actor);
+        $hasil = $this->mapLine($line, (int) $item->id, $actor);
+        app(DomainNotifications::class)->provisionalItemCreated($item, $hasil->request, $actor);
+
+        return $hasil;
     }
 
     /**
@@ -134,7 +146,7 @@ class ReviewRequest
 
         $janjiLama = $line->promised_date?->toDateString();
 
-        return DB::transaction(function () use ($line, $warehouseId, $sumber, $promisedDate, $janjiLama, $actor) {
+        $hasil = DB::transaction(function () use ($line, $warehouseId, $sumber, $promisedDate, $janjiLama, $actor) {
             $line->forceFill([
                 'source_warehouse_id' => $warehouseId,
                 'fulfillment_source' => $sumber,
@@ -154,6 +166,12 @@ class ReviewRequest
 
             return $line;
         });
+
+        if ($janjiLama !== $hasil->promised_date?->toDateString()) {
+            app(DomainNotifications::class)->promiseChanged($hasil, $actor);
+        }
+
+        return $hasil;
     }
 
     /** `under_review` → `pending_approval` (BR-REQ-03, BR-REQ-04). */
@@ -200,7 +218,7 @@ class ReviewRequest
             throw RequestRuleException::field('BR-GEN-11', 'reasonCode', 'Alasan penolakan wajib dipilih.');
         }
 
-        return DB::transaction(function () use ($request, $reasonCodeId, $notes, $actor) {
+        $hasil = DB::transaction(function () use ($request, $reasonCodeId, $notes, $actor) {
             $request->forceFill([
                 'status' => MaterialRequestStatus::Rejected,
                 'cancel_reason_id' => $reasonCodeId,
@@ -216,6 +234,10 @@ class ReviewRequest
 
             return $request->refresh();
         });
+
+        app(DomainNotifications::class)->requestDecided($hasil, $actor);
+
+        return $hasil;
     }
 
     public function ambangKeberatan(): int

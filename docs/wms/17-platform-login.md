@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `platform` (Platform & Langganan)
 
-**Versi:** 0.5
+**Versi:** 0.6
 **Tanggal:** 25 September 2026
 **Status:** selesai Fase 1 — v0.1 mencatat login Super Admin & gerbang langganan yang dibangun tanpa spesifikasi; v0.2 modul Platform penuh (modul kelima belas setelah [Purchase Request](26-purchase-request.md)): pembuatan company otomatis, paket & trial, tagihan & bukti bayar manual, siklus status terjadwal, penangguhan manual, flag fitur, masuk lewat akses dukungan, dan penyelesaian temuan §13.2 v0.1. Keputusan yang tidak tertulis di dokumen dicatat sebagai [A-176](04-keputusan-dan-asumsi.md#a-176)–[A-184](04-keputusan-dan-asumsi.md#a-184) (*Perlu validasi*); v0.3: ekspor PDF laporan (`reports.pdf`) ikut diizinkan saat langganan diakhiri ([27-pendukung-f1](27-pendukung-f1.md), [A-190](04-keputusan-dan-asumsi.md#a-190))
 **Modul:** `platform` (`app/Domain/Platform`, `app/Http/Controllers/Platform`)
@@ -166,7 +166,7 @@ Tidak ada kejadian stok. `subscriptions:cycle` (harian 00:30, `routes/console.ph
 |---|---|---|
 | Undangan Admin Company pertama | Admin Company | email (`UserInvitationNotification`) |
 | Tagihan terbit, jatuh tempo, ditangguhkan | pemegang `billing.view` (Admin Company) | lonceng + email `subscription.billing` dari `Support\BillingNotifier` lewat `subscriptions:cycle` ([A-202](04-keputusan-dan-asumsi.md#a-202)); spanduk & layar tagihan tetap |
-| Bukti bayar menunggu | Super Admin | belum — penghitung di beranda |
+| Bukti bayar menunggu | Super Admin | belum — penghitung di beranda; penerima di database pusat ([A-237](04-keputusan-dan-asumsi.md#a-237)) |
 
 ## 9. Laporan & dashboard
 
@@ -233,7 +233,7 @@ Domain `app/Domain/Platform`: 9 aksi (`CreateCompany`, `ProvisionCompany`, `Save
 
 ### 13.3 Sisa pekerjaan
 
-1. Pengingat tagihan WA dan notifikasi bukti bayar ke Super Admin (email tagihan ke company sudah, A-202).
+1. Pengingat tagihan WA `[F2]` dan notifikasi bukti bayar ke Super Admin (email tagihan ke company sudah, A-202; ditunda [A-237](04-keputusan-dan-asumsi.md#a-237)).
 2. Mewajibkan 2FA bagi Super Admin bila A-200 diubah.
 3. Penghapusan database setelah `purge_after` sebagai tindakan terpisah yang tercatat.
 4. ~~Wizard setup awal & persetujuan kebijakan privasi~~ — **selesai** ([27-pendukung-f1](27-pendukung-f1.md), [A-191](04-keputusan-dan-asumsi.md#a-191)); naskah final ketentuan tetap menunggu [O-11](04-keputusan-dan-asumsi.md#o-11).

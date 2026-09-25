@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `asset` (Aset Dipinjamkan)
 
-**Versi:** 0.4
+**Versi:** 0.6
 **Tanggal:** 25 September 2026
 **Status:** selesai Fase 1 — modul ketiga belas setelah [Konversi & Waste](24-konversi-waste.md); melengkapi stub pemeriksaan aset di retur ([A-116](04-keputusan-dan-asumsi.md#a-116)); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-163](04-keputusan-dan-asumsi.md#a-163)–[A-169](04-keputusan-dan-asumsi.md#a-169) (*Perlu validasi*); v0.3: pengingat harian aset lewat jatuh tempo lewat notifikasi ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189))
 **Modul:** `asset` (AST)
@@ -20,7 +20,7 @@ Aset (genset, scaffolding, alat) dipinjamkan ke proyek dan kembali lagi; ia teta
 - **Aset hilang** → ADJ keluar lewat approval → dihapuskan ([BR-AST-04](05-aturan-bisnis.md#br-ast)).
 - **Jatuh tempo & sisa umur**: laporan *Aset dipinjamkan*, filter lewat jatuh tempo, peringatan sisa umur ([BR-AST-06](05-aturan-bisnis.md#br-ast), [BR-AST-08](05-aturan-bisnis.md#br-ast)).
 
-Tidak termasuk: tarif sewa & penyusutan (Akuntansi, [D-07](04-keputusan-dan-asumsi.md#d-07)); jadwal maintenance `[F2]`; transfer aset On-site → On-site antar proyek ([A-116](04-keputusan-dan-asumsi.md#a-116)); notifikasi in-app/email; lampiran generik.
+Tidak termasuk: tarif sewa & penyusutan (Akuntansi, [D-07](04-keputusan-dan-asumsi.md#d-07)); jadwal maintenance `[F2]`; transfer aset On-site → On-site antar proyek ([A-116](04-keputusan-dan-asumsi.md#a-116)); notifikasi in-app/email.
 
 ## 2. Aktor & permission
 
@@ -129,8 +129,9 @@ Detail RET menampilkan nomor AST dan statusnya pada baris aset saat pemilahan. M
 
 | Kejadian | Penerima | Kanal | Keadaan |
 |---|---|---|---|
-| Aset lewat jatuh tempo (harian) | PIC proyek, Kepala Gudang | in-app, email | belum — laporan & filter sebagai pengganti ([A-169](04-keputusan-dan-asumsi.md#a-169)) |
-| Tugas approval ADJ aset hilang | approver | in-app | stub `ApprovalNotifier` |
+| Aset lewat jatuh tempo (harian) | PIC proyek, Kepala Gudang | in-app, email | `asset.overdue` lewat `notifications:daily` ke pemegang `asset.manage` di proyek + PIC ([A-235](04-keputusan-dan-asumsi.md#a-235)) |
+| Sisa umur di bawah ambang (harian) | Kepala Gudang | in-app | `asset.life_alert`, ambang `asset_life_alert_pct` (BR-AST-08) |
+| Tugas approval ADJ aset hilang | approver | in-app | `approval.task_assigned` lewat `ApprovalNotifier` |
 
 ## 9. Laporan & dashboard
 
@@ -154,12 +155,13 @@ Uji di `tests/Feature/Asset` (12 uji): `AssetLifecycleTest`, `AssetLossTest`, `A
 | TC-AST-10 | Role & cakupan | buka layar, menu | 200/403/404 sesuai §2; staf BKS 404 & tak melihat; serial bukan aset 404; menu | BR-GEN-09, BR-ACC-05 |
 | TC-AST-11 | Layar | daftar & filter; lengkapi serah terima (salah lalu benar); POST periksa tanpa foto / auditor / dengan foto; foto; pilah; profil & tandai hilang lewat dialog | tampil/tersaring; BR-AST-06 lalu tersimpan; galat foto, 403, `inspected`; foto 200 (driver 403); `available`; BR-AST-08 lalu tersimpan; Alasan wajib, `lost`; staf tanpa tombol | §6 |
 | TC-AST-12 | AST | cetak | nomor, judul, serial, blok *Dikembalikan*, tanpa harga; PDF 200, driver 403; tombol di detail | 18 §5.1, D-07 |
+| TC-AST-13 | AST `checked_out` | unggah foto serah terima keluar dua kali | `photo_out_id` menunjuk foto terbaru, dua lampiran tersimpan; staf tanpa `asset.manage` 403; setelah kembali 403 | A-238, P-03 |
 
 Uji modul lain yang berubah: TC-RET-13 (aset diperiksa dulu, `asset_returned` membawa pemeriksaan), TC-TPL-04 (`asset-handover` tak lagi 501), TC-ACC-27b (4 permission `asset`), TC-RPT-01 (9 laporan).
 
 ## 11. Di luar lingkup modul ini
 
-Tarif sewa, penyusutan (Akuntansi); jadwal & pemicu maintenance `[F2]`; notifikasi jatuh tempo; transfer aset On-site antar proyek; checklist penutupan proyek "aset sudah kembali" ([BR-PRJ-02](05-aturan-bisnis.md#br-prj)); lampiran generik untuk foto serah terima keluar (`photo_out_id`); RFID `[F2]`.
+Tarif sewa, penyusutan (Akuntansi); jadwal & pemicu maintenance `[F2]`; notifikasi jatuh tempo; transfer aset On-site antar proyek; checklist penutupan proyek "aset sudah kembali" ([BR-PRJ-02](05-aturan-bisnis.md#br-prj)); RFID `[F2]`.
 
 ## 12. Definisi selesai
 
@@ -193,6 +195,6 @@ Domain `app/Domain/Asset`: 4 aksi (`UpdateAssetHandover`, `UpdateAssetProfile`, 
 
 ### 13.3 Sisa pekerjaan
 
-1. Notifikasi jatuh tempo & sisa umur (modul notifikasi); jadwal maintenance `[F2]`.
+1. ~~Notifikasi jatuh tempo & sisa umur~~ — selesai 25 Sep 2026 ([A-235](04-keputusan-dan-asumsi.md#a-235)); jadwal maintenance `[F2]`.
 2. Transfer aset On-site antar proyek. ~~Checklist penutupan proyek~~ — **selesai** (`ProjectClosureChecklist` menahan penutupan selama ada aset di proyek; [A-187](04-keputusan-dan-asumsi.md#a-187), TC-MST-25b).
-3. Foto serah terima keluar menunggu tabel lampiran ([A-68](04-keputusan-dan-asumsi.md#a-68)).
+3. ~~Foto serah terima keluar~~ — selesai 25 Sep 2026: `POST /asset-handovers/{id}/photo-out` (`AttachHandoverPhotoOut`, izin `asset.manage`, selama `checked_out`) mengisi `photo_out_id`; foto lama tetap sebagai lampiran ([A-238](04-keputusan-dan-asumsi.md#a-238), TC-AST-13).

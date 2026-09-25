@@ -1,13 +1,13 @@
 # Tinjauan asumsi *Perlu validasi* — 25 September 2026
 
-**Versi:** 1.7
+**Versi:** 1.11
 **Tanggal:** 25 September 2026
-**Status:** daftar kerja untuk pemilik produk — dibuat otomatis dari [04-keputusan-dan-asumsi](wms/04-keputusan-dan-asumsi.md) v0.26; v1.2: ditambah A-206–A-225 dari sesi kantor 25 Sep 2026 (v0.27) (butir Penutup, [prompt serah terima](prompts/00-lanjutkan-di-rumah.md) §2 butir 6)
+**Status:** daftar kerja untuk pemilik produk — dibuat otomatis dari [04-keputusan-dan-asumsi](wms/04-keputusan-dan-asumsi.md) v0.26; v1.2: ditambah A-206–A-225 dari sesi kantor 25 Sep 2026 (v0.27) (butir Penutup, [prompt serah terima](prompts/00-lanjutkan-di-rumah.md) §2 butir 6); v1.8: ditambah A-233–A-237 (notifikasi §8, 04 v0.34); v1.9: A-238 (lampiran generik, 04 v0.35); v1.10: A-239–A-240 (04 v0.36); v1.11: A-241–A-242 (04 v0.37)
 **Dokumen terkait:** [README](README.md) · [Laporan progres](00-laporan-progres-2026-09-24.md)
 
 Setiap baris satu asumsi yang sudah dipakai kode tetapi belum disetujui. Isi kolom **Keputusan** dengan `Setuju`, `Ubah: …`, atau `Hapus`, lalu pindahkan hasilnya ke kolom *Validasi* di dokumen 04 (bukan di sini). Rincian lengkap tiap asumsi ada di anchor-nya.
 
-Jumlah: **137 asumsi** dalam 15 kelompok. Tanda ⚠ = asumsi dari sesi 25 Sep 2026 (A-170–A-205) yang paling berdampak bila ditolak karena menyentuh stok, tagihan langganan, nilai uang, atau hak akses — sebaiknya ditinjau lebih dulu (sejak v1.2 juga A-206–A-225).
+Jumlah: **147 asumsi** dalam 16 kelompok. Tanda ⚠ = asumsi dari sesi 25 Sep 2026 (A-170–A-205) yang paling berdampak bila ditolak karena menyentuh stok, tagihan langganan, nilai uang, atau hak akses — sebaiknya ditinjau lebih dulu (sejak v1.2 juga A-206–A-225).
 
 ## 2.5 Baru dari pencocokan dokumen dengan kode — 24 Sep 2026
 
@@ -220,3 +220,18 @@ Jumlah: **137 asumsi** dalam 15 kelompok. Tanda ⚠ = asumsi dari sesi 25 Sep 20
 | [A-230](wms/04-keputusan-dan-asumsi.md#a-230) ⚠ | Layar Pengaturan company: ambang hari/persen, saklar fitur (peringatan bila dipakai item), zona waktu | |
 | [A-231](wms/04-keputusan-dan-asumsi.md#a-231) ⚠ | Halaman penerima bertoken (OTP → form → ringkasan, 410), foto & tanda tangan bukti terima | |
 | [A-232](wms/04-keputusan-dan-asumsi.md#a-232) ⚠ | 11 laporan §9 Stock/Request/Shipment + 4 template cetak TRF/RET/PRQ/GRN di kerangka bersama | |
+
+## 2.20 Baru dari Sisa Fase 1 di rumah — 25 Sep 2026
+
+| ID | Asumsi (ringkas) | Keputusan |
+|---|---|---|
+| [A-233](wms/04-keputusan-dan-asumsi.md#a-233) | Penerima notifikasi §8 lewat izin (item.create, warehouse.update, reservation.release, request.review/confirm_cancel) | |
+| [A-234](wms/04-keputusan-dan-asumsi.md#a-234) | Kejadian REQ ke pemohon: diputus (kecuali pengaju approval), tanggal janji, hasil pembatalan baris | |
+| [A-235](wms/04-keputusan-dan-asumsi.md#a-235) | Pengingat harian: SLA hari kalender, reservasi per dokumen, sisa umur per serial, aset jatuh tempo + PIC + email | |
+| [A-236](wms/04-keputusan-dan-asumsi.md#a-236) ⚠ | Semua job harian (eskalasi, pengingat, konfirmasi otomatis, draf PRQ) berhenti selama company ditangguhkan | |
+| [A-237](wms/04-keputusan-dan-asumsi.md#a-237) | Belum dibangun: outbox gagal (tanpa penerbit, F3), bukti bayar → Super Admin, pengingat tagihan WA [F2] | |
+| [A-238](wms/04-keputusan-dan-asumsi.md#a-238) | Tabel lampiran generik: foto pemakaian ISU (≤ 10), foto serah terima keluar AST, arsip PDF opname saat ditutup | |
+| [A-239](wms/04-keputusan-dan-asumsi.md#a-239) | Penuaan tenggat penggantian item tiap jam (`requests:expire-substitutions`) | |
+| [A-240](wms/04-keputusan-dan-asumsi.md#a-240) ⚠ | Override bin beku oleh `bin.manage` pada PCK pending; angka sesi opname digeser −X, bin ⚑ (bukan buka ulang penugasan) | |
+| [A-241](wms/04-keputusan-dan-asumsi.md#a-241) | 16 laporan §9 modul 19–22: izin approval `approval_rule.view`, umur dari pergerakan masuk terakhir, bawaan periode & batas baris | |
+| [A-242](wms/04-keputusan-dan-asumsi.md#a-242) ⚠ | Short pick PCK TRF → TRF backorder pengganti dari gudang lain (bukan asal yang kurang); tanpa gudang cukup → manual | |

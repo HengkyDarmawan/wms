@@ -21,13 +21,13 @@ use App\Http\Controllers\Count\CountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Issue\IssueController;
 use App\Http\Controllers\Master\ClientController;
+use App\Http\Controllers\Master\CompanySettingsController;
 use App\Http\Controllers\Master\ImportController;
 use App\Http\Controllers\Master\ItemCategoryController;
 use App\Http\Controllers\Master\ItemController;
 use App\Http\Controllers\Master\ItemPhotoController;
 use App\Http\Controllers\Master\ProjectController;
 use App\Http\Controllers\Master\ReferenceController;
-use App\Http\Controllers\Master\CompanySettingsController;
 use App\Http\Controllers\Master\SetupController;
 use App\Http\Controllers\Master\UomController;
 use App\Http\Controllers\Master\VendorController;
@@ -42,6 +42,7 @@ use App\Http\Controllers\Request\DeliveryReceiptController;
 use App\Http\Controllers\Request\PortalRequestController;
 use App\Http\Controllers\Request\RequestController;
 use App\Http\Controllers\Return\ReturnController;
+use App\Http\Controllers\Shared\AttachmentController;
 use App\Http\Controllers\Shared\FileController;
 use App\Http\Controllers\Shared\ReportController;
 use App\Http\Controllers\Shipment\DeliveryTokenController;
@@ -150,6 +151,7 @@ Route::middleware('auth')->group(function (): void {
         Route::delete('/profile/signature', [ProfileController::class, 'deleteSignature'])->name('profile.signature.destroy');
         Route::get('/files/signature/{user}', [FileController::class, 'signature'])->name('files.signature');
         Route::get('/files/item-photo/{item}', [FileController::class, 'itemPhoto'])->name('files.item-photo');
+        Route::get('/attachments/{attachment}', [AttachmentController::class, 'show'])->whereNumber('attachment')->name('attachments.show');
         Route::post('/items/{item}/photo', [ItemPhotoController::class, 'store'])->name('items.photo.store');
         Route::delete('/items/{item}/photo', [ItemPhotoController::class, 'destroy'])->name('items.photo.destroy');
 
@@ -279,6 +281,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/issues/create', [IssueController::class, 'create'])->name('issues.create');
         Route::get('/issues/{materialIssue}', [IssueController::class, 'show'])->name('issues.show');
         Route::get('/issues/{materialIssue}/edit', [IssueController::class, 'edit'])->name('issues.edit');
+        Route::post('/issues/{materialIssue}/photos', [IssueController::class, 'attachPhoto'])->name('issues.photos.store');
 
         // Konversi material & berita acara waste (24-konversi-waste §6). Halaman
         // lewat GET; transisi lewat Livewire (POST), penutupan WST lewat POST
@@ -300,6 +303,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/asset-handovers', [AssetController::class, 'handovers'])->name('asset-handovers.index');
         Route::get('/asset-handovers/{assetHandover}', [AssetController::class, 'handover'])->name('asset-handovers.show');
         Route::post('/asset-handovers/{assetHandover}/inspect', [AssetController::class, 'inspect'])->name('asset-handovers.inspect');
+        Route::post('/asset-handovers/{assetHandover}/photo-out', [AssetController::class, 'photoOut'])->name('asset-handovers.photo-out');
         Route::get('/asset-inspections/{assetInspection}/photo', [AssetController::class, 'photo'])->name('asset-inspections.photo');
 
         // Purchase Request (26-purchase-request §6). Halaman lewat GET; ajukan,

@@ -96,6 +96,14 @@
         @endif
     @endcan
 
+    @include('partials.attachments', [
+        'judul' => __('Foto serah terima keluar'),
+        'lampiran' => $fotoKeluar,
+        'aksi' => auth()->user()->can('update', $ast) ? route('asset-handovers.photo-out', $ast) : null,
+        'field' => 'photo_out',
+        'kosong' => __('Belum ada foto serah terima keluar.'),
+    ])
+
     @can('inspect', $ast)
         <form class="card border-warning mb-3" method="POST" action="{{ route('asset-handovers.inspect', $ast) }}" enctype="multipart/form-data">
             @csrf

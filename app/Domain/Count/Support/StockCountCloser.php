@@ -19,6 +19,7 @@ use App\Domain\Stock\Actions\LockStockPeriod;
 use App\Domain\Warehouse\Actions\ChangeBinStatus;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Models\Bin;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Akibat keputusan akhir approval sesi (Katalog §2.13):
@@ -132,6 +133,9 @@ class StockCountCloser
         activity('count')->performedOn($count)->causedBy($actor)
             ->withProperties(['kunci_periode' => $kunci])
             ->log('Sesi opname ditutup'.($kunci !== null ? '; periode stok dikunci sampai '.$kunci : ''));
+
+        // A-238: laporan akhir diarsipkan setelah penutupan benar-benar tersimpan.
+        DB::afterCommit(fn () => app(CountReportArchive::class)->archive($count->refresh(), $actor));
 
         return $count->refresh();
     }

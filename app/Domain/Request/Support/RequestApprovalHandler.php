@@ -10,6 +10,7 @@ use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Models\ApprovalSnapshot;
 use App\Domain\Approval\Support\ApprovalContext;
 use App\Domain\Master\Models\Item;
+use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\PurchaseRequest\Support\BackorderPurchases;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
@@ -133,6 +134,8 @@ class RequestApprovalHandler implements ApprovalHandler
         app(BackorderPurchases::class)->createFor($document, $actor);
 
         activity('request')->performedOn($document)->causedBy($actor)->log('REQ disetujui');
+
+        app(DomainNotifications::class)->requestDecided($document, $actor);
     }
 
     /** @param  MaterialRequest  $document */
@@ -148,6 +151,8 @@ class RequestApprovalHandler implements ApprovalHandler
         activity('request')->performedOn($document)->causedBy($actor)
             ->withProperties(['reason_code_id' => $reasonCodeId, 'notes' => $notes])
             ->log('REQ ditolak approver');
+
+        app(DomainNotifications::class)->requestDecided($document, $actor);
     }
 
     /**

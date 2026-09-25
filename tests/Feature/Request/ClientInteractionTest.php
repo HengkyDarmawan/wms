@@ -35,6 +35,7 @@ use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Models\WarehouseType;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\Activitylog\Models\Activity;
 use Tests\Feature\Approval\Concerns\ApprovalFixtures;
 use Tests\TenantTestCase;
 
@@ -268,10 +269,13 @@ class ClientInteractionTest extends TenantTestCase
         // Tenggat dimundurkan seolah sudah lewat sehari.
         $baris->forceFill(['substitution_deadline_at' => now()->subDay()])->save();
 
-        $jumlah = app(RespondSubstitution::class)->expireOverdue();
+        // Job terjadwal tiap jam `requests:expire-substitutions` (A-239).
+        $this->artisan('requests:expire-substitutions')
+            ->expectsOutputToContain('1 penggantian kedaluwarsa')
+            ->assertSuccessful();
 
-        $this->assertSame(1, $jumlah);
         $this->assertSame(SubstitutionResponse::Expired, $baris->refresh()->substitution_response);
+        $this->assertSame(0, app(RespondSubstitution::class)->expireOverdue(), 'Aman dijalankan berulang.');
         $this->assertSame(
             RequestLineStatus::Open,
             $baris->status,
@@ -380,7 +384,7 @@ class ClientInteractionTest extends TenantTestCase
 
         $this->assertSame($janji, $baris->promised_date?->toDateString());
 
-        $tercatat = \Spatie\Activitylog\Models\Activity::query()
+        $tercatat = Activity::query()
             ->where('log_name', 'request')
             ->where('description', 'Tanggal janji baris REQ diubah')
             ->exists();

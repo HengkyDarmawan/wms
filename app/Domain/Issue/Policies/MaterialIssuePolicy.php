@@ -40,6 +40,12 @@ class MaterialIssuePolicy
             && ((int) $issue->issued_by === (int) $actor->id || $actor->hasPermission('issue.confirm'));
     }
 
+    /** Foto pemakaian (A-238): pembuat ISU, pada ISU yang tidak batal. */
+    public function attachPhoto(User $actor, MaterialIssue $issue): bool
+    {
+        return $actor->hasPermission('issue.create') && $issue->status !== MaterialIssueStatus::Cancelled;
+    }
+
     /** Katalog §2.9 `draft → confirmed`; pembalik: mengajukan ke approval. */
     public function confirm(User $actor, MaterialIssue $issue): bool
     {

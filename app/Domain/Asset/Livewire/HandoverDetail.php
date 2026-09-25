@@ -8,6 +8,7 @@ use App\Domain\Asset\Actions\UpdateAssetHandover;
 use App\Domain\Asset\Enums\ConditionGrade;
 use App\Domain\Asset\Livewire\Concerns\HandlesAssetRules;
 use App\Domain\Asset\Models\AssetHandover;
+use App\Domain\Shared\Attachments\Models\Attachment;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -44,6 +45,7 @@ class HandoverDetail extends Component
         return view('livewire.asset.handover-detail', [
             'ast' => $ast,
             'inspections' => $ast->inspections()->with('inspector:id,name')->orderByDesc('id')->get(),
+            'fotoKeluar' => Attachment::query()->with('uploader:id,name')->whereKey($ast->photo_out_id ?? 0)->get(),
             'grades' => ConditionGrade::options(),
             'riwayat' => Activity::query()->with('causer:id,name')->where('log_name', 'asset')
                 ->where('subject_type', $ast->getMorphClass())->where('subject_id', $ast->id)

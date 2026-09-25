@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Count;
 
+use App\Domain\Count\Actions\ApproveStockCount;
 use App\Domain\Count\Actions\ReconcileStockCount;
 use App\Domain\Count\Enums\StockCountStatus;
 use App\Domain\Count\Livewire\CountEntry;
@@ -13,6 +14,9 @@ use App\Domain\Count\Livewire\StockCountForm;
 use App\Domain\Count\Livewire\StockCountList;
 use App\Domain\Count\Models\CountAssignment;
 use App\Domain\Count\Models\StockCount;
+use App\Domain\Shared\Attachments\Enums\AttachmentKind;
+use App\Domain\Shared\Attachments\Models\Attachment;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\Count\Concerns\CountFixtures;
@@ -59,7 +63,7 @@ class CountScreenTest extends TenantTestCase
 
         $this->hitungPutaran($sesi, 1);
         app(ReconcileStockCount::class)->handle($sesi, $this->auditor);
-        app(\App\Domain\Count\Actions\ApproveStockCount::class)->approve($sesi->refresh(), $this->kepala);
+        app(ApproveStockCount::class)->approve($sesi->refresh(), $this->kepala);
 
         $pdf = $this->actingAs($this->staf1)->get($this->tenantUrl('counts/'.$sesi->id.'/report'));
         $pdf->assertOk();
@@ -206,5 +210,28 @@ class CountScreenTest extends TenantTestCase
             ->assertDontSee(__('Opname & penyesuaian'));
 
         Livewire::actingAs($this->kepala)->test(StockCountList::class)->assertOk()->assertSee(__('Belum ada sesi opname.'));
+    }
+
+    #[Test]
+    public function tc_opn_20_laporan_pdf_diarsipkan_saat_sesi_ditutup(): void
+    {
+        Storage::fake('local');
+        $sesi = $this->sesiBerjalan();
+        $this->hitungPutaran($sesi, 1);
+        app(ReconcileStockCount::class)->handle($sesi, $this->auditor);
+        app(ApproveStockCount::class)->approve($sesi->refresh(), $this->kepala);
+
+        $sesi->refresh();
+        $this->assertSame(StockCountStatus::Closed, $sesi->status);
+        $arsip = Attachment::query()->findOrFail($sesi->report_attachment_id);
+        $this->assertSame(AttachmentKind::Report, $arsip->kind);
+        $this->assertSame('application/pdf', $arsip->mime);
+        Storage::disk('local')->assertExists($arsip->path);
+
+        // Unduhan berikutnya memakai arsip, bukan PDF baru.
+        $unduh = $this->actingAs($this->staf1)->get($this->tenantUrl('counts/'.$sesi->id.'/report'));
+        $unduh->assertOk()->assertDownload(str_replace('/', '-', $sesi->number).'.pdf');
+        $this->assertSame(Storage::disk('local')->get($arsip->path), $unduh->streamedContent());
+        $this->actingAs($this->staf1)->get($this->tenantUrl('attachments/'.$arsip->id))->assertOk();
     }
 }

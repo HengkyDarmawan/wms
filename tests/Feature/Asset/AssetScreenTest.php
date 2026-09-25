@@ -14,6 +14,7 @@ use App\Domain\Master\Enums\AssetState;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Serial;
+use App\Domain\Shared\Attachments\Models\Attachment;
 use App\Domain\Template\Enums\DocumentTemplateType;
 use App\Domain\Template\Support\DocumentPrinter;
 use Illuminate\Http\UploadedFile;
@@ -23,7 +24,7 @@ use Tests\Feature\Asset\Concerns\AssetFixtures;
 use Tests\TenantTestCase;
 
 /**
- * TC-AST-10 s.d. TC-AST-12 — izin layar, cakupan & menu (BR-GEN-09,
+ * TC-AST-10 s.d. TC-AST-13 — izin layar, cakupan & menu (BR-GEN-09,
  * BR-ACC-05), layar serah terima + pemeriksaan lewat POST dengan foto, detail
  * aset (profil, tandai hilang), cetak BA Serah Terima Aset tanpa harga (D-07).
  */
@@ -174,5 +175,31 @@ class AssetScreenTest extends TenantTestCase
 
         Livewire::actingAs($staf)->test(HandoverDetail::class, ['assetHandover' => $ast])
             ->assertSee(route('print.document', ['type' => 'asset-handover', 'id' => $ast->id]));
+    }
+
+    #[Test]
+    public function tc_ast_13_foto_serah_terima_keluar_sebagai_lampiran(): void
+    {
+        $ast = $this->ast();
+        $kepala = $this->makeUser('warehouse_head');
+        $url = $this->tenantUrl('asset-handovers/'.$ast->id.'/photo-out');
+
+        Livewire::actingAs($kepala)->test(HandoverDetail::class, ['assetHandover' => $ast])
+            ->assertSee(__('Foto serah terima keluar'))->assertSee(route('asset-handovers.photo-out', $ast));
+
+        $this->actingAs($kepala)->post($url, ['photo_out' => UploadedFile::fake()->image('keluar-1.jpg')])->assertRedirect(route('asset-handovers.show', $ast));
+        $pertama = (int) $ast->refresh()->photo_out_id;
+        $this->actingAs($kepala)->post($url, ['photo_out' => UploadedFile::fake()->image('keluar-2.jpg')])->assertSessionHasNoErrors();
+
+        // Foto baru menggantikan rujukan; yang lama tetap tersimpan (P-03).
+        $ast->refresh();
+        $this->assertNotSame($pertama, (int) $ast->photo_out_id);
+        $this->assertSame(2, Attachment::query()->for($ast)->count());
+        $this->actingAs($kepala)->get($this->tenantUrl('attachments/'.$ast->photo_out_id))->assertOk();
+
+        // Tanpa asset.manage ditolak; setelah kembali tidak bisa lagi.
+        $this->actingAs($this->makeUser('warehouse_staff'))->post($url, ['photo_out' => UploadedFile::fake()->image('x.jpg')])->assertForbidden();
+        $this->kembalikan();
+        $this->actingAs($kepala)->post($url, ['photo_out' => UploadedFile::fake()->image('x.jpg')])->assertForbidden();
     }
 }

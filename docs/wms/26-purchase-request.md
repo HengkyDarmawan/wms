@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `purchase_request` (Purchase Request)
 
-**Versi:** 0.3
+**Versi:** 0.4
 **Tanggal:** 25 September 2026
 **Status:** selesai Fase 1 — modul keempat belas setelah [Aset](25-aset.md); menyambung baris REQ bersumber pembelian ([BR-REQ-05](05-aturan-bisnis.md#br-req)) dan rujukan baris GRN vendor yang sebelumnya stub ([19-receipt-putaway](19-receipt-putaway.md) §3); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-170](04-keputusan-dan-asumsi.md#a-170)–[A-175](04-keputusan-dan-asumsi.md#a-175) (*Perlu validasi*); v0.2: notifikasi PRQ disetujui & draf titik pesan ulang ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189))
 **Modul:** `purchase_request` (PRQ)
@@ -134,8 +134,8 @@ Fase 3: kejadian `po_created` dari Purchasing mengisi catatan pemesanan yang sam
 
 | Kejadian | Penerima | Kanal | Keadaan |
 |---|---|---|---|
-| PRQ disetujui / draf titik pesan ulang | Penindak Lanjut PR / Kepala Gudang | in-app | belum — daftar tersaring status sebagai pengganti |
-| Tugas approval PRQ | approver | in-app | stub `ApprovalNotifier` |
+| PRQ disetujui / draf titik pesan ulang | Penindak Lanjut PR / Kepala Gudang | in-app | `purchase_request.approved` (pemegang `pr.order`) / `purchase_request.reorder_draft` (pemegang `pr.submit`) |
+| Tugas approval PRQ | approver | in-app | `approval.task_assigned` lewat `ApprovalNotifier` |
 
 ## 9. Laporan & dashboard
 
@@ -196,5 +196,5 @@ Domain `app/Domain/PurchaseRequest`: 5 aksi (`CreatePurchaseRequest` dengan `upd
 
 ### 13.3 Sisa pekerjaan
 
-1. Notifikasi ke Penindak Lanjut PR dan Kepala Gudang (modul notifikasi).
+1. ~~Notifikasi ke Penindak Lanjut PR dan Kepala Gudang~~ — selesai (Pendukung F1, [27 §8](27-pendukung-f1.md#8-notifikasi)).
 2. ~~Sambungan Purchasing~~ — **v0.3, Purchasing inti Fase 1b** ([purchasing/02](../purchasing/02-purchasing-inti.md)): `Support\PurchaseOrderEvents` menerima `po_created` (catatan pemesanan per PRQ dengan `purchase_order_id`, baris dengan `purchase_order_line_id` dan `po_line_ref`), `po_updated` (ETA), `po_cancelled` (sisa dilepas, PRQ tetap *Diteruskan*) — [A-213](04-keputusan-dan-asumsi.md#a-213); `PurchaseReceipts::received` memicu kejadian `Events\OrderLinesReceived` ([A-214](04-keputusan-dan-asumsi.md#a-214)); `CancelPurchaseRequest` dan policy menolak PRQ yang punya catatan PO terbuka ([A-215](04-keputusan-dan-asumsi.md#a-215)); detail PRQ punya tombol *Buat PO* dan tautan catatan ke PO. Endpoint HTTP `[F3]` tetap belum.

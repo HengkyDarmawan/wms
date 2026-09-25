@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `receipt`, `putaway`, `vendor_return` (Penerimaan, QC, Put-away, Retur ke Vendor)
 
-**Versi:** 0.9
+**Versi:** 0.10
 **Tanggal:** 25 September 2026
 **Status:** selesai Fase 1 — modul ketujuh setelah [Picking & Shipment](15-picking-shipment.md); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-78](04-keputusan-dan-asumsi.md#a-78)–[A-84](04-keputusan-dan-asumsi.md#a-84) (*Perlu validasi*); v0.4: approval RTV lewat mesin approval ([20-approval](20-approval.md), [A-93](04-keputusan-dan-asumsi.md#a-93)); v0.5: GRN retur dan penyelesaian TRF ([22-retur-transfer](22-retur-transfer.md), [A-112](04-keputusan-dan-asumsi.md#a-112)); v0.6: surat retur RTV dicetak lewat modul Template ([18](18-template-dokumen-label.md)); v0.7: baris GRN vendor merujuk catatan pemesanan PRQ ([26-purchase-request](26-purchase-request.md), [A-174](04-keputusan-dan-asumsi.md#a-174))
 **Modul:** `receipt`, `putaway`, `vendor_return`
@@ -174,7 +174,7 @@ Belum dibangun (modul notifikasi belum ada): GRN menunggu QC → Staf Gudang; PU
 
 ## 9. Laporan & dashboard
 
-Belum dibangun; kerangka di [16-shared-laporan-berkas](16-shared-laporan-berkas.md): penerimaan per vendor/periode, barang di Karantina menurut umur, PUT tertunda, RTV terbuka.
+Selesai 25 Sep 2026 di kerangka [16 §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-241](04-keputusan-dan-asumsi.md#a-241)): `penerimaan-vendor`, `karantina-umur`, `put-tertunda`, `rtv-terbuka`.
 
 ## 10. Kasus uji (Given / When / Then)
 
@@ -267,4 +267,4 @@ Domain `app/Domain/Receipt`: dua belas aksi (`SaveGoodsReceipt`, `ReceiveGoodsRe
 3. **ADJ untuk kelebihan terima** (BR-GRN-05) — modul Adjustment.
 4. **`StockLedger::rebuildFromLedger()` tidak mengenal perubahan kondisi**: kartu stok tidak menyimpan kondisi asal (`fromStockStatus`), sehingga QC dan barang rusak saat terima menghasilkan saldo turunan yang salah per kondisi. Saldo transaksional tetap benar; perlu kolom `from_stock_status` di `stock_movements` (keputusan modul Stock).
 5. ~~**`StockLedger::availableQty()` menghitung semua bin gudang**~~ — **diperbaiki 24 Sep 2026**: hanya bin `storage` ([A-85](04-keputusan-dan-asumsi.md#a-85)); TC-GRN-11b kini membuktikan approval REQ menolak janji atas stok Dalam Perjalanan. Catatan semula: termasuk Penerimaan, Karantina berkondisi Tersedia, dan Dalam Perjalanan; approval REQ bisa menjanjikan barang yang belum di-put-away.
-6. Notifikasi §8, laporan §9 (kerangka & laporan modul lain di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md)), pemindaian PWA `[F2]`. Cetak RTV dan label **selesai** lewat modul Template ([18-template-dokumen-label](18-template-dokumen-label.md)).
+6. Notifikasi §8, pemindaian PWA `[F2]`; ~~laporan §9~~ selesai ([A-241](04-keputusan-dan-asumsi.md#a-241)). Cetak RTV dan label **selesai** lewat modul Template ([18-template-dokumen-label](18-template-dokumen-label.md)).

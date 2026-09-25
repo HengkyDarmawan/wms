@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `transfer`, `return` (Transfer & Retur dari Proyek)
 
-**Versi:** 0.5
+**Versi:** 0.6
 **Tanggal:** 24 September 2026
 **Status:** selesai Fase 1 — modul kesepuluh setelah [Count/Adjustment](21-opname-penyesuaian.md); TRF dan RET diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-106](04-keputusan-dan-asumsi.md#a-106)–[A-116](04-keputusan-dan-asumsi.md#a-116) (*Perlu validasi*)
 **Modul:** `transfer` (TRF), `return` (RET)
@@ -151,11 +151,11 @@ Reservasi: TRF memakai `document_type = transfer` (lunak, gudang asal); RET `goo
 
 ## 9. Laporan & dashboard
 
-F1: daftar TRF/RET dengan filter status. Belum (kerangka [16-shared-laporan-berkas](16-shared-laporan-berkas.md)): TRF terbuka per gudang & umur, barang dalam perjalanan antar gudang, retur per proyek dan hasil pilah (kolom *Diretur* laporan Material per Proyek), posisi barang rusak di bin Retur.
+F1: daftar TRF/RET dengan filter status. Sejak 25 Sep 2026 di kerangka [16 §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-241](04-keputusan-dan-asumsi.md#a-241)): `trf-terbuka`, `barang-dalam-perjalanan`, `retur-per-proyek` (hasil pilah; kolom *Diretur* tetap di Material per Proyek), `rusak-bin-retur`.
 
 ## 10. Kasus uji (Given / When / Then)
 
-Uji di `tests/Feature/Transfer` (16 uji) dan `tests/Feature/Return` (17 uji). Fixture `Transfer\Concerns\TransferFixtures`: CKG (induk) & BKS, proyek dengan Gudang Site KRW1/KRW2, bin penyimpanan tiap gudang, Baut 100 di CKG; `Return\Concerns\ReturnFixtures` menambah rantai REQ → SJ → bukti terima ke proyek.
+Uji di `tests/Feature/Transfer` (17 uji) dan `tests/Feature/Return` (17 uji). Fixture `Transfer\Concerns\TransferFixtures`: CKG (induk) & BKS, proyek dengan Gudang Site KRW1/KRW2, bin penyimpanan tiap gudang, Baut 100 di CKG; `Return\Concerns\ReturnFixtures` menambah rantai REQ → SJ → bukti terima ke proyek.
 
 | ID | Given | When | Then | BR |
 |---|---|---|---|---|
@@ -175,6 +175,7 @@ Uji di `tests/Feature/Transfer` (16 uji) dan `tests/Feature/Return` (17 uji). Fi
 | TC-TRF-14 | Role berbeda | buka layar TRF | 200/403 sesuai §2 | BR-GEN-09 |
 | TC-TRF-15 | Layar | form (asal = tujuan lalu benar) → daftar → tolak lewat dialog → setujui → batal | BR-RET-02; `pending_approval`; Alasan wajib; `rejected`/`in_progress`/`cancelled` | §6, BR-GEN-11 |
 | TC-TRF-16 | PCK otomatis gagal | *Buat tugas picking* → *Susun surat jalan* (prefill) → beranda | PCK dibuat; SJ terisi gudang tujuan TRF; menu *Transfer & retur* sesuai izin | §6 |
+| TC-TRF-17 | REQ 30 bersumber transfer → TRF backorder CKG; gudang JKT stok 10 | PCK TRF diambil 25 (short 5); lalu REQ kedua 30, diambil 10 (short 20) | TRF backorder baru JKT → BKS 5 untuk baris REQ yang sama (CKG tidak dipilih lagi); kasus kedua tanpa gudang cukup: tanpa TRF baru, tercatat untuk tindak lanjut manual | BR-SJ-02, BR-REQ-08, [A-242](04-keputusan-dan-asumsi.md#a-242) |
 | TC-RET-01 | Baut 20 di KRW1 | RET 12 diantar sendiri | `RET/CKG/…`, `in_progress`, `company`, cadangan keras 12, sisa calon 8 | A-110, A-111 |
 | TC-RET-02 | — | melebihi, kunci tak dikenal, tanpa baris, ke Gudang Site, dua Gudang Site, pemohon proyek lain, proyek ditutup | ditolak BR-RET-03/BR-RET-02/BR-ACC-05/BR-PRJ-01 | BR-RET-03 |
 | TC-RET-03 | Aturan RET | pengaju memutus; tolak tanpa alasan; setujui; tolak | BR-APR-03; BR-GEN-11; `in_progress`; `rejected`, jumlah bebas lagi | BR-APR-03 |
@@ -197,7 +198,7 @@ TC-GRN-12 ([19-receipt-putaway](19-receipt-putaway.md)) kini menguji GRN retur t
 
 ## 11. Di luar lingkup modul ini
 
-Pemeriksaan aset saat kembali, state aset, meter & hari pakai (modul Aset, [A-116](04-keputusan-dan-asumsi.md#a-116)); transfer aset On-site → On-site antar proyek; WST untuk isi bin Waste (modul Konversi & Waste, [24-konversi-waste](24-konversi-waste.md)); retur ke vendor dari barang rusak di bin Retur (RTV hanya dari Karantina, [BR-GRN-04](05-aturan-bisnis.md#br-grn)); notifikasi in-app/email; laporan §9; SJ balik untuk barang di tangan klien (butuh SJ tanpa PCK).
+Pemeriksaan aset saat kembali, state aset, meter & hari pakai (modul Aset, [A-116](04-keputusan-dan-asumsi.md#a-116)); transfer aset On-site → On-site antar proyek; WST untuk isi bin Waste (modul Konversi & Waste, [24-konversi-waste](24-konversi-waste.md)); retur ke vendor dari barang rusak di bin Retur (RTV hanya dari Karantina, [BR-GRN-04](05-aturan-bisnis.md#br-grn)); notifikasi in-app/email; SJ balik untuk barang di tangan klien (butuh SJ tanpa PCK).
 
 ## 12. Definisi selesai
 
@@ -235,5 +236,5 @@ Domain `app/Domain/Transfer` (3 aksi: `CreateTransfer`, `ApproveTransfer`, `Canc
 1. ~~Pemeriksaan aset saat kembali dan state aset~~ — selesai di modul Aset (v0.4, [25-aset](25-aset.md)): GRN retur aset menandai AST `returned`, aset dipilah sesudah diperiksa sesuai grade. Sisa: transfer aset On-site antar proyek ([A-116](04-keputusan-dan-asumsi.md#a-116)).
 2. SJ balik untuk barang di tangan klien — butuh SJ yang tidak berangkat dari PCK.
 3. Cross-dock barang TRF ke REQ penunggu tetap saran ([A-83](04-keputusan-dan-asumsi.md#a-83)).
-4. Short pick PCK TRF tidak menambah backorder REQ penunggu; sisa baris REQ bersumber transfer dipenuhi ulang secara manual (TRF baru atau pecah baris).
-5. Notifikasi §8, laporan §9 (kerangka di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md)). ~~Cetak berita acara retur / surat transfer~~ — **selesai 25 Sep 2026**: jenis `transfer` & `goods_return` ([18-template-dokumen-label](18-template-dokumen-label.md) §13.2, [A-232](04-keputusan-dan-asumsi.md#a-232)); SJ balik memakai cetak SJ.
+4. ~~Short pick PCK TRF tidak menambah backorder REQ penunggu~~ — selesai 25 Sep 2026: `BackorderTransfers::shortPicked` membuat TRF backorder pengganti dari gudang lain (bukan gudang asal yang kurang); tanpa gudang yang cukup, sisa ditindaklanjuti manual dan dicatat di riwayat REQ ([A-242](04-keputusan-dan-asumsi.md#a-242), TC-TRF-17).
+5. Notifikasi §8; ~~laporan §9~~ selesai ([A-241](04-keputusan-dan-asumsi.md#a-241)). ~~Cetak berita acara retur / surat transfer~~ — **selesai 25 Sep 2026**: jenis `transfer` & `goods_return` ([18-template-dokumen-label](18-template-dokumen-label.md) §13.2, [A-232](04-keputusan-dan-asumsi.md#a-232)); SJ balik memakai cetak SJ.

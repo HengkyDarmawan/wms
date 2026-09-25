@@ -21,5 +21,8 @@ Schedule::command('subscriptions:cycle')->dailyAt('00:30')->withoutOverlapping()
 // Request: bukti terima tanpa tanggapan pemohon lewat batas → dikonfirmasi otomatis (BR-REQ-10).
 Schedule::command('deliveries:auto-confirm')->dailyAt('01:00')->withoutOverlapping();
 
-// Notifikasi: pengingat harian aset lewat jatuh tempo (BR-AST-06, A-189).
+// Request: penggantian item tanpa tanggapan klien lewat tenggat → kedaluwarsa, dianggap setuju (BR-REQ-13, A-239).
+Schedule::command('requests:expire-substitutions')->hourly()->withoutOverlapping();
+
+// Notifikasi: pengingat harian SLA tinjau, reservasi menggantung, aset jatuh tempo & sisa umur (A-189, A-235).
 Schedule::command('notifications:daily')->dailyAt('07:00')->withoutOverlapping();

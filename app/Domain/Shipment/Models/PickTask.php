@@ -46,7 +46,19 @@ class PickTask extends Model
             'status' => PickTaskStatus::class,
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
+            'freeze_override_at' => 'datetime',
         ];
+    }
+
+    /** A-240: Kepala Gudang mengizinkan picking dari bin beku untuk SJ mendesak. */
+    public function hasFreezeOverride(): bool
+    {
+        return $this->freeze_override_at !== null;
+    }
+
+    public function freezeOverrider(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'freeze_override_by');
     }
 
     /** BR-ACC-05: PCK mengikuti cakupan gudang penggunanya. */

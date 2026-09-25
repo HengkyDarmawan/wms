@@ -1,9 +1,25 @@
-# Catatan Perubahan — Arsip (v0.2–v0.4)
+# Catatan Perubahan — Arsip (v0.2–v0.9)
 
-**Versi:** 1.0
+**Versi:** 1.3
 **Tanggal:** 25 September 2026
-**Status:** arsip — dipindah dari [README](README.md) v0.37 dan v0.39 agar README tetap ≤ 450 baris; isi tidak diubah
+**Status:** arsip — dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), dan v0.49 (blok v0.9) agar README tetap ≤ 450 baris; isi tidak diubah
 **Dokumen terkait:** [README](README.md)
+
+### v0.9 — 23 September 2026 (kerangka aplikasi & modul Access terbangun)
+- **Kode aplikasi masuk repo:** Laravel **13.33** di atas **PHP 8.3.33** (Laragon), MySQL **8.4.3**. Paket: `stancl/tenancy` 3.10.1 (AD-01), `spatie/laravel-permission` 8.3.0 (AD-06), `spatie/laravel-activitylog` **4.12.3** (AD-07; 5.x butuh PHP 8.4), `livewire/livewire` 4.4.6. Front-end di-bundle Vite tanpa CDN (Bootstrap 5.3 + NexaDash dari `template/`, font Inter di-host sendiri).
+- **Tenancy jalan:** company = tenant, identifikasi lewat `companies.subdomain`, database per company (`wms_tenant_<kode>`); migrasi pusat 2 berkas, migrasi tenant 3 berkas; `wms_tenant_demo` terbentuk dari seeder.
+- **Modul Access:** login lokal, undangan, lupa/atur ulang password, 2FA TOTP (ditulis sendiri), kunci akun, profil, portal klien, gerbang langganan, akses dukungan; domain `app/Domain/{Platform,Access}`; halaman error bermerek (NFR-01). **40 uji / 285 asersi hijau** (TC-ACC).
+- **Dokumen:** `wms/10-access.md` → v0.2 (§13 catatan implementasi & penyimpangan), `wms/08-arsitektur.md` → v0.6 (§9 paket terpasang), `prompts/10-access.md` baru, `00-akun-uji.md` disesuaikan (klien2 → proyek PRJ-002).
+- **Belum dikerjakan di modul ini:** layar pengelolaan Pengguna/Role/Organisasi/Perangkat/Akses Dukungan (Livewire), unggah tanda tangan, pengaturan 2FA di profil, laporan §9 — tercatat di 10-access §13.3.
+
+### v0.8 — 23 September 2026 (mulai Part 4)
+- **Lingkungan:** Laragon, PHP **8.3.33** (`php83`), MySQL **8.4 LTS** standar dev & produksi, Composer 2.8, Node 22 — CLAUDE.md dan 08-arsitektur §10 (v0.5) diperbarui dari XAMPP.
+- **Baru:** `00-akun-uji.md` (akun seed/demo satu berkas: Super Admin, company DEMO, 14 akun tenant, organisasi, aturan approval demo); `wms/10-access.md` spesifikasi modul Access v0.1 (27 kasus uji TC-ACC).
+- **Aturan v0.7:** bagian baru `BR-ACC` (BR-ACC-01–06) untuk login, Admin terakhir, role Klien eksklusif, cakupan `all`, global scope, sesi & password.
+
+### v0.7 — 23 September 2026 (peta rilis & persiapan)
+- **D-29** peta rilis: Fase 1 WMS inti → 1b Purchasing inti → 2a WhatsApp → 2b PWA offline → 3 SSO & Purchasing lengkap; login lokal dulu (D-26) ditegaskan. **Baru:** `00-checklist-persiapan.md` (keputusan O-12/O-13/O-15/A-50, bahan & akses, pemetaan halaman auth template, checklist WhatsApp Cloud API, urutan mulai).
+- O-03 target → awal Fase 2a; O-12/O-13/O-15 merujuk checklist. Blueprint §13, §18, §20; purchasing/01 v0.3 (§4 inti vs lengkap); 08-arsitektur v0.4 (§10 template `template/`, §12 langkah 4). Template NexaDash tersedia di `template/` (referensi UI, tidak di-deploy).
 
 ### v0.6 — 23 September 2026 (bukti terima, barang kurang/rusak, umur aset)
 - **Asumsi baru A-63–A-66** (*Setuju 23 Sep 2026*): A-63 konfirmasi atau keberatan klien (3 hari, otomatis bila klien mengisi sendiri); A-64 bukti terima per baris baik/rusak/kurang & per unit, DSC dengan jenis, `reship`, keputusan klien, laporan posisi barang rusak; A-65 posisi barang rusak (Dalam Perjalanan berkondisi Rusak → dibawa balik / RET + klaim); A-66 meter pemakaian, umur pakai, skor kondisi aset (penyusutan tetap di Akuntansi).

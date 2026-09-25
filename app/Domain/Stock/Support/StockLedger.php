@@ -13,6 +13,7 @@ use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockEvent;
 use App\Domain\Stock\Models\StockMovement;
 use App\Domain\Stock\Models\StockReservation;
+use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Bin;
 use Carbon\CarbonInterface;
@@ -302,7 +303,11 @@ class StockLedger
                 throw LedgerException::rule('BR-STK-02', 'Bin tidak ditemukan.');
             }
 
-            if (! $bin->acceptsMovement()) {
+            // A-240: override SJ mendesak — hanya bin asal yang beku, bukan nonaktif.
+            $bebasBeku = $request->allowFrozenSource && $binId === $request->fromBinId
+                && $bin->bin_status === BinStatus::Frozen;
+
+            if (! $bin->acceptsMovement() && ! $bebasBeku) {
                 throw LedgerException::rule(
                     'BR-OPN-02',
                     'Bin '.$bin->code.' berstatus '.$bin->bin_status->label().' dan menolak pergerakan baru.',

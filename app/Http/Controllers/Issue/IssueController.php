@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Issue;
 
+use App\Domain\Issue\Actions\AttachIssuePhoto;
+use App\Domain\Issue\Exceptions\IssueRuleException;
 use App\Domain\Issue\Models\MaterialIssue;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/** Halaman pemakaian material (23-pemakaian §6). Semua GET; transisi lewat Livewire (POST). */
+/**
+ * Halaman pemakaian material (23-pemakaian §6). Halaman lewat GET; transisi
+ * lewat Livewire (POST). Foto pemakaian lewat POST form biasa karena memuat
+ * berkas (seperti pemeriksaan aset — unggahan Livewire di luar middleware tenant).
+ */
 class IssueController extends Controller
 {
     public function index(): View
@@ -37,5 +45,22 @@ class IssueController extends Controller
         $this->authorize('view', $materialIssue);
 
         return view('issue.show', ['isu' => $materialIssue]);
+    }
+
+    public function attachPhoto(Request $request, MaterialIssue $materialIssue, AttachIssuePhoto $action): RedirectResponse
+    {
+        $this->authorize('attachPhoto', $materialIssue);
+
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ], attributes: ['photo' => __('Foto')]);
+
+        try {
+            $action->handle($materialIssue, $request->file('photo'), $request->user());
+        } catch (IssueRuleException|\RuntimeException $e) {
+            return back()->withErrors(['photo' => $e->getMessage()]);
+        }
+
+        return redirect()->route('issues.show', $materialIssue)->with('pesan', __('Foto pemakaian ditambahkan.'));
     }
 }

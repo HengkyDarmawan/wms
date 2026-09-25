@@ -142,7 +142,7 @@ class NotificationTest extends TenantTestCase
         $this->assertSame(0, $notif->send([$user, $nonaktif], 'approval.decided', 'X', null, null, null, null, [], $user));
 
         $this->actingAs($user)->post($this->tenantUrl('notifications/read-all'))->assertRedirect();
-        $this->assertSame(0, Notification::query()->where('user_id', $user->id)->whereNull('read_at')->count());
+        $this->assertSame(0, Notification::query()->inApp()->where('user_id', $user->id)->whereNull('read_at')->count());
         $this->artisan('notifications:daily')->assertSuccessful();
     }
 

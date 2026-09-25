@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `stock` (Kartu Stok, Saldo, Reservasi, Kejadian)
 
-**Versi:** 0.10
+**Versi:** 0.11
 **Tanggal:** 25 September 2026
 **Status:** terimplementasi (Fase 1) — modul keempat setelah [Warehouse](12-warehouse.md); v0.5: kunci periode otomatis dari sesi opname bulanan dan `reverse()` untuk dokumen pembalik ([21-opname-penyesuaian](21-opname-penyesuaian.md)); v0.6: `Stock\Support\RemovalOrder` — urutan alokasi FIFO/FEFO/sisa potongan/manual untuk PCK ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185)); v0.7: kolom `stock_movements.from_stock_status` — perubahan kondisi bisa dibangun ulang & dibalik dengan benar ([A-194](04-keputusan-dan-asumsi.md#a-194))
 **Modul:** `stock`
@@ -142,11 +142,11 @@ Seluruh baris [matriks §14](05-aturan-bisnis.md#14-matriks-kejadian-stok) diter
 
 ## 8. Notifikasi
 
-| Kejadian | Penerima | Kanal |
-|---|---|---|
-| Reservasi menggantung melewati ambang | Kepala Gudang, pemohon | in-app |
-| Periode stok dikunci | Admin Company, seluruh Kepala Gudang | in-app |
-| Kejadian outbox gagal terkirim berulang | Admin Company | in-app |
+| Kejadian | Penerima | Kanal | Keadaan |
+|---|---|---|---|
+| Reservasi menggantung melewati ambang | Kepala Gudang (pemegang `reservation.release` di gudangnya), pemohon | in-app, harian | `stock.reservation_stale`, satu entri per dokumen ([A-235](04-keputusan-dan-asumsi.md#a-235)) |
+| Periode stok dikunci | Admin Company, seluruh Kepala Gudang (pemegang `warehouse.update`) | in-app | `stock.period_locked` |
+| Kejadian outbox gagal terkirim berulang | Admin Company | in-app | belum — tanpa penerbit sampai adapter [F3] ([A-237](04-keputusan-dan-asumsi.md#a-237)) |
 
 ## 9. Laporan & dashboard
 
@@ -285,4 +285,4 @@ Uji yang menopangnya ada di `tests/Feature/Stock`: `StockLedgerTest` (TC-STK-01�
 2. **Rekonsiliasi saldo terjadwal** memakai `StockLedger::rebuildFromLedger()` — menunggu keputusan jadwal.
 3. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 25 Sep 2026**: *Kartu stok*, *Reservasi menggantung*, *Stok di bawah titik pesan ulang* (dan *Saldo stok* sejak Pendukung F1) di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-232](04-keputusan-dan-asumsi.md#a-232)).
 4. ~~Penutupan Gudang Site otomatis saat proyek ditutup~~ — **selesai** ([BR-PRJ-04](05-aturan-bisnis.md#br-prj)) lewat `ChangeProjectStatus` ([12-warehouse §13](12-warehouse.md), [A-187](04-keputusan-dan-asumsi.md#a-187)).
-5. **Pemberitahuan §8** (reservasi menggantung, periode dikunci, outbox gagal) — menunggu modul notifikasi.
+5. **Pemberitahuan §8** — reservasi menggantung dan periode dikunci selesai 25 Sep 2026 ([A-233](04-keputusan-dan-asumsi.md#a-233), [A-235](04-keputusan-dan-asumsi.md#a-235)); outbox gagal menunggu penerbit [F3] ([A-237](04-keputusan-dan-asumsi.md#a-237)).

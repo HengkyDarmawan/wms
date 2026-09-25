@@ -6,6 +6,7 @@ namespace App\Domain\Stock\Actions;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Master\Models\CompanySetting;
+use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\Stock\Exceptions\LedgerException;
 
 /**
@@ -47,6 +48,8 @@ class LockStockPeriod
             ->causedBy($actor)
             ->withProperties(['dari' => $sekarang, 'ke' => $tanggal, 'notes' => $notes])
             ->log('Periode stok dikunci sampai '.$tanggal);
+
+        app(DomainNotifications::class)->stockPeriodLocked($tanggal, $actor);
 
         return $tanggal;
     }

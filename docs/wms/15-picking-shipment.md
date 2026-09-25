@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `picking` & `shipment` (Picking, Surat Jalan, Bukti Terima, Selisih)
 
-**Versi:** 0.11
+**Versi:** 0.12
 **Tanggal:** 25 September 2026
 **Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188)); v0.9: halaman penerima bertoken `/terima/{token}` dan unggah foto/tanda tangan bukti terima ([A-231](04-keputusan-dan-asumsi.md#a-231), §6, §13.3)
 **Modul:** `picking`, `shipment`
@@ -127,7 +127,7 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 | [BR-SJ-07](05-aturan-bisnis.md#br-sj) | Kelengkapan cara kirim sesuai `shipment_method` |
 | [BR-SJ-09](05-aturan-bisnis.md#br-sj) | Satu SJ boleh memuat beberapa PCK dengan tujuan dan gudang asal sama |
 | [BR-SJ-10](05-aturan-bisnis.md#br-sj) | Kurang dan rusak tetap di *Dalam Perjalanan* sampai DSC diselesaikan |
-| [BR-OPN-02](05-aturan-bisnis.md#br-opn) | Bin beku menolak picking |
+| [BR-OPN-02](05-aturan-bisnis.md#br-opn) | Bin beku menolak picking, kecuali PCK `pending` diberi **override** Kepala Gudang (`bin.manage`, alasan wajib, `OverrideFrozenBinPick`): PCK boleh mengambil dari bin beku, angka sesi opname bin itu digeser dan bin ditandai ⚑ ([A-240](04-keputusan-dan-asumsi.md#a-240)) |
 | [BR-STK-01](05-aturan-bisnis.md#br-stk) | Seluruh pergerakan lewat `StockLedger`, tidak ada perkecualian |
 | [BR-GEN-11](05-aturan-bisnis.md#br-gen) | Batal, short pick, dan penyelesaian selisih menuntut Alasan |
 
@@ -181,7 +181,7 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 |---|---|---|---|---|
 | TC-PCK-01 | REQ `approved` bersumber stok | buat PCK | PCK `pending` dengan alokasi per bin | BR-SJ-01 |
 | TC-PCK-02 | PCK `pending` | mulai | status `in_progress` | — |
-| TC-PCK-03 | Bin dibeku opname | mulai picking dari bin itu | ditolak | BR-OPN-02 |
+| TC-PCK-03 | Bin dibeku opname | mulai picking dari bin itu | ditolak; dengan override Kepala Gudang boleh (TC-OPN-21) | BR-OPN-02, A-240 |
 | TC-PCK-04 | PCK `in_progress`, fisik sesuai | selesaikan | stok pindah ke Loading Area, PCK `completed` | BR-STK-01 |
 | TC-PCK-05 | Fisik kurang dari alokasi | selesaikan tanpa alasan | ditolak | BR-SJ-02 |
 | TC-PCK-06 | Fisik kurang, alasan diisi | selesaikan | sisa jadi backorder REQ, bin ditandai hitung | BR-SJ-02 |

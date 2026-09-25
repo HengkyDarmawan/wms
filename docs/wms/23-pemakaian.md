@@ -1,10 +1,10 @@
 # Spesifikasi Modul — `issue` (Pemakaian Material di Site)
 
-**Versi:** 0.4
+**Versi:** 0.5
 **Tanggal:** 24 September 2026
 **Status:** selesai Fase 1 — modul kesebelas setelah [Transfer/Retur](22-retur-transfer.md) dan [Template dokumen & label](18-template-dokumen-label.md); ISU pembalik diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-117](04-keputusan-dan-asumsi.md#a-117)–[A-119](04-keputusan-dan-asumsi.md#a-119) dan [A-150](04-keputusan-dan-asumsi.md#a-150)–[A-152](04-keputusan-dan-asumsi.md#a-152) (*Perlu validasi*)
 **Modul:** `issue` (ISU)
-**Fase:** F1 (ISU dari bin penyimpanan Gudang Site, ISU pembalik dengan approval, laporan Material per Proyek, cetak Bukti Pemakaian Material); foto pemakaian menunggu tabel lampiran ([A-68](04-keputusan-dan-asumsi.md#a-68))
+**Fase:** F1 (ISU dari bin penyimpanan Gudang Site, ISU pembalik dengan approval, laporan Material per Proyek, cetak Bukti Pemakaian Material, foto pemakaian sebagai lampiran [A-238](04-keputusan-dan-asumsi.md#a-238))
 **Dokumen terkait:** [Blueprint §6.9, §7, §9](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-PRJ](05-aturan-bisnis.md#br-prj), [§BR-GEN](05-aturan-bisnis.md#br-gen), [§14 matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status §2.9, §3](06-katalog-status-dan-enum.md) · [Glosarium §5](03-glosarium.md#5-dokumen-transaksi) · [Model data 08b](08b-model-data-stok-dokumen.md) · [Alur 3](07-proses-bisnis.md#alur-3--pemakaian-material-di-gudang-site) · [A-32](04-keputusan-dan-asumsi.md#a-32), [A-40](04-keputusan-dan-asumsi.md#a-40), [A-50](04-keputusan-dan-asumsi.md#a-50), [A-85](04-keputusan-dan-asumsi.md#a-85)
 **Ketergantungan modul:** `stock` (`StockLedger`, reservasi), `warehouse` (Gudang Site, bin penyimpanan), `master` (proyek, item, lot/serial/potongan, Alasan), `approval` (kontrak §3.9 [20-approval](20-approval.md)), `template` (cetak), `shared` (kerangka laporan).
 
@@ -16,7 +16,7 @@ Barang habis pakai yang sudah berada di Gudang Site masih stok company sampai be
 
 Staf Gudang Site atau Pemohon Internal mencatat draf; Staf Gudang Site mengonfirmasi. Salah input setelah konfirmasi dikoreksi dengan **ISU pembalik** (jumlah negatif, Alasan `*`, approval — [BR-GEN-04](05-aturan-bisnis.md#br-gen)).
 
-Tidak termasuk: aset (`asset`/`both`) — aset tidak dipakai habis dan kembali lewat retur/modul Aset ([BR-STK-08](05-aturan-bisnis.md#br-stk)); memotong potongan (konversi, modul Konversi); waste (WST); foto pemakaian (tabel lampiran); nilai uang ([D-07](04-keputusan-dan-asumsi.md#d-07)).
+Tidak termasuk: aset (`asset`/`both`) — aset tidak dipakai habis dan kembali lewat retur/modul Aset ([BR-STK-08](05-aturan-bisnis.md#br-stk)); memotong potongan (konversi, modul Konversi); waste (WST); nilai uang ([D-07](04-keputusan-dan-asumsi.md#d-07)).
 
 ## 2. Aktor & permission
 
@@ -185,12 +185,13 @@ Uji di `tests/Feature/Issue` (17 uji): `IssueTest`, `IssueReversalTest`, `IssueC
 | TC-ISU-15 | Layar | form (melebihi lalu benar) → daftar → konfirmasi → dialog pembalik (tanpa lalu dengan alasan) → ajukan → Manajemen setujui | BR-STK-06; draf + keperluan; `confirmed`; Alasan wajib; badge *Menunggu approval*; `confirmed`, saldo kembali | §6 |
 | TC-ISU-16 | Layar | ubah draf pemohon; batal lewat dialog; tolak pembalik lewat dialog | jumlah terganti; Alasan wajib, `cancelled`; tetap draf + pesan ajukan ulang | §6, BR-GEN-11 |
 | TC-ISU-17 | ISU dikonfirmasi & draf dibatalkan | cetak | HTML memuat nomor, judul, item, keperluan, blok *PIC proyek*, tanpa nilai uang; PDF 200; staf CKG 404; driver 403; tanda air DIBATALKAN; tombol di detail | 18 §5.1, D-07, A-152 |
+| TC-ISU-18 | ISU dikonfirmasi | unggah foto pemakaian (POST) | lampiran `photo` tersimpan & terbuka lewat `/attachments/{id}`; staf gudang lain 404; PDF ditolak; tanpa `issue.create` 403; kartu *Foto pemakaian* di detail | A-238, NFR-14 |
 
 Uji modul lain yang berubah: TC-ACC-27b (5 permission modul `issue`), TC-RPT-01 (8 laporan).
 
 ## 11. Di luar lingkup modul ini
 
-Aset dan serah terima aset (modul Aset); memotong potongan untuk dipakai sebagian (modul Konversi); WST; foto pemakaian (tabel lampiran, [A-68](04-keputusan-dan-asumsi.md#a-68)); pencatatan offline di PWA `[F2]`; checklist penutupan proyek yang menawarkan ISU pemakaian akhir ([BR-PRJ-02](05-aturan-bisnis.md#br-prj), modul Master); notifikasi §8; tanggal pakai mundur (kejadian memakai waktu konfirmasi).
+Aset dan serah terima aset (modul Aset); memotong potongan untuk dipakai sebagian (modul Konversi); WST; pencatatan offline di PWA `[F2]`; checklist penutupan proyek yang menawarkan ISU pemakaian akhir ([BR-PRJ-02](05-aturan-bisnis.md#br-prj), modul Master); notifikasi §8; tanggal pakai mundur (kejadian memakai waktu konfirmasi).
 
 ## 12. Definisi selesai
 
@@ -223,6 +224,6 @@ Domain `app/Domain/Issue` ([Arsitektur §4](08-arsitektur.md#4-struktur-kode) `I
 
 ### 13.3 Sisa pekerjaan
 
-1. Foto pemakaian (lampiran), notifikasi §8, tanggal pakai mundur.
+1. ~~Foto pemakaian (lampiran)~~ — selesai 25 Sep 2026: `POST /issues/{id}/photos` (`AttachIssuePhoto`, izin `issue.create`, ISU draf/terkonfirmasi, ≤ 10 foto) dan kartu *Foto pemakaian* di detail ([A-238](04-keputusan-dan-asumsi.md#a-238), TC-ISU-18). Sisa: notifikasi §8, tanggal pakai mundur.
 2. Kolom *Rencana* `[F2]` di laporan (kolom waste sudah, v0.3). ~~Tab *Pemakaian* di detail proyek; checklist penutupan proyek~~ — **selesai**: hub proyek `/projects/{id}` tab *Pemakaian* ([A-228](04-keputusan-dan-asumsi.md#a-228)) dan `ProjectClosureChecklist` (BR-PRJ-02, [A-187](04-keputusan-dan-asumsi.md#a-187)).
 3. ISU dari bin non-penyimpanan (mis. langsung dari bin Penerimaan site tanpa PUT) menunggu validasi [A-117](04-keputusan-dan-asumsi.md#a-117).

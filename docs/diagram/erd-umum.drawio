@@ -17,10 +17,10 @@
           <mxGeometry y="26" width="260" height="216" as="geometry"/>
         </mxCell>
         <mxCell id="attachments" value="attachments" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="40" width="260" height="210" as="geometry"/>
+          <mxGeometry x="680" y="40" width="260" height="226" as="geometry"/>
         </mxCell>
-        <mxCell id="attachments_cols" value="🔑 id : bigint&lt;br&gt;attachable_type : varchar(40)&lt;br&gt;attachable_id : bigint&lt;br&gt;kind : enum&lt;br&gt;disk : varchar(20)&lt;br&gt;path : varchar(255)&lt;br&gt;original_name : varchar(150)&lt;br&gt;mime : varchar(60)&lt;br&gt;size_bytes : int&lt;br&gt;↗ uploaded_by : bigint&lt;br&gt;↗ device_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="attachments">
-          <mxGeometry y="26" width="260" height="184" as="geometry"/>
+        <mxCell id="attachments_cols" value="🔑 id : bigint&lt;br&gt;attachable_type : varchar(40)&lt;br&gt;attachable_id : bigint&lt;br&gt;kind : enum&lt;br&gt;disk : varchar(20)&lt;br&gt;path : varchar(255)&lt;br&gt;original_name : varchar(150)&lt;br&gt;mime : varchar(60)&lt;br&gt;size_bytes : int&lt;br&gt;↗ uploaded_by : bigint&lt;br&gt;↗ device_id : bigint&lt;br&gt;created_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="attachments">
+          <mxGeometry y="26" width="260" height="200" as="geometry"/>
         </mxCell>
         <mxCell id="signatures" value="signatures" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="1000" y="40" width="260" height="130" as="geometry"/>

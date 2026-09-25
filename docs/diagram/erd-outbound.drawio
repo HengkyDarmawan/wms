@@ -17,10 +17,10 @@
           <mxGeometry y="26" width="260" height="456" as="geometry"/>
         </mxCell>
         <mxCell id="pick_tasks" value="pick_tasks" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="40" width="260" height="146" as="geometry"/>
+          <mxGeometry x="680" y="40" width="260" height="194" as="geometry"/>
         </mxCell>
-        <mxCell id="pick_tasks_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ assigned_to : bigint&lt;br&gt;started_at : datetime&lt;br&gt;completed_at : datetime&lt;br&gt;↗ cancel_reason_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="pick_tasks">
-          <mxGeometry y="26" width="260" height="120" as="geometry"/>
+        <mxCell id="pick_tasks_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ assigned_to : bigint&lt;br&gt;started_at : datetime&lt;br&gt;completed_at : datetime&lt;br&gt;↗ freeze_override_by : bigint&lt;br&gt;freeze_override_at : datetime&lt;br&gt;freeze_override_reason : varchar(255)&lt;br&gt;↗ cancel_reason_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="pick_tasks">
+          <mxGeometry y="26" width="260" height="168" as="geometry"/>
         </mxCell>
         <mxCell id="pick_task_lines" value="pick_task_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="1000" y="40" width="260" height="210" as="geometry"/>

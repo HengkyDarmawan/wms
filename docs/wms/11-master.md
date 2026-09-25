@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `master` (Klien, Proyek, Vendor, Item, Satuan, Referensi)
 
-**Versi:** 0.6
+**Versi:** 0.7
 **Tanggal:** 25 September 2026
 **Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192)); v0.6: layar Pengaturan company ([A-230](04-keputusan-dan-asumsi.md#a-230), §6, §13.5 no. 8)
 **Modul:** `master`
@@ -163,10 +163,10 @@ Tidak ada kejadian stok. Master vendor dan item dibaca modul Purchasing ([purcha
 
 ## 8. Notifikasi
 
-| Kejadian | Penerima | Kanal |
-|---|---|---|
-| Item `provisional` dibuat dari baris non-katalog | Admin Company | in-app |
-| Proyek ditutup / dibatalkan | PIC proyek, Kepala Gudang terkait | in-app |
+| Kejadian | Penerima | Kanal | Keadaan |
+|---|---|---|---|
+| Item `provisional` dibuat dari baris non-katalog | Admin Company (pemegang `item.create`) | in-app | `item.provisional_created` ([A-233](04-keputusan-dan-asumsi.md#a-233)) |
+| Proyek ditutup / dibatalkan | PIC proyek, Kepala Gudang terkait (pemegang `warehouse.update` di proyek) | in-app | `project.closed` |
 
 ## 9. Laporan & dashboard
 
@@ -284,7 +284,7 @@ dan `MasterScreenTest` (TC-MST-22–23).
 ### 13.5 Sisa pekerjaan modul ini
 
 1. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 24 Sep 2026** lewat layar laporan bersama di `/reports`.
-2. **Notifikasi §8** (item sementara dibuat, proyek ditutup) — menunggu modul notifikasi Fase 2.
+2. ~~Notifikasi §8~~ — selesai 25 Sep 2026 (item sementara dibuat, proyek ditutup/dibatalkan; [A-233](04-keputusan-dan-asumsi.md#a-233)).
 3. ~~Unggah foto item~~ — **selesai 24 Sep 2026** memakai disk lokal per company ([A-68](04-keputusan-dan-asumsi.md#a-68)).
 4. ~~Impor Excel master~~ — **selesai** ([27-pendukung-f1](27-pendukung-f1.md): item, proyek, vendor, saldo awal).
 5. **Rencana kebutuhan material** `[F2]` — tabelnya sudah ada sebagai stub, layarnya belum ([BR-PRJ-09](05-aturan-bisnis.md#br-prj)).
