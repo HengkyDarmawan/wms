@@ -83,6 +83,7 @@ class ConvertibleStock
                     'item_code' => $item?->code,
                     'item_name' => $item?->name,
                     'uom' => $item?->baseUom?->code,
+                    'rounding' => $item?->baseUom?->rounding === null ? null : (float) $item->baseUom->rounding,
                     'base_uom_id' => (int) $item?->base_uom_id,
                     'lot_id' => $s->lot_id === null ? null : (int) $s->lot_id,
                     'lot_no' => $s->lot?->lot_no,
@@ -225,7 +226,7 @@ class ConvertibleStock
         }
 
         if ($item !== null && $item->tracking_mode === TrackingMode::Serial) {
-            throw ConversionRuleException::field('BR-LED-03', 'inputs', 'Item berserial '.$item->code.' tidak dikonversi di Fase 1 (A-154).');
+            throw ConversionRuleException::field('BR-LED-03', 'inputs', 'Item berserial '.$item->code.' tidak dikonversi di Fase 1.');
         }
 
         throw ConversionRuleException::field('BR-CNV-01', 'inputs', 'Input yang dipilih bukan stok Tersedia di bin penyimpanan '.$gudang->code.'.');

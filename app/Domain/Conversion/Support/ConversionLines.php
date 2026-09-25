@@ -168,7 +168,7 @@ class ConversionLines
         $satuan = Item::query()->whereIn('id', $itemIds)->pluck('base_uom_id')->unique()->values();
 
         if ($satuan->count() > 1) {
-            throw ConversionRuleException::field('BR-CNV-02', 'outputs', 'Konversi '.$type->label().' menuntut semua input dan hasil dalam satu satuan dasar; rakit/bongkar antar satuan menunggu resep konversi (A-156).');
+            throw ConversionRuleException::field('BR-CNV-02', 'outputs', 'Konversi '.$type->label().' menuntut semua input dan hasil dalam satu satuan dasar; rakit/bongkar antar satuan menunggu resep konversi.');
         }
 
         $masuk = round(array_sum(array_map(fn (array $r) => (float) $r['qty_base'], $inputs)), 4);
@@ -230,7 +230,7 @@ class ConversionLines
         }
 
         if ($item->tracksSerial()) {
-            throw ConversionRuleException::field('BR-LED-03', 'outputs', $label.': item berserial '.$item->code.' tidak menjadi hasil konversi di Fase 1 (A-154).');
+            throw ConversionRuleException::field('BR-LED-03', 'outputs', $label.': item berserial '.$item->code.' tidak menjadi hasil konversi di Fase 1.');
         }
 
         if ($item->status !== ItemStatus::Active) {

@@ -57,7 +57,7 @@
                             · {{ __('Rp') }} {{ number_format((float) $inv->amount, 0, ',', '.') }}
                             @foreach ($inv->payments as $p)
                                 <div class="ms-3 mt-1">
-                                    {{ __('Bukti') }} #{{ $p->id }} · {{ $p->paid_at?->format('d/m/Y') }} · {{ __('Rp') }} {{ number_format((float) $p->amount, 0, ',', '.') }} · {{ $p->uploaded_by_name }}
+                                    {{ __('Bukti') }} #{{ $p->id }} · {{ $p->paid_at?->lokal()->format('d/m/Y') }} · {{ __('Rp') }} {{ number_format((float) $p->amount, 0, ',', '.') }} · {{ $p->uploaded_by_name }}
                                     <span class="badge {{ $p->status->badge() }}">{{ $p->status->label() }}</span>
                                     @if ($p->reject_reason) <span class="text-danger">— {{ $p->reject_reason }}</span> @endif
                                     @if ($p->proof_path) <a href="{{ route('platform.payments.proof', $p->id) }}" target="_blank" rel="noopener">{{ __('Lihat bukti') }}</a> @endif

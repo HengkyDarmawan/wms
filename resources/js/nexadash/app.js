@@ -332,7 +332,7 @@
     // Pesan "tidak ada hasil" ditambahkan sekali, di dalam area scroll nav.
     var $scroll = $nav.find('.simplebar-content').first();
     if (!$scroll.length) $scroll = $nav;
-    $scroll.append('<div class="nx-menu-empty">No menu matches that.</div>');
+    $scroll.append('<div class="nx-menu-empty">Tidak ada menu yang cocok.</div>');
 
     function esc(s) { return $('<span>').text(s).html(); }
 

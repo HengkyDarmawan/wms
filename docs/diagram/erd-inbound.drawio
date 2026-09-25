@@ -53,16 +53,16 @@
           <mxGeometry y="26" width="260" height="136" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_request_orders" value="purchase_request_orders" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="720" width="260" height="210" as="geometry"/>
+          <mxGeometry x="40" y="720" width="260" height="226" as="geometry"/>
         </mxCell>
-        <mxCell id="purchase_request_orders_cols" value="🔑 id : bigint&lt;br&gt;↗ purchase_request_id : bigint&lt;br&gt;↗ vendor_id : bigint&lt;br&gt;external_po_no : varchar(60)&lt;br&gt;marketplace_order_no : varchar(60)&lt;br&gt;tracking_no : varchar(60)&lt;br&gt;eta_date : date&lt;br&gt;↗ ordered_by : bigint&lt;br&gt;ordered_at : datetime&lt;br&gt;vendor_note : varchar(255)&lt;br&gt;notes : varchar(255)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_request_orders">
-          <mxGeometry y="26" width="260" height="184" as="geometry"/>
+        <mxCell id="purchase_request_orders_cols" value="🔑 id : bigint&lt;br&gt;↗ purchase_request_id : bigint&lt;br&gt;↗ purchase_order_id : bigint&lt;br&gt;↗ vendor_id : bigint&lt;br&gt;external_po_no : varchar(60)&lt;br&gt;marketplace_order_no : varchar(60)&lt;br&gt;tracking_no : varchar(60)&lt;br&gt;eta_date : date&lt;br&gt;↗ ordered_by : bigint&lt;br&gt;ordered_at : datetime&lt;br&gt;vendor_note : varchar(255)&lt;br&gt;notes : varchar(255)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_request_orders">
+          <mxGeometry y="26" width="260" height="200" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_request_order_lines" value="purchase_request_order_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="720" width="260" height="130" as="geometry"/>
+          <mxGeometry x="360" y="720" width="260" height="146" as="geometry"/>
         </mxCell>
-        <mxCell id="purchase_request_order_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ purchase_request_order_id : bigint&lt;br&gt;↗ purchase_request_line_id : bigint&lt;br&gt;qty_ordered : decimal(18,4)&lt;br&gt;qty_received : decimal(18,4)&lt;br&gt;po_line_ref : varchar(60)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_request_order_lines">
-          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        <mxCell id="purchase_request_order_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ purchase_request_order_id : bigint&lt;br&gt;↗ purchase_request_line_id : bigint&lt;br&gt;↗ purchase_order_line_id : bigint&lt;br&gt;qty_ordered : decimal(18,4)&lt;br&gt;qty_received : decimal(18,4)&lt;br&gt;po_line_ref : varchar(60)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_request_order_lines">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="transfers" value="transfers" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="680" y="720" width="260" height="258" as="geometry"/>

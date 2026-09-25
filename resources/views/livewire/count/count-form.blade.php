@@ -33,7 +33,7 @@
                 <div class="form-check">
                     <input class="form-check-input" id="opn-beku" type="checkbox" wire:model="form.freeze_bins"
                            @disabled($form['count_type'] === 'spot_check')>
-                    <label class="form-check-label" for="opn-beku">{{ __('Bekukan bin selama sesi (BR-OPN-02)') }}</label>
+                    <label class="form-check-label" for="opn-beku">{{ __('Bekukan bin selama sesi') }}</label> {{-- BR-OPN-02 --}}
                 </div>
             </div>
             <div class="col-12">

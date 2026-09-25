@@ -13,6 +13,7 @@
             document.documentElement.setAttribute('data-bs-theme', t);
         })();
     </script>
+    @fonts
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body data-nx-root="{{ url('/') }}">

@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `warehouse` (Gudang, Zona, Rak, Level, Bin)
 
-**Versi:** 0.6
+**Versi:** 0.8
 **Tanggal:** 24 September 2026
 **Status:** **selesai untuk Fase 1** — empat layar, delapan aksi domain, dan 28 uji hijau; penyimpangan implementasi dicatat §13; v0.6: label bin Code128 + QR dicetak lewat modul Template ([18](18-template-dokumen-label.md)), ukuran sementara [A-120](04-keputusan-dan-asumsi.md#a-120)
 **Modul:** `warehouse`
@@ -234,11 +234,15 @@ Saldo, kartu stok, reservasi (modul `stock`); saran put-away (modul `receipt`); 
 Uji yang menopangnya ada di `tests/Feature/Warehouse`: `WarehouseTest` (TC-WH-01–05, 16, 19),
 `BinTest` (TC-WH-06–15), dan `WarehouseScreenTest` (TC-WH-17, 18, 20).
 
-### 13.4 Sisa pekerjaan modul ini
+### 13.4 Tautan cepat (25 September 2026)
+
+Halaman gudang (`warehouse-detail`) menampilkan tombol tautan cepat ke daftar yang sudah menyaring gudang itu (saldo stok, reservasi, picking, SJ, GRN, put-away, PRQ, PO) dan badge proyek Gudang Site menaut ke hub proyek ([A-228](04-keputusan-dan-asumsi.md#a-228)).
+
+### 13.5 Sisa pekerjaan modul ini
 
 1. ~~**Label bin barcode dan QR**~~ — **selesai** lewat modul Template ([18-template-dokumen-label](18-template-dokumen-label.md) §5.3): tautan *Cetak label* di `/bins`. Ukuran kertas final dan jenis printer tetap menunggu [O-09](04-keputusan-dan-asumsi.md#o-09); sampai itu, [A-120](04-keputusan-dan-asumsi.md#a-120).
 2. ~~**Penjagaan saldo dan reservasi nol** sebelum menonaktifkan gudang atau bin ([BR-GEN-04](05-aturan-bisnis.md#br-gen))~~ — selesai di modul [`stock`](13-stock.md) lewat `StockGuard`.
-3. **Penutupan Gudang Site otomatis** saat proyek ditutup ([BR-PRJ-04](05-aturan-bisnis.md#br-prj)) — penjagaan saldonya sudah ada, pemicunya menyusul di modul `project`.
+3. ~~Penutupan Gudang Site otomatis saat proyek ditutup~~ — **selesai** ([BR-PRJ-04](05-aturan-bisnis.md#br-prj)): `Master\Actions\ChangeProjectStatus` menonaktifkan Gudang Site yang sudah kosong (bin ikut nonaktif + jejak) saat proyek ditutup; gudang berisi stok menahan penutupan lewat `ProjectClosureChecklist` ([A-187](04-keputusan-dan-asumsi.md#a-187), TC-MST-25b).
 4. **Impor Excel gudang dan bin** — menunggu [O-12](04-keputusan-dan-asumsi.md#o-12).
 5. ~~**Laporan §9** beserta ekspor Excel~~ — **selesai 24 Sep 2026**: *Daftar Gudang* dan *Daftar Bin* di `/reports` ([16-shared-laporan-berkas](16-shared-laporan-berkas.md)).
 6. ~~**`count_flag` menunggu persetujuan**~~ — [A-67](04-keputusan-dan-asumsi.md#a-67) disetujui 24 Sep 2026; kolomnya dipakai modul Picking untuk short pick.

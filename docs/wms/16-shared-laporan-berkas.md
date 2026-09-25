@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `shared` (Kerangka Laporan & Penyimpanan Berkas)
 
-**Versi:** 0.6
+**Versi:** 0.9
 **Tanggal:** 25 September 2026
-**Status:** selesai Fase 1 sebagian — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment belum dibangun (§13.4); v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9); v0.4: laporan itu menambah kolom konversi & waste ([24-konversi-waste](24-konversi-waste.md) §9, [A-161](04-keputusan-dan-asumsi.md#a-161)); unggah bukti BA waste memakai `StoreUpload`; v0.5: laporan kesembilan *Aset dipinjamkan* ([25-aset](25-aset.md) §9); v0.6: Beranda antrean pekerjaan, lima laporan inti Blueprint §6.9a (total 14), ekspor PDF semua laporan ([27-pendukung-f1](27-pendukung-f1.md), [A-186](04-keputusan-dan-asumsi.md#a-186), [A-190](04-keputusan-dan-asumsi.md#a-190))
+**Status:** selesai Fase 1 — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment selesai 25 Sep 2026 ([A-232](04-keputusan-dan-asumsi.md#a-232), §3.2); yang belum: laporan modul 19–22 dan penyaring §9 yang hilang (§13.1 no. 2); v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9); v0.4: laporan itu menambah kolom konversi & waste ([24-konversi-waste](24-konversi-waste.md) §9, [A-161](04-keputusan-dan-asumsi.md#a-161)); unggah bukti BA waste memakai `StoreUpload`; v0.5: laporan kesembilan *Aset dipinjamkan* ([25-aset](25-aset.md) §9); v0.6: Beranda antrean pekerjaan, lima laporan inti Blueprint §6.9a (total 14), ekspor PDF semua laporan ([27-pendukung-f1](27-pendukung-f1.md), [A-186](04-keputusan-dan-asumsi.md#a-186), [A-190](04-keputusan-dan-asumsi.md#a-190))
 **Modul:** `shared` (`app/Domain/Shared`)
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.9a](01-blueprint.md#69a-laporan-inti-fase-1) · [Arsitektur §2 (AD-09, AD-10)](08-arsitektur.md#2-keputusan-arsitektur) · [Blueprint §16 (NFR-14)](01-blueprint.md#16-kebutuhan-non-fungsional) · [A-68](04-keputusan-dan-asumsi.md#a-68) · [Aturan Bisnis §BR-ACC](05-aturan-bisnis.md#br-acc) · [Glosarium](03-glosarium.md)
@@ -64,6 +64,18 @@ Tidak ada tabel baru. Laporan membaca tabel modul lain lewat model Eloquent, seh
 | `daftar-bin` | `BinListReport` | Daftar bin | `bin.view` | kode bin, gudang, jenis, kategori penyimpanan, penegakan kapasitas, kapasitas jumlah, kapasitas berat, proyek, perlu dihitung, status | gudang, jenis, status, kategori penyimpanan | [12-warehouse §9](12-warehouse.md#9-laporan--dashboard) *Daftar bin* |
 | `material-per-proyek` | `ProjectMaterialReport` | Material per proyek | `issue.view` | proyek, kode & nama item, satuan, diminta, terkirim, terpakai, diretur, di Gudang Site, aset di proyek (dibaca dari kartu stok, [A-151](04-keputusan-dan-asumsi.md#a-151)) | proyek (dalam cakupan), item mengandung | [23-pemakaian §9](23-pemakaian.md#9-laporan--dashboard), Blueprint §9 *Material per proyek* |
 | `aset-dipinjamkan` | `LoanedAssetReport` | Aset dipinjamkan | `asset.view` | AST, proyek, item, serial, keluar, jatuh tempo, lewat (hari), hari pakai, meter keluar, status | proyek, hanya lewat jatuh tempo | [25-aset §9](25-aset.md#9-laporan--dashboard), BR-AST-06 |
+
+| `kartu-stok` | `StockCardReport` | Kartu stok | `stock.view` | waktu, item, dokumen, asal, tujuan, jumlah, satuan, kondisi, pelaku | kode item, gudang, rentang tanggal (bawaan bulan berjalan; ≤ 2.000 baris) | [13-stock §9](13-stock.md#9-laporan--dashboard) |
+| `reservasi-menggantung` | `StaleReservationReport` | Reservasi menggantung | `reservation.view` | dokumen (nomor REQ/TRF/RET), item, gudang, bin, jumlah, satuan, umur | gudang, umur minimal (bawaan `reservation_alert_days`) | [13-stock §9](13-stock.md#9-laporan--dashboard), BR-STK-16 |
+| `titik-pesan-ulang` | `ReorderPointReport` | Stok di bawah titik pesan ulang | `stock.view` | item, nama, kategori, tersedia, titik pesan ulang, selisih, satuan | gudang, kategori | [13-stock §9](13-stock.md#9-laporan--dashboard), BR-REQ-11 |
+| `daftar-req` | `RequestListReport` | Daftar permintaan material | `request.view` | nomor, dibuat, proyek, pemohon, status, jumlah baris, dibutuhkan | status, proyek, pemohon, rentang tanggal | [14-request §9](14-request.md#9-laporan--dashboard) |
+| `req-menunggu-tinjau` | `RequestReviewQueueReport` | Permintaan menunggu tinjauan | `request.view` | nomor, proyek, pemohon, status, umur, SLA terlampaui (`review_sla_days`) | umur minimal | [14-request §9](14-request.md#9-laporan--dashboard), BR-REQ-14 |
+| `baris-tanpa-sumber` | `UnsourcedLineReport` | Baris permintaan tanpa sumber | `request.view` | REQ, proyek, status REQ, item, jumlah, satuan, dibutuhkan | proyek | [14-request §9](14-request.md#9-laporan--dashboard) |
+| `penggantian-menunggu` | `PendingSubstitutionReport` | Penggantian item menunggu tanggapan | `request.view` | REQ, proyek, item asal, item pengganti, jumlah, diganti, tenggat, lewat tenggat | proyek, tenggat sebelum | [14-request §9](14-request.md#9-laporan--dashboard), BR-REQ-13 |
+| `daftar-pengiriman` | `ShipmentListReport` | Daftar pengiriman | `shipment.view` | nomor, gudang, tujuan, cara kirim, status, tanggal kirim, diterima, penerima | status, tujuan, cara kirim, gudang, rentang tanggal | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard) |
+| `short-pick` | `ShortPickReport` | Short pick | `pick.view` | PCK, gudang, selesai, item, bin, dialokasikan, diambil, selisih, alasan | gudang, rentang tanggal | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard), BR-SJ-01 |
+| `posisi-rusak-selisih` | `DamagedGoodsPositionReport` | Posisi barang rusak & selisih | `shipment.view` | DSC, SJ, gudang, proyek, item, jenis, jumlah, disposisi, status DSC, umur | gudang, umur minimal, termasuk yang selesai | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard), BR-SJ-06/10 |
+| `kinerja-pengiriman` | `DeliveryPerformanceReport` | Kinerja pengiriman | `shipment.view` | per gudang (+ total): dikirim, diterima utuh, bersisa, masih di jalan, dibatalkan, rata-rata hari, utuh (%) | gudang, rentang tanggal (berangkat) | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard) |
 
 Tidak ada kolom nilai uang di laporan mana pun ([D-07](04-keputusan-dan-asumsi.md#d-07)).
 
@@ -137,6 +149,7 @@ Uji ada di `tests/Feature/Shared`. ID memakai akhiran huruf untuk varian dalam s
 | TC-RPT-01d | Data master demo (4 item) | `daftar-item` dengan `tracking_mode = piece` | 1 baris (`PIPA-PVC-4`) dari 4 | — |
 | TC-RPT-01e | Admin Company | ekspor `daftar-item` | 200, `content-type` spreadsheetml, nama berkas memuat `daftar-item` | AD-09 |
 | TC-RPT-01f | Dua gudang, Kepala Gudang hanya di CKG | isi `daftar-gudang` | hanya CKG | BR-ACC-05 |
+| TC-RPT-06 | Fixture transfer (stok awal, TRF → SJ diterima utuh), reservasi lunak 10 hari & baru, `reorder_point` 250 | buka & ekspor 11 laporan baru; `rows()` kartu stok, titik pesan ulang, reservasi menggantung, kinerja & daftar pengiriman; driver | semua 200; kartu memuat mutasi awal; selisih 150; hanya reservasi 10 hari; 1 dikirim & 1 utuh; driver boleh `kartu-stok`, 403 `short-pick` | A-232 |
 | TC-FIL-01 | Staf gudang | unggah lalu hapus tanda tangan | path tersimpan, bisa dibuka lewat `/files/signature/{id}`, lalu null | A-68 |
 | TC-FIL-01b | Tanda tangan milik staf | Driver lalu Admin membukanya | Driver 403, Admin 200 | A-68 |
 | TC-FIL-01c | — | unggah PDF sebagai tanda tangan | galat validasi, tidak tersimpan | NFR-14 |
@@ -199,14 +212,8 @@ Uji: `tests/Feature/Shared/ReportTest.php` (TC-RPT-01, 01b–01f) dan `tests/Fea
 
 ### 13.4 Sisa pekerjaan
 
-Laporan §9 berikut **belum** didefinisikan di `ReportRegistry`:
-
-| Modul | Laporan (nama dari §9 spesifikasinya) |
-|---|---|
-| [13-stock §9](13-stock.md#9-laporan--dashboard) | Saldo stok · Kartu stok · Reservasi menggantung · Stok di bawah titik pesan ulang |
-| [14-request §9](14-request.md#9-laporan--dashboard) | Daftar REQ · REQ menunggu tinjau · Baris tanpa sumber · Penggantian item menunggu tanggapan |
-| [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard) | Daftar pengiriman · Short pick · Posisi barang rusak & selisih · Kinerja pengiriman |
+~~Laporan §9 Stock, Request, Picking/Shipment~~ — **selesai 25 Sep 2026** ([A-232](04-keputusan-dan-asumsi.md#a-232)): sebelas definisi baru di §3.2 memakai penyaring standar `Concerns\PeriodFilter` (rentang tanggal zona company, gudang dalam cakupan); uji TC-RPT-06 (`ExtendedReportTest`).
 
 *Material per proyek* ([23-pemakaian §9](23-pemakaian.md#9-laporan--dashboard)) terdaftar sejak modul Issue; kolom *Dikonversi*, *Hasil konversi*, *Waste*, *Waste didisposisi* ditambah modul Konversi & Waste; *Rencana* `[F2]`-nya belum.
 
-Juga belum: ekspor PDF (§13.1 no. 1), 404 untuk kunci tidak dikenal (§13.1 no. 3), dan penyaring §9 yang hilang (§13.1 no. 2). Prompt lanjutan: [prompts/16-shared](../prompts/16-shared.md).
+Juga belum: ekspor PDF (§13.1 no. 1) dan penyaring §9 yang hilang (§13.1 no. 2). Kunci laporan tidak dikenal kini **404** (`ReportRegistry::find` melempar `NotFoundHttpException`, 25 Sep 2026; TC-RPT-01b). Prompt lanjutan: [prompts/16-shared](../prompts/16-shared.md).

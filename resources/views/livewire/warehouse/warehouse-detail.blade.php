@@ -8,7 +8,7 @@
                     {{ $warehouse->is_active ? __('Aktif') : __('Nonaktif') }}
                 </span>
                 @if ($warehouse->project)
-                    <span class="badge text-bg-info ms-1">{{ $warehouse->project->code }}</span>
+                    <a class="badge text-bg-info ms-1 text-decoration-none" href="{{ route('projects.show', $warehouse->project_id) }}">{{ $warehouse->project->code }}</a>
                 @endif
             </p>
         </div>
@@ -18,6 +18,24 @@
     @if ($ruleError !== '')
         <div class="alert alert-danger" role="alert">{{ $ruleError }}</div>
     @endif
+
+    {{-- Tautan cepat ke daftar yang sudah menyaring gudang ini (A-228). --}}
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        @foreach ([
+            ['stock.view', 'stock.index', ['warehouseFilter' => $warehouse->id], 'bi-boxes', __('Saldo stok')],
+            ['reservation.view', 'stock.reservations', ['warehouseFilter' => $warehouse->id], 'bi-bookmark-check', __('Reservasi')],
+            ['pick.view', 'picks.index', ['warehouseFilter' => $warehouse->id], 'bi-card-checklist', __('Tugas picking')],
+            ['shipment.view', 'shipments.index', ['warehouseFilter' => $warehouse->id], 'bi-truck', __('Surat jalan')],
+            ['receipt.view', 'receipts.index', ['warehouseFilter' => $warehouse->id], 'bi-box-arrow-in-down', __('Penerimaan')],
+            ['putaway.view', 'putaways.index', ['warehouseFilter' => $warehouse->id], 'bi-inboxes', __('Put-away')],
+            ['pr.view', 'purchase-requests.index', ['warehouse' => $warehouse->id], 'bi-cart3', __('Purchase Request')],
+            ['po.view', 'purchase-orders.index', ['warehouse' => $warehouse->id], 'bi-receipt-cutoff', __('Purchase Order')],
+        ] as [$izin, $rute, $param, $ikon, $label])
+            @if (auth()->user()?->can($izin) && Route::has($rute))
+                <a class="btn btn-sm btn-outline-secondary" href="{{ route($rute, $param) }}"><i class="bi {{ $ikon }}"></i> {{ $label }}</a>
+            @endif
+        @endforeach
+    </div>
 
     <ul class="nav nav-tabs mb-3">
         @foreach (['lokasi' => __('Zona & rak'), 'bin' => __('Bin'), 'riwayat' => __('Riwayat')] as $kunci => $label)
@@ -250,7 +268,7 @@
                         @forelse ($riwayat as $baris)
                             <tr>
                                 <td class="small">
-                                    {{ $baris->created_at?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d/m/Y H:i') }}
+                                    {{ $baris->created_at?->lokal()->format('d/m/Y H:i') }}
                                 </td>
                                 <td>{{ $baris->description }}</td>
                                 <td>{{ $baris->causer?->name ?? __('Sistem') }}</td>

@@ -10,6 +10,7 @@ use App\Domain\Conversion\Exceptions\ConversionRuleException;
 use App\Domain\Count\Exceptions\CountRuleException;
 use App\Domain\Issue\Exceptions\IssueRuleException;
 use App\Domain\PurchaseRequest\Exceptions\PurchaseRequestRuleException;
+use App\Domain\Purchasing\Exceptions\PurchasingRuleException;
 use App\Domain\Receipt\Exceptions\ReceiptRuleException;
 use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Return\Exceptions\ReturnRuleException;
@@ -38,7 +39,7 @@ trait HandlesApprovalRules
             $aksi();
 
             return true;
-        } catch (ApprovalRuleException|RequestRuleException|ReceiptRuleException|CountRuleException|AdjustmentRuleException|TransferRuleException|ReturnRuleException|ShipmentRuleException|IssueRuleException|ConversionRuleException|WasteRuleException|PurchaseRequestRuleException $e) {
+        } catch (ApprovalRuleException|RequestRuleException|ReceiptRuleException|CountRuleException|AdjustmentRuleException|TransferRuleException|ReturnRuleException|ShipmentRuleException|IssueRuleException|ConversionRuleException|WasteRuleException|PurchaseRequestRuleException|PurchasingRuleException $e) {
             $this->ruleCode = $e->rule;
             $this->ruleError = $e->getMessage();
 

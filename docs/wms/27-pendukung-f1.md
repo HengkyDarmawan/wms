@@ -1,8 +1,8 @@
 # Spesifikasi Modul — Pendukung Fase 1
 
-**Versi:** 0.3
+**Versi:** 0.4
 **Tanggal:** 25 September 2026
-**Status:** selesai Fase 1 — kumpulan pekerjaan pendukung setelah modul [Platform](17-platform-login.md) (urutan prompt serah terima §2 butir 5); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-185](04-keputusan-dan-asumsi.md#a-185)–[A-193](04-keputusan-dan-asumsi.md#a-193) (*Perlu validasi*)
+**Status:** selesai Fase 1 — kumpulan pekerjaan pendukung setelah modul [Platform](17-platform-login.md) (urutan prompt serah terima §2 butir 5); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-185](04-keputusan-dan-asumsi.md#a-185)–[A-193](04-keputusan-dan-asumsi.md#a-193) (*Perlu validasi*); v0.4: pindai di form REQ & ISU ([A-206](04-keputusan-dan-asumsi.md#a-206)), impor vendor & saldo awal ([A-207](04-keputusan-dan-asumsi.md#a-207))
 **Modul:** lintas modul — `stock` (strategi pengambilan), `shared` (Beranda, laporan, PDF), `master` (penutupan proyek, wizard setup, impor Excel), `request` (konfirmasi & keberatan terima), `notification` (baru), PWA
 **Fase:** F1; WhatsApp `[F2]`, PWA offline penuh `[F2]`
 **Dokumen terkait:** [Blueprint §6.9a, §10, §11, §18](01-blueprint.md) · [Aturan Bisnis BR-STK-04/10/12, BR-PRJ-02/04, BR-REQ-10, BR-SJ-10](05-aturan-bisnis.md) · [Model data 08c `notifications`](08c-model-data-pendukung.md) · [A-49](04-keputusan-dan-asumsi.md#a-49), [A-63](04-keputusan-dan-asumsi.md#a-63), [A-77](04-keputusan-dan-asumsi.md#a-77)
@@ -23,10 +23,10 @@ Menutup butir Fase 1 [Blueprint §18](01-blueprint.md#18-peta-modul--fase-rilis)
 | 5 | Notifikasi in-app & email | Lonceng, halaman notifikasi, preferensi kanal per kejadian, email opsional, pengingat harian |
 | 6 | Laporan inti §6.9a + ekspor PDF | Saldo stok, mutasi periode, permintaan terbuka & barang rusak, konversi & waste, akurasi stok; PDF untuk semua laporan |
 | 7 | Wizard setup awal | Checklist langkah dari data company, persetujuan ketentuan (NFR-11), tanda selesai |
-| 8 | Impor data master dari Excel | Item dan proyek (+klien baru), semua-atau-tidak, lewat aturan form yang sama |
-| 9 | PWA | Installable (manifest + service worker + halaman offline), pindai kamera, draf lokal hitung opname & bukti terima (A-49) |
+| 8 | Impor dari Excel | Item, proyek (+klien baru), vendor, dan saldo awal (menjadi ADJ per gudang), semua-atau-tidak, lewat aturan form yang sama |
+| 9 | PWA | Installable (manifest + service worker + halaman offline), pindai kamera (termasuk form REQ & ISU), draf lokal hitung opname & bukti terima (A-49) |
 
-Tidak termasuk: WhatsApp `[F2]`; PWA offline penuh & antrean sinkron `[F2]`; impor bin/proyek/klien; editor naskah ketentuan final (O-11); landing page (Part 5).
+Tidak termasuk: WhatsApp `[F2]`; PWA offline penuh & antrean sinkron `[F2]`; impor bin; editor naskah ketentuan final (O-11); landing page (Part 5).
 
 ## 2. Aktor & permission
 
@@ -40,7 +40,7 @@ Tidak ada permission baru. Setiap butir memakai izin modul asalnya:
 | Notifikasi | setiap user untuk notifikasinya sendiri |
 | Laporan baru | `stock.view` (saldo, mutasi), `request.view` (permintaan terbuka), `conversion.view`, `count.view` |
 | Wizard setup | `company_setting.manage` |
-| Impor item / proyek | `item.create` / `project.create` (+`client.create` untuk klien baru) |
+| Impor item / proyek / vendor / saldo awal | `item.create` / `project.create` (+`client.create` untuk klien baru) / `vendor.create` / `adjustment.create` |
 
 ## 3. Entitas & data
 
@@ -79,7 +79,8 @@ Tanpa status baru. Perubahan perilaku:
 | Blueprint §10 | `Notification\Support\Notifier`: in-app bawaan nyala, email bawaan hanya tugas approval; pelaku & user nonaktif dilewati; pengingat yang sama belum dibaca tidak digandakan; email dikirim setelah commit dan galatnya tidak membatalkan aksi ([A-199](04-keputusan-dan-asumsi.md#a-199)) |
 | Blueprint §6.9a, UX-11/12 | laporan terdaftar di `ReportRegistry`; ekspor PDF A4 mendatar lewat `PdfRenderer`; cakupan gudang/proyek pengguna ([A-190](04-keputusan-dan-asumsi.md#a-190)) |
 | NFR-11 | wizard mewajibkan persetujuan ketentuan layanan & kebijakan privasi (naskah sementara sampai O-11) |
-| [BR-MST-01](05-aturan-bisnis.md#br-mst), BR-MST-04, BR-STK-11 | impor lewat `SaveItem` / `SaveProject` / `SaveClient` (`Master\Support\ExcelRows`, `ImportBatch`); kode ganda, klien tak dikenal & kombinasi tidak sah ditolak per baris ([A-192](04-keputusan-dan-asumsi.md#a-192)) |
+| [BR-MST-01](05-aturan-bisnis.md#br-mst), BR-MST-04, BR-STK-11 | impor lewat `SaveItem` / `SaveProject` / `SaveClient` (`Master\Support\ExcelRows`, `ImportBatch`); kode ganda, klien tak dikenal & kombinasi tidak sah ditolak per baris ([A-192](04-keputusan-dan-asumsi.md#a-192)); vendor lewat `SaveVendor` (A-52, A-53); saldo awal lewat `AdjustmentLines` lalu `CreateStockAdjustment` — satu ADJ manual per gudang beralasan *Saldo awal* (`OPENING`), tetap approval A-09, stok baru bergerak saat diposting (P-01, [A-207](04-keputusan-dan-asumsi.md#a-207)) |
+| [A-121](04-keputusan-dan-asumsi.md#a-121), [A-206](04-keputusan-dan-asumsi.md#a-206) | `Master\Support\ScanCode` membaca kode/barcode/QR item, QR lot `<item>\|<lot>`, nomor lot/serial/potongan; dipakai form REQ & ISU |
 | [A-49](04-keputusan-dan-asumsi.md#a-49) | draf hitung opname & bukti terima di perangkat ([A-193](04-keputusan-dan-asumsi.md#a-193)) |
 | D-07 | laporan & notifikasi tanpa harga |
 
@@ -93,8 +94,8 @@ Tanpa status baru. Perubahan perilaku:
 | Header (lonceng) · `/notifications` · `/notifications/preferences` | 5 notifikasi belum dibaca, tandai dibaca lewat POST, semua notifikasi, preferensi lonceng/email per kejadian |
 | `/reports/{kunci}` · `/reports/{kunci}/pdf` | 5 laporan baru; tombol **Ekspor PDF** di semua laporan |
 | `/setup` · `POST /setup/terms · complete` | wizard setup (menu Administrasi → Setup awal, palet) |
-| `/imports` · `/imports/{items,projects}/template` · `POST /imports/{items,projects}` | impor item dan proyek (tombol *Impor Excel* di daftar item & proyek, palet) |
-| PWA | `/manifest.webmanifest`, `/sw.js`, `/offline.html`; tombol kamera pada input ber-`data-scan` (lot temuan opname, lot GRN); status draf pada hitung opname & dialog bukti terima |
+| `/imports` · `/imports/{items,projects,vendors,opening-stock}/template` · `POST /imports/{…}` | impor item, proyek, vendor, saldo awal (tombol *Impor Excel* di daftar item, proyek, vendor; *Impor saldo awal* di daftar penyesuaian; palet; langkah wizard *Saldo awal*) |
+| PWA | `/manifest.webmanifest`, `/sw.js`, `/offline.html`; tombol kamera pada input ber-`data-scan` (lot temuan opname, lot GRN, **Pindai item** di form REQ, **Pindai barang** di form ISU); status draf pada hitung opname & dialog bukti terima |
 
 ## 7. Kejadian stok & integrasi
 
@@ -142,15 +143,19 @@ Kartu stok per item tetap layar `/stock/items/{id}` (13-stock). Total 14 laporan
 | TC-MST-21 | `Master/SetupWizardTest` | spanduk, 403 staf, belum lengkap ditolak, setujui ketentuan, lengkap → selesai |
 | TC-MST-22 | `Master/ItemImportTest` | templat; satu baris salah → tidak ada yang tersimpan + galat baris 3 & 4; impor benar; kode ganda ditolak |
 | TC-MST-23 | sama | impor proyek: klien tak dikenal membatalkan semua; klien baru dibuat sekali & dipakai baris berikutnya; staf 403 |
+| TC-MST-24 | `Count/OpeningStockImportTest` | impor vendor: kontak kosong (A-53), jenis asing, email salah → tidak ada yang tersimpan; jenis/status boleh label; kode dari nama; kode ganda ditolak |
+| TC-ADJ-12 | sama | impor saldo awal: bin gudang lain, lot baru tanpa kedaluwarsa, serial ganda di berkas, item & kondisi asing → tidak ada ADJ; benar → satu ADJ `OPENING` per gudang menunggu approval, stok bergerak setelah disetujui (lot/serial/potongan dibuat saat posting) |
+| TC-REQ-34 | `Request/RequestScreenTest` | pindai kode, barcode, QR lot: item mengisi baris kosong/baru jumlah 1, pindai ulang +1; kode asing ditolak |
+| TC-ISU-18 | `Issue/IssueScreenTest` | pindai item tanpa lacak +1; item berlacak wajib nomor lot/serial/potongan; potongan terisi utuh, pindai ulang ditolak |
 | TC-PWA-01 | `Shared/PwaTest` | manifest, ikon, service worker tanpa POST, offline, tautan manifest, penanda draf & pindai |
 | TC-E2E-01 | `FullLifecycleTest` | rantai Fase 1 lintas modul dengan aksi sungguhan; saldo akhir = bangun ulang kartu stok, tanpa saldo negatif |
 | TC-STK-26 | `Stock/StockLedgerTest` | perubahan kondisi tercatat (`from_stock_status`), bisa dibangun ulang, dan dibalik ke kondisi asal |
 | TC-GEN-07 | `Shared/TimezoneDisplayTest` | waktu UTC tampil di zona company (`lokal()`), riwayat REQ memakai jam WIB |
-| E2E P1–P7 | `tests/e2e/alur-pendukung.mjs` | dijalankan setelah `alur-req-sj.mjs` pada data demo segar; P7 = PRQ → pesan → GRN merujuk pesanan → put-away lewat layar sungguhan |
+| E2E P1–P9 | `tests/e2e/alur-pendukung.mjs` | dijalankan setelah `alur-req-sj.mjs` pada data demo segar; P9 = konversi Potong dari layar (batang 6 m → 2 × 2,5 m, offcut & kerf otomatis, selesai); P8 = PRQ → PO lewat layar → approval nilai Manajemen → GRN → PO selesai + cetak PO (purchasing/02); P7 = PRQ → pesan → GRN merujuk pesanan → put-away lewat layar sungguhan |
 
 ## 11. Di luar lingkup
 
-WhatsApp; offline penuh & antrean sinkron; impor bin/vendor/saldo awal; naskah final ketentuan (O-11); ringkasan email harian; dashboard konsolidasi opname & waste berbentuk grafik.
+WhatsApp; offline penuh & antrean sinkron; impor bin; naskah final ketentuan (O-11); ringkasan email harian; dashboard konsolidasi opname & waste berbentuk grafik.
 
 ## 12. Definisi selesai
 
@@ -173,10 +178,11 @@ WhatsApp; offline penuh & antrean sinkron; impor bin/vendor/saldo awal; naskah f
 9. **E2E**: `tests/e2e/alur-req-sj.mjs` kini membaca saldo awal dari database (sebelumnya mengandaikan BAUT CKG 1.000); skrip baru `tests/e2e/alur-pendukung.mjs` (P1–P7) memeriksa konfirmasi terima, notifikasi, Beranda, laporan + PDF/Excel, wizard, impor, preferensi, dan berkas PWA di aplikasi sungguhan.
 10. **Kartu stok — kondisi asal ([A-194](04-keputusan-dan-asumsi.md#a-194))**: uji rantai penuh `tests/Feature/FullLifecycleTest` (TC-E2E-01: GRN → QC → put-away → REQ jual putus → SJ → konfirmasi → kirim ke site → ISU → retur & pilah → CNV → OPN → ADJ → aset pinjam & kembali) menunjukkan saldo tidak bisa dibangun ulang untuk perubahan kondisi. Migrasi tenant `000170` menambah `stock_movements.from_stock_status`; `StockLedger::post` mengisinya, `rebuildFromLedger` dan `reverse` memakainya. Uji TC-STK-26.
 11. **Tinjauan kode (25 Sep 2026 malam)** — perbaikan: email notifikasi setelah commit (A-199); bayar terlambat memulai periode baru (A-195, [17](17-platform-login.md)); update Livewire cari/halaman lolos di mode hanya-baca (A-196); tautan akses dukungan sekali pakai (A-199, migrasi pusat `000030`); keberatan dibatasi baris REQ sendiri + kunci (A-197); `still_needed` keberatan membuka lagi baris REQ (A-198); checklist penutupan diperluas & dalam transaksi (A-187). Uji: TC-NTF-05, TC-PLT-12, TC-ACC-28g, TC-REQ-33; TC-MST-20 & TC-PLT-11 diperluas. `TenantTestCase` kini memakai manajer transaksi uji Laravel sehingga `DB::afterCommit` berjalan di uji.
+12. **Sesi kantor 25 Sep 2026** — pindai di form REQ & ISU (`ScanCode`, [A-206](04-keputusan-dan-asumsi.md#a-206)); impor vendor & saldo awal (`Master\Actions\ImportVendors`, `Adjustment\Actions\ImportOpeningStock`, alasan penyesuaian `OPENING` di `MasterReferenceSeeder`, [A-207](04-keputusan-dan-asumsi.md#a-207)). Uji TC-REQ-34, TC-ISU-18, TC-MST-24, TC-ADJ-12.
 
 ### 13.2 Sisa pekerjaan
 
 1. ~~2FA Super Admin~~ — selesai (opsional, [A-200](04-keputusan-dan-asumsi.md#a-200), [17](17-platform-login.md)).
-2. Impor master lain (vendor, saldo awal) lewat Excel; bin cukup lewat *Buat bin massal* (`GenerateBins`) karena butuh hierarki zona–rak–level.
-3. Pemindaian di form REQ/ISU (pilihan item berupa daftar) dan lot/serial di PCK; pencarian Item/Saldo/Aset, bin tujuan Put-away ([A-201](04-keputusan-dan-asumsi.md#a-201)) dan alur bin → item di PCK ([A-203](04-keputusan-dan-asumsi.md#a-203)) sudah bisa dipindai.
+2. ~~Impor vendor & saldo awal~~ — selesai ([A-207](04-keputusan-dan-asumsi.md#a-207)); bin cukup lewat *Buat bin massal* (`GenerateBins`) karena butuh hierarki zona–rak–level.
+3. ~~Pemindaian di form REQ/ISU~~ — selesai ([A-206](04-keputusan-dan-asumsi.md#a-206)); lot/serial di PCK sudah wajib sejak A-203; pencarian Item/Saldo/Aset, bin tujuan Put-away ([A-201](04-keputusan-dan-asumsi.md#a-201)) dan alur bin → item di PCK ([A-203](04-keputusan-dan-asumsi.md#a-203)) sudah bisa dipindai.
 4. ~~Email pengingat tagihan langganan~~ — selesai lewat `Platform\Support\BillingNotifier` ([A-202](04-keputusan-dan-asumsi.md#a-202)).

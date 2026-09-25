@@ -52,7 +52,7 @@ class ItemTest extends TenantTestCase
             $this->fail('Aset dengan pelacakan lot seharusnya ditolak.');
         } catch (MasterRuleException $e) {
             $this->assertArrayHasKey('ownership_model', $e->fieldErrors);
-            $this->assertStringContainsString('BR-STK-08', $e->fieldErrors['ownership_model']);
+            $this->assertStringContainsString('Serial number', $e->fieldErrors['ownership_model'], 'BR-STK-08');
         }
 
         $aset = $this->simpan([
@@ -77,7 +77,7 @@ class ItemTest extends TenantTestCase
             $this->fail('Item per potong dengan satuan hitung seharusnya ditolak.');
         } catch (MasterRuleException $e) {
             $this->assertArrayHasKey('base_uom_id', $e->fieldErrors);
-            $this->assertStringContainsString('BR-STK-09', $e->fieldErrors['base_uom_id']);
+            $this->assertStringContainsString('berkategori panjang', $e->fieldErrors['base_uom_id'], 'BR-STK-09');
         }
 
         $pipa = $this->simpan([
@@ -116,7 +116,7 @@ class ItemTest extends TenantTestCase
             $this->fail('FEFO tanpa kedaluwarsa seharusnya ditolak.');
         } catch (MasterRuleException $e) {
             $this->assertArrayHasKey('has_expiry', $e->fieldErrors);
-            $this->assertStringContainsString('BR-STK-12', $e->fieldErrors['has_expiry']);
+            $this->assertStringContainsString('kedaluwarsa diaktifkan', $e->fieldErrors['has_expiry'], 'BR-STK-12');
         }
 
         $semen = $this->simpan([
@@ -153,7 +153,7 @@ class ItemTest extends TenantTestCase
             $this->fail('Item bisa dipotong tanpa panjang minimum seharusnya ditolak.');
         } catch (MasterRuleException $e) {
             $this->assertArrayHasKey('min_offcut_length', $e->fieldErrors);
-            $this->assertStringContainsString('BR-CNV-03', $e->fieldErrors['min_offcut_length']);
+            $this->assertStringContainsString('Panjang minimum offcut', $e->fieldErrors['min_offcut_length'], 'BR-CNV-03');
         }
 
         $pipa = $this->simpan([

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Master;
 
+use App\Domain\Adjustment\Actions\ImportOpeningStock;
 use App\Domain\Master\Actions\ImportItems;
 use App\Domain\Master\Actions\ImportProjects;
+use App\Domain\Master\Actions\ImportVendors;
 use App\Domain\Master\Exceptions\MasterRuleException;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -15,10 +17,10 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/** Impor data master dari Excel (A-192): item dan proyek (+klien) — templat, unggah (POST), galat per baris. */
+/** Impor dari Excel (A-192, A-207): item, proyek (+klien), vendor, dan saldo awal — templat, unggah (POST), galat per baris. */
 class ImportController extends Controller
 {
-    /** @var array<string, array{permission: string, action: class-string, sheet: string, example: array<int, mixed>, route: string, label: string}> */
+    /** @var array<string, array{permission: string, action: class-string, sheet: string, example: array<int, mixed>, route: string, label: string, message?: string}> */
     private const JENIS = [
         'items' => [
             'permission' => 'item.create', 'action' => ImportItems::class, 'sheet' => 'Item', 'route' => 'items.index', 'label' => 'item',
@@ -28,16 +30,35 @@ class ImportController extends Controller
             'permission' => 'project.create', 'action' => ImportProjects::class, 'sheet' => 'Proyek', 'route' => 'projects.index', 'label' => 'proyek',
             'example' => ['PRJ-101', 'Gedung Kantor Cikarang', 'KLN-01', 'PT Klien Baru', 'Jl. Industri 1, Cikarang', '2026-10-01', '2027-03-31'],
         ],
+        'vendors' => [
+            'permission' => 'vendor.create', 'action' => ImportVendors::class, 'sheet' => 'Vendor', 'route' => 'vendors.index', 'label' => 'vendor',
+            'example' => ['', 'CV Baja Makmur', 'company', 'active', '01.234.567.8-901.000', 'Budi', '081234567890', 'budi@bajamakmur.co.id', 'Jl. Raya Bekasi 10', '30 hari'],
+        ],
+        'opening-stock' => [
+            'permission' => 'adjustment.create', 'action' => ImportOpeningStock::class, 'sheet' => 'Saldo awal', 'route' => 'adjustments.index', 'label' => 'baris saldo awal',
+            'message' => ':n :jenis diajukan sebagai penyesuaian stok per gudang; stok masuk setelah disetujui.',
+            'example' => ['CKG', 'CKG-A-R01-L1-B01', 'BAUT-M12', 250, 'tersedia', '', '', '', '', 'Hasil hitung pembukaan'],
+        ],
     ];
+
+    /** Izin tiap kartu di layar impor. */
+    public const PERMISSIONS = ['items' => 'item.create', 'projects' => 'project.create', 'vendors' => 'vendor.create', 'opening-stock' => 'adjustment.create'];
 
     public function index(Request $request): View
     {
-        abort_unless($request->user()->hasPermission('item.create') || $request->user()->hasPermission('project.create'), 403);
+        abort_unless(collect(self::PERMISSIONS)->contains(fn ($izin) => $request->user()->hasPermission($izin)), 403);
 
         return view('import.index', [
             'items' => ImportItems::COLUMNS,
             'projects' => ImportProjects::COLUMNS,
-            'max' => ['items' => ImportItems::MAX_ROWS, 'projects' => ImportProjects::MAX_ROWS],
+            'vendors' => ImportVendors::COLUMNS,
+            'opening' => ImportOpeningStock::COLUMNS,
+            'max' => [
+                'items' => ImportItems::MAX_ROWS,
+                'projects' => ImportProjects::MAX_ROWS,
+                'vendors' => ImportVendors::MAX_ROWS,
+                'opening-stock' => ImportOpeningStock::MAX_ROWS,
+            ],
         ]);
     }
 
@@ -77,10 +98,10 @@ class ImportController extends Controller
             return back()->withErrors(['file' => $e->getMessage()])->with('rowErrors', $e->fieldErrors['rows'] ?? null)->with('ruleCode', $e->rule);
         }
 
-        return redirect()->route($j['route'])->with('status', __(':n :jenis berhasil diimpor.', ['n' => $jumlah, 'jenis' => $j['label']]));
+        return redirect()->route($j['route'])->with('status', __($j['message'] ?? ':n :jenis berhasil diimpor.', ['n' => $jumlah, 'jenis' => $j['label']]));
     }
 
-    /** @return array{permission: string, action: class-string, sheet: string, example: array<int, mixed>, route: string, label: string} */
+    /** @return array{permission: string, action: class-string, sheet: string, example: array<int, mixed>, route: string, label: string, message?: string} */
     private function jenis(string $type): array
     {
         $j = self::JENIS[$type] ?? abort(404);

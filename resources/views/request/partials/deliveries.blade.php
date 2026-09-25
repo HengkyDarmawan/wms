@@ -14,11 +14,11 @@
                         <div>
                             <strong>{{ $sj->number }}</strong> <span class="badge {{ $sj->status->badge() }}">{{ $sj->status->label() }}</span>
                             @if ($pod)
-                                <span class="small text-muted">· {{ __('diterima') }} {{ $pod->received_by_name }} {{ $pod->confirmed_at?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d/m/Y H:i') }}</span>
+                                <span class="small text-muted">· {{ __('diterima') }} {{ $pod->received_by_name }} {{ $pod->confirmed_at?->lokal()->format('d/m/Y H:i') }}</span>
                                 @if ($pod->confirmation)
                                     <span class="badge text-bg-secondary">{{ $pod->confirmation->label() }}</span>
                                 @elseif ($pod->confirm_deadline_at)
-                                    <span class="small text-muted">· {{ __('tanggapi sebelum') }} {{ $pod->confirm_deadline_at->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d/m/Y H:i') }}</span>
+                                    <span class="small text-muted">· {{ __('tanggapi sebelum') }} {{ $pod->confirm_deadline_at->lokal()->format('d/m/Y H:i') }}</span>
                                 @endif
                             @endif
                         </div>

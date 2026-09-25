@@ -1,11 +1,11 @@
 # Model Data — Pusat, akses & organisasi, master, gudang & lokasi
 
-**Versi:** 0.19 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026)
+**Versi:** 0.20 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026, dan Purchasing inti Fase 1b)
 **Tanggal:** 25 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194, Purchasing inti A-208–A-215. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md) · [Pendukung](08c-model-data-pendukung.md)
 
-Daftar area (116 tabel):
+Daftar area (119 tabel):
 
 - [Database pusat (platform)](08a-model-data-inti.md#area-database-pusat-platform) — 13 tabel
 - [User, role, cakupan, struktur organisasi (tenant)](08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) — 11 tabel
@@ -14,6 +14,7 @@ Daftar area (116 tabel):
 - [Stok: ledger, saldo, reservasi, kejadian (tenant)](08b-model-data-stok-dokumen.md#area-stok-ledger-saldo-reservasi-kejadian-tenant) — 4 tabel
 - [Permintaan, picking, pengiriman, bukti terima, selisih (tenant)](08b-model-data-stok-dokumen.md#area-permintaan-picking-pengiriman-bukti-terima-selisih-tenant) — 12 tabel
 - [Penerimaan, put-away, retur ke vendor, PR, transfer, retur, pemakaian (tenant)](08b-model-data-stok-dokumen.md#area-penerimaan-put-away-retur-ke-vendor-pr-transfer-retur-pemakaian-tenant) — 16 tabel
+- [Purchasing inti: harga beli vendor & PO (tenant, Fase 1b)](08c-model-data-pendukung.md#area-purchasing-inti-harga-beli-vendor--po-tenant-fase-1b) — 3 tabel
 - [Konversi, resep, waste, aset (tenant)](08c-model-data-pendukung.md#area-konversi-resep-waste-aset-tenant) — 9 tabel
 - [Stock opname & penyesuaian (tenant)](08c-model-data-pendukung.md#area-stock-opname--penyesuaian-tenant) — 6 tabel
 - [Approval engine (tenant)](08c-model-data-pendukung.md#area-approval-engine-tenant) — 7 tabel

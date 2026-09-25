@@ -41,8 +41,18 @@ class WasteDisposalForm extends Component
 
         $gudang = $this->gudang();
 
-        if ($gudang->count() === 1) {
+        // Dari detail CNV / hub proyek (A-229): gudang & proyek langsung terisi bila ada di pilihan.
+        $mintaGudang = request()->query('warehouse');
+        $mintaProyek = request()->query('project');
+
+        if (is_numeric($mintaGudang) && $gudang->contains('id', (int) $mintaGudang)) {
+            $this->form['warehouse_id'] = (string) (int) $mintaGudang;
+        } elseif ($gudang->count() === 1) {
             $this->form['warehouse_id'] = (string) $gudang->first()->id;
+        }
+
+        if (is_numeric($mintaProyek) && $this->form['warehouse_id'] !== '' && auth()->user()->canAccessProject((int) $mintaProyek)) {
+            $this->form['project_id'] = (string) (int) $mintaProyek;
         }
     }
 

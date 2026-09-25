@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `issue` (Pemakaian Material di Site)
 
-**Versi:** 0.3
+**Versi:** 0.4
 **Tanggal:** 24 September 2026
 **Status:** selesai Fase 1 — modul kesebelas setelah [Transfer/Retur](22-retur-transfer.md) dan [Template dokumen & label](18-template-dokumen-label.md); ISU pembalik diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-117](04-keputusan-dan-asumsi.md#a-117)–[A-119](04-keputusan-dan-asumsi.md#a-119) dan [A-150](04-keputusan-dan-asumsi.md#a-150)–[A-152](04-keputusan-dan-asumsi.md#a-152) (*Perlu validasi*)
 **Modul:** `issue` (ISU)
@@ -224,5 +224,5 @@ Domain `app/Domain/Issue` ([Arsitektur §4](08-arsitektur.md#4-struktur-kode) `I
 ### 13.3 Sisa pekerjaan
 
 1. Foto pemakaian (lampiran), notifikasi §8, tanggal pakai mundur.
-2. Kolom *Rencana* `[F2]` di laporan (kolom waste sudah, v0.3); tab *Pemakaian* di detail proyek; checklist penutupan proyek (BR-PRJ-02).
+2. Kolom *Rencana* `[F2]` di laporan (kolom waste sudah, v0.3). ~~Tab *Pemakaian* di detail proyek; checklist penutupan proyek~~ — **selesai**: hub proyek `/projects/{id}` tab *Pemakaian* ([A-228](04-keputusan-dan-asumsi.md#a-228)) dan `ProjectClosureChecklist` (BR-PRJ-02, [A-187](04-keputusan-dan-asumsi.md#a-187)).
 3. ISU dari bin non-penyimpanan (mis. langsung dari bin Penerimaan site tanpa PUT) menunggu validasi [A-117](04-keputusan-dan-asumsi.md#a-117).

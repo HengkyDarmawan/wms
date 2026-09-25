@@ -70,12 +70,21 @@
         </div>
     @endif
 
+    <div class="card mb-3 border-primary">
+        <div class="card-body py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span class="fs-5 mb-0">{{ $kalimat }}</span>
+            @if ((float) $cnv->total_waste > 0 && $cnv->status->value === 'completed' && auth()->user()?->can('waste.create'))
+                <a class="btn btn-sm btn-outline-danger" href="{{ route('waste-disposals.create', ['warehouse' => $cnv->warehouse_id, 'project' => $cnv->project_id]) }}"><i class="bi bi-trash3"></i> {{ __('Buat BA Waste') }}</a>
+            @endif
+        </div>
+    </div>
+
     <div class="row g-3 mb-3">
-        @foreach ([['Input', $cnv->total_input], ['Output', $cnv->total_output], ['Offcut', $cnv->total_offcut], ['Waste', $cnv->total_waste], ['Kerf', $cnv->total_kerf]] as [$label, $nilai])
+        @foreach ([[__('Input'), $cnv->total_input], [__('Output'), $cnv->total_output], [__('Offcut (sisa layak)'), $cnv->total_offcut], [__('Waste (sisa buang)'), $cnv->total_waste], [__('Kerf (rugi potong)'), $cnv->total_kerf]] as [$label, $nilai])
             <div class="col-6 col-md">
                 <div class="card h-100"><div class="card-body py-2">
-                    <div class="small text-muted">{{ __($label) }}</div>
-                    <div class="fs-5">{{ number_format((float) $nilai, 2, ',', '.') }}</div>
+                    <div class="small text-muted">{{ $label }}</div>
+                    <div class="fs-5">{{ \App\Domain\Conversion\Support\ConversionPlanner::angka((float) $nilai) }} <span class="small text-muted">{{ $uom }}</span></div>
                 </div></div>
             </div>
         @endforeach
@@ -98,7 +107,7 @@
                         <tr>
                             <td>{{ $l->item?->code }} <div class="small text-muted">{{ $l->item?->name }} @if ($l->trackingLabel() !== '') · {{ $l->trackingLabel() }} @endif</div></td>
                             <td>{{ $l->bin?->code }}</td>
-                            <td class="text-end">{{ number_format((float) $l->qty_base, 2, ',', '.') }} <span class="small text-muted">{{ $l->item?->baseUom?->code }}</span></td>
+                            <td class="text-end">{{ \App\Domain\Conversion\Support\ConversionPlanner::angka((float) $l->qty_base) }} <span class="small text-muted">{{ $l->item?->baseUom?->code }}</span></td>
                             <td class="small">{{ $l->movement_id ? '#'.$l->movement_id : '—' }}</td>
                         </tr>
                     @endforeach
@@ -126,12 +135,12 @@
                         <tr>
                             <td>
                                 {{ $o->output_kind->label() }}
-                                @if ($o->auto_waste) <span class="badge text-bg-secondary" title="{{ __('Di bawah panjang minimum offcut') }}">{{ __('otomatis') }}</span> @endif
+                                @if ($o->auto_waste) <span class="badge text-bg-secondary" title="{{ __('Sisa di bawah panjang minimum offcut, otomatis menjadi waste') }}">{{ __('otomatis') }}</span> @endif
                                 @if ($o->reason) <div class="small text-muted">{{ $o->reason->label }}</div> @endif
                             </td>
                             <td>{{ $o->item?->code }} <div class="small text-muted">{{ $o->item?->name }} @if ($o->trackingLabel() !== '') · {{ $o->trackingLabel() }} @endif</div></td>
                             <td>{{ $o->bin?->code ?? '—' }}</td>
-                            <td class="text-end">{{ number_format((float) $o->qty_base, 2, ',', '.') }} <span class="small text-muted">{{ $o->item?->baseUom?->code }}</span></td>
+                            <td class="text-end">{{ \App\Domain\Conversion\Support\ConversionPlanner::angka((float) $o->qty_base) }} <span class="small text-muted">{{ $o->item?->baseUom?->code }}</span></td>
                             <td class="small">
                                 @if ($o->parentInput)
                                     {{ __('dari') }} {{ $o->parentInput->item?->code }} {{ $o->parentInput->piece?->piece_no }}

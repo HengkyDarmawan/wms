@@ -25,7 +25,7 @@
                     <div>
                         <div class="{{ $n->read_at ? '' : 'fw-semibold' }}">{{ $n->title }}</div>
                         @if ($n->body) <div class="small text-muted">{{ $n->body }}</div> @endif
-                        <div class="small text-muted">{{ $n->created_at?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d/m/Y H:i') }}</div>
+                        <div class="small text-muted">{{ $n->created_at?->lokal()->format('d/m/Y H:i') }}</div>
                     </div>
                     <form method="POST" action="{{ route('notifications.open', $n->id) }}">
                         @csrf

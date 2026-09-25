@@ -38,7 +38,7 @@ class AddRequestLines
 
     /**
      * @param  array<int, array<string, mixed>>  $lines
-     * @return MaterialRequest  REQ yang menampung baris baru
+     * @return MaterialRequest REQ yang menampung baris baru
      */
     public function handle(MaterialRequest $request, array $lines, ?User $actor = null): MaterialRequest
     {
@@ -85,7 +85,7 @@ class AddRequestLines
 
             // Snapshot approval dibuang: yang akan disetujui bukan lagi dokumen
             // yang dulu diajukan. Tugas terbuka ikut dihentikan (BR-REQ-12).
-            $this->approval->withdraw(ApprovalDocumentType::MaterialRequest, (int) $request->id, 'Klien menambah baris (BR-REQ-12).', $actor);
+            $this->approval->withdraw(ApprovalDocumentType::MaterialRequest, (int) $request->id, 'Klien menambah baris.', $actor); // BR-REQ-12
 
             $request->forceFill([
                 'status' => MaterialRequestStatus::UnderReview,

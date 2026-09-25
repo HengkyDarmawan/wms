@@ -2,7 +2,7 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
             <h1 class="h3 mb-1">{{ __('Delegasi approval') }}</h1>
-            <p class="text-muted mb-0">{{ __('Limpahkan hak approve selama cuti atau dinas. Berperiode dan tidak berantai: delegat tidak bisa mendelegasikan lagi (BR-APR-05).') }}</p>
+            <p class="text-muted mb-0">{{ __('Limpahkan hak approve selama cuti atau dinas. Berperiode dan tidak berantai: delegat tidak bisa mendelegasikan lagi.') }}</p> {{-- BR-APR-05 --}}
         </div>
         @can('create', App\Domain\Approval\Models\ApprovalDelegation::class)
             <button class="btn btn-primary" type="button" wire:click="buat">{{ __('Delegasi baru') }}</button>

@@ -37,6 +37,14 @@ class ShipmentPolicy
             && $this->dalamJangkauan($actor, $shipment);
     }
 
+    /** Tautan penerima bertoken (A-41): pemegang `shipment.ship` selama SJ sedang dikirim. */
+    public function issueToken(User $actor, Shipment $shipment): bool
+    {
+        return $actor->hasPermission('shipment.ship')
+            && $shipment->status->value === 'shipped'
+            && $this->dalamJangkauan($actor, $shipment);
+    }
+
     public function confirmDelivery(User $actor, Shipment $shipment): bool
     {
         return $actor->hasPermission('shipment.confirm_delivery')

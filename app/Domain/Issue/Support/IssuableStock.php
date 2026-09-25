@@ -127,7 +127,7 @@ class IssuableStock
             $c = $calon->get($kunci) ?? $this->tolakKunci($site, $kunci);
 
             if ($c['asset']) {
-                throw IssueRuleException::field('BR-PRJ-08', 'key', 'Item '.$c['item_code'].' adalah aset; aset tidak dipakai habis dan kembali lewat retur (BR-STK-08).');
+                throw IssueRuleException::field('BR-PRJ-08', 'key', 'Item '.$c['item_code'].' adalah aset; aset tidak dipakai habis dan kembali lewat retur.'); // BR-STK-08
             }
 
             if ($c['frozen']) {
@@ -190,7 +190,7 @@ class IssuableStock
             $c = $calon->get($kunci) ?? $this->tolakKunci($site, $kunci);
 
             if ($c['asset']) {
-                throw IssueRuleException::field('BR-PRJ-08', 'key', 'Item '.$c['item_code'].' adalah aset; aset tidak dipakai habis (BR-STK-08).');
+                throw IssueRuleException::field('BR-PRJ-08', 'key', 'Item '.$c['item_code'].' adalah aset; aset tidak dipakai habis.'); // BR-STK-08
             }
 
             if ($c['frozen']) {
@@ -227,7 +227,7 @@ class IssuableStock
         $item = count($bagian) === 5 ? Item::query()->find((int) $bagian[1]) : null;
 
         if ($item !== null && $item->ownership_model !== OwnershipModel::Consumable) {
-            throw IssueRuleException::field('BR-PRJ-08', 'key', 'Item '.$item->code.' adalah aset; aset tidak dipakai habis (BR-STK-08).');
+            throw IssueRuleException::field('BR-PRJ-08', 'key', 'Item '.$item->code.' adalah aset; aset tidak dipakai habis.'); // BR-STK-08
         }
 
         throw IssueRuleException::field('BR-PRJ-08', 'key', 'Barang yang dipilih bukan stok Tersedia di bin penyimpanan '.$site->code.'.');

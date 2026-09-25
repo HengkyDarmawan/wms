@@ -7,7 +7,7 @@
         <i class="bi bi-life-preserver"></i>
         {{ __('Mode akses dukungan (hanya-baca) oleh :admin, berlaku sampai :waktu.', [
             'admin' => session(\App\Domain\Access\Actions\StartSupportSession::SESSION_ADMIN, 'Super Admin'),
-            'waktu' => $supportAccess->ends_at->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d/m/Y H:i'),
+            'waktu' => $supportAccess->ends_at->lokal()->format('d/m/Y H:i'),
         ]) }}
     </div>
 @endif

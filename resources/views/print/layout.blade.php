@@ -39,7 +39,7 @@
         <table>
             <tr>
                 <td>{{ $kop['footer'] }}</td>
-                <td class="r">{{ __('Dicetak') }} {{ now()->format('d/m/Y H:i') }} · {{ __('tanpa nilai uang') }}</td>
+                <td class="r">{{ __('Dicetak') }} {{ now()->format('d/m/Y H:i') }} · {{ ($bernilai ?? false) ? __('nilai dalam Rupiah') : __('tanpa nilai uang') }}</td>
             </tr>
         </table>
     </div>

@@ -78,11 +78,11 @@ class StockGuard
         if ($saldo > 0) {
             return $subjek.' masih punya saldo '
                 .rtrim(rtrim(number_format($saldo, 4, '.', ''), '0'), '.')
-                .'. Kosongkan stoknya dulu (BR-GEN-04).';
+                .'. Kosongkan stoknya dulu.'; // BR-GEN-04
         }
 
         if ($reservasi > 0) {
-            return $subjek.' masih punya '.$reservasi.' reservasi aktif. Lepaskan dulu (BR-GEN-04).';
+            return $subjek.' masih punya '.$reservasi.' reservasi aktif. Lepaskan dulu.'; // BR-GEN-04
         }
 
         return null;

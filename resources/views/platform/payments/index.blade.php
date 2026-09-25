@@ -48,7 +48,7 @@
                             </td>
                             <td class="text-end">
                                 {{ number_format((float) $p->amount, 0, ',', '.') }}
-                                <div class="small text-muted">{{ $p->paid_at?->format('d/m/Y') }}</div>
+                                <div class="small text-muted">{{ $p->paid_at?->lokal()->format('d/m/Y') }}</div>
                             </td>
                             <td>
                                 @if ($p->proof_path) <a href="{{ route('platform.payments.proof', $p->id) }}" target="_blank" rel="noopener">{{ __('Lihat') }}</a> @endif

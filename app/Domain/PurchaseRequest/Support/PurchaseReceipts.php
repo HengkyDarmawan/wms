@@ -6,6 +6,7 @@ namespace App\Domain\PurchaseRequest\Support;
 
 use App\Domain\Access\Models\User;
 use App\Domain\PurchaseRequest\Enums\PurchaseRequestStatus;
+use App\Domain\PurchaseRequest\Events\OrderLinesReceived;
 use App\Domain\PurchaseRequest\Models\PurchaseRequest;
 use App\Domain\PurchaseRequest\Models\PurchaseRequestLine;
 use App\Domain\PurchaseRequest\Models\PurchaseRequestOrderLine;
@@ -79,6 +80,7 @@ class PurchaseReceipts
     public function received(GoodsReceipt $receipt, ?User $actor = null): void
     {
         $prqIds = [];
+        $diterima = [];
 
         foreach ($receipt->lines()->whereNotNull('purchase_request_order_line_id')->get() as $gl) {
             $ol = PurchaseRequestOrderLine::query()->with('order')->lockForUpdate()->find($gl->purchase_request_order_line_id);
@@ -96,6 +98,12 @@ class PurchaseReceipts
             $ol->forceFill(['qty_received' => round((float) $ol->qty_received + $qty, 4)])->save();
             PurchaseRequestLine::query()->whereKey($ol->purchase_request_line_id)->increment('qty_received', $qty);
             $prqIds[(int) $ol->order->purchase_request_id] = true;
+            $diterima[(int) $ol->id] = round(($diterima[(int) $ol->id] ?? 0) + $qty, 4);
+        }
+
+        if ($diterima !== []) {
+            // Modul Purchasing mencatat jumlah diterima PO-nya (A-214).
+            event(new OrderLinesReceived((string) $receipt->number, $diterima, $actor));
         }
 
         foreach (array_keys($prqIds) as $id) {

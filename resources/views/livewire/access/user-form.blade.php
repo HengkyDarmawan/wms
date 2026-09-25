@@ -43,10 +43,14 @@
 
                         <div class="mb-3">
                             <label class="form-label" for="clientId">{{ __('Klien (untuk user portal)') }}</label>
-                            <input class="form-control @error('clientId') is-invalid @enderror" id="clientId"
-                                   type="number" min="1" wire:model="clientId">
+                            <select class="form-select @error('clientId') is-invalid @enderror" id="clientId" wire:model="clientId">
+                                <option value="">{{ __('— bukan user klien —') }}</option>
+                                @foreach ($clients as $klien)
+                                    <option value="{{ $klien->id }}">{{ $klien->code }} — {{ $klien->name }}</option>
+                                @endforeach
+                            </select>
                             <div class="form-text">
-                                {{ __('Isi hanya untuk user klien; wajib dipasangkan dengan role Klien. Daftar klien tersedia setelah modul Master.') }}
+                                {{ __('Isi hanya untuk user klien; wajib dipasangkan dengan role Klien.') }}
                             </div>
                             @error('clientId')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>

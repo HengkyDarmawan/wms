@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `master` (Klien, Proyek, Vendor, Item, Satuan, Referensi)
 
-**Versi:** 0.4
+**Versi:** 0.6
 **Tanggal:** 25 September 2026
-**Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192))
+**Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192)); v0.6: layar Pengaturan company ([A-230](04-keputusan-dan-asumsi.md#a-230), §6, §13.5 no. 8)
 **Modul:** `master`
 **Fase:** F1 (rencana kebutuhan material `[F2]` hanya stub)
 **Dokumen terkait:** [Blueprint §6.3a](01-blueprint.md#63a-master-data-lain), [§6.4](01-blueprint.md#64-item-barang), [§6.5](01-blueprint.md#65-satuan-dinamis-uom), [§6.9](01-blueprint.md#69-proyek) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data master](08a-model-data-inti.md#area-master-data-tenant) · [Akun uji](../00-akun-uji.md)
@@ -146,7 +146,8 @@ Semua layar memakai layout back-office dan komponen Livewire, mengikuti pola mod
 | Route | Komponen | Isi |
 |---|---|---|
 | `/clients` | `master.client-list` | Daftar + form klien (kode, nama, NPWP, alamat, kontak); nonaktifkan dengan Alasan `*` |
-| `/projects` | `master.project-list` | Daftar + form proyek (kode, nama, klien atau Proyek Internal, PIC, tanggal, alamat & titik peta); ubah status ke Ditutup/Dibatalkan/Diarsipkan |
+| `/projects` | `master.project-list` | Daftar + form proyek (kode, nama, klien atau Proyek Internal, PIC, tanggal, alamat & titik peta); nama menaut ke hub |
+| `/projects/{id}` | `master.project-detail` | **Hub proyek** (Blueprint §6.9, [A-228](04-keputusan-dan-asumsi.md#a-228)): kepala + Gudang Site, tombol aksi (permintaan, transfer ke proyek lain, pemakaian, konversi, retur, laporan material), kartu ringkas (stok on-site, permintaan terbuka, aset di proyek, menunggu approval), tab Permintaan · Pengiriman · Stok on-site (Di Gudang Site / Aset di proyek / Terkirim ke klien) · Pemakaian · Konversi & waste · Retur & transfer · Aset · Approval · Riwayat; ubah status / tutup proyek dengan checklist BR-PRJ-02 |
 | `/vendors` | `master.vendor-list` | Daftar + form vendor (jenis, status, kontak, termin); menandai vendor `provisional` yang perlu dilengkapi |
 | `/items` | `master.item-list` | Daftar item dengan filter kategori, mode pelacakan, kepemilikan, status; penanda item Sementara |
 | `/items/create`, `/items/{id}/edit` | `master.item-form` | Form item lengkap dengan validasi matriks kombinasi, konversi satuan khusus, dan vendor tetap |
@@ -154,6 +155,7 @@ Semua layar memakai layout back-office dan komponen Livewire, mengikuti pola mod
 | `/item-categories` | `master.item-category-list` | Pohon kategori + form (kategori penyimpanan default, strategi, ambang toleransi) |
 | `/uoms` | `master.uom-list` | Kategori satuan + satuan di dalamnya, faktor ke satuan acuan |
 | `/references` | `master.reference-list` | Tab: Alasan, Kategori penyimpanan, Kendaraan, Ekspedisi |
+| `/settings/company` | `master.company-settings-form` | **Pengaturan company** ([A-230](04-keputusan-dan-asumsi.md#a-230)): ambang hari/persen dari `company_settings` (§13.5 no. 8 + `count_*`, `asset_life_alert_pct`) berkelompok dengan bawaan & rentang; saklar fitur lapis 1 (P-08) dengan penanda *dipakai n item*; zona waktu company; kunci periode hanya ditautkan. `company_setting.view` melihat, `company_setting.manage` menyimpan (`SaveCompanySettings`: hanya kunci yang berubah ditulis) |
 
 ## 7. Kejadian stok & integrasi
 
@@ -275,17 +277,21 @@ Uji yang menopangnya ada di `tests/Feature/Master`: `ClientProjectTest` (TC-MST-
 `VendorUomTest` (TC-MST-07–10), `ItemTest` (TC-MST-11–18), `ReferenceTest` (TC-MST-19–21),
 dan `MasterScreenTest` (TC-MST-22–23).
 
-### 13.4 Sisa pekerjaan modul ini
+### 13.4 Hub proyek (25 September 2026)
+
+`Master\Livewire\ProjectDetail` + `ProjectController@show` (`projects.show`, `whereNumber`; di luar cakupan proyek = 404). Tab mengambil data hanya saat dibuka (paginate 20 dengan `pageName` per tab); Stok on-site memakai `Return\Support\ReturnableStock::forProject` supaya angkanya sama dengan form retur; tab Approval membaca `approval_snapshots` menunggu dengan `context->project_id` dan tautan lewat `ApprovalRegistry`. Form REQ/RET membaca `?project=` dan TRF membaca `?from_warehouse=` (pola `IssueForm`). "Ubah status" dihapus dari daftar proyek. Uji TC-MST-25/25b (`tests/Feature/Master/ProjectDetailTest.php`).
+
+### 13.5 Sisa pekerjaan modul ini
 
 1. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 24 Sep 2026** lewat layar laporan bersama di `/reports`.
 2. **Notifikasi §8** (item sementara dibuat, proyek ditutup) — menunggu modul notifikasi Fase 2.
 3. ~~Unggah foto item~~ — **selesai 24 Sep 2026** memakai disk lokal per company ([A-68](04-keputusan-dan-asumsi.md#a-68)).
-4. **Impor Excel master** — dibangun bersama modul `shared`.
+4. ~~Impor Excel master~~ — **selesai** ([27-pendukung-f1](27-pendukung-f1.md): item, proyek, vendor, saldo awal).
 5. **Rencana kebutuhan material** `[F2]` — tabelnya sudah ada sebagai stub, layarnya belum ([BR-PRJ-09](05-aturan-bisnis.md#br-prj)).
 6. ~~Cakupan gudang pada penugasan role memakai id angka~~ — **selesai 24 Sep 2026** setelah modul Warehouse ada;
    keduanya kini memakai daftar nama.
-7. **Guard penutupan proyek** ([BR-PRJ-02](05-aturan-bisnis.md#br-prj)): saldo Gudang Site nol, aset kembali, DSC selesai — bahan penjaganya (`StockGuard`, DSC) sudah ada, pemanggilannya di `ChangeProjectStatus` belum.
-8. **Layar pengaturan company** — permission `company_setting.view` dan `company_setting.manage` sudah di-seed, tetapi belum ada route atau layar. Enam kunci `company_settings` dibaca kode dengan nilai bawaan dan saat ini hanya bisa diubah langsung di database:
+7. ~~Guard penutupan proyek~~ — **selesai 25 Sep 2026** (`ProjectClosureChecklist`, [A-187](04-keputusan-dan-asumsi.md#a-187)); sejak v0.5 checklist-nya ditampilkan di hub proyek sebelum menutup ([A-228](04-keputusan-dan-asumsi.md#a-228), TC-MST-25b).
+8. ~~Layar pengaturan company~~ — **selesai 25 Sep 2026** di `/settings/company` ([A-230](04-keputusan-dan-asumsi.md#a-230), TC-MST-27 `CompanySettingsTest`); daftar kunci, bawaan, dan rentangnya dipusatkan di `Support\CompanySettingCatalog` (ditambah `count_tolerance_pct` 1 %, `count_tolerance_abs` 1, `count_moderate_pct` 5 %, `asset_life_alert_pct` 20 %). Kunci yang dibaca kode:
 
    | Kunci | Bawaan | Dipakai di | Arti |
    |---|---|---|---|

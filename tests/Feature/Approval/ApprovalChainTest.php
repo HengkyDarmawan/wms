@@ -113,8 +113,8 @@ class ApprovalChainTest extends TenantTestCase
     {
         (new DemoSeeder)->run();
 
-        // REQ ×2, RTV, ADJ ×2, OPN, PRQ (00-akun-uji §5; ADJ/OPN sejak modul Count/Adjustment, PRQ sejak modul PRQ).
-        $this->assertSame(7, ApprovalRule::count());
+        // REQ ×2, RTV, ADJ ×2, OPN, PRQ (00-akun-uji §5; ADJ/OPN sejak modul Count/Adjustment, PRQ sejak modul PRQ, PO sejak Purchasing inti).
+        $this->assertSame(8, ApprovalRule::count());
 
         $besar = ApprovalRule::query()->where('name', ApprovalDemoSeeder::REQ_BESAR)->with('steps')->sole();
         $this->assertSame(ApprovalDocumentType::MaterialRequest, $besar->document_type);
@@ -129,8 +129,14 @@ class ApprovalChainTest extends TenantTestCase
         $this->assertSame(['match' => 'all', 'vendor_types' => ['online_marketplace']], $prq->conditions);
         $this->assertSame([ApproverType::WarehouseHead, ApproverType::Role], $prq->steps->pluck('approver_type')->all());
 
+        // Satu-satunya kondisi nilai uang: PO (D-28, A-212).
+        $po = ApprovalRule::query()->where('name', ApprovalDemoSeeder::PO_BESAR)->with('steps')->sole();
+        $this->assertSame(ApprovalDocumentType::PurchaseOrder, $po->document_type);
+        $this->assertEquals(['match' => 'all', 'order_value_min' => 50000000], $po->conditions);
+        $this->assertSame([ApproverType::Role], $po->steps->pluck('approver_type')->all());
+
         (new ApprovalDemoSeeder)->run();
-        $this->assertSame(7, ApprovalRule::count(), 'Seeder aman dijalankan ulang.');
+        $this->assertSame(8, ApprovalRule::count(), 'Seeder aman dijalankan ulang.');
         $this->assertSame(2, $besar->steps()->count());
     }
 }

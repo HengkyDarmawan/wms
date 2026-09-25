@@ -81,9 +81,9 @@
                                 <div>
                                     <div class="fw-semibold">{{ $akses->platformUser?->name ?? '—' }}</div>
                                     <div class="small text-muted">
-                                        {{ $akses->starts_at->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d M Y H:i') }}
+                                        {{ $akses->starts_at->lokal()->format('d M Y H:i') }}
                                         &ndash;
-                                        {{ $akses->ends_at->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d M Y H:i') }}
+                                        {{ $akses->ends_at->lokal()->format('d M Y H:i') }}
                                     </div>
                                     <div class="small">{{ $akses->reason }}</div>
                                 </div>
@@ -121,9 +121,9 @@
                                     <tr wire:key="riwayat-{{ $akses->id }}">
                                         <td class="small">{{ $akses->platformUser?->name ?? '—' }}</td>
                                         <td class="small text-muted">
-                                            {{ $akses->starts_at->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d M Y H:i') }}
+                                            {{ $akses->starts_at->lokal()->format('d M Y H:i') }}
                                             &ndash;
-                                            {{ $akses->ends_at->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d M Y H:i') }}
+                                            {{ $akses->ends_at->lokal()->format('d M Y H:i') }}
                                         </td>
                                         <td class="small">{{ $akses->reason }}</td>
                                         <td>

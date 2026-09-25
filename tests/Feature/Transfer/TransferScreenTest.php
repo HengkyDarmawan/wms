@@ -143,7 +143,7 @@ class TransferScreenTest extends TenantTestCase
             ->assertSet('form.destination_warehouse_id', (string) $this->bks->id);
 
         $this->actingAs($kepala)->get($this->tenantUrl('/'))->assertOk()
-            ->assertSee(__('Transfer & retur'))->assertSee(route('transfers.index'));
+            ->assertSee(__('Barang masuk'))->assertSee(route('transfers.index'));
 
         $this->actingAs($this->makeUser('driver'))->get($this->tenantUrl('/'))->assertOk()
             ->assertDontSee(route('transfers.index'));

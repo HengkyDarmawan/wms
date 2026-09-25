@@ -1,100 +1,114 @@
-# Prompt: melanjutkan pembangunan Fase 1 di rumah (XAMPP3)
+# Prompt: melanjutkan WMS di rumah (XAMPP3)
 
-**Versi:** 1.9
+**Versi:** 2.0
 **Tanggal:** 25 September 2026
-**Status:** arsip — semua butir §2 selesai 25 Sep 2026; lanjutan di kantor: [00-lanjutkan-di-kantor.md](00-lanjutkan-di-kantor.md). Semula: serah terima dari sesi kantor (XAMPP) ke sesi rumah (XAMPP3 + MariaDB 10.4; v1.2: mesin rumah pindah dari Laragon ke `C:\xampp3`; v1.3: langkah 0 lulus dan modul Konversi & Waste selesai — jatah nomor dan urutan sisa diperbarui; v1.4: modul Aset selesai; v1.5: modul Purchase Request selesai — jatah nomor diperbarui; v1.6: modul Platform penuh selesai; v1.7: Pendukung F1 selesai)
-**Dokumen terkait:** [README](../README.md) · [Laporan progres](../00-laporan-progres-2026-09-24.md) · [Setup lokal](../00-setup-lokal.md) · [Keputusan & Asumsi](../wms/04-keputusan-dan-asumsi.md) · [`../../CLAUDE.md`](../../CLAUDE.md)
+**Status:** aktif — serah terima dari sesi kantor (XAMPP + MariaDB 10.4.27) ke sesi rumah (XAMPP3 + MariaDB 10.4.32). v1.x (arsip) adalah serah terima 24 Sep yang semua butirnya sudah selesai; arah sebaliknya: [00-lanjutkan-di-kantor.md](00-lanjutkan-di-kantor.md) (arsip)
+**Dokumen terkait:** [README](../README.md) · [Laporan progres](../00-laporan-progres-2026-09-24.md) · [Setup lokal](../00-setup-lokal.md) · [Tinjauan asumsi](../00-tinjauan-asumsi-2026-09-25.md) · [Keputusan & Asumsi](../wms/04-keputusan-dan-asumsi.md) · [`../../CLAUDE.md`](../../CLAUDE.md)
 
-Cara pakai: setelah `git pull`, buka Claude Code di root repo lalu tempel **seluruh blok prompt di §2**. Bagian §1 untuk dibaca manusia.
+Cara pakai: di rumah, `git pull`, buka Claude Code di `C:\xampp3\htdocs\wms`, lalu tempel **seluruh blok prompt di §2**. Bagian §1 dan §3 untuk dibaca manusia.
 
 ---
 
-## 1. Keadaan saat serah terima (24 Sep 2026, sore)
+## 1. Keadaan saat serah terima (25 Sep 2026, sore)
 
 | Hal | Keadaan |
 |---|---|
-| Branch `main` | Semua modul di bawah sudah di-commit dan di-push; **493 uji hijau** di MariaDB 10.4 (kantor). Mesin rumah kini juga MariaDB 10.4 (XAMPP3), jadi hasilnya setara |
-| Modul selesai Fase 1 | Access, Master, Warehouse, Stock, Request, Picking/Shipment, Shared (laporan & berkas), Platform-login, **Penerimaan/QC/put-away/RTV (19)**, **Approval (20)**, **Opname & Penyesuaian (21)**, **Retur & Transfer (22)**, **Pemakaian ISU (23)**, **Template dokumen & label (18, sesi paralel)** |
-| Perbaikan penting | Pengiriman kini mencatat `qty_shipped`/`qty_received` ke baris REQ (`RequestFulfillment`); Stok Tersedia hanya dari bin `storage` (A-85); aset CSS/JS halaman company (`asset_helper_tenancy=false`); perilaku template NexaDash (`resources/js/globals.js`) |
-| Branch `wip/konversi-waste` | Modul 6 **setengah jadi, belum diuji**: migrasi `000130`, enum/model/support `app/Domain/Conversion`, plus `docs/wip-konversi-waste-rencana.md` berisi rancangan lengkap, rencana asumsi A-153–A-161, permission, dan urutan sisa langkah |
-| Asumsi menunggu validasi | A-72–A-119 dan A-150–A-152 (modul ini), A-120–A-126 (modul Template) |
-| Laporan progres | Fase 1: 11 selesai · 6 sebagian · 6 belum (dari 23 butir Blueprint §18) |
-| Uji browser | `tests/e2e/ui-check.mjs` (semua menu) dan `tests/e2e/alur-req-sj.mjs` (skenario §5) — lihat `tests/e2e/README.md` |
+| Branch `main` | Seluruh pekerjaan sesi kantor 25 Sep di-commit & di-push (satu commit di atas `9578e74`); lihat `git log -1` |
+| Uji | **616 hijau / 6.744 asersi** (MariaDB 10.4.27, XAMPP kantor). E2E pada demo segar: `alur-req-sj` 10/10, `alur-pendukung` 9/9, `ui-check` 87 cek, 0 error console |
+| Migrasi baru sejak `9578e74` | Tenant `2026_01_01_000210_create_purchasing_tables` (PO, harga beli vendor). Tidak ada migrasi pusat baru |
+| Modul selesai Fase 1 | **Semua 22 spesifikasi**: `docs/wms/10`–`27`, `30` dan `docs/purchasing/01`–`02` (Purchasing inti Fase 1b). Tidak ada dokumen tanpa kode |
+| Selesai hari ini | Pindai REQ/ISU (A-206); impor vendor & saldo awal (A-207); Purchasing 1b (A-208–A-218); landing Part 5 (A-220–A-225); sidebar 12 grup lipat (A-227); hub proyek (A-228); konversi per jenis (A-229); pengaturan company (A-230); halaman penerima bertoken + foto/tanda tangan (A-231); 11 laporan §9 + 4 cetak TRF/RET/PRQ/GRN (A-232); rapi UI (font, tema, teks tanpa kode internal, beranda portal); sapuan §13 di 13 spesifikasi |
+| Asumsi menunggu validasi | A-72–A-126, A-150–A-232 — **137 asumsi**, kolom *Keputusan* di [tinjauan asumsi](../00-tinjauan-asumsi-2026-09-25.md) masih kosong |
+| Uji browser | `tests/e2e/ui-check.mjs`, `alur-req-sj.mjs` (10 langkah), `alur-pendukung.mjs` (9 langkah) — helper `go()` menunggu kesiapan halaman; butuh `MYSQL_BIN` |
 
 ## 2. Prompt (tempel utuh ke Claude Code)
 
 ```
-Lanjutkan pembangunan WMS Fase 1 di mesin rumah (XAMPP3 di C:\xampp3: PHP 8.3.33 = `php`,
-MariaDB 10.4.32, web `php artisan serve --host=127.0.0.1 --port=8000`).
+Lanjutkan pekerjaan WMS di mesin rumah (XAMPP3 di C:\xampp3, repo C:\xampp3\htdocs\wms:
+PHP 8.3.33 = `php` dari C:\xampp3\php\php.exe; MariaDB 10.4.32, mysql di
+C:\xampp3\mysql\bin\mysql.exe, root tanpa password; web `php artisan serve --host=127.0.0.1 --port=8000`
+karena Apache XAMPP3 memegang port 80; Node 22, Composer 2.8, `py -3`. Laragon TIDAK dipakai).
 Baca dulu CLAUDE.md dan urutan bacanya, lalu docs/prompts/00-lanjutkan-di-rumah.md,
-docs/00-laporan-progres-2026-09-24.md, dan docs/wms/04-keputusan-dan-asumsi.md §2.6–§2.8.
+docs/00-laporan-progres-2026-09-24.md (§4, §5.6), docs/00-tinjauan-asumsi-2026-09-25.md, dan
+docs/wms/04-keputusan-dan-asumsi.md §2.15–§2.19.
 
 ## Langkah 0 — siapkan lingkungan setelah git pull (jangan lewati)
 1. `composer install`, `npm install`, `npm run build`.
-2. `.env`: `APP_URL=http://wms.test:8000`, pastikan `CACHE_STORE=array`. `database`/`file`
-   membuat halaman company galat karena stancl/tenancy butuh cache bertag.
-3. Database belum ada: buat `wms_central` dan `wms_central_test` dengan `C:\xampp3\mysql\bin\mysql.exe`, lalu
-   ikuti 00-setup-lokal §3 (migrate, ProductionSeeder, PlatformDemoSeeder). Bila sudah ada: `php artisan migrate`
-   lalu `php artisan tenants:migrate`.
-4. `php artisan tenants:seed --tenants=<id DEMO> --class="Database\Seeders\Tenant\DemoSeeder"`
+2. `.env`: `APP_URL=http://wms.test:8000`, `CACHE_STORE=array` (stancl/tenancy butuh cache bertag),
+   koneksi DB `127.0.0.1:3306` root tanpa password.
+3. `php artisan migrate` (pusat) lalu `php artisan tenants:migrate` (ada migrasi purchasing 000210).
+4. Demo segar: `php artisan tenants:migrate-fresh --tenants=1` lalu
+   `php artisan tenants:seed --tenants=1 --class="Database\Seeders\Tenant\DemoSeeder" --force`
    (`--tenants` menerima id company, bukan kode).
-5. `php artisan test` — semua harus hijau. Kode tidak diubah demi MariaDB (A-76).
+5. `php artisan test` — harus 616 hijau. Kode tidak diubah demi MariaDB (A-76).
 6. `py -3 docs/diagram/_verify.py` → HASIL: OK.
-7. Baris hosts (Administrator): `127.0.0.1 wms.test`, `demo.wms.test`, `auth.wms.test`. Jalankan
-   `php artisan serve --host=127.0.0.1 --port=8000`, lalu `node tests/e2e/ui-check.mjs` (0 error console) dan
-   `MYSQL_BIN=C:/xampp3/mysql/bin/mysql.exe node tests/e2e/alur-req-sj.mjs` pada data demo yang baru di-seed.
+7. Baris hosts (Administrator): `127.0.0.1 wms.test demo.wms.test auth.wms.test`. Jalankan
+   `php artisan serve --host=127.0.0.1 --port=8000` di latar, lalu dengan
+   `MYSQL_BIN=C:/xampp3/mysql/bin/mysql.exe`: `node tests/e2e/ui-check.mjs` (0 error console),
+   `node tests/e2e/alur-req-sj.mjs` (10/10), `node tests/e2e/alur-pendukung.mjs` (9/9) — dua yang terakhir
+   hanya lulus penuh pada demo yang baru di-seed dan dijalankan berurutan.
 Laporkan hasil langkah 0 sebelum lanjut.
 
-## Cara kerja (sama dengan sesi kantor)
-- Satu modul per giliran, berurutan. Per modul: spesifikasi docs/wms/<nn>-<modul>.md dari template
-  (format contoh: 23-pemakaian.md) → migrasi tenant → domain app/Domain/<Modul> (satu Action per permission)
-  → permission & role di ReferenceSeeder + hitungan per modul di DemoSeederTest → rute GET, layar Livewire,
-  sidebar + palet Ctrl+K → uji tests/Feature/<Modul> untuk setiap TC **plus satu uji rantai lintas modul**
-  → dokumen (ERD via docs/diagram/_generate_erd.py, Katalog enum saja, asumsi baru, README changelog,
-  laporan progres §4, cek.md).
-- Boleh mendelegasikan satu modul ke satu subagen, lalu VERIFIKASI SENDIRI sesudahnya: `php artisan test`,
-  `_verify.py`, `tenants:migrate`, `npm run build`, dan `node tests/e2e/ui-check.mjs`.
-- Larangan keras CLAUDE.md: tanpa harga/uang, tanpa hapus fisik, stok hanya lewat
+## Cara kerja
+- Satu tugas per giliran, berurutan. Perubahan fitur mengikuti pola modul: spesifikasi docs/wms/<nn>-*.md →
+  migrasi → domain app/Domain/<Modul> (satu Action per permission) → rute GET/POST, Livewire, sidebar + Ctrl+K
+  → uji tests/Feature/<Modul> per TC → dokumen (ERD via docs/diagram/_generate_erd.py, asumsi baru,
+  README changelog dengan ID, laporan progres, §13 spesifikasi).
+- Larangan keras CLAUDE.md: tanpa harga/uang di luar app/Domain/Purchasing, tanpa hapus fisik, stok hanya lewat
   app/Domain/Stock/Support/StockLedger::post()/reverse(), status hanya dari Katalog, tidak ada transisi lewat GET.
-- Keputusan yang tidak tertulis di dokumen: ambil pilihan paling sesuai dokumen, catat sebagai asumsi
-  "Perlu validasi". Jangan berhenti untuk bertanya kecuali benar-benar keputusan bisnis besar.
-- Jangan commit kecuali saya minta. Jika sesi masuk plan mode di tengah jalan, tulis status ke berkas rencana.
+- Pint HANYA pada berkas yang diubah (`vendor/bin/pint <berkas…>`), jangan per direktori.
+- Jangan jalankan dua suite uji bersamaan (database uji dipakai bersama); E2E jangan bersamaan dengan suite.
+- Boleh mendelegasikan ke subagen, lalu VERIFIKASI SENDIRI: `php artisan test`, `_verify.py`,
+  `tenants:migrate`, `npm run build`, `node tests/e2e/ui-check.mjs`.
+- Keputusan yang tidak tertulis: ambil pilihan paling sesuai dokumen, catat sebagai asumsi "Perlu validasi".
+  Jangan berhenti untuk bertanya kecuali keputusan bisnis besar.
+- Jangan commit kecuali saya minta. Jangan menyentuh database di luar prefiks `wms_`.
+- Setiap file dokumen ≤ 450 baris; bila README penuh, pindahkan blok changelog tertua ke
+  docs/00-catatan-perubahan-arsip.md (sudah ada polanya).
 
-## Jatah nomor (dikoordinasikan dengan sesi modul Template — patuhi)
-- Asumsi berikutnya: **A-206, A-207, …** (A-120–A-149 milik modul Template; A-153–A-162 Konversi & Waste; A-163–A-169 Aset; A-170–A-175 Purchase Request; A-176–A-184 Platform; A-185–A-194 Pendukung F1 & penutup; A-195–A-205 tinjauan kode, 2FA Super Admin, pindai, pengingat tagihan, petik ulang sisa, pengetatan 2FA).
-- Versi berikutnya: README 0.36→0.37, 04-keputusan 0.26→0.27, 06-katalog 0.17→0.18, model data 0.19→0.20.
+## Jatah nomor
+- Asumsi berikutnya: **A-233, A-234, …** (A-206–A-232 dipakai sesi kantor 25 Sep).
+- Versi berikutnya: README 0.45→0.46, 04-keputusan 0.33→0.34, 06-katalog 0.19→0.20, model data 0.20→0.21,
+  laporan progres 1.15→1.16, tinjauan asumsi 1.7→1.8.
 
-## Urutan sisa pekerjaan
-1. ~~**Konversi & Waste**~~ — **selesai 24 Sep 2026** (24-konversi-waste.md v0.2, 513 uji hijau). Catatan lama: spesifikasi 24-konversi-waste.md, migrasi 000130. Mulai dari branch
-   `wip/konversi-waste`: gabungkan ke main (`git merge wip/konversi-waste`), baca
-   docs/wip-konversi-waste-rencana.md (rancangan + A-153–A-161 + sisa langkah), selesaikan, lalu hapus berkas
-   rencana WIP itu. Catatan dari rancangan: tiga uji lama perlu disesuaikan saat handler/print type ada
-   (TC-APR-17 dan TC-TPL-04 memakai `waste_disposal` sebagai contoh tipe yang belum tersambung; TC-ACC-27b
-   menghitung permission per modul). Kolom Waste/Dikonversi masuk laporan Material per proyek.
-2. ~~**Aset dipinjamkan**~~ — **selesai 24 Sep 2026** (25-aset.md v0.2). Catatan lama: 25-aset.md, migrasi 000140. BR-AST-01–08, KS §2.11, A-66; lengkapi
-   stub pemeriksaan aset saat retur (A-116, 22-retur-transfer §13); BA serah terima via modul Template.
-3. ~~**Purchase Request**~~ — **selesai 25 Sep 2026** (26-purchase-request.md v0.1, 537 uji hijau). Catatan lama: 26-purchase-request.md, migrasi 000150. KS §2.15, BR-REQ-11 (titik pesan ulang,
-   job harian), A-47/A-51–A-53; sambungkan baris REQ bersumber `purchase` (BR-REQ-05) dan handler approval PRQ.
-4. ~~**Platform penuh**~~ — **selesai 25 Sep 2026** (17-platform-login.md v0.2, 546 uji hijau; migrasi pusat 000020, tanpa tabel tenant baru). Catatan lama: lanjutan 17-platform-login.md, migrasi 000160. `CreateTenant` + seed acuan otomatis
-   (TenancyServiceProvider belum menyeed), tagihan/verifikasi transfer manual, trial, suspend/terminate sesuai
-   BR-SUB; tutup temuan 17 §13 (terminated terlalu longgar, TenantDeleted menghapus DB, login Super Admin
-   tanpa penguncian).
-5. ~~**Pendukung F1**~~ — **selesai 25 Sep 2026** (27-pendukung-f1.md v0.3; impor Excel item & proyek + klien; tinjauan kode malam 25 Sep: A-195–A-199; 2FA Super Admin A-200, pindai A-201 & A-203, pengingat tagihan A-202). Catatan lama: strategi FEFO/FIFO/potongan terdekat di CreatePickTask; notifikasi in-app & email;
-   laporan §9 yang tersisa + ekspor PDF; wizard setup awal company; impor Excel master; PWA installable +
-   scan kamera + draf lokal; Beranda dinamis (kartu "Modul berikutnya" masih basi); guard penutupan proyek
-   BR-PRJ-02; konfirmasi/keberatan terima pemohon BR-REQ-10 (lalu tinjau ulang A-77).
-   (Template dokumen & label SUDAH selesai — jangan dibangun ulang.)
-6. ~~**Penutup**~~ — **selesai 25 Sep 2026** (uji rantai penuh `tests/Feature/FullLifecycleTest` TC-E2E-01, `tests/e2e/alur-pendukung.mjs` P1–P7, `ui-check.mjs` + layar Super Admin, [tinjauan asumsi](../00-tinjauan-asumsi-2026-09-25.md)). Catatan lama: perluas tests/e2e menjadi alur panjang: GRN → QC → put-away → REQ → approval → PCK → SJ →
-   terima → ISU → konversi pipa → retur sisa → opname → penyesuaian → aset pinjam & kembali; perbarui laporan
-   progres sampai semua butir Fase 1 selesai (atau stub yang disengaja); tabel ringkas semua asumsi
-   "Perlu validasi" untuk saya tinjau.
+## Yang SUDAH selesai (jangan dibangun ulang)
+Semua 22 spesifikasi Fase 1 (docs/wms/10–27, 30; docs/purchasing/01–02) punya kode + uji. Sesi kantor 25 Sep
+menambah: pindai REQ/ISU (A-206); impor Excel vendor & saldo awal (A-207); Purchasing inti 1b — PO dari PRQ,
+harga beli vendor, approval nilai PO, PO → catatan pemesanan → GRN, cetak PO (A-208–A-218); landing page
+(A-220–A-225); sidebar 12 grup lipat + filter (A-227); hub proyek /projects/{id} dengan tab & tutup proyek
+berchecklist (A-228); form konversi per jenis dengan ConversionPlanner (A-229); layar Pengaturan company
+/settings/company (A-230); halaman penerima bertoken /terima/{token} + foto & tanda tangan bukti terima,
+policy issueToken (A-231); 11 laporan §9 Stock/Request/Shipment + cetak TRF/RET/PRQ/GRN (A-232); beranda
+portal klien dengan Stok On-site; teks UI tanpa kode internal; tanggal-jam zona company; sapuan §13.
 
-Setiap modul selesai: laporkan singkat (jumlah uji, halaman baru, asumsi baru), lalu lanjut ke berikutnya
+## Urutan pekerjaan
+1. **Terapkan keputusan pemilik produk** dari kolom *Keputusan* di docs/00-tinjauan-asumsi-2026-09-25.md
+   (137 asumsi): `Setuju` → isi kolom *Validasi* di 04; `Ubah: …` → ubah kode + uji + dokumen (perubahan
+   substantif = asumsi/keputusan baru; keputusan lama tidak diedit, isi *Diganti oleh*); `Hapus` → buang
+   perilaku + uji, catat di changelog. Kerjakan yang bertanda ⚠ lebih dulu. Bila kolomnya masih kosong,
+   TANYAKAN saya dulu — jangan menebak.
+2. **Sisa Fase 1** (setelah butir 1, atau bila saya minta), urutan usulan:
+   a. Notifikasi §8 yang belum: SLA tinjau & pengganti item & tanggal janji (14), item sementara & proyek
+      ditutup (11), reservasi menggantung & periode dikunci (13), PR ke penindak lanjut (26), jatuh tempo &
+      sisa umur aset (25), pengingat tagihan WA (17, [F2] kanal).
+   b. Lampiran generik (A-68): foto pemakaian ISU, foto serah terima aset keluar, PDF laporan opname.
+   c. Override SJ mendesak dari bin beku (BR-OPN-02); job penuaan tenggat penggantian & pengingat SLA (14).
+   d. Laporan §9 modul 19–22 (penerimaan, approval, opname, retur/transfer) di kerangka 16 §3.2.
+   e. SJ balik untuk barang di tangan klien; short pick PCK TRF → backorder REQ penunggu (22).
+   f. ADJ kelebihan terima (BR-GRN-05); bukti terima per unit serial/potong (15); transfer aset antar
+      proyek (25); rekonsiliasi saldo terjadwal (13).
+   g. Menunggu keputusan pemilik: cross-dock (A-83), impor gudang/bin (O-12), OTP otomatis (O-15),
+      `from_stock_status` baris lama (A-194, butuh data produksi).
+3. **Akuntansi**, **kejadian HTTP ke sistem luar [F3]**, dan semua **[F2]** (WhatsApp, offline penuh, resep
+   konversi, maintenance aset, BoQ, cycle count ABC, editor template, RFID) — hanya bila saya minta.
+
+Setiap tugas selesai: laporkan singkat (jumlah uji, layar baru, asumsi baru), lalu lanjut ke berikutnya
 tanpa menunggu saya.
 ```
 
 ## 3. Catatan untuk manusia
 
-- Mesin kantor: XAMPP + MariaDB 10.4, `php artisan serve` port 8000 ([00-setup-lokal](../00-setup-lokal.md)). Mesin rumah: XAMPP3 (`C:\xampp3`, PHP 8.3.33 = `php`, MariaDB 10.4.32), juga `php artisan serve` port 8000 karena Apache XAMPP3 memegang port 80. Laragon lama (`C:\laragon\www\wms`) tidak dipakai lagi.
-- `phpunit.xml` memakai `memory_limit=512M` karena render PDF (dompdf) di suite penuh.
-- Worktree `C:\xampp\htdocs\wms-template` (branch `feat/template-label`) hanya ada di mesin kantor dan sudah di-merge; boleh dihapus (`git worktree remove`).
+- Profil mesin rumah lengkap di [00-setup-lokal §1](../00-setup-lokal.md#1-profil-mesin): `C:\xampp3`, PHP 8.3.33 sudah `php` di PATH, MariaDB 10.4.32, `php artisan serve` :8000. Laragon (`C:\laragon\www\wms`, MySQL 8.4) tidak dipakai; MySQL 8.4 tetap standar produksi ([A-76](../wms/04-keputusan-dan-asumsi.md#a-76), [A-162](../wms/04-keputusan-dan-asumsi.md#a-162)).
+- Isi kolom *Keputusan* di [tinjauan asumsi](../00-tinjauan-asumsi-2026-09-25.md) sebelum sesi dimulai supaya butir 1 bisa langsung dikerjakan; tanpa itu Claude akan bertanya.
+- `phpunit.xml` memakai `memory_limit=512M` (dompdf); suite penuh ±10 menit di mesin kantor, lebih cepat di rumah. E2E rapuh bila mesin sibuk — jalankan satu per satu.
+- Sebelum kembali ke kantor: minta Claude Code meng-commit & mem-push, lalu perbarui prompt arah rumah → kantor ([00-lanjutkan-di-kantor.md](00-lanjutkan-di-kantor.md)).

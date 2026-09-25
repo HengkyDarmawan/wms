@@ -54,7 +54,7 @@
 
                     @foreach ($inv->payments as $p)
                         <div class="small mt-1">
-                            {{ __('Bukti') }} {{ $p->paid_at?->format('d/m/Y') }} · {{ __('Rp') }} {{ number_format((float) $p->amount, 0, ',', '.') }}
+                            {{ __('Bukti') }} {{ $p->paid_at?->lokal()->format('d/m/Y') }} · {{ __('Rp') }} {{ number_format((float) $p->amount, 0, ',', '.') }}
                             · {{ $p->uploaded_by_name }}
                             <span class="badge {{ $p->status->badge() }}">{{ $p->status->label() }}</span>
                             @if ($p->reject_reason) <span class="text-danger">— {{ $p->reject_reason }}</span> @endif

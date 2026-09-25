@@ -34,8 +34,11 @@
     @if ($otpSekali !== null)
         <div class="alert alert-info" role="alert">
             {{ __('Kode OTP untuk penerima') }}: <strong class="fs-5">{{ $otpSekali }}</strong>
+            @if ($tautanSekali)
+                <div class="mt-1">{{ __('Tautan') }}: <a href="{{ $tautanSekali }}" target="_blank" rel="noopener" class="text-break">{{ $tautanSekali }}</a></div>
+            @endif
             <div class="small">
-                {{ __('Kode ini hanya ditampilkan sekali dan tidak tersimpan. Sampaikan langsung kepada penerima.') }}
+                {{ __('Kode ini hanya ditampilkan sekali dan tidak tersimpan. Bagikan tautannya dan sampaikan kode langsung kepada penerima.') }}
             </div>
         </div>
     @endif
@@ -134,9 +137,9 @@
                                                wire:model="terima.{{ $l->id }}.qty_missing">
                                     </td>
                                     <td>
-                                        <input class="form-control form-control-sm" type="text"
-                                               wire:model="terima.{{ $l->id }}.damage_photo_path"
-                                               placeholder="{{ __('Berkas foto') }}">
+                                        <input class="form-control form-control-sm @error('fotoRusak.'.$l->id) is-invalid @enderror" type="file"
+                                               accept="image/jpeg,image/png,image/webp" capture="environment"
+                                               wire:model="fotoRusak.{{ $l->id }}" aria-label="{{ __('Foto kerusakan') }}">
                                     </td>
                                 </tr>
                             @endforeach
@@ -146,6 +149,22 @@
 
                 @error('form.qty_good') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
                 @error('form.damage_photo_path') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
+
+                {{-- A-231: foto serah terima & tanda tangan penerima (kanvas → data URL). --}}
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label" for="terima-foto">{{ __('Foto serah terima') }} <span class="text-muted small">({{ __('opsional') }})</span></label>
+                        <input class="form-control @error('foto') is-invalid @enderror" id="terima-foto" type="file"
+                               accept="image/jpeg,image/png,image/webp" capture="environment" wire:model="foto">
+                        @error('foto') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-6" data-signature wire:ignore>
+                        <label class="form-label">{{ __('Tanda tangan penerima') }} <span class="text-muted small">({{ __('gambar dengan jari') }})</span></label>
+                        <canvas class="border rounded w-100 bg-white" height="140" aria-label="{{ __('Kanvas tanda tangan') }}"></canvas>
+                        <input type="hidden" wire:model="tandaTangan" data-signature-target>
+                        <button class="btn btn-sm btn-outline-secondary mt-1" type="button" data-signature-clear>{{ __('Hapus tanda tangan') }}</button>
+                    </div>
+                </div>
             </div>
             <div class="card-footer d-flex gap-2">
                 <button class="btn btn-success" type="button" wire:click="simpanBuktiTerima">{{ __('Simpan') }}</button>
@@ -202,7 +221,7 @@
             @endcan
 
             @if ($sj->status->value === 'shipped')
-                @can('ship', $sj)
+                @can('issueToken', $sj)
                     <button class="btn btn-outline-primary" type="button" wire:click="mintaDialog('tautan')">
                         {{ __('Terbitkan tautan penerima') }}
                     </button>
@@ -226,6 +245,12 @@
                     · {{ $bukti->confirmed_at?->lokal()->format('d/m/Y H:i') }}
                     · {{ $bukti->channel->label() }}
                 </p>
+                @if ($bukti->photo_path || $bukti->signature_path)
+                    <p class="mb-1 small">
+                        @if ($bukti->photo_path) <a href="{{ route('shipments.proof.file', [$sj, 'foto']) }}" target="_blank" rel="noopener"><i class="bi bi-image"></i> {{ __('Foto serah terima') }}</a> @endif
+                        @if ($bukti->signature_path) <a class="ms-2" href="{{ route('shipments.proof.file', [$sj, 'ttd']) }}" target="_blank" rel="noopener"><i class="bi bi-pen"></i> {{ __('Tanda tangan') }}</a> @endif
+                    </p>
+                @endif
                 @if ($bukti->confirm_deadline_at)
                     <p class="text-muted small mb-0">
                         {{ __('Pemohon bisa mengajukan keberatan sampai :tgl', [
@@ -250,7 +275,7 @@
                                 <td>#{{ $bl->shipment_line_id }}</td>
                                 <td class="text-end">{{ number_format((float) $bl->qty_good, 2, ',', '.') }}</td>
                                 <td class="text-end">{{ number_format((float) $bl->qty_damaged, 2, ',', '.') }}</td>
-                                <td class="text-end">{{ number_format((float) $bl->qty_missing, 2, ',', '.') }}</td>
+                                <td class="text-end">{{ number_format((float) $bl->qty_missing, 2, ',', '.') }} @if ($bl->damage_photo_path) <a class="ms-1" href="{{ route('shipments.proof.file', [$sj, 'baris-'.$bl->id]) }}" target="_blank" rel="noopener" title="{{ __('Foto kerusakan') }}"><i class="bi bi-image"></i></a> @endif</td>
                             </tr>
                         @endforeach
                     </tbody>

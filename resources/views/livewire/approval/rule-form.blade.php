@@ -2,7 +2,7 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
             <h1 class="h3 mb-1">{{ $ruleId ? __('Ubah aturan approval') : __('Aturan approval baru') }}</h1>
-            <p class="text-muted mb-0">{{ __('Kondisi tidak memakai nilai uang (BR-APR-07). Dokumen yang sedang menunggu tidak terpengaruh perubahan aturan (BR-APR-01).') }}</p>
+            <p class="text-muted mb-0">{{ __('Kondisi dokumen gudang tidak memakai nilai uang; hanya Purchase Order yang boleh memakai nilai PO. Dokumen yang sedang menunggu tidak terpengaruh perubahan aturan.') }}</p> {{-- BR-APR-07, D-28, BR-APR-01 --}}
         </div>
         <a class="btn btn-outline-secondary" href="{{ route('approval.rules.index') }}">{{ __('Kembali') }}</a>
     </div>
@@ -103,6 +103,13 @@
                     <input class="form-control" id="kondisi-baris" type="number" min="1" wire:model="conditions.line_count_min">
                 </div>
             @endif
+            @if (in_array('order_value_min', $allowed, true))
+                <div class="col-md-3">
+                    <label class="form-label" for="kondisi-nilai">{{ __('Nilai PO ≥ (Rp)') }}</label>
+                    <input class="form-control" id="kondisi-nilai" type="number" min="0" step="1000" wire:model="conditions.order_value_min">
+                    <div class="form-text">{{ __('Hanya untuk Purchase Order.') }}</div> {{-- D-28 --}}
+                </div>
+            @endif
             @if (in_array('line_qty_min', $allowed, true))
                 <div class="col-md-3">
                     <label class="form-label" for="kondisi-qty">{{ __('Jumlah per baris ≥ (satuan dasar)') }}</label>
@@ -175,12 +182,12 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer small text-muted">{{ __('Pengaju tidak pernah menyetujui dokumennya sendiri; bila lapis menunjuk pengaju, lapis dialihkan ke atasannya (BR-APR-03). Approver nonaktif dialihkan ke cadangan, atasan, lalu Admin Company (BR-APR-06). Kanal WhatsApp tersedia di Fase 2a.') }}</div>
+        <div class="card-footer small text-muted">{{ __('Pengaju tidak pernah menyetujui dokumennya sendiri; bila lapis menunjuk pengaju, lapis dialihkan ke atasannya. Approver nonaktif dialihkan ke cadangan, atasan, lalu Admin Company. Kanal WhatsApp tersedia di Fase 2a.') }}</div> {{-- BR-APR-03, BR-APR-06 --}}
     </div>
 
     @can('approval.simulate')
         <div class="card mb-3">
-            <div class="card-header"><strong>{{ __('Simulasi sebelum disimpan') }}</strong> <span class="small text-muted">(BR-APR-11)</span></div>
+            <div class="card-header"><strong>{{ __('Simulasi sebelum disimpan') }}</strong></div> {{-- BR-APR-11 --}}
             <div class="card-body row g-3 align-items-end">
                 <div class="col-md-5">
                     <label class="form-label" for="sim-nomor">{{ __('Nomor dokumen contoh') }}</label>

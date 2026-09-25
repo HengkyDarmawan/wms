@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `access` (Akses, Autentikasi, Role & Cakupan, Organisasi)
 
-**Versi:** 0.6
+**Versi:** 0.8
 **Tanggal:** 24 September 2026
 **Status:** **selesai untuk Fase 1** — kerangka aplikasi, autentikasi, seluruh layar §6.1–§6.7, domain, seeder, dan 100 pengujian sudah jalan. Sisa pekerjaan kecil & penyimpangan: §13
 **Modul:** `access`
@@ -137,7 +137,7 @@ Siklus request ([08 §3](08-arsitektur.md#3-tenancy--siklus-request)): middlewar
 
 ## 6. Layar
 
-Layout: `template/partials/` → `resources/views/layouts/app.blade.php` (sidebar + header) dan `auth.blade.php` (tanpa sidebar, dari `template/auth/*.html`). jQuery hanya untuk plugin (DataTables, Select2); interaksi memakai Livewire + Alpine. Menu sidebar Fase 1 mengikuti urutan modul [08 §12](08-arsitektur.md#12-langkah-berikutnya-part-4). Semua form: field wajib bertanda `*` ([BR-GEN-11](05-aturan-bisnis.md#br-gen)).
+Layout: `template/partials/` → `resources/views/layouts/app.blade.php` (sidebar + header) dan `auth.blade.php` (tanpa sidebar, dari `template/auth/*.html`). jQuery hanya untuk plugin (DataTables, Select2); interaksi memakai Livewire + Alpine. Menu sidebar: dua butir atas (Beranda, Tugas approval saya) lalu 11 grup lipat berurutan alur kerja dengan kotak *Cari menu* ([A-227](04-keputusan-dan-asumsi.md#a-227), v0.7; sebelumnya datar mengikuti urutan modul [08 §12](08-arsitektur.md#12-langkah-berikutnya-part-4)). Semua form: field wajib bertanda `*` ([BR-GEN-11](05-aturan-bisnis.md#br-gen)).
 
 Layar autentikasi memakai **controller + Blade** (form POST biasa, lebih mudah diuji dan sesuai NFR-02);
 Livewire dipakai untuk layar pengelolaan yang interaktif (§6.3–§6.7).
@@ -317,12 +317,13 @@ Aksi domain yang ada di kode tetapi tidak disebut §4: `InviteUser` (kirim ulang
 | Layar | Route | Komponen Livewire | Isi |
 |---|---|---|---|
 | Daftar pengguna | `/users` | `access.user-list` | Cari nama/email; filter role, status (turunan), unit, dan cakupan (jenis + id); aksi undang ulang, kirim tautan password, nonaktifkan (dialog *Alasan* `*` + *Keterangan* opsional), aktifkan kembali |
-| Form pengguna | `/users/create`, `/users/{id}/edit` | `access.user-form` | Data diri, organisasi (unit, jabatan, atasan), klien, dan **penugasan role × cakupan** berulang dengan tanggal berlaku; toggle kirim undangan |
+| Form pengguna | `/users/create`, `/users/{id}/edit` | `access.user-form` | Data diri, organisasi (unit, jabatan, atasan), klien (dipilih dari daftar klien aktif), dan **penugasan role × cakupan** berulang dengan tanggal berlaku; toggle kirim undangan |
 | Detail pengguna | `/users/{id}` | `access.user-detail` | Tab Ringkasan, Penugasan Role, Perangkat, Riwayat (audit log) |
 | Daftar role | `/roles` | `access.role-list` | Jumlah permission & penugasan, penanda bawaan/klien, nonaktifkan & aktifkan role buatan company |
 | Form role | `/roles/create`, `/roles/{id}/edit` | `access.role-form` | Kode (dikunci setelah dibuat), nama, sifat klien, **matriks permission per modul**, dan tombol salin dari role lain |
 | Struktur organisasi | `/org` | `access.org-tree` | Pohon unit (tambah, ubah, sub-unit, nonaktifkan/aktifkan) dengan penjagaan lingkaran induk; jabatan per unit beserta level; daftar user di unit dengan jabatan dan atasan langsung |
 | Perangkat | `/devices` | `access.device-list` | Perangkat PWA; pemegang `device.view` melihat seluruh company, user lain hanya miliknya; cari & filter status; cabut dan aktifkan kembali tanpa menghapus data |
+| Beranda portal klien | `/portal` | `PortalDashboardController` | Kartu proyek aktif, permintaan berjalan, bukti terima yang perlu konfirmasi, retur berjalan; daftar proyek klien; **Stok On-site per proyek aktif** (*Di Gudang Site*, *Terkirim ke Klien*; BR-PRJ-05) dari `ReturnableStock` yang sama dengan form retur dan hub proyek. Uji TC-MST-26 (`tests/Feature/Master/PortalDashboardTest`) |
 | Akses dukungan | `/settings/support-access` | `access.support-access` | Admin Company memberi izin berperiode ke Super Admin (*Alasan* `*`, mulai, selesai, maksimum 7 hari), daftar izin yang berlaku, tombol cabut, dan riwayat pemberian |
 
 Aksi domain yang menopangnya: `CreateUser`, `UpdateUser`, `ReactivateUser`, `SendPasswordReset`,
@@ -338,6 +339,6 @@ Seluruh layar §6 sudah ada. Yang masih terbuka:
 1. ~~Unggah tanda tangan di profil~~ — **selesai 24 Sep 2026** memakai disk lokal per company ([A-68](04-keputusan-dan-asumsi.md#a-68)); legalitas tanda tangan tetap menunggu [O-13](04-keputusan-dan-asumsi.md#o-13).
 2. ~~Pengaturan 2FA di profil~~ — **selesai 24 Sep 2026**: kode QR, konfirmasi, delapan kode pemulihan sekali pakai, dan pematian yang menuntut password.
 3. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 24 Sep 2026** lewat layar laporan bersama di `/reports`.
-4. ~~Pemilihan gudang/proyek pada cakupan memakai id angka~~ — **selesai 24 Sep 2026**: keduanya kini memakai daftar nama.
+4. ~~Pemilihan gudang/proyek pada cakupan memakai id angka~~ — **selesai 24 Sep 2026**: keduanya kini memakai daftar nama; klien pada form pengguna menyusul **25 Sep 2026** (daftar klien aktif, `exists:clients`).
 5. ~~Kolom *(impl.)* dimasukkan ke generator ERD~~ — **selesai 24 Sep 2026**; 08a–08c dibuat ulang. Kolom `users` untuk 2FA, penguncian, dan riwayat password serta tabel `login_attempts` dan `password_histories` baru masuk ERD pada pencocokan 24 Sep 2026 (08a v0.7).
 6. **Kolom `created_by`/`updated_by` dan skema `audit_logs`** berbeda dari ERD — menunggu [A-74](04-keputusan-dan-asumsi.md#a-74) dan [A-75](04-keputusan-dan-asumsi.md#a-75).

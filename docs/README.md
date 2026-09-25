@@ -1,8 +1,8 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.36
+**Versi:** 0.45
 **Tanggal:** 25 September 2026
-**Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (579 uji hijau di MariaDB 10.4). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep, [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md)); berikutnya: validasi asumsi oleh pemilik produk, lalu landing page (Part 5). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; **[A-72–A-76](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) dan [A-77–A-116](wms/04-keputusan-dan-asumsi.md#26-baru-dari-pembangunan-modul-lanjutan--24-sep-2026), [A-120–A-126](wms/04-keputusan-dan-asumsi.md#27-baru-dari-modul-template-dokumen--label--24-sep-2026), [A-117–A-119 dan A-150–A-152](wms/04-keputusan-dan-asumsi.md#28-baru-dari-modul-issue-pemakaian-material-di-site--24-sep-2026), [A-153–A-162](wms/04-keputusan-dan-asumsi.md#29-baru-dari-modul-konversi--waste--24-sep-2026), [A-163–A-169](wms/04-keputusan-dan-asumsi.md#210-baru-dari-modul-aset-dipinjamkan--24-sep-2026), [A-170–A-175](wms/04-keputusan-dan-asumsi.md#211-baru-dari-modul-purchase-request--25-sep-2026), [A-176–A-184](wms/04-keputusan-dan-asumsi.md#212-baru-dari-modul-platform-penuh--25-sep-2026), [A-185–A-194](wms/04-keputusan-dan-asumsi.md#213-baru-dari-pendukung-fase-1--25-sep-2026), [A-195–A-205](wms/04-keputusan-dan-asumsi.md#214-baru-dari-tinjauan-kode-pendukung--platform--25-sep-2026) menunggu validasi** (lahir dari pencocokan dokumen dengan kode dan dari pembangunan modul). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
+**Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (579 uji hijau di MariaDB 10.4). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep, [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md)); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai; berikutnya: validasi asumsi A-72–A-225 oleh pemilik produk. D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; **[A-72–A-76](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) dan [A-77–A-116](wms/04-keputusan-dan-asumsi.md#26-baru-dari-pembangunan-modul-lanjutan--24-sep-2026), [A-120–A-126](wms/04-keputusan-dan-asumsi.md#27-baru-dari-modul-template-dokumen--label--24-sep-2026), [A-117–A-119 dan A-150–A-152](wms/04-keputusan-dan-asumsi.md#28-baru-dari-modul-issue-pemakaian-material-di-site--24-sep-2026), [A-153–A-162](wms/04-keputusan-dan-asumsi.md#29-baru-dari-modul-konversi--waste--24-sep-2026), [A-163–A-169](wms/04-keputusan-dan-asumsi.md#210-baru-dari-modul-aset-dipinjamkan--24-sep-2026), [A-170–A-175](wms/04-keputusan-dan-asumsi.md#211-baru-dari-modul-purchase-request--25-sep-2026), [A-176–A-184](wms/04-keputusan-dan-asumsi.md#212-baru-dari-modul-platform-penuh--25-sep-2026), [A-185–A-194](wms/04-keputusan-dan-asumsi.md#213-baru-dari-pendukung-fase-1--25-sep-2026), [A-195–A-205](wms/04-keputusan-dan-asumsi.md#214-baru-dari-tinjauan-kode-pendukung--platform--25-sep-2026) menunggu validasi** (lahir dari pencocokan dokumen dengan kode dan dari pembangunan modul). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
 Dokumentasi ini adalah acuan tunggal untuk membangun WMS baru dari nol. Prototipe lama (`warehouse.sipembantu.com`) hanya referensi; indeks temuan auditnya ada di [00-audit](00-audit/README.md).
 
@@ -20,14 +20,17 @@ docs/
 ├── 00-akun-uji.md                         ← SATU-SATUNYA daftar akun seed/demo (Super Admin, company DEMO, 14 akun tenant, org, stok awal, aturan approval demo)
 ├── 00-laporan-progres-2026-09-24.md     ← hasil E2E skenario §5, cakupan TC 178/178, peta progres Fase 1, bug pengiriman ↔ REQ
 ├── 00-tinjauan-asumsi-2026-09-25.md     ← daftar kerja 100 asumsi *Perlu validasi* (A-72–A-194) untuk pemilik produk, ⚠ = paling berdampak
+├── 00-catatan-perubahan-arsip.md         ← catatan perubahan README v0.2–v0.6 (dipindah agar README ≤ 450 baris)
 ├── 00-setup-lokal.md                      ← instalasi & menjalankan aplikasi: profil rumah (Laragon) dan kantor (XAMPP + MariaDB), hosts, seed, skenario uji manual
 ├── 00-audit/README.md                     ← indeks ID temuan prototipe (BUG/UX/SEC/T) yang dirujuk
 ├── 00-audit/alur-proses.html              ← bacaan cepat: 10 alur BPMN sebagai diagram alir sederhana — DIBUAT OTOMATIS dari diagram/_generate_alur_html.py
+├── 00-audit/alur-per-peran.html           ← alur yang sama diputar PER PERAN (apa yang dikerjakan tiap pengguna) — DIBUAT OTOMATIS dari diagram/_generate_peran_html.py
 ├── wms/
 │   ├── 01-blueprint.md                    ← gambaran produk, konsep inti, dokumen, fase rilis
 │   ├── 02-riset-wms-sejenis.md            ← riset produk sejenis & keputusan adopsi
 │   ├── 03-glosarium.md                    ← istilah UI ↔ nama di kode (wajib)
-│   ├── 04-keputusan-dan-asumsi.md         ← D-xx, A-xx, O-xx, matriks ketertelusuran
+│   ├── 04-keputusan-dan-asumsi.md         ← D-xx, A-xx, O-xx
+│   ├── 04a-matriks-ketertelusuran.md      ← matriks ketertelusuran (dipisah dari 04 v0.31)
 │   ├── 05-aturan-bisnis.md                ← BR-xx, relasi antar dokumen, matriks kejadian stok
 │   ├── 06-katalog-status-dan-enum.md      ← satu-satunya sumber status & enum
 │   ├── 07-proses-bisnis.md                ← Part 2: alur 1–3 (teks per lane, tabel langkah, Mermaid) — DIBUAT OTOMATIS
@@ -55,12 +58,15 @@ docs/
 │   ├── 25-aset.md                         ← Part 4: modul Asset (AST otomatis dari SJ/RET, pemeriksaan grade+skor+foto, state aset dari kartu stok, aset hilang → ADJ, laporan aset dipinjamkan) — v0.2, §13 catatan implementasi
 │   ├── 26-purchase-request.md             ← Part 4: modul PurchaseRequest (PRQ backorder REQ / titik pesan ulang / manual, approval opsional jenis vendor, catatan pemesanan per vendor, GRN merujuk catatan, reservasi ke REQ) — v0.1, §13 catatan implementasi
 │   ├── 27-pendukung-f1.md                 ← Part 4: Pendukung Fase 1 (strategi pengambilan, konfirmasi terima, penutupan proyek, notifikasi, laporan inti + PDF, Beranda, wizard setup, impor Excel, PWA) — v0.1
+│   ├── 30-landing-page.md                 ← Part 5: landing page produk di domain pusat (Blade + Alpine, gaya indonesia.travel) — v0.1
 │   └── _template-spesifikasi-modul.md     ← template Part 4
-├── prompts/                               ← paket prompt Part 6 per modul, plus prompt audit lama dan serah terima 00-lanjutkan-di-kantor.md (rumah → kantor, aktif) / 00-lanjutkan-di-rumah.md (arsip)
+├── prompts/                               ← paket prompt Part 6 per modul, plus prompt audit lama dan serah terima 00-lanjutkan-di-rumah.md v2.0 (kantor → rumah, aktif) / 00-lanjutkan-di-kantor.md (arsip)
 ├── akuntansi/01-lingkup-dan-integrasi-wms.md
 ├── purchasing/01-lingkup-dan-integrasi-wms.md
+├── purchasing/02-purchasing-inti.md          ← spesifikasi Purchasing inti Fase 1b (PO dari PRQ, harga beli vendor, approval nilai, PO → GRN) — v0.1
 └── diagram/
     ├── _generate.py                       ← SUMBER data alur Part 2; `py -3 docs/diagram/_generate.py` menulis ulang 07* dan bpmn-*.drawio
+    ├── _generate_peran_html.py            ← alur per peran (A-226); `py -3 docs/diagram/_generate_peran_html.py` menulis ulang 00-audit/alur-per-peran.html
     ├── _generate_erd.py                   ← SUMBER model data Part 3; `py -3 docs/diagram/_generate_erd.py` menulis ulang 08a–c dan erd-*.drawio
     ├── _verify.py                         ← `py -3 docs/diagram/_verify.py`: cek link & anchor, ID terdefinisi/ganda, batas 450 baris
     ├── bpmn-01…10-*.drawio                ← BPMN (diagrams.net) — DIBUAT OTOMATIS, jangan diedit manual
@@ -76,7 +82,7 @@ docs/
 | 2 | Proses bisnis to-be (BPMN 2.0) | `diagram/bpmn-*.drawio` + `wms/07`, `07a`, `07b` (teks per lane + tabel langkah + Mermaid), dari satu sumber `diagram/_generate.py` | **v0.4** — final; alur 1/2/7/8 diperluas (A-51–A-66, BR-OPN-09–10); alur 5 memuat varian transfer dalam proyek (A-50) |
 | 3 | Arsitektur & ERD (DB pusat + DB per company), verifikasi paket | `wms/08-arsitektur.md` + `08a`–`08c` (Mermaid `erDiagram`) + `diagram/erd-*.drawio`, dari `diagram/_generate_erd.py` | **Arsitektur v0.13, model data v0.14** — 114 tabel, 15 keputusan AD-xx, paket terverifikasi (O-01 ✔); 24 Sep 2026 diselaraskan dengan implementasi (`projects.site_warehouse_id` dihapus per A-40, kolom implementasi modul Master s.d. Asset masuk) |
 | 4 | Spesifikasi modul BE (per modul, dari template) | `wms/10-…` s.d. `wms/2x-…` | **Berjalan** — [10-access](wms/10-access.md) v0.5, [11-master](wms/11-master.md) v0.3, [12-warehouse](wms/12-warehouse.md) v0.4, [13-stock](wms/13-stock.md) v0.3, [14-request](wms/14-request.md) v0.7, [15-picking-shipment](wms/15-picking-shipment.md) v0.6, [19-receipt-putaway](wms/19-receipt-putaway.md) v0.7, [20-approval](wms/20-approval.md) v0.7, [21-opname-penyesuaian](wms/21-opname-penyesuaian.md) v0.3, [22-retur-transfer](wms/22-retur-transfer.md) v0.4, [18-template-dokumen-label](wms/18-template-dokumen-label.md) v0.4, [23-pemakaian](wms/23-pemakaian.md) v0.3, [24-konversi-waste](wms/24-konversi-waste.md) v0.2, [25-aset](wms/25-aset.md) v0.2, dan [26-purchase-request](wms/26-purchase-request.md) v0.1 **selesai Fase 1**; [17-platform-login](wms/17-platform-login.md) v0.2 **selesai Fase 1**; [16-shared-laporan-berkas](wms/16-shared-laporan-berkas.md) mendokumentasikan kode bersama yang dibangun tanpa spesifikasi (16 v0.5: laporan Material per Proyek dengan kolom konversi & waste, laporan Aset dipinjamkan); [27-pendukung-f1](wms/27-pendukung-f1.md) v0.1 **selesai Fase 1**; berikutnya penutup. Pola per modul: spesifikasi → prompt → kode |
-| 5 | FE landing page (gaya indonesia.travel) | `wms/30-landing-page.md` | — |
+| 5 | FE landing page (gaya indonesia.travel) | `wms/30-landing-page.md` | **Selesai** 25 Sep 2026 — [30-landing-page](wms/30-landing-page.md) v0.1, [A-220](wms/04-keputusan-dan-asumsi.md#a-220)–[A-225](wms/04-keputusan-dan-asumsi.md#a-225) menunggu validasi; brand & harga paket tetap [O-07](wms/04-keputusan-dan-asumsi.md#o-07), [O-08](wms/04-keputusan-dan-asumsi.md#o-08) |
 | 6 | Paket prompt Claude Code (per modul) | `prompts/*.md` | **Berjalan** — [prompts/10-access.md](prompts/10-access.md), [prompts/11-master.md](prompts/11-master.md), [prompts/12-warehouse.md](prompts/12-warehouse.md), [prompts/13-stock.md](prompts/13-stock.md), [prompts/14-request.md](prompts/14-request.md), [prompts/15-picking-shipment.md](prompts/15-picking-shipment.md), [prompts/16-shared.md](prompts/16-shared.md), [prompts/17-platform-login.md](prompts/17-platform-login.md), [prompts/18-template-label.md](prompts/18-template-label.md). Prompt 13–15 menyebut dirinya "Part 7–9"; itu nomor sesi, bukan Part rencana ini |
 
 ## Jalur baca per audiens
@@ -100,6 +106,46 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.45 — 25 September 2026 (penutup putaran)
+- Laporan progres v1.15 (§4 baris navigasi/hub/konversi/pengaturan/laporan; §5.6 putaran 25 Sep sore: 616 uji, E2E `alur-req-sj` 10/10, `alur-pendukung` 9/9, `ui-check` 87 cek — 0 error console); prompt serah terima **[00-lanjutkan-di-rumah](prompts/00-lanjutkan-di-rumah.md) v2.0** (kantor → rumah, XAMPP3: langkah 0, jatah A-233, daftar selesai/belum) dan [00-lanjutkan-di-kantor](prompts/00-lanjutkan-di-kantor.md) v1.1 (arsip); E2E `go()` menunggu kesiapan halaman, P5 memantau baris preferensi; [27-pendukung-f1](wms/27-pendukung-f1.md) E2E P1–P9. **Sapuan §13**: butir sisa yang sudah terbangun dicoret — 12-warehouse v0.8, 13-stock v0.10, 15-picking-shipment v0.11, 16-shared v0.9 (Status), 17-platform v0.5, 18-template v0.7, 19-receipt v0.9, 20-approval v0.10, 21-opname v0.4, 22-retur-transfer v0.5, 23-pemakaian v0.4, 24-konversi v0.4, 25-aset v0.4 (BR-PRJ-04, BR-REQ-10, A-187/A-188/A-191/A-207/A-228/A-232).
+
+### v0.44 — 25 September 2026 (laporan & template cetak yang tersisa)
+- **11 laporan §9** Stock/Request/Picking-Shipment (`kartu-stok` … `kinerja-pengiriman`) dengan penyaring standar `PeriodFilter`, dan **4 template cetak** `transfer`, `goods_return`, `purchase_request`, `goods_receipt` + tombol *Cetak* di detailnya — [A-232](wms/04-keputusan-dan-asumsi.md#a-232); [16-shared-laporan-berkas](wms/16-shared-laporan-berkas.md) v0.8 §3.2, §10, §13.4; [18-template-dokumen-label](wms/18-template-dokumen-label.md) v0.6 §13.2; Katalog v0.19 §3; 13-stock v0.9, 14-request v0.9, 15-picking-shipment v0.10 (§13 sisa). Uji TC-RPT-06, TC-TPL-15/16; TC-RPT-01 (25 laporan). Keputusan & asumsi v0.33; tinjauan asumsi v1.7.
+
+### v0.43 — 25 September 2026 (layar Pengaturan company)
+- **Pengaturan company** `/settings/company`: ambang hari/persen (`CompanySettingCatalog`), saklar fitur P-08 dengan penanda *dipakai n item*, zona waktu; `SaveCompanySettings` hanya menulis kunci yang berubah — [A-230](wms/04-keputusan-dan-asumsi.md#a-230); [11-master](wms/11-master.md) v0.6 §6, §13.5 no. 8. Uji TC-MST-27. Keputusan & asumsi v0.32; tinjauan asumsi v1.6.
+
+### v0.42 — 25 September 2026 (bukti terima: halaman penerima bertoken, foto & tanda tangan)
+- **Halaman penerima bertoken** `/terima/{token}` (OTP → formulir → ringkasan; 410 bila tidak berlaku) dan unggah **foto serah terima, tanda tangan kanvas, foto kerusakan** di layar driver; berkas dilayani `shipments.proof.file`; policy `issueToken` memperbaiki tombol *Terbitkan tautan* yang sebelumnya tidak pernah aktif — [A-231](wms/04-keputusan-dan-asumsi.md#a-231); [15-picking-shipment](wms/15-picking-shipment.md) v0.9 §6, §13.1 no. 6, §13.3, §13.4. Uji TC-SJ-05d/05d2/05e; E2E langkah 5b (`alur-req-sj.mjs`).
+- Keputusan & asumsi v0.31 (§4 matriks ketertelusuran dipindah ke [04a-matriks-ketertelusuran](wms/04a-matriks-ketertelusuran.md) v1.0 agar ≤ 450 baris); tinjauan asumsi v1.5.
+
+### v0.41 — 25 September 2026 (rapi UI kecil)
+- Font Inter (`@fonts`) di semua layout; `theme-color` & manifest PWA = `--bs-primary` NexaDash (`#6366f1`); kode internal `(A-xx)`/`(BR-xx)`/`(D-xx)` dihapus dari teks yang tampil ke pengguna (pindah ke komentar kode; badge kode aturan tetap); tanggal-jam memakai `->lokal()` (BR-GEN-07) di aset, PRQ, platform, dan tempat yang masih memakai `timezone()` langsung; `table-responsive` pada simulasi approval & form pemesanan PRQ.
+- **Beranda portal klien** diisi (kartu, daftar proyek, Stok On-site per proyek; BR-PRJ-05/07) — [10-access](wms/10-access.md) v0.8 §13.3, TC-MST-26; form pengguna memilih klien dari daftar (TC-ACC-UI-07).
+- Laporan dengan kunci tak dikenal → 404 — [16-shared-laporan-berkas](wms/16-shared-laporan-berkas.md) v0.7 §13.4, TC-RPT-01b. Uji TC-PWA-01 memeriksa warna tema; ui-check menambah pemeriksaan lebar HP untuk layar lapangan & form.
+
+### v0.40 — 25 September 2026 (form Konversi per jenis)
+- **Konversi** dirancang ulang: jenis sebagai tombol pilihan, mode Potong (satu batang → ukuran × jumlah, kerf dari master, sisa otomatis offcut/waste), Ganti kemasan (susut otomatis waste), Rakit/Bongkar bebas; ringkasan otomatis satu sumber dengan simpan (`ConversionPlanner`) menutup bug neraca layar ≠ server; *Simpan & selesaikan / & ajukan*; detail CNV berkalimat ringkas + *Buat BA Waste* (prefill WST); pindai batang — [A-229](wms/04-keputusan-dan-asumsi.md#a-229); [24-konversi-waste](wms/24-konversi-waste.md) v0.3. Uji TC-CNV-12 (ditulis ulang), TC-CNV-14, TC-CNV-15; E2E P9.
+- Keputusan & asumsi v0.30; tinjauan asumsi v1.4.
+
+### v0.39 — 25 September 2026 (navigasi & hub Proyek)
+- **Sidebar** dirampingkan: 2 butir atas + 11 grup lipat + kotak *Cari menu* (markup lipat NexaDash yang sudah ada), gate Kunci periode & Laporan diperbaiki, ikon ganda diganti, *Impor Excel* masuk sidebar — [A-227](wms/04-keputusan-dan-asumsi.md#a-227); [10-access](wms/10-access.md) v0.7.
+- **Hub proyek** `/projects/{id}` (Blueprint §6.9): kartu ringkas, tombol aksi berisi proyek (`?project=` di REQ/RET, `?from_warehouse=` di TRF), 9 tab daftar, tutup proyek dengan checklist BR-PRJ-02 dari hub; tautan cepat di halaman gudang — [A-228](wms/04-keputusan-dan-asumsi.md#a-228); [11-master](wms/11-master.md) v0.5 (§6, §13.4), [12-warehouse](wms/12-warehouse.md) v0.7. Uji TC-MST-25/25b; `ui-check.mjs` memeriksa grup lipat, filter menu, dan hub.
+- Keputusan & asumsi v0.29 (§2.19); tinjauan asumsi v1.3 (A-226–A-228).
+
+### v0.38 — 25 September 2026 (alur aktivitas per peran)
+- **Berkas baru `00-audit/alur-per-peran.html`:** alur Part 2 diputar per peran — "sebagai Kepala Gudang, apa saja yang saya kerjakan" — untuk panduan uji manual, penjelasan ke calon pengguna, dan bahan presentasi. Sebelas peran (Blueprint §4.2 + Super Admin), 62 diagram Mermaid, penanda serah-terima antar peran, tabel langkah berisi status/aturan, daftar layar per peran, dan gaya cetak satu peran per halaman.
+- Generator baru `diagram/_generate_peran_html.py` membaca `FLOWS` dari `_generate.py` (data tidak diketik ulang) dan memeriksa bahwa **setiap lane terpetakan** sehingga tidak ada langkah yang hilang: 85 node non-Sistem → 161 langkah peran.
+- Pemetaan lane → peran dicatat sebagai [A-226](wms/04-keputusan-dan-asumsi.md#a-226) *(Perlu validasi)*; termasuk keputusan menampilkan langkah lane *Approver* di Kepala Gudang, Manajemen, dan Admin Company sebagai langkah **bersyarat aturan approval** ([A-08](wms/04-keputusan-dan-asumsi.md#a-08), [A-09](wms/04-keputusan-dan-asumsi.md#a-09)).
+- Aktivitas konfigurasi Admin Company, Manajemen, dan Auditor **tidak ada di Part 2**; sementara disusun dari spesifikasi modul dan ditandai bukan turunan BPMN. Menambahkan alur ke-11 (setup & konfigurasi company) ke `FLOWS` dicatat sebagai tindak lanjut.
+- **Tidak ada ID lain yang berubah**; `_generate.py`, `bpmn-*.drawio`, dan `07*` tidak disentuh. Keputusan & asumsi v0.28.
+
+### v0.37 — 25 September 2026 (sesi kantor: sisa Fase 1, Purchasing inti Fase 1b, landing page)
+- **Sisa Fase 1:** pindai di form REQ & ISU (`Master\Support\ScanCode`) — [A-206](wms/04-keputusan-dan-asumsi.md#a-206), TC-REQ-34, TC-ISU-18; impor vendor & saldo awal (saldo awal = ADJ manual per gudang beralasan `OPENING`, tetap approval) — [A-207](wms/04-keputusan-dan-asumsi.md#a-207), TC-MST-24, TC-ADJ-12; [27-pendukung-f1](wms/27-pendukung-f1.md) v0.4. Isi balik `from_stock_status` (A-194) tetap ditunda: belum ada data produksi.
+- **Purchasing inti Fase 1b** ([D-29](wms/04-keputusan-dan-asumsi.md#d-29)): spesifikasi baru [purchasing/02](purchasing/02-purchasing-inti.md) v0.1; migrasi tenant `000210` (`vendor_prices`, `purchase_orders`, `purchase_order_lines`, rujukan PO di catatan pemesanan); [A-208](wms/04-keputusan-dan-asumsi.md#a-208)–[A-218](wms/04-keputusan-dan-asumsi.md#a-218) (A-219 tidak dipakai); Katalog v0.18 §2.17 `PO` (status umum, tanpa nilai status baru), `approval_document_type` & `document_template_type` + `purchase_order`; glosarium v0.9 (Purchase Order, Baris PO, Harga Beli Vendor, Harga Satuan, Nilai PO); model data v0.20 (area Purchasing, 119 tabel); 20-approval v0.9 (`order_value_min`), 18-template v0.5 (cetak PO), 26-purchase-request v0.3 (`po_created`/`po_updated`/`po_cancelled`), purchasing/01 v0.4, arsitektur v0.17; 00-akun-uji v1.11 (harga demo, aturan demo ke-8). Uji TC-PO-01–10, TC-VPR-01; TC-APR-17, TC-APR-21, TC-ACC-27b diperbarui.
+- **Landing page Part 5:** [30-landing-page](wms/30-landing-page.md) v0.1, [A-220](wms/04-keputusan-dan-asumsi.md#a-220)–[A-225](wms/04-keputusan-dan-asumsi.md#a-225); uji TC-LND-01–06; `tests/e2e/ui-check.mjs` memeriksa landing (konsol, tema, lebar 390 px).
+- Keputusan & asumsi v0.27; tinjauan asumsi v1.2; laporan progres v1.14. Verifikasi: 600 uji hijau, E2E `alur-req-sj` 9/9, `alur-pendukung` 8/8 (P8 PO), `ui-check` 74 cek, 0 error console.
 
 ### v0.36 — 25 September 2026 (tinjauan kode Pendukung & Platform)
 - **Perbaikan hasil tinjauan kode** (tanpa status/enum baru):
@@ -398,49 +444,3 @@ docs/
 ### v0.7 — 23 September 2026 (peta rilis & persiapan)
 - **D-29** peta rilis: Fase 1 WMS inti → 1b Purchasing inti → 2a WhatsApp → 2b PWA offline → 3 SSO & Purchasing lengkap; login lokal dulu (D-26) ditegaskan. **Baru:** `00-checklist-persiapan.md` (keputusan O-12/O-13/O-15/A-50, bahan & akses, pemetaan halaman auth template, checklist WhatsApp Cloud API, urutan mulai).
 - O-03 target → awal Fase 2a; O-12/O-13/O-15 merujuk checklist. Blueprint §13, §18, §20; purchasing/01 v0.3 (§4 inti vs lengkap); 08-arsitektur v0.4 (§10 template `template/`, §12 langkah 4). Template NexaDash tersedia di `template/` (referensi UI, tidak di-deploy).
-
-### v0.6 — 23 September 2026 (bukti terima, barang kurang/rusak, umur aset)
-- **Asumsi baru A-63–A-66** (*Setuju 23 Sep 2026*): A-63 konfirmasi atau keberatan klien (3 hari, otomatis bila klien mengisi sendiri); A-64 bukti terima per baris baik/rusak/kurang & per unit, DSC dengan jenis, `reship`, keputusan klien, laporan posisi barang rusak; A-65 posisi barang rusak (Dalam Perjalanan berkondisi Rusak → dibawa balik / RET + klaim); A-66 meter pemakaian, umur pakai, skor kondisi aset (penyusutan tetap di Akuntansi).
-- **Aturan v0.6:** baru BR-SJ-10, BR-AST-08; diubah BR-SJ-05, BR-SJ-06, BR-REQ-10, BR-RET-05, BR-AST-07; §14 baris `goods_delivered` (jumlah baik), `delivery_discrepancy`, `asset_checked_out`/`asset_returned` (meter, skor), baris kondisi rusak tanpa kejadian.
-- **Katalog v0.6:** KS 2.3 guard bukti terima, KS 2.4 (keberatan, disposisi `reship`, keputusan klien), KS 2.1 aksi `request.confirm_receipt`/`request.dispute_receipt`; enum `discrepancy_type`, `client_decision`, `receipt_confirmation`, `pod_unit_condition`, `meter_unit`; `discrepancy_disposition` + `reship`.
-- **Blueprint v0.6** (447 baris): §4.2 Klien, §6.6 posisi rusak, §6.8 skor & meter aset, §6.9a laporan aset & posisi barang rusak, §7 SJ/DSC. **Glosarium v0.6:** 15 istilah baru. **akuntansi/01 v0.5:** penanda kejadian aset & DSC, pertanyaan penyusutan.
-- **Part 2 v0.4 / Part 3 v0.4 (dibuat ulang):** alur 1 gateway *Keberatan?*, bukti terima per baris; alur 7 meter & skor; ERD 112 tabel: `proof_of_delivery_lines`, `proof_of_delivery_units`; kolom baru di `proofs_of_delivery`, `delivery_discrepancy_lines`, `serials`, `asset_handovers`, `asset_inspections`.
-- Laporan validasi v1.2: §8 tambahan A-63–A-66.
-
-### v0.5 — 23 September 2026 (purchasing, permintaan klien, pengiriman, audit)
-- **Keputusan baru D-28** (modul Purchasing memakai mesin approval WMS; approval nilai uang hanya di Purchasing). **Asumsi baru A-51–A-62**, semua *Setuju 23 Sep 2026*: A-51 catatan pemesanan per vendor, A-52 jenis vendor & vendor tetap, A-53 vendor sementara, A-54 klien menambah baris / REQ Tambahan, A-55 penggantian item, A-56 pecah baris antar gudang, A-57 cara kirim, A-58 tutup periode stok, A-59 umur reservasi, A-60 SLA tinjau & tanggal janji, A-61 permintaan pembatalan klien, A-62 rencana kebutuhan material [F2].
-- **Aturan v0.5:** baru BR-STK-15–16, BR-REQ-11–15, BR-SJ-09, BR-OPN-09–10, BR-PRJ-09 [F2]; diubah BR-REQ-02, BR-REQ-04, BR-SJ-07, BR-GRN-01, BR-APR-07; §1 relasi PRQ → Catatan Pemesanan → GRN.
-- **Katalog v0.5:** KS 2.15 PRQ (`draft`, `approved`, `pr.order`), KS 2.1 aksi baris & `pending_approval → under_review`, KS 2.3 `shipment_method`, KS 2.13 guard SoD; enum baru `vendor_type`, `vendor_status`, `purchase_request_origin`, `request_origin`, `substitution_response`, `shipment_method`; `count_type` + `spot_check`.
-- **Blueprint v0.5** (447 baris): §3 luar lingkup (transfer antar company, ongkir), §4.2, §6.3a, §6.4, §6.6, §6.9a, §7, §8.1, §9, §10, §15, §18. **Glosarium v0.5:** 20 istilah baru. **purchasing/01 v0.2**, **akuntansi/01** (`goods_shipped`, tutup periode), **08-arsitektur v0.3** (paket Approval bersama).
-- **Part 2 v0.3 / Part 3 v0.3 (dibuat ulang):** alur 2 dimulai dari siklus PRQ; alur 1 & 8 diperluas; ERD 110 tabel: `item_vendors`, `purchase_request_orders(+_lines)`, `project_material_plans` [F2]; kolom baru di `vendors`, `material_requests`, `material_request_lines`, `shipments.shipment_method`; `purchase_requests` tanpa vendor di header.
-- Laporan validasi v1.1: §8 tambahan diskusi lanjutan.
-
-### v0.4 — 23 September 2026 (validasi asumsi)
-- **Validasi:** A-25–A-49 **Setuju** (23 Sep 2026); **A-40 Ubah** (satu proyek boleh banyak Gudang Site; guard & checklist penutupan mencakup semuanya); **A-16 diganti A-42**; asumsi baru **A-50** (pemindahan dalam proyek = TRF ringan antar Gudang Site) *Perlu validasi*. Laporan: [00-laporan-validasi-2026-09-23.md](00-laporan-validasi-2026-09-23.md).
-- **Aturan UI dari pemilik produk:** **BR-GEN-11** baru (field wajib ditandai `*`; tolak/batal = Alasan `*` + Keterangan opsional); BR-GEN-02 rujukan silang; KS §1 catatan; Blueprint §6.3a; glosarium *Keterangan*; template modul kolom *Wajib*.
-- **Aturan v0.4:** BR-PRJ-02, BR-PRJ-04 (semua Gudang Site proyek); BR-RET-02, BR-SJ-07 (transfer dalam proyek, `self_delivered`); §1 relasi TRF.
-- **Katalog v0.4:** guard `shipment.create` (KS 2.3) dan `transfer.create` (KS 2.7) memuat A-50; label `rejected`/`cancelled`.
-- **Blueprint v0.4:** §6.2, §6.9, §7 (TRF), §18, §19, §20; **Glosarium v0.4:** Gudang Site, Transfer, *Diantar Sendiri*, *Keterangan*, Alasan.
-- **Part 2 v0.2 / Part 3 v0.2 (dibuat ulang):** alur 5 gateway *Dalam proyek & diantar sendiri?* (A-50); ERD `shipments.self_delivered`, `carried_by_name`; `warehouses.project_id` catatan A-40; kepala 07*/08* dan `08-arsitektur.md` (v0.2, §12) menyebut validasi.
-- **Baru:** `diagram/_verify.py` (link & anchor, ID, ganda, ukuran). Laporan audit v0.3: anchor ke 04 §2.3 diperbarui mengikuti judul baru.
-
-### v0.3.2 — 23 September 2026 (draf Part 3)
-- **Baru:** `wms/08-arsitektur.md` (AD-01–AD-15, tenancy & siklus request, struktur kode, ledger/reservasi, outbox, antrean & scheduler, peta NFR, lingkungan) dan `wms/08a`–`08c` + `diagram/erd-*.drawio` (106 tabel, 11 area) dari `diagram/_generate_erd.py`.
-- **O-01 selesai:** paket diverifikasi di Packagist terhadap Laravel 13 / PHP 8.3; `endroid/qr-code` 6 ditolak (PHP 8.4), dipilih `bacon/bacon-qr-code` v3.
-- Blueprint §20 dan §17 menunjuk ke 08.
-
-### v0.3.1 — 23 September 2026 (draf Part 2)
-- **Baru:** `wms/07-proses-bisnis.md`, `07a`, `07b` dan `diagram/bpmn-01…10-*.drawio` untuk 10 alur (permintaan–terima, penerimaan–QC–RTV, pemakaian ISU, retur, transfer, konversi & WST, aset, opname, approval, langganan). Semua dibuat dari `diagram/_generate.py`; setiap alur mencantumkan asumsi default yang dipakainya (A-07…A-47) dan BR yang berlaku.
-- Tautan Odoo di riset diverifikasi hidup.
-
-### v0.3 — 23 September 2026 (audit dokumentasi)
-- **Struktur:** file dipindah ke `wms/`, `akuntansi/`; dibuat [purchasing/01](purchasing/01-lingkup-dan-integrasi-wms.md), [00-audit/README.md](00-audit/README.md), [00-laporan-audit-dokumentasi.md](00-laporan-audit-dokumentasi.md), `diagram/`, `../CLAUDE.md`. Semua rujukan menjadi link beranchor.
-- **Baru:** `wms/05-aturan-bisnis.md` (BR-GEN/STK/REQ/SJ/GRN/RET/CNV/AST/OPN/APR/PRJ/SUB, relasi dokumen, matriks kejadian stok, matriks kombinasi pelacakan); `wms/06-katalog-status-dan-enum.md` (16 mesin status, 23 enum, blok YAML); `wms/_template-spesifikasi-modul.md`.
-- **Blueprint v0.3:** P-02 ditulis ulang; §6.6 model stok tunggal; §7 tambah `ISU`, `RTV`, `DSC`; §7.1 relasi dokumen; §6.9 status proyek & tiga sub-tampilan Stok On-site; §4.2 role *Penindak Lanjut PR*, cakupan role × scope; NFR-07 diperjelas; NFR-13–16 baru; tag fase; §1 pembeda #4/#5 → `[F2]`.
-- **Glosarium v0.3:** `return` → `goods_return`; `stock_movement` sebagai nama tabel; ±50 istilah baru; kolom Rujukan; dikelompokkan per tema.
-- **Keputusan v0.3:** kolom Tanggal · Alasan · Konsekuensi · Diganti oleh; asumsi baru **A-29–A-49** (per tema); A-16 usulan ubah (→ A-42); A-04, A-17, A-20, A-21 diperjelas; isu baru **O-12–O-15**; matriks ketertelusuran.
-- **Akuntansi v0.3:** kejadian baru `material_consumed`, `goods_rejected`, `delivery_discrepancy`; kejadian ganda dihapus (satu kejadian per pergerakan); payload + `schema_version`, `occurred_at`, `recorded_at`, `timezone`, `reverses_event_id`; mekanisme Fase 1 = tabel outbox.
-- **Riset v0.3:** §2.8 daftar riset teknis Part 3; tautan Odoo ke dokumentasi resmi; baris "Tidak dipakai" di tabel adopsi.
-
-### v0.2 — 23 September 2026 (audit ulang Part 1)
-- A-01–A-24 disetujui. Kontradiksi opname vs approval diperbaiki (A-09). Status *Ditinjau Staf* (A-07). Efek pengiriman terhadap kepemilikan (A-25). Master Klien/Vendor/Kategori/Kendaraan/Alasan + impor Excel. Laporan inti Fase 1. Callback SSO pusat (A-28). Akses dukungan (A-27). NFR-11, NFR-12. O-11. Riset v0.2: harga WhatsApp diverifikasi ulang.

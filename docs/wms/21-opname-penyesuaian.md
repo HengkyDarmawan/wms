@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `count`, `adjustment` (Stock Opname & Penyesuaian Stok)
 
-**Versi:** 0.3
+**Versi:** 0.4
 **Tanggal:** 24 September 2026
 **Status:** selesai Fase 1 — modul kesembilan setelah [Approval](20-approval.md); OPN dan ADJ manual diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-95](04-keputusan-dan-asumsi.md#a-95)–[A-105](04-keputusan-dan-asumsi.md#a-105) (*Perlu validasi*); v0.3: asal `asset_lost` tersambung dari modul Aset ([25-aset](25-aset.md), [A-167](04-keputusan-dan-asumsi.md#a-167))
 **Modul:** `count` (OPN), `adjustment` (ADJ)
@@ -233,6 +233,6 @@ Domain `app/Domain/Count` (7 aksi, `Support\CountScope`, `VarianceClassifier`, `
 1. **Override SJ mendesak** dari bin beku ([BR-OPN-02](05-aturan-bisnis.md#br-opn)): belum ada aksi; bin beku sampai sesi disetujui.
 2. Dashboard opname lengkap (tren akurasi, top selisih, akar masalah) dan laporan ADJ per alasan.
 3. Laporan PDF disimpan sebagai lampiran (`report_attachment_id`) setelah modul lampiran ada.
-4. Stok awal demo masih lewat `StockDemoSeeder` ([A-72](04-keputusan-dan-asumsi.md#a-72)); bisa dipindah ke ADJ bila A-72 diputuskan.
+4. Stok awal **company sungguhan** kini lewat impor Excel → ADJ beralasan *Saldo awal* ([A-207](04-keputusan-dan-asumsi.md#a-207), [27-pendukung-f1](27-pendukung-f1.md)); hanya data demo yang masih lewat `StockDemoSeeder` ([A-72](04-keputusan-dan-asumsi.md#a-72)).
 5. PWA luring, pemindaian barcode bin di halaman hitung, auditor eksternal berbatas periode `[F2]`.
 6. **Aset hilang** (v0.3): `CreateStockAdjustment::forLostAsset` membuat ADJ asal `asset_lost` satu serial — boleh dari bin On-site yang ditolak ADJ manual — dengan alasan kehilangan, lewat approval yang sama (A-09); diposting → aset `written_off` ([25-aset](25-aset.md), [A-167](04-keputusan-dan-asumsi.md#a-167)).

@@ -28,8 +28,8 @@ class ReportTest extends TenantTestCase
         $admin = $this->makeUser('company_admin');
         $admin->forgetPermissionCache();
 
-        $this->assertCount(14, $registry->all(), 'Empat belas laporan terdaftar (Material per proyek sejak modul Issue, Aset dipinjamkan sejak modul Aset, lima laporan inti Blueprint §6.9a sejak Pendukung F1).');
-        $this->assertCount(14, $registry->availableTo($admin), 'Admin Company membuka semuanya.');
+        $this->assertCount(25, $registry->all(), 'Dua puluh lima laporan terdaftar (sebelas laporan §9 Stock/Request/Shipment sejak A-232; (Material per proyek sejak modul Issue, Aset dipinjamkan sejak modul Aset, lima laporan inti Blueprint §6.9a sejak Pendukung F1).');
+        $this->assertCount(25, $registry->availableTo($admin), 'Admin Company membuka semuanya.');
 
         // Driver hanya punya item.view, project.view, warehouse.view, dan stock.view.
         $driver = $this->makeUser('driver');
@@ -38,7 +38,7 @@ class ReportTest extends TenantTestCase
         $kunci = $registry->availableTo($driver)->map(fn ($r) => $r->key())->all();
 
         $this->assertEqualsCanonicalizing(
-            ['daftar-item', 'item-sementara', 'daftar-proyek', 'daftar-gudang', 'saldo-stok', 'mutasi-periode'],
+            ['daftar-item', 'item-sementara', 'daftar-proyek', 'daftar-gudang', 'saldo-stok', 'mutasi-periode', 'kartu-stok', 'titik-pesan-ulang', 'daftar-pengiriman', 'short-pick', 'posisi-rusak-selisih', 'kinerja-pengiriman'],
             $kunci,
         );
     }
@@ -54,6 +54,10 @@ class ReportTest extends TenantTestCase
         // Log masuk menuntut `user.view` yang tidak dipunyai driver.
         $this->actingAs($driver)->get($this->tenantUrl('reports/log-login'))->assertForbidden();
         $this->actingAs($driver)->get($this->tenantUrl('reports/log-login/export'))->assertForbidden();
+
+        // Kunci laporan yang tidak dikenal = halaman tidak ada, bukan galat server.
+        $this->actingAs($this->makeUser('company_admin'))->get($this->tenantUrl('reports/tidak-ada'))->assertNotFound();
+        $this->actingAs($this->makeUser('company_admin'))->get($this->tenantUrl('reports/tidak-ada/export'))->assertNotFound();
     }
 
     #[Test]

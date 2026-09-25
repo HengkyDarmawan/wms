@@ -55,6 +55,7 @@ class RuleForm extends Component
         'line_qty_min' => '',
         'from_client' => '',
         'vendor_types' => [],
+        'order_value_min' => '',
     ];
 
     /** @var array<int, array<string, mixed>> */

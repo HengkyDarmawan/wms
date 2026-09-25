@@ -17,4 +17,14 @@ class ProjectController extends Controller
 
         return view('master.projects.index');
     }
+
+    /** Hub proyek (Blueprint §6.9, A-228). Cakupan proyek di luar jangkauan = 404 lewat global scope. */
+    public function show(Project $project): View
+    {
+        // BR-ACC-05: di luar cakupan proyek pengguna = tidak ada (404), sama dengan dokumen berlingkup.
+        abort_unless(request()->user()->canAccessProject((int) $project->id), 404);
+        $this->authorize('view', $project);
+
+        return view('master.projects.show', ['project' => $project]);
+    }
 }

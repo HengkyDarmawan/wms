@@ -1,8 +1,8 @@
 # Modul Purchasing — Lingkup & Integrasi dengan WMS
 
-**Versi:** 0.3
+**Versi:** 0.4
 **Tanggal:** 23 September 2026
-**Status:** alur Fase 1 dilengkapi 23 Sep 2026 (multi-vendor, jenis vendor, vendor tetap, titik pesan ulang, D-28); Purchasing inti dijadwalkan Fase 1b ([D-29](../wms/04-keputusan-dan-asumsi.md#d-29)); spesifikasi modulnya dibuat setelah Part 4 WMS
+**Status:** alur Fase 1 dilengkapi 23 Sep 2026 (multi-vendor, jenis vendor, vendor tetap, titik pesan ulang, D-28); Purchasing inti dijadwalkan Fase 1b ([D-29](../wms/04-keputusan-dan-asumsi.md#d-29)); v0.4: **Fase 1b dibangun** — spesifikasi [02-purchasing-inti](02-purchasing-inti.md); §4 no. 1–5 terpenuhi di aplikasi yang sama, kejadian §5.2 dijalankan dalam proses ([A-213](../wms/04-keputusan-dan-asumsi.md#a-213)); §7 no. 2 dijawab sementara: kelebihan terima ditolak ([A-214](../wms/04-keputusan-dan-asumsi.md#a-214)); spesifikasi modulnya dibuat setelah Part 4 WMS
 **Dokumen terkait:** [Blueprint §15](../wms/01-blueprint.md#15-integrasi) · [Katalog Status PRQ](../wms/06-katalog-status-dan-enum.md#215-prq-purchase-request--purchase_request-f1-manual-f3-terhubung) · [Aturan Bisnis](../wms/05-aturan-bisnis.md) · [Keputusan D-08](../wms/04-keputusan-dan-asumsi.md#d-08) · [Asumsi A-47](../wms/04-keputusan-dan-asumsi.md#a-47), [A-51](../wms/04-keputusan-dan-asumsi.md#a-51)–[A-53](../wms/04-keputusan-dan-asumsi.md#a-53) · [Keputusan D-28](../wms/04-keputusan-dan-asumsi.md#d-28)
 
 ---

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domain\Master\Livewire\ClientList;
+use App\Domain\Master\Livewire\CompanySettingsForm;
 use App\Domain\Master\Livewire\ItemCategoryList;
 use App\Domain\Master\Livewire\ItemDetail;
 use App\Domain\Master\Livewire\ItemForm;
 use App\Domain\Master\Livewire\ItemList;
+use App\Domain\Master\Livewire\ProjectDetail;
 use App\Domain\Master\Livewire\ProjectList;
 use App\Domain\Master\Livewire\ReferenceList;
 use App\Domain\Master\Livewire\UomList;
@@ -73,6 +75,8 @@ class MasterServiceProvider extends ServiceProvider
     {
         Livewire::component('master.client-list', ClientList::class);
         Livewire::component('master.project-list', ProjectList::class);
+        Livewire::component('master.project-detail', ProjectDetail::class);
+        Livewire::component('master.company-settings-form', CompanySettingsForm::class);
         Livewire::component('master.vendor-list', VendorList::class);
         Livewire::component('master.item-list', ItemList::class);
         Livewire::component('master.item-form', ItemForm::class);

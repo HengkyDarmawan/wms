@@ -14,7 +14,7 @@
                 @if ($ast->goodsReturn) · {{ __('RET') }} <a href="{{ route('returns.show', $ast->goods_return_id) }}">{{ $ast->goodsReturn->number }}</a> @endif
             </p>
             @if ($ast->lost_at)
-                <p class="text-danger small mb-0">{{ __('Ditandai hilang') }} {{ $ast->lost_at->format('d/m/Y') }}: {{ $ast->lostReason?->label }} @if ($ast->adjustment) · <a href="{{ route('adjustments.show', $ast->stock_adjustment_id) }}">{{ $ast->adjustment->number }}</a> ({{ $ast->adjustment->status->label() }}) @endif</p>
+                <p class="text-danger small mb-0">{{ __('Ditandai hilang') }} {{ $ast->lost_at->lokal()->format('d/m/Y') }}: {{ $ast->lostReason?->label }} @if ($ast->adjustment) · <a href="{{ route('adjustments.show', $ast->stock_adjustment_id) }}">{{ $ast->adjustment->number }}</a> ({{ $ast->adjustment->status->label() }}) @endif</p>
             @endif
             @if ($ast->notes) <p class="small mb-0">{{ $ast->notes }}</p> @endif
         </div>

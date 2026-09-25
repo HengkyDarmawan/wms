@@ -7,6 +7,7 @@ namespace App\Domain\Shared\Files;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Menyimpan berkas unggahan ke disk tenant (AD-10, NFR-14).
@@ -71,6 +72,48 @@ class StoreUpload
         return $path;
     }
 
+    /**
+     * Gambar dari data URL (`data:image/png;base64,…`) — kanvas tanda tangan
+     * bukti terima (A-231). Batas ukuran dan jenis sama dengan unggahan biasa;
+     * isi diperiksa sebagai gambar sungguhan, bukan sekadar awalan teks.
+     *
+     * @return string path relatif di dalam disk tenant
+     */
+    public function handleDataUrl(string $dataUrl, string $folder, string $name): string
+    {
+        if (preg_match('#^data:(image/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=\r\n]+)$#', trim($dataUrl), $m) !== 1) {
+            throw new RuntimeException('Tanda tangan tidak terbaca.');
+        }
+
+        $isi = base64_decode($m[2], true);
+
+        if ($isi === false || $isi === '') {
+            throw new RuntimeException('Tanda tangan tidak terbaca.');
+        }
+
+        if (strlen($isi) > self::MAKSIMUM_BYTE) {
+            throw new RuntimeException('Ukuran berkas melebihi 5 MB.');
+        }
+
+        $info = @getimagesizefromstring($isi);
+
+        if ($info === false) {
+            throw new RuntimeException('Jenis berkas tidak didukung.');
+        }
+
+        $ekstensi = match ($info['mime'] ?? '') {
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            'image/jpeg' => 'jpg',
+            default => throw new RuntimeException('Jenis berkas tidak didukung.'),
+        };
+
+        $path = trim($folder, '/').'/'.$name.'.'.$ekstensi;
+        Storage::disk(self::DISK)->put($path, $isi);
+
+        return $path;
+    }
+
     public function delete(?string $path): void
     {
         if ($path === null || $path === '') {
@@ -88,7 +131,7 @@ class StoreUpload
     }
 
     /** Isi berkas untuk dikirim lewat controller, bukan lewat URL publik. */
-    public function stream(string $path): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function stream(string $path): StreamedResponse
     {
         return Storage::disk(self::DISK)->response($path);
     }

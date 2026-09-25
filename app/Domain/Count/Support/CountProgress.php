@@ -60,7 +60,7 @@ class CountProgress
 
                 activity('count')->performedOn($count)->causedBy($actor)
                     ->withProperties(['bin' => count($binUlang)])
-                    ->log('Selisih sedang ditemukan: hitung ulang oleh penghitung berbeda (BR-OPN-05)');
+                    ->log('Selisih sedang ditemukan: hitung ulang oleh penghitung berbeda'); // BR-OPN-05
             } else {
                 activity('count')->performedOn($count)->causedBy($actor)
                     ->log('Semua bin terhitung; siap direkonsiliasi');

@@ -99,6 +99,7 @@ class MasterReferenceSeeder extends Seeder
             'COUNT_FIX' => 'Koreksi hasil hitung ulang',
             'SYSTEM_FIX' => 'Koreksi kesalahan sistem',
             'FOUND' => 'Barang ditemukan kembali',
+            'OPENING' => 'Saldo awal',
             'OTHER' => 'Alasan lain',
         ],
         'waste' => [

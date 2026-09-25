@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `transfer`, `return` (Transfer & Retur dari Proyek)
 
-**Versi:** 0.4
+**Versi:** 0.5
 **Tanggal:** 24 September 2026
 **Status:** selesai Fase 1 — modul kesepuluh setelah [Count/Adjustment](21-opname-penyesuaian.md); TRF dan RET diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-106](04-keputusan-dan-asumsi.md#a-106)–[A-116](04-keputusan-dan-asumsi.md#a-116) (*Perlu validasi*)
 **Modul:** `transfer` (TRF), `return` (RET)
@@ -236,4 +236,4 @@ Domain `app/Domain/Transfer` (3 aksi: `CreateTransfer`, `ApproveTransfer`, `Canc
 2. SJ balik untuk barang di tangan klien — butuh SJ yang tidak berangkat dari PCK.
 3. Cross-dock barang TRF ke REQ penunggu tetap saran ([A-83](04-keputusan-dan-asumsi.md#a-83)).
 4. Short pick PCK TRF tidak menambah backorder REQ penunggu; sisa baris REQ bersumber transfer dipenuhi ulang secara manual (TRF baru atau pecah baris).
-5. Notifikasi §8, laporan §9, cetak SJ balik/berita acara retur.
+5. Notifikasi §8, laporan §9 (kerangka di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md)). ~~Cetak berita acara retur / surat transfer~~ — **selesai 25 Sep 2026**: jenis `transfer` & `goods_return` ([18-template-dokumen-label](18-template-dokumen-label.md) §13.2, [A-232](04-keputusan-dan-asumsi.md#a-232)); SJ balik memakai cetak SJ.

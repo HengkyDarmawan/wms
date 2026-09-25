@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('code') &middot; {{ config('app.name') }}</title>
     <link rel="icon" href="{{ asset('img/logo.svg') }}">
+    @fonts
     @vite(['resources/css/app.css'])
 </head>
 <body>

@@ -331,7 +331,7 @@
                     <tbody>
                         @forelse ($riwayat as $baris)
                             <tr>
-                                <td class="small">{{ $baris->created_at?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d/m/Y H:i') }}</td>
+                                <td class="small">{{ $baris->created_at?->lokal()->format('d/m/Y H:i') }}</td>
                                 <td>{{ $baris->description }}</td>
                                 <td>{{ $baris->causer?->name ?? __('Sistem') }}</td>
                             </tr>

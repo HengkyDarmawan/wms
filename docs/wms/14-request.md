@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `request` (Permintaan Material)
 
-**Versi:** 0.8
+**Versi:** 0.9
 **Tanggal:** 25 September 2026
 **Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md)); v0.6: baris bersumber transfer melahirkan TRF backorder ([22-retur-transfer](22-retur-transfer.md)); v0.7: baris bersumber pembelian melahirkan PRQ backorder ([26-purchase-request](26-purchase-request.md), [A-171](04-keputusan-dan-asumsi.md#a-171)); v0.8: konfirmasi & keberatan terima pemohon (BR-REQ-10) di layar REQ & portal, konfirmasi otomatis harian; notifikasi REQ perlu ditinjau ([27-pendukung-f1](27-pendukung-f1.md), [A-188](04-keputusan-dan-asumsi.md#a-188), [A-189](04-keputusan-dan-asumsi.md#a-189))
 **Modul:** `request`
@@ -222,7 +222,7 @@ Picking dan pengiriman (modul `picking`); pembuatan PRQ dan TRF dari backorder (
 
 **Perbaikan 24 Sep 2026 — jejak pemenuhan.** `App\Domain\Request\Support\RequestFulfillment` kini satu-satunya penulis `qty_shipped` dan `qty_received` pada baris REQ. `ShipShipment` memanggil `shipped()`, `ConfirmDelivery` memanggil `received()` (jumlah baik saja), dan `ResolveDiscrepancy` memanggil `refresh()` saat klien memutus *tidak perlu*. Status REQ diturunkan otomatis `in_progress` → `partially_fulfilled` → `completed` ([A-77](04-keputusan-dan-asumsi.md#a-77)). Sebelumnya kolom itu tak pernah terisi di alur nyata, sehingga REQ yang barangnya sudah di site masih bisa dibatalkan; ditemukan lewat E2E ([laporan progres §5.1](../00-laporan-progres-2026-09-24.md#51-pengiriman-tidak-mencatat-balik-ke-baris-req-berat)). Layar REQ dan portal menampilkan kolom *Terkirim / Diterima*. Uji TC-REQ-27–29 menjalankan rantai REQ → PCK → SJ → bukti terima tanpa mengisi kolom REQ secara manual.
 
-Sepuluh aksi domain di `app/Domain/Request/Actions`: `SaveRequest`, `SubmitRequest`, `ReviewRequest`, `ApproveRequest`, `SplitRequestLine`, `AddRequestLines`, `RespondSubstitution`, `CancelRequest`, `CancelRequestLine`, `CloseRequestShort`. (Catatan perubahan v0.15 menyebut sebelas; yang benar sepuluh.) Tenggat keberatan penggantian dibaca dari pengaturan company `substitution_objection_days` dan SLA tinjauan dari `review_sla_days` ([11-master §13.4](11-master.md#134-sisa-pekerjaan-modul-ini)).
+Sepuluh aksi domain di `app/Domain/Request/Actions`: `SaveRequest`, `SubmitRequest`, `ReviewRequest`, `ApproveRequest`, `SplitRequestLine`, `AddRequestLines`, `RespondSubstitution`, `CancelRequest`, `CancelRequestLine`, `CloseRequestShort`. (Catatan perubahan v0.15 menyebut sebelas; yang benar sepuluh.) Tenggat keberatan penggantian dibaca dari pengaturan company `substitution_objection_days` dan SLA tinjauan dari `review_sla_days` ([11-master §13.4](11-master.md#135-sisa-pekerjaan-modul-ini)).
 
 ### 13.1 Penyimpangan dari spesifikasi
 
@@ -288,4 +288,4 @@ Uji yang menopangnya ada di `tests/Feature/Request`: `RequestFlowTest` (TC-REQ-0
 5. **Job penuaan tenggat penggantian dan pengingat SLA** — metodenya sudah ada, penjadwalannya menunggu
    antrean Fase 2.
 6. **Notifikasi §8** — sebagian selesai v0.8 (REQ perlu ditinjau, barang diterima, keputusan approval); SLA tinjau, pengganti item, perubahan tanggal janji belum.
-7. **Laporan §9** beserta ekspor Excel — **belum dibangun**; kerangka di [16-shared-laporan-berkas](16-shared-laporan-berkas.md).
+7. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 25 Sep 2026**: *Daftar REQ*, *REQ menunggu tinjau*, *Baris tanpa sumber*, *Penggantian item menunggu tanggapan* di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-232](04-keputusan-dan-asumsi.md#a-232)).

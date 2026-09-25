@@ -142,8 +142,8 @@
                         <tr>
                             <td><a href="{{ route('asset-handovers.show', $h) }}">{{ $h->number }}</a> <div class="small text-muted">{{ $h->shipment?->number }} @if ($h->goodsReturn) · {{ $h->goodsReturn->number }} @endif</div></td>
                             <td>{{ $h->project?->code }}</td>
-                            <td class="small">{{ $h->checked_out_at?->format('d/m/Y') }} @if ($h->due_return_date) <div class="text-muted">{{ __('jatuh tempo') }} {{ $h->due_return_date->format('d/m/Y') }}</div> @endif</td>
-                            <td class="small">{{ $h->returned_at?->format('d/m/Y') ?? '—' }}</td>
+                            <td class="small">{{ $h->checked_out_at?->lokal()->format('d/m/Y') }} @if ($h->due_return_date) <div class="text-muted">{{ __('jatuh tempo') }} {{ $h->due_return_date->format('d/m/Y') }}</div> @endif</td>
+                            <td class="small">{{ $h->returned_at?->lokal()->format('d/m/Y') ?? '—' }}</td>
                             <td class="text-end">{{ $h->usage_days ?? '—' }}</td>
                             <td>
                                 <span class="badge {{ $h->status->badge() }}">{{ $h->status->label() }}</span>

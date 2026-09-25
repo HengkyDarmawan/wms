@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `template` (Template Dokumen & Label)
 
-**Versi:** 0.4
+**Versi:** 0.7
 **Tanggal:** 24 September 2026
 **Status:** selesai Fase 1, dibangun paralel dengan modul Retur/Transfer di branch `feat/template-label`. Keputusan yang tidak tertulis di dokumen lain dicatat sebagai [A-120](04-keputusan-dan-asumsi.md#a-120)–[A-126](04-keputusan-dan-asumsi.md#a-126) (*Perlu validasi*). v0.2: dokumen ISU (Bukti Pemakaian Material) dari modul Issue ([23-pemakaian](23-pemakaian.md), [A-152](04-keputusan-dan-asumsi.md#a-152)). v0.3: Bukti Konversi Material (jenis `conversion` baru) dan BA Waste aktif dari modul Konversi & Waste ([24-konversi-waste](24-konversi-waste.md), [A-160](04-keputusan-dan-asumsi.md#a-160)). v0.4: BA Serah Terima Aset aktif dari modul Aset ([25-aset](25-aset.md)); tidak ada lagi jenis stub.
 **Modul:** `template`
@@ -231,5 +231,5 @@ Di luar domain: provider `TemplateServiceProvider`, controller `Template\PrintCo
 
 1. [O-09](04-keputusan-dan-asumsi.md#o-09): ukuran label final dan printer thermal yang didukung. Ukuran sekarang sementara ([A-120](04-keputusan-dan-asumsi.md#a-120)).
 2. Editor template dan variabel `[F2]`; verifikasi QR publik `[F2]`.
-3. Label serial/aset dan BA AST, BA WST, dokumen TRF/RET/PRQ: ditambahkan saat modulnya dibangun, dengan menambah kasus di `DocumentTemplateType` dan `DocumentPrinter`. Dokumen ISU sudah ditambah dengan cara itu ([23-pemakaian](23-pemakaian.md) §13.1, uji TC-ISU-17), begitu juga CNV dan WST ([24-konversi-waste](24-konversi-waste.md) §13.1, uji TC-CNV-13).
-4. Ekspor PDF laporan §9 memakai `print.partials.kop` dan `PdfRenderer` ([16-shared-laporan-berkas](16-shared-laporan-berkas.md) §13).
+3. ~~Dokumen TRF/RET/PRQ/GRN~~ — **selesai 25 Sep 2026** ([A-232](04-keputusan-dan-asumsi.md#a-232)): `transfer`, `goods_return`, `purchase_request`, `goods_receipt` di `DocumentTemplateType` + `DocumentPrinter` + `print/documents/*`, tombol *Cetak* di detail masing-masing; uji TC-TPL-15/16. Label serial/aset: ditambahkan saat modulnya dibangun, dengan menambah kasus di `DocumentTemplateType` dan `DocumentPrinter`. Dokumen ISU sudah ditambah dengan cara itu ([23-pemakaian](23-pemakaian.md) §13.1, uji TC-ISU-17), begitu juga CNV dan WST ([24-konversi-waste](24-konversi-waste.md) §13.1, uji TC-CNV-13), dan **Purchase Order** (v0.5, [purchasing/02](../purchasing/02-purchasing-inti.md)): jenis `purchase_order`, satu-satunya cetakan bernilai uang — kaki cetak menjadi "nilai dalam Rupiah" lewat variabel `bernilai` ([A-217](04-keputusan-dan-asumsi.md#a-217), uji TC-PO-10).
+4. ~~Ekspor PDF laporan §9~~ — **selesai** ([16-shared-laporan-berkas](16-shared-laporan-berkas.md) §13.1, TC-RPT-05): memakai `print.partials.kop` dan `PdfRenderer`.

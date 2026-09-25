@@ -9,6 +9,7 @@ use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\PurchaseRequest\Enums\PurchaseRequestStatus;
 use App\Domain\PurchaseRequest\Models\PurchaseRequest;
+use App\Domain\PurchaseRequest\Support\PurchaseOrderEvents;
 
 /**
  * Izin Purchase Request (26-purchase-request §2, Katalog §2.15). Cakupan gudang
@@ -59,6 +60,7 @@ class PurchaseRequestPolicy
 
     public function cancel(User $actor, PurchaseRequest $prq): bool
     {
-        return $actor->hasPermission('pr.cancel') && $prq->status->isCancellable() && ! $prq->hasReceipts();
+        return $actor->hasPermission('pr.cancel') && $prq->status->isCancellable() && ! $prq->hasReceipts()
+            && ! PurchaseOrderEvents::hasOpenPurchaseOrder($prq);
     }
 }

@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `asset` (Aset Dipinjamkan)
 
-**Versi:** 0.3
+**Versi:** 0.4
 **Tanggal:** 25 September 2026
 **Status:** selesai Fase 1 — modul ketiga belas setelah [Konversi & Waste](24-konversi-waste.md); melengkapi stub pemeriksaan aset di retur ([A-116](04-keputusan-dan-asumsi.md#a-116)); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-163](04-keputusan-dan-asumsi.md#a-163)–[A-169](04-keputusan-dan-asumsi.md#a-169) (*Perlu validasi*); v0.3: pengingat harian aset lewat jatuh tempo lewat notifikasi ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189))
 **Modul:** `asset` (AST)
@@ -194,5 +194,5 @@ Domain `app/Domain/Asset`: 4 aksi (`UpdateAssetHandover`, `UpdateAssetProfile`, 
 ### 13.3 Sisa pekerjaan
 
 1. Notifikasi jatuh tempo & sisa umur (modul notifikasi); jadwal maintenance `[F2]`.
-2. Transfer aset On-site antar proyek; checklist penutupan proyek.
+2. Transfer aset On-site antar proyek. ~~Checklist penutupan proyek~~ — **selesai** (`ProjectClosureChecklist` menahan penutupan selama ada aset di proyek; [A-187](04-keputusan-dan-asumsi.md#a-187), TC-MST-25b).
 3. Foto serah terima keluar menunggu tabel lampiran ([A-68](04-keputusan-dan-asumsi.md#a-68)).

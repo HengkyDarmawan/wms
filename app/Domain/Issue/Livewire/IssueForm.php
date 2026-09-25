@@ -9,6 +9,7 @@ use App\Domain\Issue\Livewire\Concerns\HandlesIssueRules;
 use App\Domain\Issue\Models\MaterialIssue;
 use App\Domain\Issue\Support\IssuableStock;
 use App\Domain\Master\Models\Project;
+use App\Domain\Master\Support\ScanCode;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -35,6 +36,11 @@ class IssueForm extends Component
 
     #[Locked]
     public ?int $issueId = null;
+
+    public string $kodePindai = '';
+
+    /** Kunci calon yang terakhir terisi lewat pindai, untuk disorot. */
+    public ?string $sorot = null;
 
     public function mount(?MaterialIssue $materialIssue = null): void
     {
@@ -74,6 +80,7 @@ class IssueForm extends Component
         $this->form['warehouse_id'] = '';
         $this->qty = [];
         $this->note = [];
+        $this->sorot = null;
         $this->pilihSiteTunggal();
     }
 
@@ -81,6 +88,85 @@ class IssueForm extends Component
     {
         $this->qty = [];
         $this->note = [];
+        $this->sorot = null;
+    }
+
+    /**
+     * Pindai label (A-206) ke stok Gudang Site yang tampil: item tanpa lacak
+     * dicocokkan lewat kode/barcode dan jumlahnya ditambah satu (sampai batas
+     * tersedia, lalu bin berikutnya); item berlacak harus dipindai nomor
+     * lot/serial/potongannya — serial terisi 1, potongan terisi utuh (A-117).
+     */
+    public function pindai(): void
+    {
+        $kode = ScanCode::normalize($this->kodePindai);
+        $this->kodePindai = '';
+        $this->resetErrorBag('kodePindai');
+
+        if ($kode === '') {
+            return;
+        }
+
+        $calon = $this->calon()->reject(fn (array $c) => $c['frozen']);
+
+        if ($calon->isEmpty()) {
+            $this->addError('kodePindai', __('Pilih proyek dan Gudang Site yang punya stok dulu.'));
+
+            return;
+        }
+
+        $arti = ScanCode::resolve($kode);
+        $berlacak = fn (array $c) => $c['lot_id'] !== null || $c['serial_id'] !== null || $c['piece_id'] !== null;
+
+        $cocok = $calon->filter(function (array $c) use ($arti, $berlacak) {
+            foreach ($arti as $a) {
+                if ($a['item_id'] !== $c['item_id']) {
+                    continue;
+                }
+
+                if (! $berlacak($c)) {
+                    return $a['lot_id'] === null && $a['serial_id'] === null && $a['piece_id'] === null;
+                }
+
+                if (($a['lot_id'] !== null && $a['lot_id'] === $c['lot_id'])
+                    || ($a['serial_id'] !== null && $a['serial_id'] === $c['serial_id'])
+                    || ($a['piece_id'] !== null && $a['piece_id'] === $c['piece_id'])) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        if ($cocok->isEmpty()) {
+            $hanyaItem = collect($arti)->pluck('item_id')->intersect($calon->filter($berlacak)->pluck('item_id'))->isNotEmpty();
+
+            $this->addError('kodePindai', $hanyaItem
+                ? __('Item ini berlacak; pindai nomor lot/serial/potongan pada labelnya.')
+                : __('":kode" tidak cocok dengan stok yang bisa dipakai di Gudang Site ini.', ['kode' => $kode]));
+
+            return;
+        }
+
+        foreach ($cocok as $kunci => $c) {
+            $sekarang = is_numeric($this->qty[$kunci] ?? null) ? (float) $this->qty[$kunci] : 0.0;
+            $isi = match (true) {
+                $c['serial_id'] !== null => 1.0,
+                $c['piece_id'] !== null => (float) $c['max'],
+                default => $sekarang + 1,
+            };
+
+            if ($isi - (float) $c['max'] > 0.00005 || abs($isi - $sekarang) < 0.00005) {
+                continue;
+            }
+
+            $this->qty[$kunci] = rtrim(rtrim(number_format($isi, 4, '.', ''), '0'), '.');
+            $this->sorot = (string) $kunci;
+
+            return;
+        }
+
+        $this->addError('kodePindai', __('Jumlah :item sudah mencapai stok tersedia.', ['item' => $cocok->first()['item_code']]));
     }
 
     public function simpan(CreateMaterialIssue $action): void

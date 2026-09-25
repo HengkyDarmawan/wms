@@ -69,6 +69,6 @@
         </p>
     @endif
 
-    <p class="muted">{{ __('Dicetak') }} {{ now()->format('d/m/Y H:i') }} UTC · {{ __('tanpa nilai uang (D-07)') }}</p>
+    <p class="muted">{{ __('Dicetak') }} {{ now()->lokal()->format('d/m/Y H:i') }} · {{ __('tanpa nilai uang') }} {{-- D-07 --}}</p>
 </body>
 </html>

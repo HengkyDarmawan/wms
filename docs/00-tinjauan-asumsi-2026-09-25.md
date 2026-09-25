@@ -1,13 +1,13 @@
 # Tinjauan asumsi *Perlu validasi* — 25 September 2026
 
-**Versi:** 1.1
+**Versi:** 1.7
 **Tanggal:** 25 September 2026
-**Status:** daftar kerja untuk pemilik produk — dibuat otomatis dari [04-keputusan-dan-asumsi](wms/04-keputusan-dan-asumsi.md) v0.26 (butir Penutup, [prompt serah terima](prompts/00-lanjutkan-di-rumah.md) §2 butir 6)
+**Status:** daftar kerja untuk pemilik produk — dibuat otomatis dari [04-keputusan-dan-asumsi](wms/04-keputusan-dan-asumsi.md) v0.26; v1.2: ditambah A-206–A-225 dari sesi kantor 25 Sep 2026 (v0.27) (butir Penutup, [prompt serah terima](prompts/00-lanjutkan-di-rumah.md) §2 butir 6)
 **Dokumen terkait:** [README](README.md) · [Laporan progres](00-laporan-progres-2026-09-24.md)
 
 Setiap baris satu asumsi yang sudah dipakai kode tetapi belum disetujui. Isi kolom **Keputusan** dengan `Setuju`, `Ubah: …`, atau `Hapus`, lalu pindahkan hasilnya ke kolom *Validasi* di dokumen 04 (bukan di sini). Rincian lengkap tiap asumsi ada di anchor-nya.
 
-Jumlah: **111 asumsi** dalam 10 kelompok. Tanda ⚠ = asumsi dari sesi 25 Sep 2026 (A-170–A-205) yang paling berdampak bila ditolak karena menyentuh stok, tagihan langganan, atau hak akses — sebaiknya ditinjau lebih dulu.
+Jumlah: **137 asumsi** dalam 15 kelompok. Tanda ⚠ = asumsi dari sesi 25 Sep 2026 (A-170–A-205) yang paling berdampak bila ditolak karena menyentuh stok, tagihan langganan, nilai uang, atau hak akses — sebaiknya ditinjau lebih dulu (sejak v1.2 juga A-206–A-225).
 
 ## 2.5 Baru dari pencocokan dokumen dengan kode — 24 Sep 2026
 
@@ -169,3 +169,54 @@ Jumlah: **111 asumsi** dalam 10 kelompok. Tanda ⚠ = asumsi dari sesi 25 Sep 20
 | [A-203](wms/04-keputusan-dan-asumsi.md#a-203) ⚠ | Alur pindai picking: bin lalu item langsung mencatat baris | |
 | [A-204](wms/04-keputusan-dan-asumsi.md#a-204) ⚠ | Sisa baris REQ (kurang ambil, reship, keberatan) dipetik ulang lewat PCK baru | |
 | [A-205](wms/04-keputusan-dan-asumsi.md#a-205) | Pengetatan 2FA: kode tidak bisa dipakai ulang, kode salah ikut kunci akun | |
+
+## 2.15 Baru dari sesi kantor — 25 Sep 2026
+
+| ID | Asumsi (ringkas) | Keputusan |
+|---|---|---|
+| [A-206](wms/04-keputusan-dan-asumsi.md#a-206) | Pindai di form REQ & ISU | |
+| [A-207](wms/04-keputusan-dan-asumsi.md#a-207) ⚠ | Impor vendor & saldo awal (saldo awal = ADJ per gudang, tetap approval) | |
+
+## 2.16 Baru dari Purchasing inti Fase 1b — 25 Sep 2026
+
+| ID | Asumsi (ringkas) | Keputusan |
+|---|---|---|
+| [A-208](wms/04-keputusan-dan-asumsi.md#a-208) ⚠ | Purchasing di aplikasi yang sama; harga hanya di domain Purchasing; tanpa flag fitur | |
+| [A-209](wms/04-keputusan-dan-asumsi.md#a-209) | Status PO memakai status umum Katalog §1 | |
+| [A-210](wms/04-keputusan-dan-asumsi.md#a-210) ⚠ | PO hanya dari baris PRQ; satu vendor aktif × satu gudang | |
+| [A-211](wms/04-keputusan-dan-asumsi.md#a-211) | Harga beli Rupiah per satuan dasar, tanpa pajak/diskon/ongkir | |
+| [A-212](wms/04-keputusan-dan-asumsi.md#a-212) ⚠ | Approval PO berbasis nilai (`order_value_min`) | |
+| [A-213](wms/04-keputusan-dan-asumsi.md#a-213) ⚠ | Kejadian `po_created`/`po_updated`/`po_cancelled` dalam proses | |
+| [A-214](wms/04-keputusan-dan-asumsi.md#a-214) | Terima barang PO lewat GRN; kelebihan terima ditolak | |
+| [A-215](wms/04-keputusan-dan-asumsi.md#a-215) | Batal & tutup sisa PO; PRQ ber-PO terbuka tidak bisa dibatalkan | |
+| [A-216](wms/04-keputusan-dan-asumsi.md#a-216) ⚠ | Permission & role Purchasing tanpa role baru; Kepala Gudang tidak melihat harga | |
+| [A-217](wms/04-keputusan-dan-asumsi.md#a-217) | Cetak PO bernilai uang | |
+| [A-218](wms/04-keputusan-dan-asumsi.md#a-218) | Data demo Purchasing (harga, aturan ke-8) | |
+
+## 2.17 Baru dari landing page (Part 5) — 25 Sep 2026
+
+| ID | Asumsi (ringkas) | Keputusan |
+|---|---|---|
+| [A-220](wms/04-keputusan-dan-asumsi.md#a-220) | Ajakan landing = Minta demo lewat email | |
+| [A-221](wms/04-keputusan-dan-asumsi.md#a-221) | Masuk ke company dari landing (redirect subdomain, tanpa cek keberadaan) | |
+| [A-222](wms/04-keputusan-dan-asumsi.md#a-222) | Kartu paket di landing; harga 0 = Hubungi kami | |
+| [A-223](wms/04-keputusan-dan-asumsi.md#a-223) | Isi & gambar landing (sasaran, bukan klaim; ilustrasi SVG sendiri) | |
+| [A-224](wms/04-keputusan-dan-asumsi.md#a-224) | Bundel landing terpisah tanpa PWA | |
+| [A-225](wms/04-keputusan-dan-asumsi.md#a-225) | Tanpa analitik & tautan kebijakan di Fase 1 | |
+
+## 2.18 Baru dari alur aktivitas per peran — 25 Sep 2026
+
+| ID | Asumsi (ringkas) | Keputusan |
+|---|---|---|
+| [A-226](wms/04-keputusan-dan-asumsi.md#a-226) | Pemetaan lane alur → peran (bacaan alur per peran) | |
+
+## 2.19 Baru dari navigasi & hub Proyek — 25 Sep 2026
+
+| ID | Asumsi (ringkas) | Keputusan |
+|---|---|---|
+| [A-227](wms/04-keputusan-dan-asumsi.md#a-227) | Struktur menu: 2 butir atas + 11 grup lipat + cari menu | |
+| [A-228](wms/04-keputusan-dan-asumsi.md#a-228) ⚠ | Hub proyek: kartu ringkas, tombol aksi, 9 tab, tutup proyek dari hub | |
+| [A-229](wms/04-keputusan-dan-asumsi.md#a-229) ⚠ | Form konversi per jenis; Potong satu batang, kerf & sisa otomatis; susut kemasan → waste | |
+| [A-230](wms/04-keputusan-dan-asumsi.md#a-230) ⚠ | Layar Pengaturan company: ambang hari/persen, saklar fitur (peringatan bila dipakai item), zona waktu | |
+| [A-231](wms/04-keputusan-dan-asumsi.md#a-231) ⚠ | Halaman penerima bertoken (OTP → form → ringkasan, 410), foto & tanda tangan bukti terima | |
+| [A-232](wms/04-keputusan-dan-asumsi.md#a-232) ⚠ | 11 laporan §9 Stock/Request/Shipment + 4 template cetak TRF/RET/PRQ/GRN di kerangka bersama | |

@@ -9,6 +9,7 @@ use App\Domain\Return\Actions\CreateGoodsReturn;
 use App\Domain\Return\Enums\ReturnSource;
 use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Return\Support\ReturnableStock;
+use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Transfer\Livewire\Concerns\HandlesTransferRules;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
@@ -41,7 +42,10 @@ class ReturnForm extends Component
 
         $this->portal = request()->routeIs('portal.*');
 
-        $proyek = $this->proyek()->first();
+        // Dari hub proyek (A-228): proyek yang diminta menang bila ada di pilihan.
+        $diminta = request()->query('project');
+        $proyek = is_numeric($diminta) ? $this->proyek()->firstWhere('id', (int) $diminta) : null;
+        $proyek ??= $this->proyek()->first();
         $this->form['project_id'] = $proyek === null ? '' : (string) $proyek->id;
     }
 
@@ -104,7 +108,7 @@ class ReturnForm extends Component
             return $semua;
         }
 
-        $pengirim = \App\Domain\Shipment\Models\Shipment::query()->withoutGlobalScopes()
+        $pengirim = Shipment::query()->withoutGlobalScopes()
             ->where('destination_project_id', (int) $this->form['project_id'])
             ->pluck('warehouse_id')->unique()->all();
 

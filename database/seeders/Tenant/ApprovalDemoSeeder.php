@@ -18,7 +18,7 @@ use RuntimeException;
  * HANYA untuk dev, demo, dan staging.
  *
  * Jenis dokumen yang sudah tersambung ke mesin approval (REQ, RTV, ADJ, OPN,
- * PRQ) diseed.
+ * PRQ, PO) diseed.
  * Aman dijalankan berulang (dicari lewat jenis + nama).
  */
 class ApprovalDemoSeeder extends Seeder
@@ -36,6 +36,8 @@ class ApprovalDemoSeeder extends Seeder
     public const OPN_AUDIT = 'OPN tahunan & pemeriksaan mendadak';
 
     public const PRQ_ONLINE = 'PRQ toko online';
+
+    public const PO_BESAR = 'PO bernilai ≥ Rp 50 juta';
 
     public function run(): void
     {
@@ -103,6 +105,15 @@ class ApprovalDemoSeeder extends Seeder
             ['match' => 'all', 'vendor_types' => ['online_marketplace']],
             [
                 [ApproverType::WarehouseHead, null, DecisionMode::Any],
+                [ApproverType::Role, $manajemen->id, DecisionMode::Any],
+            ],
+        );
+
+        // §5 baris PO: nilai PO ≥ Rp 50.000.000 → Manajemen (D-28, A-212, A-218).
+        // PO lain tanpa aturan = disetujui otomatis (A-08).
+        $this->aturan(ApprovalDocumentType::PurchaseOrder, self::PO_BESAR, 10,
+            ['match' => 'all', 'order_value_min' => 50000000],
+            [
                 [ApproverType::Role, $manajemen->id, DecisionMode::Any],
             ],
         );

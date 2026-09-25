@@ -1,8 +1,8 @@
 # Model Data — Konversi & aset, opname & penyesuaian, approval, umum
 
-**Versi:** 0.19 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026)
+**Versi:** 0.20 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026, dan Purchasing inti Fase 1b)
 **Tanggal:** 25 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194, Purchasing inti A-208–A-215. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Inti](08a-model-data-inti.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md)
 
 Daftar area lengkap ada di [08a-model-data-inti.md](08a-model-data-inti.md).
@@ -16,6 +16,47 @@ Daftar area lengkap ada di [08a-model-data-inti.md](08a-model-data-inti.md).
 - Kunci: 🔑 PK · ↗ FK · ◆ unik. Tabel abu-abu di `.drawio` = milik area lain (rujukan).
 
 ---
+
+## Area: Purchasing inti: harga beli vendor & PO (tenant, Fase 1b)
+
+**Diagram:** [`diagram/erd-purchasing.drawio`](../diagram/erd-purchasing.drawio) · **Rujukan:** KS 2.17, D-28, D-29, A-208, A-210, A-211, purchasing/02
+
+Satu-satunya area bernilai uang di database company (A-208). PO dibuat dari baris PRQ untuk satu vendor dan satu gudang tujuan; saat disetujui menjadi catatan pemesanan PRQ (po_created) sehingga GRN vendor merujuknya. Tabel WMS hanya menyimpan rujukan ke PO, tanpa harga (D-07).
+
+### Diagram (Mermaid)
+
+```mermaid
+erDiagram
+  vendor_prices {
+    bigint id PK
+  }
+  purchase_orders {
+    bigint id PK
+    varchar_40 number UK
+  }
+  purchase_order_lines {
+    bigint id PK
+  }
+  vendors ||--o{ vendor_prices : " "
+  items ||--o{ vendor_prices : " "
+  vendors ||--o{ purchase_orders : " "
+  warehouses ||--o{ purchase_orders : "tujuan"
+  purchase_orders ||--o{ purchase_order_lines : " "
+  purchase_request_lines ||--o{ purchase_order_lines : "dipesan lewat"
+  purchase_orders ||--o{ purchase_request_orders : "po_created"
+  purchase_order_lines ||--|| purchase_request_order_lines : "pasangan"
+```
+
+### Entitas
+
+**`vendor_prices` — Harga beli vendor.** 🔑`id` bigint · ↗`vendor_id` bigint · ↗`item_id` bigint · `unit_price` decimal(18,2) *(per satuan dasar (A-211))* · `currency` char(3) *(IDR)* · `valid_from` date · `is_active` bool *(harga lama dinonaktifkan, tidak dihapus (P-03))* · `notes` varchar(255) · ↗`created_by` bigint
+  ↳ Harga berlaku = aktif, valid_from terbaru ≤ tanggal PO
+
+**`purchase_orders` — PO header.** 🔑`id` bigint · ◆`number` varchar(40) *(PO/<gudang>/<yymm>/<urut>)* · ↗`vendor_id` bigint *(vendor aktif (A-210))* · ↗`warehouse_id` bigint *(tujuan)* · `status` enum *(KS 2.17 (status umum, A-209))* · `order_date` date · `eta_date` date *(po_updated)* · `currency` char(3) *(IDR)* · `total_amount` decimal(18,2) *(Σ nilai baris; kondisi approval order_value_min (A-212))* · `payment_terms` varchar(60) *(salinan teks termin vendor)* · ↗`approval_snapshot_id` bigint · ↗`submitted_by` bigint · ↗`approved_by` bigint · ↗`reject_reason_id` bigint · ↗`close_reason_id` bigint *(tutup sisa (A-215))* · `closed_at` datetime · `completed_at` datetime
+  ↳ kolom header dokumen standar (lihat konvensi)
+
+**`purchase_order_lines` — PO baris.** 🔑`id` bigint · ↗`purchase_order_id` bigint · ↗`purchase_request_line_id` bigint *(baris PRQ asal (A-210))* · ↗`item_id` bigint · `qty_base` decimal(18,4) · `unit_price` decimal(18,2) *(A-211)* · `line_amount` decimal(18,2) *(qty × harga)* · `qty_received` decimal(18,4) *(dari GRN (A-214))* · `qty_cancelled` decimal(18,4) *(sisa batal/tutup (A-215))* · `notes` varchar(255)
+  ↳ kolom baris standar (lihat konvensi)
 
 ## Area: Konversi, resep, waste, aset (tenant)
 

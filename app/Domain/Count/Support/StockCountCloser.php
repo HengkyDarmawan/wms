@@ -77,7 +77,7 @@ class StockCountCloser
 
                 activity('adjustment')->performedOn($adj)->causedBy($actor)
                     ->withProperties(['opname' => $count->number])
-                    ->log('ADJ disetujui di tingkat sesi opname (BR-OPN-06)');
+                    ->log('ADJ disetujui di tingkat sesi opname'); // BR-OPN-06
 
                 $this->poster->post($adj, $actor);
             }
@@ -119,7 +119,7 @@ class StockCountCloser
             $sekarang = $this->lock->current();
 
             if ($sekarang === null || $tanggal > $sekarang) {
-                $kunci = $this->lock->handle($tanggal, 'Otomatis: sesi opname bulanan '.$count->number.' ditutup (BR-STK-15)', $actor);
+                $kunci = $this->lock->handle($tanggal, 'Otomatis: sesi opname bulanan '.$count->number.' ditutup', $actor); // BR-STK-15
             }
         }
 

@@ -59,7 +59,7 @@
                             <td><a href="{{ route('asset-handovers.show', $h) }}">{{ $h->number }}</a> <div class="small text-muted">{{ $h->warehouse?->code }}</div></td>
                             <td>{{ $h->serial?->serial_no }} <div class="small text-muted">{{ $h->item?->code }}</div></td>
                             <td>{{ $h->project?->code }} <div class="small text-muted">{{ $h->project?->name }}</div></td>
-                            <td class="small">{{ $h->checked_out_at?->format('d/m/Y') }}</td>
+                            <td class="small">{{ $h->checked_out_at?->lokal()->format('d/m/Y') }}</td>
                             <td class="small">
                                 {{ $h->due_return_date?->format('d/m/Y') ?? '—' }}
                                 @if ($h->isOverdue()) <span class="badge text-bg-danger">{{ __('Lewat') }}</span> @endif

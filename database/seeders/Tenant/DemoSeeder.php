@@ -51,6 +51,9 @@ class DemoSeeder extends Seeder
         // Aturan approval demo §5 (REQ, RTV); butuh role Manajemen.
         $this->call(ApprovalDemoSeeder::class);
 
+        // Purchasing inti Fase 1b: harga beli vendor demo (A-218).
+        $this->call(PurchasingDemoSeeder::class);
+
         $this->command?->info('Data demo siap: '.User::count().' user, password '.self::PASSWORD.'.');
     }
 

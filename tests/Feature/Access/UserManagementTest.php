@@ -9,6 +9,7 @@ use App\Domain\Access\Enums\UserStatus;
 use App\Domain\Access\Livewire\UserDetail;
 use App\Domain\Access\Livewire\UserForm;
 use App\Domain\Access\Livewire\UserList;
+use App\Domain\Access\Models\Permission;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\User;
 use App\Domain\Access\Models\UserInvitation;
@@ -144,7 +145,7 @@ class UserManagementTest extends TenantTestCase
         ]);
 
         $role->permissions()->sync(
-            \App\Domain\Access\Models\Permission::query()
+            Permission::query()
                 ->whereIn('name', ['auth.login', 'auth.logout', 'profile.update', 'user.view', 'user.deactivate'])
                 ->pluck('id')->all(),
         );
@@ -238,6 +239,25 @@ class UserManagementTest extends TenantTestCase
             ->assertHasErrors('assignments');
 
         $this->assertDatabaseMissing('users', ['email' => 'salah@demo.wms.test'], 'tenant');
+
+        // Klien dipilih dari daftar nama (bukan id angka); id yang tidak ada ditolak.
+        $klien = $this->makeClient(['name' => 'PT Klien Pilihan']);
+        Livewire::actingAs($admin)->test(UserForm::class)
+            ->assertSeeHtml('id="clientId"')
+            ->assertSee('PT Klien Pilihan')
+            ->set('name', 'Klien Baru')
+            ->set('email', 'klien.baru@demo.wms.test')
+            ->set('clientId', 999999)
+            ->set('assignments', [[
+                'role_id' => Role::findByCode('client_user')->id,
+                'scope_type' => ScopeType::Project->value,
+                'scope_id' => 1,
+                'valid_from' => null,
+                'valid_until' => null,
+            ]])
+            ->call('save')
+            ->assertHasErrors('clientId');
+        $this->assertTrue($klien->exists);
     }
 
     #[Test]

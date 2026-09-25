@@ -180,7 +180,7 @@ class DelegationEscalationTest extends TenantTestCase
         $this->aturan(ApprovalDocumentType::MaterialRequest, [$this->lapisUser($keluar)], ['line_count_min' => 2], 10, 'Nonaktif');
         $req = $this->ajukanReq($this->pemohon(), [['qty' => 1], ['qty' => 1]]);
         $this->assertSame([(int) $atasan->id], $this->approverTerbuka($req));
-        $this->assertStringContainsString('BR-APR-06', implode(' ', $this->snapshotReq($req)->steps[0]['notes']));
+        $this->assertStringContainsString('Dialihkan ke atasan approver', implode(' ', $this->snapshotReq($req)->steps[0]['notes']), 'Catatan BR-APR-06 tanpa kode internal.');
 
         // Nonaktif sesudah diajukan: dialihkan penjadwal tanpa menunggu batas waktu.
         $this->aturan(ApprovalDocumentType::MaterialRequest, [$this->lapisUser($kepala)], [], 20, 'Aktif');

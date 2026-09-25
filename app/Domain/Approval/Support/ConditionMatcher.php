@@ -10,8 +10,10 @@ use App\Domain\Approval\Enums\ConditionMatch;
  * Mencocokkan kondisi aturan dengan data dokumen (BR-APR-07, Blueprint §8.1).
  *
  * Kondisi yang kosong diabaikan; aturan tanpa kondisi berlaku untuk semua
- * dokumen jenisnya ("lainnya"). Tidak ada kondisi nilai uang (D-07). Jumlah
- * dibandingkan dalam satuan dasar per baris, atau jumlah baris.
+ * dokumen jenisnya ("lainnya"). Dokumen WMS tanpa kondisi nilai uang (D-07);
+ * satu-satunya kondisi uang, `order_value_min`, hanya dipakai PO modul
+ * Purchasing (D-28, A-212). Jumlah dibandingkan dalam satuan dasar per baris,
+ * atau jumlah baris.
  */
 class ConditionMatcher
 {
@@ -27,6 +29,7 @@ class ConditionMatcher
         'vendor_types' => 'Jenis vendor',
         'purchase_request_origins' => 'Asal PRQ',
         'count_types' => 'Jenis opname',
+        'order_value_min' => 'Nilai PO ≥ (Rp)',
     ];
 
     /**
@@ -62,6 +65,11 @@ class ConditionMatcher
 
         if (isset($raw['from_client']) && $raw['from_client'] !== '' && $raw['from_client'] !== null) {
             $hasil['from_client'] = filter_var($raw['from_client'], FILTER_VALIDATE_BOOLEAN);
+        }
+
+        // Nilai uang hanya untuk PO; jenis lain membuangnya lewat conditions() (D-28, A-212).
+        if (isset($raw['order_value_min']) && is_numeric($raw['order_value_min']) && (float) $raw['order_value_min'] > 0) {
+            $hasil['order_value_min'] = round((float) $raw['order_value_min'], 2);
         }
 
         return $hasil;
@@ -109,6 +117,7 @@ class ConditionMatcher
             'vendor_types' => $ctx->vendorType !== null && in_array($ctx->vendorType, $nilai, true),
             'purchase_request_origins' => $ctx->purchaseRequestOrigin !== null && in_array($ctx->purchaseRequestOrigin, $nilai, true),
             'count_types' => $ctx->countType !== null && in_array($ctx->countType, $nilai, true),
+            'order_value_min' => $ctx->orderValue !== null && $ctx->orderValue + 0.005 >= (float) $nilai,
             default => false,
         };
     }

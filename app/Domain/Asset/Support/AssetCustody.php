@@ -140,7 +140,7 @@ class AssetCustody
         }
 
         if ($ast->status !== AssetHandoverStatus::Inspected) {
-            return 'Aset '.$line->serial?->serial_no.' belum diperiksa ('.$ast->number.'); periksa dulu sebelum dipilah (BR-AST-03).';
+            return 'Aset '.$line->serial?->serial_no.' belum diperiksa ('.$ast->number.'); periksa dulu sebelum dipilah.'; // BR-AST-03
         }
 
         $hasil = $ast->latestInspection()?->resulting_state;

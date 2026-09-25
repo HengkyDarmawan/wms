@@ -1,0 +1,88 @@
+<mxfile host="app.diagrams.net" agent="wms-erd-generator">
+  <diagram name="ERD purchasing" id="erd-purchasing">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="1654">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="vendor_prices" value="vendor_prices" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="260" height="178" as="geometry"/>
+        </mxCell>
+        <mxCell id="vendor_prices_cols" value="🔑 id : bigint&lt;br&gt;↗ vendor_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;unit_price : decimal(18,2)&lt;br&gt;currency : char(3)&lt;br&gt;valid_from : date&lt;br&gt;is_active : bool&lt;br&gt;notes : varchar(255)&lt;br&gt;↗ created_by : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="vendor_prices">
+          <mxGeometry y="26" width="260" height="152" as="geometry"/>
+        </mxCell>
+        <mxCell id="purchase_orders" value="purchase_orders" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="40" width="260" height="306" as="geometry"/>
+        </mxCell>
+        <mxCell id="purchase_orders_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ vendor_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;status : enum&lt;br&gt;order_date : date&lt;br&gt;eta_date : date&lt;br&gt;currency : char(3)&lt;br&gt;total_amount : decimal(18,2)&lt;br&gt;payment_terms : varchar(60)&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;↗ submitted_by : bigint&lt;br&gt;↗ approved_by : bigint&lt;br&gt;↗ reject_reason_id : bigint&lt;br&gt;↗ close_reason_id : bigint&lt;br&gt;closed_at : datetime&lt;br&gt;completed_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_orders">
+          <mxGeometry y="26" width="260" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="purchase_order_lines" value="purchase_order_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="40" width="260" height="194" as="geometry"/>
+        </mxCell>
+        <mxCell id="purchase_order_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ purchase_order_id : bigint&lt;br&gt;↗ purchase_request_line_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;unit_price : decimal(18,2)&lt;br&gt;line_amount : decimal(18,2)&lt;br&gt;qty_received : decimal(18,4)&lt;br&gt;qty_cancelled : decimal(18,4)&lt;br&gt;notes : varchar(255)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_order_lines">
+          <mxGeometry y="26" width="260" height="168" as="geometry"/>
+        </mxCell>
+        <mxCell id="items" value="items" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="40" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="items_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="items">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="purchase_request_lines" value="purchase_request_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="396" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="purchase_request_lines_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_request_lines">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="purchase_request_order_lines" value="purchase_request_order_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="360" y="396" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="purchase_request_order_lines_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_request_order_lines">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="purchase_request_orders" value="purchase_request_orders" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="680" y="396" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="purchase_request_orders_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_request_orders">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="vendors" value="vendors" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="396" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="vendors_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="vendors">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="warehouses" value="warehouses" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="496" width="260" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="warehouses_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="warehouses">
+          <mxGeometry y="26" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="r0" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="vendors" target="vendor_prices">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r1" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="items" target="vendor_prices">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="vendors" target="purchase_orders">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3" value="tujuan" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="warehouses" target="purchase_orders">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="purchase_orders" target="purchase_order_lines">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r5" value="dipesan lewat" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="purchase_request_lines" target="purchase_order_lines">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r6" value="po_created" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="purchase_orders" target="purchase_request_orders">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r7" value="pasangan" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERmandOne;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="purchase_order_lines" target="purchase_request_order_lines">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

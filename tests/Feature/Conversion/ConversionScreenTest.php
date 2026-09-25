@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Conversion;
 
 use App\Domain\Access\Enums\ScopeType;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Conversion\Enums\ConversionStatus;
 use App\Domain\Conversion\Livewire\ConversionDetail;
 use App\Domain\Conversion\Livewire\ConversionForm;
@@ -27,6 +28,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Feature\Approval\Concerns\ApprovalFixtures;
 use Tests\Feature\Conversion\Concerns\ConversionFixtures;
 use Tests\TenantTestCase;
 
@@ -38,6 +40,7 @@ use Tests\TenantTestCase;
  */
 class ConversionScreenTest extends TenantTestCase
 {
+    use ApprovalFixtures;
     use ConversionFixtures;
 
     protected function setUp(): void
@@ -95,38 +98,55 @@ class ConversionScreenTest extends TenantTestCase
         $staf = $this->staf();
         $kunci = str_replace(':', '_', $this->kunciBatang());
 
+        // Mode Potong (A-229): pilih batang, isi ukuran × jumlah; kerf & sisa dihitung otomatis.
         $form = Livewire::actingAs($staf)
             ->test(ConversionForm::class)
             ->assertOk()
+            ->assertSet('form.conversion_type', 'cut')
             ->set('form.project_id', (string) $this->proyek->id)
             ->set('form.warehouse_id', (string) $this->gudang->id)
             ->assertSee($this->batang->piece_no)
-            ->set('qty.'.$kunci, true)
-            ->set('outputs.0.item_id', (string) $this->pipa->id)
-            ->set('outputs.0.qty_base', '2.5')
-            ->set('outputs.0.count', '2')
             ->call('simpan')
-            ->assertSet('ruleCode', 'BR-CNV-02');
+            ->assertSet('ruleCode', 'BR-CNV-02')
+            ->assertHasErrors('rencana.batang')
+            ->set('batang', $kunci)
+            ->assertSee(__('kerf per potongan'))
+            ->set('potong.0.length', '3')
+            ->set('potong.0.count', '3')
+            ->assertSee(__('melebihi batang'))
+            ->call('simpan')
+            ->assertHasErrors('rencana.potong');
 
-        $form->call('tambahHasil', 'offcut')
-            ->set('outputs.1.qty_base', '0.99')
-            ->call('tambahHasil', 'kerf')
-            ->set('outputs.2.qty_base', '0.01')
-            ->assertSee('0,0000')
+        $form->set('potong.0.length', '2.5')
+            ->set('potong.0.count', '2')
+            ->assertSee('6 M → 2 × 2,5 M + offcut 0,99 M + kerf 0,01 M')
+            ->assertSee(__('OFFCUT'))
+            ->assertSee(__('Neraca seimbang; siap disimpan.'))
             ->call('simpan')
             ->assertSet('ruleError', '')
             ->assertRedirect();
 
         $cnv = Conversion::query()->latest('id')->firstOrFail();
         $this->assertSame(ConversionStatus::Draft, $cnv->status);
-        $this->assertSame(4, $cnv->outputs()->count());
+        $this->assertSame(4, $cnv->outputs()->count(), '2 output + kerf + offcut.');
+        $this->assertSame(0.99, (float) $cnv->outputs()->where('output_kind', 'offcut')->sole()->qty_base);
+        $this->assertSame(0.01, (float) $cnv->outputs()->where('output_kind', 'kerf')->sole()->qty_base);
 
         Livewire::actingAs($staf)->test(ConversionList::class)->assertOk()->assertSee($cnv->number);
 
-        // Ubah draf lewat form yang sama: isian terisi kembali.
+        // Ubah draf lewat form yang sama: batang & ukuran terisi kembali, sisa/kerf tetap otomatis.
         Livewire::actingAs($staf)->test(ConversionForm::class, ['conversion' => $cnv])
-            ->assertSet('qty.'.$kunci, '1')
-            ->assertCount('outputs', 4);
+            ->assertSet('batang', $kunci)
+            ->assertCount('potong', 1)
+            ->assertSet('potong.0.count', '2')
+            ->assertSee('6 M → 2 × 2,5 M + offcut 0,99 M + kerf 0,01 M');
+
+        // Pindai nomor potongan memilih batang.
+        Livewire::actingAs($staf)->test(ConversionForm::class)
+            ->set('form.project_id', (string) $this->proyek->id)
+            ->set('form.warehouse_id', (string) $this->gudang->id)
+            ->set('kodePindai', 'TIDAK-ADA')->call('pindai')->assertHasErrors('kodePindai')
+            ->set('kodePindai', mb_strtolower($this->batang->piece_no))->call('pindai')->assertHasNoErrors()->assertSet('batang', $kunci);
 
         Livewire::actingAs($staf)
             ->test(ConversionDetail::class, ['conversion' => $cnv])
@@ -160,6 +180,72 @@ class ConversionScreenTest extends TenantTestCase
             ->assertSet('ruleError', '');
 
         $this->assertSame(ConversionStatus::Cancelled, $balik->refresh()->status);
+    }
+
+    #[Test]
+    public function tc_cnv_14_ganti_kemasan_dan_rakit_dari_layar_lalu_simpan_dan_selesaikan(): void
+    {
+        $staf = $this->staf();
+        $this->baut->forceFill(['is_cuttable' => true])->save();
+        $kunciBaut = str_replace(':', '_', $this->kunciCnv($this->binA, $this->baut));
+        $binWaste = $this->binSistem($this->gudang, BinType::Waste);
+
+        // Ganti kemasan: 10 baut → 9 kabel (satuan sama), susut 1 otomatis waste; Simpan & selesaikan langsung menggerakkan stok.
+        Livewire::actingAs($staf)
+            ->test(ConversionForm::class)
+            ->set('form.project_id', (string) $this->proyek->id)
+            ->set('form.warehouse_id', (string) $this->gudang->id)
+            ->set('form.conversion_type', 'repack')
+            ->assertDontSee($this->batang->piece_no)
+            ->set('cari', 'baut')
+            ->assertSee('BAUT-M12')
+            ->set('qty.'.$kunciBaut, '10')
+            ->set('hasil.0.item_id', (string) $this->kabel->id)
+            ->set('hasil.0.qty', '11')
+            ->assertSee(__('melebihi total input'))
+            ->set('hasil.0.qty', '9')
+            ->assertSee('10 PCS → 9 PCS hasil + susut 1 PCS (waste)')
+            ->assertSee(__('Simpan & selesaikan'))
+            ->call('simpanDanSelesaikan')
+            ->assertSet('ruleError', '')
+            ->assertRedirect();
+
+        $cnv = Conversion::query()->latest('id')->firstOrFail();
+        $this->assertSame(ConversionStatus::Completed, $cnv->status);
+        $this->assertSame(90.0, $this->saldo($this->binA, $this->baut));
+        $this->assertSame(9.0, $this->saldo($this->binA, $this->kabel));
+        $this->assertSame(1.0, $this->saldo($binWaste, $this->baut, StockStatus::Damaged));
+
+        $this->actingAs($staf)->get($this->tenantUrl('conversions/'.$cnv->id))->assertOk()
+            ->assertSee('10 PCS BAUT-M12 → 9 PCS KABEL-NYM + 1 PCS waste')
+            ->assertSee(route('waste-disposals.create', ['warehouse' => $this->gudang->id, 'project' => $this->proyek->id]));
+
+        // Tombol Buat BA Waste mengisi gudang & proyek di form WST.
+        Livewire::withQueryParams(['warehouse' => $this->gudang->id, 'project' => $this->proyek->id])->actingAs($staf)
+            ->test(WasteDisposalForm::class)
+            ->assertSet('form.warehouse_id', (string) $this->gudang->id)
+            ->assertSet('form.project_id', (string) $this->proyek->id);
+
+        // Rakit tanpa neraca: 5 baut → 1 kabel; dengan aturan approval tombol menjadi Simpan & ajukan.
+        $this->aturan(ApprovalDocumentType::Conversion, [$this->lapisUser($this->makeUser('warehouse_head'))]);
+
+        Livewire::actingAs($staf)
+            ->test(ConversionForm::class)
+            ->set('form.project_id', (string) $this->proyek->id)
+            ->set('form.warehouse_id', (string) $this->gudang->id)
+            ->set('form.conversion_type', 'assemble')
+            ->set('qty.'.$kunciBaut, '5')
+            ->set('hasil.0.item_id', (string) $this->kabel->id)
+            ->set('hasil.0.qty', '1')
+            ->assertSee(__('tanpa neraca ukuran'))
+            ->assertSee(__('Simpan & ajukan'))
+            ->call('simpanDanSelesaikan')
+            ->assertSet('ruleError', '')
+            ->assertRedirect();
+
+        $rakit = Conversion::query()->latest('id')->firstOrFail();
+        $this->assertSame(ConversionStatus::PendingApproval, $rakit->status);
+        $this->assertSame(90.0, $this->saldo($this->binA, $this->baut), 'Belum bergerak sebelum disetujui.');
     }
 
     #[Test]

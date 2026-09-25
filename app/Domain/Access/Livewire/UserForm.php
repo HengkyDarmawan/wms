@@ -12,6 +12,7 @@ use App\Domain\Access\Models\OrgUnit;
 use App\Domain\Access\Models\Position;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Models\Client;
 use App\Domain\Master\Models\Project;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Validation\Rule;
@@ -218,7 +219,7 @@ class UserForm extends Component
             'orgUnitId' => ['nullable', 'integer', 'exists:org_units,id'],
             'positionId' => ['nullable', 'integer', 'exists:positions,id'],
             'managerId' => ['nullable', 'integer', 'different:userId', 'exists:users,id'],
-            'clientId' => ['nullable', 'integer', 'min:1'],
+            'clientId' => ['nullable', 'integer', 'exists:clients,id'],
             'assignments' => ['required', 'array', 'min:1'],
             'assignments.*.role_id' => ['required', 'integer', 'exists:roles,id'],
             'assignments.*.scope_type' => ['required', Rule::enum(ScopeType::class)],
@@ -265,6 +266,7 @@ class UserForm extends Component
             'scopeTypes' => ScopeType::cases(),
             // Cakupan dipilih lewat nama, bukan id angka (11-master §12, 12-warehouse §12).
             'projects' => Project::query()->active()->orderBy('name')->get(['id', 'code', 'name']),
+            'clients' => Client::query()->active()->orderBy('name')->get(['id', 'code', 'name']),
             // withoutGlobalScopes: yang memberi cakupan harus melihat seluruh
             // gudang, termasuk yang di luar cakupannya sendiri.
             'warehouses' => Warehouse::withoutGlobalScopes()->orderBy('code')->get(['id', 'code', 'name']),

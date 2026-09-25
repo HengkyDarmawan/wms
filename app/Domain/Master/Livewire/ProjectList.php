@@ -17,8 +17,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use Livewire\Attributes\Url;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -73,6 +73,13 @@ class ProjectList extends Component
     public function mount(): void
     {
         $this->authorize('viewAny', Project::class);
+
+        // Tombol "Ubah" di hub proyek membuka form ubah di daftar ini.
+        $ubah = request()->query('ubah');
+
+        if (is_numeric($ubah) && Project::query()->whereKey((int) $ubah)->exists() && auth()->user()->can('update', Project::query()->find((int) $ubah))) {
+            $this->ubah((int) $ubah);
+        }
     }
 
     public function updated(string $property): void

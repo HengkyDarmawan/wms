@@ -63,7 +63,7 @@ class OrderPurchaseRequest
         }
 
         if ($jumlah === []) {
-            throw PurchaseRequestRuleException::field('BR-GEN-11', 'lines', 'Isi jumlah dipesan minimal satu baris (A-51).');
+            throw PurchaseRequestRuleException::field('BR-GEN-11', 'lines', 'Isi jumlah dipesan minimal satu baris.'); // A-51
         }
 
         $eta = null;

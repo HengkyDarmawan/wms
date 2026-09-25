@@ -58,7 +58,7 @@
         </div>
         <div class="col-12">
             @error('order.lines') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
-            <table class="table table-sm align-middle mb-0">
+            <div class="table-responsive"><table class="table table-sm align-middle mb-0">
                 <thead>
                     <tr>
                         <th scope="col">{{ __('Item') }}</th>
@@ -75,7 +75,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
     <div class="card-footer d-flex gap-2">

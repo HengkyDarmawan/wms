@@ -16,7 +16,7 @@ Repo ini berisi **dokumentasi desain** WMS SaaS multi-company (Bahasa Indonesia)
 - **Bahasa:** dokumen & UI Bahasa Indonesia; nama kode Inggris `snake_case` (tabel) / `PascalCase` (model) sesuai glosarium.
 - **ID stabil:** `D-xx` keputusan · `A-xx` asumsi · `O-xx` isu · `P-xx` prinsip · `NFR-xx` · `BR-<AREA>-nn` aturan · `TC-<MOD>-nn` kasus uji. Rujuk dengan link relatif beranchor, mis. `[A-30](docs/wms/04-keputusan-dan-asumsi.md#a-30)`.
 - **Tag fase** `[F1]` `[F2]` `[F3]` menentukan apa yang dibangun sekarang; `[F2]`/`[F3]` dibangun sebagai stub (BR-GEN-10).
-- **Larangan keras di kode WMS:** harga/nilai uang (D-07) · hapus fisik data yang sudah dipakai (P-03) · mengubah stok di luar `stock_movement` (P-01) · status/istilah di luar katalog & glosarium · transisi status lewat GET.
+- **Larangan keras di kode WMS:** harga/nilai uang (D-07; satu-satunya pengecualian domain `app/Domain/Purchasing` — PO & harga beli vendor, D-28/D-29, A-208; layar, cetak, dan kejadian WMS tetap tanpa harga) · hapus fisik data yang sudah dipakai (P-03) · mengubah stok di luar `stock_movement` (P-01) · status/istilah di luar katalog & glosarium · transisi status lewat GET.
 - **Mengubah dokumen:** naikkan `Versi` di kepala file, tambahkan baris di *Catatan perubahan* `docs/README.md` yang menyebut **ID** yang berubah (bukan narasi). Keputusan tidak diedit; buat keputusan baru dan isi *Diganti oleh*. Perubahan substantif yang belum disetujui pemilik produk dicatat sebagai asumsi baru `A-xx` berstatus *Perlu validasi*.
 - **Ukuran:** satu file ≤ ±450 baris; spesifikasi modul memakai `docs/wms/_template-spesifikasi-modul.md`.
 - **Diagram:** `.drawio` selalu didampingi bentuk teks (Mermaid `erDiagram` / tabel transisi) agar bisa dibaca agen.

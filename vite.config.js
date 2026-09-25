@@ -6,7 +6,14 @@ import { bunny } from 'laravel-vite-plugin/fonts';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                // Landing page produk di domain pusat (30-landing-page): bundel
+                // terpisah tanpa jQuery/Livewire/service worker PWA.
+                'resources/css/landing.css',
+                'resources/js/landing.js',
+            ],
             refresh: true,
             fonts: [
                 bunny('Inter', {

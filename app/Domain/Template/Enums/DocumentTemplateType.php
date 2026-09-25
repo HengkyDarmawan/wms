@@ -7,6 +7,8 @@ namespace App\Domain\Template\Enums;
 /**
  * Katalog §3 `document_template_type` — jenis template cetak (18 §5.1, §5.3).
  * Nilai dokumen = nama di kode Glosarium; label memakai awalan `label_`.
+ * `purchase_order` milik modul Purchasing dan satu-satunya yang memuat nilai
+ * uang (A-217).
  */
 enum DocumentTemplateType: string
 {
@@ -21,6 +23,11 @@ enum DocumentTemplateType: string
     case StockCount = 'stock_count';
     case AssetHandover = 'asset_handover';
     case WasteDisposal = 'waste_disposal';
+    case PurchaseOrder = 'purchase_order';
+    case Transfer = 'transfer';
+    case GoodsReturn = 'goods_return';
+    case PurchaseRequest = 'purchase_request';
+    case GoodsReceipt = 'goods_receipt';
     case LabelBin = 'label_bin';
     case LabelItem = 'label_item';
     case LabelLot = 'label_lot';
@@ -40,6 +47,11 @@ enum DocumentTemplateType: string
             self::StockCount => __('Laporan Stock Opname'),
             self::AssetHandover => __('BA Serah Terima Aset'),
             self::WasteDisposal => __('BA Waste'),
+            self::PurchaseOrder => __('Purchase Order'),
+            self::Transfer => __('Surat Transfer'),
+            self::GoodsReturn => __('Bukti Retur'),
+            self::PurchaseRequest => __('Purchase Request'),
+            self::GoodsReceipt => __('Bukti Penerimaan Barang'),
             self::LabelBin => __('Label bin'),
             self::LabelItem => __('Label item'),
             self::LabelLot => __('Label lot'),
@@ -87,6 +99,11 @@ enum DocumentTemplateType: string
             self::WasteDisposal => ['Dibuat oleh', 'Disetujui', 'Saksi'],
             self::StockCount => ['Rekonsiliasi', 'Disetujui'],
             self::AssetHandover => ['Diserahkan', 'Diterima', 'Dikembalikan'],
+            self::PurchaseOrder => ['Dibuat oleh', 'Disetujui', 'Vendor'],
+            self::Transfer => ['Dibuat oleh', 'Disetujui', 'Diterima'],
+            self::GoodsReturn => ['Pemohon', 'Diterima gudang', 'Dipilah'],
+            self::PurchaseRequest => ['Dibuat oleh', 'Disetujui', 'Pembelian'],
+            self::GoodsReceipt => ['Diterima oleh', 'Diperiksa', 'Pengirim'],
             default => [],
         };
     }

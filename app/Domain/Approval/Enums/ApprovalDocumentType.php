@@ -11,7 +11,8 @@ namespace App\Domain\Approval\Enums;
  *
  * Hanya jenis yang punya penangan terdaftar di `ApprovalRegistry` yang bisa
  * dipilih di layar aturan; sisanya titik sambung modul yang belum dibangun
- * (BR-GEN-10). `purchase_order` disiapkan untuk modul Purchasing (D-28).
+ * (BR-GEN-10). `purchase_order` milik modul Purchasing (D-28, purchasing/02) —
+ * satu-satunya jenis dengan kondisi nilai uang (A-212).
  */
 enum ApprovalDocumentType: string
 {
@@ -27,6 +28,7 @@ enum ApprovalDocumentType: string
     case VendorReturn = 'vendor_return';
     case StockCount = 'stock_count';
     case MaterialIssue = 'material_issue';
+    case PurchaseOrder = 'purchase_order';
 
     public function code(): string
     {
@@ -41,6 +43,7 @@ enum ApprovalDocumentType: string
             self::VendorReturn => 'RTV',
             self::StockCount => 'OPN',
             self::MaterialIssue => 'ISU',
+            self::PurchaseOrder => 'PO',
         };
     }
 
@@ -57,6 +60,7 @@ enum ApprovalDocumentType: string
             self::VendorReturn => 'Retur ke Vendor',
             self::StockCount => 'Stock Opname',
             self::MaterialIssue => 'Pemakaian Material',
+            self::PurchaseOrder => 'Purchase Order',
         };
     }
 
@@ -81,6 +85,7 @@ enum ApprovalDocumentType: string
             self::StockCount => ['warehouse_ids', 'count_types'],
             self::StockAdjustment => ['warehouse_ids', 'category_ids', 'ownership_models', 'line_count_min', 'line_qty_min'],
             self::GoodsReturn => ['warehouse_ids', 'project_ids', 'category_ids', 'ownership_models', 'line_count_min', 'line_qty_min', 'from_client'],
+            self::PurchaseOrder => ['warehouse_ids', 'category_ids', 'vendor_types', 'line_count_min', 'order_value_min'],
             default => ['warehouse_ids', 'project_ids', 'category_ids', 'ownership_models', 'line_count_min', 'line_qty_min'],
         };
     }

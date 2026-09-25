@@ -33,6 +33,13 @@ class TransferForm extends Component
     {
         $this->authorize('create', Transfer::class);
 
+        // Dari hub proyek (A-228): gudang asal = Gudang Site proyek itu.
+        $asal = request()->query('from_warehouse');
+
+        if (is_numeric($asal) && Warehouse::query()->where('is_active', true)->whereKey((int) $asal)->exists()) {
+            $this->form['from_warehouse_id'] = (string) (int) $asal;
+        }
+
         $this->rows = [$this->barisKosong()];
     }
 

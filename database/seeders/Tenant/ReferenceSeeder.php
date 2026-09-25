@@ -244,6 +244,20 @@ class ReferenceSeeder extends Seeder
             'pr.order' => 'Catat pemesanan PRQ (teruskan ke Purchasing)',
             'pr.cancel' => 'Batalkan Purchase Request',
         ],
+        // Purchasing inti Fase 1b (purchasing/02 §2, Katalog §2.17, A-216).
+        // Satu-satunya permission yang membuka nilai uang (A-208).
+        'purchase_order' => [
+            'po.view' => 'Lihat Purchase Order & nilainya',
+            'po.create' => 'Buat & ubah PO (termasuk ETA)',
+            'po.submit' => 'Ajukan PO',
+            'po.approve' => 'Setujui Purchase Order',
+            'po.cancel' => 'Batalkan PO',
+            'po.close' => 'Tutup sisa PO',
+        ],
+        'vendor_price' => [
+            'vendor_price.view' => 'Lihat harga beli vendor',
+            'vendor_price.manage' => 'Kelola harga beli vendor',
+        ],
         // Modul Approval (20-approval §2). Keputusan memakai permission approve
         // Katalog per dokumen (`request.approve`, `vendor_return.approve`, A-86).
         'approval' => [
@@ -271,7 +285,7 @@ class ReferenceSeeder extends Seeder
         'management' => [
             'name' => 'Manajemen',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'role.view', 'org.view', 'client.view', 'project.view', 'vendor.view', 'item.view', 'item_category.view', 'uom.view', 'reference.view', 'company_setting.view', 'warehouse.view', 'bin.view', 'warehouse_type.view', 'stock.view', 'reservation.view', 'stock_event.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'request.approve', 'vendor_return.approve', 'approval_rule.view', 'approval.simulate', 'approval.delegate', 'count.view', 'count.approve', 'adjustment.view', 'adjustment.approve', 'transfer.view', 'transfer.approve', 'return.view', 'return.approve', 'issue.view', 'issue.approve', 'conversion.view', 'conversion.approve', 'waste.view', 'waste.approve', 'asset.view', 'pr.view', 'pr.approve'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'role.view', 'org.view', 'client.view', 'project.view', 'vendor.view', 'item.view', 'item_category.view', 'uom.view', 'reference.view', 'company_setting.view', 'warehouse.view', 'bin.view', 'warehouse_type.view', 'stock.view', 'reservation.view', 'stock_event.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'request.approve', 'vendor_return.approve', 'approval_rule.view', 'approval.simulate', 'approval.delegate', 'count.view', 'count.approve', 'adjustment.view', 'adjustment.approve', 'transfer.view', 'transfer.approve', 'return.view', 'return.approve', 'issue.view', 'issue.approve', 'conversion.view', 'conversion.approve', 'waste.view', 'waste.approve', 'asset.view', 'pr.view', 'pr.approve', 'po.view', 'po.approve', 'vendor_price.view'],
         ],
         'warehouse_head' => [
             'name' => 'Kepala Gudang',
@@ -296,12 +310,12 @@ class ReferenceSeeder extends Seeder
         'pr_follow_up' => [
             'name' => 'Penindak Lanjut PR',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'item.view', 'project.view', 'vendor.view', 'vendor.create', 'warehouse.view', 'stock.view', 'receipt.view', 'vendor_return.view', 'vendor_return.complete', 'pr.view', 'pr.order', 'pr.cancel'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'item.view', 'project.view', 'vendor.view', 'vendor.create', 'warehouse.view', 'stock.view', 'receipt.view', 'vendor_return.view', 'vendor_return.complete', 'pr.view', 'pr.order', 'pr.cancel', 'po.view', 'po.create', 'po.submit', 'po.cancel', 'po.close', 'vendor_price.view', 'vendor_price.manage'],
         ],
         'internal_auditor' => [
             'name' => 'Auditor Internal',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'org.view', 'item.view', 'project.view', 'vendor.view', 'client.view', 'item_category.view', 'uom.view', 'reference.view', 'warehouse.view', 'bin.view', 'warehouse_type.view', 'stock.view', 'reservation.view', 'stock_event.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'approval_rule.view', 'count.view', 'count.create', 'count.start', 'count.assign', 'count.record', 'count.reconcile', 'count.approve', 'count.cancel', 'adjustment.view', 'transfer.view', 'return.view', 'issue.view', 'conversion.view', 'waste.view', 'asset.view', 'pr.view'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'org.view', 'item.view', 'project.view', 'vendor.view', 'client.view', 'item_category.view', 'uom.view', 'reference.view', 'warehouse.view', 'bin.view', 'warehouse_type.view', 'stock.view', 'reservation.view', 'stock_event.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'approval_rule.view', 'count.view', 'count.create', 'count.start', 'count.assign', 'count.record', 'count.reconcile', 'count.approve', 'count.cancel', 'adjustment.view', 'transfer.view', 'return.view', 'issue.view', 'conversion.view', 'waste.view', 'asset.view', 'pr.view', 'po.view', 'vendor_price.view'],
         ],
         'external_auditor' => [
             'name' => 'Auditor Eksternal',

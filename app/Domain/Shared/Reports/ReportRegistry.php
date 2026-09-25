@@ -6,7 +6,7 @@ namespace App\Domain\Shared\Reports;
 
 use App\Domain\Access\Models\User;
 use Illuminate\Support\Collection;
-use InvalidArgumentException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Daftar seluruh laporan aplikasi.
@@ -32,6 +32,18 @@ class ReportRegistry
         Definitions\OpenRequestReport::class,
         Definitions\ConversionWasteReport::class,
         Definitions\StockAccuracyReport::class,
+        // 13-stock, 14-request, 15-picking-shipment §9 (A-232).
+        Definitions\StockCardReport::class,
+        Definitions\StaleReservationReport::class,
+        Definitions\ReorderPointReport::class,
+        Definitions\RequestListReport::class,
+        Definitions\RequestReviewQueueReport::class,
+        Definitions\UnsourcedLineReport::class,
+        Definitions\PendingSubstitutionReport::class,
+        Definitions\ShipmentListReport::class,
+        Definitions\ShortPickReport::class,
+        Definitions\DamagedGoodsPositionReport::class,
+        Definitions\DeliveryPerformanceReport::class,
     ];
 
     /** @return Collection<int, Report> */
@@ -55,7 +67,8 @@ class ReportRegistry
         $laporan = $this->all()->first(fn (Report $r) => $r->key() === $key);
 
         if ($laporan === null) {
-            throw new InvalidArgumentException('Laporan "'.$key.'" tidak dikenal.');
+            // Kunci laporan datang dari URL: yang tidak dikenal = halaman tidak ada, bukan galat server.
+            throw new NotFoundHttpException('Laporan "'.$key.'" tidak dikenal.');
         }
 
         return $laporan;

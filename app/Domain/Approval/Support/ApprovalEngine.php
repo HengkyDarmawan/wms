@@ -21,6 +21,7 @@ use App\Domain\Approval\Models\ApprovalTask;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\ReasonCode;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -130,7 +131,7 @@ class ApprovalEngine
             if ($lapis === []) {
                 $snapshot->forceFill(['status' => ApprovalSnapshotStatus::Approved, 'decided_at' => now()])->save();
 
-                $this->catat($handler, $document, $submitter, 'Disetujui otomatis: tidak ada aturan approval yang berlaku (A-08)', [
+                $this->catat($handler, $document, $submitter, 'Disetujui otomatis: tidak ada aturan approval yang berlaku', [ // A-08
                     'snapshot' => $snapshot->id,
                 ]);
 
@@ -520,7 +521,7 @@ class ApprovalEngine
         foreach ($this->tugasLapis($snapshot, (int) $step['step_no'])->where('status', ApprovalTaskStatus::Open) as $t) {
             if (in_array((int) $t->approver_user_id, $sudahSetuju, true)) {
                 $this->putuskan($t, ApprovalDecisionType::Approved, (int) $t->approver_user_id,
-                    'Disetujui otomatis: sudah menyetujui lapis '.$sebelum.' (BR-APR-04).');
+                    'Disetujui otomatis: sudah menyetujui lapis '.$sebelum.'.'); // BR-APR-04
             }
         }
     }
@@ -556,7 +557,7 @@ class ApprovalEngine
                 'decided_at' => now(),
                 'channel' => 'web',
                 'comment' => 'Didelegasikan dari '.User::query()->whereKey($userId)->value('name')
-                    .' sampai '.$delegasi->ends_at->format('d/m/Y H:i').' (BR-APR-05).',
+                    .' sampai '.$delegasi->ends_at->format('d/m/Y H:i').'.', // BR-APR-05
             ]);
         }
 
@@ -634,8 +635,8 @@ class ApprovalEngine
         return null;
     }
 
-    /** @return \Illuminate\Support\Collection<int, ApprovalTask> */
-    private function tugasLapis(ApprovalSnapshot $snapshot, int $stepNo): \Illuminate\Support\Collection
+    /** @return Collection<int, ApprovalTask> */
+    private function tugasLapis(ApprovalSnapshot $snapshot, int $stepNo): Collection
     {
         return ApprovalTask::query()->with('decisions')
             ->where('approval_snapshot_id', $snapshot->id)

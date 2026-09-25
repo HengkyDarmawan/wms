@@ -18,6 +18,7 @@
             @if ($ret->rejectReason) <p class="text-danger small mb-0">{{ __('Ditolak') }}: {{ $ret->rejectReason->label }}</p> @endif
             @if ($ret->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $ret->cancelReason->label }}</p> @endif
         </div>
+        @if ($rute === 'returns') <a class="btn btn-outline-secondary" href="{{ route('print.document', ['type' => 'goods-return', 'id' => $ret->id]) }}" target="_blank" rel="noopener"><i class="bi bi-printer"></i> {{ __('Cetak') }}</a> @endif
         <a class="btn btn-outline-secondary" href="{{ route($rute.'.index') }}">{{ __('Kembali') }}</a>
     </div>
 

@@ -52,7 +52,7 @@ class SaveUomCategory
 
         if ($baru && $acuanId === null && $referenceUom === null) {
             throw MasterRuleException::fields(
-                ['reference_uom_id' => 'Kategori satuan wajib punya satuan acuan (BR-MST-03).'],
+                ['reference_uom_id' => 'Kategori satuan wajib punya satuan acuan.'], // BR-MST-03
                 'BR-MST-03',
             );
         }

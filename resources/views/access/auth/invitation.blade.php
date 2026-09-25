@@ -28,7 +28,7 @@
             <input class="form-control @error('phone') is-invalid @enderror"
                    type="text" id="phone" name="phone" value="{{ old('phone', $user->phone) }}"
                    placeholder="+62812…" maxlength="20">
-            <div class="form-text">{{ __('Opsional. Dipakai untuk notifikasi approval di fase berikutnya.') }}</div>
+            <div class="form-text">{{ __('Opsional. Dipakai untuk notifikasi WhatsApp (Fase 2).') }}</div>
             @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
 

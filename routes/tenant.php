@@ -27,6 +27,7 @@ use App\Http\Controllers\Master\ItemController;
 use App\Http\Controllers\Master\ItemPhotoController;
 use App\Http\Controllers\Master\ProjectController;
 use App\Http\Controllers\Master\ReferenceController;
+use App\Http\Controllers\Master\CompanySettingsController;
 use App\Http\Controllers\Master\SetupController;
 use App\Http\Controllers\Master\UomController;
 use App\Http\Controllers\Master\VendorController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\Platform\BillingController;
 use App\Http\Controllers\Platform\SupportSessionController;
 use App\Http\Controllers\Portal\PortalDashboardController;
 use App\Http\Controllers\PurchaseRequest\PurchaseRequestController;
+use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Receipt\ReceiptController;
 use App\Http\Controllers\Request\DeliveryReceiptController;
 use App\Http\Controllers\Request\PortalRequestController;
@@ -42,6 +44,7 @@ use App\Http\Controllers\Request\RequestController;
 use App\Http\Controllers\Return\ReturnController;
 use App\Http\Controllers\Shared\FileController;
 use App\Http\Controllers\Shared\ReportController;
+use App\Http\Controllers\Shipment\DeliveryTokenController;
 use App\Http\Controllers\Shipment\ShipmentController;
 use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Template\DocumentLayoutController;
@@ -104,6 +107,14 @@ Route::middleware('signed')->group(function (): void {
     Route::post('/support/enter/{supportAccess}', [SupportSessionController::class, 'store'])->whereNumber('supportAccess')->name('support.enter.store');
 });
 
+// Halaman penerima bertoken (A-41, A-231, BR-SJ-05): tanpa akun; token + OTP
+// adalah identitasnya, lalu lintasnya dibatasi.
+Route::middleware('throttle:30,1')->group(function (): void {
+    Route::get('/terima/{token}', [DeliveryTokenController::class, 'show'])->name('terima.show');
+    Route::post('/terima/{token}/otp', [DeliveryTokenController::class, 'otp'])->name('terima.otp');
+    Route::post('/terima/{token}', [DeliveryTokenController::class, 'store'])->name('terima.store');
+});
+
 Route::middleware('auth')->group(function (): void {
     // Notifikasi in-app untuk semua user, termasuk klien (Blueprint §10).
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -120,6 +131,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
         Route::post('/setup/terms', [SetupController::class, 'acceptTerms'])->name('setup.terms');
         Route::post('/setup/complete', [SetupController::class, 'complete'])->name('setup.complete');
+        // Pengaturan company (11-master §6, A-230): ambang, saklar fitur, zona waktu.
+        Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
@@ -170,13 +183,14 @@ Route::middleware('auth')->group(function (): void {
         // Master data (11-master §6). Semua transisi status lewat POST, bukan GET.
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
         Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+        Route::get('/projects/{project}', [ProjectController::class, 'show'])->whereNumber('project')->name('projects.show');
         Route::get('/vendors', [VendorController::class, 'index'])->name('vendors.index');
 
         Route::get('/items', [ItemController::class, 'index'])->name('items.index');
         // Impor item dari Excel (A-192).
         Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
-        Route::get('/imports/{type}/template', [ImportController::class, 'template'])->whereIn('type', ['items', 'projects'])->name('imports.template');
-        Route::post('/imports/{type}', [ImportController::class, 'store'])->whereIn('type', ['items', 'projects'])->name('imports.store');
+        Route::get('/imports/{type}/template', [ImportController::class, 'template'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock'])->name('imports.template');
+        Route::post('/imports/{type}', [ImportController::class, 'store'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock'])->name('imports.store');
         Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
         Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
         Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
@@ -213,6 +227,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/shipments', [ShipmentController::class, 'index'])->name('shipments.index');
         Route::get('/shipments/create', [ShipmentController::class, 'create'])->name('shipments.create');
         Route::get('/shipments/{shipment}', [ShipmentController::class, 'show'])->name('shipments.show');
+        // Berkas bukti terima lewat controller berotorisasi, bukan URL publik (NFR-14).
+        Route::get('/shipments/{shipment}/proof/{berkas}', [ShipmentController::class, 'proofFile'])->where('berkas', 'foto|ttd|baris-[0-9]+')->name('shipments.proof.file');
         Route::get('/discrepancies', [ShipmentController::class, 'discrepancies'])->name('discrepancies.index');
 
         // Penerimaan, put-away, retur ke vendor (19-receipt-putaway §6). Halaman
@@ -292,6 +308,14 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/purchase-requests/create', [PurchaseRequestController::class, 'create'])->name('purchase-requests.create');
         Route::get('/purchase-requests/{purchaseRequest}', [PurchaseRequestController::class, 'show'])->name('purchase-requests.show');
         Route::get('/purchase-requests/{purchaseRequest}/edit', [PurchaseRequestController::class, 'edit'])->name('purchase-requests.edit');
+
+        // Purchasing inti Fase 1b (purchasing/02 §6). Halaman lewat GET; ajukan,
+        // approval, ETA, batal, dan tutup sisa lewat aksi Livewire (POST).
+        Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+        Route::get('/purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+        Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+        Route::get('/purchase-orders/{purchaseOrder}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
+        Route::get('/vendor-prices', [PurchaseOrderController::class, 'vendorPrices'])->name('vendor-prices.index');
 
         // Tagihan langganan Admin Company (17-platform-login §6.2). Unggah bukti
         // bayar tetap boleh saat langganan ditangguhkan (BR-SUB-02).

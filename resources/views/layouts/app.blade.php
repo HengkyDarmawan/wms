@@ -8,7 +8,7 @@
     <link rel="icon" href="{{ asset('img/logo.svg') }}">
     {{-- PWA installable (Blueprint §11, A-193). --}}
     <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#6366f1">
     <link rel="apple-touch-icon" href="/img/icons/icon-192.png">
     <script>
         (function () {
@@ -18,6 +18,7 @@
         })();
     </script>
     @include('layouts.partials.palette')
+    @fonts
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 {{-- data-nx-layout menyalakan sidebar, filter menu, dan header NexaDash (resources/js/nexadash/app.js). --}}

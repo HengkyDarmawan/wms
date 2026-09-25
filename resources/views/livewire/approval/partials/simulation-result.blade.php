@@ -20,7 +20,7 @@
     @endif
 @else
     @if ($hasil['evaluations'] !== [])
-        <table class="table table-sm mb-3">
+        <div class="table-responsive mb-3"><table class="table table-sm mb-0">
             <thead><tr><th>{{ __('Prioritas') }}</th><th>{{ __('Aturan') }}</th><th>{{ __('Hasil') }}</th></tr></thead>
             <tbody>
                 @foreach ($hasil['evaluations'] as $e)
@@ -38,10 +38,10 @@
                     </tr>
                 @endforeach
             </tbody>
-        </table>
+        </table></div>
     @endif
     @if ($hasil['auto_approved'])
-        <div class="alert alert-info mb-0">{{ __('Tidak ada aturan yang cocok: dokumen akan langsung disetujui saat diajukan (A-08).') }}</div>
+        <div class="alert alert-info mb-0">{{ __('Tidak ada aturan yang cocok: dokumen akan langsung disetujui saat diajukan.') }}</div> {{-- A-08 --}}
     @endif
 @endif
 

@@ -39,8 +39,18 @@ async function page() {
     if (r.result?.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || 'eval gagal');
     return r.result?.result?.value;
   };
-  const go = async (path) => { await send('Page.navigate', { url: BASE + path }); await sleep(1800); };
-  const shot = async (name) => { const r = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true }); writeFileSync(name, Buffer.from(r.result.data, 'base64')); return name; };
+  const siap = async () => {
+    for (let i = 0; i < 60; i++) {
+      await sleep(250);
+      try {
+        const s = await ev('document.readyState === "complete" && (!document.querySelector("[wire\\:id]") || !!window.Livewire)');
+        if (s) break;
+      } catch { /* konteks halaman sedang berganti */ }
+    }
+    await sleep(400);
+  };
+  const go = async (path) => { await send('Page.navigate', { url: BASE + path }); await siap(); };
+  const shot = async (name) => { try { const r = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true }); if (r.result?.data) writeFileSync(name, Buffer.from(r.result.data, 'base64')); } catch { /* halaman sedang berpindah */ } return name; };
   // Panggil aksi Livewire pada komponen utama halaman (atau yang memuat selector).
   const wire = async (sets, method, args = [], within = 'main [wire\\:id]') => {
     await ev(`(async () => {
@@ -183,6 +193,33 @@ await cek(5, 'kepala gudang susun & berangkatkan SJ (kendaraan B 9001 XX)', asyn
   const [no, s] = sql(`SELECT number, status FROM shipments WHERE id=${sjId}`).split('\t');
   const trn = sql(`SELECT COALESCE(SUM(sb.qty_base),0) FROM stock_balances sb JOIN bins b ON b.id=sb.bin_id WHERE b.code='CKG-TRANSIT'`);
   return { ok: s === 'shipped' && Number(trn) === transitAwal + 50, bukti: `e2e-5-sj.png; ${no} status=${s}; metode=${metode.join('/')}; saldo CKG-TRANSIT=${trn}` };
+});
+
+// ---------------------------------------------------------------- 5b
+// Halaman penerima bertoken (A-231): kepala gudang menerbitkan tautan + OTP (tampil sekali),
+// halaman dibuka tanpa login, OTP salah ditolak, OTP benar membuka formulir. Formulir tidak
+// dikirim supaya langkah 6 (driver) tetap berjalan; token yang tak terpakai tidak mengganggu.
+await cek('5b', 'tautan penerima bertoken: OTP salah ditolak, OTP benar membuka formulir', async () => {
+  await kagudang.go(`/shipments/${sjId}`);
+  await kagudang.wire({}, 'mintaDialog', ['tautan']);
+  await kagudang.wire({ 'form.phone': '0812' }, 'terbitkanTautan');
+  const teks = await kagudang.text();
+  const otp = (teks.match(/Kode OTP untuk penerima:\s*(\d{6})/) || [])[1];
+  const tautan = await kagudang.ev(`document.querySelector('main a[href*="/terima/"]')?.getAttribute('href') || ''`);
+  await kagudang.shot('e2e-5b-tautan.png');
+  if (!otp || !tautan) return { ok: false, bukti: `e2e-5b-tautan.png; otp=${otp}; tautan=${tautan}` };
+  const path = new URL(tautan).pathname;
+  const penerima = await page();
+  const tunggu = async (expr) => { for (let i = 0; i < 60; i++) { try { if (await penerima.ev(expr)) return true; } catch {} await sleep(250); } return false; };
+  await penerima.go(path);
+  const adaOtp = await tunggu('!!document.getElementById("otp")');
+  await penerima.ev(`document.getElementById('otp').value='000000'; document.querySelector('form').submit();`);
+  const tolak = await tunggu('/tidak cocok/i.test(document.body.innerText)');
+  await penerima.ev(`document.getElementById('otp').value=${JSON.stringify(otp)}; document.querySelector('form').submit();`);
+  const adaForm = await tunggu('!!document.getElementById("received_by_name") && !!document.querySelector("[data-signature] canvas")');
+  await penerima.shot('e2e-5b-form.png');
+  const percobaan = sql(`SELECT attempts FROM delivery_tokens WHERE shipment_id=${sjId} ORDER BY id DESC LIMIT 1`);
+  return { ok: adaOtp && tolak && adaForm && Number(percobaan) === 1, bukti: `e2e-5b-tautan.png, e2e-5b-form.png; otp form=${adaOtp}; salah ditolak=${tolak}; form terbuka=${adaForm}; percobaan=${percobaan}` };
 });
 
 // ---------------------------------------------------------------- 6

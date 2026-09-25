@@ -37,7 +37,7 @@ class TrackingCombination
         if (! in_array($ownershipModel, $trackingMode->allowedOwnershipModels(), true)) {
             $masalah['ownership_model'] = $ownershipModel === OwnershipModel::Consumable
                 ? 'Model kepemilikan ini tidak cocok dengan mode pelacakan '.$trackingMode->label().'.'
-                : 'Aset dipinjamkan wajib memakai mode pelacakan Serial number (BR-STK-08).';
+                : 'Aset dipinjamkan wajib memakai mode pelacakan Serial number.'; // BR-STK-08
         }
 
         // BR-STK-11: strategi pengambilan harus ada di matriks.
@@ -53,17 +53,17 @@ class TrackingCombination
         }
 
         if ($removalStrategy?->requiresExpiry() && ! $hasExpiry) {
-            $masalah['has_expiry'] = 'Strategi FEFO menuntut tanggal kedaluwarsa diaktifkan (BR-STK-12).';
+            $masalah['has_expiry'] = 'Strategi FEFO menuntut tanggal kedaluwarsa diaktifkan.'; // BR-STK-12
         }
 
         // BR-STK-09: item per potong memakai satuan dasar berkategori panjang.
         if ($trackingMode->requiresLengthBaseUom() && $baseUomIsLength === false) {
-            $masalah['base_uom_id'] = 'Item per potong memakai satuan dasar berkategori panjang (BR-STK-09).';
+            $masalah['base_uom_id'] = 'Item per potong memakai satuan dasar berkategori panjang.'; // BR-STK-09
         }
 
         // BR-CNV-03: panjang minimum offcut wajib untuk item yang bisa dipotong.
         if ($isCuttable && ($minOffcutLength === null || $minOffcutLength <= 0)) {
-            $masalah['min_offcut_length'] = 'Panjang minimum offcut wajib diisi untuk item yang bisa dipotong (BR-CNV-03).';
+            $masalah['min_offcut_length'] = 'Panjang minimum offcut wajib diisi untuk item yang bisa dipotong.'; // BR-CNV-03
         }
 
         return $masalah;

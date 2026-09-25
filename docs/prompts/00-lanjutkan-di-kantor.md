@@ -1,25 +1,25 @@
 # Prompt: melanjutkan pekerjaan di kantor (XAMPP)
 
-**Versi:** 1.0
+**Versi:** 1.1
 **Tanggal:** 25 September 2026
-**Status:** aktif — serah terima dari sesi rumah (XAMPP3) ke sesi kantor (XAMPP + MariaDB 10.4). Arah sebaliknya: [00-lanjutkan-di-rumah.md](00-lanjutkan-di-rumah.md) (arsip)
+**Status:** arsip — semua butir §2 selesai 25 Sep 2026 (sesi kantor); lanjutan di rumah: [00-lanjutkan-di-rumah.md](00-lanjutkan-di-rumah.md) v2.0 (aktif). Semula: serah terima dari sesi rumah (XAMPP3) ke sesi kantor (XAMPP + MariaDB 10.4)
 **Dokumen terkait:** [README](../README.md) · [Laporan progres](../00-laporan-progres-2026-09-24.md) · [Setup lokal](../00-setup-lokal.md) · [Tinjauan asumsi](../00-tinjauan-asumsi-2026-09-25.md) · [Keputusan & Asumsi](../wms/04-keputusan-dan-asumsi.md) · [`../../CLAUDE.md`](../../CLAUDE.md)
 
 Cara pakai: setelah `git pull`, buka Claude Code di root repo lalu tempel **seluruh blok prompt di §2**. Bagian §1 dan §3 untuk dibaca manusia.
 
 ---
 
-## 1. Keadaan saat serah terima (25 Sep 2026, pagi)
+## 1. Keadaan saat serah terima (25 Sep 2026, pagi; diperbarui sore setelah putaran navigasi/hub proyek/konversi/celah F1)
 
 | Hal | Keadaan |
 |---|---|
 | Branch `main` | Pekerjaan sesi rumah dibangun di atas `8a023b7`. **Harus di-commit dan di-push dari rumah dulu**; tanpa itu kantor hanya melihat keadaan lama |
 | Fase 1 | Semua modul selesai: Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template, Issue, Konversi & Waste, Aset, Purchase Request, Platform penuh, Pendukung F1, dan penutup |
-| Uji | **579 hijau** (MariaDB 10.4.32, XAMPP3). E2E pada demo segar: `alur-req-sj` 9/9, `alur-pendukung` 7/7, `ui-check` 67 cek termasuk layar Super Admin, 0 error console |
+| Uji | **616 hijau** (MariaDB 10.4.27, XAMPP kantor, 25 Sep sore). E2E pada demo segar: `alur-req-sj` 10/10, `alur-pendukung` 9/9, `ui-check` 87 cek — 0 error console |
 | Migrasi baru sejak `8a023b7` | Pusat `000020` (tagihan, login attempt, audit pusat), `000030` (nonce tautan akses dukungan), `000040`/`000050` (2FA Super Admin). Tenant `000130`–`000180` (konversi, aset, PRQ, notifikasi, `from_stock_status`, `two_factor_last_step`) |
-| Asumsi menunggu validasi | A-72–A-126 dan A-150–A-205. Daftar kerja pemilik produk: [00-tinjauan-asumsi-2026-09-25.md](../00-tinjauan-asumsi-2026-09-25.md) (111 asumsi, ⚠ = paling berdampak) |
+| Asumsi menunggu validasi | A-72–A-126, A-150–A-232 (137 asumsi ⚠ di [00-tinjauan-asumsi-2026-09-25.md](../00-tinjauan-asumsi-2026-09-25.md) v1.7); kolom *Keputusan* masih kosong — TANYAKAN pemilik sebelum menerapkan |
 | Tinjauan kode 25 Sep | Dua putaran, semua temuan diperbaiki dengan uji — tabel di [laporan progres §5.4](../00-laporan-progres-2026-09-24.md) |
-| Sisa yang disengaja | Pindai di form REQ/ISU; impor Excel vendor & saldo awal; isi balik `from_stock_status` baris lama (A-194); WhatsApp `[F2]`; landing page (Part 5) |
+| Sisa yang disengaja | ~~Pindai REQ/ISU, impor vendor & saldo awal, landing page~~ selesai 25 Sep. Masih: isi balik `from_stock_status` (A-194, butuh data produksi); notifikasi ±20 kejadian §8; cross-dock (A-83); lampiran generik (foto ISU/aset, PDF opname); override SJ mendesak dari bin beku; job kedaluwarsa penggantian & pengingat SLA; laporan §9 modul 19–22; aset antar proyek & short pick TRF → backorder; koreksi kelebihan terima; `created_by` (A-74/A-75); OTP otomatis (O-15); Akuntansi (ditunda atas permintaan pemilik); WhatsApp `[F2]` |
 
 ## 2. Prompt (tempel utuh ke Claude Code)
 
@@ -62,9 +62,9 @@ Laporkan hasil langkah 0 sebelum lanjut.
 - Jangan commit kecuali saya minta. Jangan menyentuh database di luar prefiks `wms_`.
 
 ## Jatah nomor
-- Asumsi berikutnya: **A-206, A-207, …**
-- Versi berikutnya: README 0.36→0.37, 04-keputusan 0.26→0.27, 06-katalog 0.17→0.18, model data 0.19→0.20,
-  laporan progres 1.13→1.14, tinjauan asumsi 1.1→1.2.
+- Asumsi berikutnya: **A-233, A-234, …** (A-227–A-232 dipakai putaran 25 Sep sore)
+- Versi berikutnya: README 0.45→0.46, 04-keputusan 0.33→0.34, 06-katalog 0.19→0.20, model data 0.20→0.21,
+  laporan progres 1.15→1.16, tinjauan asumsi 1.7→1.8.
 
 ## Urutan pekerjaan
 1. **Terapkan keputusan pemilik produk** dari kolom *Keputusan* di docs/00-tinjauan-asumsi-2026-09-25.md:
@@ -73,11 +73,9 @@ Laporkan hasil langkah 0 sebelum lanjut.
      aturan CLAUDE.md (keputusan lama tidak diedit, isi *Diganti oleh*);
    - `Hapus` → buang perilakunya beserta ujinya, catat di changelog.
    Kerjakan yang bertanda ⚠ lebih dulu. Bila kolom *Keputusan* masih kosong, TANYAKAN saya dulu — jangan menebak.
-2. **Sisa Fase 1 yang disengaja belum** (hanya setelah butir 1 atau bila saya minta):
-   pindai di form REQ/ISU (A-201/A-203 sebagai pola); impor Excel vendor & saldo awal (pola
-   app/Domain/Master/Support/ExcelRows + ImportBatch, A-192); isi balik `stock_movements.from_stock_status`
-   bila sudah ada data produksi (A-194).
-3. **Part 5 landing page** — hanya bila saya minta.
+2. **Sisa Fase 1 yang disengaja belum** (hanya setelah butir 1 atau bila saya minta): daftar di baris
+   *Sisa yang disengaja* §1 dan di laporan progres §4/§5.6 — mulai dari notifikasi §8 dan lampiran generik.
+3. **Akuntansi** dan **Part F2** — hanya bila saya minta.
 
 Setiap tugas selesai: laporkan singkat (jumlah uji, layar baru, asumsi baru), lalu lanjut ke berikutnya.
 ```

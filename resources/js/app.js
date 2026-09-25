@@ -10,4 +10,5 @@ import './nexadash/app.js';
 import './wms/ui.js';
 import './wms/offline-draft.js';
 import './wms/scan.js';
+import './wms/signature.js';
 import './wms/pwa.js';

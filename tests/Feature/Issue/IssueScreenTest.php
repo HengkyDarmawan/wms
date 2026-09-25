@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Tests\Feature\Issue;
 
 use App\Domain\Access\Enums\ScopeType;
+use App\Domain\Issue\Actions\CancelMaterialIssue;
+use App\Domain\Issue\Actions\CreateMaterialIssue;
 use App\Domain\Issue\Enums\MaterialIssueStatus;
 use App\Domain\Issue\Livewire\IssueDetail;
 use App\Domain\Issue\Livewire\IssueForm;
 use App\Domain\Issue\Livewire\IssueList;
 use App\Domain\Issue\Models\MaterialIssue;
 use App\Domain\Master\Enums\ReasonContext;
+use App\Domain\Master\Models\Lot;
+use App\Domain\Master\Models\Piece;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Template\Enums\DocumentTemplateType;
 use App\Domain\Template\Support\DocumentPrinter;
@@ -82,6 +86,38 @@ class IssueScreenTest extends TenantTestCase
         $this->actingAs($auditor)->get($this->tenantUrl('reports'))->assertOk()->assertSee(__('Material per proyek'));
         $this->actingAs($auditor)->get($this->tenantUrl('reports/material-per-proyek'))->assertOk()->assertSee('Terpakai');
         $this->actingAs($this->makeUser('driver'))->get($this->tenantUrl('reports/material-per-proyek'))->assertForbidden();
+    }
+
+    #[Test]
+    public function tc_isu_18_pindai_mengisi_jumlah_stok_gudang_site(): void
+    {
+        $this->baut->forceFill(['barcode' => '8991112223334'])->save();
+        $lot = Lot::create(['item_id' => $this->semen->id, 'lot_no' => 'LOT-S1', 'expiry_date' => now()->addMonths(6)->toDateString(), 'received_at' => now()->toDateString()]);
+        $this->stok($this->binKrw1, $this->semen, 50, ['lot_id' => $lot->id]);
+        $potong = Piece::create(['item_id' => $this->pipa->id, 'piece_no' => 'P-ISU-9', 'length' => 6, 'is_offcut' => false]);
+        $this->stok($this->binKrw1, $this->pipa, 6, ['piece_id' => $potong->id]);
+
+        $kBaut = str_replace(':', '_', $this->kunciIsu($this->binKrw1, $this->baut));
+        $kSemen = str_replace(':', '_', $this->kunciIsu($this->binKrw1, $this->semen, ['lot_id' => $lot->id]));
+        $kPipa = str_replace(':', '_', $this->kunciIsu($this->binKrw1, $this->pipa, ['piece_id' => $potong->id]));
+
+        Livewire::actingAs($this->stafSite())
+            ->test(IssueForm::class)
+            ->set('form.project_id', (string) $this->proyek->id)
+            ->assertSee(__('Pindai barang'))
+            ->set('kodePindai', 'TIDAK-ADA')->call('pindai')->assertHasErrors('kodePindai')
+            ->set('kodePindai', 'baut-m12')->call('pindai')->assertHasNoErrors()->assertSet('qty.'.$kBaut, '1')->assertSet('sorot', $kBaut)
+            ->set('kodePindai', '8991112223334')->call('pindai')->assertSet('qty.'.$kBaut, '2')
+            ->set('kodePindai', 'SEMEN-PCC')->call('pindai')->assertHasErrors('kodePindai')
+            ->set('kodePindai', 'semen-pcc|lot-s1')->call('pindai')->assertHasNoErrors()->assertSet('qty.'.$kSemen, '1')
+            ->set('kodePindai', 'P-ISU-9')->call('pindai')->assertSet('qty.'.$kPipa, '6')
+            ->set('kodePindai', 'P-ISU-9')->call('pindai')->assertHasErrors('kodePindai')
+            ->call('simpan')
+            ->assertSet('ruleError', '')
+            ->assertRedirect();
+
+        $isu = MaterialIssue::query()->latest('id')->firstOrFail();
+        $this->assertSame([2.0, 1.0, 6.0], $isu->lines()->get()->sortBy(fn ($l) => [$this->baut->id => 0, $this->semen->id => 1, $this->pipa->id => 2][$l->item_id])->pluck('qty_base')->map(fn ($v) => (float) $v)->values()->all());
     }
 
     #[Test]
@@ -188,7 +224,7 @@ class IssueScreenTest extends TenantTestCase
         $staf = $this->stafSite();
         $isu = $this->konfirmasi($this->isu([['key' => $kunci, 'qty_base' => 5]], [], $staf), $staf);
         $manajemen = $this->makeUser('management');
-        $balik = app(\App\Domain\Issue\Actions\CreateMaterialIssue::class)->reverse($isu, [], $this->alasan(ReasonContext::Cancel), null, $staf);
+        $balik = app(CreateMaterialIssue::class)->reverse($isu, [], $this->alasan(ReasonContext::Cancel), null, $staf);
         $balik = $this->konfirmasi($balik, $staf);
 
         Livewire::actingAs($manajemen)
@@ -229,7 +265,7 @@ class IssueScreenTest extends TenantTestCase
         $this->actingAs($this->makeUser('driver'))->get($this->tenantUrl('print/material-issue/'.$isu->id))->assertForbidden();
 
         $draf = $this->isu([['key' => $this->kunciIsu($this->binKrw1, $this->baut), 'qty_base' => 1]], [], $staf);
-        $draf = app(\App\Domain\Issue\Actions\CancelMaterialIssue::class)->handle($draf, $this->alasan(ReasonContext::Cancel), null, $staf);
+        $draf = app(CancelMaterialIssue::class)->handle($draf, $this->alasan(ReasonContext::Cancel), null, $staf);
         $this->assertStringContainsString('DIBATALKAN', app(DocumentPrinter::class)->view(DocumentTemplateType::MaterialIssue, $draf)->render());
 
         Livewire::actingAs($staf)->test(IssueDetail::class, ['materialIssue' => $isu])

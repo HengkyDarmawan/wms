@@ -12,6 +12,7 @@ use App\Providers\MasterServiceProvider;
 use App\Providers\NotificationServiceProvider;
 use App\Providers\PlatformServiceProvider;
 use App\Providers\PurchaseRequestServiceProvider;
+use App\Providers\PurchasingServiceProvider;
 use App\Providers\ReceiptServiceProvider;
 use App\Providers\RequestServiceProvider;
 use App\Providers\ReturnServiceProvider;
@@ -43,5 +44,6 @@ return [
     ConversionServiceProvider::class,
     AssetServiceProvider::class,
     PurchaseRequestServiceProvider::class,
+    PurchasingServiceProvider::class,
     TemplateServiceProvider::class,
 ];

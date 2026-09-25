@@ -56,7 +56,7 @@
                             @endif
                             <td class="small text-muted">{{ $device->platform ?? '—' }}</td>
                             <td class="small text-muted">
-                                {{ $device->last_seen_at?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d M Y H:i') ?? __('Belum dipakai') }}
+                                {{ $device->last_seen_at?->lokal()->format('d M Y H:i') ?? __('Belum dipakai') }}
                             </td>
                             <td>
                                 <span class="badge text-bg-{{ $device->is_active ? 'success' : 'secondary' }}">

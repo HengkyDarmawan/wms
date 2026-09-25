@@ -47,7 +47,7 @@ class SaveProject
 
         if ($internal && $clientId !== null) {
             throw MasterRuleException::fields(
-                ['client_id' => 'Proyek Internal tidak boleh punya klien (BR-MST-04).'],
+                ['client_id' => 'Proyek Internal tidak boleh punya klien.'], // BR-MST-04
                 'BR-MST-04',
             );
         }

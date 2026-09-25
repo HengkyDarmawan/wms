@@ -33,7 +33,7 @@
             <p class="mb-2">
                 <span class="badge text-bg-success">{{ __('Aktif') }}</span>
                 <span class="text-muted small ms-2">
-                    {{ __('Sejak :tanggal', ['tanggal' => $user->two_factor_confirmed_at?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d M Y H:i')]) }}
+                    {{ __('Sejak :tanggal', ['tanggal' => $user->two_factor_confirmed_at?->lokal()->format('d M Y H:i')]) }}
                 </span>
             </p>
 

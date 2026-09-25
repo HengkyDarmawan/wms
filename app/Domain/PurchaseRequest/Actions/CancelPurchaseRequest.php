@@ -12,6 +12,7 @@ use App\Domain\Master\Models\ReasonCode;
 use App\Domain\PurchaseRequest\Enums\PurchaseRequestStatus;
 use App\Domain\PurchaseRequest\Exceptions\PurchaseRequestRuleException;
 use App\Domain\PurchaseRequest\Models\PurchaseRequest;
+use App\Domain\PurchaseRequest\Support\PurchaseOrderEvents;
 use App\Domain\Stock\Enums\StockEventType;
 use App\Domain\Stock\Support\StockLedger;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,10 @@ class CancelPurchaseRequest
 
         if ($prq->hasReceipts()) {
             throw PurchaseRequestRuleException::rule('BR-GEN-03', 'Sebagian barang PRQ ini sudah diterima lewat GRN; PRQ tidak bisa dibatalkan.');
+        }
+
+        if (PurchaseOrderEvents::hasOpenPurchaseOrder($prq)) {
+            throw PurchaseRequestRuleException::rule('A-215', 'PRQ ini sudah dipesan lewat Purchase Order yang masih terbuka; batalkan atau tutup PO-nya dulu.');
         }
 
         $valid = $reasonCodeId !== null && ReasonCode::query()

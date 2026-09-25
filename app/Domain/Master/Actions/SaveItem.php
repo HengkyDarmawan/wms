@@ -158,7 +158,7 @@ class SaveItem
         if ($item !== null && $item->exists) {
             if ($idBaru !== null && $idBaru !== (int) $item->base_uom_id && $item->baseUomIsLocked()) {
                 throw MasterRuleException::fields(
-                    ['base_uom_id' => 'Satuan dasar tidak bisa diubah karena item ini sudah punya lot, serial, atau potongan (BR-MST-02).'],
+                    ['base_uom_id' => 'Satuan dasar tidak bisa diubah karena item ini sudah punya lot, serial, atau potongan.'], // BR-MST-02
                     'BR-MST-02',
                 );
             }

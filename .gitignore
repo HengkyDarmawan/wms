@@ -42,3 +42,6 @@ Thumbs.db
 /e2f-*.png
 /e2e-hasil.json
 /e2f-hasil.json
+
+# Cache Python generator dokumen
+__pycache__/

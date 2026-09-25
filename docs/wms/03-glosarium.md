@@ -1,8 +1,8 @@
 # Glosarium
 
-**Versi:** 0.8
+**Versi:** 0.9
 **Tanggal:** 24 September 2026
-**Status:** istilah dari A-29–A-49 berlaku (validasi 23 Sep 2026); istilah yang bergantung pada [A-50](04-keputusan-dan-asumsi.md#a-50) mengikuti status validasinya; v0.7: istilah mesin approval (Tugas Approval, Cara Putus, Jenis Approver, Approver Cadangan, Simulasi Aturan) dari modul [20-approval](20-approval.md); v0.8: istilah cetak (Layout Induk, Template Dokumen, Label, Blok Tanda Tangan — [18](18-template-dokumen-label.md))
+**Status:** istilah dari A-29–A-49 berlaku (validasi 23 Sep 2026); istilah yang bergantung pada [A-50](04-keputusan-dan-asumsi.md#a-50) mengikuti status validasinya; v0.7: istilah mesin approval (Tugas Approval, Cara Putus, Jenis Approver, Approver Cadangan, Simulasi Aturan) dari modul [20-approval](20-approval.md); v0.8: istilah cetak (Layout Induk, Template Dokumen, Label, Blok Tanda Tangan — [18](18-template-dokumen-label.md)); v0.9: istilah Purchasing inti Fase 1b (Purchase Order, Baris PO, Harga Beli Vendor, Harga Satuan, Nilai PO — [purchasing/02](../purchasing/02-purchasing-inti.md)); satu-satunya istilah bernilai uang di aplikasi ([A-208](04-keputusan-dan-asumsi.md#a-208))
 **Dokumen terkait:** [Blueprint](01-blueprint.md) · [Katalog Status & Enum](06-katalog-status-dan-enum.md) (nilai status **tidak** diulang di sini) · [Aturan Bisnis](05-aturan-bisnis.md)
 
 Istilah di bawah **wajib dipakai sama persis** di UI, dokumen, dan kode. Kolom *Nama di kode* adalah acuan penamaan tabel/model/variabel (Inggris, `snake_case` untuk tabel; model = bentuk `PascalCase` tunggal). Kolom *Rujukan* menunjuk bagian Blueprint (BP) atau aturan bisnis (BR).
@@ -159,6 +159,11 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Purchase Request | `purchase_request` (`PRQ`) | Permintaan pembelian ke Purchasing; asal `purchase_request_origin` | KS 2.15 |
 | Catatan Pemesanan *(baru)* | `purchase_request_order` | Pemesanan per vendor/toko online di bawah PRQ (nomor PO/pesanan, resi, ETA, baris × jumlah dipesan) | A-51 |
 | Nomor Pesanan Marketplace *(baru)* | `marketplace_order_no` | Nomor pesanan di toko online | A-51 |
+| Purchase Order *(baru)* | `purchase_order` (`PO`) | Pesanan pembelian ke satu vendor untuk satu gudang tujuan, dari baris PRQ, dengan harga beli; disetujui menjadi catatan pemesanan (Fase 1b) | KS 2.17, A-210 |
+| Baris PO *(baru)* | `purchase_order_line` | Baris PRQ × jumlah × harga satuan; mencatat jumlah diterima dan ditutup | A-210, A-214 |
+| Harga Beli Vendor *(baru)* | `vendor_price` | Harga per satuan dasar item dari satu vendor, berlaku mulai tanggal tertentu; harga lama tetap sebagai riwayat | A-211 |
+| Harga Satuan *(baru)* | `unit_price` | Harga per satuan dasar pada harga beli vendor dan baris PO (Rupiah) | A-211 |
+| Nilai PO *(baru)* | `total_amount` | Σ jumlah × harga baris PO; dasar kondisi approval nilai | A-212 |
 | Timeline Dokumen *(baru)* | `document_timeline` | Riwayat status/pelaku/waktu/kanal per dokumen (untuk user) | BR-GEN-05 |
 | Jejak Audit *(baru)* | `audit_log` | Catatan teknis nilai lama → baru (untuk Admin) | BR-GEN-05 |
 | Format Nomor *(baru)* | `numbering_format` | Pola nomor dokumen per company | BR-GEN-06 |

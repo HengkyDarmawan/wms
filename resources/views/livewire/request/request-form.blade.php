@@ -58,6 +58,14 @@
                 {{ __('Tambah baris') }}
             </button>
         </div>
+        <div class="card-body border-bottom">
+            <label class="form-label" for="req-pindai">{{ __('Pindai item') }}</label>
+            <input class="form-control @error('kodePindai') is-invalid @enderror" id="req-pindai" type="text" data-scan
+                   autocomplete="off" wire:model="kodePindai" wire:keydown.enter.prevent="pindai"
+                   placeholder="{{ __('Kode item, barcode, atau label lot/serial/potongan') }}">
+            @error('kodePindai') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+            <div class="form-text">{{ __('Item baru masuk ke baris kosong dengan jumlah 1; memindai item yang sama menambah jumlahnya.') }}</div>
+        </div>
         <div class="table-responsive">
             <table class="table align-middle mb-0">
                 <thead>
@@ -72,7 +80,7 @@
                 </thead>
                 <tbody>
                     @foreach ($lines as $i => $baris)
-                        <tr wire:key="baris-{{ $i }}">
+                        <tr wire:key="baris-{{ $i }}" @class(['table-active' => $sorot === $i])>
                             <td>
                                 <select class="form-select form-select-sm" wire:model="lines.{{ $i }}.item_id">
                                     <option value="">{{ __('— tidak dari katalog —') }}</option>

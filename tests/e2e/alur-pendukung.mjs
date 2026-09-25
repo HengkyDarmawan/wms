@@ -41,8 +41,18 @@ async function page() {
     if (r.result?.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || 'eval gagal');
     return r.result?.result?.value;
   };
-  const go = async (path) => { await send('Page.navigate', { url: BASE + path }); await sleep(1800); };
-  const shot = async (name) => { const r = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true }); writeFileSync(name, Buffer.from(r.result.data, 'base64')); return name; };
+  const siap = async () => {
+    for (let i = 0; i < 60; i++) {
+      await sleep(250);
+      try {
+        const s = await ev('document.readyState === "complete" && (!document.querySelector("[wire\\:id]") || !!window.Livewire)');
+        if (s) break;
+      } catch { /* konteks halaman sedang berganti */ }
+    }
+    await sleep(400);
+  };
+  const go = async (path) => { await send('Page.navigate', { url: BASE + path }); await siap(); };
+  const shot = async (name) => { try { const r = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true }); if (r.result?.data) writeFileSync(name, Buffer.from(r.result.data, 'base64')); } catch { /* halaman sedang berpindah */ } return name; };
   // Panggil aksi Livewire pada komponen utama halaman (atau yang memuat selector).
   const wire = async (sets, method, args = [], within = 'main [wire\\:id]') => {
     await ev(`(async () => {
@@ -131,8 +141,9 @@ await cek('P5', 'admin: wizard setup, impor item (templat), preferensi notifikas
   const t2 = await admin.text();
   await admin.go('/notifications/preferences');
   await admin.ev(`document.querySelector('input[name="prefs[asset.overdue][email]"]').checked = true; document.querySelector('form[action$="/notifications/preferences"]').submit();`);
-  await sleep(2000);
-  const pref = sql(`SELECT p.email FROM notification_preferences p JOIN users u ON u.id=p.user_id WHERE u.email='admin@demo.wms.test' AND p.event_key='asset.overdue'`);
+  // POST + redirect bisa > 2 detik saat server dev sibuk: tunggu barisnya muncul, bukan tidur tetap.
+  let pref = '';
+  for (let i = 0; i < 40 && pref !== '1'; i++) { await sleep(500); pref = sql(`SELECT p.email FROM notification_preferences p JOIN users u ON u.id=p.user_id WHERE u.email='admin@demo.wms.test' AND p.event_key='asset.overdue'`); }
   return { ok: t.includes('Setup awal company') && t.includes('Buat gudang') && st === 200 && t2.includes('Unduh templat') && pref === '1', bukti: `e2f-5-setup.png; templat=${st}; pref email aset=${pref}` };
 });
 
@@ -189,6 +200,75 @@ await cek('P7', 'PRQ → pesan → GRN vendor merujuk pesanan → put-away → P
   return {
     ok: st1 === 'approved' && st2 === 'forwarded' && Number(rujuk) === Number(olId) && st3 === 'fulfilled' && putSt === 'completed' && tersedia === tersediaAwal + 40,
     bukti: `e2f-7-prq.png, e2f-7-put.png; PRQ ${st1} → ${st2} → ${st3}; GRN merujuk baris pesanan ${rujuk}; PUT ${putSt}; semen tersedia CKG ${tersediaAwal} → ${tersedia}`,
+  };
+});
+
+// ---------------------------------------------------------------- P8
+// Purchasing inti Fase 1b (purchasing/02): PRQ → PO dari layar (harga bawaan
+// vendor) → approval nilai ≥ Rp 50 juta oleh Manajemen → catatan pemesanan →
+// GRN merujuk → PO selesai; cetak PO.
+const direktur = await page();
+await cek('P8', 'PRQ → PO (harga vendor) → approval nilai Manajemen → GRN → PO selesai, cetak PO', async () => {
+  const ckg = sql("SELECT id FROM warehouses WHERE code='CKG'");
+  const baut = sql("SELECT id FROM items WHERE code='BAUT-M12'");
+  const vendor = sql("SELECT id FROM vendors WHERE code='BESI-JAYA'");
+
+  await staf.go('/purchase-requests/create');
+  await staf.wire({ 'form.warehouse_id': String(ckg), 'rows.0.item_id': String(baut), 'rows.0.qty_base': '40000' }, 'simpan');
+  const prqId = sql('SELECT id FROM purchase_requests ORDER BY id DESC LIMIT 1');
+
+  await pr.go(`/purchase-orders/create?prq=${prqId}`);
+  await pr.wire({ 'form.vendor_id': String(vendor) }, 'simpanDanAjukan');
+  const poId = sql('SELECT id FROM purchase_orders ORDER BY id DESC LIMIT 1');
+  const [nilai, st1] = sql(`SELECT total_amount, status FROM purchase_orders WHERE id=${poId || 0}`).split('\t');
+  await pr.go(`/purchase-orders/${poId}`); await pr.shot('e2f-8-po.png');
+
+  await direktur.login('manajemen@demo.wms.test');
+  await direktur.go(`/purchase-orders/${poId}`);
+  await direktur.wire({}, 'setujui');
+  const st2 = sql(`SELECT status FROM purchase_orders WHERE id=${poId}`);
+  const olId = sql(`SELECT ol.id FROM purchase_request_order_lines ol JOIN purchase_request_orders o ON o.id=ol.purchase_request_order_id WHERE o.purchase_order_id=${poId} LIMIT 1`);
+
+  await staf.go('/receipts/create');
+  await staf.wire({ 'form.receipt_type': 'vendor', 'form.warehouse_id': String(ckg), 'form.vendor_id': String(vendor), 'form.vendor_doc_no': 'SJV-E2E-PO' }, 'pakaiPesanan', [Number(olId)]);
+  await staf.wire({}, 'simpan');
+  const grnId = sql('SELECT id FROM goods_receipts ORDER BY id DESC LIMIT 1');
+  await staf.go(`/receipts/${grnId}`);
+  await staf.wire({}, 'terima');
+
+  const st3 = sql(`SELECT status FROM purchase_orders WHERE id=${poId}`);
+  const prqSt = sql(`SELECT status FROM purchase_requests WHERE id=${prqId}`);
+  const [cp, ct] = await ambil(pr, `/print/purchase-order/${poId}`);
+  return {
+    ok: Number(nilai) === 60000000 && st1 === 'pending_approval' && st2 === 'approved' && Number(olId) > 0 && st3 === 'completed' && prqSt === 'fulfilled' && cp === 200 && ct.includes('pdf'),
+    bukti: `e2f-8-po.png; nilai ${nilai}; PO ${st1} → ${st2} → ${st3}; PRQ ${prqSt}; cetak ${cp} ${ct}`,
+  };
+});
+
+// ---------------------------------------------------------------- P9
+// Konversi mode Potong (24-konversi-waste §6, A-229): pilih batang 6 m → 2 × 2,5 m;
+// kerf & offcut dihitung otomatis; Simpan & selesaikan menggerakkan stok.
+await cek('P9', 'Konversi Potong dari layar: batang 6 m → 2 × 2,5 m + offcut + kerf otomatis, selesai', async () => {
+  const ckg = sql("SELECT id FROM warehouses WHERE code='CKG'");
+  const prjInt = sql("SELECT id FROM projects WHERE code='PRJ-INT'");
+  const pipa = sql("SELECT id FROM items WHERE code='PIPA-PVC-4'");
+  const batang = sql(`SELECT p.id FROM pieces p JOIN stock_balances sb ON sb.piece_id=p.id JOIN bins b ON b.id=sb.bin_id WHERE p.item_id=${pipa} AND b.warehouse_id=${ckg} AND sb.qty_base=6 AND sb.stock_status='available' ORDER BY p.id LIMIT 1`);
+  const bin = sql(`SELECT sb.bin_id FROM stock_balances sb WHERE sb.piece_id=${batang || 0} LIMIT 1`);
+  const kunci = `${bin}_${pipa}_0_${batang}`;
+
+  await staf.go('/conversions/create');
+  // Dua permintaan: hook updated gudang mengosongkan input, jadi batang & ukuran dikirim setelahnya.
+  await staf.wire({ 'form.project_id': String(prjInt), 'form.warehouse_id': String(ckg), 'form.conversion_type': 'cut' });
+  await staf.wire({ 'batang': kunci, 'potong.0.length': '2.5', 'potong.0.count': '2' });
+  const ringkas = await staf.text();
+  await staf.shot('e2f-9-cnv.png');
+  await staf.wire({}, 'simpanDanSelesaikan');
+  const cnvId = sql('SELECT id FROM conversions ORDER BY id DESC LIMIT 1');
+  const [st, tIn, tOut, tOff, tKerf] = sql(`SELECT status, total_input, total_output, total_offcut, total_kerf FROM conversions WHERE id=${cnvId || 0}`).split('	');
+  const sisaBatang = Number(sql(`SELECT COALESCE(SUM(qty_base),0) FROM stock_balances WHERE piece_id=${batang || 0}`));
+  return {
+    ok: /2 × 2,5 M \+ offcut 0,99 M \+ kerf 0,01 M/.test(ringkas) && st === 'completed' && Number(tIn) === 6 && Number(tOut) === 5 && Number(tOff) === 0.99 && Number(tKerf) === 0.01 && sisaBatang === 0,
+    bukti: `e2f-9-cnv.png; CNV ${st}; input ${tIn} → output ${tOut} + offcut ${tOff} + kerf ${tKerf}; batang asal sisa ${sisaBatang}`,
   };
 });
 

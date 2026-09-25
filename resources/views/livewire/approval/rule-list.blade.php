@@ -93,7 +93,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-center text-muted py-4" colspan="7">{{ __('Belum ada aturan approval. Semua dokumen disetujui otomatis saat diajukan (A-08).') }}</td>
+                            <td class="text-center text-muted py-4" colspan="7">{{ __('Belum ada aturan approval. Semua dokumen disetujui otomatis saat diajukan.') }}</td> {{-- A-08 --}}
                         </tr>
                     @endforelse
                 </tbody>

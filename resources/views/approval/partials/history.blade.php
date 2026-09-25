@@ -9,7 +9,7 @@
             <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
                 <div>
                     <span class="badge {{ $s->status->badge() }}">{{ $s->status->label() }}</span>
-                    <strong>{{ $s->wasAutoApproved() ? __('Disetujui otomatis — tidak ada aturan (A-08)') : ($s->rule_name ?? __('Lapis minimum')) }}</strong>
+                    <strong>{{ $s->wasAutoApproved() ? __('Disetujui otomatis — tidak ada aturan') : ($s->rule_name ?? __('Lapis minimum')) }}</strong> {{-- A-08 --}}
                 </div>
                 <div class="text-muted">
                     {{ __('Diajukan') }} {{ $s->submitter?->name ?? __('Sistem') }} · {{ $s->submitted_at?->lokal()->format('d/m/Y H:i') }}

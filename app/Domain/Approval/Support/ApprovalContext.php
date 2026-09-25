@@ -9,8 +9,8 @@ use App\Domain\Master\Models\ItemCategory;
 
 /**
  * Data satu dokumen yang dicocokkan dengan kondisi aturan dan dipakai untuk
- * menentukan approver (BR-APR-07). Tidak ada nilai uang di sini (D-07);
- * kondisi berbasis nilai hanya milik modul Purchasing (D-28).
+ * menentukan approver (BR-APR-07). Dokumen WMS tidak membawa nilai uang
+ * (D-07); `orderValue` hanya diisi penangan PO modul Purchasing (D-28, A-212).
  *
  * Disimpan ke `approval_snapshots.context` saat diajukan.
  */
@@ -38,6 +38,7 @@ final class ApprovalContext
         public readonly ?string $countType = null,
         public readonly ?int $requesterId = null,
         public readonly array $requesterIds = [],
+        public readonly ?float $orderValue = null,
     ) {}
 
     /** @return array<string, mixed> */
@@ -59,6 +60,7 @@ final class ApprovalContext
             'count_type' => $this->countType,
             'requester_id' => $this->requesterId,
             'requester_ids' => array_values(array_unique(array_map('intval', array_filter($this->requesterIds)))),
+            'order_value' => $this->orderValue,
         ];
     }
 
@@ -81,6 +83,7 @@ final class ApprovalContext
             countType: ($data['count_type'] ?? null) ?: null,
             requesterId: isset($data['requester_id']) && $data['requester_id'] !== '' ? (int) $data['requester_id'] : null,
             requesterIds: array_map('intval', $data['requester_ids'] ?? []),
+            orderValue: isset($data['order_value']) && is_numeric($data['order_value']) ? (float) $data['order_value'] : null,
         );
     }
 

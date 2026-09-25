@@ -64,7 +64,7 @@
                         <tr>
                             <td>
                                 <a href="{{ route('purchase-requests.show', $p) }}">{{ $p->number }}</a>
-                                <div class="small text-muted">{{ $p->creator?->name ?? __('Sistem') }} · {{ $p->created_at?->format('d/m/Y') }}</div>
+                                <div class="small text-muted">{{ $p->creator?->name ?? __('Sistem') }} · {{ $p->created_at?->lokal()->format('d/m/Y') }}</div>
                             </td>
                             <td>{{ $p->warehouse?->code }}</td>
                             <td>

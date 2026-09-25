@@ -11,10 +11,12 @@ use App\Domain\Shipment\Actions\IssueDeliveryToken;
 use App\Domain\Shipment\Actions\ShipShipment;
 use App\Domain\Shipment\Livewire\Concerns\HandlesShipmentRules;
 use App\Domain\Shipment\Models\Shipment;
+use App\Domain\Shipment\Support\ProofFiles;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Spatie\Activitylog\Models\Activity;
 
 /**
@@ -27,6 +29,7 @@ use Spatie\Activitylog\Models\Activity;
 class ShipmentDetail extends Component
 {
     use HandlesShipmentRules;
+    use WithFileUploads;
 
     #[Locked]
     public int $shipmentId;
@@ -49,6 +52,17 @@ class ShipmentDetail extends Component
      * @var array<int, array<string, mixed>>
      */
     public array $terima = [];
+
+    /** Berkas bukti terima (A-231): foto serah terima, tanda tangan (data URL kanvas), foto rusak per baris. */
+    public $foto = null;
+
+    public string $tandaTangan = '';
+
+    /** @var array<int, mixed> shipment_line_id => berkas sementara */
+    public array $fotoRusak = [];
+
+    /** Tautan penerima bertoken; hanya ditampilkan sekali bersama OTP-nya. */
+    public ?string $tautanSekali = null;
 
     /** OTP tautan bertoken; hanya ditampilkan sekali setelah diterbitkan. */
     public ?string $otpSekali = null;
@@ -92,7 +106,7 @@ class ShipmentDetail extends Component
         $izin = match ($dialog) {
             'batal' => 'cancel',
             'terima' => 'confirmDelivery',
-            'tautan' => 'ship',
+            'tautan' => 'issueToken',
             default => 'view',
         };
 
@@ -101,10 +115,14 @@ class ShipmentDetail extends Component
         $this->dialog = $dialog;
         $this->reasonCode = '';
         $this->otpSekali = null;
+        $this->tautanSekali = null;
         $this->ruleError = '';
         $this->resetValidation();
 
         if ($dialog === 'terima') {
+            $this->foto = null;
+            $this->tandaTangan = '';
+            $this->fotoRusak = [];
             $this->terima = $sj->lines()->orderBy('id')->get()
                 ->mapWithKeys(fn ($l) => [$l->id => [
                     // Bawaannya seluruhnya baik: yang paling sering terjadi.
@@ -145,16 +163,29 @@ class ShipmentDetail extends Component
         $this->dispatch('pesan', teks: __('Surat jalan dibatalkan.'));
     }
 
-    public function simpanBuktiTerima(ConfirmDelivery $action): void
+    public function simpanBuktiTerima(ConfirmDelivery $action, ProofFiles $berkas): void
     {
         $sj = $this->shipment();
 
         $this->authorize('confirmDelivery', $sj);
 
         $this->validate(
-            ['form.received_by_name' => ['required', 'string', 'max:100']],
-            attributes: ['form.received_by_name' => __('Nama penerima')],
+            [
+                'form.received_by_name' => ['required', 'string', 'max:100'],
+                'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'fotoRusak.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'tandaTangan' => ['nullable', 'string', 'max:2000000'],
+            ],
+            attributes: ['form.received_by_name' => __('Nama penerima'), 'foto' => __('Foto serah terima'), 'fotoRusak.*' => __('Foto kerusakan')],
         );
+
+        $disimpan = null;
+
+        if (! $this->jalankan(function () use ($berkas, $sj, &$disimpan) {
+            $disimpan = $berkas->simpan($sj, $this->foto, $this->tandaTangan, $this->fotoRusak);
+        }) || $disimpan === null) {
+            return;
+        }
 
         $baris = [];
 
@@ -164,7 +195,8 @@ class ShipmentDetail extends Component
                 'qty_good' => (float) ($isi['qty_good'] ?? 0),
                 'qty_damaged' => (float) ($isi['qty_damaged'] ?? 0),
                 'qty_missing' => (float) ($isi['qty_missing'] ?? 0),
-                'damage_photo_path' => $isi['damage_photo_path'] ?? null,
+                // Path lama tetap diterima (uji & draf luring); unggahan baru menggantikannya.
+                'damage_photo_path' => $disimpan['lines'][(int) $id] ?? ($isi['damage_photo_path'] ?: null),
                 'notes' => $isi['notes'] ?? null,
             ];
         }
@@ -174,9 +206,13 @@ class ShipmentDetail extends Component
             'notes' => $this->form['notes'] ?: null,
             'channel' => 'driver_pwa',
             'received_by_user_id' => auth()->id(),
+            'photo_path' => $disimpan['photo_path'],
+            'signature_path' => $disimpan['signature_path'],
         ], $baris, auth()->user()));
 
         if (! $berhasil) {
+            $berkas->hapus($disimpan);
+
             return;
         }
 
@@ -197,7 +233,7 @@ class ShipmentDetail extends Component
     {
         $sj = $this->shipment();
 
-        $this->authorize('ship', $sj);
+        $this->authorize('issueToken', $sj);
 
         $hasil = null;
 
@@ -210,6 +246,7 @@ class ShipmentDetail extends Component
         }
 
         $this->otpSekali = $hasil['otp'];
+        $this->tautanSekali = route('terima.show', $hasil['token']->token);
         $this->dispatch('pesan', teks: __('Tautan bukti terima diterbitkan.'));
     }
 

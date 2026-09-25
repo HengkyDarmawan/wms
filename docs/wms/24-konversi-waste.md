@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `conversion` & `waste` (Konversi Material dan Berita Acara Waste)
 
-**Versi:** 0.2
+**Versi:** 0.4
 **Tanggal:** 24 September 2026
-**Status:** selesai Fase 1 — modul kedua belas setelah [Pemakaian material](23-pemakaian.md); dibangun di mesin rumah (XAMPP3, [A-162](04-keputusan-dan-asumsi.md#a-162)) dari rancangan WIP sesi kantor; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-153](04-keputusan-dan-asumsi.md#a-153)–[A-161](04-keputusan-dan-asumsi.md#a-161) (*Perlu validasi*)
+**Status:** selesai Fase 1 — modul kedua belas setelah [Pemakaian material](23-pemakaian.md); dibangun di mesin rumah (XAMPP3, [A-162](04-keputusan-dan-asumsi.md#a-162)) dari rancangan WIP sesi kantor; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-153](04-keputusan-dan-asumsi.md#a-153)–[A-161](04-keputusan-dan-asumsi.md#a-161) (*Perlu validasi*); v0.3: form dirancang ulang per jenis dengan hitung otomatis ([A-229](04-keputusan-dan-asumsi.md#a-229), §6, §13.3)
 **Modul:** `conversion` (CNV) · `waste` (WST)
 **Fase:** F1 (potong/rakit/bongkar/ganti kemasan dengan silsilah, offcut & waste, CNV pembalik, approval opsional, BA waste dengan bukti, cetak Bukti Konversi & BA Waste, kolom laporan Material per proyek); resep konversi `[F2]` stub ([BR-CNV-06](05-aturan-bisnis.md#br-cnv))
 **Dokumen terkait:** [Blueprint §6.7, §7, §9, §12](01-blueprint.md#67-konversi-material-offcut--waste) · [Aturan Bisnis §BR-CNV](05-aturan-bisnis.md#br-cnv), [§BR-GEN](05-aturan-bisnis.md#br-gen), [§14 matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status §2.10, §2.14, §3](06-katalog-status-dan-enum.md) · [Glosarium §5](03-glosarium.md#5-dokumen-transaksi) · [Model data 08c](08c-model-data-pendukung.md) · [Alur 6](07a-proses-bisnis-lanjutan.md#alur-6--konversi-material-offcut-dan-berita-acara-waste) · [D-10](04-keputusan-dan-asumsi.md#d-10), [D-11](04-keputusan-dan-asumsi.md#d-11), [A-06](04-keputusan-dan-asumsi.md#a-06), [A-19](04-keputusan-dan-asumsi.md#a-19), [A-36](04-keputusan-dan-asumsi.md#a-36)
@@ -137,8 +137,8 @@ waste_disposal:
 | Route | Komponen | Isi |
 |---|---|---|
 | `/conversions` | `conversion.conversion-list` | Cari nomor, filter proyek & status; jenis, total input & waste, penanda pembalik; tombol *Berita acara waste* & *Konversi baru* |
-| `/conversions/create`, `/{id}/edit` | `conversion.conversion-form` | Proyek `*`, gudang `*` (Gudang Site hanya milik proyek), jenis `*`; tabel input (potongan: centang *Pakai utuh*); tabel hasil dinamis (jenis, input induk, item output, jumlah, × potong, bin/lot/alasan); **neraca berjalan** input vs hasil |
-| `/conversions/{id}` | `conversion.conversion-detail` | Ringkasan total, input, hasil + silsilah, *Selesaikan* / *Ajukan ke approval* (sesuai aturan), *Ubah draf*, *Setujui*/*Tolak*, *Batalkan*, *Buat CNV pembalik*, riwayat approval, riwayat, **Cetak** |
+| `/conversions/create`, `/{id}/edit` | `conversion.conversion-form` | Proyek `*`, gudang `*` (Gudang Site hanya milik proyek), **jenis sebagai tombol pilihan berpenjelasan**; form berubah per jenis ([A-229](04-keputusan-dan-asumsi.md#a-229)): **Potong** = satu batang (pilih/pindai) → tabel *Hasil potong* (item hasil bersatuan sama, panjang × jumlah), kerf dari master item dan sisa dihitung otomatis (offcut ≥ minimum, di bawahnya waste); **Ganti kemasan** = input dari stok (cari/pindai) → item tujuan bersatuan sama, susut otomatis waste; **Rakit/Bongkar** = input & hasil bebas (+ baris waste manual) tanpa neraca. Kartu **Ringkasan (otomatis)** memuat kalimat "6 m → 2 × 2,5 m + offcut 0,99 m + kerf 0,01 m", rincian, peringatan (kerf belum diatur), dan galat per baris; pilihan bin hasil bersama. Tombol *Simpan draf* dan **Simpan & selesaikan** (menjadi *Simpan & ajukan* bila ada aturan approval) |
+| `/conversions/{id}` | `conversion.conversion-detail` | Kalimat ringkas + tombol **Buat BA Waste** (bila ada waste, mengisi gudang & proyek di form WST), total bersatuan, input, hasil + silsilah, *Selesaikan* / *Ajukan ke approval* (sesuai aturan), *Ubah draf*, *Setujui*/*Tolak*, *Batalkan*, *Buat CNV pembalik*, riwayat approval, riwayat, **Cetak** |
 | `/waste-disposals`, `/create`, `/{id}` | `waste.waste-disposal-list/-form/-detail` | Form: gudang, proyek, disposisi (dipakai ulang → bin tujuan), isi bin Waste (tersedia setelah dipegang BA lain, alasan opsional); detail: *Setujui*/*Tolak*, *Batalkan*, form **Tutup BA waste** (foto dan/atau nomor BA), tautan foto bukti, **Cetak** |
 | `POST /waste-disposals/{id}/close` · `GET …/evidence` | `Waste\WasteDisposalController` | Tutup dengan bukti; foto dialirkan setelah izin `view` |
 | `GET /print/conversion/{id}`, `/print/waste-disposal/{id}` | `Template\PrintController@document` | PDF Bukti Konversi Material dan BA Waste ([A-160](04-keputusan-dan-asumsi.md#a-160)) |
@@ -230,8 +230,12 @@ Domain `app/Domain/Conversion`: 5 aksi (`CreateConversion` dengan `update`/`reve
 3. **CNV pembalik positif**: baris pembalik menyalin jumlah asal (tidak negatif seperti ISU); arah pembalikan dibaca dari `reverses_movement_id` di kartu stok, termasuk di laporan.
 4. **Bukti WST lewat form biasa**: unggahan Livewire berjalan di luar middleware tenant (seperti foto item).
 
-### 13.3 Sisa pekerjaan
+### 13.3 Rancang ulang form per jenis (25 September 2026)
 
-1. Resep `[F2]`, laporan *Konversi & waste* + dashboard, notifikasi §8, lampiran generik untuk bukti.
-2. Checklist penutupan proyek yang menawarkan waste (BR-PRJ-02).
+`Support\ConversionPlanner` (murni, tanpa basis data) mengubah isian sederhana per jenis menjadi baris `outputs` yang sudah lengkap untuk `CreateConversion`; form memakainya untuk pratinjau **dan** saat menyimpan sehingga angka di layar sama dengan yang diperiksa `ConversionLines::assertBalanced` — menutup bug lama `neraca()` yang mengalikan `count` untuk semua baris. Sisa Potong selalu dikirim sebagai `offcut`; `ConversionLines` tetap yang menurunkannya ke waste (`auto_waste`, BR-CNV-03). Draf yang diubah dibaca kembali ke isian per jenis (output ber-`count` dikelompokkan; sisa & kerf otomatis tidak menjadi baris). `kalimatDokumen()` dipakai detail CNV dan hub proyek. Pesan galat tidak lagi menyebut kode asumsi internal. Uji: TC-CNV-15 (`tests/Unit/Conversion/ConversionPlannerTest`), TC-CNV-12 ditulis ulang, TC-CNV-14 (ganti kemasan & rakit dari layar, Simpan & selesaikan / & ajukan, prefill WST); E2E P9.
+
+### 13.4 Sisa pekerjaan
+
+1. Resep `[F2]`, dashboard konversi, notifikasi §8, lampiran generik untuk bukti. ~~Laporan *Konversi & waste*~~ — **selesai** (`ConversionWasteReport`, [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md)).
+2. ~~Checklist penutupan proyek yang menawarkan waste~~ — **selesai** lewat `ProjectClosureChecklist` di hub proyek (BR-PRJ-02, [A-187](04-keputusan-dan-asumsi.md#a-187), [A-228](04-keputusan-dan-asumsi.md#a-228)).
 3. Uji di MySQL 8.4 menunggu mesin dev/staging MySQL ([A-162](04-keputusan-dan-asumsi.md#a-162)).

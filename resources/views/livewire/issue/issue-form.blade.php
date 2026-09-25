@@ -48,6 +48,16 @@
 
     <div class="card mb-3">
         <div class="card-header"><strong>{{ __('Stok Gudang Site yang bisa dipakai') }}</strong></div>
+        @if ($calon->isNotEmpty())
+            <div class="card-body border-bottom">
+                <label class="form-label" for="isu-pindai">{{ __('Pindai barang') }}</label>
+                <input class="form-control @error('kodePindai') is-invalid @enderror" id="isu-pindai" type="text" data-scan
+                       autocomplete="off" wire:model="kodePindai" wire:keydown.enter.prevent="pindai"
+                       placeholder="{{ __('Kode item, barcode, atau label lot/serial/potongan') }}">
+                @error('kodePindai') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                <div class="form-text">{{ __('Tiap pindai menambah satu; serial terisi 1 dan potongan terisi utuh. Jumlah tetap bisa diubah manual.') }}</div>
+            </div>
+        @endif
         <div class="table-responsive">
             <table class="table align-middle mb-0">
                 <thead>
@@ -61,7 +71,7 @@
                 </thead>
                 <tbody>
                     @forelse ($calon as $kunci => $c)
-                        <tr wire:key="isu-calon-{{ $kunci }}">
+                        <tr wire:key="isu-calon-{{ $kunci }}" @class(['table-active' => $sorot === $kunci])>
                             <td>{{ $c['item_code'] }} <div class="small text-muted">{{ $c['item_name'] }} @if ($c['tracking'] !== '') · {{ $c['tracking'] }} @endif</div></td>
                             <td class="small">
                                 {{ $c['bin_code'] }}

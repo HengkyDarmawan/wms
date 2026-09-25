@@ -9,14 +9,19 @@ use App\Domain\Adjustment\Models\StockAdjustment;
 use App\Domain\Asset\Models\AssetHandover;
 use App\Domain\Conversion\Models\Conversion;
 use App\Domain\Issue\Models\MaterialIssue;
+use App\Domain\PurchaseRequest\Models\PurchaseRequest;
+use App\Domain\Purchasing\Models\PurchaseOrder;
+use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Receipt\Models\VendorReturn;
 use App\Domain\Request\Models\MaterialRequest;
+use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Shipment\Models\DeliveryDiscrepancy;
 use App\Domain\Shipment\Models\PickTask;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Template\Enums\DocumentTemplateType;
 use App\Domain\Template\Models\DocumentLayout;
 use App\Domain\Template\Models\DocumentTemplate;
+use App\Domain\Transfer\Models\Transfer;
 use App\Domain\Waste\Models\WasteDisposal;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
@@ -64,6 +69,11 @@ class DocumentPrinter
             DocumentTemplateType::Conversion => Conversion::query(),
             DocumentTemplateType::WasteDisposal => WasteDisposal::query(),
             DocumentTemplateType::AssetHandover => AssetHandover::query(),
+            DocumentTemplateType::PurchaseOrder => PurchaseOrder::query(),
+            DocumentTemplateType::Transfer => Transfer::query(),
+            DocumentTemplateType::GoodsReturn => GoodsReturn::query(),
+            DocumentTemplateType::PurchaseRequest => PurchaseRequest::query(),
+            DocumentTemplateType::GoodsReceipt => GoodsReceipt::query(),
             default => throw new NotFoundHttpException,
         };
 
@@ -107,6 +117,11 @@ class DocumentPrinter
             DocumentTemplateType::Conversion => $this->conversion($model),
             DocumentTemplateType::WasteDisposal => $this->wasteDisposal($model),
             DocumentTemplateType::AssetHandover => $this->assetHandover($model),
+            DocumentTemplateType::PurchaseOrder => $this->purchaseOrder($model),
+            DocumentTemplateType::Transfer => $this->transfer($model),
+            DocumentTemplateType::GoodsReturn => $this->goodsReturn($model),
+            DocumentTemplateType::PurchaseRequest => $this->purchaseRequest($model),
+            DocumentTemplateType::GoodsReceipt => $this->goodsReceipt($model),
             default => throw new NotFoundHttpException,
         };
 
@@ -121,6 +136,7 @@ class DocumentPrinter
             'batal' => ($model->status?->value ?? null) === 'cancelled',
             'qr' => $this->assets->qr($this->url($type, $model)),
             'tandaTangan' => $this->signatures($layout->signatureBlocksFor($type), $pelaku),
+            'bernilai' => false,
         ]);
     }
 
@@ -142,8 +158,51 @@ class DocumentPrinter
             DocumentTemplateType::Conversion => route('conversions.show', $model),
             DocumentTemplateType::WasteDisposal => route('waste-disposals.show', $model),
             DocumentTemplateType::AssetHandover => route('asset-handovers.show', $model),
+            DocumentTemplateType::PurchaseOrder => route('purchase-orders.show', $model),
+            DocumentTemplateType::Transfer => route('transfers.show', $model),
+            DocumentTemplateType::GoodsReturn => route('returns.show', $model),
+            DocumentTemplateType::PurchaseRequest => route('purchase-requests.show', $model),
+            DocumentTemplateType::GoodsReceipt => route('receipts.show', $model),
             default => url('/'),
         };
+    }
+
+    /** @return array<string, mixed> */
+    private function transfer(Transfer $trf): array
+    {
+        $trf->loadMissing('fromWarehouse', 'toWarehouse', 'fromProject', 'toProject', 'submitter', 'approver');
+        $lines = $trf->lines()->with('item.baseUom')->orderBy('id')->get();
+        $req = $trf->sourceRequest();
+
+        return ['trf' => $trf, 'lines' => $lines, 'rujukan' => $req?->number ?? '', 'pelaku' => [$trf->submitter, $trf->approver, null]];
+    }
+
+    /** @return array<string, mixed> */
+    private function goodsReturn(GoodsReturn $ret): array
+    {
+        $ret->loadMissing('project', 'requester', 'fromWarehouse', 'toWarehouse', 'originShipment', 'returnShipment', 'approver', 'sorter');
+        $lines = $ret->requestedLines()->with('item.baseUom', 'lot', 'serial', 'piece', 'fromBin', 'reason')->orderBy('id')->get();
+
+        return ['ret' => $ret, 'lines' => $lines, 'pelaku' => [$ret->requester, null, $ret->sorter]];
+    }
+
+    /** @return array<string, mixed> */
+    private function purchaseRequest(PurchaseRequest $prq): array
+    {
+        $prq->loadMissing('warehouse', 'project', 'materialRequest', 'creator', 'submitter', 'approver', 'forwarder');
+        $lines = $prq->lines()->with('item.baseUom', 'requestLine.request')->orderBy('id')->get();
+        $orders = $prq->orders()->with('vendor', 'lines.line.item')->orderBy('id')->get();
+
+        return ['prq' => $prq, 'lines' => $lines, 'orders' => $orders, 'pelaku' => [$prq->creator, $prq->approver, $prq->forwarder]];
+    }
+
+    /** @return array<string, mixed> */
+    private function goodsReceipt(GoodsReceipt $grn): array
+    {
+        $grn->loadMissing('warehouse', 'vendor', 'shipment', 'goodsReturn', 'receiver');
+        $lines = $grn->lines()->with('item.baseUom', 'lot', 'serial', 'piece', 'receivingBin')->orderBy('id')->get();
+
+        return ['grn' => $grn, 'lines' => $lines, 'pelaku' => [$grn->receiver, null, null]];
     }
 
     /** @return array<string, mixed> */
@@ -272,6 +331,24 @@ class DocumentPrinter
         $periksa = $ast->inspections()->with('inspector')->latest('id')->first();
 
         return ['ast' => $ast, 'periksa' => $periksa, 'pelaku' => [$ast->updater ?? $ast->shipment?->driver, $ast->project?->pic, $periksa?->inspector]];
+    }
+
+    /**
+     * PO modul Purchasing (A-217): satu-satunya cetakan bernilai uang; izin
+     * lihatnya `po.view`.
+     *
+     * @return array<string, mixed>
+     */
+    private function purchaseOrder(PurchaseOrder $po): array
+    {
+        $po->loadMissing('vendor', 'warehouse', 'creator', 'approver');
+
+        return [
+            'po' => $po,
+            'lines' => $po->lines()->with('item.baseUom', 'requestLine.purchaseRequest:id,number')->orderBy('id')->get(),
+            'bernilai' => true,
+            'pelaku' => [$po->creator, $po->approver, null],
+        ];
     }
 
     /**

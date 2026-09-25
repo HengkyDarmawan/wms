@@ -17,6 +17,7 @@
                 </p>
             @endif
         </div>
+        @if ($grn->status !== \App\Domain\Receipt\Enums\GoodsReceiptStatus::Draft) <a class="btn btn-outline-secondary" href="{{ route('print.document', ['type' => 'goods-receipt', 'id' => $grn->id]) }}" target="_blank" rel="noopener"><i class="bi bi-printer"></i> {{ __('Cetak') }}</a> @endif
         <a class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Kembali') }}</a>
     </div>
 

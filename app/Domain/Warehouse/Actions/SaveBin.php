@@ -34,7 +34,7 @@ class SaveBin
 
         if ($baru && $jenis->isSystemDefault()) {
             throw WarehouseRuleException::fields(
-                ['bin_type' => 'Bin '.$jenis->label().' dibuat otomatis untuk setiap gudang (BR-WH-02).'],
+                ['bin_type' => 'Bin '.$jenis->label().' dibuat otomatis untuk setiap gudang.'], // BR-WH-02
                 'BR-WH-02',
             );
         }
@@ -145,7 +145,7 @@ class SaveBin
         if ($jenis->requiresProject()) {
             if ($projectId === null) {
                 throw WarehouseRuleException::fields(
-                    ['project_id' => 'Bin On-site Proyek wajib terikat satu proyek (BR-WH-03).'],
+                    ['project_id' => 'Bin On-site Proyek wajib terikat satu proyek.'], // BR-WH-03
                     'BR-WH-03',
                 );
             }
@@ -159,7 +159,7 @@ class SaveBin
 
         if ($projectId !== null) {
             throw WarehouseRuleException::fields(
-                ['project_id' => 'Hanya bin On-site Proyek yang boleh terikat proyek (BR-WH-03).'],
+                ['project_id' => 'Hanya bin On-site Proyek yang boleh terikat proyek.'], // BR-WH-03
                 'BR-WH-03',
             );
         }
@@ -219,7 +219,7 @@ class SaveBin
 
         if ($diminta !== '' && $diminta !== BinCodeBuilder::segment($lama) && $diminta !== $segmenTerakhir) {
             throw WarehouseRuleException::fields(
-                ['code' => 'Kode bin tidak bisa diubah setelah dibuat; kode itu sudah tercetak di label (BR-WH-01).'],
+                ['code' => 'Kode bin tidak bisa diubah setelah dibuat; kode itu sudah tercetak di label.'], // BR-WH-01
                 'BR-WH-01',
             );
         }

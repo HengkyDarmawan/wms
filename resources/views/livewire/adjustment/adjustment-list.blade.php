@@ -5,7 +5,12 @@
             <p class="text-muted mb-0">{{ __('Koreksi stok ± per bin dengan alasan. Manual selalu lewat approval; hasil opname disetujui di tingkat sesi.') }}</p>
         </div>
         @can('create', App\Domain\Adjustment\Models\StockAdjustment::class)
-            <a class="btn btn-primary" href="{{ route('adjustments.create') }}">{{ __('Penyesuaian baru') }}</a>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-opening-stock">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor saldo awal') }}
+                </a>
+                <a class="btn btn-primary" href="{{ route('adjustments.create') }}">{{ __('Penyesuaian baru') }}</a>
+            </div>
         @endcan
     </div>
 

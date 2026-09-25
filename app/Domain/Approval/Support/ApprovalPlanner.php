@@ -58,7 +58,7 @@ class ApprovalPlanner
         $sisa = array_values(array_diff($kandidat, $pemohon));
 
         if ($kenaSod !== []) {
-            $catatan[] = 'Pengaju/pemohon dilewati (BR-APR-03).';
+            $catatan[] = 'Pengaju/pemohon dilewati.'; // BR-APR-03
         }
 
         $layak = $this->resolver->eligible($sisa, $permission);
@@ -73,7 +73,7 @@ class ApprovalPlanner
             $layak = $this->pengganti(array_map(fn (int $u) => $this->resolver->managerOf($u), $kenaSod), $pemohon, $permission);
 
             if ($layak !== []) {
-                $catatan[] = 'Dialihkan ke atasan pengaju (BR-APR-03).';
+                $catatan[] = 'Dialihkan ke atasan pengaju.'; // BR-APR-03
             }
         }
 
@@ -87,7 +87,7 @@ class ApprovalPlanner
             $layak = $this->pengganti($cadangan, $pemohon, $permission);
 
             if ($layak !== []) {
-                $catatan[] = 'Dialihkan ke approver cadangan (BR-APR-06).';
+                $catatan[] = 'Dialihkan ke approver cadangan.'; // BR-APR-06
             }
         }
 
@@ -96,7 +96,7 @@ class ApprovalPlanner
             $layak = $this->pengganti(array_map(fn (int $u) => $this->resolver->managerOf($u), $tidakLayak), $pemohon, $permission);
 
             if ($layak !== []) {
-                $catatan[] = 'Dialihkan ke atasan approver (BR-APR-06).';
+                $catatan[] = 'Dialihkan ke atasan approver.'; // BR-APR-06
             }
         }
 
@@ -107,7 +107,7 @@ class ApprovalPlanner
             if ($admin !== []) {
                 $layak = [$admin[0]];
                 $keAdmin = true;
-                $catatan[] = 'Peringatan: tidak ada approver yang memenuhi syarat; dialihkan ke Admin Company (BR-APR-06).';
+                $catatan[] = 'Peringatan: tidak ada approver yang memenuhi syarat; dialihkan ke Admin Company.'; // BR-APR-06
             }
         }
 

@@ -7,6 +7,7 @@ namespace App\Domain\Request\Livewire;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
+use App\Domain\Master\Support\ScanCode;
 use App\Domain\Request\Actions\SaveRequest;
 use App\Domain\Request\Actions\SubmitRequest;
 use App\Domain\Request\Enums\LineOwnership;
@@ -40,6 +41,11 @@ class RequestForm extends Component
     /** @var array<int, array<string, mixed>> */
     public array $lines = [];
 
+    public string $kodePindai = '';
+
+    /** Indeks baris yang terakhir terisi lewat pindai, untuk disorot. */
+    public ?int $sorot = null;
+
     public function mount(?MaterialRequest $request = null): void
     {
         if ($request?->exists) {
@@ -68,6 +74,14 @@ class RequestForm extends Component
         $this->authorize('create', MaterialRequest::class);
 
         $this->form['required_date'] = now()->addDays(3)->toDateString();
+
+        // Dari hub proyek (A-228): proyek langsung terisi bila boleh diakses.
+        $proyek = request()->query('project');
+
+        if (is_numeric($proyek) && Project::query()->active()->whereKey((int) $proyek)->exists() && auth()->user()->canAccessProject((int) $proyek)) {
+            $this->form['project_id'] = (string) (int) $proyek;
+        }
+
         $this->tambahBaris();
     }
 
@@ -93,10 +107,66 @@ class RequestForm extends Component
         unset($this->lines[$index]);
 
         $this->lines = array_values($this->lines);
+        $this->sorot = null;
 
         if ($this->lines === []) {
             $this->tambahBaris();
         }
+    }
+
+    /**
+     * Pindai label item (A-206): item yang sudah ada di baris ditambah satu,
+     * item baru mengisi baris kosong pertama atau baris baru dengan jumlah 1.
+     * Jumlah tetap bisa diubah manual sesudahnya.
+     */
+    public function pindai(): void
+    {
+        $kode = ScanCode::normalize($this->kodePindai);
+        $this->kodePindai = '';
+        $this->resetErrorBag('kodePindai');
+
+        if ($kode === '') {
+            return;
+        }
+
+        $ids = Item::query()->whereKey(ScanCode::itemIds($kode))
+            ->whereIn('status', [ItemStatus::Active->value, ItemStatus::Provisional->value])
+            ->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        if ($ids === []) {
+            $this->addError('kodePindai', __('":kode" tidak cocok dengan item aktif mana pun.', ['kode' => $kode]));
+
+            return;
+        }
+
+        if (count($ids) > 1) {
+            $this->addError('kodePindai', __('":kode" cocok dengan lebih dari satu item; pilih itemnya dari daftar.', ['kode' => $kode]));
+
+            return;
+        }
+
+        $itemId = (string) $ids[0];
+
+        foreach ($this->lines as $i => $baris) {
+            if ((string) $baris['item_id'] === $itemId) {
+                $this->lines[$i]['qty_base'] = (string) ((is_numeric($baris['qty_base']) ? (float) $baris['qty_base'] : 0) + 1);
+                $this->sorot = $i;
+
+                return;
+            }
+        }
+
+        $kosong = collect($this->lines)->search(fn ($b) => (string) $b['item_id'] === '' && trim((string) $b['non_catalog_text']) === '');
+
+        if ($kosong === false) {
+            $this->tambahBaris();
+            $kosong = array_key_last($this->lines);
+        }
+
+        $this->lines[$kosong]['item_id'] = $itemId;
+        $this->lines[$kosong]['qty_base'] = is_numeric($this->lines[$kosong]['qty_base']) && (float) $this->lines[$kosong]['qty_base'] > 0
+            ? $this->lines[$kosong]['qty_base'] : '1';
+        $this->sorot = (int) $kosong;
     }
 
     public function simpan(SaveRequest $action): void

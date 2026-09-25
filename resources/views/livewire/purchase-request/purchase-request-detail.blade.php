@@ -13,14 +13,15 @@
                 · {{ __('Dibuat') }} {{ $prq->creator?->name ?? __('Sistem') }}
                 @if ($prq->submitter) · {{ __('Diajukan') }} {{ $prq->submitter->name }} @endif
                 @if ($prq->approved_at) · {{ __('Disetujui') }} {{ $prq->approver?->name ?? __('otomatis') }} @endif
-                @if ($prq->forwarded_at) · {{ __('Diteruskan') }} {{ $prq->forwarder?->name }} {{ $prq->forwarded_at->format('d/m/Y') }} @endif
-                @if ($prq->fulfilled_at) · {{ __('Dipenuhi') }} {{ $prq->fulfilled_at->format('d/m/Y') }} @endif
+                @if ($prq->forwarded_at) · {{ __('Diteruskan') }} {{ $prq->forwarder?->name }} {{ $prq->forwarded_at->lokal()->format('d/m/Y') }} @endif
+                @if ($prq->fulfilled_at) · {{ __('Dipenuhi') }} {{ $prq->fulfilled_at->lokal()->format('d/m/Y') }} @endif
             </p>
             @if ($prq->notes) <p class="small mb-0">{{ $prq->notes }}</p> @endif
             @if ($prq->rejectReason) <p class="text-danger small mb-0">{{ __('Ditolak') }} {{ $prq->approver?->name }}: {{ $prq->rejectReason->label }}</p> @endif
             @if ($prq->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $prq->cancelReason->label }}</p> @endif
             @if ($menunggu) <p class="small mb-0">{{ __('Menunggu keputusan approver.') }}</p> @endif
         </div>
+        @if ($prq->status !== \App\Domain\PurchaseRequest\Enums\PurchaseRequestStatus::Draft) <a class="btn btn-outline-secondary" href="{{ route('print.document', ['type' => 'purchase-request', 'id' => $prq->id]) }}" target="_blank" rel="noopener"><i class="bi bi-printer"></i> {{ __('Cetak') }}</a> @endif
         <a class="btn btn-outline-secondary" href="{{ route('purchase-requests.index') }}">{{ __('Kembali') }}</a>
     </div>
 
@@ -100,8 +101,11 @@
                 <button class="btn btn-primary" type="button" wire:click="setujui">{{ __('Setujui') }}</button>
                 <button class="btn btn-outline-danger" type="button" wire:click="mintaDialog('tolak')">{{ __('Tolak') }}</button>
             @endcan
+            @if ($prq->status->acceptsOrders() && auth()->user()?->can('po.create') && Route::has('purchase-orders.create'))
+                <a class="btn btn-primary" href="{{ route('purchase-orders.create', ['prq' => $prq->id]) }}"><i class="bi bi-receipt-cutoff"></i> {{ __('Buat PO') }}</a>
+            @endif
             @can('order', $prq)
-                <button class="btn btn-primary" type="button" wire:click="mintaDialog('pesan')">{{ __('Catat pemesanan') }}</button>
+                <button class="btn btn-outline-primary" type="button" wire:click="mintaDialog('pesan')">{{ __('Catat pemesanan') }}</button>
             @endcan
             @can('cancel', $prq)
                 <button class="btn btn-outline-danger" type="button" wire:click="mintaDialog('batal')">{{ __('Batalkan') }}</button>
@@ -116,7 +120,11 @@
                 <li class="list-group-item">
                     <strong>{{ $o->vendor?->name }}</strong>
                     @if ($o->vendor?->status === \App\Domain\Master\Enums\VendorStatus::Provisional) <span class="badge text-bg-warning">{{ __('vendor sementara') }}</span> @endif
-                    · {{ $o->reference() }}
+                    · @if ($o->purchase_order_id && auth()->user()?->can('po.view'))
+                        <a href="{{ route('purchase-orders.show', $o->purchase_order_id) }}">{{ $o->reference() }}</a>
+                    @else
+                        {{ $o->reference() }}
+                    @endif
                     @if ($o->eta_date) · {{ __('ETA') }} {{ $o->eta_date->format('d/m/Y') }} @endif
                     · {{ $o->orderer?->name }} {{ $o->ordered_at?->lokal()->format('d/m/Y H:i') }}
                     @if ($o->vendor_note) <div class="text-muted">{{ $o->vendor_note }}</div> @endif

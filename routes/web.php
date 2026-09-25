@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Access\TwoFactorSetupController;
+use App\Http\Controllers\Central\LandingController;
 use App\Http\Controllers\Platform\CompanyController;
 use App\Http\Controllers\Platform\PaymentController;
 use App\Http\Controllers\Platform\PlanController;
@@ -31,10 +32,14 @@ foreach ($centralDomains as $index => $domain) {
         // Nama route cukup dipasang sekali; domain lain hanya alias.
         $utama = $index === 0;
 
-        $home = Route::get('/', fn () => view('central.welcome'));
+        // Landing page produk (30-landing-page). "Masuk ke company Anda" hanya
+        // mengalihkan ke subdomain company lewat GET tanpa mengubah data (A-221).
+        $home = Route::get('/', [LandingController::class, 'show']);
+        $masuk = Route::get('/masuk', [LandingController::class, 'enter'])->middleware('throttle:60,1');
 
         if ($utama) {
             $home->name('central.home');
+            $masuk->name('central.enter');
         }
 
         // Login Super Admin (Blueprint §4.1). Guard `platform` dan tabel

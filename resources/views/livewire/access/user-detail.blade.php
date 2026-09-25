@@ -60,12 +60,12 @@
 
                     <dt class="col-sm-4 col-lg-3">{{ __('Login terakhir') }}</dt>
                     <dd class="col-sm-8 col-lg-9">
-                        {{ $user->last_login_at?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d M Y H:i') ?? '—' }}
+                        {{ $user->last_login_at?->lokal()->format('d M Y H:i') ?? '—' }}
                     </dd>
 
                     <dt class="col-sm-4 col-lg-3">{{ __('Password diubah') }}</dt>
                     <dd class="col-sm-8 col-lg-9 mb-0">
-                        {{ $user->password_changed_at?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d M Y H:i') ?? '—' }}
+                        {{ $user->password_changed_at?->lokal()->format('d M Y H:i') ?? '—' }}
                     </dd>
                 </dl>
             @elseif ($tab === 'role')
@@ -154,7 +154,7 @@
                             <div class="d-flex justify-content-between gap-2">
                                 <span>{{ $catatan->description }}</span>
                                 <span class="small text-muted text-nowrap">
-                                    {{ $catatan->created_at?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d M Y H:i') }}
+                                    {{ $catatan->created_at?->lokal()->format('d M Y H:i') }}
                                 </span>
                             </div>
                             @if ($catatan->properties?->isNotEmpty())

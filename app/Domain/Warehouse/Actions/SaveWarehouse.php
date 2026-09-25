@@ -128,7 +128,7 @@ class SaveWarehouse
         if ($tipe->isSite()) {
             if ($projectId === null) {
                 throw WarehouseRuleException::fields(
-                    ['project_id' => 'Gudang Site wajib terikat satu proyek (BR-WH-04).'],
+                    ['project_id' => 'Gudang Site wajib terikat satu proyek.'], // BR-WH-04
                     'BR-WH-04',
                 );
             }
@@ -145,7 +145,7 @@ class SaveWarehouse
 
         if ($projectId !== null) {
             throw WarehouseRuleException::fields(
-                ['project_id' => 'Hanya Gudang Site yang boleh terikat proyek (BR-WH-04).'],
+                ['project_id' => 'Hanya Gudang Site yang boleh terikat proyek.'], // BR-WH-04
                 'BR-WH-04',
             );
         }
@@ -193,7 +193,7 @@ class SaveWarehouse
         while ($id !== null && $batas < 20) {
             if ($id === $warehouseId) {
                 throw WarehouseRuleException::fields(
-                    ['parent_id' => 'Hierarki gudang tidak boleh melingkar (BR-WH-05).'],
+                    ['parent_id' => 'Hierarki gudang tidak boleh melingkar.'], // BR-WH-05
                     'BR-WH-05',
                 );
             }

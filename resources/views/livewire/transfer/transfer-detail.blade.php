@@ -18,6 +18,7 @@
             @if ($trf->rejectReason) <p class="text-danger small mb-0">{{ __('Ditolak') }}: {{ $trf->rejectReason->label }}</p> @endif
             @if ($trf->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $trf->cancelReason->label }}</p> @endif
         </div>
+        <a class="btn btn-outline-secondary" href="{{ route('print.document', ['type' => 'transfer', 'id' => $trf->id]) }}" target="_blank" rel="noopener"><i class="bi bi-printer"></i> {{ __('Cetak') }}</a>
         <a class="btn btn-outline-secondary" href="{{ route('transfers.index') }}">{{ __('Kembali') }}</a>
     </div>
 

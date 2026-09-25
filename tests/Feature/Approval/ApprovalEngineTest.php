@@ -175,7 +175,7 @@ class ApprovalEngineTest extends TenantTestCase
         $req = $this->ajukanReq($pemohon);
 
         $this->assertSame([(int) $kepalaLain->id], $this->approverTerbuka($req), 'BR-APR-03: pemohon dilewati.');
-        $this->assertStringContainsString('BR-APR-03', implode(' ', $this->snapshotReq($req)->steps[0]['notes']));
+        $this->assertStringContainsString('Pengaju/pemohon dilewati', implode(' ', $this->snapshotReq($req)->steps[0]['notes']), 'Catatan BR-APR-03 tanpa kode internal.');
 
         $this->gagal(fn () => $this->setuju($req, $pemohon), 'BR-APR-03');
         $this->gagal(fn () => app(ApproveRequest::class)->handle($req, $pemohon), 'BR-REQ-07');
@@ -214,7 +214,7 @@ class ApprovalEngineTest extends TenantTestCase
 
         $otomatis = ApprovalDecision::query()->whereHas('task', fn ($q) => $q->where('approval_snapshot_id', $s->id)->where('step_no', 2))->sole();
         $this->assertSame(ApprovalDecisionType::Approved, $otomatis->decision);
-        $this->assertStringContainsString('BR-APR-04', (string) $otomatis->comment);
+        $this->assertStringContainsString('sudah menyetujui lapis 1', (string) $otomatis->comment, 'Catatan BR-APR-04 tanpa kode internal.');
 
         $this->setuju($req, $direktur);
         $this->assertSame(MaterialRequestStatus::Approved, $req->refresh()->status);

@@ -15,6 +15,7 @@ use App\Domain\Conversion\Enums\ConversionStatus;
 use App\Domain\Conversion\Livewire\Concerns\HandlesConversionRules;
 use App\Domain\Conversion\Models\Conversion;
 use App\Domain\Conversion\Support\ConversionApprovalRoute;
+use App\Domain\Conversion\Support\ConversionPlanner;
 use App\Domain\Master\Enums\ReasonContext;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
@@ -50,10 +51,15 @@ class ConversionDetail extends Component
     {
         $cnv = $this->cnv();
 
+        $inputs = $cnv->inputs()->with('item:id,code,name,base_uom_id', 'item.baseUom:id,code', 'bin:id,code', 'lot:id,lot_no', 'piece:id,piece_no,length')->orderBy('id')->get();
+        $outputs = $cnv->outputs()->with('item:id,code,name,base_uom_id', 'item.baseUom:id,code', 'bin:id,code', 'lot:id,lot_no', 'newPiece:id,piece_no,length,parent_piece_id', 'parentInput.piece:id,piece_no', 'parentInput.item:id,code', 'reason:id,label')->orderBy('id')->get();
+
         return view('livewire.conversion.conversion-detail', [
             'cnv' => $cnv,
-            'inputs' => $cnv->inputs()->with('item:id,code,name,base_uom_id', 'item.baseUom:id,code', 'bin:id,code', 'lot:id,lot_no', 'piece:id,piece_no,length')->orderBy('id')->get(),
-            'outputs' => $cnv->outputs()->with('item:id,code,name,base_uom_id', 'item.baseUom:id,code', 'bin:id,code', 'lot:id,lot_no', 'newPiece:id,piece_no,length,parent_piece_id', 'parentInput.piece:id,piece_no', 'parentInput.item:id,code', 'reason:id,label')->orderBy('id')->get(),
+            'kalimat' => ConversionPlanner::kalimatDokumen($inputs, $outputs),
+            'uom' => $inputs->first()?->item?->baseUom?->code,
+            'inputs' => $inputs,
+            'outputs' => $outputs,
             'menunggu' => $cnv->isAwaitingApproval(),
             'aturan' => $cnv->status === ConversionStatus::Draft ? app(ConversionApprovalRoute::class)->rule($cnv)?->name : null,
             'pembalik' => $cnv->reversals()->orderBy('id')->get(['id', 'number', 'status']),

@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `picking` & `shipment` (Picking, Surat Jalan, Bukti Terima, Selisih)
 
-**Versi:** 0.8
+**Versi:** 0.11
 **Tanggal:** 25 September 2026
-**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188))
+**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188)); v0.9: halaman penerima bertoken `/terima/{token}` dan unggah foto/tanda tangan bukti terima ([A-231](04-keputusan-dan-asumsi.md#a-231), §6, §13.3)
 **Modul:** `picking`, `shipment`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-SJ](05-aturan-bisnis.md#br-sj) · [Katalog Status §2.2–§2.4](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
@@ -139,7 +139,8 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 | `/picks/{pck}` | `shipment.pick-detail` | Baris alokasi, pencatatan jumlah diambil, short pick dengan Alasan `*` |
 | `/shipments` | `shipment.shipment-list` | Daftar SJ dengan penyaring status, tujuan, cara kirim |
 | `/shipments/create` | `shipment.shipment-form` | Memilih PCK `completed` di Loading Area dengan tujuan sama; kelengkapan cara kirim |
-| `/shipments/{sj}` | `shipment.shipment-detail` | Muat, kirim, bukti terima, dan DSC yang lahir darinya |
+| `/shipments/{sj}` | `shipment.shipment-detail` | Muat, kirim, bukti terima (foto serah terima, tanda tangan kanvas, foto rusak per baris), tautan penerima + OTP tampil sekali, dan DSC yang lahir darinya |
+| `/terima/{token}` | `DeliveryTokenController` (tanpa login) | Penerima tanpa akun: OTP → formulir bukti terima per baris (foto wajib bila rusak, tanda tangan) → ringkasan; tautan kedaluwarsa/terpakai → 410 ([A-231](04-keputusan-dan-asumsi.md#a-231)) |
 | `/discrepancies` | `shipment.discrepancy-list` | DSC terbuka dengan umur dan disposisi per baris |
 
 ## 7. Kejadian stok & integrasi
@@ -226,7 +227,7 @@ Penerimaan di gudang tujuan (modul `receipt`); retur (modul `return`); transfer 
 
 ## 13. Catatan implementasi (24 September 2026)
 
-Picking tinggal di domain `app/Domain/Shipment`, bukan folder `Picking/` seperti [Arsitektur §4](08-arsitektur.md#4-struktur-kode). Tujuh aksi domain: `CreatePickTask` (`pick.create`), `ProcessPickTask` (`pick.start`, `pick.complete`, `pick.cancel`), `CreateShipment` (`shipment.create`), `ShipShipment` (`shipment.ship`, `shipment.cancel`), `ConfirmDelivery` (`shipment.confirm_delivery`), `IssueDeliveryToken`, `ResolveDiscrepancy` (`discrepancy.resolve`). Dua kelas memegang lebih dari satu permission; tiap metode memeriksa permission-nya sendiri ([A-73](04-keputusan-dan-asumsi.md#a-73)). Short pick menandai bin lewat `ChangeBinStatus::flagForCount()` ([A-67](04-keputusan-dan-asumsi.md#a-67)). Pengaturan company yang dipakai: `receipt_confirm_days` dan `discrepancy_alert_days` ([11-master §13.4](11-master.md#134-sisa-pekerjaan-modul-ini)).
+Picking tinggal di domain `app/Domain/Shipment`, bukan folder `Picking/` seperti [Arsitektur §4](08-arsitektur.md#4-struktur-kode). Tujuh aksi domain: `CreatePickTask` (`pick.create`), `ProcessPickTask` (`pick.start`, `pick.complete`, `pick.cancel`), `CreateShipment` (`shipment.create`), `ShipShipment` (`shipment.ship`, `shipment.cancel`), `ConfirmDelivery` (`shipment.confirm_delivery`), `IssueDeliveryToken`, `ResolveDiscrepancy` (`discrepancy.resolve`). Dua kelas memegang lebih dari satu permission; tiap metode memeriksa permission-nya sendiri ([A-73](04-keputusan-dan-asumsi.md#a-73)). Short pick menandai bin lewat `ChangeBinStatus::flagForCount()` ([A-67](04-keputusan-dan-asumsi.md#a-67)). Pengaturan company yang dipakai: `receipt_confirm_days` dan `discrepancy_alert_days` ([11-master §13.4](11-master.md#135-sisa-pekerjaan-modul-ini)).
 
 ### 13.1 Penyimpangan dari spesifikasi
 
@@ -243,9 +244,9 @@ Picking tinggal di domain `app/Domain/Shipment`, bukan folder `Picking/` seperti
    memuat `vendor`, tetapi tidak ada kolom yang menampung vendornya.
 5. **DSC diberi `number`.** ERD tidak menyebutnya, tetapi DSC adalah dokumen yang dirujuk saat
    berdebat dengan ekspedisi dan klien; dokumen tanpa nomor tidak bisa disebut.
-6. **Pengiriman OTP lewat WhatsApp atau SMS belum ada** ([O-06](04-keputusan-dan-asumsi.md#o-06)).
-   Tautan dan OTP-nya sudah berfungsi; kodenya ditampilkan sekali di layar penerbit dan disampaikan
-   lisan oleh staf.
+6. **Pengiriman OTP lewat WhatsApp atau SMS belum ada** (penyedia OTP: [O-15](04-keputusan-dan-asumsi.md#o-15)).
+   Tautan dan OTP-nya berfungsi; keduanya ditampilkan sekali di layar penerbit dan disampaikan
+   driver kepada penerima ([A-231](04-keputusan-dan-asumsi.md#a-231)).
 7. **Alokasi picking hanya dari bin `storage`** (v0.4, bersama modul [Receipt/Putaway](19-receipt-putaway.md)).
    Sebelumnya `CreatePickTask` mengambil saldo Tersedia dari bin apa pun di gudang, termasuk bin Dalam
    Perjalanan milik gudang asal, Penerimaan, dan Loading Area — barang transfer yang belum diterima gudang
@@ -297,22 +298,21 @@ Picking tinggal di domain `app/Domain/Shipment`, bukan folder `Picking/` seperti
 | Susun surat jalan | `/shipments/create` | `shipment.shipment-form` | Pilih PCK selesai di gudang itu, tujuan, dan kelengkapan cara kirim |
 | Detail surat jalan | `/shipments/{id}` | `shipment.shipment-detail` | Berangkatkan, batalkan, bukti terima per baris, tautan bertoken, riwayat |
 | Selisih pengiriman | `/discrepancies` | `shipment.discrepancy-list` | DSC terbuka, umur, dan penyelesaian per baris |
+| Halaman penerima bertoken | `/terima/{token}` | `Shipment\DeliveryTokenController` + `Support\ProofFiles` | Tanpa `auth`, `throttle`; OTP diverifikasi `IssueDeliveryToken::verify` (sesi 30 menit per token), bukti terima lewat `ConfirmDelivery` kanal `token_link`, token dihabiskan; berkas `pod/sj-<id>/…` dilayani `shipments.proof.file` (berotorisasi). Kemampuan policy baru `issueToken` (SJ `shipped`) — sebelumnya tombol *Terbitkan tautan* memakai `ship` yang hanya berlaku saat `prepared` |
 
 Uji yang menopangnya ada di `tests/Feature/Shipment`: `PickTaskTest` (TC-PCK-01–08),
-`ShipmentTest` (TC-SJ-01–12), `DiscrepancyTest` (TC-DSC-01–05), dan `ShipmentScreenTest`
-(TC-SJ-13–17, TC-PCK-09, TC-DSC-06).
+`ShipmentTest` (TC-SJ-01–12), `DiscrepancyTest` (TC-DSC-01–05), `ShipmentScreenTest`
+(TC-SJ-13–17, TC-PCK-09, TC-DSC-06), dan `DeliveryTokenPageTest` (TC-SJ-05d, 05d2, 05e).
 
 ### 13.4 Sisa pekerjaan modul ini
 
-1. **Halaman penerima bertoken** — token, OTP, dan pembatasan percobaannya sudah ada; halaman publiknya
-   dan pengiriman OTP menunggu [O-06](04-keputusan-dan-asumsi.md#o-06).
+1. ~~Halaman penerima bertoken~~ — **selesai 25 Sep 2026** ([A-231](04-keputusan-dan-asumsi.md#a-231)); pengiriman OTP otomatis menunggu [O-15](04-keputusan-dan-asumsi.md#o-15).
 2. **Bukti terima per unit** untuk item berserial dan per potong — tabelnya ada, pengisiannya menunggu
    pemindaian di PWA ([BR-SJ-05](05-aturan-bisnis.md#br-sj)).
-3. **Konfirmasi dan keberatan pemohon** ([BR-REQ-10](05-aturan-bisnis.md#br-req)) — kolomnya sudah ada di
-   bukti terima, layarnya menyusul bersama portal pemohon.
+3. ~~Konfirmasi dan keberatan pemohon~~ — **selesai** ([BR-REQ-10](05-aturan-bisnis.md#br-req), [A-188](04-keputusan-dan-asumsi.md#a-188)): kartu bukti terima di REQ back-office & portal klien, keberatan berfoto membuka DSC, konfirmasi otomatis lewat batas ([27-pendukung-f1](27-pendukung-f1.md)).
 4. **Cross-dock dari GRN** ([BR-SJ-03](05-aturan-bisnis.md#br-sj), [A-83](04-keputusan-dan-asumsi.md#a-83)) — menunggu keputusan A-83. GRN retur
    untuk barang rusak yang dibawa balik tidak dibuat ([A-114](04-keputusan-dan-asumsi.md#a-114)); modul Retur sudah ada ([22](22-retur-transfer.md)).
-5. **Aset dipinjamkan** (v0.6): `ConfirmDelivery` memanggil `Asset\Support\AssetCustody::checkOut` untuk baris `loan` berserial sebelum memindahkannya ke bin On-site; state aset (`reserved` → `in_transit` → `on_loan`) diperbarui observer kartu stok modul Aset ([25-aset §13](25-aset.md)).
-5. **Unggah tanda tangan dan foto** lewat layar; sekarang jalurnya menerima path berkas.
-6. **Mode offline driver** ([BR-SJ-08](05-aturan-bisnis.md#br-sj)) `[F2]`.
-7. **Notifikasi §8** dan **laporan §9** beserta ekspornya — laporan belum dibangun; kerangkanya di [16-shared-laporan-berkas](16-shared-laporan-berkas.md).
+5. *(catatan implementasi, bukan sisa)* **Aset dipinjamkan** (v0.6): `ConfirmDelivery` memanggil `Asset\Support\AssetCustody::checkOut` untuk baris `loan` berserial sebelum memindahkannya ke bin On-site; state aset (`reserved` → `in_transit` → `on_loan`) diperbarui observer kartu stok modul Aset ([25-aset §13](25-aset.md)).
+6. ~~Unggah tanda tangan dan foto lewat layar~~ — **selesai 25 Sep 2026**: layar driver dan halaman penerima mengunggah foto serah terima, tanda tangan kanvas (data URL → PNG), foto kerusakan per baris (`StoreUpload::handleDataUrl`, NFR-14).
+7. **Mode offline driver** ([BR-SJ-08](05-aturan-bisnis.md#br-sj)) `[F2]`.
+8. **Notifikasi §8** belum lengkap; ~~laporan §9~~ — **selesai 25 Sep 2026**: *Daftar pengiriman*, *Short pick*, *Posisi barang rusak & selisih*, *Kinerja pengiriman* di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-232](04-keputusan-dan-asumsi.md#a-232)).

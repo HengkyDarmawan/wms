@@ -11,6 +11,7 @@ use App\Domain\Approval\Enums\ApproverType;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
+use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\Uom;
 use App\Domain\Request\Actions\SaveRequest;
@@ -198,6 +199,42 @@ class RequestScreenTest extends TenantTestCase
         $this->assertNotNull($req);
         $this->assertSame('under_review', $req->status->value, 'Tanpa gudang sumber, REQ internal ikut ditinjau.');
         $this->assertSame(12.0, (float) $req->openLines()->first()->qty_base);
+    }
+
+    #[Test]
+    public function tc_req_34_pindai_item_mengisi_baris_permintaan(): void
+    {
+        $semen = Item::create([
+            'code' => 'SEMEN-50',
+            'name' => 'Semen 50 kg',
+            'barcode' => '8990001112223',
+            'status' => ItemStatus::Active,
+            'tracking_mode' => TrackingMode::Lot,
+            'base_uom_id' => Uom::query()->where('code', 'PCS')->value('id'),
+        ]);
+        Lot::create(['item_id' => $semen->id, 'lot_no' => 'LOT-S1', 'received_at' => now()->toDateString()]);
+
+        $pemohon = $this->makeUser('internal_requester');
+        $pemohon->forgetPermissionCache();
+
+        Livewire::actingAs($pemohon)
+            ->test(RequestForm::class)
+            ->set('kodePindai', 'TIDAK-ADA')->call('pindai')->assertHasErrors('kodePindai')
+            ->set('kodePindai', 'baut-m12')->call('pindai')->assertHasNoErrors()
+            ->assertSet('lines.0.item_id', (string) $this->item->id)->assertSet('lines.0.qty_base', '1')->assertSet('sorot', 0)
+            ->set('kodePindai', 'BAUT-M12')->call('pindai')->assertSet('lines.0.qty_base', '2')->assertSet('kodePindai', '')
+            ->set('kodePindai', '8990001112223')->call('pindai')
+            ->assertSet('lines.1.item_id', (string) $semen->id)->assertSet('lines.1.qty_base', '1')
+            ->set('kodePindai', 'SEMEN-50|LOT-S1')->call('pindai')->assertSet('lines.1.qty_base', '2')
+            ->assertCount('lines', 2)
+            ->set('form.project_id', (string) $this->proyek->id)
+            ->call('simpan')
+            ->assertHasNoErrors()
+            ->assertRedirect();
+
+        $req = MaterialRequest::query()->latest('id')->firstOrFail();
+        $this->assertSame([2.0, 2.0], $req->openLines()->orderBy('id')->pluck('qty_base')->map(fn ($v) => (float) $v)->all());
+        $this->assertStringContainsString('data-scan', (string) file_get_contents(resource_path('views/livewire/request/request-form.blade.php')));
     }
 
     #[Test]

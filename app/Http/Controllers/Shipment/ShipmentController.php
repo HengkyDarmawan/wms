@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Shipment;
 
+use App\Domain\Shared\Files\StoreUpload;
 use App\Domain\Shipment\Models\DeliveryDiscrepancy;
 use App\Domain\Shipment\Models\PickTask;
 use App\Domain\Shipment\Models\Shipment;
 use App\Http\Controllers\Controller;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** Halaman modul Picking & Shipment (15-picking-shipment §6). */
 class ShipmentController extends Controller
@@ -46,6 +48,25 @@ class ShipmentController extends Controller
         $this->authorize('view', $shipment);
 
         return view('shipment.show', ['sj' => $shipment]);
+    }
+
+    /** Foto serah terima (`foto`), tanda tangan (`ttd`), atau foto kerusakan baris bukti (`baris-<id>`). */
+    public function proofFile(Shipment $shipment, string $berkas, StoreUpload $files): StreamedResponse
+    {
+        $this->authorize('view', $shipment);
+
+        $bukti = $shipment->proof()->first();
+        abort_if($bukti === null, 404);
+
+        $path = match (true) {
+            $berkas === 'foto' => $bukti->photo_path,
+            $berkas === 'ttd' => $bukti->signature_path,
+            default => $bukti->lines()->whereKey((int) substr($berkas, 6))->value('damage_photo_path'),
+        };
+
+        abort_unless($files->exists($path), 404);
+
+        return $files->stream((string) $path);
     }
 
     public function discrepancies(): View

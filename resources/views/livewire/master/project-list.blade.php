@@ -3,7 +3,7 @@
         <div>
             <h1 class="h3 mb-1">{{ __('Proyek') }}</h1>
             <p class="text-muted mb-0">
-                {{ __('Pusat pelacakan material. Hanya proyek aktif yang menerima dokumen baru.') }}
+                {{ __('Pusat pelacakan material. Buka proyek untuk melihat stok on-site, dokumen, approval, dan menutup proyek. Hanya proyek aktif yang menerima dokumen baru.') }}
             </p>
         </div>
 
@@ -212,7 +212,7 @@
                     @forelse ($projects as $project)
                         <tr wire:key="proyek-{{ $project->id }}">
                             <td>
-                                <div class="fw-semibold">{{ $project->name }}</div>
+                                <a class="fw-semibold" href="{{ route('projects.show', $project) }}">{{ $project->name }}</a>
                                 <div class="small text-muted">{{ $project->code }}</div>
                             </td>
                             <td>
@@ -234,17 +234,10 @@
                                 </span>
                             </td>
                             <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary" href="{{ route('projects.show', $project) }}">{{ __('Buka') }}</a>
                                 @can('update', $project)
                                     <button class="btn btn-sm btn-outline-secondary" type="button"
                                             wire:click="ubah({{ $project->id }})">{{ __('Ubah') }}</button>
-                                @endcan
-                                @can('close', $project)
-                                    @unless ($project->is_internal)
-                                        <button class="btn btn-sm btn-outline-warning" type="button"
-                                                wire:click="mintaUbahStatus({{ $project->id }})">
-                                            {{ __('Ubah status') }}
-                                        </button>
-                                    @endunless
                                 @endcan
                             </td>
                         </tr>

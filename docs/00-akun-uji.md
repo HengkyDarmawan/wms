@@ -1,6 +1,6 @@
 # Akun Uji & Data Demo (dev / demo / staging)
 
-**Versi:** 1.10
+**Versi:** 1.11
 **Tanggal:** 25 September 2026
 **Status:** aktif — **hanya untuk dev, demo, dan staging**. Produksi tidak memakai berkas ini: Super Admin produksi dibuat dari `.env` saat instalasi, semua user lain lewat undangan dan mengatur password sendiri ([Blueprint §13](wms/01-blueprint.md#13-autentikasi--sso), [NFR-02](wms/01-blueprint.md#16-kebutuhan-non-fungsional)).
 **Dokumen terkait:** [Blueprint §4](wms/01-blueprint.md#4-pengguna--peran) · [BR-GEN-09](wms/05-aturan-bisnis.md#br-gen) · [Model data pusat & akses](wms/08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) · [Spesifikasi modul Access](wms/10-access.md)
@@ -27,6 +27,7 @@ Berkas ini adalah **satu-satunya sumber** daftar akun seed. Seeder `DemoSeeder` 
 | Proyek | `PRJ-001` Pipa Karawang (klien PT Klien Satu, aktif) · `PRJ-INT` Proyek Internal ([A-06](wms/04-keputusan-dan-asumsi.md#a-06)) · `PRJ-002` Gudang Cikarang milik CV Klien Dua (sengaja masih kosong) |
 | Klien | PT Klien Satu (`KL1`) · CV Klien Dua (`KL2`) |
 | Vendor | PT Baja Prima (`company`, vendor tetap pipa) · Toko Besi Jaya (`shop`) · Tokopedia Toko Alat (`online_marketplace`) |
+| Harga beli vendor (Purchasing Fase 1b) | Lewat `PurchasingDemoSeeder`, berlaku 1 Sep 2026, per satuan dasar ([A-218](wms/04-keputusan-dan-asumsi.md#a-218)): PT Baja Prima `PIPA-PVC-4` Rp 14.500/m · Toko Besi Jaya `BAUT-M12` Rp 1.500/pcs dan `SEMEN-PCC-50` Rp 1.400/kg · Tokopedia Toko Alat `BAUT-M12` Rp 1.350/pcs |
 | Kategori item | `MATERIAL` Material · `PIPA` Pipa (anak Material) · `FASTENER` Baut & mur (anak Material) · `ALAT` Alat kerja |
 | Item contoh | `PIPA-PVC-4` Pipa PVC 4 inci (per potong, bisa dipotong) · `BAUT-M12` Baut M12 (tanpa pelacakan) · `SEMEN-PCC-50` Semen PCC (lot, kedaluwarsa, FEFO) · `GENSET-5KVA` Genset 5 kVA (serial, aset) — satu item per mode pelacakan |
 | Ekspedisi | JNE Trucking · Indah Cargo |
@@ -40,7 +41,7 @@ Password dev semua akun: **`Demo#2026!`**. Nomor WA dummy dipakai untuk uji noti
 | Email | Nama | Role bawaan | Cakupan | Catatan |
 |---|---|---|---|---|
 | `admin@demo.wms.test` | Rina Admin | Admin Company | semua | Pemberi akses dukungan; Admin Company terakhir tidak bisa dinonaktifkan ([BR-ACC-02](wms/05-aturan-bisnis.md#br-acc)) |
-| `manajemen@demo.wms.test` | Budi Direktur | Manajemen | semua | Approver tingkat atas; atasan Kepala Gudang |
+| `manajemen@demo.wms.test` | Budi Direktur | Manajemen | semua | Approver tingkat atas; atasan Kepala Gudang; approver PO bernilai besar |
 | `kagudang.ckg@demo.wms.test` | Andi Kepala | Kepala Gudang **dan** Staf Gudang | Kepala Gudang: gudang CKG · Staf Gudang: gudang BKS | Contoh multi-role beda gudang ([A-04](wms/04-keputusan-dan-asumsi.md#a-04)) |
 | `kagudang.bks@demo.wms.test` | Sari Kepala | Kepala Gudang | gudang BKS | Approver sesi opname BKS |
 | `staf1.ckg@demo.wms.test` | Dedi Staf | Staf Gudang | gudang CKG | Penghitung pertama (opname) |
@@ -49,7 +50,7 @@ Password dev semua akun: **`Demo#2026!`**. Nomor WA dummy dipakai untuk uji noti
 | `driver1@demo.wms.test` | Gani Driver | Driver | semua | Kendaraan B 9001 XX |
 | `driver2@demo.wms.test` | Hadi Driver | Driver | semua | Kendaraan B 9002 XX |
 | `pemohon.prj001@demo.wms.test` | Indra Engineer | Pemohon Internal | proyek PRJ-001 | Juga PIC proyek PRJ-001; atasan = Budi Direktur |
-| `pr@demo.wms.test` | Joko Purchasing | Penindak Lanjut PR | semua | Catatan pemesanan, vendor sementara ([A-51](wms/04-keputusan-dan-asumsi.md#a-51), [A-53](wms/04-keputusan-dan-asumsi.md#a-53)) |
+| `pr@demo.wms.test` | Joko Purchasing | Penindak Lanjut PR | semua | Catatan pemesanan, vendor sementara ([A-51](wms/04-keputusan-dan-asumsi.md#a-51), [A-53](wms/04-keputusan-dan-asumsi.md#a-53)); membuat PO & harga beli vendor (Fase 1b, [A-216](wms/04-keputusan-dan-asumsi.md#a-216)) |
 | `auditor@demo.wms.test` | Kartika Auditor | Auditor Internal | semua | Read-only mutasi; boleh sesi opname & pemeriksaan mendadak ([BR-OPN-08](wms/05-aturan-bisnis.md#br-opn), [BR-OPN-10](wms/05-aturan-bisnis.md#br-opn)) |
 | `klien1@klien-satu.test` | Lina (PT Klien Satu) | Klien | klien KL1, proyek PRJ-001 | Login di `/portal`; role Klien tidak digabung role internal ([BR-ACC-03](wms/05-aturan-bisnis.md#br-acc)) |
 | `klien2@klien-dua.test` | Maman (CV Klien Dua) | Klien | klien KL2, proyek PRJ-002 | Proyeknya masih kosong: portal menampilkan daftar kosong, tidak melihat proyek klien lain ([A-21](wms/04-keputusan-dan-asumsi.md#a-21)) |
@@ -74,7 +75,7 @@ Nomor WA dummy: `+6281200000001` … `+6281200000014` berurutan sesuai tabel.
 
 ## 5. Aturan approval bawaan demo
 
-> **Sudah diseed** (sejak 24 Sep 2026) oleh `ApprovalDemoSeeder`, dipanggil `DemoSeeder`, untuk jenis dokumen yang sudah tersambung ke mesin approval ([20-approval](wms/20-approval.md)): REQ, RTV, — sejak modul Count/Adjustment ([21-opname-penyesuaian](wms/21-opname-penyesuaian.md)) — ADJ dan OPN, dan — sejak modul PRQ ([26-purchase-request](wms/26-purchase-request.md)) — PRQ (tujuh aturan). TRF dan RET sudah tersambung ([22-retur-transfer](wms/22-retur-transfer.md)) tetapi **tidak punya aturan demo**: tanpa aturan keduanya disetujui otomatis ([A-08](wms/04-keputusan-dan-asumsi.md#a-08)), yang juga jalur ringan transfer dalam proyek antar KRW1 dan KRW2 ([A-50](wms/04-keputusan-dan-asumsi.md#a-50)). CNV dan WST ([24-konversi-waste](wms/24-konversi-waste.md)) juga **tanpa aturan demo**: CNV diselesaikan langsung oleh staf, WST disetujui otomatis lalu ditutup dengan bukti. Aset ([25-aset](wms/25-aset.md)): Genset dipinjamkan lewat REQ pinjam; AST lahir saat SJ diterima; aset hilang membuat ADJ `asset_lost` yang ikut lapis minimum ADJ (Kepala Gudang lokasi aset, cadangan Manajemen). Ubah aturan dari layar *Aturan approval* (Admin Company); coba dulu di *Simulasi approval*.
+> **Sudah diseed** (sejak 24 Sep 2026) oleh `ApprovalDemoSeeder`, dipanggil `DemoSeeder`, untuk jenis dokumen yang sudah tersambung ke mesin approval ([20-approval](wms/20-approval.md)): REQ, RTV, — sejak modul Count/Adjustment ([21-opname-penyesuaian](wms/21-opname-penyesuaian.md)) — ADJ dan OPN, dan — sejak modul PRQ ([26-purchase-request](wms/26-purchase-request.md)) — PRQ, dan — sejak Purchasing inti ([purchasing/02](purchasing/02-purchasing-inti.md)) — PO (delapan aturan). TRF dan RET sudah tersambung ([22-retur-transfer](wms/22-retur-transfer.md)) tetapi **tidak punya aturan demo**: tanpa aturan keduanya disetujui otomatis ([A-08](wms/04-keputusan-dan-asumsi.md#a-08)), yang juga jalur ringan transfer dalam proyek antar KRW1 dan KRW2 ([A-50](wms/04-keputusan-dan-asumsi.md#a-50)). CNV dan WST ([24-konversi-waste](wms/24-konversi-waste.md)) juga **tanpa aturan demo**: CNV diselesaikan langsung oleh staf, WST disetujui otomatis lalu ditutup dengan bukti. Aset ([25-aset](wms/25-aset.md)): Genset dipinjamkan lewat REQ pinjam; AST lahir saat SJ diterima; aset hilang membuat ADJ `asset_lost` yang ikut lapis minimum ADJ (Kepala Gudang lokasi aset, cadangan Manajemen). Ubah aturan dari layar *Aturan approval* (Admin Company); coba dulu di *Simulasi approval*.
 
 | Dokumen | Aturan (prioritas) | Kondisi | Lapis | Diseed | Rujukan |
 |---|---|---|---|---|---|
@@ -84,6 +85,7 @@ Nomor WA dummy: `+6281200000001` … `+6281200000014` berurutan sesuai tabel.
 | ADJ manual | ADJ di atas 100 unit (10) | jumlah satuan dasar per baris > 100 (`line_qty_min` 100,0001, [A-105](wms/04-keputusan-dan-asumsi.md#a-105)) | 1. Kepala gudang (cukup salah satu) → 2. Manajemen | ✔ | [A-09](wms/04-keputusan-dan-asumsi.md#a-09) |
 | ADJ manual | ADJ lainnya (100) | — | 1. Kepala gudang (cukup salah satu). Tanpa aturan pun tetap satu lapis Kepala Gudang (lapis minimum) | ✔ | [A-09](wms/04-keputusan-dan-asumsi.md#a-09) |
 | PRQ | PRQ toko online (10) | jenis vendor `online_marketplace` (vendor tetap item sebelum dipesan, [A-173](wms/04-keputusan-dan-asumsi.md#a-173)) | 1. Kepala gudang tujuan (cukup salah satu) → 2. Manajemen; PRQ lain tanpa aturan = disetujui otomatis | ✔ | [A-52](wms/04-keputusan-dan-asumsi.md#a-52) |
+| PO | PO bernilai ≥ Rp 50 juta (10) | nilai PO ≥ Rp 50.000.000 (satu-satunya kondisi uang, [D-28](wms/04-keputusan-dan-asumsi.md#d-28)) | 1. Manajemen (cukup salah satu). PO lebih kecil tanpa aturan = disetujui otomatis | ✔ | [A-212](wms/04-keputusan-dan-asumsi.md#a-212) |
 | OPN | OPN tahunan & pemeriksaan mendadak (10) | jenis `annual` / `spot_check` | 1. Auditor Internal (cukup salah satu) | ✔ | [BR-OPN-09](wms/05-aturan-bisnis.md#br-opn) |
 | OPN | — (tanpa aturan) | jenis `monthly` / `adhoc` | lapis minimum: Kepala gudang cakupan; sesi audit (dibuat Auditor) ke Auditor Internal; cadangan Manajemen | bawaan kode | [A-96](wms/04-keputusan-dan-asumsi.md#a-96) |
 | ISU pembalik | — (tanpa aturan) | pembalikan pemakaian material ([BR-GEN-04](wms/05-aturan-bisnis.md#br-gen)) | lapis minimum: Kepala gudang Gudang Site; tanpa Kepala Gudang site → cadangan Manajemen (di demo: Budi Direktur) | bawaan kode | [A-150](wms/04-keputusan-dan-asumsi.md#a-150) |

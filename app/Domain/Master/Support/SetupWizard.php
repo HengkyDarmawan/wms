@@ -43,7 +43,7 @@ class SetupWizard
             $this->langkah('projects', 'Daftarkan klien & proyek', 'Proyek menentukan tujuan permintaan dan Gudang Site.', Project::query()->where('is_internal', false)->exists(), $this->rute('projects.index')),
             $this->langkah('users', 'Undang pengguna & atur role', 'Kepala gudang, staf, pemohon, klien.', User::query()->count() > 1, $this->rute('users.index')),
             $this->langkah('approval', 'Atur aturan approval', 'Opsional: tanpa aturan dokumen disetujui otomatis.', ApprovalRule::query()->exists(), $this->rute('approval.rules.index'), true),
-            $this->langkah('opening', 'Masukkan saldo awal', 'Lewat penyesuaian stok atau opname pembukaan.', StockBalance::query()->where('qty_base', '>', 0)->exists(), $this->rute('adjustments.create'), true),
+            $this->langkah('opening', 'Masukkan saldo awal', 'Impor Excel, penyesuaian stok, atau opname pembukaan.', StockBalance::query()->where('qty_base', '>', 0)->exists(), $this->rute('imports.index') ?? $this->rute('adjustments.create'), true),
         ];
     }
 

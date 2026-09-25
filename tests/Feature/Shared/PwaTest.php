@@ -21,6 +21,7 @@ class PwaTest extends TenantTestCase
         $manifest = json_decode((string) file_get_contents(public_path('manifest.webmanifest')), true);
         $this->assertSame('standalone', $manifest['display']);
         $this->assertSame('/', $manifest['start_url']);
+        $this->assertSame('#6366f1', $manifest['theme_color'], 'Warna tema PWA = --bs-primary NexaDash.');
 
         foreach ($manifest['icons'] as $ikon) {
             $this->assertFileExists(public_path(ltrim($ikon['src'], '/')));
@@ -32,7 +33,8 @@ class PwaTest extends TenantTestCase
         $this->assertStringContainsString("req.method !== 'GET'", $sw, 'POST tidak pernah disimpan.');
         $this->assertFileExists(public_path('offline.html'));
 
-        $this->get($this->tenantUrl('login'))->assertOk()->assertSee('/manifest.webmanifest', false);
+        $this->get($this->tenantUrl('login'))->assertOk()->assertSee('/manifest.webmanifest', false)
+            ->assertSee('<meta name="theme-color" content="#6366f1">', false);
         $this->actingAs($this->makeUser('warehouse_staff'))->get($this->tenantUrl('/'))->assertOk()
             ->assertSee('/manifest.webmanifest', false);
 
