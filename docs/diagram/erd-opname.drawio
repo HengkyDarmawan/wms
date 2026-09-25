@@ -29,10 +29,10 @@
           <mxGeometry y="26" width="260" height="328" as="geometry"/>
         </mxCell>
         <mxCell id="stock_adjustments" value="stock_adjustments" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="460" width="260" height="274" as="geometry"/>
+          <mxGeometry x="40" y="460" width="260" height="290" as="geometry"/>
         </mxCell>
-        <mxCell id="stock_adjustments_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;origin : enum&lt;br&gt;↗ stock_count_id : bigint&lt;br&gt;↗ reversal_of_id : bigint&lt;br&gt;↗ reason_code_id : bigint&lt;br&gt;status : enum&lt;br&gt;↗ submitted_by : bigint&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;↗ approved_by : bigint&lt;br&gt;approved_at : datetime&lt;br&gt;↗ reject_reason_id : bigint&lt;br&gt;posted_at : datetime&lt;br&gt;↗ cancel_reason_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="stock_adjustments">
-          <mxGeometry y="26" width="260" height="248" as="geometry"/>
+        <mxCell id="stock_adjustments_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;origin : enum&lt;br&gt;↗ stock_count_id : bigint&lt;br&gt;↗ goods_receipt_id : bigint&lt;br&gt;↗ reversal_of_id : bigint&lt;br&gt;↗ reason_code_id : bigint&lt;br&gt;status : enum&lt;br&gt;↗ submitted_by : bigint&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;↗ approved_by : bigint&lt;br&gt;approved_at : datetime&lt;br&gt;↗ reject_reason_id : bigint&lt;br&gt;posted_at : datetime&lt;br&gt;↗ cancel_reason_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="stock_adjustments">
+          <mxGeometry y="26" width="260" height="264" as="geometry"/>
         </mxCell>
         <mxCell id="stock_adjustment_lines" value="stock_adjustment_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="360" y="460" width="260" height="322" as="geometry"/>

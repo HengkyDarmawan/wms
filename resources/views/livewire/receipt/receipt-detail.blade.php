@@ -114,7 +114,13 @@
                                 {{ $l->trackingLabel() }}
                                 @if ($l->expiry_date) <div class="text-muted">{{ __('Kedaluwarsa') }} {{ $l->expiry_date->format('d/m/Y') }}</div> @endif
                             </td>
-                            <td class="text-end">{{ number_format((float) $l->qty_received, 2, ',', '.') }}</td>
+                            <td class="text-end">
+                                {{ number_format((float) $l->qty_received, 2, ',', '.') }}
+                                @if ((float) $l->qty_excess > 0)
+                                    {{-- BR-GRN-05, A-245: kelebihan tidak diposting GRN, melainkan lewat ADJ. --}}
+                                    <div class="small text-warning-emphasis">+{{ number_format((float) $l->qty_excess, 2, ',', '.') }} {{ __('kelebihan → ADJ') }}</div>
+                                @endif
+                            </td>
                             <td>{{ $l->receivingBin?->code ?? '—' }}</td>
                             <td>
                                 @if ($l->qc_result)

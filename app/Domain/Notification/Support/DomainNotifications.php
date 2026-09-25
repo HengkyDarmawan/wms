@@ -131,6 +131,17 @@ class DomainNotifications
         ));
     }
 
+    /** Rekonsiliasi saldo terjadwal menemukan selisih (BR-STK-01, A-243): Admin Company. */
+    public function balanceMismatch(int $count): void
+    {
+        $this->aman(fn () => $this->notifier->send(
+            $this->notifier->recipients('stock.lock_period'),
+            'stock.balance_mismatch', $count.' saldo stok tidak cocok dengan kartu stok',
+            'Saldo tidak diubah otomatis; periksa kartu stok item terkait dan koreksi lewat ADJ bila perlu.',
+            route('stock.index', [], false),
+        ));
+    }
+
     /** REQ diputus — ditolak saat tinjau atau keputusan akhir approval — ke pemohon (14 §8). */
     public function requestDecided(MaterialRequest $req, ?User $actor = null): void
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Receipt\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Adjustment\Actions\CreateStockAdjustment;
 use App\Domain\PurchaseRequest\Support\PurchaseReceipts;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Enums\ReceiptType;
@@ -95,6 +96,9 @@ class ReceiveGoodsReceipt
                 // Katalog §2.15: PRQ sebagian terpenuhi / dipenuhi dari GRN yang merujuknya.
                 ReceiptType::Vendor => app(PurchaseReceipts::class)->received($receipt, $actor),
             };
+
+            // BR-GRN-05 (A-245): kelebihan terima transfer/retur memicu ADJ `over_receipt`.
+            app(CreateStockAdjustment::class)->forOverReceipt($receipt, $actor);
 
             // BR-GRN-04: GRN pengganti menutup rantai RTV-nya.
             $rtv = $receipt->replacedReturn();

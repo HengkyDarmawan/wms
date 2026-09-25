@@ -80,8 +80,8 @@ class ShipmentDetail extends Component
 
         return view('livewire.shipment.shipment-detail', [
             'sj' => $sj,
-            'lines' => $sj->lines()->with('pickTaskLine.item:id,code,name', 'pickTaskLine.bin:id,code')->orderBy('id')->get(),
-            'bukti' => $sj->proof()->with('lines')->first(),
+            'lines' => $sj->lines()->with('pickTaskLine.item:id,code,name', 'pickTaskLine.bin:id,code', 'pickTaskLine.serial:id,serial_no', 'pickTaskLine.piece:id,piece_no')->orderBy('id')->get(),
+            'bukti' => $sj->proof()->with('lines.units')->first(),
             'selisih' => $sj->discrepancies()->with('lines.shipmentLine.pickTaskLine.item')->orderByDesc('id')->get(),
             'alasan' => $this->pilihanAlasan(ReasonContext::Cancel),
             'riwayat' => $this->riwayat($sj),
@@ -123,7 +123,7 @@ class ShipmentDetail extends Component
             $this->foto = null;
             $this->tandaTangan = '';
             $this->fotoRusak = [];
-            $this->terima = $sj->lines()->orderBy('id')->get()
+            $this->terima = $sj->lines()->with('pickTaskLine:id,serial_id,piece_id')->orderBy('id')->get()
                 ->mapWithKeys(fn ($l) => [$l->id => [
                     // Bawaannya seluruhnya baik: yang paling sering terjadi.
                     'qty_good' => (string) (float) $l->qty_shipped,
@@ -131,6 +131,9 @@ class ShipmentDetail extends Component
                     'qty_missing' => '0',
                     'damage_photo_path' => '',
                     'notes' => '',
+                    // A-244: serial/potongan dinilai per unit — satu pilihan kondisi.
+                    'kondisi' => $l->pickTaskLine?->serial_id !== null || $l->pickTaskLine?->piece_id !== null ? 'good' : null,
+                    'qty' => (float) $l->qty_shipped,
                 ]])->all();
         }
     }
@@ -190,6 +193,13 @@ class ShipmentDetail extends Component
         $baris = [];
 
         foreach ($this->terima as $id => $isi) {
+            // Unit serial/potongan: kondisi yang dipilih memegang seluruh jumlahnya.
+            if (in_array($isi['kondisi'] ?? null, ['good', 'damaged', 'missing'], true)) {
+                foreach (['good', 'damaged', 'missing'] as $k) {
+                    $isi['qty_'.$k] = $isi['kondisi'] === $k ? (float) $isi['qty'] : 0;
+                }
+            }
+
             $baris[] = [
                 'shipment_line_id' => $id,
                 'qty_good' => (float) ($isi['qty_good'] ?? 0),

@@ -13,7 +13,11 @@ use App\Domain\Adjustment\Models\StockAdjustmentLine;
 use App\Domain\Adjustment\Support\AdjustmentLines;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalEngine;
+use App\Domain\Master\Enums\ReasonContext;
+use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Serial;
+use App\Domain\Receipt\Models\GoodsReceipt;
+use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Support\DocumentNumber;
 use App\Domain\Warehouse\Models\Bin;
@@ -171,6 +175,61 @@ class CreateStockAdjustment
             activity('adjustment')->performedOn($adj)->causedBy($actor)
                 ->withProperties(['serial' => $serial->serial_no])
                 ->log('ADJ aset hilang diajukan');
+
+            return $this->ajukan($adj, $actor);
+        });
+    }
+
+    /**
+     * BR-GRN-05 (A-245): kelebihan terima GRN transfer/retur. Satu ADJ per GRN
+     * ber-asal `over_receipt`, baris + ke bin tempat GRN menaruh barangnya dengan
+     * kondisi yang sama, lalu lewat approval seperti ADJ manual (A-09).
+     */
+    public function forOverReceipt(GoodsReceipt $receipt, ?User $actor = null): ?StockAdjustment
+    {
+        $lebih = $receipt->lines()->with('returnLine')->where('qty_excess', '>', 0)->get();
+
+        if ($lebih->isEmpty()) {
+            return null;
+        }
+
+        $alasan = (int) ReasonCode::query()->where('context', ReasonContext::Adjustment->value)
+            ->orderByRaw("case when code = 'FOUND' then 0 else 1 end")->orderBy('id')->value('id');
+
+        if ($alasan === 0) {
+            throw AdjustmentRuleException::rule('BR-GEN-02', 'Master alasan penyesuaian kosong; kelebihan terima tidak bisa dicatat.');
+        }
+
+        $receipt->loadMissing('warehouse');
+
+        return DB::transaction(function () use ($receipt, $lebih, $alasan, $actor) {
+            $adj = StockAdjustment::create([
+                'number' => $this->nomor->next('ADJ', (string) $receipt->warehouse->code),
+                'warehouse_id' => $receipt->warehouse_id,
+                'origin' => AdjustmentOrigin::OverReceipt,
+                'goods_receipt_id' => $receipt->id,
+                'reason_code_id' => $alasan,
+                'status' => StockAdjustmentStatus::Submitted,
+                'submitted_by' => $actor?->id,
+                'notes' => 'Kelebihan terima '.$receipt->number,
+            ]);
+
+            foreach ($lebih as $l) {
+                StockAdjustmentLine::create([
+                    'stock_adjustment_id' => $adj->id,
+                    'item_id' => $l->item_id,
+                    'bin_id' => $l->receiving_bin_id,
+                    'lot_id' => $l->lot_id,
+                    'stock_status' => ($l->returnLine?->stock_status ?? StockStatus::Available)->value,
+                    'qty_delta' => (float) $l->qty_excess,
+                    'reason_code_id' => $alasan,
+                    'notes' => 'Kelebihan terima '.$receipt->number,
+                ]);
+            }
+
+            activity('adjustment')->performedOn($adj)->causedBy($actor)
+                ->withProperties(['grn' => $receipt->number, 'baris' => $lebih->count()])
+                ->log('ADJ kelebihan terima diajukan');
 
             return $this->ajukan($adj, $actor);
         });

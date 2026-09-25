@@ -143,6 +143,7 @@
                         </tbody>
                     </table>
                 </div>
+                <p class="small text-muted px-3 mb-2">{{ __('Jumlah di atas yang dikirim dicatat sebagai kelebihan dan diajukan lewat penyesuaian stok (ADJ), bukan lewat GRN.') }}</p>
                 @error('form.qty_received') <div class="text-danger small p-3">{{ $message }}</div> @enderror
             @endif
         </div>
@@ -181,6 +182,7 @@
                         </tbody>
                     </table>
                 </div>
+                <p class="small text-muted px-3 mb-2">{{ __('Jumlah di atas yang dikirim dicatat sebagai kelebihan dan diajukan lewat penyesuaian stok (ADJ), bukan lewat GRN.') }}</p>
                 @error('form.qty_received') <div class="text-danger small p-3">{{ $message }}</div> @enderror
             @endif
         </div>

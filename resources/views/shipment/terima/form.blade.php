@@ -32,8 +32,23 @@
             @php($id = $l->id)
             <div class="border rounded p-2 mb-2">
                 <div class="fw-semibold">{{ $l->pickTaskLine?->item?->code }} <span class="fw-normal text-muted small">{{ $l->pickTaskLine?->item?->name }}</span></div>
-                <div class="small text-muted mb-2">{{ __('Dikirim') }} {{ rtrim(rtrim(number_format((float) $l->qty_shipped, 4, ',', '.'), '0'), ',') }} {{ $l->pickTaskLine?->item?->baseUom?->code }}</div>
+                <div class="small text-muted mb-2">
+                    {{ __('Dikirim') }} {{ rtrim(rtrim(number_format((float) $l->qty_shipped, 4, ',', '.'), '0'), ',') }} {{ $l->pickTaskLine?->item?->baseUom?->code }}
+                    @if ($l->pickTaskLine?->serial) · {{ __('Serial') }} {{ $l->pickTaskLine->serial->serial_no }} @endif
+                    @if ($l->pickTaskLine?->piece) · {{ __('Potongan') }} {{ $l->pickTaskLine->piece->piece_no }} @endif
+                </div>
                 <div class="row g-2">
+                    @if ($l->pickTaskLine?->serial_id !== null || $l->pickTaskLine?->piece_id !== null)
+                        {{-- A-244: satu unit — baik, rusak, atau kurang seluruhnya. --}}
+                        <div class="col-12">
+                            <label class="form-label small mb-0" for="kondisi-{{ $id }}">{{ __('Kondisi unit') }}</label>
+                            <select class="form-select form-select-sm" id="kondisi-{{ $id }}" name="lines[{{ $id }}][condition]">
+                                @foreach (\App\Domain\Shipment\Enums\PodUnitCondition::cases() as $k)
+                                    <option value="{{ $k->value }}" @selected(old('lines.'.$id.'.condition', 'good') === $k->value)>{{ $k->label() }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @else
                     <div class="col-4">
                         <label class="form-label small mb-0" for="baik-{{ $id }}">{{ __('Baik') }}</label>
                         <input class="form-control form-control-sm" id="baik-{{ $id }}" type="number" step="any" min="0"
@@ -49,6 +64,7 @@
                         <input class="form-control form-control-sm" id="kurang-{{ $id }}" type="number" step="any" min="0"
                                name="lines[{{ $id }}][qty_missing]" value="{{ old('lines.'.$id.'.qty_missing', '0') }}">
                     </div>
+                    @endif
                     <div class="col-12">
                         <label class="form-label small mb-0" for="foto-{{ $id }}">{{ __('Foto kerusakan') }} <span class="text-muted">({{ __('wajib bila rusak') }})</span></label>
                         <input class="form-control form-control-sm" id="foto-{{ $id }}" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" name="photos[{{ $id }}]">

@@ -131,7 +131,7 @@ Satu kelas aksi per permission (menjawab alternatif [A-73](04-keputusan-dan-asum
 | [BR-GRN-02](05-aturan-bisnis.md#br-grn) | QC per baris; `completed` ditolak selama ada baris Karantina tanpa hasil; efek stok per hasil [A-78](04-keputusan-dan-asumsi.md#a-78) |
 | [BR-GRN-03](05-aturan-bisnis.md#br-grn) | `PutawaySuggester` ([A-84](04-keputusan-dan-asumsi.md#a-84)); bin tujuan harus bin penyimpanan gudang yang sama; ganti saran = alasan wajib |
 | [BR-GRN-04](05-aturan-bisnis.md#br-grn) | RTV hanya dari baris di bin Karantina berhasil QC `rejected`/`quarantined`; GRN pengganti merujuk RTV; baris yang dimuat RTV berjalan tidak bisa diputus ulang QC |
-| [BR-GRN-05](05-aturan-bisnis.md#br-grn) | GRN transfer ≤ jumlah baik bukti terima; satu GRN aktif per SJ ([A-82](04-keputusan-dan-asumsi.md#a-82)) |
+| [BR-GRN-05](05-aturan-bisnis.md#br-grn) | GRN transfer ≤ jumlah baik bukti terima (retur ≤ yang dikirim/diajukan); kelebihannya disimpan di `qty_excess` dan memicu ADJ `over_receipt` saat GRN diterima ([A-245](04-keputusan-dan-asumsi.md#a-245)); satu GRN aktif per SJ ([A-82](04-keputusan-dan-asumsi.md#a-82)); GRN vendor/PO tetap menolak kelebihan ([A-214](04-keputusan-dan-asumsi.md#a-214)) |
 | [BR-LED-03](05-aturan-bisnis.md#br-led), [BR-LED-04](05-aturan-bisnis.md#br-led) | Nomor lot/serial/panjang wajib sesuai mode item; serial ganda dalam satu GRN ditolak |
 | [BR-STK-09](05-aturan-bisnis.md#br-stk), [BR-STK-12](05-aturan-bisnis.md#br-stk) | Potongan per panjang; kedaluwarsa wajib bila item ber-`has_expiry`; lot sama dengan kedaluwarsa beda ditolak |
 | [BR-STK-13](05-aturan-bisnis.md#br-stk), [BR-SJ-04](05-aturan-bisnis.md#br-sj) | Transfer: barang milik gudang asal (Dalam Perjalanan) sampai GRN tujuan `received` |
@@ -192,7 +192,7 @@ Uji di `tests/Feature/Receipt`.
 | TC-GRN-08 | Draf / GRN diterima | batal tanpa alasan / dengan alasan / GRN diterima | ditolak / `cancelled` / ditolak | BR-GEN-11, BR-GEN-04 |
 | TC-GRN-09 | Baris Karantina tanpa hasil QC | selesaikan | ditolak | BR-GRN-02 |
 | TC-GRN-10 | Tanpa QC + lolos + ditolak | selesaikan | satu PUT untuk dua baris pertama | KS 2.6 |
-| TC-GRN-11 | SJ ke gudang BKS, bukti terima 18 baik 2 kurang | GRN transfer | sebelum bukti terima / gudang salah / 19 / GRN kedua ditolak; terima: BKS Penerimaan 18, CKG transit 2, `stock_transferred` | BR-SJ-04, BR-GRN-05, A-81, A-82 |
+| TC-GRN-11 | SJ ke gudang BKS, bukti terima 18 baik 2 kurang | GRN transfer | sebelum bukti terima / gudang salah / GRN kedua ditolak; isian 19 → diterima 18 + kelebihan 1; terima: BKS Penerimaan 18, CKG transit 2, `stock_transferred`, ADJ `over_receipt` +1 ke Penerimaan BKS menunggu approval | BR-SJ-04, BR-GRN-05, A-81, A-82 |
 | TC-GRN-11b | Stok di Dalam Perjalanan | buat PCK | tidak dialokasikan | A-84 |
 | TC-GRN-12 | — | GRN sumber retur tanpa RET | ditolak (v0.5; sebelumnya BR-GEN-10) | BR-RET-01 |
 | TC-GRN-13 | Periode terkunci hari ini | terima | ditolak, tetap draf | BR-STK-15 |
@@ -224,7 +224,7 @@ Uji di `tests/Feature/Receipt`.
 
 ## 11. Di luar lingkup modul ini
 
-GRN dari RET dan pemilahan retur (modul `return`); status PRQ dan reservasi backorder PRQ ke REQ penunggu ([BR-REQ-08](05-aturan-bisnis.md#br-req)) — modul `purchase_request` ([26](26-purchase-request.md)); penyelesaian TRF (modul `transfer`); ADJ untuk kelebihan terima; pemindaian PWA `[F2]`; label barcode.
+GRN dari RET dan pemilahan retur (modul `return`); status PRQ dan reservasi backorder PRQ ke REQ penunggu ([BR-REQ-08](05-aturan-bisnis.md#br-req)) — modul `purchase_request` ([26](26-purchase-request.md)); penyelesaian TRF (modul `transfer`); pemindaian PWA `[F2]`; label barcode.
 
 ## 12. Definisi selesai
 
@@ -264,7 +264,7 @@ Domain `app/Domain/Receipt`: dua belas aksi (`SaveGoodsReceipt`, `ReceiveGoodsRe
 
 1. **Cross-dock** ([A-83](04-keputusan-dan-asumsi.md#a-83)) — menunggu keputusan cara memuat baris cross-dock ke SJ; reservasi ke REQ penunggu sudah ada untuk barang TRF ([A-108](04-keputusan-dan-asumsi.md#a-108)) dan PRQ ([A-171](04-keputusan-dan-asumsi.md#a-171)).
 2. ~~**GRN retur**~~ — **selesai v0.5** ([22-retur-transfer](22-retur-transfer.md)); GRN barang rusak yang dibawa balik (DSC `return_receipt_id`) sengaja tidak dibuat ([A-114](04-keputusan-dan-asumsi.md#a-114)).
-3. **ADJ untuk kelebihan terima** (BR-GRN-05) — modul Adjustment.
+3. ~~ADJ untuk kelebihan terima~~ (BR-GRN-05) — selesai 25 Sep 2026: `CreateStockAdjustment::forOverReceipt` dari `ReceiveGoodsReceipt` ([A-245](04-keputusan-dan-asumsi.md#a-245), TC-GRN-11).
 4. **`StockLedger::rebuildFromLedger()` tidak mengenal perubahan kondisi**: kartu stok tidak menyimpan kondisi asal (`fromStockStatus`), sehingga QC dan barang rusak saat terima menghasilkan saldo turunan yang salah per kondisi. Saldo transaksional tetap benar; perlu kolom `from_stock_status` di `stock_movements` (keputusan modul Stock).
 5. ~~**`StockLedger::availableQty()` menghitung semua bin gudang**~~ — **diperbaiki 24 Sep 2026**: hanya bin `storage` ([A-85](04-keputusan-dan-asumsi.md#a-85)); TC-GRN-11b kini membuktikan approval REQ menolak janji atas stok Dalam Perjalanan. Catatan semula: termasuk Penerimaan, Karantina berkondisi Tersedia, dan Dalam Perjalanan; approval REQ bisa menjanjikan barang yang belum di-put-away.
 6. Notifikasi §8, pemindaian PWA `[F2]`; ~~laporan §9~~ selesai ([A-241](04-keputusan-dan-asumsi.md#a-241)). Cetak RTV dan label **selesai** lewat modul Template ([18-template-dokumen-label](18-template-dokumen-label.md)).

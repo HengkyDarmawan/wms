@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Shipment;
 
 use App\Domain\Shipment\Actions\ConfirmDelivery;
 use App\Domain\Shipment\Actions\IssueDeliveryToken;
+use App\Domain\Shipment\Enums\PodUnitCondition;
 use App\Domain\Shipment\Enums\ProofChannel;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Models\DeliveryToken;
@@ -37,7 +38,7 @@ class DeliveryTokenController extends Controller
             return response()->view('shipment.terima.mati', [], 410);
         }
 
-        $sj = $baris->shipment()->with('warehouse:id,code,name', 'destinationProject:id,code,name', 'lines.pickTaskLine.item:id,code,name,base_uom_id', 'lines.pickTaskLine.item.baseUom:id,code')->first();
+        $sj = $baris->shipment()->with('warehouse:id,code,name', 'destinationProject:id,code,name', 'lines.pickTaskLine.item:id,code,name,base_uom_id', 'lines.pickTaskLine.item.baseUom:id,code', 'lines.pickTaskLine.serial:id,serial_no', 'lines.pickTaskLine.piece:id,piece_no')->first();
 
         if ($baris->used_at !== null && $sj?->proof()->exists()) {
             return view('shipment.terima.selesai', ['sj' => $sj, 'bukti' => $sj->proof()->with('lines')->first()]);
@@ -83,6 +84,7 @@ class DeliveryTokenController extends Controller
             'lines.*.qty_good' => ['nullable', 'numeric', 'min:0'],
             'lines.*.qty_damaged' => ['nullable', 'numeric', 'min:0'],
             'lines.*.qty_missing' => ['nullable', 'numeric', 'min:0'],
+            'lines.*.condition' => ['nullable', 'in:good,damaged,missing'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'photos.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'signature' => ['nullable', 'string', 'max:2000000'],
@@ -92,8 +94,18 @@ class DeliveryTokenController extends Controller
         $disimpan = $berkas->simpan($sj, $request->file('photo'), $request->input('signature'), (array) ($request->file('photos') ?? []));
 
         $isian = [];
+        $dikirim = $sj->lines()->pluck('qty_shipped', 'id');
 
         foreach ((array) $request->input('lines', []) as $lineId => $nilai) {
+            // A-244: unit serial/potongan memilih satu kondisi untuk seluruh jumlahnya.
+            $kondisi = PodUnitCondition::tryFrom((string) ($nilai['condition'] ?? ''));
+
+            if ($kondisi !== null) {
+                foreach (PodUnitCondition::cases() as $k) {
+                    $nilai['qty_'.$k->value] = $k === $kondisi ? (float) ($dikirim[(int) $lineId] ?? 0) : 0;
+                }
+            }
+
             $isian[] = [
                 'shipment_line_id' => (int) $lineId,
                 'qty_good' => (float) ($nilai['qty_good'] ?? 0),

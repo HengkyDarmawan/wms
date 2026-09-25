@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `picking` & `shipment` (Picking, Surat Jalan, Bukti Terima, Selisih)
 
-**Versi:** 0.12
+**Versi:** 0.13
 **Tanggal:** 25 September 2026
 **Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188)); v0.9: halaman penerima bertoken `/terima/{token}` dan unggah foto/tanda tangan bukti terima ([A-231](04-keputusan-dan-asumsi.md#a-231), §6, §13.3)
 **Modul:** `picking`, `shipment`
@@ -209,6 +209,7 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 | TC-DSC-05 | Disposisi tanpa alasan bila menuntut | selesaikan | ditolak | BR-GEN-11 |
 | TC-SJ-13 | User tanpa `shipment.view` | buka daftar SJ | 403 | BR-GEN-09 |
 | TC-SJ-14 | Klien proyek lain | buka SJ | 404 | BR-ACC-05 |
+| TC-SJ-18 | SJ aset berserial (1 unit) terkirim | bukti terima dibagi 0,5 baik + 0,5 rusak; lalu seluruhnya baik | pembagian ditolak BR-SJ-05; layar driver menawarkan satu pilihan kondisi berserial; baris `proof_of_delivery_units` (serial, `good`) | BR-SJ-05, A-64, [A-244](04-keputusan-dan-asumsi.md#a-244) |
 
 ## 11. Di luar lingkup modul ini
 
@@ -307,8 +308,7 @@ Uji yang menopangnya ada di `tests/Feature/Shipment`: `PickTaskTest` (TC-PCK-01�
 ### 13.4 Sisa pekerjaan modul ini
 
 1. ~~Halaman penerima bertoken~~ — **selesai 25 Sep 2026** ([A-231](04-keputusan-dan-asumsi.md#a-231)); pengiriman OTP otomatis menunggu [O-15](04-keputusan-dan-asumsi.md#o-15).
-2. **Bukti terima per unit** untuk item berserial dan per potong — tabelnya ada, pengisiannya menunggu
-   pemindaian di PWA ([BR-SJ-05](05-aturan-bisnis.md#br-sj)).
+2. ~~Bukti terima per unit~~ untuk item berserial dan per potong — selesai 25 Sep 2026: satu baris SJ = satu unit, dinilai utuh baik/rusak/kurang (pilihan kondisi di layar driver & halaman penerima), dicatat di `proof_of_delivery_units` ([A-244](04-keputusan-dan-asumsi.md#a-244), TC-SJ-18); pemindaian PWA tetap `[F2]`.
 3. ~~Konfirmasi dan keberatan pemohon~~ — **selesai** ([BR-REQ-10](05-aturan-bisnis.md#br-req), [A-188](04-keputusan-dan-asumsi.md#a-188)): kartu bukti terima di REQ back-office & portal klien, keberatan berfoto membuka DSC, konfirmasi otomatis lewat batas ([27-pendukung-f1](27-pendukung-f1.md)).
 4. **Cross-dock dari GRN** ([BR-SJ-03](05-aturan-bisnis.md#br-sj), [A-83](04-keputusan-dan-asumsi.md#a-83)) — menunggu keputusan A-83. GRN retur
    untuk barang rusak yang dibawa balik tidak dibuat ([A-114](04-keputusan-dan-asumsi.md#a-114)); modul Retur sudah ada ([22](22-retur-transfer.md)).

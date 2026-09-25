@@ -122,20 +122,35 @@
                         <tbody>
                             @foreach ($lines as $l)
                                 <tr wire:key="terima-{{ $l->id }}">
-                                    <td>{{ $l->pickTaskLine?->item?->code }}</td>
+                                    <td>
+                                        {{ $l->pickTaskLine?->item?->code }}
+                                        @if ($l->pickTaskLine?->serial) <div class="small text-muted">{{ __('Serial') }} {{ $l->pickTaskLine->serial->serial_no }}</div> @endif
+                                        @if ($l->pickTaskLine?->piece) <div class="small text-muted">{{ __('Potongan') }} {{ $l->pickTaskLine->piece->piece_no }}</div> @endif
+                                    </td>
                                     <td class="text-end">{{ number_format((float) $l->qty_shipped, 2, ',', '.') }}</td>
-                                    <td>
-                                        <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
-                                               wire:model="terima.{{ $l->id }}.qty_good">
-                                    </td>
-                                    <td>
-                                        <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
-                                               wire:model="terima.{{ $l->id }}.qty_damaged">
-                                    </td>
-                                    <td>
-                                        <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
-                                               wire:model="terima.{{ $l->id }}.qty_missing">
-                                    </td>
+                                    @if (($terima[$l->id]['kondisi'] ?? null) !== null)
+                                        {{-- A-244: satu unit — baik, rusak, atau kurang seluruhnya. --}}
+                                        <td colspan="3">
+                                            <select class="form-select form-select-sm" wire:model="terima.{{ $l->id }}.kondisi" aria-label="{{ __('Kondisi unit') }}">
+                                                @foreach (\App\Domain\Shipment\Enums\PodUnitCondition::cases() as $k)
+                                                    <option value="{{ $k->value }}">{{ $k->label() }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                    @else
+                                        <td>
+                                            <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
+                                                   wire:model="terima.{{ $l->id }}.qty_good">
+                                        </td>
+                                        <td>
+                                            <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
+                                                   wire:model="terima.{{ $l->id }}.qty_damaged">
+                                        </td>
+                                        <td>
+                                            <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
+                                                   wire:model="terima.{{ $l->id }}.qty_missing">
+                                        </td>
+                                    @endif
                                     <td>
                                         <input class="form-control form-control-sm @error('fotoRusak.'.$l->id) is-invalid @enderror" type="file"
                                                accept="image/jpeg,image/png,image/webp" capture="environment"

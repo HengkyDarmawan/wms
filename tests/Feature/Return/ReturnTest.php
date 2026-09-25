@@ -19,7 +19,6 @@ use App\Domain\Return\Enums\GoodsReturnStatus;
 use App\Domain\Return\Enums\ReturnOwnership;
 use App\Domain\Return\Exceptions\ReturnRuleException;
 use App\Domain\Return\Models\GoodsReturn;
-use App\Domain\Shipment\Actions\ProcessPickTask;
 use App\Domain\Shipment\Enums\PickTaskStatus;
 use App\Domain\Stock\Enums\ReservationLevel;
 use App\Domain\Stock\Models\StockReservation;
@@ -221,9 +220,7 @@ class ReturnTest extends TenantTestCase
             'receipt_type' => 'return', 'warehouse_id' => $this->bks->id, 'goods_return_id' => $ret->id,
         ], [], $this->makeUser()), 'BR-RET-01', ReceiptRuleException::class);
 
-        // BR-GRN-05: tidak lebih dari yang diajukan (tanpa SJ).
-        $this->gagal(fn () => $this->grnRetur($ret, [['goods_return_line_id' => $baris->id, 'qty_received' => 6]]), 'BR-GRN-05', ReceiptRuleException::class);
-
+        // BR-GRN-05: kelebihan atas yang diajukan menjadi ADJ (A-245, TC-GRN-11).
         $grn = $this->grnRetur($ret, [['goods_return_line_id' => $baris->id, 'qty_received' => 4]]);
         $this->assertSame(GoodsReturnStatus::Received, $ret->refresh()->status);
         $this->assertSame(4.0, (float) $baris->refresh()->qty_received);

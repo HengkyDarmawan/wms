@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.49
+**Versi:** 0.50
 **Tanggal:** 25 September 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (579 uji hijau di MariaDB 10.4). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep, [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md)); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai; berikutnya: validasi asumsi A-72–A-225 oleh pemilik produk. D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; **[A-72–A-76](wms/04-keputusan-dan-asumsi.md#25-baru-dari-pencocokan-dokumen-dengan-kode--24-sep-2026) dan [A-77–A-116](wms/04-keputusan-dan-asumsi.md#26-baru-dari-pembangunan-modul-lanjutan--24-sep-2026), [A-120–A-126](wms/04-keputusan-dan-asumsi.md#27-baru-dari-modul-template-dokumen--label--24-sep-2026), [A-117–A-119 dan A-150–A-152](wms/04-keputusan-dan-asumsi.md#28-baru-dari-modul-issue-pemakaian-material-di-site--24-sep-2026), [A-153–A-162](wms/04-keputusan-dan-asumsi.md#29-baru-dari-modul-konversi--waste--24-sep-2026), [A-163–A-169](wms/04-keputusan-dan-asumsi.md#210-baru-dari-modul-aset-dipinjamkan--24-sep-2026), [A-170–A-175](wms/04-keputusan-dan-asumsi.md#211-baru-dari-modul-purchase-request--25-sep-2026), [A-176–A-184](wms/04-keputusan-dan-asumsi.md#212-baru-dari-modul-platform-penuh--25-sep-2026), [A-185–A-194](wms/04-keputusan-dan-asumsi.md#213-baru-dari-pendukung-fase-1--25-sep-2026), [A-195–A-205](wms/04-keputusan-dan-asumsi.md#214-baru-dari-tinjauan-kode-pendukung--platform--25-sep-2026) menunggu validasi** (lahir dari pencocokan dokumen dengan kode dan dari pembangunan modul). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -20,7 +20,7 @@ docs/
 ├── 00-akun-uji.md                         ← SATU-SATUNYA daftar akun seed/demo (Super Admin, company DEMO, 14 akun tenant, org, stok awal, aturan approval demo)
 ├── 00-laporan-progres-2026-09-24.md     ← hasil E2E skenario §5, cakupan TC 178/178, peta progres Fase 1, bug pengiriman ↔ REQ
 ├── 00-tinjauan-asumsi-2026-09-25.md     ← daftar kerja 100 asumsi *Perlu validasi* (A-72–A-194) untuk pemilik produk, ⚠ = paling berdampak
-├── 00-catatan-perubahan-arsip.md         ← catatan perubahan README v0.2–v0.9 (dipindah agar README ≤ 450 baris)
+├── 00-catatan-perubahan-arsip.md         ← catatan perubahan README v0.2–v0.10 (dipindah agar README ≤ 450 baris)
 ├── 00-setup-lokal.md                      ← instalasi & menjalankan aplikasi: profil rumah (Laragon) dan kantor (XAMPP + MariaDB), hosts, seed, skenario uji manual
 ├── 00-audit/README.md                     ← indeks ID temuan prototipe (BUG/UX/SEC/T) yang dirujuk
 ├── 00-audit/alur-proses.html              ← bacaan cepat: 10 alur BPMN sebagai diagram alir sederhana — DIBUAT OTOMATIS dari diagram/_generate_alur_html.py
@@ -106,6 +106,10 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.50 — 25 September 2026 (sesi rumah: Sisa Fase 1 butir 2f)
+- **Rekonsiliasi saldo terjadwal** `stock:reconcile` 02:00, hanya melapor ([A-243](wms/04-keputusan-dan-asumsi.md#a-243), TC-STK-35); **bukti terima per unit** serial/potongan ([A-244](wms/04-keputusan-dan-asumsi.md#a-244), TC-SJ-18); **kelebihan terima GRN transfer/retur → ADJ `over_receipt`**, migrasi tenant `000240_add_over_receipt_columns` ([A-245](wms/04-keputusan-dan-asumsi.md#a-245), TC-GRN-11). Transfer aset On-site antar proyek menunggu keputusan ([A-116](wms/04-keputusan-dan-asumsi.md#a-116)).
+- Katalog v0.20 (`adjustment_origin` + `over_receipt`); model data (`qty_excess`, `stock_adjustments.goods_receipt_id`); spesifikasi [13](wms/13-stock.md) v0.12, [15](wms/15-picking-shipment.md) v0.13, [19](wms/19-receipt-putaway.md), [21](wms/21-opname-penyesuaian.md), [27](wms/27-pendukung-f1.md); 04 v0.38; tinjauan asumsi v1.12; laporan progres v1.20; arsip changelog v1.4 (blok v0.10 dipindah).
 
 ### v0.49 — 25 September 2026 (sesi rumah: laporan §9 modul 19–22, short pick TRF)
 - **16 laporan §9** modul 19–22 (`penerimaan-vendor` … `rusak-bin-retur`, total 41 laporan) + `Reports\Concerns\{LatestInbound, ApprovalScope}` — [A-241](wms/04-keputusan-dan-asumsi.md#a-241), uji TC-RPT-07–10; **short pick PCK TRF → TRF backorder pengganti** untuk REQ penunggu — [A-242](wms/04-keputusan-dan-asumsi.md#a-242), TC-TRF-17. SJ balik barang di tangan klien menunggu keputusan pemilik ([A-111](wms/04-keputusan-dan-asumsi.md#a-111)).
@@ -437,10 +441,3 @@ docs/
 - **Aksi domain baru:** `SaveOrgUnit`, `DeactivateOrgUnit`, `SavePosition`, `RevokeDevice`; unit maupun jabatan yang masih dipakai user aktif tidak bisa dinonaktifkan.
 - **Perbaikan:** `device.manage` tanpa `device.view` kini hanya berlaku untuk perangkat sendiri; waktu akses dukungan disimpan UTC meski diisi memakai zona waktu company (BR-GEN-07).
 - **Pengujian:** 60 → **82 uji / 542 asersi**, semua hijau (TC-ACC-UI-30–37, 40–45, 50–54 baru). `wms/10-access.md` → v0.4 (status selesai Fase 1, §13.4 sisa pekerjaan).
-
-### v0.10 — 23 September 2026 (layar Pengguna & Role)
-- **Layar §6.3 Pengguna:** daftar dengan pencarian dan filter role/status/unit/cakupan; form tambah-ubah dengan penugasan role × cakupan berulang; detail bertab (Ringkasan, Penugasan Role, Perangkat, Riwayat). Aksi: undang ulang, kirim tautan atur ulang password, nonaktifkan (*Alasan* `*` + *Keterangan* opsional, BR-GEN-11), aktifkan kembali.
-- **Layar §6.4 Role:** daftar role dengan jumlah permission & penugasan; form dengan matriks permission per modul, salin dari role lain, dan penonaktifan role buatan company. Role bawaan tetap tidak bisa dinonaktifkan.
-- **Aksi domain baru:** `CreateUser`, `UpdateUser`, `ReactivateUser`, `SendPasswordReset`, `SaveRole`, `DeactivateRole`; menegakkan BR-ACC-01 (wajib punya penugasan), BR-ACC-02 (Admin Company terakhir), BR-ACC-03 (role Klien eksklusif), BR-ACC-04 (cakupan `all`).
-- **Menu Administrasi** di sidebar tampil sesuai permission; pesan aksi memakai event Livewire + Alpine.
-- **Pengujian:** 40 → **60 uji / 414 asersi**, semua hijau (TC-ACC-UI-01–11 dan TC-ACC-UI-20–27 baru). `wms/10-access.md` → v0.3 (§13.3 daftar layar yang sudah ada, §13.4 sisa pekerjaan).

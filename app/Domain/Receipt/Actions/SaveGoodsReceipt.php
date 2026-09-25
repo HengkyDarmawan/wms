@@ -108,6 +108,26 @@ class SaveGoodsReceipt
         });
     }
 
+    /**
+     * BR-GRN-05 (A-245): jumlah di atas batas rujukan (SJ/RET) = kelebihan.
+     * Serial dan potongan adalah unit tercatat — kelebihannya tidak mungkin
+     * datang dari luar, jadi tetap ditolak.
+     */
+    private function kelebihan(float $qty, float $batas, string $kode, bool $unit): float
+    {
+        $lebih = round($qty - $batas, 4);
+
+        if ($lebih <= 0.00005) {
+            return 0.0;
+        }
+
+        if ($unit) {
+            throw ReceiptRuleException::field('BR-GRN-05', 'qty_received', 'Baris '.$kode.': serial/potongan tidak bisa diterima melebihi yang dikirim.');
+        }
+
+        return $lebih;
+    }
+
     /** @param  array<string, mixed>  $header */
     private function gudang(?GoodsReceipt $receipt, array $header): Warehouse
     {
@@ -278,17 +298,11 @@ class SaveGoodsReceipt
                 continue;
             }
 
-            // BR-GRN-05: tidak boleh menerima lebih dari yang dikirim dan diterima baik.
-            if ($qty - $baik > 0.00005) {
-                throw ReceiptRuleException::field(
-                    'BR-GRN-05',
-                    'qty_received',
-                    'Baris '.$sl->pickTaskLine?->item?->code.': diterima '.$qty.' melebihi jumlah baik '.$baik
-                    .'. Kelebihan dicatat lewat penyesuaian stok, bukan GRN.',
-                );
-            }
-
             $asal = $sl->pickTaskLine;
+
+            // BR-GRN-05 (A-245): GRN hanya menerima sampai jumlah baik; kelebihannya
+            // dicatat terpisah dan memicu ADJ saat GRN diterima.
+            $lebih = $this->kelebihan($qty, $baik, (string) $asal?->item?->code, $asal?->serial_id !== null || $asal?->piece_id !== null);
 
             $baris[] = [
                 'item_id' => $asal->item_id,
@@ -296,7 +310,8 @@ class SaveGoodsReceipt
                 'lot_id' => $asal->lot_id,
                 'serial_id' => $asal->serial_id,
                 'piece_id' => $asal->piece_id,
-                'qty_received' => $qty,
+                'qty_received' => round($qty - $lebih, 4),
+                'qty_excess' => $lebih,
             ];
         }
 
@@ -376,14 +391,8 @@ class SaveGoodsReceipt
                 continue;
             }
 
-            // BR-GRN-05: tidak boleh menerima lebih dari yang dikirim.
-            if ($qty - $maks > 0.00005) {
-                throw ReceiptRuleException::field(
-                    'BR-GRN-05',
-                    'qty_received',
-                    'Baris '.$rl->item->code.': diterima '.$qty.' melebihi yang dikirim ('.$maks.'). Kelebihan dicatat lewat penyesuaian stok, bukan GRN.',
-                );
-            }
+            // BR-GRN-05 (A-245): kelebihan atas yang dikirim dicatat terpisah → ADJ.
+            $lebih = $this->kelebihan($qty, $maks, (string) $rl->item->code, $rl->serial_id !== null || $rl->piece_id !== null);
 
             if (($rl->serial_id !== null || $rl->piece_id !== null) && abs($qty - $maks) > 0.00005) {
                 throw ReceiptRuleException::field('BR-LED-03', 'qty_received', 'Baris '.$rl->item->code.': serial dan potongan diterima utuh.');
@@ -396,7 +405,8 @@ class SaveGoodsReceipt
                 'lot_id' => $rl->lot_id,
                 'serial_id' => $rl->serial_id,
                 'piece_id' => $rl->piece_id,
-                'qty_received' => $qty,
+                'qty_received' => round($qty - $lebih, 4),
+                'qty_excess' => $lebih,
             ];
         }
 

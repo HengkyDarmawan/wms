@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `stock` (Kartu Stok, Saldo, Reservasi, Kejadian)
 
-**Versi:** 0.11
+**Versi:** 0.12
 **Tanggal:** 25 September 2026
 **Status:** terimplementasi (Fase 1) — modul keempat setelah [Warehouse](12-warehouse.md); v0.5: kunci periode otomatis dari sesi opname bulanan dan `reverse()` untuk dokumen pembalik ([21-opname-penyesuaian](21-opname-penyesuaian.md)); v0.6: `Stock\Support\RemovalOrder` — urutan alokasi FIFO/FEFO/sisa potongan/manual untuk PCK ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185)); v0.7: kolom `stock_movements.from_stock_status` — perubahan kondisi bisa dibangun ulang & dibalik dengan benar ([A-194](04-keputusan-dan-asumsi.md#a-194))
 **Modul:** `stock`
@@ -146,6 +146,7 @@ Seluruh baris [matriks §14](05-aturan-bisnis.md#14-matriks-kejadian-stok) diter
 |---|---|---|---|
 | Reservasi menggantung melewati ambang | Kepala Gudang (pemegang `reservation.release` di gudangnya), pemohon | in-app, harian | `stock.reservation_stale`, satu entri per dokumen ([A-235](04-keputusan-dan-asumsi.md#a-235)) |
 | Periode stok dikunci | Admin Company, seluruh Kepala Gudang (pemegang `warehouse.update`) | in-app | `stock.period_locked` |
+| Saldo tidak cocok dengan kartu stok (rekonsiliasi harian) | Admin Company (pemegang `stock.lock_period`) | in-app, email | `stock.balance_mismatch` ([A-243](04-keputusan-dan-asumsi.md#a-243)) |
 | Kejadian outbox gagal terkirim berulang | Admin Company | in-app | belum — tanpa penerbit sampai adapter [F3] ([A-237](04-keputusan-dan-asumsi.md#a-237)) |
 
 ## 9. Laporan & dashboard
@@ -195,10 +196,11 @@ Seluruh baris [matriks §14](05-aturan-bisnis.md#14-matriks-kejadian-stok) diter
 | TC-STK-32 | Kejadian gagal terkirim | buka outbox | galat terakhir dan jumlah percobaan tampil | AD-05 |
 | TC-STK-33 | Periode terkunci sampai kemarin | kunci mundur seminggu | ditolak dengan kode BR-STK-15; riwayat pemajuan tampil | BR-STK-15 |
 | TC-STK-34 | Company demo baru | jalankan `DemoSeeder` dua kali | saldo empat item contoh terbentuk lewat kartu stok, tiap pergerakan punya kejadian outbox, jalankan ulang tidak menggandakan | P-01, BR-LED-06, A-72 |
+| TC-STK-35 | Saldo cocok, lalu satu saldo dirusak di luar kartu stok | `stock:reconcile` | cocok → tanpa selisih; dirusak → 1 selisih (kartu 6, saldo 9), saldo **tidak** diubah, Admin Company diberi tahu `stock.balance_mismatch`, Kepala Gudang tidak | BR-STK-01, P-01, [A-243](04-keputusan-dan-asumsi.md#a-243) |
 
 ## 11. Di luar lingkup modul ini
 
-Seluruh dokumen (modul masing-masing); saran put-away; sesi opname; pengiriman kejadian lewat HTTP (Fase 3); rekonsiliasi saldo terjadwal; laporan akurasi opname.
+Seluruh dokumen (modul masing-masing); saran put-away; sesi opname; pengiriman kejadian lewat HTTP (Fase 3); laporan akurasi opname.
 
 ## 12. Definisi selesai
 
@@ -282,7 +284,7 @@ Uji yang menopangnya ada di `tests/Feature/Stock`: `StockLedgerTest` (TC-STK-01�
 ### 13.4 Sisa pekerjaan modul ini
 
 1. **Pengiriman kejadian lewat HTTP** ke Akuntansi dan Purchasing — Fase 3; Fase 1 berhenti di tabel outbox.
-2. **Rekonsiliasi saldo terjadwal** memakai `StockLedger::rebuildFromLedger()` — menunggu keputusan jadwal.
+2. ~~Rekonsiliasi saldo terjadwal~~ — selesai 25 Sep 2026: `stock:reconcile` 02:00 (`Stock\Support\StockReconciler` membandingkan `rebuildFromLedger()` dengan `stock_balances`), hanya melapor ke Admin Company, tanpa perbaikan otomatis ([A-243](04-keputusan-dan-asumsi.md#a-243), TC-STK-35).
 3. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 25 Sep 2026**: *Kartu stok*, *Reservasi menggantung*, *Stok di bawah titik pesan ulang* (dan *Saldo stok* sejak Pendukung F1) di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-232](04-keputusan-dan-asumsi.md#a-232)).
 4. ~~Penutupan Gudang Site otomatis saat proyek ditutup~~ — **selesai** ([BR-PRJ-04](05-aturan-bisnis.md#br-prj)) lewat `ChangeProjectStatus` ([12-warehouse §13](12-warehouse.md), [A-187](04-keputusan-dan-asumsi.md#a-187)).
 5. **Pemberitahuan §8** — reservasi menggantung dan periode dikunci selesai 25 Sep 2026 ([A-233](04-keputusan-dan-asumsi.md#a-233), [A-235](04-keputusan-dan-asumsi.md#a-235)); outbox gagal menunggu penerbit [F3] ([A-237](04-keputusan-dan-asumsi.md#a-237)).

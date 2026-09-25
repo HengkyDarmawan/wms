@@ -99,7 +99,7 @@ Tanpa status baru. Perubahan perilaku:
 
 ## 7. Kejadian stok & integrasi
 
-Tidak ada kejadian stok baru. Job terjadwal baru: `deliveries:auto-confirm` (01:00), `notifications:daily` (07:00: SLA tinjau REQ, reservasi menggantung, aset lewat jatuh tempo, sisa umur aset — `Notification\Support\DailyReminders`, [A-235](04-keputusan-dan-asumsi.md#a-235)). Semua job harian melewati company yang ditangguhkan ([A-236](04-keputusan-dan-asumsi.md#a-236)).
+Tidak ada kejadian stok baru. Job terjadwal baru: `deliveries:auto-confirm` (01:00), `stock:reconcile` (02:00, [A-243](04-keputusan-dan-asumsi.md#a-243)), `notifications:daily` (07:00: SLA tinjau REQ, reservasi menggantung, aset lewat jatuh tempo, sisa umur aset — `Notification\Support\DailyReminders`, [A-235](04-keputusan-dan-asumsi.md#a-235)). Semua job harian melewati company yang ditangguhkan ([A-236](04-keputusan-dan-asumsi.md#a-236)).
 
 ## 8. Notifikasi
 
@@ -117,6 +117,7 @@ Tidak ada kejadian stok baru. Job terjadwal baru: `deliveries:auto-confirm` (01:
 | `item.provisional_created` | pemegang `item.create` | tidak |
 | `project.closed` | PIC proyek + pemegang `warehouse.update` di proyek | tidak |
 | `stock.period_locked` | pemegang `warehouse.update` | tidak |
+| `stock.balance_mismatch` | pemegang `stock.lock_period` (rekonsiliasi harian `stock:reconcile`, [A-243](04-keputusan-dan-asumsi.md#a-243)) | ya |
 | `stock.reservation_stale` | pemegang `reservation.release` di gudang + pemohon REQ (harian) | tidak |
 | `request.review_overdue` | pemegang `request.review` di proyek (harian) | tidak |
 | `request.decided` | pemohon REQ (bila bukan pengaju approval) | tidak |

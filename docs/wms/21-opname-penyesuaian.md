@@ -48,7 +48,7 @@ Penugasan: `bin_id`, `counter_user_id` (kosong = belum ditugaskan), `round` (1/2
 
 ### 3.3 `stock_adjustments`, `stock_adjustment_lines` — ADJ
 
-Header: `number` (`ADJ/<gudang>/<yymm>/<urut>`), `warehouse_id`, `origin` (`manual`/`count`/`asset_lost`; `discrepancy` stub), `stock_count_id`, `reversal_of_id`, `reason_code_id` (konteks `adjustment`), `status`, `submitted_by`, `approval_snapshot_id`, `approved_by/at`, `reject_reason_id`, `posted_at`, `cancel_reason_id`, `notes`. Baris: `bin_id`, `item_id`, `lot_id/serial_id/piece_id`, isian turunan baru `lot_no`, `expiry_date`, `serial_no`, `piece_length` (dibuat saat posting), `qty_delta` (±), `stock_status`, `count_line_id`, `reversal_of_line_id`, `reason_code_id`, `movement_id`, `notes`.
+Header: `number` (`ADJ/<gudang>/<yymm>/<urut>`), `warehouse_id`, `origin` (`manual`/`count`/`asset_lost`/`over_receipt`; `discrepancy` stub), `stock_count_id`, `goods_receipt_id` (asal `over_receipt`, [A-245](04-keputusan-dan-asumsi.md#a-245)), `reversal_of_id`, `reason_code_id` (konteks `adjustment`), `status`, `submitted_by`, `approval_snapshot_id`, `approved_by/at`, `reject_reason_id`, `posted_at`, `cancel_reason_id`, `notes`. Baris: `bin_id`, `item_id`, `lot_id/serial_id/piece_id`, isian turunan baru `lot_no`, `expiry_date`, `serial_no`, `piece_length` (dibuat saat posting), `qty_delta` (±), `stock_status`, `count_line_id`, `reversal_of_line_id`, `reason_code_id`, `movement_id`, `notes`.
 
 ```mermaid
 erDiagram

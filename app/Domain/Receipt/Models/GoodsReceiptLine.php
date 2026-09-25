@@ -48,6 +48,7 @@ class GoodsReceiptLine extends Model
         return [
             'qc_result' => QcResult::class,
             'qty_received' => 'decimal:4',
+            'qty_excess' => 'decimal:4',
             'piece_length' => 'decimal:4',
             'expiry_date' => 'date',
             'qc_at' => 'datetime',

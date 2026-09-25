@@ -10,7 +10,8 @@ namespace App\Domain\Adjustment\Enums;
  *
  * `discrepancy` dan `asset_lost` adalah titik sambung: DSC `adjusted` di Fase 1
  * memposting sendiri dengan kejadian `delivery_discrepancy` (A-98), dan
- * write-off aset menunggu modul Aset (BR-GEN-10).
+ * write-off aset menunggu modul Aset (BR-GEN-10). over_receipt: kelebihan terima
+ * GRN transfer/retur (BR-GRN-05, A-245).
  */
 enum AdjustmentOrigin: string
 {
@@ -18,6 +19,7 @@ enum AdjustmentOrigin: string
     case Count = 'count';
     case Discrepancy = 'discrepancy';
     case AssetLost = 'asset_lost';
+    case OverReceipt = 'over_receipt';
 
     public function label(): string
     {
@@ -26,6 +28,7 @@ enum AdjustmentOrigin: string
             self::Count => 'Hasil opname',
             self::Discrepancy => 'Selisih pengiriman',
             self::AssetLost => 'Aset hilang',
+            self::OverReceipt => 'Kelebihan terima',
         };
     }
 

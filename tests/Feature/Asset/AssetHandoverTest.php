@@ -12,6 +12,12 @@ use App\Domain\Master\Enums\MeterUnit;
 use App\Domain\Master\Models\CompanySetting;
 use App\Domain\Master\Models\Serial;
 use App\Domain\Shared\Reports\ReportRegistry;
+use App\Domain\Shipment\Actions\ConfirmDelivery;
+use App\Domain\Shipment\Enums\PodUnitCondition;
+use App\Domain\Shipment\Exceptions\ShipmentRuleException;
+use App\Domain\Shipment\Livewire\ShipmentDetail;
+use App\Domain\Shipment\Models\ProofOfDeliveryUnit;
+use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\Asset\Concerns\AssetFixtures;
 use Tests\TenantTestCase;
@@ -97,5 +103,33 @@ class AssetHandoverTest extends TenantTestCase
 
         $this->assertFalse(app(AssetPolicy::class)->update($this->makeUser('warehouse_staff'), $gns));
         $this->gagalAset(fn () => $aksi->handle(Serial::create(['item_id' => $this->kabel->id, 'serial_no' => 'KBL-1']), [], $kepala), 'BR-STK-08');
+    }
+
+    #[Test]
+    public function tc_sj_18_bukti_terima_serial_dinilai_per_unit(): void
+    {
+        $sj = $this->terkirimKeKlien($this->genset, 1, ['line_ownership' => 'loan']);
+        $baris = $sj->lines()->sole();
+        $aksi = app(ConfirmDelivery::class);
+
+        // Satu unit tidak boleh dibagi baik/rusak (BR-SJ-05, A-244).
+        try {
+            $aksi->handle($sj, ['received_by_name' => 'Mandor'], [['shipment_line_id' => $baris->id, 'qty_good' => 0.5, 'qty_damaged' => 0.5, 'damage_photo_path' => 'uji/rusak.jpg']], $this->makeUser('driver'));
+            $this->fail('Unit serial tidak boleh dibagi.');
+        } catch (ShipmentRuleException $e) {
+            $this->assertSame('BR-SJ-05', $e->rule);
+        }
+
+        // Layar driver menawarkan satu pilihan kondisi untuk baris serial.
+        $driver = $this->makeUser('driver');
+        Livewire::actingAs($driver)->test(ShipmentDetail::class, ['shipment' => $sj])
+            ->call('mintaDialog', 'terima')
+            ->assertSet('terima.'.$baris->id.'.kondisi', 'good')
+            ->assertSee('GNS-01');
+
+        $bukti = $aksi->handle($sj, ['received_by_name' => 'Mandor'], [['shipment_line_id' => $baris->id, 'qty_good' => 1]], $driver);
+        $unit = ProofOfDeliveryUnit::query()->where('proof_of_delivery_line_id', $bukti->lines()->sole()->id)->sole();
+        $this->assertSame((int) $this->gns->id, (int) $unit->serial_id);
+        $this->assertSame(PodUnitCondition::Good, $unit->condition);
     }
 }

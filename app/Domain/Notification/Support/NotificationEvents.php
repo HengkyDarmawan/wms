@@ -27,6 +27,7 @@ final class NotificationEvents
         'item.provisional_created' => ['label' => 'Item sementara dibuat dari permintaan', 'email' => false, 'permission' => 'item.create'],
         'project.closed' => ['label' => 'Proyek ditutup atau dibatalkan', 'email' => false],
         'stock.period_locked' => ['label' => 'Periode stok dikunci', 'email' => false, 'permission' => 'warehouse.update'],
+        'stock.balance_mismatch' => ['label' => 'Saldo stok tidak cocok dengan kartu stok', 'email' => true, 'permission' => 'stock.lock_period'],
         'stock.reservation_stale' => ['label' => 'Reservasi menggantung melewati ambang', 'email' => false],
         'request.review_overdue' => ['label' => 'Permintaan melewati SLA tinjau', 'email' => false, 'permission' => 'request.review'],
         'request.decided' => ['label' => 'Permintaan saya disetujui atau ditolak', 'email' => false, 'permission' => 'request.create'],

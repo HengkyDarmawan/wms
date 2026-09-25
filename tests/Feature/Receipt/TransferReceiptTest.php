@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Receipt;
 
+use App\Domain\Adjustment\Enums\AdjustmentOrigin;
+use App\Domain\Adjustment\Enums\StockAdjustmentStatus;
+use App\Domain\Adjustment\Models\StockAdjustment;
 use App\Domain\Receipt\Actions\ReceiveGoodsReceipt;
 use App\Domain\Receipt\Actions\SaveGoodsReceipt;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Exceptions\ReceiptRuleException;
+use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Stock\Models\StockEvent;
 use App\Domain\Stock\Support\MovementRequest;
@@ -84,11 +88,10 @@ class TransferReceiptTest extends TenantTestCase
         // Bukan gudang tujuannya.
         $this->gagal(fn () => $this->draf($sj, [], $this->gudang), 'BR-SJ-04');
 
-        // BR-GRN-05: tidak boleh melebihi jumlah baik.
-        $this->gagal(fn () => $this->draf($sj, [['shipment_line_id' => $sj->lines()->first()->id, 'qty_received' => 19]]), 'BR-GRN-05');
-
-        $grn = $this->draf($sj);
+        // BR-GRN-05 (A-245): GRN hanya sampai jumlah baik; kelebihannya dicatat terpisah.
+        $grn = $this->draf($sj, [['shipment_line_id' => $sj->lines()->first()->id, 'qty_received' => 19]]);
         $this->assertSame(18.0, (float) $grn->lines()->first()->qty_received);
+        $this->assertSame(1.0, (float) $grn->lines()->first()->qty_excess);
 
         // SJ : GRN = 1 : 1.
         $this->gagal(fn () => $this->draf($sj), 'BR-GRN-05');
@@ -99,6 +102,13 @@ class TransferReceiptTest extends TenantTestCase
         $this->assertSame(18.0, $this->saldo($this->binSistem($this->bks, BinType::Receiving), $this->baut));
         $this->assertSame(2.0, $this->saldo($transitCkg, $this->baut), 'Yang kurang tetap menunggu DSC di Dalam Perjalanan CKG.');
         $this->assertNull($grn->lines()->first()->qc_result, 'Transfer tidak melewati QC (A-79).');
+
+        // Kelebihan 1 memicu ADJ `over_receipt` ke bin Penerimaan BKS, lewat approval (A-09).
+        $adj = StockAdjustment::query()->where('goods_receipt_id', $grn->id)->sole();
+        $this->assertSame(AdjustmentOrigin::OverReceipt, $adj->origin);
+        $this->assertSame(StockAdjustmentStatus::PendingApproval, $adj->status);
+        $this->assertSame(1.0, (float) $adj->lines()->sole()->qty_delta);
+        $this->assertSame((int) $this->binSistem($this->bks, BinType::Receiving)->id, (int) $adj->lines()->sole()->bin_id);
 
         $kejadian = StockEvent::query()->where('source_type', 'goods_receipt')->where('source_id', $grn->id)->sole();
         $this->assertSame('stock_transferred', $kejadian->event_type->value);
@@ -114,13 +124,13 @@ class TransferReceiptTest extends TenantTestCase
 
         // Sisa di bin penyimpanan CKG 30; 20 di Dalam Perjalanan tidak boleh dijanjikan
         // (A-85), apalagi dipetik (A-84) — REQ 40 sudah tertahan di approval.
-        $this->assertSame(30.0, app(\App\Domain\Stock\Support\StockLedger::class)
+        $this->assertSame(30.0, app(StockLedger::class)
             ->availableQty((int) $this->baut->id, (int) $this->gudang->id));
 
         try {
             $this->reqDisetujui($this->makeProject(), $this->gudang, $this->baut, 40);
             $this->fail('Stok di Dalam Perjalanan seharusnya tidak bisa direservasi.');
-        } catch (\App\Domain\Request\Exceptions\RequestRuleException $e) {
+        } catch (RequestRuleException $e) {
             $this->assertSame('BR-REQ-05', $e->rule);
             $this->assertStringContainsString('hanya 30', $e->getMessage());
         }

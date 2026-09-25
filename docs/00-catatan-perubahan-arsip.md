@@ -1,9 +1,16 @@
-# Catatan Perubahan — Arsip (v0.2–v0.9)
+# Catatan Perubahan — Arsip (v0.2–v0.10)
 
-**Versi:** 1.3
+**Versi:** 1.4
 **Tanggal:** 25 September 2026
-**Status:** arsip — dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), dan v0.49 (blok v0.9) agar README tetap ≤ 450 baris; isi tidak diubah
+**Status:** arsip — dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), dan v0.50 (blok v0.10) agar README tetap ≤ 450 baris; isi tidak diubah
 **Dokumen terkait:** [README](README.md)
+
+### v0.10 — 23 September 2026 (layar Pengguna & Role)
+- **Layar §6.3 Pengguna:** daftar dengan pencarian dan filter role/status/unit/cakupan; form tambah-ubah dengan penugasan role × cakupan berulang; detail bertab (Ringkasan, Penugasan Role, Perangkat, Riwayat). Aksi: undang ulang, kirim tautan atur ulang password, nonaktifkan (*Alasan* `*` + *Keterangan* opsional, BR-GEN-11), aktifkan kembali.
+- **Layar §6.4 Role:** daftar role dengan jumlah permission & penugasan; form dengan matriks permission per modul, salin dari role lain, dan penonaktifan role buatan company. Role bawaan tetap tidak bisa dinonaktifkan.
+- **Aksi domain baru:** `CreateUser`, `UpdateUser`, `ReactivateUser`, `SendPasswordReset`, `SaveRole`, `DeactivateRole`; menegakkan BR-ACC-01 (wajib punya penugasan), BR-ACC-02 (Admin Company terakhir), BR-ACC-03 (role Klien eksklusif), BR-ACC-04 (cakupan `all`).
+- **Menu Administrasi** di sidebar tampil sesuai permission; pesan aksi memakai event Livewire + Alpine.
+- **Pengujian:** 40 → **60 uji / 414 asersi**, semua hijau (TC-ACC-UI-01–11 dan TC-ACC-UI-20–27 baru). `wms/10-access.md` → v0.3 (§13.3 daftar layar yang sudah ada, §13.4 sisa pekerjaan).
 
 ### v0.9 — 23 September 2026 (kerangka aplikasi & modul Access terbangun)
 - **Kode aplikasi masuk repo:** Laravel **13.33** di atas **PHP 8.3.33** (Laragon), MySQL **8.4.3**. Paket: `stancl/tenancy` 3.10.1 (AD-01), `spatie/laravel-permission` 8.3.0 (AD-06), `spatie/laravel-activitylog` **4.12.3** (AD-07; 5.x butuh PHP 8.4), `livewire/livewire` 4.4.6. Front-end di-bundle Vite tanpa CDN (Bootstrap 5.3 + NexaDash dari `template/`, font Inter di-host sendiri).

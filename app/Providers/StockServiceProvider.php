@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Domain\Stock\Console\ReconcileStockCommand;
 use App\Domain\Stock\Livewire\BalanceList;
 use App\Domain\Stock\Livewire\EventList;
 use App\Domain\Stock\Livewire\PeriodLock;
@@ -33,5 +34,9 @@ class StockServiceProvider extends ServiceProvider
         Livewire::component('stock.reservation-list', ReservationList::class);
         Livewire::component('stock.event-list', EventList::class);
         Livewire::component('stock.period-lock', PeriodLock::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([ReconcileStockCommand::class]);
+        }
     }
 }

@@ -13,6 +13,7 @@ use App\Domain\Shipment\Enums\DiscrepancyOrigin;
 use App\Domain\Shipment\Enums\DiscrepancyStatus;
 use App\Domain\Shipment\Enums\DiscrepancyType;
 use App\Domain\Shipment\Enums\OwnershipEffect;
+use App\Domain\Shipment\Enums\PodUnitCondition;
 use App\Domain\Shipment\Enums\ProofChannel;
 use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
@@ -20,6 +21,7 @@ use App\Domain\Shipment\Models\DeliveryDiscrepancy;
 use App\Domain\Shipment\Models\DeliveryDiscrepancyLine;
 use App\Domain\Shipment\Models\ProofOfDelivery;
 use App\Domain\Shipment\Models\ProofOfDeliveryLine;
+use App\Domain\Shipment\Models\ProofOfDeliveryUnit;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Shipment\Models\ShipmentLine;
 use App\Domain\Shipment\Support\WarehouseBins;
@@ -110,6 +112,10 @@ class ConfirmDelivery
                     'notes' => $baris['notes'],
                 ]);
 
+                if ($baris['unit'] !== null) {
+                    ProofOfDeliveryUnit::create(['proof_of_delivery_line_id' => $barisBukti->id] + $baris['unit']);
+                }
+
                 $this->terapkanEfek($shipment, $sj, $baris, $actor);
 
                 $sj->forceFill(['qty_delivered' => $baris['qty_good']])->save();
@@ -197,6 +203,25 @@ class ConfirmDelivery
                 );
             }
 
+            // BR-SJ-05, A-64, A-244: serial dan potongan dinilai per unit — satu
+            // baris SJ adalah satu unit, jadi seluruhnya baik, rusak, atau kurang.
+            $pick = $sj->pickTaskLine;
+            $unit = null;
+
+            if ($pick?->serial_id !== null || $pick?->piece_id !== null) {
+                $penuh = array_filter(['good' => $baik, 'damaged' => $rusak, 'missing' => $kurang], fn (float $n) => $n > 0.0001);
+
+                if (count($penuh) !== 1) {
+                    throw ShipmentRuleException::field(
+                        'BR-SJ-05',
+                        'qty_good',
+                        'Baris '.($pick->item?->code ?? $id).' adalah satu unit (serial/potongan): pilih baik, rusak, atau kurang untuk seluruhnya.',
+                    );
+                }
+
+                $unit = ['serial_id' => $pick->serial_id, 'piece_id' => $pick->piece_id, 'condition' => PodUnitCondition::from((string) array_key_first($penuh))];
+            }
+
             $foto = is_string($baris['damage_photo_path'] ?? null) ? trim($baris['damage_photo_path']) : '';
 
             // A-64: kerusakan tanpa foto tidak bisa diadu belakangan.
@@ -215,6 +240,7 @@ class ConfirmDelivery
                 'qty_missing' => $kurang,
                 'damage_photo_path' => $foto === '' ? null : $foto,
                 'notes' => is_string($baris['notes'] ?? null) ? ($baris['notes'] ?: null) : null,
+                'unit' => $unit,
             ];
 
             $terisi[] = $id;
