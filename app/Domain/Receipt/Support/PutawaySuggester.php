@@ -75,6 +75,8 @@ class PutawaySuggester
             ->where('warehouse_id', $warehouse->id)
             ->where('bin_type', BinType::Storage->value)
             ->where('bin_status', BinStatus::Active->value)
+            // A-255: bin yang ikut terpakai barang besar di bin sebelahnya tidak disarankan.
+            ->whereNull('occupied_by_bin_id')
             ->orderBy('code')
             ->get();
     }

@@ -1,7 +1,7 @@
 # Spesifikasi Modul — `shared` (Kerangka Laporan & Penyimpanan Berkas)
 
-**Versi:** 0.11
-**Tanggal:** 25 September 2026
+**Versi:** 0.12
+**Tanggal:** 26 September 2026
 **Status:** selesai Fase 1 — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment selesai 25 Sep 2026 ([A-232](04-keputusan-dan-asumsi.md#a-232), §3.2); laporan modul 19–22 selesai 25 Sep 2026 (16 laporan, [A-241](04-keputusan-dan-asumsi.md#a-241)); total 41 laporan terdaftar; v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9); v0.4: laporan itu menambah kolom konversi & waste ([24-konversi-waste](24-konversi-waste.md) §9, [A-161](04-keputusan-dan-asumsi.md#a-161)); unggah bukti BA waste memakai `StoreUpload`; v0.5: laporan kesembilan *Aset dipinjamkan* ([25-aset](25-aset.md) §9); v0.6: Beranda antrean pekerjaan, lima laporan inti Blueprint §6.9a (total 14), ekspor PDF semua laporan ([27-pendukung-f1](27-pendukung-f1.md), [A-186](04-keputusan-dan-asumsi.md#a-186), [A-190](04-keputusan-dan-asumsi.md#a-190))
 **Modul:** `shared` (`app/Domain/Shared`)
 **Fase:** F1
@@ -225,6 +225,8 @@ Kode modul ini dibangun lebih dulu daripada dokumennya, bersamaan dengan modul A
 Uji: `tests/Feature/Shared/ReportTest.php` (TC-RPT-01, 01b–01f) dan `tests/Feature/Shared/FileUploadTest.php` (TC-FIL-01, 01b–01g), `tests/Feature/Shared/TenantAssetUrlTest.php` (TC-FIL-02, 02b).
 
 **Aset aplikasi vs berkas company (24 Sep 2026).** `config/tenancy.php` `asset_helper_tenancy` dimatikan. Saat aktif, `asset()` dan `@vite` di halaman company menunjuk `/tenancy/assets/…`, yang dilayani dari storage company. Akibatnya build Vite dan logo 404 dan seluruh halaman company tampil tanpa gaya. Aset aplikasi bersifat global (`public/`). Berkas milik company tidak pernah lewat `asset()`: berkas itu disajikan route berotorisasi `/files/…` ([A-68](04-keputusan-dan-asumsi.md#a-68)), jadi tidak ada yang hilang.
+
+**Dokumen terkait (26 Sep 2026, [A-252](04b-asumsi-lanjutan.md#a-252)):** `Shared\Support\DocumentLineage` menelusuri asal & turunan satu dokumen dari tautan skema yang ada (FK, `source_type/source_id`, baris SJ ↔ PCK/RET/TRF, catatan pemesanan ↔ PO ↔ GRN, pembalik ISU/CNV/ADJ, rantai AST) dan komponen `<x-related-documents>` menampilkannya di detail REQ, PCK, SJ, GRN, PUT, RTV, RET, TRF, PRQ, PO, ISU, CNV, ADJ, AST (bukan portal). Hanya dokumen yang lolos policy `view` **dan** global scope cakupan (BR-ACC-05); PO hanya bagi `po.view`. `Shared\Support\ProjectDocumentTimeline` membangun linimasa dokumen proyek untuk tab *Riwayat* hub. Tabel `document_timelines` (BR-GEN-05) tetap belum dibangun. Uji TC-DOC-01–03.
 
 ### 13.4 Sisa pekerjaan
 

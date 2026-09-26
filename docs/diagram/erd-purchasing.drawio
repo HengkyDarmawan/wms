@@ -17,10 +17,10 @@
           <mxGeometry y="26" width="260" height="280" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_order_lines" value="purchase_order_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="40" width="260" height="194" as="geometry"/>
+          <mxGeometry x="680" y="40" width="260" height="226" as="geometry"/>
         </mxCell>
-        <mxCell id="purchase_order_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ purchase_order_id : bigint&lt;br&gt;↗ purchase_request_line_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;unit_price : decimal(18,2)&lt;br&gt;line_amount : decimal(18,2)&lt;br&gt;qty_received : decimal(18,4)&lt;br&gt;qty_cancelled : decimal(18,4)&lt;br&gt;notes : varchar(255)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_order_lines">
-          <mxGeometry y="26" width="260" height="168" as="geometry"/>
+        <mxCell id="purchase_order_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ purchase_order_id : bigint&lt;br&gt;↗ purchase_request_line_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;qty_over_request : decimal(18,4)&lt;br&gt;over_order_reason : varchar(255)&lt;br&gt;unit_price : decimal(18,2)&lt;br&gt;line_amount : decimal(18,2)&lt;br&gt;qty_received : decimal(18,4)&lt;br&gt;qty_cancelled : decimal(18,4)&lt;br&gt;notes : varchar(255)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_order_lines">
+          <mxGeometry y="26" width="260" height="200" as="geometry"/>
         </mxCell>
         <mxCell id="items" value="items" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
           <mxGeometry x="1000" y="40" width="260" height="50" as="geometry"/>

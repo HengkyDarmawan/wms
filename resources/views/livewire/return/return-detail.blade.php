@@ -8,7 +8,7 @@
             <p class="text-muted mb-0">
                 {{ $ret->project?->code }} — {{ $ret->project?->name }}
                 · {{ __('ke') }} {{ $ret->toWarehouse?->code }}
-                · {{ $ret->self_delivered ? __('Diantar sendiri') : __('SJ balik dari').' '.$ret->fromWarehouse?->code }}
+                · {{ $ret->self_delivered ? __('Diantar sendiri') : ($ret->isPickup() ? __('Dijemput driver') : __('SJ balik dari').' '.$ret->fromWarehouse?->code) }}
                 @if ($ret->originShipment) · {{ __('SJ asal') }} {{ $ret->originShipment->number }} @endif
                 · {{ __('Diajukan') }} {{ $ret->requester?->name }}
                 @if ($ret->approver) · {{ __('Diputus') }} {{ $ret->approver->name }} @endif
@@ -115,6 +115,11 @@
         </div>
     </div>
 
+    @if ($pilihanJemput)
+        {{-- A-248: barang di proyek dijemput driver dengan SJ tanpa tugas picking. --}}
+        @include('shipment.partials.pickup-form', ['judul' => __('Buat SJ jemput'), 'keterangan' => __('satu perjalanan untuk semua baris RET ini; sopir & plat wajib'), 'aksi' => 'buatSjJemput'])
+    @endif
+
     @unless ($portal)
         <div class="card mb-3">
             <div class="card-header"><strong>{{ __('Pergerakan fisik') }}</strong></div>
@@ -123,7 +128,7 @@
                     <li class="list-group-item">{{ __('Tugas picking') }} <a href="{{ route('picks.show', $pck->id) }}">{{ $pck->number }}</a> · {{ $pck->status->label() }}</li>
                 @endif
                 @if ($ret->returnShipment)
-                    <li class="list-group-item">{{ __('SJ balik') }} <a href="{{ route('shipments.show', $ret->return_shipment_id) }}">{{ $ret->returnShipment->number }}</a> · {{ $ret->returnShipment->status->label() }}</li>
+                    <li class="list-group-item">{{ $ret->isPickup() ? __('SJ jemput') : __('SJ balik') }} <a href="{{ route('shipments.show', $ret->return_shipment_id) }}">{{ $ret->returnShipment->number }}</a> · {{ $ret->returnShipment->status->label() }}</li>
                 @endif
                 @if ($grn)
                     <li class="list-group-item">{{ __('GRN retur') }} <a href="{{ route('receipts.show', $grn->id) }}">{{ $grn->number }}</a> · {{ $grn->status->label() }}</li>
@@ -214,6 +219,10 @@
         </div>
     @endcan
 
+    {{-- A-252: dokumen asal & turunan. --}}
+    @unless ($portal ?? false)
+        <x-related-documents :document="$ret" />
+    @endunless
     @unless ($portal)
         @include('approval.partials.history', ['riwayatApproval' => $riwayatApproval])
     @endunless

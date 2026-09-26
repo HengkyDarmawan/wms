@@ -74,7 +74,7 @@ class ProjectClosureChecklist
             ->where('asset_state', AssetState::OnLoan->value)->pluck('serial_no');
 
         if ($aset->isNotEmpty()) {
-            $butir[] = 'Aset masih dipinjam proyek: '.$this->daftar($aset).' — ajukan retur aset.';
+            $butir[] = 'Aset masih dipinjam proyek: '.$this->daftar($aset).' — ajukan retur aset atau pindahkan ke proyek lain.'; // A-250
         }
 
         foreach ($site as $gudang) {

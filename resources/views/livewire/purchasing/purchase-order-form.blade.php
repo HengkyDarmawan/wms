@@ -83,7 +83,14 @@
                                 <div class="small text-muted">{{ $l->item?->name }}</div>
                             </td>
                             <td class="text-end">{{ number_format($r['available'], 2, ',', '.') }} <span class="small text-muted">{{ $l->item?->baseUom?->code }}</span></td>
-                            <td><input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model.live.debounce.500ms="qty.{{ $l->id }}" aria-label="{{ __('Jumlah dipesan') }} {{ $l->item?->code }}"></td>
+                            <td>
+                                <input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model.live.debounce.500ms="qty.{{ $l->id }}" aria-label="{{ __('Jumlah dipesan') }} {{ $l->item?->code }}">
+                                @if ($this->lebih($l->id, $r['available']) > 0)
+                                    {{-- A-246: pesan lebih dari permintaan wajib beralasan. --}}
+                                    <div class="small text-warning-emphasis mt-1">{{ __('Lebih :n dari permintaan', ['n' => number_format($this->lebih($l->id, $r['available']), 2, ',', '.')]) }}</div>
+                                    <input class="form-control form-control-sm mt-1" type="text" maxlength="255" wire:model="reason.{{ $l->id }}" placeholder="{{ __('Alasan, mis. MOQ vendor') }}" aria-label="{{ __('Alasan pesan lebih') }} {{ $l->item?->code }}">
+                                @endif
+                            </td>
                             <td><input class="form-control form-control-sm" type="number" step="0.01" min="0" wire:model.live.debounce.500ms="price.{{ $l->id }}" aria-label="{{ __('Harga satuan') }} {{ $l->item?->code }}"></td>
                             <td class="text-end text-nowrap">{{ $this->nilai($l->id) > 0 ? \App\Domain\Purchasing\Support\Money::format($this->nilai($l->id)) : '—' }}</td>
                         </tr>

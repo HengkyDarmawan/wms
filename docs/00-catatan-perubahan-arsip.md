@@ -1,9 +1,17 @@
-# Catatan Perubahan — Arsip (v0.2–v0.10)
+# Catatan Perubahan — Arsip (v0.2–v0.11)
 
-**Versi:** 1.4
-**Tanggal:** 25 September 2026
-**Status:** arsip — dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), dan v0.50 (blok v0.10) agar README tetap ≤ 450 baris; isi tidak diubah
+**Versi:** 1.5
+**Tanggal:** 26 September 2026
+**Status:** arsip — dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), dan v0.51 (blok v0.11) agar README tetap ≤ 450 baris; isi tidak diubah
 **Dokumen terkait:** [README](README.md)
+
+### v0.11 — 23 September 2026 (struktur organisasi, perangkat, akses dukungan)
+- **Layar §6.5 Struktur organisasi:** pohon unit dengan tambah, ubah, sub-unit, dan penonaktifan; penjagaan agar induk tidak menjadi dirinya sendiri atau turunannya; jabatan per unit beserta level; daftar user di unit lengkap dengan jabatan dan atasan langsung (D-16, dasar aturan approval Blueprint §8.1).
+- **Layar §6.6 Perangkat:** daftar perangkat PWA dengan pencarian dan filter status; pemegang `device.view` melihat seluruh company, user lain hanya miliknya; cabut dan aktifkan kembali tanpa menghapus data (P-03).
+- **Layar §6.7 Akses dukungan:** Admin Company memberi izin berperiode kepada Super Admin dengan *Alasan* `*`, batas maksimum 7 hari, daftar izin yang berlaku, tombol cabut, dan riwayat (A-27, BR-SUB-04).
+- **Aksi domain baru:** `SaveOrgUnit`, `DeactivateOrgUnit`, `SavePosition`, `RevokeDevice`; unit maupun jabatan yang masih dipakai user aktif tidak bisa dinonaktifkan.
+- **Perbaikan:** `device.manage` tanpa `device.view` kini hanya berlaku untuk perangkat sendiri; waktu akses dukungan disimpan UTC meski diisi memakai zona waktu company (BR-GEN-07).
+- **Pengujian:** 60 → **82 uji / 542 asersi**, semua hijau (TC-ACC-UI-30–37, 40–45, 50–54 baru). `wms/10-access.md` → v0.4 (status selesai Fase 1, §13.4 sisa pekerjaan).
 
 ### v0.10 — 23 September 2026 (layar Pengguna & Role)
 - **Layar §6.3 Pengguna:** daftar dengan pencarian dan filter role/status/unit/cakupan; form tambah-ubah dengan penugasan role × cakupan berulang; detail bertab (Ringkasan, Penugasan Role, Perangkat, Riwayat). Aksi: undang ulang, kirim tautan atur ulang password, nonaktifkan (*Alasan* `*` + *Keterangan* opsional, BR-GEN-11), aktifkan kembali.

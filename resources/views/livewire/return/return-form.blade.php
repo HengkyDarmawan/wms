@@ -40,9 +40,8 @@
                 <label class="form-label" for="ret-angkut">{{ __('Pengangkutan') }} <span class="wajib">*</span></label>
                 <select class="form-select @error('form.self_delivered') is-invalid @enderror" id="ret-angkut" wire:model="form.self_delivered">
                     <option value="1">{{ __('Diantar sendiri (tanpa SJ balik)') }}</option>
-                    @unless ($portal)
-                        <option value="0">{{ __('SJ balik dari Gudang Site') }}</option>
-                    @endunless
+                    {{-- A-111/A-248: stok Gudang Site dipetik lalu dikirim; barang lain dijemput driver. --}}
+                    <option value="0">{{ $portal ? __('Dijemput driver gudang (SJ jemput)') : __('SJ balik: stok Gudang Site dipetik, barang lain dijemput') }}</option>
                 </select>
                 @error('form.self_delivered') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>

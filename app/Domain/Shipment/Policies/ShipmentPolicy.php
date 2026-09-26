@@ -42,6 +42,8 @@ class ShipmentPolicy
     {
         return $actor->hasPermission('shipment.ship')
             && $shipment->status->value === 'shipped'
+            // SJ jemput diterima gudangnya sendiri, bukan penerima di luar (A-248).
+            && ! $shipment->isReturnPickup()
             && $this->dalamJangkauan($actor, $shipment);
     }
 

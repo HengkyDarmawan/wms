@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalRegistry;
+use App\Domain\Transfer\Livewire\ProjectMove;
 use App\Domain\Transfer\Livewire\TransferDetail;
 use App\Domain\Transfer\Livewire\TransferForm;
 use App\Domain\Transfer\Livewire\TransferList;
@@ -30,5 +31,6 @@ class TransferServiceProvider extends ServiceProvider
         Livewire::component('transfer.transfer-list', TransferList::class);
         Livewire::component('transfer.transfer-form', TransferForm::class);
         Livewire::component('transfer.transfer-detail', TransferDetail::class);
+        Livewire::component('transfer.project-move', ProjectMove::class);
     }
 }

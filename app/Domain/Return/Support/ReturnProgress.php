@@ -48,6 +48,25 @@ class ReturnProgress
             ->log('SJ balik disusun');
     }
 
+    /**
+     * A-248: SJ jemput dibatalkan sebelum berangkat → RET kembali `approved`
+     * menunggu SJ jemput baru (kecuali RET-nya sendiri sedang dibatalkan).
+     */
+    public function returnShipmentCancelled(Shipment $shipment, ?User $actor = null): void
+    {
+        $ret = GoodsReturn::withoutGlobalScopes()->where('return_shipment_id', $shipment->id)->first();
+
+        if ($ret === null || $ret->status !== GoodsReturnStatus::InProgress) {
+            return;
+        }
+
+        $ret->forceFill(['return_shipment_id' => null, 'status' => GoodsReturnStatus::Approved])->save();
+
+        activity('return')->performedOn($ret)->causedBy($actor)
+            ->withProperties(['sj' => $shipment->number])
+            ->log('SJ jemput dibatalkan; RET menunggu SJ jemput baru');
+    }
+
     /** GRN retur diterima: RET `received`, cadangan keras Gudang Site dilepas. */
     public function received(GoodsReceipt $receipt, ?User $actor = null): void
     {

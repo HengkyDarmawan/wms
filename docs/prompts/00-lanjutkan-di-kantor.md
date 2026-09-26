@@ -1,8 +1,8 @@
 # Prompt: melanjutkan pekerjaan di kantor (XAMPP)
 
-**Versi:** 2.0
-**Tanggal:** 25 September 2026
-**Status:** aktif — serah terima dari sesi rumah 25 Sep 2026 malam (XAMPP3 + MariaDB 10.4.32) ke sesi kantor (XAMPP + MariaDB 10.4.27). v1.x (arsip) adalah serah terima 25 Sep pagi yang semua butirnya sudah selesai; arah sebaliknya: [00-lanjutkan-di-rumah.md](00-lanjutkan-di-rumah.md) (arsip)
+**Versi:** 2.1
+**Tanggal:** 26 September 2026
+**Status:** arsip — dikerjakan sesi kantor 26 Sep 2026 (langkah 0, keputusan atas 31 asumsi ⚠, SJ balik & transfer aset dibangun, lihat [laporan progres §5.8](../00-laporan-progres-2026-09-24.md)); lanjutan di rumah: [00-lanjutkan-di-rumah.md](00-lanjutkan-di-rumah.md) v2.2 (aktif). Semula: serah terima dari sesi rumah 25 Sep 2026 malam (XAMPP3 + MariaDB 10.4.32) ke sesi kantor (XAMPP + MariaDB 10.4.27). v1.x (arsip) adalah serah terima 25 Sep pagi yang semua butirnya sudah selesai; arah sebaliknya: [00-lanjutkan-di-rumah.md](00-lanjutkan-di-rumah.md) (arsip)
 **Dokumen terkait:** [README](../README.md) · [Laporan progres](../00-laporan-progres-2026-09-24.md) · [Setup lokal](../00-setup-lokal.md) · [Tinjauan asumsi](../00-tinjauan-asumsi-2026-09-25.md) · [Keputusan & Asumsi](../wms/04-keputusan-dan-asumsi.md) · [`../../CLAUDE.md`](../../CLAUDE.md)
 
 Cara pakai: di kantor, `git pull`, buka Claude Code di `C:\xampp\htdocs\wms`, lalu tempel **seluruh blok prompt di §2**. Bagian §1 dan §3 untuk dibaca manusia.

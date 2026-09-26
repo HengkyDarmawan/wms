@@ -9,11 +9,13 @@ use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\ReasonCode;
-use App\Domain\Return\Exceptions\ReturnRuleException;
 use App\Domain\Return\Enums\GoodsReturnStatus;
+use App\Domain\Return\Exceptions\ReturnRuleException;
 use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Shipment\Actions\ProcessPickTask;
+use App\Domain\Shipment\Actions\ShipShipment;
 use App\Domain\Shipment\Enums\PickTaskStatus;
+use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Stock\Actions\ManageReservation;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +39,7 @@ class CancelGoodsReturn
 
     public function handle(GoodsReturn $ret, ?int $reasonCodeId, ?string $notes = null, ?User $actor = null): GoodsReturn
     {
-        if (! $ret->status->isCancellable()) {
+        if (! $ret->canBeCancelled()) {
             throw ReturnRuleException::rule(
                 'BR-GEN-03',
                 'RET berstatus '.$ret->status->label().' tidak bisa dibatalkan; barangnya sudah dalam perjalanan atau diterima.',
@@ -63,6 +65,8 @@ class CancelGoodsReturn
         $keterangan = $notes !== null && trim($notes) !== '' ? trim($notes) : null;
 
         return DB::transaction(function () use ($ret, $pck, $reasonCodeId, $keterangan, $actor) {
+            $sjJemput = $ret->isPickup() && $ret->returnShipment?->status === ShipmentStatus::Prepared ? $ret->returnShipment : null;
+
             if ($pck !== null) {
                 try {
                     $this->picking->cancel($pck, $reasonCodeId, $actor);
@@ -76,6 +80,12 @@ class CancelGoodsReturn
                 'cancel_reason_id' => $reasonCodeId,
                 'cancelled_at' => now(),
             ])->save();
+
+            // A-248: SJ jemput yang belum berangkat ikut dibatalkan (setelah RET
+            // batal, agar RET tidak dikembalikan ke menunggu SJ jemput).
+            if ($sjJemput !== null) {
+                app(ShipShipment::class)->cancel($sjJemput, $reasonCodeId, $actor);
+            }
 
             $this->approval->withdraw(ApprovalDocumentType::GoodsReturn, (int) $ret->id, 'RET dibatalkan.', $actor);
             $this->reservasi->releaseForDocument('goods_return', (int) $ret->id, 'RETURN_CANCELLED', $actor);

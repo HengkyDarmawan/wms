@@ -7,6 +7,7 @@ namespace App\Domain\Warehouse\Livewire;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\StorageCategory;
 use App\Domain\Warehouse\Actions\ChangeBinStatus;
+use App\Domain\Warehouse\Actions\SaveBin;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Livewire\Concerns\HandlesWarehouseRules;
@@ -45,6 +46,20 @@ class BinList extends Component
 
     #[Url(except: '')]
     public string $flagFilter = '';
+
+    /** A-254: saring per zona / rak (kode). */
+    #[Url(except: '')]
+    public string $zoneFilter = '';
+
+    #[Url(except: '')]
+    public string $rackFilter = '';
+
+    /** Ubah bin (kategori & kapasitas; kode terkunci, BR-WH-01). */
+    #[Locked]
+    public ?int $ubahId = null;
+
+    /** @var array<string, string> */
+    public array $formBin = [];
 
     #[Locked]
     public ?int $actingId = null;
@@ -104,6 +119,46 @@ class BinList extends Component
         $this->dispatch('pesan', teks: __('Status bin diperbarui.'));
     }
 
+    public function mintaUbah(int $id): void
+    {
+        $bin = Bin::findOrFail($id);
+        $this->authorize('update', $bin);
+
+        $this->ubahId = (int) $bin->id;
+        $this->formBin = [
+            'storage_category_id' => (string) ($bin->storage_category_id ?? ''),
+            'capacity_qty' => $this->angka($bin->capacity_qty),
+            'capacity_weight' => $this->angka($bin->capacity_weight),
+            'capacity_volume' => $this->angka($bin->capacity_volume),
+            'capacity_length' => $this->angka($bin->capacity_length),
+            'capacity_mode' => (string) ($bin->capacity_mode ?? ''),
+        ];
+        $this->resetValidation();
+    }
+
+    public function simpanBin(SaveBin $action): void
+    {
+        $bin = Bin::findOrFail($this->ubahId);
+        $this->authorize('update', $bin);
+
+        $gudang = Warehouse::query()->withoutGlobalScopes()->findOrFail($bin->warehouse_id);
+
+        if ($this->jalankan(fn () => $action->handle($gudang, $bin, $this->formBin + [
+            'bin_type' => $bin->bin_type->value,
+            'rack_level_id' => $bin->rack_level_id,
+            'project_id' => $bin->project_id,
+        ], auth()->user()), 'formBin')) {
+            $this->ubahId = null;
+            $this->dispatch('pesan', teks: __('Bin disimpan.'));
+        }
+    }
+
+    public function batalUbah(): void
+    {
+        $this->ubahId = null;
+        $this->resetValidation();
+    }
+
     public function batalAksi(): void
     {
         $this->actingId = null;
@@ -158,15 +213,22 @@ class BinList extends Component
         ]);
     }
 
+    private function angka(mixed $n): string
+    {
+        return $n === null ? '' : rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0'), '.');
+    }
+
     private function bins(): LengthAwarePaginator
     {
         return Bin::query()
-            ->with('warehouse:id,code,name', 'storageCategory:id,name,capacity_mode', 'project:id,code,name')
+            ->with('warehouse:id,code,name', 'storageCategory:id,name,capacity_mode', 'project:id,code,name', 'rackLevel:id,code,rack_id', 'rackLevel.rack:id,code,zone_id,is_area', 'rackLevel.rack.zone:id,code', 'occupiedBy:id,code')
             ->when($this->search !== '', fn (Builder $q) => $q->where('code', 'like', '%'.$this->search.'%'))
             ->when($this->warehouseFilter !== '', fn (Builder $q) => $q->where('warehouse_id', (int) $this->warehouseFilter))
             ->when($this->typeFilter !== '', fn (Builder $q) => $q->where('bin_type', $this->typeFilter))
             ->when($this->statusFilter !== '', fn (Builder $q) => $q->where('bin_status', $this->statusFilter))
             ->when($this->flagFilter !== '', fn (Builder $q) => $q->where('count_flag', $this->flagFilter === 'ya'))
+            ->when($this->zoneFilter !== '', fn (Builder $q) => $q->whereHas('rackLevel.rack.zone', fn ($z) => $z->where('code', mb_strtoupper(trim($this->zoneFilter)))))
+            ->when($this->rackFilter !== '', fn (Builder $q) => $q->whereHas('rackLevel.rack', fn ($r) => $r->where('code', mb_strtoupper(trim($this->rackFilter)))))
             ->orderBy('code')
             ->paginate(25);
     }

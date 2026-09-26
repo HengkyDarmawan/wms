@@ -219,6 +219,10 @@
         </div>
     </div>
 
+    {{-- A-252: dokumen asal & turunan. --}}
+    @unless ($portal ?? false)
+        <x-related-documents :document="$grn" />
+    @endunless
     <div class="card mt-3">
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush small">

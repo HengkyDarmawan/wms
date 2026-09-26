@@ -31,6 +31,8 @@ class PurchaseOrderIssuer
                 'po_line_id' => (int) $l->id,
                 'purchase_request_line_id' => (int) $l->purchase_request_line_id,
                 'qty' => (float) $l->qty_base,
+                // A-246: bagian di atas sisa PRQ sudah disetujui beralasan.
+                'over_order' => $l->over_order_reason !== null && (float) $l->qty_over_request > 0,
             ])->all(),
         ], $actor);
     }

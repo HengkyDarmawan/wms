@@ -9,6 +9,7 @@ use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Return\Enums\GoodsReturnStatus;
 use App\Domain\Return\Models\GoodsReturn;
+use App\Domain\Shipment\Enums\ShipmentStatus;
 
 /**
  * Izin retur dari proyek (22-retur-transfer §2). Setujui/tolak hanya untuk
@@ -43,7 +44,7 @@ class GoodsReturnPolicy
     public function cancel(User $actor, GoodsReturn $ret): bool
     {
         return $actor->hasPermission('return.cancel')
-            && $ret->status->isCancellable()
+            && $ret->canBeCancelled()
             && ((int) $ret->requester_id === (int) $actor->id || $actor->hasPermission('return.approve'));
     }
 
@@ -58,7 +59,9 @@ class GoodsReturnPolicy
         return $actor->client_id === null
             && $actor->hasPermission('receipt.create')
             && $ret->status === GoodsReturnStatus::InProgress
-            && $ret->activeReceipt() === null;
+            && $ret->activeReceipt() === null
+            // A-248: barang jemput diterima setelah SJ jemput tiba dan dikonfirmasi.
+            && (! $ret->isPickup() || in_array($ret->returnShipment?->status, [ShipmentStatus::Delivered, ShipmentStatus::PartiallyDelivered], true));
     }
 
     /** PCK SJ balik dari detail RET bila pembuatan otomatis gagal (A-111). */
@@ -68,6 +71,18 @@ class GoodsReturnPolicy
             && $actor->hasPermission('pick.create')
             && $ret->status === GoodsReturnStatus::Approved
             && ! $ret->self_delivered
+            && ! $ret->isPickup()
             && $ret->livePickTask() === null;
+    }
+
+    /** SJ jemput dari detail RET (A-248): disusun gudang tujuan. */
+    public function createPickup(User $actor, GoodsReturn $ret): bool
+    {
+        return $actor->client_id === null
+            && $actor->hasPermission('shipment.create')
+            && $ret->status === GoodsReturnStatus::Approved
+            && $ret->isPickup()
+            && $ret->return_shipment_id === null
+            && $actor->canAccessWarehouse((int) $ret->to_warehouse_id);
     }
 }

@@ -15,10 +15,11 @@ use Illuminate\Support\Collection;
  * Dipakai form untuk pratinjau **dan** saat menyimpan, jadi angka di layar
  * selalu sama dengan yang diperiksa {@see ConversionLines::assertBalanced}.
  *
- * - **Potong** (`cut`): satu batang (potongan utuh) → daftar ukuran × jumlah.
- *   Kerf dihitung dari master item (`kerf` per potongan), sisa = panjang −
- *   dipakai − kerf; sisa menjadi offcut (server menurunkannya ke waste bila
- *   di bawah `min_offcut_length`, BR-CNV-03).
+ * - **Potong** (`cut`): satu atau beberapa batang (potongan utuh, A-253) →
+ *   daftar ukuran × jumlah per batang (baris merujuk batangnya lewat
+ *   `parent`). Kerf dihitung per batang dari master item (`kerf` per
+ *   potongan), sisa = panjang − dipakai − kerf; sisa menjadi offcut (server
+ *   menurunkannya ke waste bila di bawah `min_offcut_length`, BR-CNV-03).
  * - **Ganti kemasan** (`repack`): Σ input − Σ output = susut → waste otomatis.
  * - **Rakit/Bongkar**: hasil bebas, tanpa neraca (A-156).
  *
@@ -53,19 +54,84 @@ class ConversionPlanner
      */
     private function potong(array $inputs, array $rows, Collection $items, array $opsi): array
     {
+        $kosong = ['jenis' => 'cut', 'panjang' => 0.0, 'dipakai' => 0.0, 'potongan' => 0, 'kerf_per_potong' => null, 'kerf' => 0.0,
+            'sisa' => 0.0, 'sisa_jenis' => null, 'min_offcut' => null, 'uom' => null, 'peringatan' => [], 'kalimat' => '',
+            'batang' => [], 'jumlah_batang' => 0];
+
+        if ($inputs === []) {
+            return ['outputs' => [], 'summary' => $kosong, 'errors' => ['batang' => 'Pilih satu batang yang akan dipotong.']];
+        }
+
+        // A-253: satu CNV boleh memotong beberapa batang; tiap baris ukuran
+        // merujuk batangnya lewat `parent` (kosong = batang pertama).
+        $pertama = (string) $inputs[0]['key'];
+        $perBatang = [];
+
+        foreach (array_values($rows) as $n => $r) {
+            $perBatang[(string) (($r['parent'] ?? '') ?: $pertama)][$n] = $r;
+        }
+
+        $outputs = [];
         $errors = [];
-        $batang = $inputs[0] ?? null;
+        $bagian = [];
+        $dipakai = [];
+
+        foreach (array_values($inputs) as $i => $batang) {
+            if (in_array((string) $batang['key'], $dipakai, true)) {
+                $errors[$i === 0 ? 'batang' : 'batang@'.$batang['key']] = 'Batang yang sama dipilih dua kali.';
+
+                continue;
+            }
+
+            $dipakai[] = (string) $batang['key'];
+            $hasil = $this->potongSatu($batang, $perBatang[(string) $batang['key']] ?? [], $items, $opsi, $i === 0 ? '' : '@'.$batang['key']);
+            $outputs = array_merge($outputs, $hasil['outputs']);
+            $errors += $hasil['errors'];
+            $bagian[] = $hasil['summary'] + ['key' => (string) $batang['key'], 'tracking' => $batang['tracking'] ?? '', 'item_code' => $batang['item_code'] ?? ''];
+        }
+
+        if (count($bagian) === 1) {
+            return ['outputs' => $outputs, 'summary' => $bagian[0] + ['batang' => $bagian, 'jumlah_batang' => 1], 'errors' => $errors];
+        }
+
+        $jumlah = fn (string $k) => round(array_sum(array_column($bagian, $k)), 4);
+        $ringkas = [
+            'jenis' => 'cut',
+            'panjang' => $jumlah('panjang'),
+            'dipakai' => $jumlah('dipakai'),
+            'potongan' => (int) array_sum(array_column($bagian, 'potongan')),
+            'kerf_per_potong' => $bagian[0]['kerf_per_potong'] ?? null,
+            'kerf' => $jumlah('kerf'),
+            'sisa' => $jumlah('sisa'),
+            'sisa_jenis' => null,
+            'min_offcut' => $bagian[0]['min_offcut'] ?? null,
+            'uom' => $bagian[0]['uom'] ?? null,
+            'peringatan' => array_values(array_unique(array_merge(...array_column($bagian, 'peringatan')))),
+            'batang' => $bagian,
+            'jumlah_batang' => count($bagian),
+        ];
+        $ringkas['kalimat'] = $this->kalimatBanyakBatang($ringkas, $outputs, $items);
+
+        return ['outputs' => $outputs, 'summary' => $ringkas, 'errors' => $errors];
+    }
+
+    /**
+     * Satu batang → ukuran × jumlah; kerf dan sisa batang itu sendiri.
+     *
+     * @param  array<string, mixed>  $batang
+     * @param  array<int, array<string, mixed>>  $rows
+     * @param  Collection<int, object>  $items
+     * @param  array<string, mixed>  $opsi
+     * @return array{outputs: array<int, array<string, mixed>>, summary: array<string, mixed>, errors: array<string, string>}
+     */
+    private function potongSatu(array $batang, array $rows, Collection $items, array $opsi, string $akhiran): array
+    {
+        $errors = [];
         $ringkas = ['jenis' => 'cut', 'panjang' => 0.0, 'dipakai' => 0.0, 'potongan' => 0, 'kerf_per_potong' => null, 'kerf' => 0.0,
             'sisa' => 0.0, 'sisa_jenis' => null, 'min_offcut' => null, 'uom' => null, 'peringatan' => [], 'kalimat' => ''];
 
-        if ($batang === null) {
-            $errors['batang'] = 'Pilih satu batang yang akan dipotong.';
-
-            return ['outputs' => [], 'summary' => $ringkas, 'errors' => $errors];
-        }
-
-        if (count($inputs) > 1 || $batang['piece_id'] === null) {
-            $errors['batang'] = 'Mode Potong memotong satu batang (item per potong) per konversi.';
+        if ($batang['piece_id'] === null) {
+            $errors['batang'.$akhiran] = 'Mode Potong memotong batang (item per potong); pilih potongan utuh.';
         }
 
         $panjang = round((float) ($batang['qty'] ?? $batang['balance'] ?? 0), 4);
@@ -137,10 +203,12 @@ class ConversionPlanner
             $ringkas['peringatan'][] = 'Item ini belum punya susut mata potong (kerf) di master item; rugi potong dihitung 0.';
         }
 
+        $label = $akhiran === '' ? '' : 'Batang '.($batang['tracking'] ?? '').': ';
+
         if ($outputs === []) {
-            $errors['potong'] = $errors['potong'] ?? 'Isi minimal satu ukuran potongan.';
+            $errors['potong'.$akhiran] = $errors['potong'.$akhiran] ?? $label.'Isi minimal satu ukuran potongan.';
         } elseif ($sisa < -$toleransi) {
-            $errors['potong'] = 'Total potongan + kerf ('.self::angka($dipakai + $kerf).' '.$batang['uom'].') melebihi panjang batang '.self::angka($panjang).' '.$batang['uom'].'.';
+            $errors['potong'.$akhiran] = $label.'Total potongan + kerf ('.self::angka($dipakai + $kerf).' '.$batang['uom'].') melebihi panjang batang '.self::angka($panjang).' '.$batang['uom'].'.';
         }
 
         if ($kerf > $toleransi) {
@@ -178,6 +246,48 @@ class ConversionPlanner
         $ringkas['kalimat'] = $this->kalimatPotong($batang, $rows, $items, $ringkas);
 
         return ['outputs' => $outputs, 'summary' => $ringkas, 'errors' => $errors];
+    }
+
+    /**
+     * "3 batang (18 m) → 10 × 1,5 m + 2 × 2 m + offcut 0,5 m + kerf 0,12 m" (A-253).
+     *
+     * @param  array<string, mixed>  $r
+     * @param  array<int, array<string, mixed>>  $outputs
+     * @param  Collection<int, object>  $items
+     */
+    private function kalimatBanyakBatang(array $r, array $outputs, Collection $items): string
+    {
+        $uom = (string) ($r['uom'] ?? '');
+        $grup = [];
+
+        foreach ($outputs as $o) {
+            if ((string) $o['kind'] !== ConversionOutputKind::Output->value) {
+                continue;
+            }
+
+            $qty = round((float) $o['qty_base'], 4);
+            $kunci = 'output|'.(int) $o['item_id'].'|'.$qty;
+            $grup[$kunci] ??= ['n' => 0, 'qty' => $qty, 'label' => ''];
+            $grup[$kunci]['n'] += (int) $o['count'];
+        }
+
+        // Sisa per batang mengikuti jenisnya (offcut, atau waste bila di bawah minimum).
+        foreach ($r['batang'] as $b) {
+            if ($b['sisa_jenis'] !== null) {
+                $qty = round((float) $b['sisa'], 4);
+                $kunci = $b['sisa_jenis'].'|'.$qty;
+                $grup[$kunci] ??= ['n' => 0, 'qty' => $qty, 'label' => ' '.$b['sisa_jenis']];
+                $grup[$kunci]['n']++;
+            }
+        }
+
+        $bagian = array_map(fn (array $g) => ($g['n'] > 1 ? $g['n'].' × ' : '').self::angka($g['qty']).' '.$uom.$g['label'], array_values($grup));
+
+        if ($r['kerf'] > 0) {
+            $bagian[] = 'kerf '.self::angka($r['kerf']).' '.$uom;
+        }
+
+        return $r['jumlah_batang'].' batang ('.self::angka($r['panjang']).' '.$uom.') → '.($bagian === [] ? '…' : implode(' + ', $bagian));
     }
 
     /**
@@ -377,10 +487,15 @@ class ConversionPlanner
         $kiri = [];
         $uom = null;
 
+        // A-253: batang sama panjang dari item yang sama dikelompokkan ("3 × 6 m PIPA").
         foreach ($inputs as $i) {
             $uom ??= $i->item?->baseUom?->code;
-            $kiri[] = self::angka((float) $i->qty_base).' '.($i->item?->baseUom?->code ?? '').' '.($i->item?->code ?? '');
+            $kunci = $i->item_id.'|'.round((float) $i->qty_base, 4);
+            $kiri[$kunci] ??= ['n' => 0, 'teks' => self::angka((float) $i->qty_base).' '.($i->item?->baseUom?->code ?? '').' '.($i->item?->code ?? '')];
+            $kiri[$kunci]['n']++;
         }
+
+        $kiri = array_map(fn (array $k) => ($k['n'] > 1 ? $k['n'].' × ' : '').$k['teks'], $kiri);
 
         $grup = [];
 

@@ -186,6 +186,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
         Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
         Route::get('/projects/{project}', [ProjectController::class, 'show'])->whereNumber('project')->name('projects.show');
+        // A-250: pindahkan sisa proyek (aset On-site + stok Gudang Site) ke proyek lain.
+        Route::get('/projects/{project}/move', [ProjectController::class, 'move'])->whereNumber('project')->name('projects.move');
         Route::get('/vendors', [VendorController::class, 'index'])->name('vendors.index');
 
         Route::get('/items', [ItemController::class, 'index'])->name('items.index');
@@ -204,6 +206,8 @@ Route::middleware('auth')->group(function (): void {
         // Gudang & lokasi (12-warehouse §6).
         Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
         Route::get('/warehouses/{warehouse}', [WarehouseController::class, 'show'])->name('warehouses.show');
+        // A-254: denah gudang 2D (lihat: warehouse.view; ubah: bin.manage lewat aksi Livewire).
+        Route::get('/warehouses/{warehouse}/layout', [WarehouseController::class, 'layout'])->name('warehouses.layout');
         Route::get('/bins', [BinController::class, 'index'])->name('bins.index');
         Route::get('/warehouse-types', [WarehouseTypeController::class, 'index'])->name('warehouse-types.index');
 

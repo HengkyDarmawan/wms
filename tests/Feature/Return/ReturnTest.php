@@ -167,14 +167,17 @@ class ReturnTest extends TenantTestCase
     }
 
     #[Test]
-    public function tc_ret_05_sj_balik_hanya_untuk_stok_gudang_site(): void
+    public function tc_ret_05_retur_penjualan_merujuk_sj_asal_dan_boleh_dijemput(): void
     {
         $sj = $this->terkirimKeKlien($this->baut, 10);
         $this->terimaSj($sj);
 
         $kunciJual = 'sold:'.$sj->lines()->first()->id;
 
-        $this->gagal(fn () => $this->ret([['key' => $kunciJual, 'qty_base' => 2]], ['self_delivered' => false]), 'BR-RET-03');
+        // A-248 (mengubah A-111): barang di tangan klien boleh dijemput dengan SJ tanpa PCK.
+        $jemput = $this->ret([['key' => $kunciJual, 'qty_base' => 2]], ['self_delivered' => false]);
+        $this->assertTrue($jemput->isPickup());
+        $this->assertNull($jemput->livePickTask());
 
         $ret = $this->ret([['key' => $kunciJual, 'qty_base' => 2]]);
         $this->assertSame(ReturnOwnership::Sold, $ret->lines()->sole()->ownership, 'BR-RET-03: retur penjualan.');

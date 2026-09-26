@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Baris PO: baris PRQ × jumlah satuan dasar × harga satuan (A-210, A-211).
+ * `qty_over_request` + `over_order_reason`: bagian di atas sisa PRQ (A-246).
  * `qty_received` dari GRN (A-214); `qty_cancelled` = sisa yang dibatalkan
  * atau ditutup (A-215).
  */
@@ -26,6 +27,7 @@ class PurchaseOrderLine extends Model
     {
         return [
             'qty_base' => 'decimal:4',
+            'qty_over_request' => 'decimal:4',
             'unit_price' => 'decimal:2',
             'line_amount' => 'decimal:2',
             'qty_received' => 'decimal:4',

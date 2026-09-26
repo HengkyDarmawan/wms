@@ -50,6 +50,41 @@
         </div>
     @endif
 
+    @if ($ubahId)
+        {{-- A-254: ubah kategori & kapasitas bin; kode terkunci (BR-WH-01). --}}
+        <div class="card border-primary mb-3">
+            <div class="card-header"><strong>{{ __('Ubah bin') }}</strong></div>
+            <div class="card-body row g-2">
+                <div class="col-md-4">
+                    <label class="form-label" for="ubah-kategori">{{ __('Kategori penyimpanan') }}</label>
+                    <select class="form-select" id="ubah-kategori" wire:model="formBin.storage_category_id">
+                        <option value="">—</option>
+                        @foreach ($storageCategories as $k) <option value="{{ $k->id }}">{{ $k->name }}</option> @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="ubah-mode">{{ __('Jika melebihi kapasitas') }}</label>
+                    <select class="form-select" id="ubah-mode" wire:model="formBin.capacity_mode">
+                        <option value="">{{ __('Ikut kategori penyimpanan') }}</option>
+                        <option value="warn">{{ __('Peringatan saja') }}</option>
+                        <option value="block">{{ __('Blokir (hitung total isi bin)') }}</option>
+                    </select>
+                </div>
+                @foreach (['capacity_qty' => __('Kapasitas jumlah'), 'capacity_weight' => __('Berat maks. (kg)'), 'capacity_volume' => __('Volume maks. (m³)'), 'capacity_length' => __('Panjang maks.')] as $k => $t)
+                    <div class="col-md-3">
+                        <label class="form-label" for="ubah-{{ $k }}">{{ $t }}</label>
+                        <input class="form-control @error('formBin.'.$k) is-invalid @enderror" id="ubah-{{ $k }}" type="number" step="0.0001" min="0" wire:model="formBin.{{ $k }}" placeholder="{{ __('opsional') }}">
+                        @error('formBin.'.$k) <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                @endforeach
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <button class="btn btn-primary" type="button" wire:click="simpanBin">{{ __('Simpan') }}</button>
+                <button class="btn btn-outline-secondary" type="button" wire:click="batalUbah">{{ __('Batal') }}</button>
+            </div>
+        </div>
+    @endif
+
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-lg-3">
@@ -92,6 +127,14 @@
                     <option value="tidak">{{ __('Tidak ditandai') }}</option>
                 </select>
             </div>
+            <div class="col-lg-2">
+                <label class="form-label" for="filter-zona-bin">{{ __('Zona') }}</label>
+                <input class="form-control" id="filter-zona-bin" type="search" wire:model.live.debounce.400ms="zoneFilter" placeholder="A">
+            </div>
+            <div class="col-lg-2">
+                <label class="form-label" for="filter-rak-bin">{{ __('Rak') }}</label>
+                <input class="form-control" id="filter-rak-bin" type="search" wire:model.live.debounce.400ms="rackFilter" placeholder="R01">
+            </div>
         </div>
     </div>
 
@@ -102,6 +145,7 @@
                     <tr>
                         <th>{{ __('Kode bin') }}</th>
                         <th>{{ __('Gudang') }}</th>
+                        <th>{{ __('Zona · Rak · Level') }}</th>
                         <th>{{ __('Jenis') }}</th>
                         <th>{{ __('Kategori penyimpanan') }}</th>
                         <th class="text-end">{{ __('Kapasitas') }}</th>
@@ -125,6 +169,15 @@
                                 @endif
                             </td>
                             <td>{{ $bin->warehouse?->code ?? '—' }}</td>
+                            <td class="small">
+                                @if ($bin->rackLevel)
+                                    {{ $bin->rackLevel->rack?->zone?->code }} · {{ $bin->rackLevel->rack?->code }} · {{ $bin->rackLevel->code }}
+                                    @if ($bin->rackLevel->rack?->is_area) <span class="badge text-bg-secondary">{{ __('area') }}</span> @endif
+                                @else
+                                    —
+                                @endif
+                                @if ($bin->occupiedBy) <div class="text-muted">{{ __('ikut terpakai oleh') }} {{ $bin->occupiedBy->code }}</div> @endif
+                            </td>
                             <td>{{ $bin->bin_type->label() }}</td>
                             <td>
                                 {{ $bin->storageCategory?->name ?? '—' }}
@@ -133,7 +186,7 @@
                                 @endif
                             </td>
                             <td class="text-end small">
-                                {{ $bin->capacity_qty ? (float) $bin->capacity_qty : '—' }}
+                                {{ collect(['' => $bin->capacity_qty, ' kg' => $bin->capacity_weight, ' m³' => $bin->capacity_volume, ' ('.__('panjang').')' => $bin->capacity_length])->filter(fn ($v) => $v !== null)->map(fn ($v, $s) => (float) $v.$s)->implode(' · ') ?: '—' }}
                             </td>
                             <td>
                                 <span class="badge text-bg-{{ $bin->bin_status->badge() }}">
@@ -159,6 +212,9 @@
                                         @endunless
                                     @endif
 
+                                    @unless ($bin->is_virtual)
+                                        <button class="btn btn-sm btn-outline-primary" type="button" wire:click="mintaUbah({{ $bin->id }})">{{ __('Ubah') }}</button>
+                                    @endunless
                                     <button class="btn btn-sm btn-outline-secondary" type="button"
                                             wire:click="ubahPenandaHitung({{ $bin->id }}, {{ $bin->count_flag ? 'false' : 'true' }})">
                                         {{ $bin->count_flag ? __('Lepas penanda') : __('Tandai hitung') }}
@@ -168,7 +224,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">{{ __('Belum ada bin yang cocok.') }}</td>
+                            <td colspan="8" class="text-center text-muted py-4">{{ __('Belum ada bin yang cocok.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

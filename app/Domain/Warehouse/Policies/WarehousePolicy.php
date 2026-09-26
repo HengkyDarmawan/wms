@@ -32,6 +32,13 @@ class WarehousePolicy
             && $actor->canAccessWarehouse((int) $warehouse->id);
     }
 
+    /** Denah gudang (A-254): ubah ukuran/posisi, rak area, bin ikut terpakai. */
+    public function manageLayout(User $actor, Warehouse $warehouse): bool
+    {
+        return $actor->hasPermission('bin.manage')
+            && $actor->canAccessWarehouse((int) $warehouse->id);
+    }
+
     public function deactivate(User $actor, Warehouse $warehouse): bool
     {
         return $actor->hasPermission('warehouse.deactivate');

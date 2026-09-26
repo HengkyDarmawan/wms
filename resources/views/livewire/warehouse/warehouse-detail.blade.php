@@ -12,7 +12,11 @@
                 @endif
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('warehouses.index') }}">{{ __('Kembali') }}</a>
+        <div class="d-flex flex-wrap gap-2">
+            {{-- A-254: denah 2D zona → rak → level → bin. --}}
+            <a class="btn btn-primary" href="{{ route('warehouses.layout', $warehouse) }}"><i class="bi bi-grid-3x3-gap"></i> {{ __('Denah gudang') }}</a>
+            <a class="btn btn-outline-secondary" href="{{ route('warehouses.index') }}">{{ __('Kembali') }}</a>
+        </div>
     </div>
 
     @if ($ruleError !== '')

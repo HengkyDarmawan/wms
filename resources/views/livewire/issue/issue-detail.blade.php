@@ -147,6 +147,10 @@
     ])
 
     @if ($isu->isReversal())
+    {{-- A-252: dokumen asal & turunan. --}}
+    @unless ($portal ?? false)
+        <x-related-documents :document="$isu" />
+    @endunless
         @include('approval.partials.history', ['riwayatApproval' => $riwayatApproval])
     @endif
 

@@ -24,7 +24,7 @@ class Zone extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return ['is_active' => 'boolean', 'length_m' => 'decimal:2', 'width_m' => 'decimal:2'];
     }
 
     public function warehouse(): BelongsTo

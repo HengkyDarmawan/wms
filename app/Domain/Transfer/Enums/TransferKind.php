@@ -15,6 +15,7 @@ enum TransferKind: string
     case BetweenWarehouses = 'between_warehouses';
     case BetweenProjects = 'between_projects';
     case WithinProject = 'within_project';
+    case AssetOnSite = 'asset_onsite';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum TransferKind: string
             self::BetweenWarehouses => 'Antar gudang',
             self::BetweenProjects => 'Antar proyek',
             self::WithinProject => 'Dalam proyek (antar titik)',
+            self::AssetOnSite => 'Aset antar proyek (On-site)',
         };
     }
 

@@ -141,6 +141,14 @@ class GoodsReturnApprovalHandler implements ApprovalHandler
             return;
         }
 
+        // A-248: barang di proyek dijemput driver; RET menunggu SJ jemput
+        // disusun gudang tujuan (tanpa PCK, tanpa cadangan stok).
+        if ($document->isPickup()) {
+            activity('return')->performedOn($document)->causedBy($actor)->log('RET menunggu SJ jemput dari gudang tujuan');
+
+            return;
+        }
+
         $this->cobaBuatPicking($document, $actor);
     }
 

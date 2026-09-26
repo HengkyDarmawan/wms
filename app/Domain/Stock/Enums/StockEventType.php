@@ -26,6 +26,8 @@ enum StockEventType: string
     case StockAdjusted = 'stock_adjusted';
     case AssetCheckedOut = 'asset_checked_out';
     case AssetReturned = 'asset_returned';
+    // Katalog v0.21, A-249: aset pindah bin On-site proyek asal → proyek tujuan.
+    case AssetTransferred = 'asset_transferred';
     case AssetLostOrDamaged = 'asset_lost_or_damaged';
     case PurchaseRequested = 'purchase_requested';
     case PurchaseRequestCancelled = 'purchase_request_cancelled';
@@ -46,6 +48,7 @@ enum StockEventType: string
             self::StockAdjusted => 'Stok disesuaikan',
             self::AssetCheckedOut => 'Aset dipinjamkan',
             self::AssetReturned => 'Aset kembali',
+            self::AssetTransferred => 'Aset dipindah antar proyek',
             self::AssetLostOrDamaged => 'Aset hilang atau rusak',
             self::PurchaseRequested => 'Permintaan pembelian',
             self::PurchaseRequestCancelled => 'Permintaan pembelian dibatalkan',

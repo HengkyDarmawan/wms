@@ -31,8 +31,8 @@ use Livewire\Component;
 
 /**
  * Layar 24-konversi-waste §6 — CNV baru / ubah draf, dirancang per jenis
- * (A-229): **Potong** = satu batang → daftar ukuran × jumlah, kerf & sisa
- * dihitung {@see ConversionPlanner}; **Ganti kemasan** = input → item tujuan,
+ * (A-229): **Potong** = satu atau beberapa batang (A-253) → daftar ukuran ×
+ * jumlah per batang, kerf & sisa dihitung per batang {@see ConversionPlanner}; **Ganti kemasan** = input → item tujuan,
  * susut otomatis waste; **Rakit/Bongkar** = input & hasil bebas tanpa neraca.
  * Ringkasan di layar dan baris yang disimpan berasal dari perencana yang
  * sama, jadi tidak ada selisih antara pratinjau dan pemeriksaan server.
@@ -49,6 +49,17 @@ class ConversionForm extends Component
 
     /** @var array<int, array<string, string>> Potong: id, item_id, length, count */
     public array $potong = [];
+
+    /**
+     * Potong banyak batang (A-253): batang ke-2 dst., masing-masing dengan pola
+     * sendiri. Batang pertama tetap `$batang` + `$potong`.
+     *
+     * @var array<int, array{id: string, key: string, potong: array<int, array<string, string>>}>
+     */
+    public array $tambahan = [];
+
+    /** Jumlah batang tujuan "salin pola batang 1". */
+    public string $jumlahSalin = '1';
 
     /** @var array<string, string> Ganti kemasan / rakit / bongkar: kunci calon => jumlah */
     public array $qty = [];
@@ -119,6 +130,73 @@ class ConversionForm extends Component
     public function hapusPotong(string $id): void
     {
         $this->potong = array_values(array_filter($this->potong, fn ($p) => $p['id'] !== $id)) ?: [$this->barisPotong()];
+    }
+
+    /** A-253: tambah batang kosong dengan satu baris ukuran. */
+    public function tambahBatang(): void
+    {
+        $this->tambahan[] = ['id' => (string) Str::uuid(), 'key' => '', 'potong' => [$this->barisPotong()]];
+    }
+
+    public function hapusBatang(string $id): void
+    {
+        $this->tambahan = array_values(array_filter($this->tambahan, fn ($b) => $b['id'] !== $id));
+    }
+
+    public function tambahPotongBatang(string $id): void
+    {
+        foreach ($this->tambahan as $i => $b) {
+            if ($b['id'] === $id) {
+                $this->tambahan[$i]['potong'][] = $this->barisPotong();
+            }
+        }
+    }
+
+    public function hapusPotongBatang(string $id, string $barisId): void
+    {
+        foreach ($this->tambahan as $i => $b) {
+            if ($b['id'] === $id) {
+                $this->tambahan[$i]['potong'] = array_values(array_filter($b['potong'], fn ($p) => $p['id'] !== $barisId)) ?: [$this->barisPotong()];
+            }
+        }
+    }
+
+    /**
+     * A-253: salin pola batang pertama ke N batang lain dengan item yang sama,
+     * dipilih otomatis **FIFO** — potongan tertua lebih dulu (A-185), bin
+     * dibeku dilewati. Pola tiap batang tetap bisa diubah sesudahnya.
+     */
+    public function salinPola(): void
+    {
+        $this->resetErrorBag('jumlahSalin');
+        $calon = $this->calon();
+        $pertama = $calon->get($this->batang);
+
+        if ($pertama === null) {
+            $this->addError('jumlahSalin', __('Pilih batang pertama dan isi polanya dulu.'));
+
+            return;
+        }
+
+        $jumlah = is_numeric($this->jumlahSalin) ? max(0, (int) $this->jumlahSalin) : 0;
+        $terpakai = array_merge([$this->batang], array_column($this->tambahan, 'key'));
+
+        $pilihan = $calon
+            ->filter(fn (array $c, string $kunci) => $c['piece_id'] !== null && ! $c['frozen'] && (int) $c['item_id'] === (int) $pertama['item_id'] && ! in_array($kunci, $terpakai, true))
+            ->sortBy('piece_id')
+            ->take($jumlah);
+
+        if ($pilihan->count() < $jumlah) {
+            $this->addError('jumlahSalin', __('Hanya ada :n batang lain untuk :item di gudang ini.', ['n' => $pilihan->count(), 'item' => $pertama['item_code']]));
+        }
+
+        foreach ($pilihan->keys() as $kunci) {
+            $this->tambahan[] = [
+                'id' => (string) Str::uuid(),
+                'key' => (string) $kunci,
+                'potong' => array_map(fn (array $p) => ['id' => (string) Str::uuid()] + $p, array_map(fn ($p) => array_diff_key($p, ['id' => true]), $this->potong)),
+            ];
+        }
     }
 
     public function tambahHasil(string $kind = 'output'): void
@@ -272,10 +350,10 @@ class ConversionForm extends Component
     {
         $jenis = $this->jenis();
         $inputs = $jenis === ConversionType::Cut
-            ? array_values(array_filter([$this->batangTerpilih($calon)]))
+            ? $this->batangSemua($calon)
             : $this->inputTerpilih($calon)->values()->all();
 
-        $rows = $jenis === ConversionType::Cut ? $this->potong : $this->hasil;
+        $rows = $jenis === ConversionType::Cut ? $this->barisPotongSemua($calon) : $this->hasil;
 
         return app(ConversionPlanner::class)->plan($jenis, $inputs, $rows, $items->keyBy('id'), [
             'bin_id' => $this->form['bin_id'],
@@ -307,7 +385,7 @@ class ConversionForm extends Component
         }
 
         $inputs = $this->jenis() === ConversionType::Cut
-            ? array_values(array_map(fn ($c) => ['key' => $c['key'], 'qty_base' => $c['qty']], array_filter([$this->batangTerpilih($calon)])))
+            ? array_map(fn ($c) => ['key' => $c['key'], 'qty_base' => $c['qty']], $this->batangSemua($calon))
             : $this->inputTerpilih($calon)->map(fn ($c) => ['key' => $c['key'], 'qty_base' => $c['qty']])->values()->all();
 
         $cnv = null;
@@ -345,13 +423,18 @@ class ConversionForm extends Component
         $outputs = $conversion->outputs()->orderBy('id')->get();
 
         if ($conversion->conversion_type === ConversionType::Cut) {
-            $pertama = $inputs->first();
-            $this->batang = $pertama === null ? '' : str_replace(':', '_', ConvertibleStock::key((int) $pertama->bin_id, (int) $pertama->item_id, $pertama->lot_id, $pertama->piece_id));
-
-            $this->potong = $outputs->where('output_kind', ConversionOutputKind::Output)
+            // A-253: tiap input = satu batang; baris ukurannya = output ber-induk input itu.
+            $pola = fn ($input) => $outputs->where('output_kind', ConversionOutputKind::Output)
+                ->filter(fn ($o) => (int) ($o->parent_input_id ?? $inputs->first()?->id) === (int) $input->id)
                 ->groupBy(fn ($o) => $o->item_id.'|'.(float) $o->qty_base)
-                ->map(fn ($g) => ['id' => (string) Str::uuid(), 'item_id' => (int) $g->first()->item_id === (int) $pertama?->item_id ? '' : (string) $g->first()->item_id, 'length' => $this->angka((float) $g->first()->qty_base), 'count' => (string) $g->count()])
+                ->map(fn ($g) => ['id' => (string) Str::uuid(), 'item_id' => (int) $g->first()->item_id === (int) $input->item_id ? '' : (string) $g->first()->item_id, 'length' => $this->angka((float) $g->first()->qty_base), 'count' => (string) $g->count()])
                 ->values()->all() ?: [$this->barisPotong()];
+            $kunci = fn ($i) => str_replace(':', '_', ConvertibleStock::key((int) $i->bin_id, (int) $i->item_id, $i->lot_id, $i->piece_id));
+
+            $pertama = $inputs->first();
+            $this->batang = $pertama === null ? '' : $kunci($pertama);
+            $this->potong = $pertama === null ? [$this->barisPotong()] : $pola($pertama);
+            $this->tambahan = $inputs->slice(1)->map(fn ($i) => ['id' => (string) Str::uuid(), 'key' => $kunci($i), 'potong' => $pola($i)])->values()->all();
             $this->form['bin_id'] = (string) ($outputs->firstWhere('output_kind', ConversionOutputKind::Output)?->bin_id ?? '');
             $this->hasil = [$this->barisHasil()];
 
@@ -374,6 +457,7 @@ class ConversionForm extends Component
         $this->batang = '';
         $this->qty = [];
         $this->potong = [$this->barisPotong()];
+        $this->tambahan = [];
         $this->hasil = [$this->barisHasil()];
     }
 
@@ -445,6 +529,54 @@ class ConversionForm extends Component
             ->filter(fn (array $c) => $this->jenis() !== ConversionType::Repack || $c['piece_id'] === null)
             ->filter(fn (array $c, string $kunci) => $q === '' || isset($this->qty[$kunci])
                 || str_contains(mb_strtolower($c['item_code'].' '.$c['item_name'].' '.$c['bin_code'].' '.$c['tracking']), $q));
+    }
+
+    /**
+     * Semua batang Potong (A-253): batang pertama lalu batang tambahan yang
+     * sudah dipilih, masing-masing dipotong utuh sepanjang saldonya.
+     *
+     * @param  Collection<string, array<string, mixed>>  $calon
+     * @return array<int, array<string, mixed>>
+     */
+    private function batangSemua(Collection $calon): array
+    {
+        $hasil = array_filter([$this->batangTerpilih($calon)]);
+
+        foreach ($this->tambahan as $b) {
+            $c = $calon->get($b['key']);
+
+            if ($c !== null && $c['piece_id'] !== null) {
+                $hasil[] = $c + ['qty' => (float) $c['balance']];
+            }
+        }
+
+        return array_values($hasil);
+    }
+
+    /**
+     * Baris ukuran semua batang dengan `parent` = kunci batangnya (A-253).
+     *
+     * @param  Collection<string, array<string, mixed>>  $calon
+     * @return array<int, array<string, string>>
+     */
+    private function barisPotongSemua(Collection $calon): array
+    {
+        $pertama = $calon->get($this->batang)['key'] ?? '';
+        $rows = array_map(fn (array $p) => $p + ['parent' => (string) $pertama], $this->potong);
+
+        foreach ($this->tambahan as $b) {
+            $kunci = $calon->get($b['key'])['key'] ?? null;
+
+            if ($kunci === null) {
+                continue;
+            }
+
+            foreach ($b['potong'] as $p) {
+                $rows[] = $p + ['parent' => (string) $kunci];
+            }
+        }
+
+        return $rows;
     }
 
     /** @param  Collection<string, array<string, mixed>>  $calon */

@@ -12,6 +12,7 @@ use App\Domain\Shipment\Actions\ShipShipment;
 use App\Domain\Shipment\Livewire\Concerns\HandlesShipmentRules;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Shipment\Support\ProofFiles;
+use App\Domain\Shipment\Support\ShipmentLineOrigins;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
@@ -77,12 +78,15 @@ class ShipmentDetail extends Component
     public function render(): View
     {
         $sj = $this->shipment();
+        $lines = $sj->lines()->with('item:id,code,name', 'serial:id,serial_no', 'piece:id,piece_no', 'pickTaskLine.bin:id,code', 'pickTaskLine.pickTask')->orderBy('id')->get();
 
         return view('livewire.shipment.shipment-detail', [
             'sj' => $sj,
-            'lines' => $sj->lines()->with('pickTaskLine.item:id,code,name', 'pickTaskLine.bin:id,code', 'pickTaskLine.serial:id,serial_no', 'pickTaskLine.piece:id,piece_no')->orderBy('id')->get(),
+            'lines' => $lines,
+            // Asal per baris: REQ/SJ asal, AST, atau DSC (A-248).
+            'asal' => app(ShipmentLineOrigins::class)->for($sj, $lines),
             'bukti' => $sj->proof()->with('lines.units')->first(),
-            'selisih' => $sj->discrepancies()->with('lines.shipmentLine.pickTaskLine.item')->orderByDesc('id')->get(),
+            'selisih' => $sj->discrepancies()->with('lines.shipmentLine.item')->orderByDesc('id')->get(),
             'alasan' => $this->pilihanAlasan(ReasonContext::Cancel),
             'riwayat' => $this->riwayat($sj),
         ]);
@@ -123,7 +127,7 @@ class ShipmentDetail extends Component
             $this->foto = null;
             $this->tandaTangan = '';
             $this->fotoRusak = [];
-            $this->terima = $sj->lines()->with('pickTaskLine:id,serial_id,piece_id')->orderBy('id')->get()
+            $this->terima = $sj->lines()->orderBy('id')->get()
                 ->mapWithKeys(fn ($l) => [$l->id => [
                     // Bawaannya seluruhnya baik: yang paling sering terjadi.
                     'qty_good' => (string) (float) $l->qty_shipped,
@@ -132,7 +136,7 @@ class ShipmentDetail extends Component
                     'damage_photo_path' => '',
                     'notes' => '',
                     // A-244: serial/potongan dinilai per unit — satu pilihan kondisi.
-                    'kondisi' => $l->pickTaskLine?->serial_id !== null || $l->pickTaskLine?->piece_id !== null ? 'good' : null,
+                    'kondisi' => $l->isUnit() ? 'good' : null,
                     'qty' => (float) $l->qty_shipped,
                 ]])->all();
         }

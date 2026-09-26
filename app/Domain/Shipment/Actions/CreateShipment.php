@@ -20,6 +20,8 @@ use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Shipment\Models\ShipmentLine;
 use App\Domain\Stock\Support\DocumentNumber;
 use App\Domain\Transfer\Models\Transfer;
+use App\Domain\Warehouse\Models\Warehouse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -81,6 +83,11 @@ class CreateShipment
                     ShipmentLine::create([
                         'shipment_id' => $sj->id,
                         'pick_task_line_id' => $baris->id,
+                        // A-247: identitas barang ikut di baris SJ.
+                        'item_id' => $baris->item_id,
+                        'lot_id' => $baris->lot_id,
+                        'serial_id' => $baris->serial_id,
+                        'piece_id' => $baris->piece_id,
                         'qty_shipped' => $sisa,
                         'ownership_effect' => $this->efekKepemilikan($pck, $baris, $tujuan),
                     ]);
@@ -115,9 +122,9 @@ class CreateShipment
      * BR-SJ-09: PCK yang digabung harus satu gudang asal dan satu tujuan.
      *
      * @param  array<int, int>  $ids
-     * @return \Illuminate\Support\Collection<int, PickTask>
+     * @return Collection<int, PickTask>
      */
-    private function kumpulkanTugas(array $ids): \Illuminate\Support\Collection
+    private function kumpulkanTugas(array $ids): Collection
     {
         $ids = array_values(array_unique(array_map('intval', $ids)));
 
@@ -180,10 +187,10 @@ class CreateShipment
      * SJ-nya wajib bertujuan gudang tujuan dokumen itu. PCK retur tidak digabung
      * dengan PCK lain karena satu SJ balik diterima satu GRN retur.
      *
-     * @param  \Illuminate\Support\Collection<int, PickTask>  $tugas
+     * @param  Collection<int, PickTask>  $tugas
      * @param  array<string, mixed>  $data
      */
-    private function pastikanTujuanDokumen(\Illuminate\Support\Collection $tugas, DestinationType $tujuan, array $data): void
+    private function pastikanTujuanDokumen(Collection $tugas, DestinationType $tujuan, array $data): void
     {
         $retur = $tugas->where('source_type', 'goods_return');
 
@@ -208,7 +215,7 @@ class CreateShipment
             $gudangTujuan = (int) $dokumen->to_warehouse_id;
 
             if (! $tujuan->staysInTransitUntilReceipt() || (int) ($data['destination_warehouse_id'] ?? 0) !== $gudangTujuan) {
-                $kode = \App\Domain\Warehouse\Models\Warehouse::withoutGlobalScopes()->whereKey($gudangTujuan)->value('code');
+                $kode = Warehouse::withoutGlobalScopes()->whereKey($gudangTujuan)->value('code');
 
                 throw ShipmentRuleException::field(
                     'BR-SJ-09',

@@ -77,6 +77,33 @@ class Shipment extends Model
         return $this->belongsTo(Project::class, 'destination_project_id');
     }
 
+    /** Proyek tempat barang dijemput (SJ tanpa PCK, A-247). */
+    public function originProject(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'origin_project_id');
+    }
+
+    /**
+     * SJ tanpa PCK (A-247): berangkat dari proyek, barisnya baris RET/TRF.
+     * Stok tidak bergerak saat berangkat karena barangnya tidak di bin gudang.
+     */
+    public function isWithoutPicking(): bool
+    {
+        return $this->source_type !== null;
+    }
+
+    /** SJ jemput retur (A-248). */
+    public function isReturnPickup(): bool
+    {
+        return $this->source_type === 'goods_return';
+    }
+
+    /** SJ antar site TRF aset antar proyek (A-249). */
+    public function isSiteTransfer(): bool
+    {
+        return $this->source_type === 'transfer';
+    }
+
     public function destinationWarehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class, 'destination_warehouse_id');
@@ -154,8 +181,9 @@ class Shipment extends Model
     public function carrierLabel(): string
     {
         return match ($this->shipment_method) {
-            ShipmentMethod::OwnFleet => trim(($this->vehicle?->plate_no ?? '').' · '.($this->driver?->name ?? ''), ' ·'),
-            ShipmentMethod::Carrier => trim(($this->carrier?->name ?? '').' · '.($this->tracking_no ?? ''), ' ·'),
+            // A-247: plat & sopir boleh teks bebas bila bukan master.
+            ShipmentMethod::OwnFleet => trim(($this->vehicle?->plate_no ?? $this->vehicle_plate ?? '').' · '.($this->driver?->name ?? $this->carried_by_name ?? ''), ' ·'),
+            ShipmentMethod::Carrier => trim(implode(' · ', array_filter([$this->carrier?->name, $this->vehicle_plate, $this->carried_by_name, $this->tracking_no]))),
             ShipmentMethod::SelfDelivered => (string) ($this->carried_by_name ?? '—'),
         };
     }

@@ -23,6 +23,7 @@ use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Return\Support\ReturnableStock;
+use App\Domain\Shared\Support\ProjectDocumentTimeline;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Models\StockBalance;
@@ -140,6 +141,12 @@ class ProjectDetail extends Component
             'alasan' => ReasonCode::options(ReasonContext::Cancel),
             'tabs' => $this->labelTab(),
             'data' => $this->dataTab($project, $stok),
+            // A-250: riwayat pindahan antar proyek — TRF yang proyek asal/tujuannya berbeda.
+            'pindahan' => Transfer::query()
+                ->where(fn (Builder $q) => $q->where('from_project_id', $project->id)->orWhere('to_project_id', $project->id))
+                ->whereNotNull('from_project_id')->whereNotNull('to_project_id')->whereColumn('from_project_id', '!=', 'to_project_id')
+                ->with('fromProject:id,code,name', 'toProject:id,code,name')->withCount('lines')
+                ->orderByDesc('id')->limit(10)->get(),
         ]);
     }
 
@@ -225,8 +232,12 @@ class ProjectDetail extends Component
             'aset' => AssetHandover::query()->where('project_id', $id)->with('serial:id,serial_no,asset_state,due_return_date', 'item:id,code,name')
                 ->orderByDesc('id')->paginate(20, pageName: 'ast'),
             'approval' => $this->approvalMenunggu($project),
-            'riwayat' => Activity::query()->where('subject_type', Project::class)->where('subject_id', $id)
-                ->with('causer:id,name')->latest('id')->paginate(20, pageName: 'riwayat'),
+            // A-252: linimasa dokumen proyek di atas log aktivitas proyek.
+            'riwayat' => [
+                'dokumen' => app(ProjectDocumentTimeline::class)->for($project),
+                'aktivitas' => Activity::query()->where('subject_type', Project::class)->where('subject_id', $id)
+                    ->with('causer:id,name')->latest('id')->paginate(20, pageName: 'riwayat'),
+            ],
             default => null,
         };
     }

@@ -377,8 +377,10 @@ class SaveGoodsReceipt
 
         foreach ($ret->requestedLines()->with('item')->orderBy('id')->get() as $rl) {
             /** @var GoodsReturnLine $rl */
-            $sjLine = $sj?->lines->first(fn (ShipmentLine $x) => $x->pickTaskLine?->pickTask?->source_type === 'goods_return'
-                && (int) $x->pickTaskLine->source_line_id === (int) $rl->id);
+            // SJ balik lewat PCK (A-111) atau SJ jemput tanpa PCK (A-248).
+            $sjLine = $sj?->lines->first(fn (ShipmentLine $x) => $sj->isReturnPickup()
+                ? (int) $x->source_line_id === (int) $rl->id
+                : $x->pickTaskLine?->pickTask?->source_type === 'goods_return' && (int) $x->pickTaskLine->source_line_id === (int) $rl->id);
             $maks = $sj !== null ? (float) ($sjLine?->qty_delivered ?? 0) : (float) $rl->qty_base;
 
             if ($maks <= 0) {

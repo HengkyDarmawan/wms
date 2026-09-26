@@ -43,6 +43,9 @@ class PurchaseOrderForm extends Component
     /** @var array<int|string, string> purchase_request_line_id => harga satuan */
     public array $price = [];
 
+    /** @var array<int|string, string> purchase_request_line_id => alasan pesan lebih (A-246) */
+    public array $reason = [];
+
     public function mount(?PurchaseOrder $purchaseOrder = null): void
     {
         if ($purchaseOrder !== null && $purchaseOrder->exists) {
@@ -59,6 +62,7 @@ class PurchaseOrderForm extends Component
             foreach ($purchaseOrder->lines as $l) {
                 $this->qty[$l->purchase_request_line_id] = $this->angka((float) $l->qty_base);
                 $this->price[$l->purchase_request_line_id] = $this->angka((float) $l->unit_price);
+                $this->reason[$l->purchase_request_line_id] = (string) $l->over_order_reason;
             }
 
             return;
@@ -158,6 +162,14 @@ class PurchaseOrderForm extends Component
         return is_numeric($q) && is_numeric($h) ? Money::round((float) $q * (float) $h) : 0.0;
     }
 
+    /** Jumlah isian di atas sisa permintaan (A-246). */
+    public function lebih(int|string $lineId, float $sisa): float
+    {
+        $q = $this->qty[$lineId] ?? '';
+
+        return is_numeric($q) && (float) $q - $sisa > 0.00005 ? round((float) $q - $sisa, 4) : 0.0;
+    }
+
     private function simpanDraf(CreatePurchaseOrder $action): ?PurchaseOrder
     {
         $this->validate([
@@ -169,7 +181,7 @@ class PurchaseOrderForm extends Component
 
         foreach ($this->qty as $lineId => $jumlah) {
             if (is_numeric($jumlah) && (float) $jumlah != 0.0) {
-                $baris[] = ['purchase_request_line_id' => (int) $lineId, 'qty_base' => $jumlah, 'unit_price' => $this->price[$lineId] ?? null];
+                $baris[] = ['purchase_request_line_id' => (int) $lineId, 'qty_base' => $jumlah, 'unit_price' => $this->price[$lineId] ?? null, 'over_order_reason' => $this->reason[$lineId] ?? null];
             }
         }
 

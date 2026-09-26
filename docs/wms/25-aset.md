@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `asset` (Aset Dipinjamkan)
 
-**Versi:** 0.6
-**Tanggal:** 25 September 2026
-**Status:** selesai Fase 1 — modul ketiga belas setelah [Konversi & Waste](24-konversi-waste.md); melengkapi stub pemeriksaan aset di retur ([A-116](04-keputusan-dan-asumsi.md#a-116)); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-163](04-keputusan-dan-asumsi.md#a-163)–[A-169](04-keputusan-dan-asumsi.md#a-169) (*Perlu validasi*); v0.3: pengingat harian aset lewat jatuh tempo lewat notifikasi ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189))
+**Versi:** 0.7
+**Tanggal:** 26 September 2026
+**Status:** selesai Fase 1 — modul ketiga belas setelah [Konversi & Waste](24-konversi-waste.md); melengkapi stub pemeriksaan aset di retur ([A-116](04-keputusan-dan-asumsi.md#a-116)); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-163](04-keputusan-dan-asumsi.md#a-163)–[A-169](04-keputusan-dan-asumsi.md#a-169) (*Perlu validasi*); v0.3: pengingat harian aset lewat jatuh tempo lewat notifikasi ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.7: **transfer aset On-site antar proyek** (TRF aset + SJ antar site, AST `transferred`, kejadian `asset_transferred`), pindahan sisa proyek dari hub, jejak lokasi aset ([A-249](04b-asumsi-lanjutan.md#a-249), [A-250](04b-asumsi-lanjutan.md#a-250), [A-251](04b-asumsi-lanjutan.md#a-251))
 **Modul:** `asset` (AST)
 **Fase:** F1 (serah terima otomatis dari SJ, kembali lewat RET/GRN, pemeriksaan grade + skor + foto + meter, state aset mengikuti lokasi, aset hilang → ADJ, laporan aset dipinjamkan, cetak BA Serah Terima Aset); jadwal maintenance & pemicu meter `[F2]` stub ([BR-AST-07](05-aturan-bisnis.md#br-ast)); notifikasi jatuh tempo menunggu modul notifikasi
 **Dokumen terkait:** [Blueprint §6.8](01-blueprint.md#68-aset-dipinjamkan) · [Aturan Bisnis §BR-AST](05-aturan-bisnis.md#br-ast), [§14 matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status §2.11, §3](06-katalog-status-dan-enum.md) · [Model data 08c](08c-model-data-pendukung.md) · [A-29](04-keputusan-dan-asumsi.md#a-29), [A-66](04-keputusan-dan-asumsi.md#a-66), [A-116](04-keputusan-dan-asumsi.md#a-116) · [22-retur-transfer](22-retur-transfer.md), [15-picking-shipment](15-picking-shipment.md), [21-opname-penyesuaian](21-opname-penyesuaian.md)
@@ -20,7 +20,7 @@ Aset (genset, scaffolding, alat) dipinjamkan ke proyek dan kembali lagi; ia teta
 - **Aset hilang** → ADJ keluar lewat approval → dihapuskan ([BR-AST-04](05-aturan-bisnis.md#br-ast)).
 - **Jatuh tempo & sisa umur**: laporan *Aset dipinjamkan*, filter lewat jatuh tempo, peringatan sisa umur ([BR-AST-06](05-aturan-bisnis.md#br-ast), [BR-AST-08](05-aturan-bisnis.md#br-ast)).
 
-Tidak termasuk: tarif sewa & penyusutan (Akuntansi, [D-07](04-keputusan-dan-asumsi.md#d-07)); jadwal maintenance `[F2]`; transfer aset On-site → On-site antar proyek ([A-116](04-keputusan-dan-asumsi.md#a-116)); notifikasi in-app/email.
+Tidak termasuk: tarif sewa & penyusutan (Akuntansi, [D-07](04-keputusan-dan-asumsi.md#d-07)); jadwal maintenance `[F2]`; notifikasi in-app/email. Transfer aset On-site → On-site antar proyek **termasuk** sejak v0.7 ([A-249](04b-asumsi-lanjutan.md#a-249)).
 
 ## 2. Aktor & permission
 
@@ -65,11 +65,13 @@ asset_handover:
     - {from: null, to: checked_out, action: system, when: shipment_loan_delivered, effect: asset_checked_out}   # ConfirmDelivery
     - {from: checked_out, to: returned, action: system, when: return_grn_received}                             # ReturnProgress
     - {from: returned, to: inspected, action: asset.inspect, guard: grade_score_components_photo}
-  terminal: [inspected]
+    - {from: checked_out, to: transferred, action: system, when: site_shipment_delivered, effect: asset_transferred}  # A-249, AST baru checked_out di proyek tujuan
+  terminal: [inspected, transferred]
 asset_state:            # BR-AST-01, disinkron dari kartu stok & reservasi (A-164)
   available -> reserved: alokasi keras serial / Loading Area
   reserved -> in_transit: SJ berangkat
   in_transit -> on_loan: SJ diterima proyek (bin On-site)
+  on_loan -> on_loan: SJ antar site diterima proyek tujuan (On-site → On-site, current_project berganti, A-249)
   on_loan -> returned: GRN retur (bin Retur)
   returned -> available|maintenance|damaged: asset.inspect (grade A/B, C, D)
   any -> lost: asset.mark_lost (tanpa pergerakan)
@@ -80,6 +82,7 @@ asset_state:            # BR-AST-01, disinkron dari kartu stok & reservasi (A-16
 | Transisi | Implementasi | Efek samping |
 |---|---|---|
 | → `checked_out` | `Shipment\Actions\ConfirmDelivery` → `Asset\Support\AssetCustody::checkOut` | AST baru; jatuh tempo bawaan = target selesai proyek (bila belum lewat); meter keluar = pembacaan terakhir; payload `asset_checked_out` diperkaya |
+| → `transferred` + AST baru | `Transfer\Actions\CreateAssetTransfer` (`transfer.create`) → approval → `Shipment\Actions\CreatePickupShipment::forAssetTransfer` (`shipment.create`) → `ConfirmDelivery::terimaAntarSite` → `AssetCustody::transfer` | AST lama `transferred` + `usage_days` + `next_handover_id`; AST baru `checked_out` (`previous_handover_id`, `transfer_id`, jatuh tempo = target selesai proyek tujuan, meter keluar = pembacaan terakhir); satu pergerakan On-site → On-site; tanpa pemeriksaan ([A-249](04b-asumsi-lanjutan.md#a-249)) |
 | lengkapi serah terima | `Asset\Actions\UpdateAssetHandover` (`asset.manage`) | tanggal kembali ≥ tanggal keluar, meter & grade keluar |
 | → `returned` | `Return\Support\ReturnProgress::received` → `AssetCustody::returned` | hari pakai; AST susulan bila aset di On-site tanpa AST |
 | → `inspected` | `Asset\Actions\InspectAsset` via `POST /asset-handovers/{id}/inspect` | riwayat pemeriksaan, pemakaian meter, grade/skor/akumulasi meter di serial, state = hasil grade; C/D menerbitkan `asset_lost_or_damaged` |
@@ -121,6 +124,7 @@ Detail RET menampilkan nomor AST dan statusnya pada baris aset saat pemilahan. M
 | Kejadian | Pergerakan | Payload tambahan |
 |---|---|---|
 | `asset_checked_out` | SJ loan diterima: Dalam Perjalanan → On-site | `handover_number`, `serial_id`, `serial_no`, `project_code`, `due_return_date`, `meter_unit`, `meter_out`, `condition_out` |
+| `asset_transferred` | SJ antar site TRF aset diterima: On-site proyek asal → On-site proyek tujuan ([A-249](04b-asumsi-lanjutan.md#a-249)) | `handover_number` (baru), `previous_handover_number`, `serial_id`, `serial_no`, `from_project_code`, `to_project_code`, `usage_days_from_project`, `due_return_date`, `meter_unit`, `meter_out`, `received_damaged` |
 | `asset_returned` | pemilahan RET: bin Retur → bin hasil | `handover_number`, `usage_days`, `usage_hours`/`usage_km`, `meter_out`, `meter_in`, `inspection` {grade, skor, state hasil, waktu} |
 | `asset_lost_or_damaged` | **tanpa pergerakan** — pemeriksaan C/D (`kind = damaged`) atau tanda hilang (`kind = lost`) | serial, grade/skor atau alasan, `handover_number` |
 | `stock_adjusted` | ADJ `asset_lost` diposting: bin → keluar | `adjustment_origin = asset_lost` |
@@ -155,13 +159,16 @@ Uji di `tests/Feature/Asset` (12 uji): `AssetLifecycleTest`, `AssetLossTest`, `A
 | TC-AST-10 | Role & cakupan | buka layar, menu | 200/403/404 sesuai §2; staf BKS 404 & tak melihat; serial bukan aset 404; menu | BR-GEN-09, BR-ACC-05 |
 | TC-AST-11 | Layar | daftar & filter; lengkapi serah terima (salah lalu benar); POST periksa tanpa foto / auditor / dengan foto; foto; pilah; profil & tandai hilang lewat dialog | tampil/tersaring; BR-AST-06 lalu tersimpan; galat foto, 403, `inspected`; foto 200 (driver 403); `available`; BR-AST-08 lalu tersimpan; Alasan wajib, `lost`; staf tanpa tombol | §6 |
 | TC-AST-12 | AST | cetak | nomor, judul, serial, blok *Dikembalikan*, tanpa harga; PDF 200, driver 403; tombol di detail | 18 §5.1, D-07 |
+| TC-AST-14 | aset dipinjam P1 4 hari, P2 ber-On-site | TRF aset → SJ antar site → berangkat → terima lewat tautan | TRF `approved` tanpa PCK; berangkat tanpa pergerakan; satu pergerakan On-site P1 → P2; state `on_loan` P2, jatuh tempo P2; AST lama `transferred` 5 hari ↔ AST baru; `asset_transferred`; TRF `completed`; retur dari P2 memakai AST baru | A-249 |
+| TC-AST-15 | TRF aset berangkat | terima: aset kurang | SJ `partially_delivered`; aset tetap di P1, AST tetap `checked_out`; TRF `completed`, diterima 0 | A-249 |
+| TC-AST-16 | layar | pindahan dari hub → detail TRF → SJ antar site → terima; halaman aset & AST | wizard 200 (driver 403), TRF aset dibuat; tombol & SJ; jejak lokasi Proyek P1 → Proyek P2; tautan "Dipindah dari"; SJ "Dijemput dari", asal AST | A-250, A-251 |
 | TC-AST-13 | AST `checked_out` | unggah foto serah terima keluar dua kali | `photo_out_id` menunjuk foto terbaru, dua lampiran tersimpan; staf tanpa `asset.manage` 403; setelah kembali 403 | A-238, P-03 |
 
 Uji modul lain yang berubah: TC-RET-13 (aset diperiksa dulu, `asset_returned` membawa pemeriksaan), TC-TPL-04 (`asset-handover` tak lagi 501), TC-ACC-27b (4 permission `asset`), TC-RPT-01 (9 laporan).
 
 ## 11. Di luar lingkup modul ini
 
-Tarif sewa, penyusutan (Akuntansi); jadwal & pemicu maintenance `[F2]`; notifikasi jatuh tempo; transfer aset On-site antar proyek; checklist penutupan proyek "aset sudah kembali" ([BR-PRJ-02](05-aturan-bisnis.md#br-prj)); RFID `[F2]`.
+Tarif sewa, penyusutan (Akuntansi); jadwal & pemicu maintenance `[F2]`; notifikasi jatuh tempo; checklist penutupan proyek "aset sudah kembali" ([BR-PRJ-02](05-aturan-bisnis.md#br-prj)); RFID `[F2]`.
 
 ## 12. Definisi selesai
 
@@ -196,5 +203,5 @@ Domain `app/Domain/Asset`: 4 aksi (`UpdateAssetHandover`, `UpdateAssetProfile`, 
 ### 13.3 Sisa pekerjaan
 
 1. ~~Notifikasi jatuh tempo & sisa umur~~ — selesai 25 Sep 2026 ([A-235](04-keputusan-dan-asumsi.md#a-235)); jadwal maintenance `[F2]`.
-2. Transfer aset On-site antar proyek. ~~Checklist penutupan proyek~~ — **selesai** (`ProjectClosureChecklist` menahan penutupan selama ada aset di proyek; [A-187](04-keputusan-dan-asumsi.md#a-187), TC-MST-25b).
+2. ~~Transfer aset On-site antar proyek~~ — **selesai 26 Sep 2026** ([A-249](04b-asumsi-lanjutan.md#a-249), [A-250](04b-asumsi-lanjutan.md#a-250), [A-251](04b-asumsi-lanjutan.md#a-251)): TRF aset (`transfers.asset_onsite`, `transfer_lines.serial_id`) diputus mesin approval tanpa PCK/reservasi, SJ antar site tanpa PCK (sopir & plat wajib), penerima proyek tujuan mengonfirmasi (login atau `/terima/{token}`, tombol *Kirim tautan via WA*), `AssetCustody::transfer` menutup/melahirkan AST berantai (`previous_handover_id`/`next_handover_id`); hub proyek *Pindahkan ke proyek lain* (`Transfer\Livewire\ProjectMove`, `MoveProjectRemainder`) dan kartu *Riwayat pindahan*; halaman aset kartu *Jejak lokasi* (`Asset\Support\AssetLocationTrail`). ~~Checklist penutupan proyek~~ — **selesai** (`ProjectClosureChecklist` menahan penutupan selama ada aset di proyek; [A-187](04-keputusan-dan-asumsi.md#a-187), TC-MST-25b).
 3. ~~Foto serah terima keluar~~ — selesai 25 Sep 2026: `POST /asset-handovers/{id}/photo-out` (`AttachHandoverPhotoOut`, izin `asset.manage`, selama `checked_out`) mengisi `photo_out_id`; foto lama tetap sebagai lampiran ([A-238](04-keputusan-dan-asumsi.md#a-238), TC-AST-13).

@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `picking` & `shipment` (Picking, Surat Jalan, Bukti Terima, Selisih)
 
-**Versi:** 0.13
-**Tanggal:** 25 September 2026
-**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188)); v0.9: halaman penerima bertoken `/terima/{token}` dan unggah foto/tanda tangan bukti terima ([A-231](04-keputusan-dan-asumsi.md#a-231), §6, §13.3)
+**Versi:** 0.14
+**Tanggal:** 26 September 2026
+**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188)); v0.9: halaman penerima bertoken `/terima/{token}` dan unggah foto/tanda tangan bukti terima ([A-231](04-keputusan-dan-asumsi.md#a-231), §6, §13.3); v0.14: **SJ tanpa PCK** — SJ jemput retur dari proyek, identitas barang di baris SJ, sopir & plat bebas, kolom asal per baris ([A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248))
 **Modul:** `picking`, `shipment`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-SJ](05-aturan-bisnis.md#br-sj) · [Katalog Status §2.2–§2.4](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
@@ -89,7 +89,8 @@ Daftar: `pick.view`, `pick.create`, `pick.start`, `pick.complete`, `pick.cancel`
 
 | Tabel | Isi |
 |---|---|
-| `shipment_lines` | `pick_task_line_id`, `qty_shipped`, `qty_delivered`, `ownership_effect` (`sold`/`transfer`/`loan`, [BR-SJ-04](05-aturan-bisnis.md#br-sj)) |
+| `shipments` (+) | `source_type`/`source_id` (`goods_return`, kelak `transfer`) = SJ tanpa PCK; `origin_project_id` = proyek tempat barang dijemput; `vehicle_plate` = plat bebas bila bukan master (sopir bebas = `carried_by_name`) — migrasi 000260, [A-247](04b-asumsi-lanjutan.md#a-247) |
+| `shipment_lines` | `pick_task_line_id` (kosong untuk SJ tanpa PCK), `source_line_id` (baris RET/TRF), `item_id`, `lot_id`, `serial_id`, `piece_id` (identitas barang, diisi balik dari PCK untuk SJ lama), `qty_shipped`, `qty_delivered`, `ownership_effect` (`sold`/`transfer`/`loan`, [BR-SJ-04](05-aturan-bisnis.md#br-sj)) |
 | `proofs_of_delivery` | satu per SJ: penerima, tanda tangan, foto, GPS, `channel` (`driver_pwa`/`token_link`), `confirmation`, `confirm_deadline_at` |
 | `proof_of_delivery_lines` | per baris SJ: `qty_good` + `qty_damaged` + `qty_missing` = `qty_shipped`; foto wajib bila rusak |
 | `proof_of_delivery_units` | per unit untuk item berserial dan per potong: `condition` = `good`/`damaged`/`missing` |
@@ -109,6 +110,7 @@ Diambil apa adanya dari [Katalog Status §2.2–§2.4](06-katalog-status-dan-enu
 PCK:  pending → in_progress → completed
       pending|in_progress → cancelled
 SJ:   prepared → shipped → delivered | partially_delivered
+      (SJ tanpa PCK, A-247: disusun dari RET jemput tanpa PCK selesai; berangkat & tiba tanpa pergerakan stok)
       prepared → cancelled          (setelah shipped tidak bisa dibatalkan)
 DSC:  open → resolved
 ```
@@ -209,6 +211,7 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 | TC-DSC-05 | Disposisi tanpa alasan bila menuntut | selesaikan | ditolak | BR-GEN-11 |
 | TC-SJ-13 | User tanpa `shipment.view` | buka daftar SJ | 403 | BR-GEN-09 |
 | TC-SJ-14 | Klien proyek lain | buka SJ | 404 | BR-ACC-05 |
+| TC-SJ-19 | Aset On-site + barang terkirim (REQ lain) satu proyek | RET dijemput → SJ jemput berangkat; asal baris; cetak; tiba (serial baik, baut 3 baik 1 kurang); GRN retur | aset tetap On-site sampai GRN; asal "Aset, AST/…" dan REQ + SJ asal; cetak memuat "Dijemput dari", RET, plat; `partially_delivered`; GRN 1 + 3 | A-247, A-248 |
 | TC-SJ-18 | SJ aset berserial (1 unit) terkirim | bukti terima dibagi 0,5 baik + 0,5 rusak; lalu seluruhnya baik | pembagian ditolak BR-SJ-05; layar driver menawarkan satu pilihan kondisi berserial; baris `proof_of_delivery_units` (serial, `good`) | BR-SJ-05, A-64, [A-244](04-keputusan-dan-asumsi.md#a-244) |
 
 ## 11. Di luar lingkup modul ini
@@ -288,6 +291,8 @@ Picking tinggal di domain `app/Domain/Shipment`, bukan folder `Picking/` seperti
    policy dipanggil. Policy tetap menjaga komponen dan aksinya, sebagai lapis kedua.
 8. **Token bukti terima sekali pakai.** Menerbitkan tautan baru mematikan yang lama, supaya tidak ada dua
    orang yang merasa berhak menandatangani.
+
+9. **SJ tanpa PCK** (26 Sep 2026, [A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248)): `CreatePickupShipment::forGoodsReturn` menyusun SJ jemput dari RET `approved` yang dijemput (tanpa stok Gudang Site) — satu SJ per RET, sopir (user atau nama) dan plat (master atau bebas) wajib. `ShipShipment` dan `ConfirmDelivery::terimaJemput` tidak menggerakkan stok dan tidak membuka DSC; yang tiba (baik + rusak) menjadi batas GRN retur, kurang = tidak terbawa, tanpa batas konfirmasi pemohon. Batal SJ jemput `prepared` mengembalikan RET ke `approved`. Identitas barang kini dibaca dari baris SJ (`ShipmentLine::item/serial/piece`, `isUnit`) di layar SJ, halaman penerima, cetak SJ/bukti terima/DSC. `Support\ShipmentLineOrigins` menurunkan **asal per baris** (REQ/TRF/RET PCK; untuk SJ jemput: REQ + SJ asal, AST, atau DSC) untuk layar dan cetak SJ. Tautan penerima bertoken tidak diterbitkan untuk SJ jemput.
 
 ### 13.3 Layar yang sudah ada
 

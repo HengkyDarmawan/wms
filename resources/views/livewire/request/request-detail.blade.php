@@ -343,6 +343,10 @@
 
     @include('request.partials.deliveries', ['req' => $req])
 
+    {{-- A-252: dokumen asal & turunan. --}}
+    @unless ($portal ?? false)
+        <x-related-documents :document="$req" />
+    @endunless
     @include('approval.partials.history', ['riwayatApproval' => $riwayatApproval])
 
     <div class="card">

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Domain\Transfer\Livewire;
 
+use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalHistory;
 use App\Domain\Master\Enums\ReasonContext;
+use App\Domain\Master\Models\Carrier;
+use App\Domain\Master\Models\Vehicle;
 use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Shipment\Actions\CreatePickTask;
+use App\Domain\Shipment\Actions\CreatePickupShipment;
 use App\Domain\Shipment\Enums\PickTaskStatus;
 use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Models\PickTask;
@@ -42,6 +46,9 @@ class TransferDetail extends Component
     /** @var array<string, string> */
     public array $form = ['reason' => '', 'notes' => ''];
 
+    /** @var array<string, string> isian SJ antar site TRF aset (A-249) */
+    public array $jemput = ['shipment_method' => 'own_fleet', 'vehicle_id' => '', 'vehicle_plate' => '', 'driver_id' => '', 'carried_by_name' => '', 'carrier_id' => '', 'tracking_no' => '', 'notes' => ''];
+
     public function mount(Transfer $transfer): void
     {
         $this->authorize('view', $transfer);
@@ -55,9 +62,15 @@ class TransferDetail extends Component
         $pck = $trf->pickTasks()->with('warehouse:id,code')->orderBy('id')->get();
         $sj = $this->suratJalan($pck);
 
+        // TRF aset (A-249): SJ antar site tanpa PCK.
+        if ($trf->asset_onsite) {
+            $sj = Shipment::query()->withoutGlobalScopes()->where('source_type', 'transfer')->where('source_id', $trf->id)
+                ->orderBy('id')->get(['id', 'number', 'status', 'shipment_method']);
+        }
+
         return view('livewire.transfer.transfer-detail', [
             'trf' => $trf,
-            'lines' => $trf->lines()->with('item:id,code,name', 'requestLine.request:id,number')->orderBy('id')->get(),
+            'lines' => $trf->lines()->with('item:id,code,name', 'serial:id,serial_no', 'requestLine.request:id,number')->orderBy('id')->get(),
             'pickTasks' => $pck,
             'shipments' => $sj,
             'receipts' => GoodsReceipt::query()->withoutGlobalScopes()->whereIn('shipment_id', $sj->pluck('id'))->orderBy('id')->get(['id', 'number', 'status', 'shipment_id']),
@@ -72,6 +85,11 @@ class TransferDetail extends Component
                 ->where('subject_type', $trf->getMorphClass())->where('subject_id', $trf->id)
                 ->latest('id')->limit(30)->get(),
             'riwayatApproval' => app(ApprovalHistory::class)->for(ApprovalDocumentType::Transfer, (int) $trf->id),
+            'pilihanJemput' => auth()->user()?->can('createSiteShipment', $trf) ? [
+                'vehicles' => Vehicle::query()->where('is_active', true)->orderBy('plate_no')->get(['id', 'plate_no']),
+                'carriers' => Carrier::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+                'drivers' => User::query()->whereNull('client_id')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            ] : null,
         ]);
     }
 
@@ -94,6 +112,23 @@ class TransferDetail extends Component
 
         if ($this->jalankan(fn () => $action->forTransfer($trf, auth()->user()))) {
             $this->dispatch('pesan', teks: __('Tugas picking dibuat di gudang asal.'));
+        }
+    }
+
+    /** SJ antar site TRF aset (A-249): driver menjemput di proyek asal, mengantar ke proyek tujuan. */
+    public function buatSjAntarSite(CreatePickupShipment $action): void
+    {
+        $trf = $this->trf();
+        $this->authorize('createSiteShipment', $trf);
+
+        $sj = null;
+
+        $ok = $this->jalankan(function () use ($action, $trf, &$sj) {
+            $sj = $action->forAssetTransfer($trf, $this->jemput, auth()->user());
+        }, 'jemput');
+
+        if ($ok && $sj !== null) {
+            $this->redirectRoute('shipments.show', $sj, navigate: true);
         }
     }
 

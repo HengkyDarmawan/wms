@@ -11,6 +11,7 @@ use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Return\Enums\GoodsReturnStatus;
 use App\Domain\Shipment\Enums\PickTaskStatus;
+use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Models\PickTask;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Warehouse\Models\Warehouse;
@@ -175,6 +176,31 @@ class GoodsReturn extends Model
     public function isFromClient(): bool
     {
         return $this->requester?->client_id !== null;
+    }
+
+    /**
+     * RET dijemput driver dengan SJ tanpa PCK (A-248): tidak diantar sendiri
+     * dan tidak memuat stok Gudang Site (yang itu lewat PCK, A-111).
+     */
+    public function isPickup(): bool
+    {
+        return ! $this->self_delivered && $this->from_warehouse_id === null;
+    }
+
+    /**
+     * Katalog §2.8: batal selama belum ada SJ balik berangkat. RET jemput sudah
+     * `in_progress` sejak SJ jemput disusun, jadi masih bisa dibatalkan selama
+     * SJ itu `prepared` (SJ-nya ikut dibatalkan).
+     */
+    public function canBeCancelled(): bool
+    {
+        if ($this->status->isCancellable()) {
+            return true;
+        }
+
+        return $this->status === GoodsReturnStatus::InProgress
+            && $this->isPickup()
+            && $this->returnShipment?->status === ShipmentStatus::Prepared;
     }
 
     public function getActivitylogOptions(): LogOptions

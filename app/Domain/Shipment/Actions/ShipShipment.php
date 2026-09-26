@@ -6,6 +6,7 @@ namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Request\Support\RequestFulfillment;
+use App\Domain\Return\Support\ReturnProgress;
 use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Models\Shipment;
@@ -51,6 +52,30 @@ class ShipShipment
 
         if ($lines->isEmpty()) {
             throw ShipmentRuleException::rule('BR-SJ-09', 'Surat jalan tanpa baris tidak bisa diberangkatkan.');
+        }
+
+        // A-247: SJ tanpa PCK berangkat dari proyek — barangnya tidak di bin
+        // gudang, jadi tidak ada pergerakan Loading Area → Dalam Perjalanan.
+        if ($shipment->isWithoutPicking()) {
+            return DB::transaction(function () use ($shipment, $lines, $notes, $actor) {
+                $shipment->forceFill([
+                    'status' => ShipmentStatus::Shipped,
+                    'loaded_at' => $shipment->loaded_at ?? now(),
+                    'shipped_at' => now(),
+                    'notes' => $notes ?? $shipment->notes,
+                ])->save();
+
+                // Jejak di baris TRF aset (A-249), sama seperti SJ TRF biasa (A-107).
+                if ($shipment->isSiteTransfer()) {
+                    $lines->each(fn (ShipmentLine $l) => $this->transfer->shippedWithoutPicking($l));
+                }
+
+                activity('shipment')->performedOn($shipment)->causedBy($actor)
+                    ->withProperties(['pembawa' => $shipment->carrierLabel(), 'dari' => $shipment->originProject?->code])
+                    ->log('Surat jalan berangkat menjemput');
+
+                return $shipment->refresh();
+            });
         }
 
         $loading = $this->bins->loadingArea($shipment->warehouse);
@@ -101,6 +126,14 @@ class ShipShipment
             'status' => ShipmentStatus::Cancelled,
             'cancel_reason_id' => $reasonCodeId,
         ])->save();
+
+        if ($shipment->isReturnPickup()) {
+            app(ReturnProgress::class)->returnShipmentCancelled($shipment, $actor);
+        }
+
+        if ($shipment->isSiteTransfer()) {
+            $this->transfer->siteShipmentCancelled($shipment, $actor);
+        }
 
         activity('shipment')
             ->performedOn($shipment)

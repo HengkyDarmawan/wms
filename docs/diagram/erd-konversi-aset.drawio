@@ -41,10 +41,10 @@
           <mxGeometry y="26" width="260" height="184" as="geometry"/>
         </mxCell>
         <mxCell id="asset_handovers" value="asset_handovers" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="524" width="260" height="434" as="geometry"/>
+          <mxGeometry x="680" y="524" width="260" height="482" as="geometry"/>
         </mxCell>
-        <mxCell id="asset_handovers_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ shipment_id : bigint&lt;br&gt;↗ shipment_line_id : bigint&lt;br&gt;↗ goods_return_id : bigint&lt;br&gt;↗ goods_return_line_id : bigint&lt;br&gt;status : enum&lt;br&gt;checked_out_at : datetime&lt;br&gt;due_return_date : date&lt;br&gt;condition_out : char(1)&lt;br&gt;photo_out_id : bigint&lt;br&gt;meter_out : decimal(12,1)&lt;br&gt;returned_at : datetime&lt;br&gt;usage_days : int&lt;br&gt;meter_in : decimal(12,1)&lt;br&gt;usage_hours : decimal(12,1)&lt;br&gt;usage_km : decimal(12,1)&lt;br&gt;lost_at : datetime&lt;br&gt;↗ lost_reason_id : bigint&lt;br&gt;↗ stock_adjustment_id : bigint&lt;br&gt;↗ updated_by : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="asset_handovers">
-          <mxGeometry y="26" width="260" height="408" as="geometry"/>
+        <mxCell id="asset_handovers_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ shipment_id : bigint&lt;br&gt;↗ shipment_line_id : bigint&lt;br&gt;↗ goods_return_id : bigint&lt;br&gt;↗ goods_return_line_id : bigint&lt;br&gt;↗ transfer_id : bigint&lt;br&gt;↗ previous_handover_id : bigint&lt;br&gt;↗ next_handover_id : bigint&lt;br&gt;status : enum&lt;br&gt;checked_out_at : datetime&lt;br&gt;due_return_date : date&lt;br&gt;condition_out : char(1)&lt;br&gt;photo_out_id : bigint&lt;br&gt;meter_out : decimal(12,1)&lt;br&gt;returned_at : datetime&lt;br&gt;usage_days : int&lt;br&gt;meter_in : decimal(12,1)&lt;br&gt;usage_hours : decimal(12,1)&lt;br&gt;usage_km : decimal(12,1)&lt;br&gt;lost_at : datetime&lt;br&gt;↗ lost_reason_id : bigint&lt;br&gt;↗ stock_adjustment_id : bigint&lt;br&gt;↗ updated_by : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="asset_handovers">
+          <mxGeometry y="26" width="260" height="456" as="geometry"/>
         </mxCell>
         <mxCell id="asset_inspections" value="asset_inspections" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="1000" y="524" width="260" height="258" as="geometry"/>
@@ -53,61 +53,61 @@
           <mxGeometry y="26" width="260" height="232" as="geometry"/>
         </mxCell>
         <mxCell id="maintenance_schedules" value="maintenance_schedules" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1008" width="260" height="146" as="geometry"/>
+          <mxGeometry x="40" y="1056" width="260" height="146" as="geometry"/>
         </mxCell>
         <mxCell id="maintenance_schedules_cols" value="🔑 id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;scheduled_at : date&lt;br&gt;interval_days : int&lt;br&gt;performed_at : date&lt;br&gt;notes : varchar(255)&lt;br&gt;status : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="maintenance_schedules">
           <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="bins" value="bins" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="360" y="1008" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="1056" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="bins_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="bins">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="goods_return_lines" value="goods_return_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="1008" width="260" height="50" as="geometry"/>
+          <mxGeometry x="680" y="1056" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="goods_return_lines_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="goods_return_lines">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="items" value="items" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="1008" width="260" height="50" as="geometry"/>
+          <mxGeometry x="1000" y="1056" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="items_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="items">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="pieces" value="pieces" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1204" width="260" height="50" as="geometry"/>
+          <mxGeometry x="40" y="1252" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="pieces_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="pieces">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="projects" value="projects" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="360" y="1204" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="1252" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="projects_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="projects">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="serials" value="serials" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="1204" width="260" height="50" as="geometry"/>
+          <mxGeometry x="680" y="1252" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="serials_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="serials">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="shipment_lines" value="shipment_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="1204" width="260" height="50" as="geometry"/>
+          <mxGeometry x="1000" y="1252" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="shipment_lines_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="shipment_lines">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="stock_adjustments" value="stock_adjustments" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1304" width="260" height="50" as="geometry"/>
+          <mxGeometry x="40" y="1352" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="stock_adjustments_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="stock_adjustments">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="warehouses" value="warehouses" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="360" y="1304" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="1352" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="warehouses_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="warehouses">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>

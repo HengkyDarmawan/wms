@@ -24,7 +24,7 @@ class PurchaseOrderEvents
     /**
      * `po_created`: satu catatan pemesanan per PRQ; PRQ `approved → forwarded`.
      *
-     * @param  array{po_id: int, po_number: string, vendor_id: int, warehouse_id: int, eta_date: ?string, lines: array<int, array{po_line_id: int, purchase_request_line_id: int, qty: float}>}  $po
+     * @param  array{po_id: int, po_number: string, vendor_id: int, warehouse_id: int, eta_date: ?string, lines: array<int, array{po_line_id: int, purchase_request_line_id: int, qty: float, over_order?: bool}>}  $po
      */
     public function created(array $po, ?User $actor = null): void
     {
@@ -41,7 +41,9 @@ class PurchaseOrderEvents
                     throw PurchaseRequestRuleException::rule('BR-GEN-01', $prq->number.' ('.$prq->status->label().') tidak lagi menerima pesanan untuk gudang ini.');
                 }
 
-                if ($baris['qty'] - $l->unorderedQty() > 0.00005) {
+                // A-246: pesanan di atas sisa hanya bila PO menandainya beralasan;
+                // kelebihannya menjadi stok gudang biasa setelah GRN.
+                if ($baris['qty'] - $l->unorderedQty() > 0.00005 && ! ($baris['over_order'] ?? false)) {
                     throw PurchaseRequestRuleException::rule('BR-REQ-08', $l->item?->code.' di '.$prq->number.': dipesan '.$baris['qty'].' melebihi sisa yang belum dipesan ('.$l->unorderedQty().').');
                 }
 

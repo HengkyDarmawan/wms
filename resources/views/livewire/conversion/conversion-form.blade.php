@@ -47,7 +47,7 @@
                 <div class="row g-2">
                     @foreach ($types as $t)
                         @php($ket = match ($t) {
-                            \App\Domain\Conversion\Enums\ConversionType::Cut => __('Satu batang dipotong menjadi beberapa ukuran; sisa dan rugi potong dihitung otomatis.'),
+                            \App\Domain\Conversion\Enums\ConversionType::Cut => __('Satu atau beberapa batang dipotong menjadi beberapa ukuran; sisa dan rugi potong dihitung per batang.'),
                             \App\Domain\Conversion\Enums\ConversionType::Repack => __('Isi kemasan dipindah ke item kemasan lain dengan satuan dasar sama; susut menjadi waste.'),
                             \App\Domain\Conversion\Enums\ConversionType::Assemble => __('Beberapa barang dirakit menjadi barang lain; tanpa neraca ukuran.'),
                             \App\Domain\Conversion\Enums\ConversionType::Disassemble => __('Satu barang dibongkar menjadi bagian-bagiannya; tanpa neraca ukuran.'),
@@ -144,6 +144,66 @@
                 </table>
             </div>
             @error('rencana.potong') <div class="card-footer text-danger small">{{ $message }}</div> @enderror
+        </div>
+
+        {{-- A-253: batang lain dalam CNV yang sama — pola sama (salin) atau berbeda. --}}
+        @foreach ($tambahan as $bi => $b)
+            @php($calonB = $batangCalon[$b['key']] ?? null)
+            @php($kunciAsli = $calonB['key'] ?? '')
+            <div class="card mb-3" wire:key="batang-{{ $b['id'] }}">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <strong>{{ __('Batang :n', ['n' => $bi + 2]) }}</strong>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tambahPotongBatang('{{ $b['id'] }}')">+ {{ __('Tambah ukuran') }}</button>
+                        <button class="btn btn-sm btn-outline-danger" type="button" wire:click="hapusBatang('{{ $b['id'] }}')">{{ __('Hapus batang') }}</button>
+                    </div>
+                </div>
+                <div class="card-body pb-0">
+                    <select class="form-select form-select-sm mb-2" wire:model.live="tambahan.{{ $bi }}.key" aria-label="{{ __('Batang') }} {{ $bi + 2 }}">
+                        <option value="">{{ __('Pilih batang…') }}</option>
+                        @foreach ($batangCalon as $kunci => $c)
+                            <option value="{{ $kunci }}" @disabled($c['frozen'])>{{ $c['item_code'] }} · {{ $c['tracking'] }} · {{ $angka($c['balance']) }} {{ $c['uom'] }} · {{ $c['bin_code'] }}</option>
+                        @endforeach
+                    </select>
+                    @if ($kunciAsli !== '' && $errors->first('rencana.batang@'.$kunciAsli) !== '') <div class="text-danger small mb-2">{{ $errors->first('rencana.batang@'.$kunciAsli) }}</div> @endif
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <tbody>
+                            @foreach ($b['potong'] as $pi => $p)
+                                @php($galat = $errors->first('rencana.potong.'.$p['id']))
+                                <tr wire:key="batang-{{ $b['id'] }}-{{ $p['id'] }}" @class(['table-danger' => $galat !== ''])>
+                                    <td style="width: 40%">
+                                        <select class="form-select form-select-sm" wire:model.live="tambahan.{{ $bi }}.potong.{{ $pi }}.item_id" aria-label="{{ __('Item hasil') }}">
+                                            <option value="">{{ __('Sama dengan batang') }}</option>
+                                            @foreach ($items as $it) <option value="{{ $it->id }}">{{ $it->code }} — {{ $it->name }}</option> @endforeach
+                                        </select>
+                                    </td>
+                                    <td style="width: 22%"><input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model.live.debounce.500ms="tambahan.{{ $bi }}.potong.{{ $pi }}.length" aria-label="{{ __('Panjang') }}"></td>
+                                    <td style="width: 18%"><input class="form-control form-control-sm" type="number" step="1" min="1" max="100" wire:model.live.debounce.500ms="tambahan.{{ $bi }}.potong.{{ $pi }}.count" aria-label="{{ __('Jumlah potongan') }}"></td>
+                                    <td class="text-end">{{ is_numeric($p['length']) && is_numeric($p['count']) ? $angka((float) $p['length'] * (int) $p['count']) : '—' }}</td>
+                                    <td class="text-end"><button class="btn btn-sm btn-outline-danger" type="button" wire:click="hapusPotongBatang('{{ $b['id'] }}', '{{ $p['id'] }}')" aria-label="{{ __('Hapus baris') }}"><i class="bi bi-x-lg"></i></button></td>
+                                </tr>
+                                @if ($galat !== '')
+                                    <tr><td class="text-danger small pt-0" colspan="5">{{ $galat }}</td></tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @if ($kunciAsli !== '' && $errors->first('rencana.potong@'.$kunciAsli) !== '') <div class="card-footer text-danger small">{{ $errors->first('rencana.potong@'.$kunciAsli) }}</div> @endif
+            </div>
+        @endforeach
+
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tambahBatang" @disabled($form['warehouse_id'] === '')>+ {{ __('Tambah batang (pola berbeda)') }}</button>
+            <span class="small text-muted">{{ __('atau') }}</span>
+            <div class="input-group input-group-sm" style="max-width: 22rem">
+                <span class="input-group-text">{{ __('Salin pola batang 1 ke') }}</span>
+                <input class="form-control @error('jumlahSalin') is-invalid @enderror" type="number" min="1" max="100" wire:model="jumlahSalin" aria-label="{{ __('Jumlah batang') }}">
+                <button class="btn btn-outline-primary" type="button" wire:click="salinPola" @disabled(! $batangTerpilih)>{{ __('batang (FIFO)') }}</button>
+            </div>
+            @error('jumlahSalin') <div class="small text-danger w-100">{{ $message }}</div> @enderror
         </div>
     @else
         {{-- ===== Ganti kemasan / Rakit / Bongkar: input dari stok, hasil bebas ===== --}}
@@ -291,7 +351,15 @@
             @if ($r['kalimat'] !== '')
                 <p class="fs-5 mb-2">{{ $r['kalimat'] }}</p>
             @endif
-            @if ($jenis === \App\Domain\Conversion\Enums\ConversionType::Cut && ($r['panjang'] ?? 0) > 0)
+            @if ($jenis === \App\Domain\Conversion\Enums\ConversionType::Cut && ($r['jumlah_batang'] ?? 0) > 1)
+                {{-- A-253: ringkasan per batang. --}}
+                <ul class="small mb-2">
+                    @foreach ($r['batang'] as $n => $bg)
+                        <li>{{ __('Batang :n', ['n' => $n + 1]) }} ({{ $bg['item_code'] }} {{ $bg['tracking'] }}): {{ $bg['kalimat'] }}</li>
+                    @endforeach
+                    <li>{{ __('Total') }}: {{ __('dipakai') }} {{ $angka($r['dipakai']) }} {{ $r['uom'] }} ({{ $r['potongan'] }} {{ __('potongan') }}), {{ __('kerf') }} {{ $angka($r['kerf']) }} {{ $r['uom'] }}, {{ __('sisa') }} {{ $angka($r['sisa']) }} {{ $r['uom'] }}</li>
+                </ul>
+            @elseif ($jenis === \App\Domain\Conversion\Enums\ConversionType::Cut && ($r['panjang'] ?? 0) > 0)
                 <ul class="small mb-2">
                     <li>{{ __('Dipakai') }}: {{ $angka($r['dipakai']) }} {{ $r['uom'] }} ({{ $r['potongan'] }} {{ __('potongan') }})</li>
                     <li>{{ __('Rugi potong (kerf)') }}: {{ $r['potongan'] }} × {{ $r['kerf_per_potong'] === null ? '0' : $angka($r['kerf_per_potong']) }} = {{ $angka($r['kerf']) }} {{ $r['uom'] }}</li>

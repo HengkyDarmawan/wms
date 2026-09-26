@@ -24,4 +24,12 @@ class WarehouseController extends Controller
 
         return view('warehouse.warehouses.show', ['warehouse' => $warehouse]);
     }
+
+    /** Denah gudang 2D (A-254). */
+    public function layout(Warehouse $warehouse): View
+    {
+        $this->authorize('view', $warehouse);
+
+        return view('warehouse.warehouses.layout', ['warehouse' => $warehouse]);
+    }
 }

@@ -13,8 +13,8 @@ use Illuminate\Support\Collection;
 
 /**
  * Baris PO dari baris PRQ (A-210, A-211): PRQ gudang yang sama dan menerima
- * pesanan; jumlah ≤ sisa belum dipesan dikurangi jumlah yang sedang dipegang
- * PO draf/menunggu approval lain; harga satuan > 0.
+ * pesanan; jumlah di atas sisa belum dipesan (dikurangi yang dipegang PO
+ * draf/menunggu approval lain) wajib beralasan (A-246); harga satuan > 0.
  */
 class PurchaseOrderLines
 {
@@ -76,9 +76,13 @@ class PurchaseOrderLines
             }
 
             $tersedia = round(max(0, $l->unorderedQty() - ($this->heldByOtherOrders([$id], $exceptPoId)[$id] ?? 0)), 4);
+            $lebih = $qty - $tersedia > 0.00005 ? round($qty - $tersedia, 4) : 0.0;
+            $alasan = trim((string) ($isi['over_order_reason'] ?? ''));
 
-            if ($qty - $tersedia > 0.00005) {
-                throw PurchasingRuleException::field('BR-REQ-08', 'lines', $label.': dipesan '.$qty.' melebihi sisa yang bisa dipesan ('.$tersedia.').');
+            // A-246: pesan di atas sisa (MOQ vendor, tambah stok) boleh asal beralasan;
+            // kelebihannya menjadi stok gudang biasa setelah diterima.
+            if ($lebih > 0 && $alasan === '') {
+                throw PurchasingRuleException::field('A-246', 'lines', $label.': dipesan '.$qty.' melebihi sisa permintaan ('.$tersedia.'); isi alasan kelebihan (mis. MOQ vendor).');
             }
 
             $harga = is_numeric($isi['unit_price'] ?? null) ? Money::round((float) $isi['unit_price']) : 0.0;
@@ -93,6 +97,8 @@ class PurchaseOrderLines
                 'purchase_request_line_id' => $id,
                 'item_id' => (int) $l->item_id,
                 'qty_base' => $qty,
+                'qty_over_request' => $lebih,
+                'over_order_reason' => $lebih > 0 ? mb_substr($alasan, 0, 255) : null,
                 'unit_price' => $harga,
                 'line_amount' => Money::round($qty * $harga),
                 'notes' => $catatan === '' ? null : mb_substr($catatan, 0, 255),

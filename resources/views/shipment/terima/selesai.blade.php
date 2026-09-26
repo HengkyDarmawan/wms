@@ -16,7 +16,7 @@
             @foreach ($bukti?->lines ?? [] as $b)
                 @php($sl = $sj->lines->firstWhere('id', $b->shipment_line_id))
                 <tr>
-                    <td>{{ $sl?->pickTaskLine?->item?->code }}</td>
+                    <td>{{ $sl?->item?->code }}</td>
                     <td class="text-end">{{ (float) $b->qty_good }}</td>
                     <td class="text-end">{{ (float) $b->qty_damaged }}</td>
                     <td class="text-end">{{ (float) $b->qty_missing }}</td>

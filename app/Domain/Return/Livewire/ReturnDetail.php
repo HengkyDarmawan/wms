@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Return\Livewire;
 
+use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalHistory;
 use App\Domain\Master\Enums\ReasonContext;
+use App\Domain\Master\Models\Carrier;
 use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Master\Models\Vehicle;
 use App\Domain\Receipt\Actions\SaveGoodsReceipt;
 use App\Domain\Receipt\Support\PutawaySuggester;
 use App\Domain\Return\Actions\ApproveGoodsReturn;
@@ -18,7 +21,7 @@ use App\Domain\Return\Enums\ReturnSorting;
 use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Return\Models\GoodsReturnLine;
 use App\Domain\Shipment\Actions\CreatePickTask;
-use App\Domain\Shipment\Enums\PickTaskStatus;
+use App\Domain\Shipment\Actions\CreatePickupShipment;
 use App\Domain\Transfer\Livewire\Concerns\HandlesTransferRules;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
@@ -53,6 +56,9 @@ class ReturnDetail extends Component
 
     /** @var array<int|string, array<int, array<string, string>>> line_id => bagian */
     public array $pilah = [];
+
+    /** @var array<string, string> isian SJ jemput (A-248) */
+    public array $jemput = ['shipment_method' => 'own_fleet', 'vehicle_id' => '', 'vehicle_plate' => '', 'driver_id' => '', 'carried_by_name' => '', 'carrier_id' => '', 'tracking_no' => '', 'notes' => ''];
 
     public function mount(GoodsReturn $goodsReturn): void
     {
@@ -91,6 +97,11 @@ class ReturnDetail extends Component
                 ->where('subject_type', $ret->getMorphClass())->where('subject_id', $ret->id)
                 ->latest('id')->limit(30)->get(),
             'riwayatApproval' => app(ApprovalHistory::class)->for(ApprovalDocumentType::GoodsReturn, (int) $ret->id),
+            'pilihanJemput' => ! $this->portal && auth()->user()?->can('createPickup', $ret) ? [
+                'vehicles' => Vehicle::query()->where('is_active', true)->orderBy('plate_no')->get(['id', 'plate_no']),
+                'carriers' => Carrier::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+                'drivers' => User::query()->whereNull('client_id')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            ] : null,
         ]);
     }
 
@@ -113,6 +124,23 @@ class ReturnDetail extends Component
 
         if ($this->jalankan(fn () => $action->forGoodsReturn($ret, auth()->user()))) {
             $this->dispatch('pesan', teks: __('Tugas picking SJ balik dibuat di Gudang Site.'));
+        }
+    }
+
+    /** SJ jemput tanpa PCK dari proyek ke gudang tujuan RET (A-248). */
+    public function buatSjJemput(CreatePickupShipment $action): void
+    {
+        $ret = $this->ret();
+        $this->authorize('createPickup', $ret);
+
+        $sj = null;
+
+        $ok = $this->jalankan(function () use ($action, $ret, &$sj) {
+            $sj = $action->forGoodsReturn($ret, $this->jemput, auth()->user());
+        }, 'jemput');
+
+        if ($ok && $sj !== null) {
+            $this->redirectRoute('shipments.show', $sj, navigate: true);
         }
     }
 

@@ -199,4 +199,8 @@
             @endcan
         </div>
     </div>
+    {{-- A-252: dokumen asal & turunan. --}}
+    @unless ($portal ?? false)
+        <x-related-documents :document="$task" />
+    @endunless
 </div>

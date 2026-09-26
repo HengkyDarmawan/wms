@@ -176,6 +176,28 @@
         </ul>
     </div>
 
+    {{-- A-251: jejak lokasi — di mana saja aset ini pernah berada dan berapa lama. --}}
+    <div class="card mb-3">
+        <div class="card-header"><strong>{{ __('Jejak lokasi') }}</strong></div>
+        <div class="card-body">
+            @forelse ($jejak as $t)
+                <span class="d-inline-flex align-items-center gap-1 mb-1">
+                    @if (! $loop->first) <i class="bi bi-arrow-right text-muted" aria-hidden="true"></i> @endif
+                    <span @class(['badge', 'text-bg-primary' => $t['sekarang'], 'text-bg-light border' => ! $t['sekarang']])>
+                        @if ($t['project_id'])
+                            <a class="{{ $t['sekarang'] ? 'link-light' : '' }}" href="{{ route('projects.show', $t['project_id']) }}">{{ $t['label'] }}</a>
+                        @else
+                            {{ $t['label'] }}
+                        @endif
+                        · {{ $t['sekarang'] ? __('sekarang, :n hari', ['n' => $t['hari']]) : __(':n hari', ['n' => $t['hari']]) }}
+                    </span>
+                </span>
+            @empty
+                <span class="text-muted small">{{ __('Belum ada pergerakan.') }}</span>
+            @endforelse
+        </div>
+    </div>
+
     <div class="card mb-3">
         <div class="card-header"><strong>{{ __('Kartu stok serial') }}</strong></div>
         <ul class="list-group list-group-flush small">

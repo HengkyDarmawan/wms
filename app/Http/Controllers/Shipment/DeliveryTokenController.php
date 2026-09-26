@@ -38,7 +38,7 @@ class DeliveryTokenController extends Controller
             return response()->view('shipment.terima.mati', [], 410);
         }
 
-        $sj = $baris->shipment()->with('warehouse:id,code,name', 'destinationProject:id,code,name', 'lines.pickTaskLine.item:id,code,name,base_uom_id', 'lines.pickTaskLine.item.baseUom:id,code', 'lines.pickTaskLine.serial:id,serial_no', 'lines.pickTaskLine.piece:id,piece_no')->first();
+        $sj = $baris->shipment()->with('warehouse:id,code,name', 'destinationProject:id,code,name', 'lines.item:id,code,name,base_uom_id', 'lines.item.baseUom:id,code', 'lines.serial:id,serial_no', 'lines.piece:id,piece_no')->first();
 
         if ($baris->used_at !== null && $sj?->proof()->exists()) {
             return view('shipment.terima.selesai', ['sj' => $sj, 'bukti' => $sj->proof()->with('lines')->first()]);

@@ -28,8 +28,9 @@ use Illuminate\Support\Facades\DB;
  * terakhir (BR-RET-05). Baris jual-putus menandai `ownership = sold` (retur
  * penjualan, BR-RET-03, A-26); lainnya `company`.
  *
- * SJ balik (`self_delivered = false`) hanya untuk stok satu Gudang Site —
- * barang lain tidak berada di bin gudang sehingga tidak bisa dipetik (A-111).
+ * SJ balik (`self_delivered = false`): stok satu Gudang Site dipetik lalu
+ * dikirim (A-111); barang lain dijemput driver dengan SJ jemput tanpa PCK
+ * (A-248). Satu RET memilih salah satu, tidak dicampur.
  * RET langsung diteruskan ke mesin approval; tanpa aturan disetujui otomatis.
  */
 class CreateGoodsReturn
@@ -101,12 +102,17 @@ class CreateGoodsReturn
             throw ReturnRuleException::rule('BR-RET-03', 'Satu RET hanya untuk stok satu Gudang Site; pisahkan retur per titik.');
         }
 
-        // A-111: SJ balik hanya untuk stok Gudang Site yang bisa dipetik.
-        if (! $sendiri && collect($baris)->contains(fn (array $b) => $b['c']['source'] !== ReturnSource::SiteStock)) {
+        // A-111, A-248: SJ balik untuk stok Gudang Site lewat PCK, untuk barang
+        // lain (di tangan klien, aset On-site, ditinggal ekspedisi) lewat SJ
+        // jemput tanpa PCK. Keduanya tidak dicampur dalam satu RET.
+        $adaSite = collect($baris)->contains(fn (array $b) => $b['c']['source'] === ReturnSource::SiteStock);
+        $adaLain = collect($baris)->contains(fn (array $b) => $b['c']['source'] !== ReturnSource::SiteStock);
+
+        if (! $sendiri && $adaSite && $adaLain) {
             throw ReturnRuleException::field(
                 'BR-RET-03',
                 'self_delivered',
-                'SJ balik hanya untuk stok Gudang Site. Barang di tangan klien, aset On-site, dan barang ditinggal ekspedisi diretur tanpa SJ (diantar sendiri).',
+                'Stok Gudang Site (dipetik lalu dikirim) dan barang yang dijemput dari proyek tidak bisa satu SJ balik; pisahkan menjadi dua RET.',
             );
         }
 

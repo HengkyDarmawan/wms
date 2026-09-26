@@ -9,7 +9,9 @@ use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Shipment\Enums\PickTaskStatus;
+use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Models\PickTask;
+use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Transfer\Enums\TransferKind;
 use App\Domain\Transfer\Enums\TransferOrigin;
 use App\Domain\Transfer\Enums\TransferStatus;
@@ -28,7 +30,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * Gudang Site dalam satu proyek (Katalog Status §2.7, A-50, BR-RET-01/02).
  *
  * Pergerakan fisiknya lewat PCK di gudang asal, SJ, dan GRN transfer di gudang
- * tujuan (A-33); TRF sendiri tidak pernah menulis kartu stok.
+ * tujuan (A-33); TRF sendiri tidak pernah menulis kartu stok. TRF aset
+ * (`asset_onsite`, A-249) memindahkan aset On-site antar proyek lewat SJ antar
+ * site tanpa PCK dan tanpa GRN.
  *
  * @property TransferStatus $status
  * @property TransferOrigin $origin
@@ -52,6 +56,7 @@ class Transfer extends Model
         return [
             'status' => TransferStatus::class,
             'origin' => TransferOrigin::class,
+            'asset_onsite' => 'boolean',
             'approved_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'completed_at' => 'datetime',
@@ -157,8 +162,24 @@ class Transfer extends Model
         return $this->pickTasks()->where('status', '!=', PickTaskStatus::Cancelled->value)->exists();
     }
 
+    /**
+     * SJ antar site TRF aset (A-249): SJ tanpa PCK bersumber TRF ini yang
+     * belum dibatalkan.
+     */
+    public function liveAssetShipment(): ?Shipment
+    {
+        return Shipment::query()->withoutGlobalScopes()
+            ->where('source_type', 'transfer')->where('source_id', $this->id)
+            ->where('status', '!=', ShipmentStatus::Cancelled->value)
+            ->latest('id')->first();
+    }
+
     public function kind(): TransferKind
     {
+        if ($this->asset_onsite) {
+            return TransferKind::AssetOnSite;
+        }
+
         return TransferKind::between(
             $this->from_project_id !== null ? (int) $this->from_project_id : null,
             $this->to_project_id !== null ? (int) $this->to_project_id : null,

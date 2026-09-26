@@ -18,6 +18,7 @@ use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Shipment\Models\DeliveryDiscrepancy;
 use App\Domain\Shipment\Models\PickTask;
 use App\Domain\Shipment\Models\Shipment;
+use App\Domain\Shipment\Support\ShipmentLineOrigins;
 use App\Domain\Template\Enums\DocumentTemplateType;
 use App\Domain\Template\Models\DocumentLayout;
 use App\Domain\Template\Models\DocumentTemplate;
@@ -208,10 +209,10 @@ class DocumentPrinter
     /** @return array<string, mixed> */
     private function shipment(Shipment $sj): array
     {
-        $sj->loadMissing('warehouse', 'destinationProject', 'destinationWarehouse', 'destinationVendor', 'vehicle', 'driver', 'carrier', 'proof');
+        $sj->loadMissing('warehouse', 'originProject', 'destinationProject', 'destinationWarehouse', 'destinationVendor', 'vehicle', 'driver', 'carrier', 'proof');
 
         $lines = $sj->lines()
-            ->with('pickTaskLine.item.baseUom', 'pickTaskLine.lot', 'pickTaskLine.serial', 'pickTaskLine.piece', 'pickTaskLine.pickTask')
+            ->with('item.baseUom', 'lot', 'serial', 'piece', 'pickTaskLine.pickTask')
             ->orderBy('id')->get();
 
         $pickIds = $lines->pluck('pickTaskLine.pick_task_id')->filter()->unique();
@@ -222,7 +223,9 @@ class DocumentPrinter
         return [
             'sj' => $sj,
             'lines' => $lines,
+            'asal' => app(ShipmentLineOrigins::class)->for($sj, $lines),
             'rujukan' => [
+                'dokumen' => app(ShipmentLineOrigins::class)->sourceDocument($sj),
                 'pck' => PickTask::query()->whereIn('id', $pickIds)->orderBy('id')->pluck('number')->all(),
                 'req' => MaterialRequest::query()->withoutGlobalScopes()->whereIn('id', $reqIds)->orderBy('id')->pluck('number')->all(),
             ],
@@ -238,7 +241,7 @@ class DocumentPrinter
     private function proof(Shipment $sj): array
     {
         $sj->loadMissing('warehouse', 'destinationProject', 'destinationWarehouse', 'destinationVendor', 'driver', 'carrier', 'vehicle');
-        $proof = $sj->proof()->with('receivedByUser', 'lines.shipmentLine.pickTaskLine.item.baseUom', 'lines.shipmentLine.pickTaskLine.lot', 'lines.shipmentLine.pickTaskLine.serial', 'lines.shipmentLine.pickTaskLine.piece')->firstOrFail();
+        $proof = $sj->proof()->with('receivedByUser', 'lines.shipmentLine.item.baseUom', 'lines.shipmentLine.lot', 'lines.shipmentLine.serial', 'lines.shipmentLine.piece')->firstOrFail();
 
         return [
             'sj' => $sj,
@@ -272,7 +275,7 @@ class DocumentPrinter
         $dsc->loadMissing('resolver');
         $sj = Shipment::query()->with('warehouse', 'driver', 'destinationProject', 'destinationWarehouse', 'destinationVendor')->findOrFail($dsc->shipment_id);
 
-        $lines = $dsc->lines()->with('reasonCode', 'shipmentLine.pickTaskLine.item.baseUom', 'shipmentLine.pickTaskLine.lot', 'shipmentLine.pickTaskLine.serial', 'shipmentLine.pickTaskLine.piece')
+        $lines = $dsc->lines()->with('reasonCode', 'shipmentLine.item.baseUom', 'shipmentLine.lot', 'shipmentLine.serial', 'shipmentLine.piece')
             ->orderBy('id')->get();
 
         return ['dsc' => $dsc, 'sj' => $sj, 'lines' => $lines, 'pelaku' => [$dsc->resolver, $sj->driver]];

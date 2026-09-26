@@ -140,6 +140,25 @@ for (const url of links) {
   cek('hub proyek: tombol aksi', await ev('!!document.querySelector(`main a[href*="/requests/create?project="]`)'));
 }
 
+// 6b. Layar tinjauan pemilik 26 Sep 2026: denah gudang (A-254), pindahan proyek (A-250), dokumen terkait (A-252).
+{
+  const sebelum = errors.length;
+  await go(`${BASE}/warehouses/1/layout`);
+  cek('denah gudang: svg zona', await ev('document.querySelectorAll("main svg rect").length > 0'));
+  await ev('document.querySelector("main svg g")?.dispatchEvent(new MouseEvent("click", { bubbles: true }))');
+  await sleep(900);
+  cek('denah gudang: panel rak', await ev('!!document.querySelector("main .border-primary")'));
+  await go(`${BASE}/projects/1/move`);
+  cek('pindahan proyek: layar', /Pindahkan/.test(await ev('document.querySelector("main h1")?.textContent || ""')));
+  await go(`${BASE}/shipments`);
+  const sj = await ev('document.querySelector(`main a[href*="/shipments/"]:not([href$="/create"])`)?.href || ""');
+  if (sj) {
+    await go(sj);
+    cek('SJ: dokumen terkait', await ev('[...document.querySelectorAll("main .card-header")].some(h => /Dokumen terkait/.test(h.textContent))'));
+  }
+  cek('layar baru tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
+}
+
 // 7. Layar Super Admin di domain pusat (akun dari docs/00-akun-uji.md)
 const PUSAT = process.env.WMS_CENTRAL || BASE.replace('://demo.', '://');
 

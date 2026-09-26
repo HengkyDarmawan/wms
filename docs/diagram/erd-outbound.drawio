@@ -29,16 +29,16 @@
           <mxGeometry y="26" width="260" height="184" as="geometry"/>
         </mxCell>
         <mxCell id="shipments" value="shipments" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="572" width="260" height="290" as="geometry"/>
+          <mxGeometry x="40" y="572" width="260" height="354" as="geometry"/>
         </mxCell>
-        <mxCell id="shipments_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;destination_type : enum&lt;br&gt;↗ destination_project_id : bigint&lt;br&gt;↗ destination_warehouse_id : bigint&lt;br&gt;↗ destination_vendor_id : bigint&lt;br&gt;↗ vehicle_id : bigint&lt;br&gt;↗ driver_id : bigint&lt;br&gt;↗ carrier_id : bigint&lt;br&gt;tracking_no : varchar(60)&lt;br&gt;shipment_method : enum&lt;br&gt;carried_by_name : varchar(100)&lt;br&gt;loaded_at : datetime&lt;br&gt;shipped_at : datetime&lt;br&gt;delivered_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="shipments">
-          <mxGeometry y="26" width="260" height="264" as="geometry"/>
+        <mxCell id="shipments_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;destination_type : enum&lt;br&gt;↗ destination_project_id : bigint&lt;br&gt;↗ destination_warehouse_id : bigint&lt;br&gt;↗ destination_vendor_id : bigint&lt;br&gt;source_type : varchar(20)&lt;br&gt;source_id : bigint&lt;br&gt;↗ origin_project_id : bigint&lt;br&gt;↗ vehicle_id : bigint&lt;br&gt;vehicle_plate : varchar(20)&lt;br&gt;↗ driver_id : bigint&lt;br&gt;↗ carrier_id : bigint&lt;br&gt;tracking_no : varchar(60)&lt;br&gt;shipment_method : enum&lt;br&gt;carried_by_name : varchar(100)&lt;br&gt;loaded_at : datetime&lt;br&gt;shipped_at : datetime&lt;br&gt;delivered_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="shipments">
+          <mxGeometry y="26" width="260" height="328" as="geometry"/>
         </mxCell>
         <mxCell id="shipment_lines" value="shipment_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="572" width="260" height="130" as="geometry"/>
+          <mxGeometry x="360" y="572" width="260" height="210" as="geometry"/>
         </mxCell>
-        <mxCell id="shipment_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ shipment_id : bigint&lt;br&gt;↗ pick_task_line_id : bigint&lt;br&gt;qty_shipped : decimal(18,4)&lt;br&gt;qty_delivered : decimal(18,4)&lt;br&gt;ownership_effect : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="shipment_lines">
-          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        <mxCell id="shipment_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ shipment_id : bigint&lt;br&gt;↗ pick_task_line_id : bigint&lt;br&gt;source_line_id : bigint&lt;br&gt;↗ item_id : bigint&lt;br&gt;↗ lot_id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ piece_id : bigint&lt;br&gt;qty_shipped : decimal(18,4)&lt;br&gt;qty_delivered : decimal(18,4)&lt;br&gt;ownership_effect : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="shipment_lines">
+          <mxGeometry y="26" width="260" height="184" as="geometry"/>
         </mxCell>
         <mxCell id="proofs_of_delivery" value="proofs_of_delivery" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="680" y="572" width="260" height="290" as="geometry"/>
@@ -53,67 +53,67 @@
           <mxGeometry y="26" width="260" height="136" as="geometry"/>
         </mxCell>
         <mxCell id="proof_of_delivery_units" value="proof_of_delivery_units" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="912" width="260" height="114" as="geometry"/>
+          <mxGeometry x="40" y="976" width="260" height="114" as="geometry"/>
         </mxCell>
         <mxCell id="proof_of_delivery_units_cols" value="🔑 id : bigint&lt;br&gt;↗ proof_of_delivery_line_id : bigint&lt;br&gt;↗ serial_id : bigint&lt;br&gt;↗ piece_id : bigint&lt;br&gt;condition : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="proof_of_delivery_units">
           <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="delivery_tokens" value="delivery_tokens" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="912" width="260" height="162" as="geometry"/>
+          <mxGeometry x="360" y="976" width="260" height="162" as="geometry"/>
         </mxCell>
         <mxCell id="delivery_tokens_cols" value="🔑 id : bigint&lt;br&gt;↗ shipment_id : bigint&lt;br&gt;◆ token : varchar(64)&lt;br&gt;otp_hash : varchar(255)&lt;br&gt;phone : varchar(20)&lt;br&gt;expires_at : datetime&lt;br&gt;used_at : datetime&lt;br&gt;attempts : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="delivery_tokens">
           <mxGeometry y="26" width="260" height="136" as="geometry"/>
         </mxCell>
         <mxCell id="delivery_discrepancies" value="delivery_discrepancies" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="912" width="260" height="130" as="geometry"/>
+          <mxGeometry x="680" y="976" width="260" height="130" as="geometry"/>
         </mxCell>
         <mxCell id="delivery_discrepancies_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ shipment_id : bigint&lt;br&gt;origin : enum&lt;br&gt;↗ resolved_by : bigint&lt;br&gt;resolved_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="delivery_discrepancies">
           <mxGeometry y="26" width="260" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="delivery_discrepancy_lines" value="delivery_discrepancy_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="912" width="260" height="210" as="geometry"/>
+          <mxGeometry x="1000" y="976" width="260" height="210" as="geometry"/>
         </mxCell>
         <mxCell id="delivery_discrepancy_lines_cols" value="🔑 id : bigint&lt;br&gt;↗ delivery_discrepancy_id : bigint&lt;br&gt;↗ shipment_line_id : bigint&lt;br&gt;discrepancy_type : enum&lt;br&gt;qty_base : decimal(18,4)&lt;br&gt;disposition : enum&lt;br&gt;client_decision : enum&lt;br&gt;↗ reason_code_id : bigint&lt;br&gt;claim_ref : varchar(60)&lt;br&gt;photo_path : varchar(255)&lt;br&gt;return_receipt_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="delivery_discrepancy_lines">
           <mxGeometry y="26" width="260" height="184" as="geometry"/>
         </mxCell>
         <mxCell id="bins" value="bins" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1172" width="260" height="50" as="geometry"/>
+          <mxGeometry x="40" y="1236" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="bins_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="bins">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="carriers" value="carriers" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="360" y="1172" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="1236" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="carriers_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="carriers">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="items" value="items" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="1172" width="260" height="50" as="geometry"/>
+          <mxGeometry x="680" y="1236" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="items_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="items">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="projects" value="projects" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="1172" width="260" height="50" as="geometry"/>
+          <mxGeometry x="1000" y="1236" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="projects_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="projects">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="users" value="users" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1272" width="260" height="50" as="geometry"/>
+          <mxGeometry x="40" y="1336" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="users_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="users">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="vehicles" value="vehicles" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="360" y="1272" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="1336" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="vehicles_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="vehicles">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="warehouses" value="warehouses" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="1272" width="260" height="50" as="geometry"/>
+          <mxGeometry x="680" y="1336" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="warehouses_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="warehouses">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>

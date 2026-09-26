@@ -6,7 +6,12 @@
                 <span class="badge {{ $sj->status->badge() }}">{{ $sj->status->label() }}</span>
             </h1>
             <p class="text-muted mb-0">
-                {{ $sj->warehouse?->code }} → {{ $sj->destinationLabel() }} ·
+                @if ($sj->isWithoutPicking())
+                    {{-- A-247: SJ tanpa PCK berangkat dari proyek. --}}
+                    {{ __('Dijemput dari') }} {{ $sj->originProject?->code }} → {{ $sj->destinationLabel() }} ·
+                @else
+                    {{ $sj->warehouse?->code }} → {{ $sj->destinationLabel() }} ·
+                @endif
                 {{ $sj->shipment_method->label() }}: {{ $sj->carrierLabel() }}
                 @if ($sj->shipped_at)
                     · {{ __('Berangkat') }} {{ $sj->shipped_at->lokal()->format('d/m/Y H:i') }}
@@ -36,6 +41,11 @@
             {{ __('Kode OTP untuk penerima') }}: <strong class="fs-5">{{ $otpSekali }}</strong>
             @if ($tautanSekali)
                 <div class="mt-1">{{ __('Tautan') }}: <a href="{{ $tautanSekali }}" target="_blank" rel="noopener" class="text-break">{{ $tautanSekali }}</a></div>
+                {{-- A-251: berbagi lewat aplikasi WhatsApp (tanpa API); OTP tetap disampaikan driver. --}}
+                <a class="btn btn-sm btn-success mt-2" target="_blank" rel="noopener"
+                   href="https://wa.me/?text={{ rawurlencode(__('Konfirmasi penerimaan barang :sj: :url (kode OTP dari driver).', ['sj' => $sj->number, 'url' => $tautanSekali])) }}">
+                    <i class="bi bi-whatsapp" aria-hidden="true"></i> {{ __('Kirim tautan via WA') }}
+                </a>
             @endif
             <div class="small">
                 {{ __('Kode ini hanya ditampilkan sekali dan tidak tersimpan. Bagikan tautannya dan sampaikan kode langsung kepada penerima.') }}
@@ -123,9 +133,9 @@
                             @foreach ($lines as $l)
                                 <tr wire:key="terima-{{ $l->id }}">
                                     <td>
-                                        {{ $l->pickTaskLine?->item?->code }}
-                                        @if ($l->pickTaskLine?->serial) <div class="small text-muted">{{ __('Serial') }} {{ $l->pickTaskLine->serial->serial_no }}</div> @endif
-                                        @if ($l->pickTaskLine?->piece) <div class="small text-muted">{{ __('Potongan') }} {{ $l->pickTaskLine->piece->piece_no }}</div> @endif
+                                        {{ $l->item?->code }}
+                                        @if ($l->serial) <div class="small text-muted">{{ __('Serial') }} {{ $l->serial->serial_no }}</div> @endif
+                                        @if ($l->piece) <div class="small text-muted">{{ __('Potongan') }} {{ $l->piece->piece_no }}</div> @endif
                                     </td>
                                     <td class="text-end">{{ number_format((float) $l->qty_shipped, 2, ',', '.') }}</td>
                                     @if (($terima[$l->id]['kondisi'] ?? null) !== null)
@@ -196,6 +206,7 @@
                     <tr>
                         <th scope="col">{{ __('Item') }}</th>
                         <th scope="col">{{ __('Bin asal') }}</th>
+                        <th scope="col">{{ __('Asal dokumen') }}</th>
                         <th class="text-end" scope="col">{{ __('Dikirim') }}</th>
                         <th class="text-end" scope="col">{{ __('Diterima') }}</th>
                         <th scope="col">{{ __('Kepemilikan') }}</th>
@@ -205,17 +216,20 @@
                     @forelse ($lines as $l)
                         <tr @class(['table-warning' => $l->outstandingQty() > 0 && $sj->status->isFinal()])>
                             <td>
-                                {{ $l->pickTaskLine?->item?->code }}
-                                <div class="small text-muted">{{ $l->pickTaskLine?->item?->name }}</div>
+                                {{ $l->item?->code }}
+                                <div class="small text-muted">{{ $l->item?->name }}</div>
+                                @if ($l->serial) <div class="small text-muted">{{ __('Serial') }} {{ $l->serial->serial_no }}</div> @endif
+                                @if ($l->piece) <div class="small text-muted">{{ __('Potongan') }} {{ $l->piece->piece_no }}</div> @endif
                             </td>
-                            <td>{{ $l->pickTaskLine?->bin?->code ?? '—' }}</td>
+                            <td>{{ $l->pickTaskLine?->bin?->code ?? ($sj->isWithoutPicking() ? __('Proyek').' '.$sj->originProject?->code : '—') }}</td>
+                            <td class="small">{{ $asal[$l->id] ?? '—' }}</td>
                             <td class="text-end">{{ number_format((float) $l->qty_shipped, 2, ',', '.') }}</td>
                             <td class="text-end">{{ number_format((float) $l->qty_delivered, 2, ',', '.') }}</td>
-                            <td><span class="badge text-bg-light">{{ $l->ownership_effect->label() }}</span></td>
+                            <td><span class="badge text-bg-light">{{ $sj->isReturnPickup() ? __('Retur') : $l->ownership_effect->label() }}</span></td>
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-center text-muted py-4" colspan="5">{{ __('Belum ada muatan.') }}</td>
+                            <td class="text-center text-muted py-4" colspan="6">{{ __('Belum ada muatan.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -317,7 +331,7 @@
                             @foreach ($dsc->lines as $dl)
                                 {{ $dl->discrepancy_type->label() }}
                                 {{ number_format((float) $dl->qty_base, 2, ',', '.') }}
-                                {{ $dl->shipmentLine?->pickTaskLine?->item?->code }}{{ ! $loop->last ? ' · ' : '' }}
+                                {{ $dl->shipmentLine?->item?->code }}{{ ! $loop->last ? ' · ' : '' }}
                             @endforeach
                         </div>
                     </li>
@@ -326,6 +340,10 @@
         </div>
     @endif
 
+    {{-- A-252: dokumen asal & turunan. --}}
+    @unless ($portal ?? false)
+        <x-related-documents :document="$sj" />
+    @endunless
     <div class="card">
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush">

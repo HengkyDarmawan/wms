@@ -105,7 +105,12 @@
                                     <a href="{{ route('purchase-requests.show', $l->requestLine->purchase_request_id) }}">{{ $l->requestLine->purchaseRequest->number }}</a>
                                 @endif
                             </td>
-                            <td class="text-end">{{ number_format((float) $l->qty_base, 2, ',', '.') }} <span class="small text-muted">{{ $l->item?->baseUom?->code }}</span></td>
+                            <td class="text-end">
+                                {{ number_format((float) $l->qty_base, 2, ',', '.') }} <span class="small text-muted">{{ $l->item?->baseUom?->code }}</span>
+                                @if ((float) $l->qty_over_request > 0)
+                                    <div class="small text-warning-emphasis">{{ __('Lebih :n dari permintaan', ['n' => number_format((float) $l->qty_over_request, 2, ',', '.')]) }}: {{ $l->over_order_reason }}</div>
+                                @endif
+                            </td>
                             <td class="text-end">{{ number_format((float) $l->qty_received, 2, ',', '.') }}</td>
                             <td class="text-end">{{ (float) $l->qty_cancelled > 0 ? number_format((float) $l->qty_cancelled, 2, ',', '.') : '—' }}</td>
                             <td class="text-end text-nowrap">{{ $rp($l->unit_price) }}</td>
@@ -158,6 +163,10 @@
         </ul>
     </div>
 
+    {{-- A-252: dokumen asal & turunan. --}}
+    @unless ($portal ?? false)
+        <x-related-documents :document="$po" />
+    @endunless
     @include('approval.partials.history', ['riwayatApproval' => $riwayatApproval])
 
     <div class="card">

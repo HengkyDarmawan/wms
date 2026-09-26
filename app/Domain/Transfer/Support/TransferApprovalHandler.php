@@ -127,6 +127,14 @@ class TransferApprovalHandler implements ApprovalHandler
             'approved_at' => now(),
         ])->save();
 
+        // A-249: TRF aset On-site tidak dipetik dari bin gudang; ia menunggu SJ
+        // antar site (SJ tanpa PCK) yang menjemput aset di proyek asal.
+        if ($document->asset_onsite) {
+            activity('transfer')->performedOn($document)->causedBy($actor)->log('TRF aset disetujui; menunggu SJ antar site');
+
+            return;
+        }
+
         $this->reservasiLunak($document, $actor);
 
         activity('transfer')->performedOn($document)->causedBy($actor)->log('TRF disetujui');

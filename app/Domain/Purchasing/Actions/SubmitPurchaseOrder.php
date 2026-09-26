@@ -37,6 +37,7 @@ class SubmitPurchaseOrder
             'purchase_request_line_id' => $l->purchase_request_line_id,
             'qty_base' => $l->qty_base,
             'unit_price' => $l->unit_price,
+            'over_order_reason' => $l->over_order_reason,
         ])->all(), (int) $po->id);
 
         return DB::transaction(function () use ($po, $actor) {

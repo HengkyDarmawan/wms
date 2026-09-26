@@ -215,12 +215,14 @@ class ReceiveGoodsReceipt
             $baik = (float) ($line->shipmentLine?->qty_delivered ?? 0);
 
             if ((float) $line->qty_received - $baik > 0.00005) {
-                throw ReceiptRuleException::rule('BR-GRN-05', 'Baris '.$line->item->code.' melebihi jumlah baik di bukti terima SJ balik ('.$baik.').');
+                throw ReceiptRuleException::rule('BR-GRN-05', 'Baris '.$line->item->code.' melebihi jumlah yang tiba menurut bukti terima SJ balik ('.$baik.').');
             }
         }
 
+        // SJ jemput (A-248) tidak memindahkan stok: barang masih di asalnya
+        // (bin On-site untuk aset, di luar kartu stok untuk barang klien).
         $asal = match (true) {
-            $sj !== null => (int) $this->bins->inTransit($sj->warehouse)->id,
+            $sj !== null && ! $sj->isReturnPickup() => (int) $this->bins->inTransit($sj->warehouse)->id,
             $rl->from_bin_id !== null => (int) $rl->from_bin_id,
             default => null,
         };

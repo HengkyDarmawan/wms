@@ -16,6 +16,7 @@ use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Return\Models\GoodsReturnLine;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Shipment\Models\ShipmentLine;
+use App\Domain\Transfer\Models\Transfer;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -88,6 +89,24 @@ class AssetHandover extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class)->withoutGlobalScopes();
+    }
+
+    /** TRF aset antar proyek yang menutup atau melahirkan AST ini (A-249). */
+    public function transfer(): BelongsTo
+    {
+        return $this->belongsTo(Transfer::class)->withoutGlobalScopes();
+    }
+
+    /** AST di proyek sebelumnya (aset dipindah antar proyek, A-249). */
+    public function previousHandover(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'previous_handover_id')->withoutGlobalScopes();
+    }
+
+    /** AST di proyek berikutnya (aset dipindah antar proyek, A-249). */
+    public function nextHandover(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'next_handover_id')->withoutGlobalScopes();
     }
 
     public function warehouse(): BelongsTo

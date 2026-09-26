@@ -24,7 +24,7 @@ class RackLevel extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return ['is_active' => 'boolean', 'height_m' => 'decimal:2'];
     }
 
     public function rack(): BelongsTo

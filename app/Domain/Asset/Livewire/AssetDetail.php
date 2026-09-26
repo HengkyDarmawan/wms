@@ -8,6 +8,7 @@ use App\Domain\Adjustment\Models\StockAdjustment;
 use App\Domain\Asset\Actions\MarkAssetLost;
 use App\Domain\Asset\Actions\UpdateAssetProfile;
 use App\Domain\Asset\Livewire\Concerns\HandlesAssetRules;
+use App\Domain\Asset\Support\AssetLocationTrail;
 use App\Domain\Asset\Support\AssetQuery;
 use App\Domain\Master\Enums\MeterUnit;
 use App\Domain\Master\Enums\ReasonContext;
@@ -56,6 +57,7 @@ class AssetDetail extends Component
             'handovers' => $aset->handovers()->with('project:id,code,name', 'shipment:id,number', 'goodsReturn:id,number', 'lostReason:id,label')->orderByDesc('id')->get(),
             'inspections' => $aset->inspections()->with('inspector:id,name', 'handover:id,number')->orderByDesc('id')->get(),
             'movements' => StockMovement::query()->with('fromBin:id,code', 'toBin:id,code')->where('serial_id', $aset->id)->orderByDesc('id')->limit(20)->get(),
+            'jejak' => app(AssetLocationTrail::class)->for($aset),
             'adjustments' => StockAdjustment::query()->withoutGlobalScopes()->where('origin', 'asset_lost')
                 ->whereHas('lines', fn ($q) => $q->where('serial_id', $aset->id))->orderByDesc('id')->get(['id', 'number', 'status']),
             'units' => MeterUnit::options(),

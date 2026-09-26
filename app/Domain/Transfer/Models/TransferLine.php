@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Transfer\Models;
 
 use App\Domain\Master\Models\Item;
+use App\Domain\Master\Models\Serial;
 use App\Domain\Request\Models\MaterialRequestLine;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -40,6 +41,12 @@ class TransferLine extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    /** Aset yang dipindah antar proyek (TRF aset, A-249). */
+    public function serial(): BelongsTo
+    {
+        return $this->belongsTo(Serial::class);
     }
 
     /** Baris REQ penunggu bila TRF lahir dari backorder (BR-REQ-08). */

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Warehouse\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Enums\CapacityMode;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\StorageCategory;
 use App\Domain\Warehouse\Enums\BinStatus;
@@ -67,6 +68,12 @@ class SaveBin
             'project_id' => $projectId,
             'is_virtual' => $jenis->isVirtual(),
         ];
+
+        // A-255: mode kapasitas per bin (kosong = ikut kategori penyimpanan).
+        if (array_key_exists('capacity_mode', $attributes)) {
+            $mode = CapacityMode::tryFrom((string) $attributes['capacity_mode']);
+            $data['capacity_mode'] = $mode?->value;
+        }
 
         $bin = DB::transaction(function () use ($bin, $baru, $data): Bin {
             if ($baru) {

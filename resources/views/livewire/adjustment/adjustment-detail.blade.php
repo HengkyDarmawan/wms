@@ -105,6 +105,10 @@
     </div>
 
     @if ($adj->isManual())
+    {{-- A-252: dokumen asal & turunan. --}}
+    @unless ($portal ?? false)
+        <x-related-documents :document="$adj" />
+    @endunless
         @include('approval.partials.history', ['riwayatApproval' => $riwayatApproval])
     @endif
 

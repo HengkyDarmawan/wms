@@ -356,7 +356,13 @@ class StockLedger
 
         $sesudah = round((float) $saldo->qty_base + $request->qtyBase, 4);
 
-        if ($bin !== null && $bin->exceedsCapacity($sesudah)) {
+        // A-255: bin bermode kapasitas sendiri (bin area alat berat) dihitung dari
+        // total isi bin, bukan per baris saldo.
+        $isi = $bin !== null && $bin->capacityCountsWholeBin()
+            ? round((float) StockBalance::query()->withoutGlobalScopes()->where('bin_id', $bin->id)->where('qty_base', '>', 0)->sum('qty_base') + $request->qtyBase, 4)
+            : $sesudah;
+
+        if ($bin !== null && $bin->exceedsCapacity($isi)) {
             if ($bin->blocksOnOverCapacity()) {
                 throw LedgerException::rule(
                     'BR-WH-06',

@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `warehouse` (Gudang, Zona, Rak, Level, Bin)
 
-**Versi:** 0.8
-**Tanggal:** 24 September 2026
-**Status:** **selesai untuk Fase 1** — empat layar, delapan aksi domain, dan 28 uji hijau; penyimpangan implementasi dicatat §13; v0.6: label bin Code128 + QR dicetak lewat modul Template ([18](18-template-dokumen-label.md)), ukuran sementara [A-120](04-keputusan-dan-asumsi.md#a-120)
+**Versi:** 0.9
+**Tanggal:** 26 September 2026
+**Status:** **selesai untuk Fase 1** — empat layar, delapan aksi domain, dan 28 uji hijau; penyimpangan implementasi dicatat §13; v0.6: label bin Code128 + QR dicetak lewat modul Template ([18](18-template-dokumen-label.md)), ukuran sementara [A-120](04-keputusan-dan-asumsi.md#a-120); v0.9: **denah gudang 2D** dengan ukuran/posisi opsional, rak area & bin ikut terpakai untuk barang besar, tanggal masuk & FIFO, kolom zona/rak/level dan ubah bin di `/bins` ([A-254](04b-asumsi-lanjutan.md#a-254), [A-255](04b-asumsi-lanjutan.md#a-255), [A-256](04b-asumsi-lanjutan.md#a-256))
 **Modul:** `warehouse`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.2](01-blueprint.md#62-struktur-organisasi--gudang), [§6.3](01-blueprint.md#63-lokasi-rak--bin--wajib) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data gudang](08a-model-data-inti.md#area-gudang--lokasi-tenant) · [Akun uji](../00-akun-uji.md)
@@ -121,8 +121,9 @@ Aturan baru modul ini (`BR-WH`, ditambahkan ke [05-aturan-bisnis](05-aturan-bisn
 | Route | Komponen | Isi |
 |---|---|---|
 | `/warehouses` | `warehouse.warehouse-list` | Pohon gudang dengan tipe, induk, proyek, kepala gudang, jumlah bin; form sebaris; nonaktifkan dengan Alasan `*` |
-| `/warehouses/{id}` | `warehouse.warehouse-detail` | Tab Zona & rak (dengan pembuat bin massal), Bin, dan Riwayat |
-| `/bins` | `warehouse.bin-list` | Seluruh bin lintas gudang; filter gudang, jenis, status, kategori penyimpanan; bekukan dan cairkan; cetak label |
+| `/warehouses/{id}` | `warehouse.warehouse-detail` | Tab Zona & rak (dengan pembuat bin massal), Bin, dan Riwayat; tombol **Denah gudang** |
+| `/warehouses/{id}/layout` | `warehouse.warehouse-layout` | **Denah 2D** ([A-254](04b-asumsi-lanjutan.md#a-254)): zona → rak berwarna status atau umur stok; klik rak → level → bin → isi (item, jumlah, lot/serial/potongan, tanggal masuk, umur, *tertua — ambil dulu*); cari bin/item/lot/serial/potongan; mode **Atur denah** (`bin.manage`): ukuran zona, ukuran/posisi/arah rak (geser di grid 0,5 m), rak area, tandai bin ikut terpakai ([A-255](04b-asumsi-lanjutan.md#a-255)) |
+| `/bins` | `warehouse.bin-list` | Seluruh bin lintas gudang; filter gudang, jenis, status, **zona, rak**; kolom zona · rak · level & kapasitas lengkap; **Ubah** (kategori, kapasitas, mode kapasitas per bin); bekukan dan cairkan; cetak label |
 | `/warehouse-types` | `warehouse.type-list` | Master tipe gudang; tipe bawaan hanya bisa diubah namanya |
 
 Field wajib bertanda `*` ([BR-GEN-11](05-aturan-bisnis.md#br-gen)). Label bin memakai barcode Code128 dan QR (AD-08); ukuran kertas dibuat dapat diatur karena [O-09](04-keputusan-dan-asumsi.md#o-09) belum diputuskan.
@@ -168,6 +169,11 @@ Tidak ada kejadian stok. Modul `stock` membaca `bins` untuk saldo dan `warehouse
 | TC-WH-17 | User bercakupan gudang CKG | buka daftar gudang | hanya CKG yang tampil | BR-ACC-05 |
 | TC-WH-18 | User tanpa `warehouse.create` | buka form gudang | 403 | BR-GEN-09 |
 | TC-WH-19 | Tipe gudang bawaan | hapus atau ubah kodenya | ditolak | P-03 |
+| TC-WH-21 | Zona 12 × 6 m | rak area seluruh zona; isi 1 unit lalu item lain | kode `…-AREA`, ukuran = zona, `block` kapasitas 1; isi kedua BR-WH-06; tidak disarankan put-away | A-255 |
+| TC-WH-22 | Bin utama & tetangga | tandai ikut terpakai (utama kosong / tanpa alasan / tetangga berisi / sah); keluarkan isi utama | BR-WH-06, BR-GEN-11, BR-WH-06; tercatat & tidak disarankan; lepas otomatis | A-255 |
+| TC-WH-23 | Rak tanpa posisi | data denah; ukuran negatif; ukuran zona & rak; geser 2,26/1,74 lalu 50/50 | ditata otomatis; BR-GEN-11; snap 2,5/1,5; dijepit 7/4 di dalam zona | A-254 |
+| TC-WH-24 | Baut masuk 40 hari & 2 hari lalu | data denah dengan cari; label lot | tertua di bin lama, umur 40, 2 hasil cari; label "Masuk dd/mm/yyyy" | A-256 |
+| TC-WH-25 | Kepala Gudang & staf | layar denah, panel rak, geser, rak area; staf; daftar bin saring rak, ubah kapasitas | 200 + tombol; isi & tertua; posisi 1/1; rak area; staf tanpa tombol & 403; kolom zona·rak·level, kapasitas 20 blokir | A-254, A-255 |
 | TC-WH-20 | Seeder demo dijalankan | periksa gudang | CKG, BKS, KRW1, KRW2 sesuai [00-akun-uji](../00-akun-uji.md) §2 | — |
 
 ## 11. Di luar lingkup modul ini
@@ -237,6 +243,10 @@ Uji yang menopangnya ada di `tests/Feature/Warehouse`: `WarehouseTest` (TC-WH-01
 ### 13.4 Tautan cepat (25 September 2026)
 
 Halaman gudang (`warehouse-detail`) menampilkan tombol tautan cepat ke daftar yang sudah menyaring gudang itu (saldo stok, reservasi, picking, SJ, GRN, put-away, PRQ, PO) dan badge proyek Gudang Site menaut ke hub proyek ([A-228](04-keputusan-dan-asumsi.md#a-228)).
+
+### 13.4b Denah gudang (26 September 2026)
+
+Migrasi tenant `000280_add_layout_columns_to_warehouse_tables` (semua kolom opsional). `Support\WarehouseLayoutData` menyusun zona → rak (posisi otomatis 4 rak per baris bila kosong) → level → bin → isi; status rak beku › terpakai › penuh › terisi › kosong; umur isi dari pergerakan masuk terakhir; baris tertua per item ditandai (FIFO). `Actions\SaveWarehouseLayout` (`bin.manage`): ukuran zona/rak/level, geser rak (snap 0,5 m, dijepit di dalam zona), `areaRack` (rak + level L1 + bin `AREA`, `capacity_mode = block`, bawaan 1 unit, opsi seluruh zona). `Actions\MarkBinsOccupied`: bin tetangga kosong ditandai `occupied_by_bin_id` + alasan; dilepas manual atau otomatis lewat observer `StockMovement::created` saat bin utama kosong. `StockLedger::tambah` menghitung kapasitas bin bermode sendiri dari **total isi bin**; `PutawaySuggester` melewati bin ikut terpakai. `Livewire\WarehouseLayout` — SVG + Alpine (tanpa library baru), `WarehousePolicy::manageLayout`. `/bins`: kolom & filter zona/rak/level, ubah bin lewat `SaveBin` (kini menerima `capacity_mode`). Label lot/potongan mencantumkan tanggal masuk ([A-256](04b-asumsi-lanjutan.md#a-256)). Uji TC-WH-21–25; `ui-check` 6b.
 
 ### 13.5 Sisa pekerjaan modul ini
 

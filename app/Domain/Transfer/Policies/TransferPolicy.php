@@ -53,7 +53,19 @@ class TransferPolicy
     public function createPick(User $actor, Transfer $trf): bool
     {
         return $actor->hasPermission('pick.create')
+            && ! $trf->asset_onsite
             && in_array($trf->status, [TransferStatus::Approved, TransferStatus::InProgress], true)
             && ! $trf->hasLivePickTask();
+    }
+
+    /** SJ antar site TRF aset (A-249): disusun gudang pemilik bin On-site proyek asal. */
+    public function createSiteShipment(User $actor, Transfer $trf): bool
+    {
+        return $actor->client_id === null
+            && $actor->hasPermission('shipment.create')
+            && $trf->asset_onsite
+            && $trf->status === TransferStatus::Approved
+            && $trf->liveAssetShipment() === null
+            && $actor->canAccessWarehouse((int) $trf->from_warehouse_id);
     }
 }

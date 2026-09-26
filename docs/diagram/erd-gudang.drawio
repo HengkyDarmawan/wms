@@ -17,37 +17,37 @@
           <mxGeometry y="26" width="260" height="152" as="geometry"/>
         </mxCell>
         <mxCell id="zones" value="zones" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="40" width="260" height="114" as="geometry"/>
+          <mxGeometry x="680" y="40" width="260" height="146" as="geometry"/>
         </mxCell>
-        <mxCell id="zones_cols" value="🔑 id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;code : varchar(10)&lt;br&gt;name : varchar(60)&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="zones">
-          <mxGeometry y="26" width="260" height="88" as="geometry"/>
+        <mxCell id="zones_cols" value="🔑 id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;code : varchar(10)&lt;br&gt;name : varchar(60)&lt;br&gt;length_m : decimal(8,2)&lt;br&gt;width_m : decimal(8,2)&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="zones">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="racks" value="racks" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="40" width="260" height="98" as="geometry"/>
+          <mxGeometry x="1000" y="40" width="260" height="226" as="geometry"/>
         </mxCell>
-        <mxCell id="racks_cols" value="🔑 id : bigint&lt;br&gt;↗ zone_id : bigint&lt;br&gt;code : varchar(10)&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="racks">
-          <mxGeometry y="26" width="260" height="72" as="geometry"/>
+        <mxCell id="racks_cols" value="🔑 id : bigint&lt;br&gt;↗ zone_id : bigint&lt;br&gt;code : varchar(10)&lt;br&gt;name : varchar(60)&lt;br&gt;is_area : bool&lt;br&gt;pos_x : decimal(8,2)&lt;br&gt;pos_y : decimal(8,2)&lt;br&gt;length_m : decimal(8,2)&lt;br&gt;width_m : decimal(8,2)&lt;br&gt;height_m : decimal(8,2)&lt;br&gt;orientation : char(1)&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="racks">
+          <mxGeometry y="26" width="260" height="200" as="geometry"/>
         </mxCell>
         <mxCell id="rack_levels" value="rack_levels" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="268" width="260" height="98" as="geometry"/>
+          <mxGeometry x="40" y="316" width="260" height="114" as="geometry"/>
         </mxCell>
-        <mxCell id="rack_levels_cols" value="🔑 id : bigint&lt;br&gt;↗ rack_id : bigint&lt;br&gt;code : varchar(10)&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="rack_levels">
-          <mxGeometry y="26" width="260" height="72" as="geometry"/>
+        <mxCell id="rack_levels_cols" value="🔑 id : bigint&lt;br&gt;↗ rack_id : bigint&lt;br&gt;code : varchar(10)&lt;br&gt;height_m : decimal(8,2)&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="rack_levels">
+          <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="bins" value="bins" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="268" width="260" height="290" as="geometry"/>
+          <mxGeometry x="360" y="316" width="260" height="354" as="geometry"/>
         </mxCell>
-        <mxCell id="bins_cols" value="🔑 id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ rack_level_id : bigint&lt;br&gt;◆ code : varchar(40)&lt;br&gt;bin_type : enum&lt;br&gt;bin_status : enum&lt;br&gt;↗ storage_category_id : bigint&lt;br&gt;capacity_qty : decimal(18,4)&lt;br&gt;capacity_weight : decimal(18,4)&lt;br&gt;capacity_volume : decimal(18,4)&lt;br&gt;capacity_length : decimal(18,4)&lt;br&gt;↗ project_id : bigint&lt;br&gt;is_virtual : bool&lt;br&gt;↗ frozen_by_count_id : bigint&lt;br&gt;freeze_reason : varchar(255)&lt;br&gt;count_flag : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="bins">
-          <mxGeometry y="26" width="260" height="264" as="geometry"/>
+        <mxCell id="bins_cols" value="🔑 id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;↗ rack_level_id : bigint&lt;br&gt;◆ code : varchar(40)&lt;br&gt;bin_type : enum&lt;br&gt;bin_status : enum&lt;br&gt;↗ storage_category_id : bigint&lt;br&gt;capacity_qty : decimal(18,4)&lt;br&gt;capacity_weight : decimal(18,4)&lt;br&gt;capacity_volume : decimal(18,4)&lt;br&gt;capacity_mode : varchar(5)&lt;br&gt;↗ occupied_by_bin_id : bigint&lt;br&gt;occupied_reason : varchar(255)&lt;br&gt;occupied_at : datetime&lt;br&gt;capacity_length : decimal(18,4)&lt;br&gt;↗ project_id : bigint&lt;br&gt;is_virtual : bool&lt;br&gt;↗ frozen_by_count_id : bigint&lt;br&gt;freeze_reason : varchar(255)&lt;br&gt;count_flag : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="bins">
+          <mxGeometry y="26" width="260" height="328" as="geometry"/>
         </mxCell>
         <mxCell id="projects" value="projects" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="268" width="260" height="50" as="geometry"/>
+          <mxGeometry x="680" y="316" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="projects_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="projects">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="storage_categories" value="storage_categories" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="268" width="260" height="50" as="geometry"/>
+          <mxGeometry x="1000" y="316" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="storage_categories_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="storage_categories">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>

@@ -32,7 +32,7 @@
         </thead>
         <tbody>
             @foreach ($lines as $i => $l)
-                @php $p = $l->shipmentLine?->pickTaskLine; @endphp
+                @php $p = $l->shipmentLine; @endphp
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $p?->item?->code }}</td>

@@ -353,7 +353,9 @@ class ReceiptForm extends Component
             $max = $ret->returnShipment === null
                 ? (float) $l->qty_base
                 : (float) $ret->returnShipment->lines
-                    ->filter(fn ($x) => $x->pickTaskLine?->pickTask?->source_type === 'goods_return' && (int) $x->pickTaskLine->source_line_id === (int) $l->id)
+                    ->filter(fn ($x) => $ret->returnShipment->isReturnPickup()
+                        ? (int) $x->source_line_id === (int) $l->id // SJ jemput (A-248)
+                        : $x->pickTaskLine?->pickTask?->source_type === 'goods_return' && (int) $x->pickTaskLine->source_line_id === (int) $l->id)
                     ->sum('qty_delivered');
 
             $hasil[] = ['line' => $l, 'max' => round($max, 4)];

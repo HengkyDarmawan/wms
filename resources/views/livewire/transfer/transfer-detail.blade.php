@@ -66,7 +66,7 @@
                         <th class="text-end" scope="col">{{ __('Jumlah') }}</th>
                         <th class="text-end" scope="col">{{ __('Dikirim') }}</th>
                         <th class="text-end" scope="col">{{ __('Diterima') }}</th>
-                        <th scope="col">{{ __('Baris REQ') }}</th>
+                        <th scope="col">{{ $trf->asset_onsite ? __('Aset (serial)') : __('Baris REQ') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -76,7 +76,13 @@
                             <td class="text-end">{{ number_format((float) $l->qty_base, 2, ',', '.') }}</td>
                             <td class="text-end">{{ number_format((float) $l->qty_shipped, 2, ',', '.') }}</td>
                             <td class="text-end">{{ number_format((float) $l->qty_received, 2, ',', '.') }}</td>
-                            <td class="small">{{ $l->requestLine?->request?->number ?? '—' }}</td>
+                            <td class="small">
+                                @if ($l->serial)
+                                    <a href="{{ route('assets.show', $l->serial_id) }}">{{ $l->serial->serial_no }}</a>
+                                @else
+                                    {{ $l->requestLine?->request?->number ?? '—' }}
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -106,13 +112,20 @@
         </div>
     </div>
 
+    @if ($pilihanJemput)
+        {{-- A-249: aset On-site dijemput di proyek asal dan diantar ke proyek tujuan tanpa PCK. --}}
+        @include('shipment.partials.pickup-form', ['judul' => __('Buat SJ antar site'), 'keterangan' => __('driver menjemput aset di proyek asal; sopir & plat wajib'), 'aksi' => 'buatSjAntarSite'])
+    @endif
+
     <div class="card mb-3">
         <div class="card-header"><strong>{{ __('Pergerakan fisik') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($pickTasks as $p)
                 <li class="list-group-item">{{ __('Tugas picking') }} <a href="{{ route('picks.show', $p->id) }}">{{ $p->number }}</a> · {{ $p->warehouse?->code }} · {{ $p->status->label() }}</li>
             @empty
-                <li class="list-group-item text-muted">{{ __('Belum ada tugas picking.') }}</li>
+                @unless ($trf->asset_onsite)
+                    <li class="list-group-item text-muted">{{ __('Belum ada tugas picking.') }}</li>
+                @endunless
             @endforelse
             @foreach ($shipments as $s)
                 <li class="list-group-item">{{ __('Surat jalan') }} <a href="{{ route('shipments.show', $s->id) }}">{{ $s->number }}</a> · {{ $s->shipment_method->label() }} · {{ $s->status->label() }}</li>
@@ -123,6 +136,10 @@
         </ul>
     </div>
 
+    {{-- A-252: dokumen asal & turunan. --}}
+    @unless ($portal ?? false)
+        <x-related-documents :document="$trf" />
+    @endunless
     @include('approval.partials.history', ['riwayatApproval' => $riwayatApproval])
 
     <div class="card">

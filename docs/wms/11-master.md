@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `master` (Klien, Proyek, Vendor, Item, Satuan, Referensi)
 
-**Versi:** 0.7
-**Tanggal:** 25 September 2026
-**Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192)); v0.6: layar Pengaturan company ([A-230](04-keputusan-dan-asumsi.md#a-230), §6, §13.5 no. 8)
+**Versi:** 0.8
+**Tanggal:** 26 September 2026
+**Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192)); v0.6: layar Pengaturan company ([A-230](04-keputusan-dan-asumsi.md#a-230), §6, §13.5 no. 8); v0.8: hub proyek — *Pindahkan ke proyek lain* dan *Riwayat pindahan antar proyek* ([A-250](04b-asumsi-lanjutan.md#a-250), §13.4)
 **Modul:** `master`
 **Fase:** F1 (rencana kebutuhan material `[F2]` hanya stub)
 **Dokumen terkait:** [Blueprint §6.3a](01-blueprint.md#63a-master-data-lain), [§6.4](01-blueprint.md#64-item-barang), [§6.5](01-blueprint.md#65-satuan-dinamis-uom), [§6.9](01-blueprint.md#69-proyek) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data master](08a-model-data-inti.md#area-master-data-tenant) · [Akun uji](../00-akun-uji.md)
@@ -280,6 +280,10 @@ dan `MasterScreenTest` (TC-MST-22–23).
 ### 13.4 Hub proyek (25 September 2026)
 
 `Master\Livewire\ProjectDetail` + `ProjectController@show` (`projects.show`, `whereNumber`; di luar cakupan proyek = 404). Tab mengambil data hanya saat dibuka (paginate 20 dengan `pageName` per tab); Stok on-site memakai `Return\Support\ReturnableStock::forProject` supaya angkanya sama dengan form retur; tab Approval membaca `approval_snapshots` menunggu dengan `context->project_id` dan tautan lewat `ApprovalRegistry`. Form REQ/RET membaca `?project=` dan TRF membaca `?from_warehouse=` (pola `IssueForm`). "Ubah status" dihapus dari daftar proyek. Uji TC-MST-25/25b (`tests/Feature/Master/ProjectDetailTest.php`).
+
+**26 Sep 2026 ([A-250](04b-asumsi-lanjutan.md#a-250)):** tombol **Pindahkan ke proyek lain** (izin `transfer.create`) membuka `/projects/{id}/move` (`ProjectController@move`, `Transfer\Livewire\ProjectMove`): pilih proyek tujuan dan Gudang Site-nya, centang aset yang dipinjam (bawaan semua) dan jumlah stok Tersedia per Gudang Site (bawaan = bisa dipindah) → `Transfer\Actions\MoveProjectRemainder` membuat TRF aset On-site + TRF stok per Gudang Site asal dalam satu transaksi. Kartu **Riwayat pindahan antar proyek** (10 terakhir, TRF yang proyek asal ≠ tujuan) menampilkan arah dan tombol ke proyek lawan. Pesan checklist penutupan untuk aset dipinjam kini menyarankan "atau pindahkan ke proyek lain". Uji TC-TRF-20, TC-AST-16.
+
+**Tab Riwayat ([A-252](04b-asumsi-lanjutan.md#a-252)):** linimasa semua dokumen proyek (REQ, SJ dikirim ke / dijemput dari proyek, ISU, CNV, WST, RET, TRF asal/tujuan, PRQ, AST; 60 terbaru, bertaut, hanya yang boleh dilihat) di atas log perubahan proyek. Uji TC-DOC-02.
 
 ### 13.5 Sisa pekerjaan modul ini
 

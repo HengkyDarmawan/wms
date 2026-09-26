@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Master;
 
 use App\Domain\Master\Models\Project;
+use App\Domain\Transfer\Models\Transfer;
 use App\Http\Controllers\Controller;
 use Illuminate\View\View;
 
@@ -26,5 +27,14 @@ class ProjectController extends Controller
         $this->authorize('view', $project);
 
         return view('master.projects.show', ['project' => $project]);
+    }
+
+    /** Pindahkan sisa proyek ke proyek lain (A-250): TRF aset On-site + TRF stok Gudang Site. */
+    public function move(Project $project): View
+    {
+        abort_unless(request()->user()->canAccessProject((int) $project->id), 404);
+        $this->authorize('create', Transfer::class);
+
+        return view('master.projects.move', ['project' => $project]);
     }
 }

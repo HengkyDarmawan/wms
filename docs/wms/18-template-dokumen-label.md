@@ -1,7 +1,7 @@
 # Spesifikasi Modul — `template` (Template Dokumen & Label)
 
-**Versi:** 0.7
-**Tanggal:** 24 September 2026
+**Versi:** 0.8
+**Tanggal:** 26 September 2026
 **Status:** selesai Fase 1, dibangun paralel dengan modul Retur/Transfer di branch `feat/template-label`. Keputusan yang tidak tertulis di dokumen lain dicatat sebagai [A-120](04-keputusan-dan-asumsi.md#a-120)–[A-126](04-keputusan-dan-asumsi.md#a-126) (*Perlu validasi*). v0.2: dokumen ISU (Bukti Pemakaian Material) dari modul Issue ([23-pemakaian](23-pemakaian.md), [A-152](04-keputusan-dan-asumsi.md#a-152)). v0.3: Bukti Konversi Material (jenis `conversion` baru) dan BA Waste aktif dari modul Konversi & Waste ([24-konversi-waste](24-konversi-waste.md), [A-160](04-keputusan-dan-asumsi.md#a-160)). v0.4: BA Serah Terima Aset aktif dari modul Aset ([25-aset](25-aset.md)); tidak ada lagi jenis stub.
 **Modul:** `template`
 **Fase:** F1: template bawaan dan layout induk per company, cetak PDF dokumen, label barcode/QR untuk bin, item, lot, dan potongan. Editor template penuh `[F2]`.
@@ -226,6 +226,8 @@ Di luar domain: provider `TemplateServiceProvider`, controller `Template\PrintCo
    - Label 500 buah: ±150 MB dan sampai 35 detik, melewati `memory_limit` 128 MB dan batas waktu 30 detik. Karena itu batas cetak diturunkan ke **200 label** ([A-120](04-keputusan-dan-asumsi.md#a-120)).
    - Uji dibatasi pada sedikit render PDF karena memori suite uji ikut menumpuk.
 6. **Laporan opname** (`count/report.blade.php`, modul Count) hanya ditambah `@include('print.partials.kop')`; controller dan rutenya tidak berubah.
+
+**26 Sep 2026 ([A-256](04b-asumsi-lanjutan.md#a-256)):** `LabelPayload::lot` mencantumkan *Masuk dd/mm/yyyy* (`lots.received_at`) di samping kedaluwarsa, dan `LabelPayload::piece` tanggal potongan lahir — membantu mengambil yang lama dulu (FIFO). Isi barcode/QR tidak berubah.
 
 ### 13.2 Sisa pekerjaan
 

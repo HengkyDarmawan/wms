@@ -1,8 +1,8 @@
 # Model Data — Pusat, akses & organisasi, master, gudang & lokasi
 
-**Versi:** 0.21 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026, Purchasing inti Fase 1b, dan lampiran generik)
-**Tanggal:** 25 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194, Purchasing inti A-208–A-215, lampiran A-238, override bin beku A-240, kelebihan terima A-245. Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Versi:** 0.22 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026, Purchasing inti Fase 1b, lampiran generik, dan tinjauan pemilik produk 26 Sep 2026)
+**Tanggal:** 26 September 2026
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194, Purchasing inti A-208–A-215, lampiran A-238, override bin beku A-240, kelebihan terima A-245, tinjauan pemilik produk A-246 dst. ([04b](04b-asumsi-lanjutan.md)). Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md) · [Pendukung](08c-model-data-pendukung.md)
 
 Daftar area (119 tabel):
@@ -424,13 +424,13 @@ erDiagram
 
 **`warehouses` — Gudang.** 🔑`id` bigint · ◆`code` varchar(10) *(segmen nomor dokumen)* · `name` varchar(100) · ↗`warehouse_type_id` bigint · ↗`parent_id` bigint *(self, hierarki)* · ↗`project_id` bigint *(wajib bila type = site; satu proyek boleh punya beberapa ([A-40](04-keputusan-dan-asumsi.md#a-40)))* · ↗`head_user_id` bigint *(Kepala Gudang)* · `address` text · `is_active` bool
 
-**`zones` — Zona.** 🔑`id` bigint · ↗`warehouse_id` bigint · `code` varchar(10) · `name` varchar(60) · `is_active` bool
+**`zones` — Zona.** 🔑`id` bigint · ↗`warehouse_id` bigint · `code` varchar(10) · `name` varchar(60) · `length_m` decimal(8,2) *(opsional, denah (A-254))* · `width_m` decimal(8,2) *(opsional)* · `is_active` bool
   ↳ UK(warehouse_id, code)
 
-**`racks` — Rak.** 🔑`id` bigint · ↗`zone_id` bigint · `code` varchar(10) · `is_active` bool
+**`racks` — Rak.** 🔑`id` bigint · ↗`zone_id` bigint · `code` varchar(10) · `name` varchar(60) *(opsional)* · `is_area` bool *(rak area barang besar (A-255))* · `pos_x` decimal(8,2) *(posisi denah, opsional (A-254))* · `pos_y` decimal(8,2) · `length_m` decimal(8,2) · `width_m` decimal(8,2) · `height_m` decimal(8,2) · `orientation` char(1) *(h|v)* · `is_active` bool
   ↳ UK(zone_id, code)
 
-**`rack_levels` — Level.** 🔑`id` bigint · ↗`rack_id` bigint · `code` varchar(10) · `is_active` bool
+**`rack_levels` — Level.** 🔑`id` bigint · ↗`rack_id` bigint · `code` varchar(10) · `height_m` decimal(8,2) *(opsional (A-254))* · `is_active` bool
   ↳ UK(rack_id, code)
 
-**`bins` — Bin.** 🔑`id` bigint · ↗`warehouse_id` bigint *(denormalisasi untuk query)* · ↗`rack_level_id` bigint *(null untuk bin virtual/dock)* · ◆`code` varchar(40) *(CKG-A-R03-L2-B05)* · `bin_type` enum *(bin_type)* · `bin_status` enum *(active|frozen|inactive)* · ↗`storage_category_id` bigint · `capacity_qty` decimal(18,4) · `capacity_weight` decimal(18,4) · `capacity_volume` decimal(18,4) · `capacity_length` decimal(18,4) · ↗`project_id` bigint *(hanya on_site)* · `is_virtual` bool · ↗`frozen_by_count_id` bigint *(stock_counts)* · `freeze_reason` varchar(255) *(alasan pembekuan)* · `count_flag` bool *(perlu dihitung ([A-67](04-keputusan-dan-asumsi.md#a-67), [BR-SJ-02](05-aturan-bisnis.md#br-sj)))*
+**`bins` — Bin.** 🔑`id` bigint · ↗`warehouse_id` bigint *(denormalisasi untuk query)* · ↗`rack_level_id` bigint *(null untuk bin virtual/dock)* · ◆`code` varchar(40) *(CKG-A-R03-L2-B05)* · `bin_type` enum *(bin_type)* · `bin_status` enum *(active|frozen|inactive)* · ↗`storage_category_id` bigint · `capacity_qty` decimal(18,4) · `capacity_weight` decimal(18,4) · `capacity_volume` decimal(18,4) · `capacity_mode` varchar(5) *(warn|block per bin, menimpa kategori (A-255))* · ↗`occupied_by_bin_id` bigint *(ikut terpakai barang besar (A-255))* · `occupied_reason` varchar(255) · `occupied_at` datetime · `capacity_length` decimal(18,4) · ↗`project_id` bigint *(hanya on_site)* · `is_virtual` bool · ↗`frozen_by_count_id` bigint *(stock_counts)* · `freeze_reason` varchar(255) *(alasan pembekuan)* · `count_flag` bool *(perlu dihitung ([A-67](04-keputusan-dan-asumsi.md#a-67), [BR-SJ-02](05-aturan-bisnis.md#br-sj)))*

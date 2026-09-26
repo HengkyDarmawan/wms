@@ -31,6 +31,7 @@ use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Stock\Support\DocumentNumber;
 use App\Domain\Stock\Support\MovementRequest;
 use App\Domain\Stock\Support\StockLedger;
+use App\Domain\Transfer\Support\TransferProgress;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -78,8 +79,16 @@ class ConfirmDelivery
             throw ShipmentRuleException::field('BR-SJ-05', 'received_by_name', 'Nama penerima wajib diisi.');
         }
 
-        $barisSj = $shipment->lines()->with('pickTaskLine.item')->get()->keyBy('id');
+        $barisSj = $shipment->lines()->with('pickTaskLine.item', 'item')->get()->keyBy('id');
         $isian = $this->periksaIsian($barisSj, $lines);
+
+        if ($shipment->isReturnPickup()) {
+            return $this->terimaJemput($shipment, $proof, $isian, $barisSj, $penerima, $actor);
+        }
+
+        if ($shipment->isSiteTransfer()) {
+            return $this->terimaAntarSite($shipment, $proof, $isian, $barisSj, $penerima, $actor);
+        }
 
         $hasil = DB::transaction(function () use ($shipment, $proof, $isian, $barisSj, $penerima, $actor) {
             $bukti = ProofOfDelivery::create([
@@ -153,6 +162,176 @@ class ConfirmDelivery
         return $hasil;
     }
 
+    /**
+     * A-248: SJ jemput tiba di gudang tujuan RET. Barangnya belum di kartu stok
+     * gudang (barang klien) atau masih di bin On-site (aset), jadi tidak ada
+     * pergerakan dan tidak ada DSC: yang tiba (baik + rusak) menjadi batas GRN
+     * retur, kondisinya diputus saat pemilahan; yang kurang tidak tiba.
+     *
+     * @param  array<int, array<string, mixed>>  $isian
+     * @param  Collection<int, ShipmentLine>  $barisSj
+     */
+    private function terimaJemput(Shipment $shipment, array $proof, array $isian, Collection $barisSj, string $penerima, ?User $actor): ProofOfDelivery
+    {
+        return DB::transaction(function () use ($shipment, $proof, $isian, $barisSj, $penerima, $actor) {
+            $bukti = ProofOfDelivery::create([
+                'shipment_id' => $shipment->id,
+                'received_by_name' => $penerima,
+                'received_by_user_id' => $this->id($proof, 'received_by_user_id') ?? $actor?->id,
+                'signature_path' => $this->teks($proof, 'signature_path'),
+                'photo_path' => $this->teks($proof, 'photo_path'),
+                'confirmed_at' => now(),
+                'channel' => ProofChannel::tryFrom((string) ($proof['channel'] ?? '')) ?? ProofChannel::DriverPwa,
+                'notes' => $this->teks($proof, 'notes'),
+            ]);
+
+            $kurang = false;
+
+            foreach ($isian as $baris) {
+                /** @var ShipmentLine $sj */
+                $sj = $barisSj[$baris['shipment_line_id']];
+
+                $barisBukti = ProofOfDeliveryLine::create([
+                    'proof_of_delivery_id' => $bukti->id,
+                    'shipment_line_id' => $sj->id,
+                    'qty_good' => $baris['qty_good'],
+                    'qty_damaged' => $baris['qty_damaged'],
+                    'qty_missing' => $baris['qty_missing'],
+                    'damage_photo_path' => $baris['damage_photo_path'],
+                    'notes' => $baris['notes'],
+                ]);
+
+                if ($baris['unit'] !== null) {
+                    ProofOfDeliveryUnit::create(['proof_of_delivery_line_id' => $barisBukti->id] + $baris['unit']);
+                }
+
+                $sj->forceFill(['qty_delivered' => round((float) $baris['qty_good'] + (float) $baris['qty_damaged'], 4)])->save();
+
+                if ((float) $baris['qty_missing'] > 0) {
+                    $kurang = true;
+                }
+            }
+
+            $shipment->forceFill([
+                'status' => $kurang ? ShipmentStatus::PartiallyDelivered : ShipmentStatus::Delivered,
+                'delivered_at' => now(),
+            ])->save();
+
+            activity('shipment')->performedOn($shipment)->causedBy($actor)
+                ->withProperties(['penerima' => $penerima, 'kurang' => $kurang])
+                ->log($kurang ? 'SJ jemput tiba, sebagian barang tidak terbawa' : 'SJ jemput tiba di gudang');
+
+            return $bukti->refresh();
+        });
+    }
+
+    /**
+     * A-249: SJ antar site diterima proyek tujuan. Aset yang tiba (baik atau
+     * rusak) pindah **satu pergerakan** bin On-site asal → bin On-site tujuan
+     * dengan kejadian `asset_transferred`; AST lama `transferred`, AST baru
+     * `checked_out`. Yang kurang tidak bergerak — tetap tercatat di proyek asal
+     * dan ditindaklanjuti manual. Tanpa DSC dan tanpa konfirmasi pemohon.
+     *
+     * @param  array<int, array<string, mixed>>  $isian
+     * @param  Collection<int, ShipmentLine>  $barisSj
+     */
+    private function terimaAntarSite(Shipment $shipment, array $proof, array $isian, Collection $barisSj, string $penerima, ?User $actor): ProofOfDelivery
+    {
+        $shipment->loadMissing('originProject', 'destinationProject');
+        $binAsal = $this->bins->onSite($shipment->originProject);
+        $binTujuan = $this->bins->onSite($shipment->destinationProject);
+
+        return DB::transaction(function () use ($shipment, $proof, $isian, $barisSj, $penerima, $actor, $binAsal, $binTujuan) {
+            $bukti = ProofOfDelivery::create([
+                'shipment_id' => $shipment->id,
+                'received_by_name' => $penerima,
+                'received_by_user_id' => $this->id($proof, 'received_by_user_id'),
+                'signature_path' => $this->teks($proof, 'signature_path'),
+                'photo_path' => $this->teks($proof, 'photo_path'),
+                'lat' => $proof['lat'] ?? null,
+                'lng' => $proof['lng'] ?? null,
+                'confirmed_at' => now(),
+                'channel' => ProofChannel::tryFrom((string) ($proof['channel'] ?? '')) ?? ProofChannel::DriverPwa,
+                'notes' => $this->teks($proof, 'notes'),
+            ]);
+
+            $kurang = false;
+            $diterima = [];
+
+            foreach ($isian as $baris) {
+                /** @var ShipmentLine $sj */
+                $sj = $barisSj[$baris['shipment_line_id']];
+
+                $barisBukti = ProofOfDeliveryLine::create([
+                    'proof_of_delivery_id' => $bukti->id,
+                    'shipment_line_id' => $sj->id,
+                    'qty_good' => $baris['qty_good'],
+                    'qty_damaged' => $baris['qty_damaged'],
+                    'qty_missing' => $baris['qty_missing'],
+                    'damage_photo_path' => $baris['damage_photo_path'],
+                    'notes' => $baris['notes'],
+                ]);
+
+                if ($baris['unit'] !== null) {
+                    ProofOfDeliveryUnit::create(['proof_of_delivery_line_id' => $barisBukti->id] + $baris['unit']);
+                }
+
+                $tiba = round((float) $baris['qty_good'] + (float) $baris['qty_damaged'], 4);
+
+                if ($tiba > 0) {
+                    $payload = app(AssetCustody::class)->transfer($shipment, $sj, (float) $baris['qty_damaged'] > 0, $actor);
+
+                    try {
+                        $this->ledger->post(new MovementRequest(
+                            item: $sj->item,
+                            qtyBase: $tiba,
+                            fromBinId: (int) $binAsal->id,
+                            toBinId: (int) $binTujuan->id,
+                            lotId: $sj->lot_id,
+                            serialId: $sj->serial_id,
+                            pieceId: $sj->piece_id,
+                            projectId: $shipment->destination_project_id,
+                            documentType: 'shipment',
+                            documentId: (int) $shipment->id,
+                            documentLineId: (int) $sj->id,
+                            documentNumber: $shipment->number,
+                            performedBy: $actor,
+                            eventType: StockEventType::AssetTransferred,
+                            eventPayload: [
+                                'shipment_number' => $shipment->number,
+                                'item_code' => $sj->item?->code,
+                                'qty_base' => $tiba,
+                            ] + $payload,
+                        ));
+                    } catch (LedgerException $e) {
+                        throw ShipmentRuleException::rule($e->rule, 'Gagal memindahkan aset antar proyek: '.$e->getMessage());
+                    }
+
+                    $diterima[(int) $sj->source_line_id] = $tiba;
+                }
+
+                $sj->forceFill(['qty_delivered' => $tiba])->save();
+
+                if ((float) $baris['qty_missing'] > 0) {
+                    $kurang = true;
+                }
+            }
+
+            $shipment->forceFill([
+                'status' => $kurang ? ShipmentStatus::PartiallyDelivered : ShipmentStatus::Delivered,
+                'delivered_at' => now(),
+            ])->save();
+
+            app(TransferProgress::class)->siteShipmentReceived($shipment, $diterima, $actor);
+
+            activity('shipment')->performedOn($shipment)->causedBy($actor)
+                ->withProperties(['penerima' => $penerima, 'kurang' => $kurang])
+                ->log($kurang ? 'SJ antar site diterima; sebagian aset tidak tiba' : 'SJ antar site diterima proyek tujuan');
+
+            return $bukti->refresh();
+        });
+    }
+
     public function ambangKonfirmasi(): int
     {
         $nilai = (int) CompanySetting::get(self::AMBANG_KONFIRMASI, 3);
@@ -198,28 +377,27 @@ class ConfirmDelivery
                 throw ShipmentRuleException::field(
                     'BR-SJ-05',
                     'qty_good',
-                    'Baris '.($sj->pickTaskLine?->item?->code ?? $id).': baik + rusak + kurang = '.$total
+                    'Baris '.($sj->item?->code ?? $id).': baik + rusak + kurang = '.$total
                     .', seharusnya '.$dikirim.' sesuai yang dikirim.',
                 );
             }
 
             // BR-SJ-05, A-64, A-244: serial dan potongan dinilai per unit — satu
             // baris SJ adalah satu unit, jadi seluruhnya baik, rusak, atau kurang.
-            $pick = $sj->pickTaskLine;
             $unit = null;
 
-            if ($pick?->serial_id !== null || $pick?->piece_id !== null) {
+            if ($sj->isUnit()) {
                 $penuh = array_filter(['good' => $baik, 'damaged' => $rusak, 'missing' => $kurang], fn (float $n) => $n > 0.0001);
 
                 if (count($penuh) !== 1) {
                     throw ShipmentRuleException::field(
                         'BR-SJ-05',
                         'qty_good',
-                        'Baris '.($pick->item?->code ?? $id).' adalah satu unit (serial/potongan): pilih baik, rusak, atau kurang untuk seluruhnya.',
+                        'Baris '.($sj->item?->code ?? $id).' adalah satu unit (serial/potongan): pilih baik, rusak, atau kurang untuk seluruhnya.',
                     );
                 }
 
-                $unit = ['serial_id' => $pick->serial_id, 'piece_id' => $pick->piece_id, 'condition' => PodUnitCondition::from((string) array_key_first($penuh))];
+                $unit = ['serial_id' => $sj->serial_id, 'piece_id' => $sj->piece_id, 'condition' => PodUnitCondition::from((string) array_key_first($penuh))];
             }
 
             $foto = is_string($baris['damage_photo_path'] ?? null) ? trim($baris['damage_photo_path']) : '';

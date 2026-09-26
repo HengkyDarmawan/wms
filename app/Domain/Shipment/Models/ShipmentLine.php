@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Shipment\Models;
 
+use App\Domain\Master\Models\Item;
+use App\Domain\Master\Models\Lot;
+use App\Domain\Master\Models\Piece;
+use App\Domain\Master\Models\Serial;
+use App\Domain\Return\Models\GoodsReturnLine;
 use App\Domain\Shipment\Enums\OwnershipEffect;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +16,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Baris SJ — satu baris PCK yang ikut berangkat.
+ * Baris SJ — satu baris PCK yang ikut berangkat, atau (SJ tanpa PCK, A-247)
+ * satu baris RET/TRF yang dijemput dari proyek (`source_line_id`). Identitas
+ * barang (item, lot, serial, potongan) disimpan di baris ini untuk keduanya.
  *
  * `ownership_effect` diputuskan di sini, bukan saat barang diterima: apa yang
  * terjadi pada kepemilikan sudah ditentukan dokumen asalnya (BR-SJ-04), dan
@@ -51,6 +58,38 @@ class ShipmentLine extends Model
     public function pickTaskLine(): BelongsTo
     {
         return $this->belongsTo(PickTaskLine::class, 'pick_task_line_id');
+    }
+
+    public function item(): BelongsTo
+    {
+        return $this->belongsTo(Item::class);
+    }
+
+    public function lot(): BelongsTo
+    {
+        return $this->belongsTo(Lot::class);
+    }
+
+    public function serial(): BelongsTo
+    {
+        return $this->belongsTo(Serial::class);
+    }
+
+    public function piece(): BelongsTo
+    {
+        return $this->belongsTo(Piece::class);
+    }
+
+    /** Baris RET yang dijemput (SJ jemput, A-248). */
+    public function returnLine(): BelongsTo
+    {
+        return $this->belongsTo(GoodsReturnLine::class, 'source_line_id');
+    }
+
+    /** Satu unit utuh (serial/potongan) dinilai utuh saat diterima (A-244). */
+    public function isUnit(): bool
+    {
+        return $this->serial_id !== null || $this->piece_id !== null;
     }
 
     public function proofLines(): HasMany

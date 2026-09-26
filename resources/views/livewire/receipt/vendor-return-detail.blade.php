@@ -101,6 +101,10 @@
         </div>
     </div>
 
+    {{-- A-252: dokumen asal & turunan. --}}
+    @unless ($portal ?? false)
+        <x-related-documents :document="$rtv" />
+    @endunless
     @include('approval.partials.history', ['riwayatApproval' => $riwayatApproval])
 
     <div class="card">

@@ -62,7 +62,7 @@ class PurchaseOrderTest extends TenantTestCase
 
         $this->gagalPo(fn () => $this->poDraf($prq, []), 'BR-GEN-11');
         $this->gagalPo(fn () => $this->poDraf($prq, $baris(['qty_base' => -5])), 'BR-LED-02');
-        $this->gagalPo(fn () => $this->poDraf($prq, $baris(['qty_base' => 101])), 'BR-REQ-08');
+        $this->gagalPo(fn () => $this->poDraf($prq, $baris(['qty_base' => 101])), 'A-246');
         $this->gagalPo(fn () => $this->poDraf($prq, $baris(['unit_price' => 0])), 'A-211');
 
         $sementara = Vendor::create(['code' => 'V-SEM', 'name' => 'Toko Sementara', 'vendor_type' => VendorType::Shop, 'status' => VendorStatus::Provisional, 'is_active' => true]);
@@ -73,7 +73,7 @@ class PurchaseOrderTest extends TenantTestCase
 
         // Jumlah yang dipegang PO draf lain mengurangi sisa (A-210).
         $this->poDraf($prq, $baris(['qty_base' => 70]));
-        $this->gagalPo(fn () => $this->poDraf($prq, $baris(['qty_base' => 31])), 'BR-REQ-08');
+        $this->gagalPo(fn () => $this->poDraf($prq, $baris(['qty_base' => 31])), 'A-246');
         $this->assertSame(PurchaseOrderStatus::Draft, $this->poDraf($prq, $baris(['qty_base' => 30]))->status);
     }
 
@@ -153,6 +153,41 @@ class PurchaseOrderTest extends TenantTestCase
         $this->assertSame(PurchaseOrderStatus::Completed, $po->status);
         $this->assertNotNull($po->completed_at);
         $this->assertSame(PurchaseRequestStatus::Fulfilled, $prq->refresh()->status);
+    }
+
+    #[Test]
+    public function tc_po_11_pesan_lebih_dari_prq_beralasan_menjadi_stok_biasa(): void
+    {
+        $prq = $this->prqManual([['item_id' => $this->baut->id, 'qty_base' => 100]]);
+        $id = $prq->lines()->sole()->id;
+
+        // A-246: di atas sisa tanpa alasan ditolak, dengan alasan lolos.
+        $this->gagalPo(fn () => $this->poDraf($prq, [['purchase_request_line_id' => $id, 'qty_base' => 150, 'unit_price' => 1500]]), 'A-246');
+
+        $po = $this->poDisetujui($prq, [['purchase_request_line_id' => $id, 'qty_base' => 150, 'unit_price' => 1500, 'over_order_reason' => 'MOQ vendor 150']]);
+        $baris = $po->lines()->sole();
+
+        $this->assertSame(PurchaseOrderStatus::Approved, $po->status);
+        $this->assertSame(50.0, (float) $baris->qty_over_request);
+        $this->assertSame('MOQ vendor 150', $baris->over_order_reason);
+        $this->assertSame(225000.0, (float) $po->total_amount);
+
+        // Catatan pemesanan memegang jumlah PO penuh; GRN boleh sampai 150, tidak lebih (A-214).
+        $catatan = PurchaseRequestOrder::query()->where('purchase_order_id', $po->id)->sole()->lines()->sole();
+        $this->assertSame(150.0, (float) $catatan->qty_ordered);
+        $this->assertSame(150.0, (float) $prq->lines()->sole()->refresh()->qty_ordered);
+        $this->gagalPo(fn () => $this->grnDraf([['item_id' => $this->baut->id, 'qty_received' => 151, 'purchase_request_order_line_id' => $catatan->id]]), 'BR-GRN-05');
+
+        $grn = $this->grnDiterima([['item_id' => $this->baut->id, 'qty_received' => 150, 'purchase_request_order_line_id' => $catatan->id]]);
+
+        $this->assertSame(150.0, (float) $grn->lines()->sole()->qty_received);
+        $this->assertSame(PurchaseOrderStatus::Completed, $po->refresh()->status);
+        $this->assertSame(PurchaseRequestStatus::Fulfilled, $prq->refresh()->status, 'Kebutuhan 100 terpenuhi; 50 sisanya stok biasa.');
+
+        // Kelebihan karena kemasan juga tercatat per baris.
+        $prq2 = $this->prqManual([['item_id' => $this->baut->id, 'qty_base' => 10]]);
+        $draf = $this->poDraf($prq2, [['purchase_request_line_id' => $prq2->lines()->sole()->id, 'qty_base' => 12, 'unit_price' => 1500, 'over_order_reason' => 'Kemasan isi 12']]);
+        $this->assertSame(2.0, (float) $draf->lines()->sole()->qty_over_request);
     }
 
     #[Test]

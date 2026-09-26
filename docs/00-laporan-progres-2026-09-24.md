@@ -1,8 +1,8 @@
 # Laporan Progres — 24 September 2026
 
-**Versi:** 1.20
-**Tanggal:** 25 September 2026
-**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); v1.7: modul Issue (pemakaian material di site) selesai (493 uji hijau); v1.8: modul Konversi & Waste selesai di mesin rumah XAMPP3 (513 uji hijau); v1.9: modul Aset dipinjamkan selesai (525 uji hijau); v1.10: modul Purchase Request selesai (537 uji hijau); v1.11: modul Platform penuh selesai (546 uji hijau); v1.12: Pendukung Fase 1 selesai (569 uji hijau); v1.13: tinjauan kode + 2FA Super Admin, pindai, pengingat tagihan (579 uji hijau, §5.4); v1.14: sesi kantor — pindai REQ/ISU, impor vendor & saldo awal, Purchasing inti Fase 1b, landing page (§5.5); v1.15: putaran navigasi, hub proyek, konversi per jenis, celah F1 (§5.6); v1.16: sesi rumah — lingkungan XAMPP3 & notifikasi §8 Sisa Fase 1 (§5.7); v1.17: lampiran generik (§5.7); v1.18: override bin beku & penuaan penggantian (§5.7); v1.19: laporan §9 modul 19–22 & short pick TRF (§5.7); v1.20: butir 2f (§5.7); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau)
+**Versi:** 1.21
+**Tanggal:** 26 September 2026
+**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); v1.7: modul Issue (pemakaian material di site) selesai (493 uji hijau); v1.8: modul Konversi & Waste selesai di mesin rumah XAMPP3 (513 uji hijau); v1.9: modul Aset dipinjamkan selesai (525 uji hijau); v1.10: modul Purchase Request selesai (537 uji hijau); v1.11: modul Platform penuh selesai (546 uji hijau); v1.12: Pendukung Fase 1 selesai (569 uji hijau); v1.13: tinjauan kode + 2FA Super Admin, pindai, pengingat tagihan (579 uji hijau, §5.4); v1.14: sesi kantor — pindai REQ/ISU, impor vendor & saldo awal, Purchasing inti Fase 1b, landing page (§5.5); v1.15: putaran navigasi, hub proyek, konversi per jenis, celah F1 (§5.6); v1.16: sesi rumah — lingkungan XAMPP3 & notifikasi §8 Sisa Fase 1 (§5.7); v1.17: lampiran generik (§5.7); v1.18: override bin beku & penuaan penggantian (§5.7); v1.19: laporan §9 modul 19–22 & short pick TRF (§5.7); v1.20: butir 2f (§5.7); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau); v1.21: sesi kantor 26 Sep 2026 — keputusan pemilik produk atas asumsi ⚠ dan tujuh tugas turunannya (§5.8, 654 uji hijau)
 **Dokumen terkait:** [README](README.md) · [Setup lokal §5](00-setup-lokal.md#5-skenario-uji-manual) · [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) · [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) · [Keputusan & Asumsi](wms/04-keputusan-dan-asumsi.md)
 
 Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang baru di-seed: delapan skenario uji manual lewat Chrome headless, 321 uji otomatis, dan pencocokan setiap kasus uji `TC-xx` di spesifikasi dengan ujinya. Hasilnya dipakai untuk memetakan seberapa jauh Fase 1 sudah berjalan.
@@ -186,6 +186,23 @@ Temuan teknis yang layak diingat: (1) Livewire menjalankan semua hook `updated*`
 | Butir 2f | rekonsiliasi saldo terjadwal (lapor saja); bukti terima per unit serial/potongan; kelebihan terima GRN transfer/retur → ADJ `over_receipt`; transfer aset antar proyek menunggu keputusan ([A-116](wms/04-keputusan-dan-asumsi.md#a-116)) | [A-243](wms/04-keputusan-dan-asumsi.md#a-243)–[A-245](wms/04-keputusan-dan-asumsi.md#a-245), TC-STK-35, TC-SJ-18, TC-GRN-11 |
 
 Verifikasi (XAMPP3 rumah): setelah 2a **621 uji hijau / 6.797 asersi**, setelah 2b **624 / 6.848**, setelah 2c **625 / 6.868**, setelah 2d+2e **630 / 7.090**, setelah 2f **632 / 7.118**; `_verify.py` OK; `ui-check` 0 error console.
+
+### 5.8 Sesi kantor (XAMPP) — 26 Sep 2026
+
+Pemilik produk meninjau 31 asumsi ⚠ di [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) v1.13 (28 Setuju, A-229 sebagian, A-210 diubah) dan menjawab dua keputusan terbuka (SJ balik barang di tangan klien, transfer aset antar proyek: **bangun**). Catatannya melahirkan fitur baru, dicatat sebagai [A-246–A-256](wms/04b-asumsi-lanjutan.md).
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| 0. Langkah 0 | MariaDB 10.4.27 dinyalakan; install + build, migrasi 000220–000240, demo segar; 632 uji hijau, `_verify` OK, `ui-check` 0 error, E2E 10/10 & 9/9, saldo cocok | [A-76](wms/04-keputusan-dan-asumsi.md#a-76) |
+| 1. Catat keputusan | kolom *Validasi* 04 v0.39 & *Keputusan* tinjauan v1.13; berkas lanjutan 04b; tabel §2.19 04 disambung | — |
+| 2. PO lebih dari PRQ | alasan wajib (MOQ); kelebihan jadi stok biasa; GRN sampai jumlah PO | [A-246](wms/04b-asumsi-lanjutan.md#a-246), TC-PO-11 |
+| 3. SJ jemput | SJ tanpa PCK dari proyek, sopir & plat wajib, tanpa pergerakan sampai GRN retur, asal per baris di layar & cetak | [A-247](wms/04b-asumsi-lanjutan.md#a-247), [A-248](wms/04b-asumsi-lanjutan.md#a-248), TC-RET-18–21, TC-SJ-19 |
+| 4. Aset antar proyek | TRF aset + SJ antar site; satu pergerakan On-site → On-site, `asset_transferred`, AST `transferred` berantai; pindahan sisa proyek dari hub; jejak lokasi; kirim tautan via WA | [A-249](wms/04b-asumsi-lanjutan.md#a-249)–[A-251](wms/04b-asumsi-lanjutan.md#a-251), TC-AST-14–16, TC-TRF-18–20 |
+| 5. Dokumen terkait | kartu asal & turunan di 14 layar detail; linimasa dokumen di tab Riwayat hub | [A-252](wms/04b-asumsi-lanjutan.md#a-252), TC-DOC-01–03 |
+| 6. Potong banyak batang | satu CNV, pola per batang atau salin FIFO; kerf & sisa per batang | [A-253](wms/04b-asumsi-lanjutan.md#a-253), TC-CNV-15/16 |
+| 7. Denah gudang 2D | ukuran/posisi opsional, warna status/umur, cari, geser grid, rak area, bin ikut terpakai, tanggal masuk FIFO, ubah bin | [A-254](wms/04b-asumsi-lanjutan.md#a-254)–[A-256](wms/04b-asumsi-lanjutan.md#a-256), TC-WH-21–25 |
+
+Verifikasi (XAMPP kantor, MariaDB 10.4.27): setelah tugas 2–3 **638 uji / 7.277 asersi**, setelah tugas 4 **644 / 7.437**, akhir **654 / 7.581**; `_verify.py` OK; `npm run build` OK; E2E pada demo segar: alur-req-sj 10/10, alur-pendukung 9/9, ui-check 92 cek (termasuk denah, pindahan proyek, dokumen terkait) — 0 error console; klik & geser rak diuji di Chrome dengan peristiwa mouse sungguhan; `stock:reconcile` saldo cocok. Migrasi tenant baru: 000250–000280. Belum dikerjakan: 119 asumsi tanpa ⚠ (kolom *Keputusan* masih kosong).
 
 ## 6. Cara mengulang
 

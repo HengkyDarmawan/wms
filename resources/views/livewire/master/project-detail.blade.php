@@ -49,6 +49,8 @@
                 @if ($sites->isNotEmpty())
                     <a class="btn btn-outline-primary" href="{{ route('transfers.create', ['from_warehouse' => $sites->first()->id]) }}"><i class="bi bi-arrow-left-right"></i> {{ __('Transfer ke proyek lain') }}</a>
                 @endif
+                {{-- A-250: aset On-site + stok Gudang Site pindah sekaligus. --}}
+                <a class="btn btn-outline-primary" href="{{ route('projects.move', $project) }}"><i class="bi bi-box-arrow-right"></i> {{ __('Pindahkan ke proyek lain') }}</a>
             @endcan
             @can('issue.create')
                 <a class="btn btn-outline-primary" href="{{ route('issues.create', ['project' => $project->id]) }}"><i class="bi bi-hammer"></i> {{ __('Pemakaian material') }}</a>
@@ -148,6 +150,33 @@
             </div>
         @endforeach
     </div>
+
+    @if (session('pesan'))
+        <div class="alert alert-success" role="status">{{ session('pesan') }}</div>
+    @endif
+
+    @if ($pindahan->isNotEmpty())
+        {{-- A-250: riwayat pindahan antar proyek, dengan tombol ke proyek lawan. --}}
+        <div class="card mb-3">
+            <div class="card-header"><strong>{{ __('Riwayat pindahan antar proyek') }}</strong></div>
+            <ul class="list-group list-group-flush small">
+                @foreach ($pindahan as $t)
+                    @php($keluar = (int) $t->from_project_id === (int) $project->id)
+                    @php($lawan = $keluar ? $t->toProject : $t->fromProject)
+                    <li class="list-group-item d-flex flex-wrap align-items-center gap-2">
+                        <i class="bi {{ $keluar ? 'bi-box-arrow-right text-warning' : 'bi-box-arrow-in-left text-success' }}" aria-hidden="true"></i>
+                        <a href="{{ route('transfers.show', $t->id) }}">{{ $t->number }}</a>
+                        <span>{{ $t->kind()->label() }} · {{ $t->lines_count }} {{ __('baris') }} · {{ $keluar ? __('dipindah ke') : __('diterima dari') }}</span>
+                        @if ($lawan)
+                            <a class="btn btn-sm btn-outline-secondary py-0" href="{{ route('projects.show', $lawan->id) }}">{{ $lawan->code }} — {{ $lawan->name }}</a>
+                        @endif
+                        <span class="badge {{ $t->status->badge() }}">{{ $t->status->label() }}</span>
+                        <span class="text-muted ms-auto">{{ $t->created_at?->lokal()->format('d/m/Y') }}</span>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <ul class="nav nav-tabs mb-3">
         @foreach ($tabs as $kunci => $label)
@@ -406,8 +435,26 @@
             </div>
         </div>
     @elseif ($tab === 'riwayat')
-        <div class="card">
+        {{-- A-252: linimasa semua dokumen proyek, terbaru di atas. --}}
+        <div class="card mb-3">
+            <div class="card-header"><strong>{{ __('Linimasa dokumen proyek') }}</strong></div>
             <ul class="list-group list-group-flush small">
+                @forelse ($data['dokumen'] as $d)
+                    <li class="list-group-item d-flex flex-wrap align-items-center gap-2">
+                        <span class="text-muted" style="min-width: 7.5rem">{{ $d['tanggal']?->lokal()->format('d/m/Y H:i') }}</span>
+                        <span class="badge text-bg-light border">{{ $d['jenis'] }}</span>
+                        <a href="{{ $d['url'] }}">{{ $d['number'] }}</a>
+                        @if ($d['status']) <span class="badge {{ $d['badge'] }}">{{ $d['status'] }}</span> @endif
+                    </li>
+                @empty
+                    <li class="list-group-item text-muted">{{ __('Belum ada dokumen proyek.') }}</li>
+                @endforelse
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-header"><strong>{{ __('Riwayat perubahan proyek') }}</strong></div>
+            <ul class="list-group list-group-flush small">
+                @php($data = $data['aktivitas'])
                 @forelse ($data as $r)
                     <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
                 @empty

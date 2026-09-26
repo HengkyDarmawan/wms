@@ -49,7 +49,11 @@ class LabelPayload
         return [
             'title' => (string) $lot->lot_no,
             'subtitle' => trim($kodeItem.' '.($lot->item?->name ?? '')),
-            'detail' => $lot->expiry_date ? __('Kedaluwarsa').' '.$lot->expiry_date->format('d/m/Y') : '',
+            // A-256: tanggal masuk tercetak supaya yang lama diambil dulu (FIFO).
+            'detail' => trim(implode(' · ', array_filter([
+                $lot->received_at ? __('Masuk').' '.$lot->received_at->format('d/m/Y') : null,
+                $lot->expiry_date ? __('Kedaluwarsa').' '.$lot->expiry_date->format('d/m/Y') : null,
+            ]))),
             'code128' => (string) $lot->lot_no,
             'qr' => $kodeItem.'|'.$lot->lot_no,
         ];
@@ -63,7 +67,8 @@ class LabelPayload
         return [
             'title' => (string) $piece->piece_no,
             'subtitle' => trim(($piece->item?->code ?? '').' '.($piece->item?->name ?? '')),
-            'detail' => trim(__('Panjang').' '.$panjang.' '.($piece->item?->baseUom?->code ?? '')),
+            'detail' => trim(__('Panjang').' '.$panjang.' '.($piece->item?->baseUom?->code ?? '')
+                .($piece->created_at ? ' · '.__('Masuk').' '.$piece->created_at->format('d/m/Y') : '')), // A-256 FIFO
             'code128' => (string) $piece->piece_no,
             'qr' => (string) $piece->piece_no,
         ];

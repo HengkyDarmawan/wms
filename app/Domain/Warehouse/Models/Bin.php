@@ -62,6 +62,7 @@ class Bin extends Model
             'capacity_length' => 'decimal:4',
             'is_virtual' => 'boolean',
             'count_flag' => 'boolean',
+            'occupied_at' => 'datetime',
         ];
     }
 
@@ -89,6 +90,17 @@ class Bin extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /** Bin utama tempat barang besar dicatat, bila bin ini ikut terpakai olehnya (A-255). */
+    public function occupiedBy(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'occupied_by_bin_id')->withoutGlobalScopes();
+    }
+
+    public function isOccupied(): bool
+    {
+        return $this->occupied_by_bin_id !== null;
     }
 
     public function scopeActive(Builder $query): Builder
@@ -119,7 +131,21 @@ class Bin extends Model
      */
     public function capacityMode(): CapacityMode
     {
+        // A-255: mode per bin (mis. bin area alat berat) menimpa kategori.
+        if ($this->capacity_mode !== null && ($mode = CapacityMode::tryFrom((string) $this->capacity_mode)) !== null) {
+            return $mode;
+        }
+
         return $this->storageCategory?->capacity_mode ?? CapacityMode::Warn;
+    }
+
+    /**
+     * Kapasitas bin dihitung dari **total isi bin** (bukan per baris saldo)
+     * bila mode kapasitasnya diatur per bin — bin area berisi satu unit.
+     */
+    public function capacityCountsWholeBin(): bool
+    {
+        return $this->capacity_mode !== null;
     }
 
     public function blocksOnOverCapacity(): bool
@@ -162,7 +188,7 @@ class Bin extends Model
             ->logOnly([
                 'warehouse_id', 'rack_level_id', 'code', 'bin_type', 'bin_status',
                 'storage_category_id', 'capacity_qty', 'capacity_weight',
-                'capacity_volume', 'capacity_length', 'project_id', 'count_flag',
+                'capacity_volume', 'capacity_length', 'capacity_mode', 'project_id', 'count_flag', 'occupied_by_bin_id',
             ])
             ->logOnlyDirty();
     }

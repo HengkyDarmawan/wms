@@ -31,14 +31,14 @@
         @foreach ($sj->lines as $l)
             @php($id = $l->id)
             <div class="border rounded p-2 mb-2">
-                <div class="fw-semibold">{{ $l->pickTaskLine?->item?->code }} <span class="fw-normal text-muted small">{{ $l->pickTaskLine?->item?->name }}</span></div>
+                <div class="fw-semibold">{{ $l->item?->code }} <span class="fw-normal text-muted small">{{ $l->item?->name }}</span></div>
                 <div class="small text-muted mb-2">
-                    {{ __('Dikirim') }} {{ rtrim(rtrim(number_format((float) $l->qty_shipped, 4, ',', '.'), '0'), ',') }} {{ $l->pickTaskLine?->item?->baseUom?->code }}
-                    @if ($l->pickTaskLine?->serial) · {{ __('Serial') }} {{ $l->pickTaskLine->serial->serial_no }} @endif
-                    @if ($l->pickTaskLine?->piece) · {{ __('Potongan') }} {{ $l->pickTaskLine->piece->piece_no }} @endif
+                    {{ __('Dikirim') }} {{ rtrim(rtrim(number_format((float) $l->qty_shipped, 4, ',', '.'), '0'), ',') }} {{ $l->item?->baseUom?->code }}
+                    @if ($l->serial) · {{ __('Serial') }} {{ $l->serial->serial_no }} @endif
+                    @if ($l->piece) · {{ __('Potongan') }} {{ $l->piece->piece_no }} @endif
                 </div>
                 <div class="row g-2">
-                    @if ($l->pickTaskLine?->serial_id !== null || $l->pickTaskLine?->piece_id !== null)
+                    @if ($l->isUnit())
                         {{-- A-244: satu unit — baik, rusak, atau kurang seluruhnya. --}}
                         <div class="col-12">
                             <label class="form-label small mb-0" for="kondisi-{{ $id }}">{{ __('Kondisi unit') }}</label>

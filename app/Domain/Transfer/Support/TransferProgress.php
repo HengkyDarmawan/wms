@@ -11,6 +11,7 @@ use App\Domain\Receipt\Models\GoodsReceiptLine;
 use App\Domain\Shipment\Enums\PickTaskStatus;
 use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Models\PickTaskLine;
+use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Shipment\Models\ShipmentLine;
 use App\Domain\Transfer\Enums\TransferStatus;
 use App\Domain\Transfer\Models\Transfer;
@@ -36,6 +37,62 @@ class TransferProgress
         }
 
         $baris->forceFill(['qty_shipped' => (float) $baris->qty_shipped + (float) $line->qty_shipped])->save();
+    }
+
+    /** SJ antar site TRF aset berangkat (A-249): baris SJ merujuk baris TRF langsung. */
+    public function shippedWithoutPicking(ShipmentLine $line): void
+    {
+        $baris = TransferLine::query()->find($line->source_line_id);
+
+        $baris?->forceFill(['qty_shipped' => (float) $baris->qty_shipped + (float) $line->qty_shipped])->save();
+    }
+
+    /**
+     * SJ antar site dibatalkan sebelum berangkat → TRF aset kembali `approved`
+     * menunggu SJ baru (A-249).
+     */
+    public function siteShipmentCancelled(Shipment $shipment, ?User $actor = null): void
+    {
+        $trf = Transfer::withoutGlobalScopes()->find($shipment->source_id);
+
+        if ($trf === null || $trf->status !== TransferStatus::InProgress) {
+            return;
+        }
+
+        $trf->forceFill(['status' => TransferStatus::Approved])->save();
+
+        activity('transfer')->performedOn($trf)->causedBy($actor)
+            ->withProperties(['sj' => $shipment->number])
+            ->log('SJ antar site dibatalkan; TRF menunggu SJ baru');
+    }
+
+    /**
+     * SJ antar site diterima proyek tujuan (A-249): jumlah diterima baris TRF
+     * dan TRF `completed` — aset yang tidak terbawa tetap di proyek asal dan
+     * ditindaklanjuti manual (retur atau tandai hilang).
+     *
+     * @param  array<int, float>  $diterimaPerBaris  transfer_line_id => jumlah tiba
+     */
+    public function siteShipmentReceived(Shipment $shipment, array $diterimaPerBaris, ?User $actor = null): void
+    {
+        $trf = Transfer::withoutGlobalScopes()->find($shipment->source_id);
+
+        if ($trf === null) {
+            return;
+        }
+
+        foreach ($diterimaPerBaris as $id => $qty) {
+            $baris = TransferLine::query()->find($id);
+            $baris?->forceFill(['qty_received' => (float) $baris->qty_received + $qty])->save();
+        }
+
+        $kurang = $trf->lines()->get()->contains(fn (TransferLine $l) => (float) $l->qty_received + 0.00005 < (float) $l->qty_base);
+
+        $trf->forceFill(['status' => TransferStatus::Completed, 'completed_at' => now()])->save();
+
+        activity('transfer')->performedOn($trf)->causedBy($actor)
+            ->withProperties(['sj' => $shipment->number, 'ada_yang_tidak_tiba' => $kurang])
+            ->log($kurang ? 'TRF aset selesai; sebagian aset tidak tiba dan tetap tercatat di proyek asal' : 'TRF aset selesai: aset diterima proyek tujuan');
     }
 
     /** GRN transfer `received`: jumlah diterima gudang tujuan. */
