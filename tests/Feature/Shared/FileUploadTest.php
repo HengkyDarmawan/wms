@@ -6,10 +6,10 @@ namespace Tests\Feature\Shared;
 
 use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Master\Models\Item;
-use App\Domain\Master\Models\Uom;
 use App\Domain\Shared\Files\StoreUpload;
 use Database\Seeders\Tenant\MasterDemoSeeder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TenantTestCase;
 
@@ -28,7 +28,7 @@ class FileUploadTest extends TenantTestCase
         $files = app(StoreUpload::class);
 
         foreach (['signatures', 'items'] as $folder) {
-            foreach (\Illuminate\Support\Facades\Storage::disk('local')->files($folder) as $path) {
+            foreach (Storage::disk('local')->files($folder) as $path) {
                 $files->delete($path);
             }
         }
@@ -103,14 +103,14 @@ class FileUploadTest extends TenantTestCase
     }
 
     #[Test]
-    public function tc_fil_01d_berkas_lebih_dari_lima_mb_ditolak(): void
+    public function tc_fil_01d_berkas_mentah_lebih_dari_dua_puluh_mb_ditolak(): void
     {
         $user = $this->makeUser('warehouse_staff');
 
-        // NFR-14: batas 5 MB.
+        // A-257: unggahan mentah maks 20 MB (dikompres menjadi ≤ 5 MB, NFR-14/A-23).
         $this->actingAs($user)
             ->post($this->tenantUrl('profile/signature'), [
-                'signature' => UploadedFile::fake()->image('besar.jpg')->size(6000),
+                'signature' => UploadedFile::fake()->image('besar.jpg')->size(21000),
             ])
             ->assertSessionHasErrors('signature');
 
@@ -176,7 +176,7 @@ class FileUploadTest extends TenantTestCase
             (string) $user->id,
         );
 
-        $penuh = \Illuminate\Support\Facades\Storage::disk('local')->path($path);
+        $penuh = Storage::disk('local')->path($path);
 
         // FilesystemTenancyBootstrapper menyisipkan pengenal company ke path.
         $this->assertStringContainsString('tenant', $penuh);

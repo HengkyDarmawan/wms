@@ -76,7 +76,7 @@ class DocumentLayoutTest extends TenantTestCase
             ->post($this->tenantUrl('settings/document-layout/logo'), ['logo' => UploadedFile::fake()->create('logo.pdf', 10, 'application/pdf')])
             ->assertSessionHasErrors('logo');
         $this->actingAs($admin)
-            ->post($this->tenantUrl('settings/document-layout/logo'), ['logo' => UploadedFile::fake()->image('besar.png')->size(6 * 1024)])
+            ->post($this->tenantUrl('settings/document-layout/logo'), ['logo' => UploadedFile::fake()->image('besar.png')->size(21 * 1024)]) // A-257: mentah > 20 MB ditolak
             ->assertSessionHasErrors('logo');
         $this->assertNull(DocumentLayout::current()->logo_path);
 

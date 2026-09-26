@@ -61,7 +61,7 @@ class AssetController extends Controller
         $this->authorize('inspect', $assetHandover);
 
         $request->validate([
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photo' => ['nullable', ...StoreUpload::ATURAN_FOTO],
         ], attributes: ['photo' => __('Foto')]);
 
         try {
@@ -79,7 +79,7 @@ class AssetController extends Controller
         $this->authorize('update', $assetHandover);
 
         $request->validate([
-            'photo_out' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photo_out' => ['required', ...StoreUpload::ATURAN_FOTO],
         ], attributes: ['photo_out' => __('Foto serah terima')]);
 
         try {

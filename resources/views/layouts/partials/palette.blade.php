@@ -68,6 +68,7 @@
         ['izin' => 'company_setting.manage', 'route' => 'setup.index', 'label' => __('Setup awal'), 'ikon' => 'bi-rocket-takeoff'],
         ['izin' => 'item.create', 'route' => 'imports.index', 'label' => __('Impor dari Excel (item, proyek, vendor)'), 'ikon' => 'bi-file-earmark-spreadsheet'],
         ['izin' => 'adjustment.create', 'route' => 'imports.index', 'label' => __('Impor saldo awal stok'), 'ikon' => 'bi-file-earmark-spreadsheet'],
+        ['izin' => 'bin.manage', 'route' => 'imports.index', 'label' => __('Impor struktur gudang (zona, rak, bin)'), 'ikon' => 'bi-file-earmark-spreadsheet'],
         ['izin' => 'document_layout.manage', 'route' => 'document-layout.edit', 'label' => __('Layout dokumen'), 'ikon' => 'bi-file-earmark-richtext'],
         ['izin' => 'label.print', 'route' => 'labels.index', 'label' => __('Cetak label'), 'ikon' => 'bi-upc-scan'],
         ['izin' => null, 'route' => 'reports.index', 'label' => __('Laporan'), 'ikon' => 'bi-file-earmark-bar-graph'],

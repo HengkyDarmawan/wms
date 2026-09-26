@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Shipment;
 
+use App\Domain\Shared\Files\StoreUpload;
 use App\Domain\Shipment\Actions\ConfirmDelivery;
 use App\Domain\Shipment\Actions\IssueDeliveryToken;
 use App\Domain\Shipment\Enums\PodUnitCondition;
@@ -85,8 +86,8 @@ class DeliveryTokenController extends Controller
             'lines.*.qty_damaged' => ['nullable', 'numeric', 'min:0'],
             'lines.*.qty_missing' => ['nullable', 'numeric', 'min:0'],
             'lines.*.condition' => ['nullable', 'in:good,damaged,missing'],
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'photos.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photo' => ['nullable', ...StoreUpload::ATURAN_FOTO],
+            'photos.*' => ['nullable', ...StoreUpload::ATURAN_FOTO],
             'signature' => ['nullable', 'string', 'max:2000000'],
         ], attributes: ['received_by_name' => __('Nama penerima'), 'photo' => __('Foto serah terima'), 'photos.*' => __('Foto kerusakan')]);
 

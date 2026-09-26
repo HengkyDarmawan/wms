@@ -75,7 +75,7 @@
                                     <input class="form-control form-control-sm" id="tgl-{{ $inv->id }}" name="paid_at" type="date" value="{{ old('paid_at', now()->toDateString()) }}" required>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label small" for="bukti-{{ $inv->id }}">{{ __('Bukti transfer (foto, maks 5 MB)') }} <span class="wajib">*</span></label>
+                                    <label class="form-label small" for="bukti-{{ $inv->id }}">{{ __('Bukti transfer (foto, maks 20 MB)') }} <span class="wajib">*</span></label>
                                     <input class="form-control form-control-sm" id="bukti-{{ $inv->id }}" name="proof" type="file" accept="image/jpeg,image/png,image/webp" required>
                                 </div>
                                 <div class="col-md-2">

@@ -6,6 +6,7 @@ namespace App\Domain\Shipment\Livewire;
 
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Shared\Files\StoreUpload;
 use App\Domain\Shipment\Actions\ConfirmDelivery;
 use App\Domain\Shipment\Actions\IssueDeliveryToken;
 use App\Domain\Shipment\Actions\ShipShipment;
@@ -179,8 +180,8 @@ class ShipmentDetail extends Component
         $this->validate(
             [
                 'form.received_by_name' => ['required', 'string', 'max:100'],
-                'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-                'fotoRusak.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'foto' => ['nullable', ...StoreUpload::ATURAN_FOTO],
+                'fotoRusak.*' => ['nullable', ...StoreUpload::ATURAN_FOTO],
                 'tandaTangan' => ['nullable', 'string', 'max:2000000'],
             ],
             attributes: ['form.received_by_name' => __('Nama penerima'), 'foto' => __('Foto serah terima'), 'fotoRusak.*' => __('Foto kerusakan')],

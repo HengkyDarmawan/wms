@@ -49,7 +49,7 @@ class WasteDisposalController extends Controller
         $this->authorize('close', $wasteDisposal);
 
         $request->validate([
-            'evidence_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'evidence_photo' => ['nullable', ...StoreUpload::ATURAN_FOTO],
             'evidence_note' => ['nullable', 'string', 'max:255'],
         ], attributes: ['evidence_photo' => __('Foto berita acara'), 'evidence_note' => __('Nomor / keterangan BA')]);
 

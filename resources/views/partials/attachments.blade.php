@@ -4,7 +4,7 @@
     $field (nama input berkas), $kosong (teks bila belum ada).
 --}}
 <div class="card mb-3">
-    <div class="card-header"><strong>{{ $judul }}</strong> <span class="small text-muted">{{ __('jpg/png/webp, maks. 5 MB') }}</span></div>
+    <div class="card-header"><strong>{{ $judul }}</strong> <span class="small text-muted">{{ __('jpg/png/webp, maks. 20 MB, dikecilkan otomatis') }}</span></div>
     <div class="card-body">
         @if ($lampiran->isEmpty())
             <p class="text-muted small mb-0">{{ $kosong }}</p>

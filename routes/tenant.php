@@ -191,10 +191,10 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/vendors', [VendorController::class, 'index'])->name('vendors.index');
 
         Route::get('/items', [ItemController::class, 'index'])->name('items.index');
-        // Impor item dari Excel (A-192).
+        // Impor dari Excel (A-192, A-207, A-258 struktur gudang).
         Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
-        Route::get('/imports/{type}/template', [ImportController::class, 'template'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock'])->name('imports.template');
-        Route::post('/imports/{type}', [ImportController::class, 'store'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock'])->name('imports.store');
+        Route::get('/imports/{type}/template', [ImportController::class, 'template'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock', 'bins'])->name('imports.template');
+        Route::post('/imports/{type}', [ImportController::class, 'store'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock', 'bins'])->name('imports.store');
         Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
         Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
         Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');

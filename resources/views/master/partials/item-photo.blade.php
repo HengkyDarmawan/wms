@@ -37,7 +37,7 @@
                     <button class="btn btn-primary" type="submit">{{ __('Simpan') }}</button>
                 </div>
                 @error('photo')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                <div class="form-text">{{ __('PNG, JPG, atau WEBP. Maksimum 5 MB.') }}</div>
+                <div class="form-text">{{ __('PNG, JPG, atau WEBP. Maksimum 20 MB; dikecilkan otomatis.') }}</div>
             </form>
         @endcan
     </div>

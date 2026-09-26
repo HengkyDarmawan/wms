@@ -28,7 +28,7 @@ class ItemPhotoController extends Controller
         $this->authorize('update', $item);
 
         $request->validate([
-            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photo' => ['required', ...StoreUpload::ATURAN_FOTO],
         ], attributes: ['photo' => __('Foto item')]);
 
         try {

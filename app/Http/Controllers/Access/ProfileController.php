@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Access;
 
 use App\Domain\Access\Actions\ChangePassword;
 use App\Domain\Access\Actions\ManageTwoFactor;
-use App\Domain\Shared\Files\StoreUpload;
 use App\Domain\Access\Exceptions\AccessRuleException;
+use App\Domain\Shared\Files\StoreUpload;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -76,6 +76,7 @@ class ProfileController extends Controller
 
         return back()->with('status', __('Password berhasil diubah.'));
     }
+
     /**
      * Unggah tanda tangan (10-access §6.2). Disimpan di disk privat per company;
      * legalitasnya masih menunggu [O-13], jadi ini baru gambar untuk dokumen cetak.
@@ -83,13 +84,14 @@ class ProfileController extends Controller
     public function updateSignature(Request $request): RedirectResponse
     {
         $request->validate([
-            'signature' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'signature' => ['required', ...StoreUpload::ATURAN_FOTO],
         ], attributes: ['signature' => __('Tanda tangan')]);
 
         $user = $request->user();
 
         try {
-            $path = $this->files->handle($request->file('signature'), 'signatures', (string) $user->id);
+            // A-257: tanda tangan tetap PNG (transparansi), hanya dikecilkan bila perlu.
+            $path = $this->files->handle($request->file('signature'), 'signatures', (string) $user->id, keepFormat: true);
         } catch (\RuntimeException $e) {
             throw ValidationException::withMessages(['signature' => $e->getMessage()]);
         }
@@ -108,5 +110,4 @@ class ProfileController extends Controller
 
         return back()->with('status', __('Tanda tangan dihapus.'));
     }
-
 }

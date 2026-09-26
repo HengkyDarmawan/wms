@@ -66,7 +66,8 @@ class SaveDocumentLayout
 
         try {
             // dompdf hanya andal untuk PNG/JPEG, jadi WebP tidak diterima di sini.
-            $path = $this->files->handle($file, self::FOLDER_LOGO, 'logo-'.$layout->id, ['image/png', 'image/jpeg']);
+            // A-257: logo tetap PNG bila PNG; foto besar dikecilkan otomatis.
+            $path = $this->files->handle($file, self::FOLDER_LOGO, 'logo-'.$layout->id, ['image/png', 'image/jpeg'], keepFormat: true);
         } catch (RuntimeException $e) {
             throw ValidationException::withMessages(['logo' => $e->getMessage()]);
         }

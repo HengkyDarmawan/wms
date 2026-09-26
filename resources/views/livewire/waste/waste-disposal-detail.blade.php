@@ -115,7 +115,7 @@
                 <div class="col-md-6">
                     <label class="form-label" for="wst-foto">{{ __('Foto berita acara') }}</label>
                     <input class="form-control" id="wst-foto" name="evidence_photo" type="file" accept="image/jpeg,image/png,image/webp">
-                    <div class="form-text">{{ __('JPG/PNG/WebP, maksimal 5 MB.') }}</div>
+                    <div class="form-text">{{ __('JPG/PNG/WebP, maksimal 20 MB; dikecilkan otomatis.') }}</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="wst-bukti">{{ __('Nomor / keterangan BA') }}</label>

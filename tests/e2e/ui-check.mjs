@@ -159,6 +159,15 @@ for (const url of links) {
   cek('layar baru tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
 }
 
+// 6c. Impor struktur gudang (A-258): kartu di /imports dan templat bisa diunduh.
+{
+  const sebelum = errors.length;
+  await go(`${BASE}/imports`);
+  cek('impor: kartu struktur gudang', await ev('!!document.querySelector(`#impor-bins form[action$="/imports/bins"]`)'));
+  cek('impor: templat struktur gudang', (await ev('fetch("/imports/bins/template").then(r => r.status)')) === 200);
+  cek('impor: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
+}
+
 // 7. Layar Super Admin di domain pusat (akun dari docs/00-akun-uji.md)
 const PUSAT = process.env.WMS_CENTRAL || BASE.replace('://demo.', '://');
 

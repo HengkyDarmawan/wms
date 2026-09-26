@@ -1,8 +1,8 @@
 # Setup Lokal — menjalankan dan mengetes aplikasi
 
-**Versi:** 1.5
-**Tanggal:** 24 September 2026
-**Status:** aktif — dua profil mesin dev: **rumah** (XAMPP3 + MariaDB 10.4) dan **kantor** (XAMPP + MariaDB 10.4), keduanya [A-76](wms/04-keputusan-dan-asumsi.md#a-76) / [A-162](wms/04-keputusan-dan-asumsi.md#a-162); v1.5: mesin rumah pindah dari Laragon ke `C:\xampp3`
+**Versi:** 1.6
+**Tanggal:** 26 September 2026
+**Status:** aktif — dua profil mesin dev: **rumah** (XAMPP3 + MariaDB 10.4) dan **kantor** (XAMPP + MariaDB 10.4), keduanya [A-76](wms/04-keputusan-dan-asumsi.md#a-76) / [A-162](wms/04-keputusan-dan-asumsi.md#a-162); v1.5: mesin rumah pindah dari Laragon ke `C:\xampp3`; v1.6: batas unggah PHP untuk foto 20 MB (§4)
 **Dokumen terkait:** [Akun uji](00-akun-uji.md) · [Arsitektur §10](wms/08-arsitektur.md#10-lingkungan) · [README](README.md) · [`../CLAUDE.md`](../CLAUDE.md)
 
 Panduan dari klon bersih sampai bisa login dan mencoba alur REQ → PCK → SJ di browser. Semua akun dan password berasal dari [00-akun-uji](00-akun-uji.md). Semua database berprefiks `wms_`; MySQL/MariaDB lokal dipakai bersama proyek lain, jadi **jangan menyentuh database lain**.
@@ -84,6 +84,18 @@ Identifikasi company memakai host tanpa port, jadi `:8000` tidak mengganggu. Ses
 
 Surel (undangan, reset password) masuk ke `storage/logs/laravel.log` karena `MAIL_MAILER=log`.
 
+### Batas unggah PHP
+
+Foto kamera HP boleh diunggah sampai 20 MB lalu dikompres otomatis menjadi ≤ 5 MB ([A-257](wms/04b-asumsi-lanjutan.md#a-257)). PHP memotong unggahan **sebelum** sampai ke aplikasi bila php.ini lebih kecil, sehingga foto 6–20 MB gagal dengan pesan "gagal diunggah". Bawaan kantor saat ini: `upload_max_filesize = 5M`, `post_max_size = 20M`, `memory_limit = 128M`.
+
+| Kunci php.ini | Nilai | Alasan |
+|---|---|---|
+| `upload_max_filesize` | `20M` | Satu foto mentah maksimal 20 MB |
+| `post_max_size` | `64M` | Halaman terima SJ bisa mengirim foto serah terima dan beberapa foto kerusakan sekaligus |
+| `memory_limit` | `256M` | Disarankan; kompresor menaikkan batas memori sementara untuk foto besar |
+
+Berkasnya `C:\xampp\php-8.3.33\php.ini` (kantor) dan `C:\xampp3\php\php.ini` (rumah). Periksa dengan `php -i | findstr /i "upload_max post_max memory_limit"`, lalu hentikan dan jalankan ulang `php artisan serve`. Produksi (cPanel *MultiPHP INI Editor* / php-fpm) dan batas body web server (mis. `client_max_body_size 64m` di Nginx) perlu nilai yang sama. Ekstensi `gd` wajib aktif; `exif` tidak wajib.
+
 ## 5. Skenario uji manual
 
 | No | Akun | Langkah | Hasil yang diharapkan |
@@ -122,3 +134,4 @@ py -3 docs/diagram/_verify.py       # link, anchor, ID, batas 450 baris
 | Sidebar tidak bisa di-scroll, ikon mata/tombol tema/⌘K tidak merespons | Buka Console browser (F12). Bundel lama: `npm run build` lalu `Ctrl+F5`. `ReferenceError: jQuery is not defined` berarti urutan impor di `resources/js/app.js` rusak — `globals.js` wajib diimpor paling awal |
 | Migrasi gagal di MariaDB karena fitur khusus MySQL 8 | Kode tidak boleh diubah untuk MariaDB ([A-76](wms/04-keputusan-dan-asumsi.md#a-76)). Pasang MySQL 8.4 ZIP portable di port 3307 dan set `DB_PORT=3307` |
 | `php -v` menunjukkan 7.4 atau 8.5 | PHP yang salah di PATH; pakai path lengkap dari §1 |
+| Foto > 5 MB gagal diunggah | php.ini masih `upload_max_filesize = 5M`; naikkan sesuai [§4 Batas unggah PHP](#batas-unggah-php) lalu jalankan ulang `php artisan serve` |

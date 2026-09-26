@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Issue;
 use App\Domain\Issue\Actions\AttachIssuePhoto;
 use App\Domain\Issue\Exceptions\IssueRuleException;
 use App\Domain\Issue\Models\MaterialIssue;
+use App\Domain\Shared\Files\StoreUpload;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,7 +53,7 @@ class IssueController extends Controller
         $this->authorize('attachPhoto', $materialIssue);
 
         $request->validate([
-            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photo' => ['required', ...StoreUpload::ATURAN_FOTO],
         ], attributes: ['photo' => __('Foto')]);
 
         try {

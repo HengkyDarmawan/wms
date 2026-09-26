@@ -21,12 +21,16 @@ class AttachmentStore
 {
     public function __construct(private readonly StoreUpload $files) {}
 
-    /** Foto unggahan user: jpeg/png/webp ≤ 5 MB (NFR-14). */
+    /**
+     * Foto unggahan user: jpeg/png/webp mentah ≤ 20 MB, dikompres otomatis
+     * menjadi ≤ 5 MB (NFR-14, A-23, A-257). MIME & ukuran yang dicatat adalah
+     * milik berkas tersimpan, bukan berkas asli.
+     */
     public function photo(Model $owner, UploadedFile $file, ?User $actor = null): Attachment
     {
         $path = $this->files->handle($file, $this->folder($owner), $this->nama());
 
-        return $this->catat($owner, AttachmentKind::Photo, $path, (string) $file->getMimeType(), (int) $file->getSize(),
+        return $this->catat($owner, AttachmentKind::Photo, $path, $this->files->mimeType($path), $this->files->size($path),
             mb_substr($file->getClientOriginalName(), 0, 150), $actor);
     }
 

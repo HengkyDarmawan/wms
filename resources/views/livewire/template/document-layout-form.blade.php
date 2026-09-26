@@ -91,7 +91,7 @@
                         <label class="form-label" for="lay-logo">{{ __('Unggah logo') }}</label>
                         <input class="form-control" id="lay-logo" type="file"
                                name="logo" accept="image/png,image/jpeg" required>
-                        <div class="form-text">{{ __('PNG atau JPEG, maks 5 MB.') }}</div>
+                        <div class="form-text">{{ __('PNG atau JPEG, maks 20 MB; dikecilkan otomatis.') }}</div>
                         <button class="btn btn-sm btn-outline-primary mt-2" type="submit">{{ __('Simpan logo') }}</button>
                     </form>
                 </div>

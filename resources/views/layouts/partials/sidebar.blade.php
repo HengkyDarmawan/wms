@@ -65,7 +65,7 @@
         ['Laporan & cetak', 'laporan', [
             [null, 'reports.index', __('Laporan'), 'bi-file-earmark-bar-graph', 'reports.*'],
             ['label.print', 'labels.index', __('Cetak label'), 'bi-upc-scan', 'labels.*'],
-            [['item.create', 'project.create', 'vendor.create', 'adjustment.create'], 'imports.index', __('Impor Excel'), 'bi-file-earmark-spreadsheet', 'imports.*'],
+            [['item.create', 'project.create', 'vendor.create', 'adjustment.create', 'bin.manage'], 'imports.index', __('Impor Excel'), 'bi-file-earmark-spreadsheet', 'imports.*'],
         ]],
         ['Pengaturan', 'pengaturan', [
             ['user.view', 'users.index', __('Pengguna'), 'bi-people', 'users.*'],

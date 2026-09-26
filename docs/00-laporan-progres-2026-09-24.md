@@ -1,8 +1,8 @@
 # Laporan Progres — 24 September 2026
 
-**Versi:** 1.21
+**Versi:** 1.24
 **Tanggal:** 26 September 2026
-**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); v1.7: modul Issue (pemakaian material di site) selesai (493 uji hijau); v1.8: modul Konversi & Waste selesai di mesin rumah XAMPP3 (513 uji hijau); v1.9: modul Aset dipinjamkan selesai (525 uji hijau); v1.10: modul Purchase Request selesai (537 uji hijau); v1.11: modul Platform penuh selesai (546 uji hijau); v1.12: Pendukung Fase 1 selesai (569 uji hijau); v1.13: tinjauan kode + 2FA Super Admin, pindai, pengingat tagihan (579 uji hijau, §5.4); v1.14: sesi kantor — pindai REQ/ISU, impor vendor & saldo awal, Purchasing inti Fase 1b, landing page (§5.5); v1.15: putaran navigasi, hub proyek, konversi per jenis, celah F1 (§5.6); v1.16: sesi rumah — lingkungan XAMPP3 & notifikasi §8 Sisa Fase 1 (§5.7); v1.17: lampiran generik (§5.7); v1.18: override bin beku & penuaan penggantian (§5.7); v1.19: laporan §9 modul 19–22 & short pick TRF (§5.7); v1.20: butir 2f (§5.7); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau); v1.21: sesi kantor 26 Sep 2026 — keputusan pemilik produk atas asumsi ⚠ dan tujuh tugas turunannya (§5.8, 654 uji hijau)
+**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); v1.7: modul Issue (pemakaian material di site) selesai (493 uji hijau); v1.8: modul Konversi & Waste selesai di mesin rumah XAMPP3 (513 uji hijau); v1.9: modul Aset dipinjamkan selesai (525 uji hijau); v1.10: modul Purchase Request selesai (537 uji hijau); v1.11: modul Platform penuh selesai (546 uji hijau); v1.12: Pendukung Fase 1 selesai (569 uji hijau); v1.13: tinjauan kode + 2FA Super Admin, pindai, pengingat tagihan (579 uji hijau, §5.4); v1.14: sesi kantor — pindai REQ/ISU, impor vendor & saldo awal, Purchasing inti Fase 1b, landing page (§5.5); v1.15: putaran navigasi, hub proyek, konversi per jenis, celah F1 (§5.6); v1.16: sesi rumah — lingkungan XAMPP3 & notifikasi §8 Sisa Fase 1 (§5.7); v1.17: lampiran generik (§5.7); v1.18: override bin beku & penuaan penggantian (§5.7); v1.19: laporan §9 modul 19–22 & short pick TRF (§5.7); v1.20: butir 2f (§5.7); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau); v1.21: sesi kantor 26 Sep 2026 — keputusan pemilik produk atas asumsi ⚠ dan tujuh tugas turunannya (§5.8, 654 uji hijau); v1.22: kompresi foto otomatis A-23/A-257 (§5.9, 659 uji hijau); v1.23: impor struktur gudang A-258 (§5.10, 663 uji hijau); v1.24: §1 ditandai sebagai potret 24 Sep, baris asumsi & kalimat penutupnya diperbarui
 **Dokumen terkait:** [README](README.md) · [Setup lokal §5](00-setup-lokal.md#5-skenario-uji-manual) · [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) · [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) · [Keputusan & Asumsi](wms/04-keputusan-dan-asumsi.md)
 
 Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang baru di-seed: delapan skenario uji manual lewat Chrome headless, 321 uji otomatis, dan pencocokan setiap kasus uji `TC-xx` di spesifikasi dengan ujinya. Hasilnya dipakai untuk memetakan seberapa jauh Fase 1 sudah berjalan.
@@ -11,6 +11,8 @@ Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang
 
 ## 1. Ringkasan
 
+> **Potret 24 Sep 2026** (setelah modul Picking/Shipment). Angka uji, cakupan TC, dan bug di tabel ini tidak diperbarui; keadaan terbaru ada di §4 (22 dari 24 butir selesai, 1 stub, 1 sebagian) dan §5.8–§5.10 (663 uji hijau).
+
 | Ukuran | Hasil |
 |---|---|
 | Skenario E2E [00-setup-lokal §5](00-setup-lokal.md#5-skenario-uji-manual) | **9 dari 9 langkah lulus**, 0 error console |
@@ -18,9 +20,9 @@ Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang
 | Kasus uji `TC-xx` di spesifikasi 10–17 | **178 dari 178 punya uji otomatis**, semuanya lulus |
 | Butir Fase 1 di [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) | **13 selesai · 6 sebagian · 4 belum dibangun** (dari 23, satu 'selesai' berupa stub; v1.2 Penerimaan/QC/put-away/RTV; v1.3 Approval engine; v1.4 Stock opname; v1.5 Retur & transfer; v1.6 Template dokumen & label; v1.7 Pemakaian material di site; v1.8 Konversi material, offcut, waste; v1.9 Aset dipinjamkan; v1.10 Purchase Request manual; v1.11 Platform, trial, tagihan manual; v1.12 strategi pengambilan, notifikasi, laporan & dashboard, wizard, impor Excel, PWA) |
 | Bug baru dari E2E | **1 berat** (§5.1), 1 ringan (§5.2) |
-| Asumsi menunggu validasi | A-72–A-126, A-150–A-218, A-220–A-225 (v1.14) — [daftar kerja](00-tinjauan-asumsi-2026-09-25.md) |
+| Asumsi menunggu validasi | 26 Sep 2026: 31 asumsi ⚠ + A-111, A-116 diputus (§5.8), tinjauan asumsi tanpa ⚠ berjalan; sisa **106** (A-84 dst. + A-257, A-258) — [daftar kerja](00-tinjauan-asumsi-2026-09-25.md) |
 
-Singkatnya: alur keluar **REQ → approval → picking → surat jalan → bukti terima → selisih** berjalan dari ujung ke ujung. Separuh besar Fase 1 lainnya belum dibangun: barang masuk (GRN), approval berlapis, opname, retur/transfer, pemakaian, konversi, dan aset.
+Singkatnya: saat potret ini, alur keluar **REQ → approval → picking → surat jalan → bukti terima → selisih** berjalan dari ujung ke ujung, sedangkan barang masuk (GRN), approval berlapis, opname, retur/transfer, pemakaian, konversi, dan aset belum dibangun. Semuanya selesai sejak v1.2–v1.12 (§4).
 
 ## 2. Hasil E2E
 
@@ -203,6 +205,22 @@ Pemilik produk meninjau 31 asumsi ⚠ di [tinjauan asumsi](00-tinjauan-asumsi-20
 | 7. Denah gudang 2D | ukuran/posisi opsional, warna status/umur, cari, geser grid, rak area, bin ikut terpakai, tanggal masuk FIFO, ubah bin | [A-254](wms/04b-asumsi-lanjutan.md#a-254)–[A-256](wms/04b-asumsi-lanjutan.md#a-256), TC-WH-21–25 |
 
 Verifikasi (XAMPP kantor, MariaDB 10.4.27): setelah tugas 2–3 **638 uji / 7.277 asersi**, setelah tugas 4 **644 / 7.437**, akhir **654 / 7.581**; `_verify.py` OK; `npm run build` OK; E2E pada demo segar: alur-req-sj 10/10, alur-pendukung 9/9, ui-check 92 cek (termasuk denah, pindahan proyek, dokumen terkait) — 0 error console; klik & geser rak diuji di Chrome dengan peristiwa mouse sungguhan; `stock:reconcile` saldo cocok. Migrasi tenant baru: 000250–000280. Belum dikerjakan: 119 asumsi tanpa ⚠ (kolom *Keputusan* masih kosong).
+
+### 5.9 Kompresi foto otomatis — 26 Sep 2026
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Kompresi foto (A-23) | satu titik `ImageCompressor` di `StoreUpload::handle()`, GD tanpa paket baru; semua jalur foto (item, tanda tangan, lampiran ISU/AST, inspeksi aset, BA waste, bukti terima SJ driver & tautan, keberatan, bukti bayar, logo); mentah ≤ 20 MB → tersimpan ≤ 5 MB, 1920 px, JPEG 80, putar EXIF; PNG transparan/tanda tangan/logo tetap PNG; PDF utuh | [A-23](wms/04-keputusan-dan-asumsi.md#a-23), [A-257](wms/04b-asumsi-lanjutan.md#a-257), TC-FIL-03–03e |
+
+Verifikasi (XAMPP kantor): **659 uji / 7.635 asersi** hijau; `_verify.py` OK. php.ini kantor masih `upload_max_filesize = 5M`, jadi uji manual foto > 5 MB baru bisa setelah php.ini dinaikkan ([setup lokal](00-setup-lokal.md#batas-unggah-php)).
+
+### 5.10 Impor struktur gudang — 26 Sep 2026
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Impor zona–rak–level–bin | kartu *Struktur gudang* di `/imports` + templat; gudang harus sudah ada; zona/rak/level baru dibuat otomatis lewat `SaveLocation`, bin lewat `SaveBin`; semua-atau-tidak, kode yang ada/ganda ditolak; `bin.manage` (Kepala Gudang kini bisa membuka `/imports`, hanya kartu ini); tombol di `/bins`, menu, palet | [A-258](wms/04b-asumsi-lanjutan.md#a-258), [O-12](wms/04-keputusan-dan-asumsi.md#o-12) sebagian, TC-WH-26–26d |
+
+Verifikasi (XAMPP kantor, MariaDB 10.4.27): **663 uji / 7.681 asersi** hijau; `_verify.py` OK; `npm run build` OK; `ui-check` 94 cek (termasuk 6c kartu & templat impor struktur gudang) — 0 GAGAL, 0 error console. Impor gudang sendiri tetap menunggu O-12.
 
 ## 6. Cara mengulang
 

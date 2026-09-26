@@ -1,9 +1,20 @@
-# Catatan Perubahan — Arsip (v0.2–v0.11)
+# Catatan Perubahan — Arsip (v0.2–v0.12)
 
-**Versi:** 1.5
+**Versi:** 1.6
 **Tanggal:** 26 September 2026
-**Status:** arsip — dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), dan v0.51 (blok v0.11) agar README tetap ≤ 450 baris; isi tidak diubah
+**Status:** arsip — dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), dan v0.52 (blok v0.12) agar README tetap ≤ 450 baris; isi tidak diubah
 **Dokumen terkait:** [README](README.md)
+
+### v0.12 — 23 September 2026 (modul Master selesai Fase 1)
+- **`wms/11-master.md` → v0.2 (selesai Fase 1):** §13 baru berisi penyimpangan implementasi, keputusan implementasi, daftar sembilan layar, dan sisa pekerjaan. Definisi selesai §12 dicentang.
+- **BR-MST-01 s.d. BR-MST-05 ditegakkan di kode:** kode master huruf besar dan terkunci (`MasterCode`), satuan dasar terkunci setelah ada lot/serial/potongan, kategori satuan wajib punya satuan acuan berfaktor 1, Proyek Internal tanpa klien dan tidak bisa ditutup, master hanya bisa dinonaktifkan bila tidak dipakai data aktif.
+- **Matriks kombinasi pelacakan** (BR-STK-08, BR-STK-09, BR-STK-11, BR-STK-12, BR-CNV-03) dipusatkan di `TrackingCombination`, dipakai form item sebagai petunjuk dan `SaveItem` sebagai penjaga.
+- **Sembilan layar §6:** klien, proyek (dengan dialog ubah status §4), vendor, daftar item, form item, detail item bertab, kategori item, satuan, dan data referensi bertab. Menu "Master data" ditambahkan ke sidebar.
+- **Tiga belas aksi domain** dan tujuh policy; 24 permission modul `master` ditambahkan ke seeder referensi beserta pembagiannya per role bawaan (§2).
+- **Seeder:** `MasterReferenceSeeder` (kategori & satuan standar, alasan baku delapan konteks, kategori penyimpanan, saklar fitur P-08) dan `MasterDemoSeeder` (klien, proyek, vendor, dan empat item yang mewakili empat mode pelacakan) sesuai [00-akun-uji](00-akun-uji.md) §2. `DemoSeeder` tidak lagi memakai id klien/proyek sementara.
+- **Cakupan proyek pada penugasan role** kini memakai daftar nama proyek, bukan id angka (menutup satu butir sisa pekerjaan `wms/10-access.md` §13.4).
+- **Penyimpangan tercatat:** `projects.site_warehouse_id` tidak dibuat (A-40); kode kategori satuan huruf besar; konversi kemasan per item boleh lintas kategori satuan (BR-STK-09); `company_settings` dan `feature_settings` mencatat audit manual.
+- **Pengujian:** 82 → **119 uji / 697 asersi**, semua hijau (TC-MST-01–23 di `tests/Feature/Master`).
 
 ### v0.11 — 23 September 2026 (struktur organisasi, perangkat, akses dukungan)
 - **Layar §6.5 Struktur organisasi:** pohon unit dengan tambah, ubah, sub-unit, dan penonaktifan; penjagaan agar induk tidak menjadi dirinya sendiri atau turunannya; jabatan per unit beserta level; daftar user di unit lengkap dengan jabatan dan atasan langsung (D-16, dasar aturan approval Blueprint §8.1).

@@ -21,26 +21,36 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class StoreUpload
 {
-    /** NFR-14: batas ukuran berkas unggahan. */
+    /** NFR-14, A-23: batas ukuran berkas **tersimpan**. */
     public const MAKSIMUM_BYTE = 5 * 1024 * 1024;
+
+    /** A-257: batas unggahan mentah sebelum dikompres (foto kamera HP). */
+    public const MAKSIMUM_MENTAH = 20 * 1024 * 1024;
 
     /** @var array<int, string> */
     public const TIPE_GAMBAR = ['image/jpeg', 'image/png', 'image/webp'];
 
+    /** @var array<int, string> aturan validasi foto unggahan (A-257: mentah ≤ 20 MB) */
+    public const ATURAN_FOTO = ['image', 'mimes:jpg,jpeg,png,webp', 'max:20480'];
+
     private const DISK = 'local';
 
     /**
+     * Foto dikompres otomatis ({@see ImageCompressor}, A-23): unggahan mentah
+     * ≤ 20 MB, hasil tersimpan ≤ 5 MB. `$keepFormat` menjaga PNG tetap PNG
+     * (tanda tangan, logo). Berkas bukan gambar disimpan apa adanya.
+     *
      * @param  array<int, string>  $allowedMimes
      * @return string path relatif di dalam disk tenant
      */
-    public function handle(UploadedFile $file, string $folder, string $name, array $allowedMimes = self::TIPE_GAMBAR): string
+    public function handle(UploadedFile $file, string $folder, string $name, array $allowedMimes = self::TIPE_GAMBAR, bool $keepFormat = false): string
     {
         if (! $file->isValid()) {
             throw new RuntimeException('Berkas gagal diunggah.');
         }
 
-        if ($file->getSize() > self::MAKSIMUM_BYTE) {
-            throw new RuntimeException('Ukuran berkas melebihi 5 MB.');
+        if ($file->getSize() > self::MAKSIMUM_MENTAH) {
+            throw new RuntimeException('Ukuran berkas melebihi 20 MB.');
         }
 
         // Tipe dibaca dari isi berkas, bukan dari nama atau header klien.
@@ -50,9 +60,20 @@ class StoreUpload
             throw new RuntimeException('Jenis berkas tidak didukung.');
         }
 
-        $ekstensi = match ($mime) {
+        $hasil = app(ImageCompressor::class)->compress((string) $file->getRealPath(), $mime, $keepFormat);
+        $mimeAkhir = $hasil['mime'] ?? $mime;
+        $ukuranAkhir = $hasil !== null ? strlen($hasil['bytes']) : (int) $file->getSize();
+
+        if ($ukuranAkhir > self::MAKSIMUM_BYTE) {
+            throw new RuntimeException(in_array($mime, self::TIPE_GAMBAR, true)
+                ? 'Ukuran gambar masih melebihi 5 MB setelah dikompres.'
+                : 'Ukuran berkas melebihi 5 MB.');
+        }
+
+        $ekstensi = match ($mimeAkhir) {
             'image/png' => 'png',
             'image/webp' => 'webp',
+            'application/pdf' => 'pdf',
             default => 'jpg',
         };
 
@@ -67,9 +88,25 @@ class StoreUpload
             }
         }
 
-        Storage::disk(self::DISK)->putFileAs(trim($folder, '/'), $file, $name.'.'.$ekstensi);
+        if ($hasil !== null) {
+            Storage::disk(self::DISK)->put($path, $hasil['bytes']);
+        } else {
+            Storage::disk(self::DISK)->putFileAs(trim($folder, '/'), $file, $name.'.'.$ekstensi);
+        }
 
         return $path;
+    }
+
+    /** Ukuran berkas tersimpan (setelah kompresi). */
+    public function size(string $path): int
+    {
+        return (int) Storage::disk(self::DISK)->size($path);
+    }
+
+    /** MIME berkas tersimpan (setelah kompresi). */
+    public function mimeType(string $path): string
+    {
+        return (string) Storage::disk(self::DISK)->mimeType($path);
     }
 
     /**

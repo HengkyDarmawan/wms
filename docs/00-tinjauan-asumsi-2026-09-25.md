@@ -13,23 +13,23 @@ Jumlah: **150 asumsi** dalam 16 kelompok. Tanda ⚠ = asumsi dari sesi 25 Sep 20
 
 | ID | Asumsi (ringkas) | Keputusan |
 |---|---|---|
-| [A-72](wms/04-keputusan-dan-asumsi.md#a-72) | Stok awal demo lewat seeder, tanpa dokumen | |
-| [A-73](wms/04-keputusan-dan-asumsi.md#a-73) | Satu kelas aksi boleh memegang beberapa transisi dari dokumen yang sama | |
-| [A-74](wms/04-keputusan-dan-asumsi.md#a-74) | Kolom konvensi belum dipasang di tabel tenant | |
-| [A-75](wms/04-keputusan-dan-asumsi.md#a-75) | Skema `audit_logs` mengikuti spatie/activitylog | |
-| [A-76](wms/04-keputusan-dan-asumsi.md#a-76) | Dev di mesin kantor memakai XAMPP + MariaDB 10.4.27 | |
+| [A-72](wms/04-keputusan-dan-asumsi.md#a-72) | Stok awal demo lewat seeder, tanpa dokumen | Setuju |
+| [A-73](wms/04-keputusan-dan-asumsi.md#a-73) | Satu kelas aksi boleh memegang beberapa transisi dari dokumen yang sama | Setuju |
+| [A-74](wms/04-keputusan-dan-asumsi.md#a-74) | Kolom konvensi belum dipasang di tabel tenant | Setuju |
+| [A-75](wms/04-keputusan-dan-asumsi.md#a-75) | Skema `audit_logs` mengikuti spatie/activitylog | Setuju |
+| [A-76](wms/04-keputusan-dan-asumsi.md#a-76) | Dev di mesin kantor memakai XAMPP + MariaDB 10.4.27 | Setuju |
 
 ## 2.6 Baru dari pembangunan modul lanjutan — 24 Sep 2026
 
 | ID | Asumsi (ringkas) | Keputusan |
 |---|---|---|
-| [A-77](wms/04-keputusan-dan-asumsi.md#a-77) | REQ `completed` saat semua baris diterima baik atau ditutup, tanpa menunggu konfirmasi pemohon | |
-| [A-78](wms/04-keputusan-dan-asumsi.md#a-78) | Efek QC pada stok | |
-| [A-79](wms/04-keputusan-dan-asumsi.md#a-79) | QC wajib = saklar company `qc` menyala DAN `items.requires_qc` | |
-| [A-80](wms/04-keputusan-dan-asumsi.md#a-80) | Permission QC dan approval RTV tanpa modul approval | |
-| [A-81](wms/04-keputusan-dan-asumsi.md#a-81) | GRN transfer menerbitkan `stock_transferred` dengan pergerakan | |
-| [A-82](wms/04-keputusan-dan-asumsi.md#a-82) | GRN transfer menuntut bukti terima lebih dulu | |
-| [A-83](wms/04-keputusan-dan-asumsi.md#a-83) | Cross-dock hanya saran di Fase 1 | |
+| [A-77](wms/04-keputusan-dan-asumsi.md#a-77) | REQ `completed` saat semua baris diterima baik atau ditutup, tanpa menunggu konfirmasi pemohon | Setuju |
+| [A-78](wms/04-keputusan-dan-asumsi.md#a-78) | Efek QC pada stok | Setuju |
+| [A-79](wms/04-keputusan-dan-asumsi.md#a-79) | QC wajib = saklar company `qc` menyala DAN `items.requires_qc` | Setuju |
+| [A-80](wms/04-keputusan-dan-asumsi.md#a-80) | Permission QC dan approval RTV tanpa modul approval | Setuju |
+| [A-81](wms/04-keputusan-dan-asumsi.md#a-81) | GRN transfer menerbitkan `stock_transferred` dengan pergerakan | Setuju |
+| [A-82](wms/04-keputusan-dan-asumsi.md#a-82) | GRN transfer menuntut bukti terima lebih dulu | Setuju |
+| [A-83](wms/04-keputusan-dan-asumsi.md#a-83) | Cross-dock hanya saran di Fase 1 | Setuju |
 | [A-84](wms/04-keputusan-dan-asumsi.md#a-84) | Aturan saran bin put-away | |
 | [A-85](wms/04-keputusan-dan-asumsi.md#a-85) | Stok Tersedia hanya dihitung dari bin penyimpanan (`storage`) | |
 | [A-86](wms/04-keputusan-dan-asumsi.md#a-86) | Hak memutus approval = tugas dari aturan + permission approve Katalog per dokumen | |

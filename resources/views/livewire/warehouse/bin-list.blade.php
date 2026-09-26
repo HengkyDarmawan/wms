@@ -3,15 +3,22 @@
         <div>
             <h1 class="h3 mb-1">{{ __('Bin') }}</h1>
             <p class="text-muted mb-0">
-                {{ __('Lokasi terkecil tempat stok disimpan. Bin dibuat dari detail gudang, bukan dari layar ini.') }}
+                {{ __('Lokasi terkecil tempat stok disimpan. Bin dibuat dari detail gudang atau impor Excel, bukan dari layar ini.') }}
             </p>
         </div>
-        @can('label.print')
-            <a class="btn btn-outline-secondary"
-               href="{{ route('labels.index', ['type' => 'label_bin', 'warehouse' => $warehouseFilter ?: null]) }}">
-                <i class="bi bi-upc-scan"></i> {{ __('Cetak label') }}
-            </a>
-        @endcan
+        <div class="d-flex gap-2">
+            @can('bin.manage')
+                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-bins">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
+                </a>
+            @endcan
+            @can('label.print')
+                <a class="btn btn-outline-secondary"
+                   href="{{ route('labels.index', ['type' => 'label_bin', 'warehouse' => $warehouseFilter ?: null]) }}">
+                    <i class="bi bi-upc-scan"></i> {{ __('Cetak label') }}
+                </a>
+            @endcan
+        </div>
     </div>
 
     @if ($ruleError !== '')
