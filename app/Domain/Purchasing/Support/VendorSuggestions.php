@@ -61,7 +61,8 @@ class VendorSuggestions
     /** Vendor aktif dari catatan pemesanan PRQ / PO terbaru untuk item ini. */
     public function lastVendor(int $itemId): ?Vendor
     {
-        $pesanan = PurchaseRequestOrder::query()
+        // Catatan pemesanan yang lahir dari PO dibaca lewat baris PO (tanggal PO), bukan tanggal catatannya.
+        $pesanan = PurchaseRequestOrder::query()->whereNull('purchase_order_id')
             ->whereHas('lines.line', fn ($q) => $q->where('item_id', $itemId))
             ->whereHas('vendor', fn ($q) => $this->aktif($q))
             ->latest('ordered_at')->latest('id')->first(['id', 'vendor_id', 'ordered_at']);

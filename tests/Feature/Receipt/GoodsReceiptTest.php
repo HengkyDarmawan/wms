@@ -86,9 +86,10 @@ class GoodsReceiptTest extends TenantTestCase
     }
 
     #[Test]
-    public function tc_grn_04_item_lot_wajib_nomor_lot_dan_kedaluwarsa(): void
+    public function tc_grn_04_item_lot_wajib_kedaluwarsa_lot_otomatis(): void
     {
-        $this->gagal(fn () => $this->grnDraf([['item_id' => $this->semen->id, 'qty_received' => 10]]), 'BR-LED-03');
+        // A-297: nomor lot dibuat dari nomor GRN; yang wajib tinggal kedaluwarsa.
+        $this->gagal(fn () => $this->grnDraf([['item_id' => $this->semen->id, 'qty_received' => 10]]), 'BR-STK-12');
         $this->gagal(fn () => $this->grnDraf([['item_id' => $this->semen->id, 'qty_received' => 10, 'lot_no' => 'L1']]), 'BR-STK-12');
 
         $grn = $this->grnDiterima([[
@@ -96,7 +97,8 @@ class GoodsReceiptTest extends TenantTestCase
         ]]);
 
         $baris = $grn->lines()->with('lot')->first();
-        $this->assertSame('LOT-2609', $baris->lot?->lot_no);
+        $this->assertSame($grn->number.'-01', $baris->lot?->lot_no);
+        $this->assertSame('LOT-2609', $baris->vendor_batch_no, 'Isian staf menjadi batch vendor.');
         $this->assertSame((int) $this->vendor->id, (int) $baris->lot->vendor_id);
     }
 

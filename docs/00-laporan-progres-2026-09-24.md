@@ -362,7 +362,7 @@ Keputusan pemilik produk: pemilihan vendor tugas Purchasing; sistem hanya menyar
 
 Tanpa mengubah aturan: form GRN/Permintaan/Retur menampilkan satuan terpilih sebagai akhiran kotak jumlah, hasil satuan dasar di bawah Rusak ("1 DUS = 100 PCS"), dan isian *Kemasan lain…* di baris sendiri (terbaca penuh di 1366 px & HP); bantuan serial/potongan mengikuti saklar; detail GRN "Batch / nomor seri" dan "menunggu retur 100 PCS (1 DUS)"; teks sisa A-283 (daftar barang, kolom **Beli/Pinjam**, placeholder pindai, kondisi approval "Jenis barang (aset/habis pakai)"); riwayat aktivitas bawaan tampil "dibuat/diubah/dihapus". Uji TC-GRN-33/33b, TC-REQ-38, TC-RIW-01.
 
-Verifikasi (rumah, PHP 8.3 + MariaDB 10.4): Verifikasi: tests/Feature/Label 20/20 hijau, py -3 docs/diagram/_verify.py OK; uji penuh masih berjalan saat commit (hasil menyusul), E2E belum dijalankan; Pint hanya berkas yang diubah. Seluruh working tree (v0.58–v0.75) di-commit per tema dan di-push ke `origin/main`.
+Verifikasi (rumah, PHP 8.3 + MariaDB 10.4): Verifikasi: tests/Feature/Label 20/20 hijau, py -3 docs/diagram/_verify.py OK; uji penuh 770 uji: 764 lulus, 6 gagal diperbaiki (tc_po_13 & tc_grn_33b kode; tc_mst_23, tc_grn_04, tc_po_16, tc_tpl_13 uji mengikuti A-297/A-305) lalu diuji ulang hijau, E2E belum dijalankan; Pint hanya berkas yang diubah. Seluruh working tree (v0.58–v0.75) di-commit per tema dan di-push ke `origin/main`.
 
 ## 6. Cara mengulang
 

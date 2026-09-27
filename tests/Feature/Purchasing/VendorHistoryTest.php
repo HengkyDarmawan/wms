@@ -195,6 +195,7 @@ class VendorHistoryTest extends TenantTestCase
     {
         $toko = Vendor::create(['code' => 'V-ONLINE', 'name' => 'Toko Online', 'vendor_type' => VendorType::OnlineMarketplace,
             'status' => VendorStatus::Active, 'is_active' => true]);
+        $this->makeUser('management');
         $this->aturan(ApprovalDocumentType::PurchaseOrder, [$this->lapisRole('management')],
             ['match' => 'all', 'vendor_types' => ['online_marketplace']], 10, 'PO toko online');
 

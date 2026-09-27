@@ -165,7 +165,7 @@ class LabelPrintTest extends TenantTestCase
             ->assertSee(route('labels.index'), false);
 
         $this->actingAs($this->makeUser('driver'))->get($this->tenantUrl('/'))->assertOk()
-            ->assertDontSee(route('labels.index'), false);
+            ->assertDontSee('"'.route('labels.index').'"', false);
 
         // Layar: pilih bin, kertas, salinan → tautan cetak memuat pilihan.
         Livewire::actingAs($kepala)->test(LabelPrint::class)

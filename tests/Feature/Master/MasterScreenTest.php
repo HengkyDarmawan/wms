@@ -117,7 +117,7 @@ class MasterScreenTest extends TenantTestCase
 
         $this->assertFalse($pipa->is_cuttable, 'Memotong pipa termasuk pemakaian, bukan jenis barang.');
         $this->assertSame('M', $pipa->baseUom->code, 'Pipa disimpan dalam meter.');
-        $this->assertSame(2, $pipa->vendors()->count());
+        $this->assertSame(0, $pipa->vendors()->count(), 'A-305: vendor tetap item tidak diisi lagi; saran vendor dari riwayat.');
 
         // Konversi kemasan "1 batang = 6 m" tersimpan.
         $konversi = $pipa->uomConversions()->first();

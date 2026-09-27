@@ -146,7 +146,7 @@
                     <tr>
                         <th scope="col">{{ __('Item') }}</th>
                         {{-- A-283/A-297: istilah pengguna; potongan hanya bila saklar menyala (A-284). --}}
-                        <th scope="col">{{ __('Batch / nomor seri') }}@if (\App\Domain\Master\Support\StockFeatures::piece()) {{ ' / '.__('potongan') }}@endif</th>
+                        <th scope="col">{{ __('Batch / nomor seri').(\App\Domain\Master\Support\StockFeatures::piece() ? ' / '.__('potongan') : '') }}</th>
                         @if ($kondisi)
                             <th class="text-end" scope="col">{{ __('Dikirim vendor') }}</th>
                             <th class="text-end" scope="col">{{ __('Baik') }}</th>
@@ -187,7 +187,7 @@
                                         <span class="text-danger">{{ \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_damaged, $satuan) }}</span>
                                         <div class="small text-muted">{{ $l->damageReason?->label }} · {{ $l->damagedBin?->code }}</div>
                                         @php($sisaRetur = $l->damagedReturnable())
-                                        <div class="small {{ $sisaRetur > 0 ? 'text-danger-emphasis' : 'text-muted' }}">@if ($sisaRetur > 0){{ __('menunggu retur') }} {{ \App\Domain\Master\Support\QtyFormat::withUnit($sisaRetur, $satuan) }}@if ($kms = \App\Domain\Master\Support\QtyFormat::packaging($l->item, $sisaRetur)) ({{ $kms }})@endif @else{{ __('sudah dimuat RTV') }}@endif</div>
+                                        <div class="small {{ $sisaRetur > 0 ? 'text-danger-emphasis' : 'text-muted' }}">{{ $sisaRetur > 0 ? __('menunggu retur').' '.\App\Domain\Master\Support\QtyFormat::withUnit($sisaRetur, $satuan).(($kms = \App\Domain\Master\Support\QtyFormat::packaging($l->item, $sisaRetur)) ? ' ('.$kms.')' : '') : __('sudah dimuat RTV') }}</div>
                                     @else
                                         —
                                     @endif
