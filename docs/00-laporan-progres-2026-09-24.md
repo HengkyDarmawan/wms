@@ -1,8 +1,8 @@
 # Laporan Progres — 24 September 2026
 
-**Versi:** 1.24
-**Tanggal:** 26 September 2026
-**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); v1.7: modul Issue (pemakaian material di site) selesai (493 uji hijau); v1.8: modul Konversi & Waste selesai di mesin rumah XAMPP3 (513 uji hijau); v1.9: modul Aset dipinjamkan selesai (525 uji hijau); v1.10: modul Purchase Request selesai (537 uji hijau); v1.11: modul Platform penuh selesai (546 uji hijau); v1.12: Pendukung Fase 1 selesai (569 uji hijau); v1.13: tinjauan kode + 2FA Super Admin, pindai, pengingat tagihan (579 uji hijau, §5.4); v1.14: sesi kantor — pindai REQ/ISU, impor vendor & saldo awal, Purchasing inti Fase 1b, landing page (§5.5); v1.15: putaran navigasi, hub proyek, konversi per jenis, celah F1 (§5.6); v1.16: sesi rumah — lingkungan XAMPP3 & notifikasi §8 Sisa Fase 1 (§5.7); v1.17: lampiran generik (§5.7); v1.18: override bin beku & penuaan penggantian (§5.7); v1.19: laporan §9 modul 19–22 & short pick TRF (§5.7); v1.20: butir 2f (§5.7); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau); v1.21: sesi kantor 26 Sep 2026 — keputusan pemilik produk atas asumsi ⚠ dan tujuh tugas turunannya (§5.8, 654 uji hijau); v1.22: kompresi foto otomatis A-23/A-257 (§5.9, 659 uji hijau); v1.23: impor struktur gudang A-258 (§5.10, 663 uji hijau); v1.24: §1 ditandai sebagai potret 24 Sep, baris asumsi & kalimat penutupnya diperbarui
+**Versi:** 1.40
+**Tanggal:** 28 September 2026
+**Status:** potret keadaan setelah modul Picking/Shipment; v1.2: modul Receipt/Putaway selesai (363 uji hijau); v1.3: modul Approval selesai (392 uji hijau); v1.4: modul Count/Adjustment selesai (428 uji hijau); v1.5: modul Return/Transfer selesai (461 uji hijau); v1.7: modul Issue (pemakaian material di site) selesai (493 uji hijau); v1.8: modul Konversi & Waste selesai di mesin rumah XAMPP3 (513 uji hijau); v1.9: modul Aset dipinjamkan selesai (525 uji hijau); v1.10: modul Purchase Request selesai (537 uji hijau); v1.11: modul Platform penuh selesai (546 uji hijau); v1.12: Pendukung Fase 1 selesai (569 uji hijau); v1.13: tinjauan kode + 2FA Super Admin, pindai, pengingat tagihan (579 uji hijau, §5.4); v1.14: sesi kantor — pindai REQ/ISU, impor vendor & saldo awal, Purchasing inti Fase 1b, landing page (§5.5); v1.15: putaran navigasi, hub proyek, konversi per jenis, celah F1 (§5.6); v1.16: sesi rumah — lingkungan XAMPP3 & notifikasi §8 Sisa Fase 1 (§5.7); v1.17: lampiran generik (§5.7); v1.18: override bin beku & penuaan penggantian (§5.7); v1.19: laporan §9 modul 19–22 & short pick TRF (§5.7); v1.20: butir 2f (§5.7); diperbarui setiap modul selesai; v1.6: modul Template dokumen & label selesai (476 uji hijau); v1.21: sesi kantor 26 Sep 2026 — keputusan pemilik produk atas asumsi ⚠ dan tujuh tugas turunannya (§5.8, 654 uji hijau); v1.22: kompresi foto otomatis A-23/A-257 (§5.9, 659 uji hijau); v1.23: impor struktur gudang A-258 (§5.10, 663 uji hijau); v1.24: §1 ditandai sebagai potret 24 Sep, baris asumsi & kalimat penutupnya diperbarui; v1.25: tinjauan asumsi tanpa ⚠ putaran 1 (§1 baris asumsi); v1.26: putaran 2 + hitung ulang selisih besar (§5.11, 664 uji hijau); v1.27: putaran 3 + ukuran & desain label (§5.12, 669 uji hijau); v1.28: putaran 4 + riwayat cetak & segel tanda tangan (§5.13, 684 uji hijau); v1.29: putaran 5, A-157–A-168 Setuju (§1 baris asumsi); v1.30: putaran 6; v1.31: putaran 7 + tanda PPN di PO & kamera di semua browser (§5.14, 685 uji hijau); v1.32: putaran 8 + bonus vendor di GRN (§5.15, 687 uji hijau); v1.33: putaran 9 + approver sedivisi, kalender libur, paket tanpa harga (§5.16, 690 uji hijau); v1.34: sisa kecil Fase 1 — denah, impor gudang, OTP otomatis (§5.17), ringkasan §1 diperbarui; v1.35: Fase 2a WhatsApp (§5.18); v1.36: denah berisi petak bin (§5.17, A-281); v1.37: form item ringkas, Beli/Pinjam ikut item, pesan validasi Indonesia (§5.17, A-282); v1.38: tiga jenis barang & saklar fitur (§5.20, A-283–A-286); v1.39: penerimaan Baik/Rusak/Kurang & kemasan (§5.21, A-287–A-295)
 **Dokumen terkait:** [README](README.md) · [Setup lokal §5](00-setup-lokal.md#5-skenario-uji-manual) · [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) · [Arsitektur §12](wms/08-arsitektur.md#12-langkah-berikutnya-part-4) · [Keputusan & Asumsi](wms/04-keputusan-dan-asumsi.md)
 
 Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang baru di-seed: delapan skenario uji manual lewat Chrome headless, 321 uji otomatis, dan pencocokan setiap kasus uji `TC-xx` di spesifikasi dengan ujinya. Hasilnya dipakai untuk memetakan seberapa jauh Fase 1 sudah berjalan.
@@ -11,16 +11,16 @@ Semua skenario di dokumen dijalankan di aplikasi sungguhan dengan data demo yang
 
 ## 1. Ringkasan
 
-> **Potret 24 Sep 2026** (setelah modul Picking/Shipment). Angka uji, cakupan TC, dan bug di tabel ini tidak diperbarui; keadaan terbaru ada di §4 (22 dari 24 butir selesai, 1 stub, 1 sebagian) dan §5.8–§5.10 (663 uji hijau).
+> **Keadaan terbaru (27 Sep 2026):** Fase 1 selesai — semua butir [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) Fase 1 dan 1b (Purchasing inti) sudah dibangun (§4), sisa kecil ditutup (§5.17); **Fase 2a WhatsApp** dibangun tanpa akun Meta (§5.18). **707 uji hijau / 8.447 asersi**. Semua 152 asumsi lama sudah diputus; **10 asumsi baru** (A-271–A-280) menunggu keputusan. Berikutnya: pendaftaran Meta & uji nomor sungguhan (pemilik), lalu Fase 2b PWA offline ([D-29](wms/04-keputusan-dan-asumsi.md#d-29)). Tabel di bawah adalah potret awal 24 Sep 2026 dan dibiarkan sebagai riwayat.
 
-| Ukuran | Hasil |
+| Ukuran (24 Sep 2026) | Hasil |
 |---|---|
 | Skenario E2E [00-setup-lokal §5](00-setup-lokal.md#5-skenario-uji-manual) | **9 dari 9 langkah lulus**, 0 error console |
 | Uji otomatis | **321 lulus / 1.836 asersi**, 0 gagal (MariaDB 10.4) |
 | Kasus uji `TC-xx` di spesifikasi 10–17 | **178 dari 178 punya uji otomatis**, semuanya lulus |
-| Butir Fase 1 di [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) | **13 selesai · 6 sebagian · 4 belum dibangun** (dari 23, satu 'selesai' berupa stub; v1.2 Penerimaan/QC/put-away/RTV; v1.3 Approval engine; v1.4 Stock opname; v1.5 Retur & transfer; v1.6 Template dokumen & label; v1.7 Pemakaian material di site; v1.8 Konversi material, offcut, waste; v1.9 Aset dipinjamkan; v1.10 Purchase Request manual; v1.11 Platform, trial, tagihan manual; v1.12 strategi pengambilan, notifikasi, laporan & dashboard, wizard, impor Excel, PWA) |
+| Butir Fase 1 di [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis) | *(saat itu)* **13 selesai · 6 sebagian · 4 belum dibangun** — kini semuanya selesai, lihat §4 (dari 23, satu 'selesai' berupa stub; v1.2 Penerimaan/QC/put-away/RTV; v1.3 Approval engine; v1.4 Stock opname; v1.5 Retur & transfer; v1.6 Template dokumen & label; v1.7 Pemakaian material di site; v1.8 Konversi material, offcut, waste; v1.9 Aset dipinjamkan; v1.10 Purchase Request manual; v1.11 Platform, trial, tagihan manual; v1.12 strategi pengambilan, notifikasi, laporan & dashboard, wizard, impor Excel, PWA) |
 | Bug baru dari E2E | **1 berat** (§5.1), 1 ringan (§5.2) |
-| Asumsi menunggu validasi | 26 Sep 2026: 31 asumsi ⚠ + A-111, A-116 diputus (§5.8), tinjauan asumsi tanpa ⚠ berjalan; sisa **106** (A-84 dst. + A-257, A-258) — [daftar kerja](00-tinjauan-asumsi-2026-09-25.md) |
+| Asumsi menunggu validasi | 26 Sep 2026: 31 asumsi ⚠ + A-111, A-116 diputus (§5.8), tinjauan asumsi tanpa ⚠ **selesai** (putaran 1–9, 27 Sep 2026: A-84–A-258 seluruhnya diputus; A-92/A-99/A-120/A-121/A-125/A-126/A-211/A-222 diubah, A-193/A-214/A-233/A-235 dilengkapi, §5.11–§5.16); sisa hanya **A-260** ("Masuk sebagai", sesi paralel) — [daftar kerja](00-tinjauan-asumsi-2026-09-25.md) |
 
 Singkatnya: saat potret ini, alur keluar **REQ → approval → picking → surat jalan → bukti terima → selisih** berjalan dari ujung ke ujung, sedangkan barang masuk (GRN), approval berlapis, opname, retur/transfer, pemakaian, konversi, dan aset belum dibangun. Semuanya selesai sejak v1.2–v1.12 (§4).
 
@@ -87,7 +87,7 @@ Sumber baris: [Blueprint §18](wms/01-blueprint.md#18-peta-modul--fase-rilis). S
 | Aset dipinjamkan | ✅ Selesai | [25-aset](wms/25-aset.md): AST otomatis dari SJ aset & GRN retur, jatuh tempo & meter keluar, pemeriksaan grade + skor + catatan komponen + foto sebelum dipilah, state aset mengikuti kartu stok (BR-AST-01), aset hilang → ADJ `asset_lost` → dihapuskan, laporan aset dipinjamkan & sisa umur, cetak BA Serah Terima Aset. Jadwal maintenance `[F2]` stub; notifikasi jatuh tempo menunggu modul notifikasi |
 | Approval engine | ✅ Selesai | [20-approval](wms/20-approval.md): aturan per jenis dokumen tanpa nilai uang, lapis & cara putus, SoD, snapshot, delegasi, eskalasi terjadwal + manual, simulasi, riwayat; REQ, RTV, ADJ, OPN, TRF, dan RET tersambung — sejak v1.10 semua jenis dokumen Katalog (termasuk ISU, CNV, WST, PRQ); WhatsApp stub Fase 2a; notifikasi stub ([A-91](wms/04-keputusan-dan-asumsi.md#a-91)) |
 | Stock opname | ✅ Selesai | [21-opname-penyesuaian](wms/21-opname-penyesuaian.md): sesi bulanan/tahunan/ad-hoc/pemeriksaan mendadak, pembekuan bin, hitung buta di halaman ramah HP, toleransi ganda, hitung ulang orang berbeda, akar masalah, approval tingkat sesi (Auditor untuk tahunan/audit), ADJ per gudang diposting lewat buku besar, kunci periode bulanan, penanda hitung; ADJ manual dua lapis & pembalik; override SJ mendesak dan dashboard tren belum ([A-95](wms/04-keputusan-dan-asumsi.md#a-95)–[A-105](wms/04-keputusan-dan-asumsi.md#a-105)) |
-| Template dokumen & label | ✅ Selesai | [18-template-dokumen-label](wms/18-template-dokumen-label.md); editor template [F2]; ukuran label menunggu O-09 (A-120); Surat Transfer, Bukti Retur, PRQ, GRN sejak 25 Sep (A-232) |
+| Template dokumen & label | ✅ Selesai | [18-template-dokumen-label](wms/18-template-dokumen-label.md); editor template [F2]; ukuran label = master per company + desain label (A-261, A-262; O-09 dijawab); Surat Transfer, Bukti Retur, PRQ, GRN sejak 25 Sep (A-232) |
 | PWA (installable, scan kamera, draf lokal) | ✅ Selesai | manifest + service worker + halaman offline, pindai kamera (BarcodeDetector), draf hitung opname & bukti terima ([27-pendukung-f1](wms/27-pendukung-f1.md), A-193); pindai di pencarian item/saldo/aset, bin tujuan put-away (A-201) dan bin → item di PCK (A-203), form REQ & ISU (A-206); offline penuh [F2] |
 | Landing page produk | ✅ Selesai | Part 5: [30-landing-page](wms/30-landing-page.md) — Blade + Alpine, gaya indonesia.travel, paket dari DB, *Minta demo*, masuk ke company (A-220–A-225); brand & harga menunggu O-07/O-08 |
 | Navigasi & rapi UI | ✅ Selesai | sidebar 12 grup lipat + filter menu (A-227), font Inter & warna tema, teks tanpa kode internal, tanggal-jam zona company, beranda portal klien dengan Stok On-site (§5.6) |
@@ -222,9 +222,151 @@ Verifikasi (XAMPP kantor): **659 uji / 7.635 asersi** hijau; `_verify.py` OK. ph
 
 Verifikasi (XAMPP kantor, MariaDB 10.4.27): **663 uji / 7.681 asersi** hijau; `_verify.py` OK; `npm run build` OK; `ui-check` 94 cek (termasuk 6c kartu & templat impor struktur gudang) — 0 GAGAL, 0 error console. Impor gudang sendiri tetap menunggu O-12.
 
+### 5.11 Tinjauan asumsi tanpa ⚠ — 26 Sep 2026 (rumah)
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Putaran 1 (A-84–A-95) | 11 Setuju; A-92 diubah (mesin approval permanen di `app/Domain/Approval`); tanpa kode | 04 v0.41 |
+| Putaran 2 (A-87, A-96–A-107) | 12 Setuju; A-99 diubah → selisih besar ikut dihitung ulang, akar masalah setelahnya | [A-259](wms/04b-asumsi-lanjutan.md#a-259), BR-OPN-05/07, TC-OPN-09, TC-OPN-22 |
+
+Verifikasi (salinan repo di sandbox cloud, PHP 8.4 + MariaDB 10.11 — belum di XAMPP3): **664 uji / 7.711 asersi** hijau; Pint pada berkas yang diubah. Belum dijalankan: `_verify.py` di mesin rumah, `ui-check`, dan E2E — jalankan di Langkah 0 sesi berikut.
+
+### 5.12 Ukuran & desain label — 26 Sep 2026 (rumah)
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Putaran 3 (A-108–A-124 tanpa A-111, A-116–A-119) | 10 Setuju; A-120 dan A-121 diubah | 04 v0.43 |
+| Ukuran label (master) | `/settings/label-formats`: gulungan/lembar ukuran bebas, pratinjau susunan, tengahkan, nonaktifkan; 6 preset dari migrasi `000290` | [A-261](wms/04b-asumsi-lanjutan.md#a-261), TC-TPL-17/18/21 |
+| Desain label | `/settings/label-designs`: kanvas seukuran label (interact.js), geser/ubah ukuran 6 elemen, barcode/QR/keduanya, tata ulang otomatis, jadikan bawaan, contoh PDF; cetak mengikuti desain | [A-262](wms/04b-asumsi-lanjutan.md#a-262), TC-TPL-19/20 |
+
+Verifikasi (salinan repo di sandbox cloud, PHP 8.4 + MariaDB 10.11 — belum di XAMPP3): **669 uji / 7.837 asersi** hijau; `_verify.py` OK; `npm run build` OK (tanpa unduh font Bunny); Chromium headless: tambah ukuran, geser elemen, simpan, muat ulang, contoh PDF, halaman terkait — 0 error console; PDF 5 ukuran dirender ke PNG dan diperiksa. Setelah `git pull` di rumah: `npm install` (paket baru `interactjs`), `npm run build`, `php artisan tenants:migrate`.
+
+### 5.13 Riwayat cetak & segel tanda tangan — 26 Sep 2026 (rumah)
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Putaran 4 (A-117–A-119, A-125–A-126, A-150–A-156) | 10 Setuju; A-125 dan A-126 diubah | 04 v0.44 |
+| Riwayat cetak | setiap cetak dicatat (cetakan ke-n); cap *CETAK ULANG ke-n* SJ/Bukti Terima/PO; kartu *Riwayat cetak* di layar detail | [A-263](wms/04b-asumsi-lanjutan.md#a-263), TC-TPL-22/23 |
+| Segel tanda tangan | kanvas tanda tangan di profil; QR + waktu + kode segel di setiap kotak berpelaku; `/verifikasi/{token}` publik | [A-264](wms/04b-asumsi-lanjutan.md#a-264), TC-TPL-24/25 |
+
+Verifikasi (salinan repo di sandbox cloud, PHP 8.4 + MariaDB 10.11, digabung dengan pekerjaan "Masuk sebagai" dari sesi paralel — belum di XAMPP3): **684 uji / 8.073 asersi** hijau; `_verify.py` OK; PDF SJ cetakan ke-2 dirender dan diperiksa (cap, QR segel, kode). Setelah `git pull` di rumah: `php artisan tenants:migrate` (000300).
+
+### 5.14 PPN di PO & pindai kamera di semua browser — 27 Sep 2026 (rumah)
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Putaran 7 (A-190–A-211, 12 asumsi) | 11 Setuju; A-211 diubah; A-193 disetujui dengan perluasan kamera | 04 v0.47 |
+| Tanda PPN di PO | centang *Harga sudah termasuk PPN* (bawaan ya) di form draf; detail & cetak PO menulis sudah/belum termasuk PPN; nilai PO tidak berubah; migrasi `000310` | [A-265](wms/04b-asumsi-lanjutan.md#a-265), TC-PO-12 |
+| Kamera di semua browser | tombol kamera juga di iPhone/Safari, Firefox, laptop — lewat web biasa tanpa memasang aplikasi; ZXing dimuat saat dipakai; butuh HTTPS | [A-266](wms/04b-asumsi-lanjutan.md#a-266) |
+
+Verifikasi (salinan repo di sandbox cloud, PHP 8.4 + MariaDB 10.11 — belum di XAMPP3): **685 uji / 8.092 asersi** hijau; `_verify.py` OK; `npm run build` OK (ZXing jadi potongan terpisah ±125 KB gzip); Chromium headless tanpa `BarcodeDetector` dengan kamera palsu: Code128 `BRG-001` terbaca, Enter terkirim, lapisan kamera tertutup. Setelah `git pull` di rumah: `npm install`, `npm run build`, `php artisan tenants:migrate` (000310), `php artisan test`.
+
+### 5.15 Bonus vendor di penerimaan — 27 Sep 2026 (rumah)
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Putaran 8 (A-214–A-227, 12 asumsi) | 10 Setuju (A-214 dilengkapi bonus); A-220, A-222 menunggu penjelasan | 04 v0.48 |
+| Bonus vendor | GRN vendor: centang *Bonus vendor* + keterangan wajib, tombol *Pisahkan kelebihan jadi bonus*; bonus masuk stok tetapi tidak menambah diterima PO/PRQ; detail PO *Bonus dari vendor*; migrasi `000320` | [A-267](wms/04b-asumsi-lanjutan.md#a-267), TC-GRN-22 |
+
+Verifikasi (salinan repo di sandbox cloud, PHP 8.4 + MariaDB 10.11 — belum di XAMPP3): **687 uji** hijau; `_verify.py` OK. Setelah `git pull` di rumah: `php artisan tenants:migrate` (000310, 000320), `php artisan test`.
+
+### 5.16 Approver sedivisi, kalender libur, paket tanpa harga — 27 Sep 2026 (rumah)
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Putaran 9 (13 asumsi terakhir) | semua diputus; A-222 diubah; A-233, A-235 dilengkapi; pilihan dijawab lewat pertanyaan pilihan ganda | 04 v0.49, tinjauan v1.22 |
+| Approver sedivisi | centang *Hanya dari divisi pemohon* pada lapis Role/Jabatan (bawaan menyala); divisi = unit pemohon + induknya; migrasi `000330` | [A-269](wms/04b-asumsi-lanjutan.md#a-269), TC-APR-23 |
+| Kalender libur | hari kerja per minggu (bawaan 6); libur nasional & cuti bersama 2026–2027 terisi otomatis, bisa dinonaktifkan/ditambah; SLA tinjau = hari kerja; migrasi `000340` | [A-270](wms/04b-asumsi-lanjutan.md#a-270), TC-MST-28 |
+| Paket tanpa harga | kartu paket landing selalu *Hubungi kami* | [A-268](wms/04b-asumsi-lanjutan.md#a-268), TC-LND-02 |
+
+Verifikasi (salinan repo di sandbox cloud, PHP 8.4 + MariaDB 10.11 — belum di XAMPP3): **690 uji / 8.170 asersi** hijau; `_verify.py` OK. Setelah `git pull` di rumah: `php artisan tenants:migrate` (000310–000340), `php artisan test`.
+
+### 5.17 Sisa kecil Fase 1 — 27 Sep 2026
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Zona-rak-level dari denah | mode *Atur denah*: kartu *Tambah zona & rak* (zona; rak + level L1…Ln + bin per level + kapasitas, satu transaksi), *Tambah level* & *Tambah bin* di panel rak, ubah nama zona; kode tetap terkunci | [A-271](wms/04b-asumsi-lanjutan.md#a-271), TC-WH-27 |
+| Impor gudang (sisa O-12) | kartu *Gudang* di `/imports` + tombol di `/warehouses`; lewat `SaveWarehouse` (bin bawaan ikut), induk boleh dari baris sebelumnya, Site wajib proyek, kepala via email; semua-atau-tidak | [A-272](wms/04b-asumsi-lanjutan.md#a-272), TC-WH-28–28c |
+| OTP otomatis (O-15) | kanal pesan platform `MessageGateway` (`none`/`log`/`http` generik), saklar company `otp_auto`; OTP ke HP penerima, tidak tampil ke driver; gagal → jalur manual; *Kirim ulang* (jeda 60 dtk, maks 4); migrasi `000350` | [A-273](wms/04b-asumsi-lanjutan.md#a-273), TC-SJ-20–20e |
+| Denah mudah dibaca (28 Sep, masukan uji manual) | rak = kotak besar berisi petak bin per level, label level di luar, warna per bin; gambar diperbesar bila tidak muat | [A-281](wms/04b-asumsi-lanjutan.md#a-281), TC-WH-29 |
+| Form item ringkas (28 Sep, masukan uji manual) | tiga bagian opsional jadi tab; teks bantuan pelacakan; sifat baris hanya untuk item Keduanya; **perbaikan:** Beli/Pinjam REQ ikut item (A-38), pesan validasi Bahasa Indonesia (`lang/id`) | [A-282](wms/04b-asumsi-lanjutan.md#a-282), TC-MST-29, TC-REQ-35 |
+| Tidak dibangun | cross-dock tetap saran ([A-83](wms/04-keputusan-dan-asumsi.md#a-83) *Setuju*); isi balik `from_stock_status` tidak perlu ([A-194](wms/04-keputusan-dan-asumsi.md#a-194) *Setuju*); utang dokumen 16 §2/§12 sudah beres (16 v0.14); php.ini kantor (`upload_max_filesize`) adalah pengaturan mesin, bukan kode | — |
+
+Verifikasi (salinan repo di sandbox cloud, PHP 8.4 + MariaDB 10.11, digabung dengan perubahan lokal XAMPP3 yang belum di-commit sejak `b8a4aaa`): sebelum mulai **690 uji / 8.170** hijau; akhir **699 uji / 8.345 asersi** hijau; `_verify.py` OK; build Vite OK (tanpa unduh font Bunny); `ui-check` di Chromium headless termasuk cek baru 6c2 (kartu & templat impor gudang) dan 6c3 (zona & rak baru dari denah). Setelah menyalin ke mesin rumah: `php artisan tenants:migrate` (000290–000350), `npm install`, `npm run build`, `php artisan test`.
+
+### 5.18 Fase 2a WhatsApp — 27 Sep 2026
+
+| Bagian | Hasil | Rujukan |
+|---|---|---|
+| Kanal | transport `cloud` (Graph API) / `log` / `none`; log pesan pusat per company & kategori; kuota template bulanan dari paket; webhook pusat bertanda tangan; pengalih tombol `/buka/…` | [A-274](wms/04b-asumsi-lanjutan.md#a-274), [A-278](wms/04b-asumsi-lanjutan.md#a-278), BR-WA-03/04 |
+| Nomor | kartu WhatsApp di profil, verifikasi kode 6 digit, ganti nomor = verifikasi ulang | [A-275](wms/04b-asumsi-lanjutan.md#a-275), BR-WA-01 |
+| Notifikasi | Admin Company memilih kejadian Mati/Langsung/Ringkasan; kolom WhatsApp di preferensi; ringkasan harian 07.00 | [A-276](wms/04b-asumsi-lanjutan.md#a-276), [A-280](wms/04b-asumsi-lanjutan.md#a-280) |
+| Approval | lapis *Web & WhatsApp*; tombol Setujui memutus (kanal, nomor, id pesan, token); Tolak → tautan web; balasan konfirmasi bisa dimatikan | [A-277](wms/04b-asumsi-lanjutan.md#a-277), BR-APR-10 |
+| OTP | OTP bukti terima lewat template kode WhatsApp bila aktif | [A-279](wms/04b-asumsi-lanjutan.md#a-279) |
+| Pusat | kartu pemakaian WhatsApp di detail company | [A-278](wms/04b-asumsi-lanjutan.md#a-278) |
+
+Verifikasi (sandbox cloud, PHP 8.4 + MariaDB 10.11): **707 uji / 8.447 asersi** hijau (TC-WA-01–11 baru); `_verify.py` OK; pemeriksaan Chromium di demo dengan driver `log`: kartu WhatsApp di profil → kirim kode → kode dibaca dari log → terverifikasi; kartu pengaturan company disimpan; kolom WhatsApp di preferensi; kanal lapis di form aturan — 0 error console. Setelah menyalin ke mesin rumah: `php artisan tenants:migrate` (000360). Belum: template disetujui Meta & uji nomor sungguhan (pemilik produk, O-03).
+
+### 5.20 Tiga jenis barang & saklar fitur — 28 Sep 2026
+
+§5.19 tetap dicadangkan untuk *Penutupan Fase 1 — daftar terbuka*. Konteks pemilik produk: orang lapangan memakai sistem tanpa istilah teknis; item cukup tiga jenis. Audit Tahap A menemukan saklar `lot`/`serial`/`piece`/`expiry`/`fefo` hanya disimpan, tidak pernah dibaca kode.
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Form item | satu pilihan **Jenis barang** (Barang biasa / Barang berkedaluwarsa / Alat bernomor seri) menggantikan pelacakan, kepemilikan, sifat baris, kedaluwarsa, strategi; isian potong & tab Vendor tetap dihapus dari form (data tetap); item lama lain = *Jenis khusus* read-only; jenis terkunci setelah ada pergerakan stok | [A-283](wms/04b-asumsi-lanjutan.md#a-283), BR-MST-06, TC-MST-30–32 |
+| Saklar fitur | `StockFeatures` dibaca layar & aksi; saklar mati menyembunyikan pilihan/layar khusus dan menolak data baru, data lama tetap jalan; company baru: per potong & QC mati; seed ulang tidak menimpa pilihan company | [A-284](wms/04b-asumsi-lanjutan.md#a-284), BR-GEN-12, TC-MST-33 |
+| Layar potongan | mode Potong, tab Potongan, label potongan, kolom potongan di Saldo stok/Kartu stok/laporan hanya bila `piece` menyala | A-284, TC-MST-35, TC-CNV-18, TC-TPL-26, TC-STK-36, TC-RPT-11 |
+| Konversi | *Bisa dipotong* hanya syarat Potong; Ganti kemasan/Rakit/Bongkar untuk barang habis pakai mana pun; serial ditolak | [A-285](wms/04b-asumsi-lanjutan.md#a-285), TC-CNV-17 |
+| REQ | Beli/Pinjam teks dari jenis barang; pilihan hanya item Keduanya; aksi simpan menghitung ulang | [A-286](wms/04b-asumsi-lanjutan.md#a-286), TC-REQ-36 |
+| Impor & daftar | kolom `jenis_barang` (templat lama tetap dibaca); daftar item, detail, laporan *Daftar item* memakai Jenis barang | A-283, TC-MST-34 |
+| Demo & uji | DEMO/DEMO kosong: per potong & QC mati; `PIPA-PVC-4` Barang biasa 87,7 m (9 baris kartu stok demo, sebelumnya 23); fixture penerimaan, konversi, opname dan `ItemTest` menyalakan saklarnya sendiri; E2E `alur-pendukung` P9 kini Ganti kemasan BAUT | [akun uji](00-akun-uji.md) v1.14 |
+
+Verifikasi (rumah, PHP 8.3 + MariaDB 10.4): **727 uji / 8.649 asersi** hijau (12 uji baru); Pint hanya berkas yang diubah. E2E `alur-pendukung.mjs` belum dijalankan ulang (butuh DEMO yang di-reset).
+
+### 5.21 Penerimaan Baik/Rusak/Kurang & kemasan — 28 Sep 2026
+
+Keputusan pemilik produk: karantina/QC tidak dipakai (mutu tanggung jawab klien), tetapi setiap penerimaan vendor mencatat Baik, Rusak, Kurang; barang datang per kemasan. Audit Tahap A: baris GRN hanya punya satu jumlah, RTV hanya dari hasil QC, dan kemasan item (`item_uom_conversions`) tidak pernah dipakai transaksi.
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| GRN vendor | per baris Dikirim vendor / Baik / Rusak (+ alasan) / Kurang; Baik ke Penerimaan → put-away, Rusak ke Karantina berkondisi Rusak tanpa QC, Kurang tanpa gerakan; hanya Baik mengurangi pesanan PO/PRQ; serial/potongan per unit dengan daftar unit rusak | [A-287](wms/04b-asumsi-lanjutan.md#a-287)–[A-289](wms/04b-asumsi-lanjutan.md#a-289), TC-GRN-23–26, TC-PUT-09 |
+| RTV | tombol *Retur ke vendor* di detail GRN mengisi bagian rusak penuh; jatah rusak & jatah QC lama terpisah (`is_receipt_damage`) | [A-290](wms/04b-asumsi-lanjutan.md#a-290), TC-RTV-10–11 |
+| Kemasan | pemilih satuan di GRN, Permintaan, Retur ("10 DUS = 120 BOX"), *Kemasan lain…* + *Ingat untuk item ini*; satuan diketik disimpan di baris; tab *Kemasan* di form item; perbaikan kemasan nonaktif hidup lagi | [A-291](wms/04b-asumsi-lanjutan.md#a-291)–[A-294](wms/04b-asumsi-lanjutan.md#a-294), TC-GRN-27, TC-REQ-37, TC-RET-22, TC-MST-36–37 |
+| Tampilan | "9 DUS 8 BOX" di Saldo stok, Kartu stok, panel isi bin denah, dan kolom satuan semua cetakan; cetak GRN berkolom kondisi | [A-293](wms/04b-asumsi-lanjutan.md#a-293), [A-295](wms/04b-asumsi-lanjutan.md#a-295), TC-STK-37, TC-WH-30, TC-TPL-27 |
+
+Verifikasi (rumah, PHP 8.3 + MariaDB 10.4): **740 uji / 8.794 asersi** hijau (22 uji baru); Pint hanya berkas yang diubah. E2E `alur-pendukung.mjs` P10 ditambahkan, belum dijalankan ulang (butuh DEMO yang di-reset). Catatan terbuka: bila vendor memberi potongan harga alih-alih pengganti, sisa pesanan dibatalkan lewat "batalkan sisa" PO; catatan pemesanan PRQ tanpa PO belum punya padanannya.
+
+### 5.22 Label kemasan induk/isi & penelusuran vendor — 28 Sep 2026
+
+Keputusan pemilik produk: setiap barang masuk ditempel label QR/barcode yang tertelusur ke GRN → catatan pemesanan/PO → vendor & tanggal; label wajib dipindai saat keluar gudang.
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Buat label | dialog *Selesaikan* GRN vendor: jumlah dus × isi per dus (bawaan dari kemasan) → label induk `KODE-0001…`; *Cetak label isi* `KODE-0001-0001…`; lot Barang berkedaluwarsa otomatis = nomor GRN + baris, isian staf jadi batch vendor | [A-296](wms/04b-asumsi-lanjutan.md#a-296), [A-297](wms/04b-asumsi-lanjutan.md#a-297), TC-GRN-28–31 |
+| Pindai wajib | PCK & ISU: pindai label (induk → dialog jumlah isi), wajib = min(jumlah keluar, isi label, saldo); SJ menempel nomornya; label utuh dibuka lagi di GRN transfer/site/retur & ISU pembalik; pilah retur rusak/waste membatalkan label | [A-299](wms/04b-asumsi-lanjutan.md#a-299)–[A-301](wms/04b-asumsi-lanjutan.md#a-301), TC-PCK-19–22, TC-SJ-21, TC-TRF-21, TC-ISU-20–21, TC-RET-23 |
+| Cetak & telusur | jenis label *Label kemasan* & *Label serial*; halaman **Telusuri label** (asal GRN/vendor/PO, riwayat, tautan dokumen) | [A-298](wms/04b-asumsi-lanjutan.md#a-298), [A-302](wms/04b-asumsi-lanjutan.md#a-302), TC-TPL-28–33 |
+| Laporan | **Barang bermasalah per vendor** (rusak/kurang saat terima, ditolak QC, rusak kirim, retur rusak; % bermasalah) | [A-303](wms/04b-asumsi-lanjutan.md#a-303), TC-RPT-12 |
+
+### 5.23 Saran vendor dari riwayat & riwayat harga beli — 28 Sep 2026
+
+Keputusan pemilik produk: pemilihan vendor tugas Purchasing; sistem hanya menyarankan (vendor terakhir & termurah) dan Purchasing bebas mengganti. Vendor tetap item berhenti dipakai; kondisi approval jenis vendor pindah ke PO.
+
+| Tugas | Hasil | Rujukan |
+|---|---|---|
+| Saran vendor | dialog catatan pemesanan PRQ & form PO: vendor terakhir + termurah 6 bln (di PRQ tanpa angka, hanya `po.view`); alasan pilihan opsional | [A-304](wms/04b-asumsi-lanjutan.md#a-304), [A-305](wms/04b-asumsi-lanjutan.md#a-305), TC-PO-13, TC-PRQ-13 |
+| Form PO | harga PO terakhir & termurah per baris; tanda "Naik X %" di atas `po_price_increase_pct` (bawaan 10 %) | [A-306](wms/04b-asumsi-lanjutan.md#a-306), [A-307](wms/04b-asumsi-lanjutan.md#a-307), TC-PO-14 |
+| Riwayat harga beli | halaman per item (ringkasan 3/6/12 bln, grafik, ekspor Excel) + laporan `riwayat-harga-beli` | [A-309](wms/04b-asumsi-lanjutan.md#a-309), TC-PO-15 |
+| Approval & vendor | aturan demo *PO toko online* menggantikan *PRQ toko online*; dialog nonaktif vendor menampilkan PO/pesanan terbuka | [A-308](wms/04b-asumsi-lanjutan.md#a-308), [A-310](wms/04b-asumsi-lanjutan.md#a-310), TC-PO-16, TC-MST-39 |
+
+### 5.24 Perapian tampilan A-283 & A-287–A-295 — 28 Sep 2026
+
+Tanpa mengubah aturan: form GRN/Permintaan/Retur menampilkan satuan terpilih sebagai akhiran kotak jumlah, hasil satuan dasar di bawah Rusak ("1 DUS = 100 PCS"), dan isian *Kemasan lain…* di baris sendiri (terbaca penuh di 1366 px & HP); bantuan serial/potongan mengikuti saklar; detail GRN "Batch / nomor seri" dan "menunggu retur 100 PCS (1 DUS)"; teks sisa A-283 (daftar barang, kolom **Beli/Pinjam**, placeholder pindai, kondisi approval "Jenis barang (aset/habis pakai)"); riwayat aktivitas bawaan tampil "dibuat/diubah/dihapus". Uji TC-GRN-33/33b, TC-REQ-38, TC-RIW-01.
+
+Verifikasi (rumah, PHP 8.3 + MariaDB 10.4): Verifikasi: tests/Feature/Label 20/20 hijau, py -3 docs/diagram/_verify.py OK; uji penuh masih berjalan saat commit (hasil menyusul), E2E belum dijalankan; Pint hanya berkas yang diubah. Seluruh working tree (v0.58–v0.75) di-commit per tema dan di-push ke `origin/main`.
+
 ## 6. Cara mengulang
 
 1. Data bersih: drop `wms_tenant_demo`, `php artisan migrate:fresh`, lalu urutan seed [00-setup-lokal §3](00-setup-lokal.md#3-database-dan-data-demo).
 2. `php artisan serve --host=127.0.0.1 --port=8000`.
-3. Skrip E2E ada di `tests/e2e/` (Node 22+ + Chrome, tanpa paket tambahan; `MYSQL_BIN` menunjuk `mysql.exe`): `ui-check.mjs`, `alur-req-sj.mjs` (10 langkah), `alur-pendukung.mjs` (9 langkah, dijalankan setelah `alur-req-sj`).
+3. Skrip E2E ada di `tests/e2e/` (Node 22+ + Chrome, tanpa paket tambahan; `MYSQL_BIN` menunjuk `mysql.exe`): `ui-check.mjs`, `alur-req-sj.mjs` (10 langkah), `alur-pendukung.mjs` (10 langkah, dijalankan setelah `alur-req-sj`).
 4. `php artisan test --log-junit` untuk hasil per uji.

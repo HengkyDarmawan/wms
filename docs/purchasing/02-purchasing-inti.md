@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `purchasing` (Purchasing inti, Fase 1b)
 
-**Versi:** 0.2
-**Tanggal:** 26 September 2026
-**Status:** selesai Fase 1b — dibangun setelah Fase 1 WMS sesuai peta rilis [D-29](../wms/04-keputusan-dan-asumsi.md#d-29); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-208](../wms/04-keputusan-dan-asumsi.md#a-208)–[A-218](../wms/04-keputusan-dan-asumsi.md#a-218) (*Perlu validasi*); v0.2: A-208, A-212, A-213, A-216 disetujui pemilik produk 26 Sep 2026; A-210 diubah — PO boleh melebihi sisa PRQ dengan alasan wajib ([A-246](../wms/04b-asumsi-lanjutan.md#a-246))
+**Versi:** 0.6
+**Tanggal:** 28 September 2026
+**Status:** selesai Fase 1b — dibangun setelah Fase 1 WMS sesuai peta rilis [D-29](../wms/04-keputusan-dan-asumsi.md#d-29); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-208](../wms/04-keputusan-dan-asumsi.md#a-208)–[A-218](../wms/04-keputusan-dan-asumsi.md#a-218) (*Perlu validasi*); v0.2: A-208, A-212, A-213, A-216 disetujui pemilik produk 26 Sep 2026; A-210 diubah — PO boleh melebihi sisa PRQ dengan alasan wajib ([A-246](../wms/04b-asumsi-lanjutan.md#a-246)); v0.3: A-209 disetujui 27 Sep 2026; A-211 diubah — centang *Harga sudah termasuk PPN* per PO, bawaan ya ([A-265](../wms/04b-asumsi-lanjutan.md#a-265)); v0.4: A-214, A-215, A-217, A-218 disetujui 27 Sep 2026; bonus vendor diterima di GRN di luar pesanan dan tampil di detail PO ([A-267](../wms/04b-asumsi-lanjutan.md#a-267)); v0.5: jumlah diterima PO hanya bagian **Baik** GRN; Rusak & Kurang tetap sisa PO — pengganti diterima atas PO yang sama, atau sisa dibatalkan bila vendor memberi potongan ([A-287](../wms/04b-asumsi-lanjutan.md#a-287))
 **Modul:** `purchasing` (PO, harga beli vendor)
 **Fase:** F1b; evaluasi vendor, penawaran, three-way match `[F3]`
 **Dokumen terkait:** [Lingkup & integrasi Purchasing](01-lingkup-dan-integrasi-wms.md) · [D-07](../wms/04-keputusan-dan-asumsi.md#d-07), [D-08](../wms/04-keputusan-dan-asumsi.md#d-08), [D-28](../wms/04-keputusan-dan-asumsi.md#d-28) · [Katalog §2.17](../wms/06-katalog-status-dan-enum.md#217-po-purchase-order--purchase_order-f1b) · [Glosarium §5](../wms/03-glosarium.md#5-dokumen-transaksi) · [26-purchase-request](../wms/26-purchase-request.md) · [20-approval](../wms/20-approval.md)
@@ -16,7 +16,7 @@ WMS berhenti di **kebutuhan** (PRQ) dan **penerimaan fisik** (GRN). Purchasing i
 
 Harga hanya hidup di domain ini ([A-208](../wms/04-keputusan-dan-asumsi.md#a-208)); layar, cetak, dan kejadian WMS tetap tanpa harga ([D-07](../wms/04-keputusan-dan-asumsi.md#d-07)).
 
-Tidak termasuk: PO tanpa PRQ (pesan **lebih** dari PRQ boleh, [A-246](../wms/04b-asumsi-lanjutan.md#a-246)), pajak/diskon/ongkir, pembayaran & termin (Akuntansi), evaluasi vendor & perbandingan penawaran `[F3]`, endpoint `/api/integrations/purchasing` `[F3]`, pemindahan kepemilikan master vendor (WMS tetap pemilik sampai Fase 3).
+Tidak termasuk: PO tanpa PRQ (pesan **lebih** dari PRQ boleh, [A-246](../wms/04b-asumsi-lanjutan.md#a-246)), perhitungan pajak (PO hanya menandai harga sudah/belum termasuk PPN, [A-265](../wms/04b-asumsi-lanjutan.md#a-265)), diskon, ongkir, pembayaran & termin (Akuntansi), evaluasi vendor & perbandingan penawaran `[F3]`, endpoint `/api/integrations/purchasing` `[F3]`, pemindahan kepemilikan master vendor (WMS tetap pemilik sampai Fase 3).
 
 ## 2. Aktor & permission
 
@@ -39,7 +39,7 @@ Migrasi tenant `2026_01_01_000210_create_purchasing_tables.php`; model di `app/D
 | Tabel | Kolom pokok |
 |---|---|
 | `vendor_prices` | `vendor_id`, `item_id`, `unit_price` decimal(18,2) per satuan dasar, `currency` (`IDR`), `valid_from`, `is_active`, `notes`, `created_by` — riwayat: harga baru = baris baru, harga lama dinonaktifkan, tidak dihapus (P-03) |
-| `purchase_orders` | `number` (`PO/<gudang>/<yymm>/<urut>`), `vendor_id`, `warehouse_id` (tujuan), `status` (Katalog §2.17), `order_date`, `eta_date`, `currency`, `total_amount` decimal(18,2), `payment_terms` (salinan teks vendor), `notes`, `approval_snapshot_id`, `created_by`, `submitted_by/at`, `approved_by/at`, `reject_reason_id`, `cancel_reason_id`, `cancelled_at`, `close_reason_id`, `closed_at`, `completed_at` |
+| `purchase_orders` | `number` (`PO/<gudang>/<yymm>/<urut>`), `vendor_id`, `warehouse_id` (tujuan), `status` (Katalog §2.17), `order_date`, `eta_date`, `currency`, `price_includes_tax` (boolean, bawaan ya — keterangan saja, [A-265](../wms/04b-asumsi-lanjutan.md#a-265)), `total_amount` decimal(18,2), `payment_terms` (salinan teks vendor), `notes`, `approval_snapshot_id`, `created_by`, `submitted_by/at`, `approved_by/at`, `reject_reason_id`, `cancel_reason_id`, `cancelled_at`, `close_reason_id`, `closed_at`, `completed_at` |
 | `purchase_order_lines` | `purchase_order_id`, `purchase_request_line_id`, `item_id`, `qty_base`, `qty_over_request` + `over_order_reason` (bagian di atas sisa PRQ, migrasi 000250, [A-246](../wms/04b-asumsi-lanjutan.md#a-246)), `unit_price`, `line_amount`, `qty_received`, `qty_cancelled`, `notes` |
 | `purchase_request_orders` (+) | `purchase_order_id` — catatan pemesanan yang lahir dari PO |
 | `purchase_request_order_lines` (+) | `purchase_order_line_id` — pasangan baris PO |
@@ -81,7 +81,7 @@ purchase_order:
 | keputusan | `Actions\ApprovePurchaseOrder` → `DecideApproval`; `Support\PurchaseOrderApprovalHandler` | tolak = `rejected` + Alasan `*` |
 | `→ approved` | `PurchaseOrderApprovalHandler::onApproved` → `Support\PurchaseOrderIssuer::issue` | **`po_created`**: satu catatan pemesanan per PRQ, PRQ `approved → forwarded` ([A-213](../wms/04-keputusan-dan-asumsi.md#a-213)) |
 | ubah ETA | `Actions\UpdatePurchaseOrderEta` | **`po_updated`**: ETA catatan pemesanan ikut |
-| GRN diterima | `PurchaseRequest\Support\PurchaseReceipts::received` → kejadian `OrderLinesReceived` → `Support\PurchaseOrderReceipts` | `qty_received` baris PO, status PO ([A-214](../wms/04-keputusan-dan-asumsi.md#a-214)) |
+| GRN diterima | `PurchaseRequest\Support\PurchaseReceipts::received` → kejadian `OrderLinesReceived` → `Support\PurchaseOrderReceipts` | `qty_received` baris PO, status PO ([A-214](../wms/04-keputusan-dan-asumsi.md#a-214)) Hanya bagian Baik ([A-287](../wms/04b-asumsi-lanjutan.md#a-287)). |
 | batal / tutup sisa | `Actions\CancelPurchaseOrder`, `Actions\ClosePurchaseOrder` → `PurchaseOrderIssuer::release` | **`po_cancelled`**: `qty_ordered` catatan & baris PRQ dikurangi sisa ([A-215](../wms/04-keputusan-dan-asumsi.md#a-215)) |
 
 ## 5. Aturan bisnis yang berlaku
@@ -91,6 +91,8 @@ purchase_order:
 | [D-07](../wms/04-keputusan-dan-asumsi.md#d-07), [A-208](../wms/04-keputusan-dan-asumsi.md#a-208) | harga hanya di tabel/layar/cetak Purchasing; payload `stock_events` dan layar PRQ/GRN tanpa harga |
 | [A-210](../wms/04-keputusan-dan-asumsi.md#a-210) | satu PO = satu vendor aktif × satu gudang tujuan; baris dari PRQ `approved`/`forwarded`/`partially_fulfilled` gudang itu; jumlah ≤ sisa belum dipesan − jumlah di PO draf/menunggu lain, **atau lebih dengan alasan wajib** (MOQ vendor, tambah stok — [A-246](../wms/04b-asumsi-lanjutan.md#a-246)); diperiksa ulang saat diajukan dan disetujui |
 | [A-211](../wms/04-keputusan-dan-asumsi.md#a-211) | IDR; harga satuan > 0 per satuan dasar; `line_amount = round(qty × harga, 2)`; `total_amount = Σ` |
+| [A-265](../wms/04b-asumsi-lanjutan.md#a-265) | `price_includes_tax` bawaan ya, diubah hanya di draf; tidak mengubah nilai — tanpa hitungan PPN |
+| [A-267](../wms/04b-asumsi-lanjutan.md#a-267) | barang bonus vendor (mis. beli 2 gratis 1) = baris GRN bertanda bonus: masuk stok, tidak menambah `qty_received` PO, tidak dibatasi sisa pesanan; bonus yang dijanjikan saat pesan cukup ditulis di *Keterangan* PO |
 | [BR-APR-07](../wms/05-aturan-bisnis.md#br-apr), [D-28](../wms/04-keputusan-dan-asumsi.md#d-28) | kondisi `order_value_min` hanya untuk `purchase_order`; jenis dokumen lain tetap tanpa uang |
 | [BR-GRN-01](../wms/05-aturan-bisnis.md#br-grn), [BR-GRN-05](../wms/05-aturan-bisnis.md#br-grn) | GRN merujuk catatan pemesanan hasil PO; kelebihan terima ditolak (menjawab sementara [01 §7](01-lingkup-dan-integrasi-wms.md#7-pertanyaan-untuk-spesifikasi-purchasing-nanti) no. 2) |
 | [A-246](../wms/04b-asumsi-lanjutan.md#a-246) | kelebihan di atas sisa PRQ ikut catatan pemesanan penuh (`qty_ordered` baris PRQ boleh > diminta); GRN boleh sampai jumlah PO; PRQ `fulfilled` saat diterima ≥ diminta; kelebihan = stok Tersedia biasa, reservasi ke REQ penunggu tetap sebatas kebutuhan ([A-171](../wms/04-keputusan-dan-asumsi.md#a-171)) |
@@ -102,11 +104,11 @@ purchase_order:
 | Route | Komponen | Isi |
 |---|---|---|
 | `/purchase-orders` | `purchasing.purchase-order-list` | cari nomor PO/PRQ/vendor, filter gudang, vendor, status; nilai PO, ETA |
-| `/purchase-orders/create` | `purchasing.purchase-order-form` | vendor `*`, gudang tujuan `*`, ETA, catatan; tabel baris PRQ terbuka gudang itu (sisa, vendor tetap item disarankan), jumlah & harga satuan per baris (bawaan dari daftar harga), isian *Alasan* muncul bila jumlah melebihi sisa ([A-246](../wms/04b-asumsi-lanjutan.md#a-246)), total; *Simpan draf*, *Simpan & ajukan*. `?prq=<id>` memilih gudang dan baris PRQ itu |
+| `/purchase-orders/create` | `purchasing.purchase-order-form` | vendor `*`, gudang tujuan `*`, ETA, catatan; tabel baris PRQ terbuka gudang itu (sisa, vendor tetap item disarankan), jumlah & harga satuan per baris (bawaan dari daftar harga), centang *Harga sudah termasuk PPN* (bawaan tercentang, A-265), isian *Alasan* muncul bila jumlah melebihi sisa ([A-246](../wms/04b-asumsi-lanjutan.md#a-246)), total; *Simpan draf*, *Simpan & ajukan*. `?prq=<id>` memilih gudang dan baris PRQ itu |
 | `/purchase-orders/{id}/edit` | sama | ubah draf |
-| `/purchase-orders/{id}` | `purchasing.purchase-order-detail` | baris (dipesan + "lebih X dari permintaan: alasan", diterima, dibatalkan, harga, nilai), total; *Ajukan*, *Setujui/Tolak*, *Ubah ETA*, *Batalkan*, *Tutup sisa*, *Cetak PO*; PRQ & GRN terkait; riwayat approval; riwayat |
+| `/purchase-orders/{id}` | `purchasing.purchase-order-detail` | baris (dipesan + "lebih X dari permintaan: alasan", diterima, dibatalkan, harga, nilai), total; kartu GRN terkait dengan daftar *Bonus dari vendor* ([A-267](../wms/04b-asumsi-lanjutan.md#a-267)); *Ajukan*, *Setujui/Tolak*, *Ubah ETA*, *Batalkan*, *Tutup sisa*, *Cetak PO*; PRQ & GRN terkait; riwayat approval; riwayat |
 | `/vendor-prices` | `purchasing.vendor-price-list` | daftar harga berlaku per vendor × item, cari, tambah harga baru (menggantikan yang lama), nonaktifkan |
-| `/print/purchase-order/{id}` | `DocumentPrinter` | PDF PO dengan harga ([A-217](../wms/04-keputusan-dan-asumsi.md#a-217)) |
+| `/print/purchase-order/{id}` | `DocumentPrinter` | PDF PO dengan harga ([A-217](../wms/04-keputusan-dan-asumsi.md#a-217)); *Nilai PO (sudah/belum termasuk PPN)* dan catatan kaki sesuai tanda PO |
 
 Detail PRQ menampilkan tombol **Buat PO** (pemegang `po.create`, PRQ menerima pesanan). Sidebar **Pembelian → Purchase Request, Purchase Order, Harga beli vendor**; palet Ctrl+K *Purchase Order*, *PO baru*, *Harga beli vendor*. Semua transisi lewat aksi Livewire (POST).
 
@@ -128,7 +130,7 @@ Tugas & keputusan approval PO memakai notifikasi approval generik (`approval.tas
 
 ## 9. Laporan & dashboard
 
-Daftar PO memuat filter status/vendor/gudang dan nilai. Laporan pembelian per vendor/periode `[F3]`.
+Daftar PO memuat filter status/vendor/gudang dan nilai. ~~Laporan pembelian per vendor/periode `[F3]`~~ — **terbangun 28 Sep 2026** sebagai laporan **Riwayat harga beli** (`riwayat-harga-beli`, izin `po.view`, penyaring item/vendor/periode, ekspor Excel) dan halaman per item `/items/{item}/price-history` (ringkasan terakhir/termurah/rata-rata per vendor 3/6/12 bulan + grafik) ([A-309](../wms/04b-asumsi-lanjutan.md#a-309)). Rekap nilai pembelian per vendor tetap `[F3]`.
 
 ## 10. Kasus uji (Given / When / Then)
 
@@ -147,17 +149,22 @@ Uji di `tests/Feature/Purchasing` (`PurchaseOrderTest`, `PurchaseOrderScreenTest
 | TC-PO-09 | role & cakupan | layar, menu, harga | 200/403/404 sesuai §2; Kepala Gudang tidak melihat menu PO/harga; staf gudang lain 404 | BR-ACC-05 |
 | TC-PO-10 | layar | form dari PRQ → simpan & ajukan → detail setujui → cetak | nilai tampil Rp; PDF 200 hanya `po.view` | §6 |
 | TC-PO-11 | PRQ 100 baut | PO 150 tanpa alasan; dengan alasan "MOQ"; GRN 151 lalu 150 | tanpa alasan ditolak A-246; PO `approved`, lebih 50 + alasan tercatat, nilai 225.000; catatan pemesanan 150; GRN 151 ditolak BR-GRN-05; GRN 150 → PO `completed`, PRQ `fulfilled` | A-246, A-214 |
+| TC-PO-12 | PO draf 10 × 11.100 | bawaan; hilangkan centang di form; aksi dengan `'0'` / kosong | tanda ya, nilai 111.000; setelah diubah tanda tidak, nilai tetap 111.000; detail & cetak menulis *Harga belum termasuk PPN*; `'0'` = tidak, kosong = ya | A-265 |
+| TC-PO-13 | PO baut: Toko Murah 1.200 (30 hr), vendor 1.600 (5 hr), Toko Murah 900 (250 hr); PO draf | saran | terakhir = vendor, termurah 6 bln = Toko Murah 1.200 (bukan 900); draf tidak dihitung; vendor dinonaktifkan → terakhir Toko Murah | [A-304](../wms/04b-asumsi-lanjutan.md#a-304) |
+| TC-PO-14 | PO terakhir baut 1.000 | form PO dari PRQ: harga 1.090, 1.150; batas 20 %; ganti vendor + alasan | bawaan vendor terakhir; "Naik 15,0 %" hanya untuk 1.150; batas 20 % tanpa tanda; `vendor_choice_note` tersimpan | [A-306](../wms/04b-asumsi-lanjutan.md#a-306) |
+| TC-PO-15 | tiga PO baut | halaman riwayat, laporan, ekspor; staf gudang | ringkasan terakhir 1.000, rata-rata 6 bln 1.225 (tertimbang), PO 200 hari di luar 6 bln; grafik; xlsx; tanpa `po.view` 403 & tombol tidak tampil | [A-309](../wms/04b-asumsi-lanjutan.md#a-309) |
+| TC-PO-16 | aturan PO toko online → Manajemen | PO ke vendor perusahaan; PO ke toko online | disetujui otomatis; menunggu approval | [A-308](../wms/04b-asumsi-lanjutan.md#a-308) |
 | TC-VPR-01 | vendor & item | harga baru 1.500 lalu 1.600 | yang lama nonaktif, riwayat tetap; harga ≤ 0 ditolak; tanpa izin 403 | A-211 |
 
 Uji modul lain yang berubah: TC-APR-03 (kunci nilai hanya untuk PO), TC-APR-17 (jenis di luar katalog), TC-APR-21 (8 aturan demo), TC-ACC-27b (permission `purchase_order`, `vendor_price`), TC-TPL (jenis template `purchase_order`).
 
 ## 11. Di luar lingkup modul ini
 
-PO tanpa PRQ; pajak, diskon, ongkir, uang muka, pembayaran (Akuntansi); perbandingan penawaran & evaluasi vendor `[F3]`; kirim PO lewat email/WhatsApp; pembatalan per baris PO; migrasi kepemilikan master vendor.
+PO tanpa PRQ; perhitungan pajak (DPP, tarif, faktur), diskon, ongkir, uang muka, pembayaran (Akuntansi); perbandingan penawaran & evaluasi vendor `[F3]`; kirim PO lewat email/WhatsApp; pembatalan per baris PO; migrasi kepemilikan master vendor.
 
 ## 12. Definisi selesai
 
-- [x] Migrasi tenant 000210, model, enum; ERD digenerate ulang
+- [x] Migrasi tenant 000210 (+000310 tanda PPN), model, enum; ERD digenerate ulang
 - [x] Mesin status Katalog §2.17 tanpa status baru; approval nilai lewat mesin approval
 - [x] PO → catatan pemesanan → GRN → PO selesai; batal & tutup sisa mengembalikan sisa
 - [x] Layar PO, harga beli vendor, cetak PO, menu, palet
@@ -172,3 +179,11 @@ Domain `app/Domain/Purchasing`: aksi `CreatePurchaseOrder` (+`update`), `SubmitP
 Perubahan di modul lain: **Approval** — `ApprovalDocumentType::PurchaseOrder`, kunci kondisi `order_value_min`, `ApprovalContext::orderValue`, kolom di form aturan; **PRQ** — kejadian `OrderLinesReceived`, guard batal PRQ ber-PO terbuka, tombol *Buat PO*; **Template** — jenis `purchase_order`, kaki cetak "nilai dalam Rupiah" khusus PO.
 
 **26 Sep 2026 ([A-246](../wms/04b-asumsi-lanjutan.md#a-246)):** `PurchaseOrderLines::normalize` menghitung `qty_over_request` dan menolak kelebihan tanpa `over_order_reason` (kode `A-246`); `SubmitPurchaseOrder` memeriksa ulang dengan alasannya; `PurchaseOrderIssuer::issue` mengirim `over_order` per baris sehingga `PurchaseOrderEvents::created` menerima jumlah di atas sisa hanya bila bertanda. `PurchaseReceipts` dan `BackorderPurchases::reserveArrivals` tidak berubah: batas GRN = sisa catatan pemesanan (= jumlah PO), reservasi ke REQ sebatas kebutuhan.
+
+**27 Sep 2026 ([A-265](../wms/04b-asumsi-lanjutan.md#a-265)):** migrasi tenant 000310 menambah `purchase_orders.price_includes_tax` (bawaan `true`, PO lama ikut ya); `CreatePurchaseOrder::handle/update` membaca `price_includes_tax` dari header (kosong = ya); `PurchaseOrder::taxNote()` dipakai detail dan cetak; perubahan tanda tercatat di riwayat (`logOnly`).
+
+**27 Sep 2026 ([A-267](../wms/04b-asumsi-lanjutan.md#a-267)):** `PurchaseOrderDetail` menampilkan baris GRN `is_bonus` dari GRN yang memuat barang PO ini (kecuali GRN batal); pesan BR-GRN-05 di `PurchaseReceipts::guard` menyarankan baris bonus. Uji TC-GRN-22 (`tests/Feature/Purchasing/VendorBonusTest.php`).
+
+### 13.4 Saran vendor, riwayat harga beli, peringatan kenaikan (28 September 2026)
+
+`Support\VendorSuggestions` (vendor terakhir & termurah 6 bulan dari PO disetujui dan catatan pemesanan, vendor aktif) mengganti `item_vendors` di form PO dan dialog catatan pemesanan PRQ ([A-304](../wms/04b-asumsi-lanjutan.md#a-304)); form PO menampilkan harga PO terakhir & termurah per baris dan tanda kenaikan di atas `po_price_increase_pct` ([A-306](../wms/04b-asumsi-lanjutan.md#a-306)), kolom baru `purchase_orders.vendor_choice_note` (migrasi tenant `000420`). `Support\PurchasePriceHistory` + `Reports\PurchasePriceHistoryReport` + `Livewire\PriceHistory` ([A-309](../wms/04b-asumsi-lanjutan.md#a-309)); harga dibandingkan apa adanya dengan tanda PPN ([A-307](../wms/04b-asumsi-lanjutan.md#a-307)). Kondisi jenis vendor hanya di PO ([A-308](../wms/04b-asumsi-lanjutan.md#a-308)). Uji `tests/Feature/Purchasing/VendorHistoryTest` (TC-PO-13–16, TC-PRQ-13, TC-MST-39).

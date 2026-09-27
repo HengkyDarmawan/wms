@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `receipt`, `putaway`, `vendor_return` (Penerimaan, QC, Put-away, Retur ke Vendor)
 
-**Versi:** 0.10
-**Tanggal:** 25 September 2026
-**Status:** selesai Fase 1 — modul ketujuh setelah [Picking & Shipment](15-picking-shipment.md); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-78](04-keputusan-dan-asumsi.md#a-78)–[A-84](04-keputusan-dan-asumsi.md#a-84) (*Perlu validasi*); v0.4: approval RTV lewat mesin approval ([20-approval](20-approval.md), [A-93](04-keputusan-dan-asumsi.md#a-93)); v0.5: GRN retur dan penyelesaian TRF ([22-retur-transfer](22-retur-transfer.md), [A-112](04-keputusan-dan-asumsi.md#a-112)); v0.6: surat retur RTV dicetak lewat modul Template ([18](18-template-dokumen-label.md)); v0.7: baris GRN vendor merujuk catatan pemesanan PRQ ([26-purchase-request](26-purchase-request.md), [A-174](04-keputusan-dan-asumsi.md#a-174))
+**Versi:** 0.14
+**Tanggal:** 28 September 2026
+**Status:** selesai Fase 1 — modul ketujuh setelah [Picking & Shipment](15-picking-shipment.md); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-78](04-keputusan-dan-asumsi.md#a-78)–[A-84](04-keputusan-dan-asumsi.md#a-84) (*Perlu validasi*); v0.4: approval RTV lewat mesin approval ([20-approval](20-approval.md), [A-93](04-keputusan-dan-asumsi.md#a-93)); v0.5: GRN retur dan penyelesaian TRF ([22-retur-transfer](22-retur-transfer.md), [A-112](04-keputusan-dan-asumsi.md#a-112)); v0.6: surat retur RTV dicetak lewat modul Template ([18](18-template-dokumen-label.md)); v0.7: baris GRN vendor merujuk catatan pemesanan PRQ ([26-purchase-request](26-purchase-request.md), [A-174](04-keputusan-dan-asumsi.md#a-174)); v0.11: baris GRN vendor bertanda **bonus vendor** — masuk stok tanpa rujukan pesanan, keterangan wajib ([A-267](04b-asumsi-lanjutan.md#a-267)); v0.12: GRN vendor mencatat **Baik / Rusak / Kurang** tanpa QC, barang rusak ke Karantina berkondisi Rusak dan langsung bisa diretur, jumlah boleh diketik dalam kemasan ([A-287](04b-asumsi-lanjutan.md#a-287)–[A-291](04b-asumsi-lanjutan.md#a-291), [A-295](04b-asumsi-lanjutan.md#a-295); §3.2, §5–§7, §9, §10, §13.4)
 **Modul:** `receipt`, `putaway`, `vendor_return`
 **Fase:** F1 (GRN manual tanpa PO; terhubung PO di Fase 1b, D-29)
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-GRN](05-aturan-bisnis.md#br-grn) · [Katalog Status §2.5, §2.6, §2.16](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data inbound](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 2](07-proses-bisnis.md) dan [alur 5](07a-proses-bisnis-lanjutan.md)
@@ -61,15 +61,19 @@ Migrasi: `database/migrations/tenant/2026_01_01_000080_create_receipt_tables.php
 
 | Kolom | Catatan |
 |---|---|
-| `item_id`, `qty_received` | serial selalu 1; potongan = panjangnya |
+| `item_id`, `qty_received` | jumlah **Baik** ([A-288](04b-asumsi-lanjutan.md#a-288)); serial 1 atau 0 (unit rusak); potongan = panjangnya |
+| `qty_vendor`, `qty_damaged`, `qty_short` | GRN vendor: jumlah menurut surat jalan vendor = Baik + **Rusak** + **Kurang** ([A-287](04b-asumsi-lanjutan.md#a-287)); baris lama `qty_vendor` kosong |
+| `damage_reason_id`, `damaged_bin_id` | alasan rusak (konteks Kerusakan, wajib bila Rusak > 0) dan bin Karantina tujuan barang rusak |
+| `uom_id`, `qty_input`, `uom_qty_base` | satuan yang diketik (kosong = satuan dasar), jumlah vendor yang diketik, dan isi kemasan saat input ([A-291](04b-asumsi-lanjutan.md#a-291)) |
 | `lot_no`, `expiry_date`, `serial_no`, `piece_length` | isian draf; turunannya dibuat saat `received` |
 | `lot_id`, `serial_id`, `piece_id` | diisi saat `received` (vendor) atau disalin dari baris PCK (transfer) |
 | `shipment_line_id` | baris SJ yang diterima (transfer) |
 | `purchase_request_order_line_id` | baris catatan pemesanan PRQ (GRN vendor, opsional, berindeks; [A-174](04-keputusan-dan-asumsi.md#a-174)) |
 | `goods_return_line_id` | baris RET (GRN retur) |
-| `receiving_bin_id` | bin Penerimaan atau Karantina QC |
+| `receiving_bin_id` | bin Penerimaan atau Karantina QC untuk bagian Baik; kosong bila seluruhnya rusak |
 | `qc_result`, `qc_by`, `qc_at`, `qc_reason_id`, `qc_note` | langkah QC |
 | `is_cross_dock` | selalu `false` di F1 ([A-83](04-keputusan-dan-asumsi.md#a-83)) |
+| `is_bonus` | barang bonus vendor (mis. beli 2 gratis 1): hanya GRN vendor, tanpa `purchase_request_order_line_id`, `notes` wajib; tidak dibatasi sisa pesanan dan tidak menambah jumlah diterima PO/PRQ ([A-267](04b-asumsi-lanjutan.md#a-267)) |
 
 ### 3.3 `putaway_tasks`, `putaway_task_lines`
 
@@ -77,7 +81,7 @@ Header: `number` (`PUT/<gudang>/…`), `goods_receipt_id`, `warehouse_id`, `stat
 
 ### 3.4 `vendor_returns`, `vendor_return_lines`
 
-Header: `number` (`RTV/<gudang>/…`), `warehouse_id`, `vendor_id`, `goods_receipt_id`, `status` (Katalog §2.16), `submitted_by`, `approved_by`, `approved_at`, `reject_reason_id`, `shipped_at`, `vendor_confirmed_at`, `replacement_receipt_id`, `cancel_reason_id`, `notes`. Baris: `goods_receipt_line_id`, item/lot/serial/potongan, `bin_id` (Karantina asal), `stock_status` (kondisi yang keluar), `qty_base`, `reason_code_id`.
+Header: `number` (`RTV/<gudang>/…`), `warehouse_id`, `vendor_id`, `goods_receipt_id`, `status` (Katalog §2.16), `submitted_by`, `approved_by`, `approved_at`, `reject_reason_id`, `shipped_at`, `vendor_confirmed_at`, `replacement_receipt_id`, `cancel_reason_id`, `notes`. Baris: `goods_receipt_line_id`, item/lot/serial/potongan, `bin_id` (Karantina asal), `stock_status` (kondisi yang keluar), `is_receipt_damage` (dari bagian Rusak saat GRN, [A-290](04b-asumsi-lanjutan.md#a-290)), `qty_base`, `reason_code_id`.
 
 ```mermaid
 erDiagram
@@ -127,11 +131,11 @@ Satu kelas aksi per permission (menjawab alternatif [A-73](04-keputusan-dan-asum
 
 | Aturan | Ditegakkan di mana |
 |---|---|
-| [BR-GRN-01](05-aturan-bisnis.md#br-grn) | Ledger diposting saat `received` ke bin Penerimaan (Tersedia) atau Karantina QC (Karantina) bila wajib QC ([A-79](04-keputusan-dan-asumsi.md#a-79)) |
-| [BR-GRN-02](05-aturan-bisnis.md#br-grn) | QC per baris; `completed` ditolak selama ada baris Karantina tanpa hasil; efek stok per hasil [A-78](04-keputusan-dan-asumsi.md#a-78) |
+| [BR-GRN-01](05-aturan-bisnis.md#br-grn) | Ledger diposting saat `received` ke bin Penerimaan (Tersedia) atau Karantina QC (Karantina) bila wajib QC ([A-79](04-keputusan-dan-asumsi.md#a-79)); GRN vendor: Baik ke bin itu, Rusak ke Karantina QC berkondisi Rusak tanpa QC, Kurang tanpa gerakan; hanya Baik mengurangi pesanan ([A-287](04b-asumsi-lanjutan.md#a-287)) |
+| [BR-GRN-02](05-aturan-bisnis.md#br-grn) | QC per baris; `completed` ditolak selama ada baris Karantina tanpa hasil; efek stok per hasil [A-78](04-keputusan-dan-asumsi.md#a-78); QC hanya bagian Baik ([A-287](04b-asumsi-lanjutan.md#a-287)) |
 | [BR-GRN-03](05-aturan-bisnis.md#br-grn) | `PutawaySuggester` ([A-84](04-keputusan-dan-asumsi.md#a-84)); bin tujuan harus bin penyimpanan gudang yang sama; ganti saran = alasan wajib |
-| [BR-GRN-04](05-aturan-bisnis.md#br-grn) | RTV hanya dari baris di bin Karantina berhasil QC `rejected`/`quarantined`; GRN pengganti merujuk RTV; baris yang dimuat RTV berjalan tidak bisa diputus ulang QC |
-| [BR-GRN-05](05-aturan-bisnis.md#br-grn) | GRN transfer ≤ jumlah baik bukti terima (retur ≤ yang dikirim/diajukan); kelebihannya disimpan di `qty_excess` dan memicu ADJ `over_receipt` saat GRN diterima ([A-245](04-keputusan-dan-asumsi.md#a-245)); satu GRN aktif per SJ ([A-82](04-keputusan-dan-asumsi.md#a-82)); GRN vendor/PO tetap menolak kelebihan ([A-214](04-keputusan-dan-asumsi.md#a-214)) |
+| [BR-GRN-04](05-aturan-bisnis.md#br-grn) | RTV hanya dari baris di bin Karantina berhasil QC `rejected`/`quarantined`; GRN pengganti merujuk RTV; baris yang dimuat RTV berjalan tidak bisa diputus ulang QC; juga langsung dari bagian Rusak saat GRN (jatah terpisah, `is_receipt_damage`; RTV bagian rusak tidak mengunci QC) ([A-290](04b-asumsi-lanjutan.md#a-290)) |
+| [BR-GRN-05](05-aturan-bisnis.md#br-grn) | GRN transfer ≤ jumlah baik bukti terima (retur ≤ yang dikirim/diajukan); kelebihannya disimpan di `qty_excess` dan memicu ADJ `over_receipt` saat GRN diterima ([A-245](04-keputusan-dan-asumsi.md#a-245)); satu GRN aktif per SJ ([A-82](04-keputusan-dan-asumsi.md#a-82)); GRN vendor/PO tetap menolak kelebihan ([A-214](04-keputusan-dan-asumsi.md#a-214)); GRN vendor: baik + rusak ≤ sisa pesanan termasuk draf lain, jumlah vendor boleh melebihi ([A-289](04b-asumsi-lanjutan.md#a-289)) |
 | [BR-LED-03](05-aturan-bisnis.md#br-led), [BR-LED-04](05-aturan-bisnis.md#br-led) | Nomor lot/serial/panjang wajib sesuai mode item; serial ganda dalam satu GRN ditolak |
 | [BR-STK-09](05-aturan-bisnis.md#br-stk), [BR-STK-12](05-aturan-bisnis.md#br-stk) | Potongan per panjang; kedaluwarsa wajib bila item ber-`has_expiry`; lot sama dengan kedaluwarsa beda ditolak |
 | [BR-STK-13](05-aturan-bisnis.md#br-stk), [BR-SJ-04](05-aturan-bisnis.md#br-sj) | Transfer: barang milik gudang asal (Dalam Perjalanan) sampai GRN tujuan `received` |
@@ -147,12 +151,12 @@ Satu kelas aksi per permission (menjawab alternatif [A-73](04-keputusan-dan-asum
 | Route | Komponen | Isi |
 |---|---|---|
 | `/receipts` | `receipt.receipt-list` | Daftar GRN (cari, status, sumber, gudang) dan SJ transfer yang menunggu diterima |
-| `/receipts/create`, `/receipts/{id}/edit` | `receipt.receipt-form` | Sumber vendor (baris item; serial/panjang satu per baris teks) atau transfer (baris SJ, jumlah ≤ baik); pengganti RTV |
-| `/receipts/{id}` | `receipt.receipt-detail` | Terima, QC per baris (dialog hasil + Alasan), selesai, batal, buat ulang PUT, tautan PUT/RTV, saran cross-dock, riwayat |
+| `/receipts/create`, `/receipts/{id}/edit` | `receipt.receipt-form` | Sumber vendor (baris item; serial/panjang satu per baris teks; centang *Bonus vendor* + *Keterangan bonus*, tombol *Pisahkan kelebihan jadi bonus* bila jumlah melebihi sisa pesanan — [A-267](04b-asumsi-lanjutan.md#a-267)) atau transfer (baris SJ, jumlah ≤ baik); pengganti RTV |
+| `/receipts/{id}` | `receipt.receipt-detail` | Terima, QC per baris (dialog hasil + Alasan), selesai, batal, buat ulang PUT, tautan PUT/RTV, saran cross-dock, riwayat; GRN vendor berkolom Dikirim vendor / Baik (+ kemasan) / Rusak (alasan, bin, sisa menunggu retur) / Kurang; tombol **Retur ke vendor** hanya bila masih ada yang bisa diretur ([A-287](04b-asumsi-lanjutan.md#a-287), [A-290](04b-asumsi-lanjutan.md#a-290)) |
 | `/putaways` | `receipt.putaway-list` | Tugas PUT per status dan gudang |
 | `/putaways/{id}` | `receipt.putaway-detail` | Bin saran terisi; ganti bin + alasan; peringatan kapasitas; batal |
 | `/vendor-returns` | `receipt.vendor-return-list` | Daftar RTV |
-| `/vendor-returns/create` | `receipt.vendor-return-form` | Pilih GRN, jumlah dan Alasan per baris Karantina |
+| `/vendor-returns/create` | `receipt.vendor-return-form` | Pilih GRN; baris **Rusak saat diterima** terisi penuh (alasan Kerusakan) dan baris Karantina hasil QC lama; jumlah dan Alasan per baris ([A-290](04b-asumsi-lanjutan.md#a-290)) |
 | `/vendor-returns/{id}` | `receipt.vendor-return-detail` | Setujui/tolak, kirim, konfirmasi vendor, batal, riwayat |
 
 Menu sidebar **Penerimaan** (Penerimaan barang, Tugas put-away, Retur ke vendor) dan entri palet Ctrl+K, disaring permission.
@@ -161,7 +165,7 @@ Menu sidebar **Penerimaan** (Penerimaan barang, Tugas put-away, Retur ke vendor)
 
 | Transisi | Pergerakan stok | Kejadian outbox |
 |---|---|---|
-| GRN vendor `received` | luar → Penerimaan (Tersedia) / Karantina QC (Karantina) | `goods_received` (`vendor_doc_no`, `po_ref`, `qc_required`) |
+| GRN vendor `received` | Baik: luar → Penerimaan (Tersedia) / Karantina QC (Karantina); Rusak: luar → Karantina QC (Rusak), [A-287](04b-asumsi-lanjutan.md#a-287) | `goods_received` per bagian (`vendor_doc_no`, `po_ref`, `qc_required`, `stock_status`, `qty_short` bila ada, `damage_reason` untuk bagian rusak; `is_bonus: true` untuk baris bonus, [A-267](04b-asumsi-lanjutan.md#a-267)) |
 | GRN transfer `received` | Dalam Perjalanan gudang asal → Penerimaan gudang tujuan | `stock_transferred` (`phase = goods_receipt`, gudang & proyek asal/tujuan, [A-81](04-keputusan-dan-asumsi.md#a-81)) |
 | QC lolos | Karantina QC (Karantina) → Penerimaan (Tersedia) | — |
 | QC ditolak | Karantina QC: Karantina → Rusak (bin sama) | — |
@@ -174,7 +178,7 @@ Belum dibangun (modul notifikasi belum ada): GRN menunggu QC → Staf Gudang; PU
 
 ## 9. Laporan & dashboard
 
-Selesai 25 Sep 2026 di kerangka [16 §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-241](04-keputusan-dan-asumsi.md#a-241)): `penerimaan-vendor`, `karantina-umur`, `put-tertunda`, `rtv-terbuka`.
+*Barang karantina menurut umur* kini ikut barang Rusak di bin Karantina (kolom Kondisi) dan *Penerimaan per vendor* berkolom Rusak & Kurang ([A-295](04b-asumsi-lanjutan.md#a-295)). Selesai 25 Sep 2026 di kerangka [16 §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-241](04-keputusan-dan-asumsi.md#a-241)): `penerimaan-vendor`, `karantina-umur`, `put-tertunda`, `rtv-terbuka`.
 
 ## 10. Kasus uji (Given / When / Then)
 
@@ -204,6 +208,7 @@ Uji di `tests/Feature/Receipt`.
 | TC-GRN-19 | Staf, pemohon, auditor | buka layar | 200 / 403 / lihat saja | BR-GEN-09 |
 | TC-GRN-20 | Staf | form + detail | draf (serial dipecah), terima, QC, selesai | §6 |
 | TC-GRN-21 | Kepala Gudang BKS | buka GRN CKG | 404 | BR-ACC-05 |
+| TC-GRN-22 | PO disetujui 100 baut | GRN 150 pada baris pesanan; 100 + bonus 50 tanpa keterangan; bonus merujuk pesanan; 100 + bonus 50 "Promo beli 2 gratis 1"; form: *Pisahkan kelebihan jadi bonus* | BR-GRN-05 (dengan petunjuk bonus); A-267; A-267; stok +150, PO `completed` dengan diterima 100, PRQ `fulfilled`, kejadian bonus `is_bonus`, detail PO *Bonus dari vendor*; form memecah 100 + 50 bonus | [A-267](04b-asumsi-lanjutan.md#a-267) |
 | TC-PUT-01 | Bin kosong / bin berisi item sama | saran | bin kosong pertama / bin sejenis | BR-GRN-03, A-84 |
 | TC-PUT-02 | PUT menunggu | selesaikan di saran | Penerimaan → bin, tanpa kejadian | KS 2.6 |
 | TC-PUT-03 | PUT | ganti bin tanpa/dengan alasan | ditolak / tersimpan dengan alasan | BR-GRN-03 |
@@ -221,6 +226,22 @@ Uji di `tests/Feature/Receipt`.
 | TC-RTV-07 | RTV menunggu / dikirim | batal | `cancelled` / ditolak | BR-GEN-03 |
 | TC-RTV-08 | Baris dimuat RTV | QC ulang | ditolak | BR-GRN-04 |
 | TC-RTV-09 | Staf, Kepala Gudang | layar form → setujui → kirim | `shipped` | §6 |
+| TC-GRN-23 | PO 12 baut, QC tidak dipakai | GRN: vendor 12, baik 8, rusak 2 → terima | kurang 2; 8 Tersedia di Penerimaan, 2 Rusak di Karantina; dua `goods_received` (available, damaged + `qty_short`); PO/PRQ menerima 8 saja | [A-287](04b-asumsi-lanjutan.md#a-287) |
+| TC-GRN-24 | PO 12 | rusak tanpa alasan; vendor 10 + kurang 5 tidak cocok; baik + rusak 0; baik 10 + rusak 3; vendor 20 baik 10 rusak 2; draf lain; kurang tanpa vendor | BR-GEN-11; A-288; BR-LED-02; BR-GRN-05; kurang 8; BR-GRN-05; vendor = baik + kurang | [A-288](04b-asumsi-lanjutan.md#a-288), [A-289](04b-asumsi-lanjutan.md#a-289) |
+| TC-GRN-25 | Semen berlot, genset berserial, pipa per potong | lot baik 5 rusak 1; serial baik & unit rusak + kurang 1; potongan rusak | satu lot; unit rusak tanpa bin terima, vendor 2; semua rusak di Karantina | A-288 |
+| TC-GRN-26 | Saklar QC menyala, kabel wajib QC | baik 5 rusak 1; baris baut seluruhnya rusak | baik menunggu QC di Karantina, rusak berkondisi Rusak; selesai menuntut QC bagian baik; baris rusak semua tanpa PUT | A-287 |
+| TC-GRN-27 | Baut tanpa kemasan | GRN 10 DUS (1 DUS = 12, ingat) baik 9 rusak 1; GRN kedua 2 DUS isian 20 | 120/108/12 dalam satuan dasar, "10 DUS"; kemasan DUS = 12 tersimpan & tercatat di riwayat item; kemasan lama dipakai, tidak ditimpa | [A-291](04b-asumsi-lanjutan.md#a-291), [A-292](04b-asumsi-lanjutan.md#a-292) |
+| TC-GRN-28 | GRN vendor baut 30 diterima | Selesaikan 3 dus × 12; GRN kedua 1 dus; label isi 12 dari induk 1; label isi lagi | `BAUT-M12-0001…0003` isi 12/12/6 Di gudang di bin Penerimaan; GRN kedua `-0004`; `-0001-0001…0012`, induk sisa 0 tetap Di gudang; ditolak | BR-LBL-02, [A-296](04b-asumsi-lanjutan.md#a-296) |
+| TC-GRN-28b | layar detail GRN diterima | *Selesaikan* → dialog (bawaan 1 dus × 25) → 3 × 10 → *Cetak label isi* 5 | GRN Selesai, label 10/10/5 tampil; 5 label isi; tautan cetak `label_package` | [A-302](04b-asumsi-lanjutan.md#a-302) |
+| TC-GRN-29 | baik 20 rusak 4 | rencana 2 × 12; tanpa rencana; *Buat label* 2 × 10 belakangan | ditolak BR-LBL-02 & GRN tetap Diterima; selesai tanpa label; sisa tanpa label 0 | [A-296](04b-asumsi-lanjutan.md#a-296) |
+| TC-GRN-30 | urutan LBL baut = 9999 | 2 dus | `BAUT-M12-10000`, `-10001` | [A-296](04b-asumsi-lanjutan.md#a-296) |
+| TC-GRN-31 | semen berkedaluwarsa | GRN dengan isian `batch-77` + kedaluwarsa; GRN tanpa batch | lot = `<nomor GRN>-01`, batch vendor `BATCH-77` di baris & lot, label menunjuk lot; pemindai label → item + lot | [A-297](04b-asumsi-lanjutan.md#a-297) |
+| TC-GRN-32 | 2 label di bin Penerimaan | selesaikan PUT | bin label = bin tujuan PUT, kejadian "Ditaruh di bin" | [A-300](04b-asumsi-lanjutan.md#a-300) |
+| TC-GRN-33 | Baut, kemasan DUS = 100; saklar serial nyala, potongan mati | form GRN: pilih baut, DUS, rusak 1, lalu *Kemasan lain…*; nyalakan saklar potongan | akhiran PCS lalu DUS di kotak jumlah; "1 DUS = 100 PCS" di bawah Rusak; isian kemasan lain di baris sendiri; bantuan serial tampil, bantuan potongan hanya bila saklar menyala | [A-291](04b-asumsi-lanjutan.md#a-291), [A-284](04b-asumsi-lanjutan.md#a-284) |
+| TC-GRN-33b | GRN baut baik 200 rusak 100 | buka detail; nyalakan saklar potongan | kolom "Batch / nomor seri" (+ "/ potongan" bila menyala); "menunggu retur 100 PCS (1 DUS)" | [A-283](04b-asumsi-lanjutan.md#a-283), [A-293](04b-asumsi-lanjutan.md#a-293) |
+| TC-PUT-09 | GRN baik 8 rusak 2 dan baris seluruhnya rusak | selesaikan | PUT 8; baris rusak semua tanpa baris PUT | A-288 |
+| TC-RTV-10 | PO 12, GRN baik 10 rusak 2 | form RTV dari detail GRN (3 ditolak, lalu 2); setujui; kirim; GRN pengganti 2 | bagian rusak terisi 2, melebihi ditolak BR-GRN-04; baris RTV `is_receipt_damage`, Karantina Rusak → keluar, `goods_rejected`; PO selesai setelah pengganti | [A-290](04b-asumsi-lanjutan.md#a-290) |
+| TC-RTV-11 | QC menyala, kabel baik 5 rusak 1 | RTV bagian rusak 1, lalu 1 lagi; QC bagian baik | jatah rusak habis → BR-GRN-04; QC tetap bisa dicatat | A-290 |
 
 ## 11. Di luar lingkup modul ini
 
@@ -259,6 +280,18 @@ Domain `app/Domain/Receipt`: dua belas aksi (`SaveGoodsReceipt`, `ReceiveGoodsRe
 2. **QC lolos memindah barang kembali ke bin Penerimaan**, sehingga PUT dan cross-dock selalu berangkat dari satu bin ([A-78](04-keputusan-dan-asumsi.md#a-78)).
 3. **PUT satu per GRN**, dibuat ulang lewat `CompleteGoodsReceipt::replan()` untuk baris tanpa PUT aktif (mis. setelah PUT dibatalkan) — Katalog tidak menyebut jalan kembali dari PUT `cancelled`.
 4. **RTV tidak memakai tabel `shipments`**; dokumen RTV adalah surat jalan returnya ([A-80](04-keputusan-dan-asumsi.md#a-80)).
+
+### 13.4 Baik / Rusak / Kurang & kemasan (28 September 2026)
+
+`TrackingRecords::normalize` menerima `qty_damaged` dan `damaged_unit` (serial/potongan); `SaveGoodsReceipt::kondisi` menghitung Kurang dan memeriksa alasan; `SaveGoodsReceipt::keSatuanDasar` mengubah jumlah berkemasan ke satuan dasar lewat `Master\Support\UnitInput` dan menyimpan kemasan baru (`RememberItemPackaging`) di dalam transaksi GRN. `ReceiveGoodsReceipt::terimaVendor` memposting dua gerakan per baris (Baik, Rusak) dengan satu `materialize`, jadi baik dan rusak satu lot/serial. `PurchaseReceipts::received` tetap hanya Baik; `guard` menjumlah draf lain `qty_received + qty_damaged`. `GoodsReceiptLine::isPutawayEligible` menolak baris tanpa Baik; `damagedReturnable()` = rusak − RTV aktif bagian rusak. `CreateVendorReturn` menerima `part` (`damage` | `qc`); `vendor_return_lines.is_receipt_damage` memisahkan jatah, dan `RecordQcResult` mengabaikan RTV bagian rusak. Form GRN: kolom Dikirim vendor/Baik/Rusak/Kurang + alasan, pemilih satuan (partial `livewire.master.partials.unit-picker`), serial/potongan dengan daftar unit rusak. Uji TC-GRN-23–27, TC-PUT-09, TC-RTV-10–11; fixture penerimaan lama tetap dengan saklar QC menyala sehingga uji QC lama tetap berlaku.
+
+### 13.5 Label kemasan & lot otomatis (28 September 2026)
+
+`ReceiptDetail::mintaSelesai` membuka dialog *Jumlah dus / Isi per dus* untuk GRN vendor yang punya baris bisa dilabeli (`CreatePackageLabels::labelable`: vendor, Barang biasa/berkedaluwarsa, Baik tanpa label > 0), bawaan `CreatePackageLabels::defaults` ([A-296](04b-asumsi-lanjutan.md#a-296)); `selesaikan` meneruskan rencana ke `CompleteGoodsReceipt::handle($grn, $actor, $labels)` yang membuat label di transaksi yang sama (pemanggil tanpa rencana = tanpa label, jadi uji & E2E lama tetap). Kartu `label.receipt-labels` di detail GRN Selesai: daftar induk (+ jumlah label isi), *Buat label*, *Cetak semua* (≤200 per berkas), *Cetak terpilih*, *Cetak label isi*, *Batalkan* ([A-302](04b-asumsi-lanjutan.md#a-302)). `TrackingRecords` membuat lot otomatis `<nomor GRN>-NN` untuk GRN vendor; isian lot di form menjadi *Batch vendor (opsional)* (`vendor_batch_no`, `lots.attributes.vendor_batch`) ([A-297](04b-asumsi-lanjutan.md#a-297)). `CompletePutaway` memindah bin label (`PackageLabelLedger::putAway`); `ReceiveGoodsReceipt` membuka lagi label pada GRN transfer/Gudang Site/retur ([A-300](04b-asumsi-lanjutan.md#a-300)). Laporan §9 baru **Barang bermasalah per vendor** ([A-303](04b-asumsi-lanjutan.md#a-303)).
+
+### 13.6 Perapian tampilan (28 September 2026)
+
+Tanpa mengubah aturan: kotak Dikirim vendor/Baik/Rusak/Kurang berakhiran satuan terpilih dan lebih lebar; hasil satuan dasar di bawah Rusak (`UnitInput::selectedCode/baseText`); isian *Kemasan lain…* dirender selebar baris lewat partial `master/partials/unit-picker-lain`; teks bantuan serial/potongan mengikuti saklar ([A-284](04b-asumsi-lanjutan.md#a-284)); detail GRN memakai "Batch / nomor seri" dan sisa retur bersatuan + kemasan ([A-293](04b-asumsi-lanjutan.md#a-293)).
 
 ### 13.3 Sisa pekerjaan
 

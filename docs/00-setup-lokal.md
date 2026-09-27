@@ -1,8 +1,8 @@
 # Setup Lokal — menjalankan dan mengetes aplikasi
 
-**Versi:** 1.6
-**Tanggal:** 26 September 2026
-**Status:** aktif — dua profil mesin dev: **rumah** (XAMPP3 + MariaDB 10.4) dan **kantor** (XAMPP + MariaDB 10.4), keduanya [A-76](wms/04-keputusan-dan-asumsi.md#a-76) / [A-162](wms/04-keputusan-dan-asumsi.md#a-162); v1.5: mesin rumah pindah dari Laragon ke `C:\xampp3`; v1.6: batas unggah PHP untuk foto 20 MB (§4)
+**Versi:** 1.9
+**Tanggal:** 27 September 2026
+**Status:** aktif — dua profil mesin dev: **rumah** (XAMPP3 + MariaDB 10.4) dan **kantor** (XAMPP + MariaDB 10.4), keduanya [A-76](wms/04-keputusan-dan-asumsi.md#a-76) / [A-162](wms/04-keputusan-dan-asumsi.md#a-162); v1.5: mesin rumah pindah dari Laragon ke `C:\xampp3`; v1.6: batas unggah PHP untuk foto 20 MB (§4); v1.7: tombol kamera butuh HTTPS atau `localhost` (§7, A-266)
 **Dokumen terkait:** [Akun uji](00-akun-uji.md) · [Arsitektur §10](wms/08-arsitektur.md#10-lingkungan) · [README](README.md) · [`../CLAUDE.md`](../CLAUDE.md)
 
 Panduan dari klon bersih sampai bisa login dan mencoba alur REQ → PCK → SJ di browser. Semua akun dan password berasal dari [00-akun-uji](00-akun-uji.md). Semua database berprefiks `wms_`; MySQL/MariaDB lokal dipakai bersama proyek lain, jadi **jangan menyentuh database lain**.
@@ -96,6 +96,30 @@ Foto kamera HP boleh diunggah sampai 20 MB lalu dikompres otomatis menjadi ≤ 5
 
 Berkasnya `C:\xampp\php-8.3.33\php.ini` (kantor) dan `C:\xampp3\php\php.ini` (rumah). Periksa dengan `php -i | findstr /i "upload_max post_max memory_limit"`, lalu hentikan dan jalankan ulang `php artisan serve`. Produksi (cPanel *MultiPHP INI Editor* / php-fpm) dan batas body web server (mis. `client_max_body_size 64m` di Nginx) perlu nilai yang sama. Ekstensi `gd` wajib aktif; `exif` tidak wajib.
 
+### Kanal WhatsApp/SMS (OTP bukti terima otomatis)
+
+OTP tautan penerima bisa dikirim otomatis ke HP penerima ([A-273](wms/04b-asumsi-lanjutan.md#a-273)). Kanalnya diatur di `.env` platform; company menyalakan saklar **OTP bukti terima otomatis** di *Pengaturan company*.
+
+| `.env` | Nilai lokal | Keterangan |
+|---|---|---|
+| `WMS_MESSAGING_DRIVER` | `log` | `none` = OTP disampaikan driver (bawaan); `log` = pesan ditulis ke `storage/logs/laravel.log` (untuk mencoba); `http` = gateway sungguhan |
+| `WMS_MESSAGING_URL`, `WMS_MESSAGING_TOKEN` | — | Hanya untuk `http`: alamat POST dan token (dikirim di header `Authorization`, bisa diganti `WMS_MESSAGING_TOKEN_HEADER`) |
+| `WMS_MESSAGING_PHONE_FIELD`, `WMS_MESSAGING_MESSAGE_FIELD` | `target`, `message` | Nama field nomor & pesan sesuai gateway; `WMS_MESSAGING_FORMAT=json` bila gateway meminta JSON; `WMS_MESSAGING_EXTRA` field tetap berformat JSON |
+
+Coba lokal: isi `WMS_MESSAGING_DRIVER=log`, jalankan ulang `php artisan serve`, nyalakan saklar di `/settings/company`, terbitkan tautan penerima dari detail SJ dengan nomor HP, lalu lihat kode OTP di `storage/logs/laravel.log`. Pemilihan penyedia sungguhan menunggu [O-15](wms/04-keputusan-dan-asumsi.md#o-15).
+
+### WhatsApp tanpa akun Meta (Fase 2a)
+
+Notifikasi & approval WhatsApp ([31-whatsapp](wms/31-whatsapp.md)) bisa dicoba lokal dengan driver `log`:
+
+1. `.env`: `WMS_WA_DRIVER=log` (lalu jalankan ulang `php artisan serve`); `php artisan tenants:migrate` (migrasi `000360`).
+2. Super Admin (`http://wms.test:8000/admin`) → company DEMO → *Flag fitur* → nyalakan **Notifikasi & approval WhatsApp**.
+3. Login sebagai approver (mis. Kepala Gudang) → *Profil* → kartu **WhatsApp** → isi nomor → *Kirim kode*; kodenya ada di `storage/logs/laravel.log` (baris `[wms.whatsapp]`, `wms_kode`) → *Verifikasi*.
+4. Admin Company → *Pengaturan company* → kartu **WhatsApp** (pilih kejadian *Langsung*/*Ringkasan harian*) dan *Aturan approval* → lapis → Kanal **Web & WhatsApp**.
+5. Ajukan REQ → log memuat `wms_approval` dengan payload tombol `APR|1|<token>|A`. Tiru tombol: `php artisan whatsapp:simulate 62812xxxxxxx "APR|1|<token>|A"` → REQ disetujui (kanal WhatsApp di riwayat approval).
+
+Produksi: `WMS_WA_DRIVER=cloud` + `WMS_WA_TOKEN`, `WMS_WA_PHONE_NUMBER_ID`, `WMS_WA_APP_SECRET`, `WMS_WA_VERIFY_TOKEN`; webhook Meta ke `https://<domain pusat>/api/webhooks/whatsapp`.
+
 ## 5. Skenario uji manual
 
 | No | Akun | Langkah | Hasil yang diharapkan |
@@ -135,3 +159,4 @@ py -3 docs/diagram/_verify.py       # link, anchor, ID, batas 450 baris
 | Migrasi gagal di MariaDB karena fitur khusus MySQL 8 | Kode tidak boleh diubah untuk MariaDB ([A-76](wms/04-keputusan-dan-asumsi.md#a-76)). Pasang MySQL 8.4 ZIP portable di port 3307 dan set `DB_PORT=3307` |
 | `php -v` menunjukkan 7.4 atau 8.5 | PHP yang salah di PATH; pakai path lengkap dari §1 |
 | Foto > 5 MB gagal diunggah | php.ini masih `upload_max_filesize = 5M`; naikkan sesuai [§4 Batas unggah PHP](#batas-unggah-php) lalu jalankan ulang `php artisan serve` |
+| Tombol kamera (pindai) tidak muncul di HP | Browser hanya membuka kamera di halaman **HTTPS** atau `localhost`; `http://demo.wms.test:8000` dari HP di jaringan yang sama tidak diizinkan ([A-266](wms/04b-asumsi-lanjutan.md#a-266)). Uji kamera di laptop (`localhost`/Chrome dengan `chrome://flags/#unsafely-treat-insecure-origin-as-secure` diisi alamat dev) atau lewat terowongan HTTPS; di produksi selalu HTTPS. Scanner USB/Bluetooth tetap jalan tanpa kamera |

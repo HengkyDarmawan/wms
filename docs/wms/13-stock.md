@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `stock` (Kartu Stok, Saldo, Reservasi, Kejadian)
 
-**Versi:** 0.12
-**Tanggal:** 25 September 2026
-**Status:** terimplementasi (Fase 1) — modul keempat setelah [Warehouse](12-warehouse.md); v0.5: kunci periode otomatis dari sesi opname bulanan dan `reverse()` untuk dokumen pembalik ([21-opname-penyesuaian](21-opname-penyesuaian.md)); v0.6: `Stock\Support\RemovalOrder` — urutan alokasi FIFO/FEFO/sisa potongan/manual untuk PCK ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185)); v0.7: kolom `stock_movements.from_stock_status` — perubahan kondisi bisa dibangun ulang & dibalik dengan benar ([A-194](04-keputusan-dan-asumsi.md#a-194))
+**Versi:** 0.14
+**Tanggal:** 28 September 2026
+**Status:** terimplementasi (Fase 1) — modul keempat setelah [Warehouse](12-warehouse.md); v0.5: kunci periode otomatis dari sesi opname bulanan dan `reverse()` untuk dokumen pembalik ([21-opname-penyesuaian](21-opname-penyesuaian.md)); v0.6: `Stock\Support\RemovalOrder` — urutan alokasi FIFO/FEFO/sisa potongan/manual untuk PCK ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185)); v0.7: kolom `stock_movements.from_stock_status` — perubahan kondisi bisa dibangun ulang & dibalik dengan benar ([A-194](04-keputusan-dan-asumsi.md#a-194)); v0.13: kolom *Potongan* di Saldo stok & Kartu stok hanya bila saklar per potong menyala ([A-284](04b-asumsi-lanjutan.md#a-284), §6, §10 TC-STK-36); v0.14: saldo & kartu stok menampilkan satuan dasar dan uraian kemasan ("9 DUS 8 BOX") ([A-293](04b-asumsi-lanjutan.md#a-293), §6, §10 TC-STK-37)
 **Modul:** `stock`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.6](01-blueprint.md#66-stok) · [Aturan Bisnis](05-aturan-bisnis.md) · [Matriks kejadian stok](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data stok](08b-model-data-stok-dokumen.md#area-stok-ledger-saldo-reservasi-kejadian-tenant) · [Akuntansi §4](../akuntansi/01-lingkup-dan-integrasi-wms.md)
@@ -130,8 +130,8 @@ Aturan baru modul ini (`BR-LED`, ditambahkan ke [05-aturan-bisnis](05-aturan-bis
 
 | Route | Komponen | Isi |
 |---|---|---|
-| `/stock` | `stock.balance-list` | Saldo per item dengan pengelompokan gudang; kolom tersedia, dicadangkan, karantina, rusak; untuk item per potong ditambah jumlah potongan |
-| `/stock/items/{item}` | `stock.stock-card` | Kartu stok satu item: saldo per bin dan riwayat pergerakan dengan penyaring gudang, bin, dan tanggal |
+| `/stock` | `stock.balance-list` | Saldo per item dengan pengelompokan gudang; kolom tersedia, dicadangkan, karantina, rusak; untuk item per potong ditambah jumlah potongan — kolom itu hanya bila saklar `piece` menyala ([A-284](04b-asumsi-lanjutan.md#a-284)) Kolom Tersedia bersatuan dasar dengan uraian kemasan di bawahnya ([A-293](04b-asumsi-lanjutan.md#a-293)). |
+| `/stock/items/{item}` | `stock.stock-card` | Kartu stok satu item: saldo per bin (kolom *Potongan* hanya bila saklar `piece` menyala) dan riwayat pergerakan dengan penyaring gudang, bin, dan tanggal Jumlah saldo & pergerakan disertai uraian kemasan ([A-293](04b-asumsi-lanjutan.md#a-293)). |
 | `/stock/reservations` | `stock.reservation-list` | Reservasi aktif, lunak dan keras, dengan penanda menggantung dan tombol lepas beserta Alasan `*` |
 | `/stock/events` | `stock.event-list` | Outbox kejadian: jenis, sumber, waktu, status terkirim, dan galat terakhir |
 | `/settings/stock-period` | `stock.period-lock` | Tanggal kunci periode beserta riwayat pemajuannya |
@@ -197,6 +197,8 @@ Seluruh baris [matriks §14](05-aturan-bisnis.md#14-matriks-kejadian-stok) diter
 | TC-STK-33 | Periode terkunci sampai kemarin | kunci mundur seminggu | ditolak dengan kode BR-STK-15; riwayat pemajuan tampil | BR-STK-15 |
 | TC-STK-34 | Company demo baru | jalankan `DemoSeeder` dua kali | saldo empat item contoh terbentuk lewat kartu stok, tiap pergerakan punya kejadian outbox, jalankan ulang tidak menggandakan | P-01, BR-LED-06, A-72 |
 | TC-STK-35 | Saldo cocok, lalu satu saldo dirusak di luar kartu stok | `stock:reconcile` | cocok → tanpa selisih; dirusak → 1 selisih (kartu 6, saldo 9), saldo **tidak** diubah, Admin Company diberi tahu `stock.balance_mismatch`, Kepala Gudang tidak | BR-STK-01, P-01, [A-243](04-keputusan-dan-asumsi.md#a-243) |
+| TC-STK-36 | Item lama per potong bersaldo, saklar `piece` mati | posting pergerakan; buka Saldo stok & Kartu stok; nyalakan saklar | pergerakan diterima (P-03); kolom *Potongan* tidak tampil, lalu tampil | [A-284](04b-asumsi-lanjutan.md#a-284) |
+| TC-STK-37 | Baut 100 dengan kemasan DUS = 12 | buka Saldo stok & Kartu stok | "8 DUS 4 …" tampil | [A-293](04b-asumsi-lanjutan.md#a-293) |
 
 ## 11. Di luar lingkup modul ini
 

@@ -1,10 +1,10 @@
 # Spesifikasi Modul — `approval` (Mesin Approval)
 
-**Versi:** 0.11
-**Tanggal:** 25 September 2026
-**Status:** selesai Fase 1 — modul kedelapan setelah [Receipt/Putaway](19-receipt-putaway.md); REQ dan RTV sudah diputus lewat mesin ini; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-86](04-keputusan-dan-asumsi.md#a-86)–[A-94](04-keputusan-dan-asumsi.md#a-94) (*Perlu validasi*); v0.3: ADJ dan OPN tersambung ([21-opname-penyesuaian](21-opname-penyesuaian.md), [A-96](04-keputusan-dan-asumsi.md#a-96), [A-105](04-keputusan-dan-asumsi.md#a-105)); v0.4: TRF dan RET tersambung ([22-retur-transfer](22-retur-transfer.md)); v0.5: ISU pembalik tersambung dengan lapis minimum ([23-pemakaian](23-pemakaian.md), [A-150](04-keputusan-dan-asumsi.md#a-150)); v0.6: CNV (hanya bila ada aturan) dan WST (otomatis tanpa aturan) tersambung ([24-konversi-waste](24-konversi-waste.md), [A-153](04-keputusan-dan-asumsi.md#a-153)); v0.7: penangan PRQ — semua jenis dokumen Katalog tersambung ([26-purchase-request](26-purchase-request.md), [A-173](04-keputusan-dan-asumsi.md#a-173)); v0.8: `ApprovalNotifier` mengirim notifikasi in-app/email tugas & keputusan ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189))
+**Versi:** 0.15
+**Tanggal:** 27 September 2026
+**Status:** selesai Fase 1 — modul kedelapan setelah [Receipt/Putaway](19-receipt-putaway.md); REQ dan RTV sudah diputus lewat mesin ini; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-86](04-keputusan-dan-asumsi.md#a-86)–[A-94](04-keputusan-dan-asumsi.md#a-94) (*Perlu validasi*); v0.3: ADJ dan OPN tersambung ([21-opname-penyesuaian](21-opname-penyesuaian.md), [A-96](04-keputusan-dan-asumsi.md#a-96), [A-105](04-keputusan-dan-asumsi.md#a-105)); v0.4: TRF dan RET tersambung ([22-retur-transfer](22-retur-transfer.md)); v0.5: ISU pembalik tersambung dengan lapis minimum ([23-pemakaian](23-pemakaian.md), [A-150](04-keputusan-dan-asumsi.md#a-150)); v0.6: CNV (hanya bila ada aturan) dan WST (otomatis tanpa aturan) tersambung ([24-konversi-waste](24-konversi-waste.md), [A-153](04-keputusan-dan-asumsi.md#a-153)); v0.7: penangan PRQ — semua jenis dokumen Katalog tersambung ([26-purchase-request](26-purchase-request.md), [A-173](04-keputusan-dan-asumsi.md#a-173)); v0.8: `ApprovalNotifier` mengirim notifikasi in-app/email tugas & keputusan ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.12: §13.1 butir 1 dan 4 mengikuti validasi A-92 (permanen di `app/Domain/Approval`) dan A-91 (notifikasi sudah jalan); v0.13: lapis Role/Jabatan bisa dibatasi divisi pemohon ([A-269](04b-asumsi-lanjutan.md#a-269)); Fase 2a: kanal lapis *Web & WhatsApp*, keputusan lewat tombol WhatsApp ([31-whatsapp](31-whatsapp.md), [A-277](04b-asumsi-lanjutan.md#a-277))
 **Modul:** `approval`
-**Fase:** F1 (web, delegasi, eskalasi, simulasi); approval via WhatsApp `[F2]` (Fase 2a) sebagai stub
+**Fase:** F1 (web, delegasi, eskalasi, simulasi); approval via WhatsApp (Fase 2a) — dibangun di [31-whatsapp](31-whatsapp.md)
 **Dokumen terkait:** [Blueprint §8](01-blueprint.md#8-approval-engine) · [Aturan Bisnis §BR-APR](05-aturan-bisnis.md#br-apr) · [Katalog Status §3](06-katalog-status-dan-enum.md#3-enum-lain) · [Glosarium §9](03-glosarium.md#9-approval--notifikasi) · [Model data 08c](08c-model-data-pendukung.md#area-approval-engine-tenant) · [Alur 9](07b-proses-bisnis-pendukung.md#alur-9--approval-generik-semua-jenis-dokumen) · [D-17](04-keputusan-dan-asumsi.md#d-17), [D-18](04-keputusan-dan-asumsi.md#d-18), [D-28](04-keputusan-dan-asumsi.md#d-28)
 **Ketergantungan modul:** `access` (user, role × cakupan, atasan langsung, jabatan), `master` (Alasan, kategori item, proyek), `warehouse`. Modul dokumen memasang diri lewat kontrak §3.9: `request`, `receipt` (RTV), `adjustment`, `count`, `transfer`, dan `return` sudah; `purchase_request`, `conversion`, `waste`, `issue`, dan modul Purchasing (PO, D-28) menyusul.
 
@@ -44,7 +44,7 @@ Migrasi: `database/migrations/tenant/2026_01_01_000090_create_approval_tables.ph
 
 ### 3.2 `approval_steps`
 
-`step_no`, `approver_type`, `approver_ref_id` (user/jabatan/role), `decision_mode`, `backup_approver_type`, `backup_ref_id`, `timeout_hours` (bawaan 24, [A-18](04-keputusan-dan-asumsi.md#a-18)), `channel` (selalu `web` di F1), `require_pin` (stub F2).
+`step_no`, `approver_type`, `approver_ref_id` (user/jabatan/role), `decision_mode`, `same_org_unit` (bawaan `true`; hanya berarti untuk role/jabatan — kandidat dibatasi unit organisasi pemohon beserta unit induknya, [A-269](04b-asumsi-lanjutan.md#a-269)), `backup_approver_type`, `backup_ref_id`, `timeout_hours` (bawaan 24, [A-18](04-keputusan-dan-asumsi.md#a-18)), `channel` (selalu `web` di F1), `require_pin` (stub F2).
 
 ### 3.3 `approval_snapshots`
 
@@ -135,6 +135,7 @@ Semua keputusan lewat POST (aksi Livewire); route hanya GET halaman. Keputusan m
 | [BR-APR-04](05-aturan-bisnis.md#br-apr) | Approver lapis berikutnya yang sudah menyetujui lapis sebelumnya disetujui otomatis dengan catatan |
 | [BR-APR-05](05-aturan-bisnis.md#br-apr) | Delegasi berperiode, satu lompatan; delegasi berantai atau tumpang tindih ditolak ([A-89](04-keputusan-dan-asumsi.md#a-89)) |
 | [BR-APR-06](05-aturan-bisnis.md#br-apr) | Approver nonaktif/tak berizin: saat diajukan dan oleh penjadwal → cadangan → atasan → Admin Company dengan peringatan ([A-88](04-keputusan-dan-asumsi.md#a-88), [A-90](04-keputusan-dan-asumsi.md#a-90)) |
+| [A-269](04b-asumsi-lanjutan.md#a-269) | `ApprovalPlanner::planStep`: lapis role/jabatan bertanda `same_org_unit` hanya memakai pemegang di divisi pemohon (+ induk, `ApproverResolver::requesterOrgUnits`); kosong → jalur BR-APR-06; pemohon tanpa unit → tanpa batas, dicatat di rencana |
 | [BR-APR-07](05-aturan-bisnis.md#br-apr), D-07 | Kondisi hanya kuantitas, jumlah baris, gudang, proyek, kategori, kepemilikan, klien, jenis vendor, asal PRQ, jenis opname |
 | [BR-APR-08](05-aturan-bisnis.md#br-apr) | `due_at` = dibuat + `timeout_hours` (bawaan 24 jam kalender); `approval:escalate` tiap jam |
 | [BR-APR-09](05-aturan-bisnis.md#br-apr) | Kunci baris; tugas yang sudah diputus/digantikan menolak keputusan berikutnya |
@@ -149,7 +150,7 @@ Semua keputusan lewat POST (aksi Livewire); route hanya GET halaman. Keputusan m
 |---|---|---|
 | `/approvals` | `approval.task-inbox` | Tab *Menunggu saya*, *Sudah saya putus*, *Semua tugas terbuka* (pemegang `approval.escalate`, dengan tombol eskalasi); setujui, tolak (dialog Alasan `*` + Keterangan); tanda lewat batas, delegasi, hasil eskalasi |
 | `/approval-rules` | `approval.rule-list` | Aturan per jenis, urut prioritas; ringkasan kondisi dan lapis; jumlah dokumen yang memakai; aktifkan/nonaktifkan |
-| `/approval-rules/create`, `/approval-rules/{id}/edit` | `approval.rule-form` | Jenis `*`, nama `*`, prioritas `*`, aktif; kondisi sesuai jenis; lapis (approver `*`, cara putus `*`, batas waktu `*`, cadangan), urutkan/hapus lapis; **simulasi atas nomor dokumen contoh** sebelum disimpan |
+| `/approval-rules/create`, `/approval-rules/{id}/edit` | `approval.rule-form` | Jenis `*`, nama `*`, prioritas `*`, aktif; kondisi sesuai jenis; lapis (approver `*`, centang *Hanya dari divisi pemohon* untuk role/jabatan — bawaan menyala, cara putus `*`, batas waktu `*`, cadangan), urutkan/hapus lapis; **simulasi atas nomor dokumen contoh** sebelum disimpan |
 | `/approval-delegations` | `approval.delegations` | Delegasi yang diberikan/diterima (Admin: semua, dan boleh atas nama orang lain); buat (delegat `*`, mulai `*`, sampai `*`, jenis dokumen, keterangan), akhiri |
 | `/approval-simulation` | `approval.simulation` | Pilih jenis; dari nomor dokumen atau isian manual (gudang, proyek, kategori, kepemilikan, jumlah, pemohon, jenis vendor, klien); hasil: evaluasi tiap aturan, aturan dipakai, approver per lapis dengan catatan SoD/eskalasi |
 
@@ -165,7 +166,7 @@ Mesin approval tidak menyentuh stok. Akibat stok keputusan akhir ada di penangan
 |---|---|---|---|
 | Tugas dibuat / dialihkan | approver | in-app, email | **stub** `ApprovalNotifier::taskAssigned()` ([A-91](04-keputusan-dan-asumsi.md#a-91)); pengganti: angka di menu dan kotak tugas |
 | Dokumen disetujui/ditolak | pengaju | in-app | stub `documentDecided()` |
-| Tugas + tombol Setujui/Tolak | approver | WhatsApp | Fase 2a (BR-APR-10) |
+| Tugas + tombol Setujui/Tolak | approver | WhatsApp | Fase 2a (BR-APR-10) — lapis *Web & WhatsApp*, [A-277](04b-asumsi-lanjutan.md#a-277) |
 
 ## 9. Laporan & dashboard
 
@@ -206,6 +207,7 @@ Uji di `tests/Feature/Approval`; TC-REQ dan TC-RTV yang menyentuh approval dises
 | TC-APR-20d | Delegasi & simulasi | buat/akhiri; simulasi nomor & manual; detail REQ | panel Riwayat approval tampil | §6 |
 | TC-APR-21 | DemoSeeder | jalankan dua kali | tujuh aturan persis 00-akun-uji §5 (REQ ×2, RTV, ADJ ×2, OPN, PRQ) | 00-akun-uji |
 | TC-APR-22 | Role bawaan | periksa permission; aturan menunjuk staf | Kepala Gudang/Manajemen memegang approve; staf tak berizin dialihkan ke atasannya | A-86 |
+| TC-APR-23 | Direksi ⊃ Divisi A, Divisi B; Manajemen di ketiganya | REQ dari pemohon A, B, tanpa unit; centang dimatikan; lapis jabatan; lapis user | A → Manajer A + Direksi; B → Manajer B + Direksi; tanpa unit → semua (catatan); dimatikan → semua; jabatan hanya pemegang di divisi A; user tidak dibatasi; form menampilkan centang hanya untuk role/jabatan | [A-269](04b-asumsi-lanjutan.md#a-269) |
 
 ## 11. Di luar lingkup modul ini
 
@@ -224,14 +226,14 @@ Approval via WhatsApp, token, PIN (Fase 2a); notifikasi in-app/email (modul noti
 
 ## 13. Catatan implementasi (24 September 2026)
 
-Domain `app/Domain/Approval`: `Contracts\ApprovalHandler`; `Support\ApprovalEngine`, `ApprovalPlanner`, `ApproverResolver`, `ConditionMatcher`, `ApprovalContext`, `ApprovalRegistry`, `ApprovalHistory`, `ApprovalNotifier` (stub); lima aksi (`DecideApproval`, `SaveApprovalRule`, `SaveDelegation`, `EscalateApprovalTask`, `SimulateApproval`); tiga policy; lima komponen Livewire; perintah `Console\EscalateApprovalsCommand`. Didaftarkan di `App\Providers\ApprovalServiceProvider` (registry singleton); penangan dokumen didaftarkan `RequestServiceProvider` dan `ReceiptServiceProvider`.
+Domain `app/Domain/Approval`: `Contracts\ApprovalHandler`; `Support\ApprovalEngine`, `ApprovalPlanner`, `ApproverResolver`, `ConditionMatcher`, `ApprovalContext`, `ApprovalRegistry`, `ApprovalHistory`, `ApprovalNotifier` (sejak Pendukung F1 mengirim in-app + email, [A-189](04-keputusan-dan-asumsi.md#a-189)); lima aksi (`DecideApproval`, `SaveApprovalRule`, `SaveDelegation`, `EscalateApprovalTask`, `SimulateApproval`); tiga policy; lima komponen Livewire; perintah `Console\EscalateApprovalsCommand`. Didaftarkan di `App\Providers\ApprovalServiceProvider` (registry singleton); penangan dokumen didaftarkan `RequestServiceProvider` dan `ReceiptServiceProvider`.
 
 ### 13.1 Penyimpangan dari spesifikasi
 
-1. **Domain di `app/Domain/Approval`, bukan paket `packages/approval`** ([Arsitektur §4](08-arsitektur.md#4-struktur-kode)). Batas paketnya adalah kontrak §3.9: mesin tidak mengimpor modul dokumen mana pun. Dipindah ke paket saat Purchasing dibangun ([A-92](04-keputusan-dan-asumsi.md#a-92)).
+1. **Domain di `app/Domain/Approval`, bukan paket `packages/approval`** ([Arsitektur §4](08-arsitektur.md#4-struktur-kode)). Batas paketnya adalah kontrak §3.9: mesin tidak mengimpor modul dokumen mana pun. Sejak validasi 26 Sep 2026 **permanen** di sini — Purchasing dibangun di aplikasi yang sama, jadi tidak dipindah ke paket ([A-92](04-keputusan-dan-asumsi.md#a-92) diubah, [A-208](04-keputusan-dan-asumsi.md#a-208)).
 2. **Kolom di luar ERD** (digenerate ulang ke [08c](08c-model-data-pendukung.md)): `approval_snapshots.document_number`, `rule_name`, `context`; `approval_delegations.notes`; `vendor_returns.approval_snapshot_id`. Waktu snapshot bermikrodetik agar UK ERD tidak bentrok saat diajukan ulang dalam detik yang sama.
 3. **Keputusan memakai permission approve per dokumen**, bukan permission generik modul ([A-86](04-keputusan-dan-asumsi.md#a-86)).
-4. **Notifikasi stub** ([A-91](04-keputusan-dan-asumsi.md#a-91)).
+4. ~~**Notifikasi stub**~~ — sudah dijalankan modul notifikasi ([A-91](04-keputusan-dan-asumsi.md#a-91), [A-189](04-keputusan-dan-asumsi.md#a-189)).
 
 ### 13.2 Keputusan implementasi
 
@@ -249,7 +251,11 @@ Domain `app/Domain/Approval`: `Contracts\ApprovalHandler`; `Support\ApprovalEngi
 ### 13.4 Sisa pekerjaan
 
 1. ~~Penangan PRQ~~ — **selesai v0.7** ([26-purchase-request](26-purchase-request.md): `PurchaseRequest\Support\PurchaseRequestApprovalHandler`, approval opsional — tanpa aturan disetujui otomatis; kondisi `vendor_types` membaca vendor tetap item sebelum ada catatan pemesanan [A-173](04-keputusan-dan-asumsi.md#a-173); aturan demo *PRQ toko online*). Semua jenis `approval_document_type` kini tersambung; contoh jenis belum tersambung di TC-APR-17 diganti jenis di luar katalog (`purchase_order`). ADJ dan OPN sudah terpasang (v0.3, [21-opname-penyesuaian](21-opname-penyesuaian.md)); TRF dan RET (v0.4, [22-retur-transfer](22-retur-transfer.md)); ISU pembalik (v0.5, [23-pemakaian](23-pemakaian.md): `Issue\Support\MaterialIssueApprovalHandler`, lapis minimum Kepala Gudang Gudang Site → Manajemen, dokumen tetap `draft` selama menunggu, [A-150](04-keputusan-dan-asumsi.md#a-150)); CNV dan WST (v0.6, [24-konversi-waste](24-konversi-waste.md): `ConversionApprovalHandler` tanpa lapis minimum — `conversion.submit` hanya bila ada aturan dan ditolak kembali `draft` [A-153](04-keputusan-dan-asumsi.md#a-153); `WasteDisposalApprovalHandler` disetujui otomatis tanpa aturan, ditolak `rejected`). 
-2. ~~Notifikasi in-app/email saat tugas dibuat dan saat dokumen diputus~~ — **selesai v0.8** ([27-pendukung-f1](27-pendukung-f1.md)); notifikasi saat tugas dialihkan (delegasi/eskalasi) dan WhatsApp Fase 2a belum.
+2. ~~Notifikasi in-app/email saat tugas dibuat dan saat dokumen diputus~~ — **selesai v0.8** ([27-pendukung-f1](27-pendukung-f1.md)); notifikasi saat tugas dialihkan (delegasi/eskalasi) sudah lewat `taskAssigned` (asal tugas disebut); ~~WhatsApp~~ — **selesai Fase 2a** ([31-whatsapp](31-whatsapp.md)).
 3. ~~Laporan §9~~ — selesai 25 Sep 2026 ([A-241](04-keputusan-dan-asumsi.md#a-241)).
 5. ~~Penangan `purchase_order`~~ — **selesai v0.9** ([purchasing/02](../purchasing/02-purchasing-inti.md)): `Purchasing\Support\PurchaseOrderApprovalHandler`; kunci kondisi baru `order_value_min` (**Nilai PO ≥**, satu-satunya kondisi uang, hanya muncul untuk jenis PO) dan `ApprovalContext::orderValue`; tanpa aturan PO disetujui otomatis ([A-212](04-keputusan-dan-asumsi.md#a-212)); kotak tugas menangkap `PurchasingRuleException`. TC-APR-17 kini memakai jenis di luar katalog `sales_order`; TC-APR-21 memeriksa 8 aturan demo termasuk *PO bernilai ≥ Rp 50 juta*.
 4. Tautan dokumen di kotak tugas mengikuti cakupan pembaca: approver di luar cakupan dokumen (mis. "user tertentu") memutus dari kotak tugas tanpa membuka halaman dokumen.
+
+### 13.5 Jenis vendor dinilai di PO (28 September 2026)
+
+`ApprovalDocumentType::PurchaseRequest->conditions()` tidak lagi memuat `vendor_types`; `PurchaseRequestApprovalHandler` mengirim `vendorType = null`. Kondisi `vendor_types` tetap untuk PO (vendor PO) dan RTV. Aturan PRQ lama yang masih menyimpan kondisi itu tidak cocok untuk kondisi tersebut; `RuleForm` menampilkan peringatan dan menyimpan ulang membuang kondisinya ([A-308](04b-asumsi-lanjutan.md#a-308)). Uji TC-PO-16, TC-PRQ-03.

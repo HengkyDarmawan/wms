@@ -1,8 +1,8 @@
 # Model Data — Konversi & aset, opname & penyesuaian, approval, umum
 
-**Versi:** 0.22 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026, Purchasing inti Fase 1b, lampiran generik, dan tinjauan pemilik produk 26 Sep 2026)
-**Tanggal:** 26 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194, Purchasing inti A-208–A-215, lampiran A-238, override bin beku A-240, kelebihan terima A-245, tinjauan pemilik produk A-246 dst. ([04b](04b-asumsi-lanjutan.md)). Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Versi:** 0.32 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026, Purchasing inti Fase 1b, lampiran generik, tinjauan pemilik produk 26 Sep 2026, ukuran & desain label A-261/A-262, riwayat cetak & segel tanda tangan A-263/A-264, tanda harga PO termasuk PPN A-265, bonus vendor di GRN A-267, approver sedivisi A-269, kalender libur A-270, OTP bukti terima otomatis A-273, WhatsApp Fase 2a A-274–A-280, kondisi terima Baik/Rusak/Kurang & satuan kemasan di baris dokumen A-287–A-291, label kemasan induk/isi & lot otomatis A-296–A-299, serta saran vendor dari riwayat A-304–A-305)
+**Tanggal:** 28 September 2026
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194, Purchasing inti A-208–A-215, lampiran A-238, override bin beku A-240, kelebihan terima A-245, tinjauan pemilik produk A-246 dst. dan OTP otomatis A-273, WhatsApp A-274–A-280 ([04b](04b-asumsi-lanjutan.md)). Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Inti](08a-model-data-inti.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md)
 
 Daftar area lengkap ada di [08a-model-data-inti.md](08a-model-data-inti.md).
@@ -52,7 +52,7 @@ erDiagram
 **`vendor_prices` — Harga beli vendor.** 🔑`id` bigint · ↗`vendor_id` bigint · ↗`item_id` bigint · `unit_price` decimal(18,2) *(per satuan dasar (A-211))* · `currency` char(3) *(IDR)* · `valid_from` date · `is_active` bool *(harga lama dinonaktifkan, tidak dihapus (P-03))* · `notes` varchar(255) · ↗`created_by` bigint
   ↳ Harga berlaku = aktif, valid_from terbaru ≤ tanggal PO
 
-**`purchase_orders` — PO header.** 🔑`id` bigint · ◆`number` varchar(40) *(PO/<gudang>/<yymm>/<urut>)* · ↗`vendor_id` bigint *(vendor aktif (A-210))* · ↗`warehouse_id` bigint *(tujuan)* · `status` enum *(KS 2.17 (status umum, A-209))* · `order_date` date · `eta_date` date *(po_updated)* · `currency` char(3) *(IDR)* · `total_amount` decimal(18,2) *(Σ nilai baris; kondisi approval order_value_min (A-212))* · `payment_terms` varchar(60) *(salinan teks termin vendor)* · ↗`approval_snapshot_id` bigint · ↗`submitted_by` bigint · ↗`approved_by` bigint · ↗`reject_reason_id` bigint · ↗`close_reason_id` bigint *(tutup sisa (A-215))* · `closed_at` datetime · `completed_at` datetime
+**`purchase_orders` — PO header.** 🔑`id` bigint · ◆`number` varchar(40) *(PO/<gudang>/<yymm>/<urut>)* · ↗`vendor_id` bigint *(vendor aktif (A-210))* · ↗`warehouse_id` bigint *(tujuan)* · `status` enum *(KS 2.17 (status umum, A-209))* · `order_date` date · `eta_date` date *(po_updated)* · `currency` char(3) *(IDR)* · `price_includes_tax` boolean *(harga sudah termasuk PPN, bawaan ya (A-265))* · `total_amount` decimal(18,2) *(Σ nilai baris; kondisi approval order_value_min (A-212))* · `payment_terms` varchar(60) *(salinan teks termin vendor)* · ↗`approval_snapshot_id` bigint · ↗`submitted_by` bigint · ↗`approved_by` bigint · ↗`reject_reason_id` bigint · ↗`close_reason_id` bigint *(tutup sisa (A-215))* · `closed_at` datetime · `completed_at` datetime · `vendor_choice_note` varchar(255) *(alasan memilih vendor, opsional (A-304))*
   ↳ kolom header dokumen standar (lihat konvensi)
 
 **`purchase_order_lines` — PO baris.** 🔑`id` bigint · ↗`purchase_order_id` bigint · ↗`purchase_request_line_id` bigint *(baris PRQ asal (A-210))* · ↗`item_id` bigint · `qty_base` decimal(18,4) · `qty_over_request` decimal(18,4) *(di atas sisa PRQ (A-246))* · `over_order_reason` varchar(255) *(wajib bila lebih, mis. MOQ (A-246))* · `unit_price` decimal(18,2) *(A-211)* · `line_amount` decimal(18,2) *(qty × harga)* · `qty_received` decimal(18,4) *(dari GRN (A-214))* · `qty_cancelled` decimal(18,4) *(sisa batal/tutup (A-215))* · `notes` varchar(255)
@@ -257,7 +257,7 @@ erDiagram
 
 **`approval_rules` — Aturan approval.** 🔑`id` bigint · `document_type` varchar(30) · `name` varchar(100) · `priority` int · `conditions` json *(gudang, proyek, kategori, kepemilikan, qty ≥, dari klien, jenis vendor, asal PRQ ([BR-APR-07](05-aturan-bisnis.md#br-apr)); F2: melebihi rencana)* · `is_active` bool
 
-**`approval_steps` — Lapis aturan.** 🔑`id` bigint · ↗`approval_rule_id` bigint · `step_no` int · `approver_type` enum *(user|position|role|direct_manager|warehouse_head|project_pic)* · `approver_ref_id` bigint · `decision_mode` enum *(sequential|any|all)* · `backup_approver_type` enum · `backup_ref_id` bigint · `timeout_hours` int *(default 24)* · `channel` enum *(web|whatsapp|both)* · `require_pin` bool
+**`approval_steps` — Lapis aturan.** 🔑`id` bigint · ↗`approval_rule_id` bigint · `step_no` int · `approver_type` enum *(user|position|role|direct_manager|warehouse_head|project_pic)* · `approver_ref_id` bigint · `decision_mode` enum *(sequential|any|all)* · `same_org_unit` boolean *(hanya divisi pemohon (A-269))* · `backup_approver_type` enum · `backup_ref_id` bigint · `timeout_hours` int *(default 24)* · `channel` enum *(web|whatsapp|both)* · `require_pin` bool
 
 **`approval_snapshots` — Snapshot per dokumen.** 🔑`id` bigint · `document_type` varchar(30) · `document_id` bigint · `document_number` varchar(40) *([A-94](04-keputusan-dan-asumsi.md#a-94))* · ↗`rule_id` bigint *(asal)* · `rule_name` varchar(100) *(nama aturan saat diajukan ([A-94](04-keputusan-dan-asumsi.md#a-94)))* · `context` json *(data dokumen yang dicocokkan ([A-94](04-keputusan-dan-asumsi.md#a-94)))* · `steps` json *(salinan lapis yang berlaku setelah SoD)* · `status` enum *(pending|approved|rejected|cancelled)* · `current_step` int · ↗`submitted_by` bigint · `submitted_at` datetime(6) *(mikrodetik ([A-94](04-keputusan-dan-asumsi.md#a-94)))* · `decided_at` datetime(6)
   ↳ UK(document_type, document_id, submitted_at)
@@ -303,6 +303,20 @@ erDiagram
   document_templates {
     bigint id PK
   }
+  label_formats {
+    bigint id PK
+    varchar_20 code UK
+  }
+  label_designs {
+    bigint id PK
+  }
+  print_logs {
+    bigint id PK
+  }
+  signature_seals {
+    bigint id PK
+    char_40 token UK
+  }
   numbering_formats {
     bigint id PK
     varchar_30 document_type UK
@@ -326,6 +340,10 @@ erDiagram
   users ||--o{ notifications : " "
   users ||--o{ notification_preferences : " "
   document_layouts ||--o{ document_templates : " "
+  label_formats ||--o{ document_templates : "bawaan label"
+  label_formats ||--o{ label_designs : " "
+  users ||--o{ print_logs : "pencetak"
+  users ||--o{ signature_seals : "penanda tangan"
   import_batches ||--o{ import_rows : " "
   devices ||--o{ sync_queue : " "
   devices ||--o{ attachments : " "
@@ -351,8 +369,18 @@ erDiagram
 
 **`document_layouts` — Layout induk.** 🔑`id` bigint · `name` varchar(80) · `logo_attachment_id` bigint *(tanpa FK sampai tabel lampiran ada (A-123))* · `logo_path` varchar(255) *(A-123)* · `header_html` text *(F1 teks biasa (A-122))* · `footer_html` text *(F1 teks biasa)* · `colors` json *({accent})* · `signature_blocks` json *({jenis: [label]} (A-125))* · `is_default` bool
 
-**`document_templates` — Template dokumen.** 🔑`id` bigint · `document_type` varchar(30) · `name` varchar(80) · ↗`layout_id` bigint · `body_html` text *(F1 kosong = Blade bawaan; editor F2 (A-122))* · `paper` varchar(20) *(paper_size (A-120))* · `is_default` bool · `version` int
+**`document_templates` — Template dokumen.** 🔑`id` bigint · `document_type` varchar(30) · `name` varchar(80) · ↗`layout_id` bigint · `body_html` text *(F1 kosong = Blade bawaan; editor F2 (A-122))* · `paper` varchar(20) *(paper_size; dokumen saja sejak A-261)* · ↗`label_format_id` bigint *(ukuran label bawaan jenis label (A-261))* · `is_default` bool · `version` int
   ↳ UK(document_type, name, version)
+
+**`label_formats` — Ukuran label (A-261).** 🔑`id` bigint · ◆`code` varchar(20) *(huruf besar, terkunci)* · `name` varchar(80) · `media` varchar(10) *(label_media: roll|sheet)* · `width_mm` decimal(6,2) · `height_mm` decimal(6,2) · `page_width_mm` decimal(6,2) *(lembar saja)* · `page_height_mm` decimal(6,2) *(lembar saja)* · `columns` tinyint · `rows` tinyint · `margin_top_mm` decimal(6,2) · `margin_left_mm` decimal(6,2) · `gap_x_mm` decimal(6,2) · `gap_y_mm` decimal(6,2) · `is_active` bool *(dinonaktifkan, tidak dihapus)*
+
+**`label_designs` — Desain label (A-262).** 🔑`id` bigint · `document_type` varchar(30) *(label_bin|label_item|label_lot|label_piece)* · ↗`label_format_id` bigint · `code_mode` varchar(10) *(label_code_mode: barcode|qr|both)* · `elements` json *(posisi & gaya 6 elemen (mm))* · ↗`updated_by` bigint
+  ↳ UK(document_type, label_format_id)
+
+**`print_logs` — Riwayat cetak (A-263).** 🔑`id` bigint · `document_type` varchar(30) *(jenis cetak)* · `document_id` bigint · `document_number` varchar(60) · `copy_no` int *(cetakan ke-n)* · ↗`printed_by` bigint · `printed_at` datetime · `ip` varchar(45)
+  ↳ hanya ditambah
+
+**`signature_seals` — Segel tanda tangan (A-264).** 🔑`id` bigint · ◆`token` char(40) *(isi QR, acak)* · `document_type` varchar(30) · `document_id` bigint · `document_number` varchar(60) · `block_no` tinyint · `block_label` varchar(40) · ↗`signer_user_id` bigint *(kosong bila nama bebas)* · `signer_name` varchar(120) · `signer_title` varchar(120) *(jabatan)* · `acted_at` datetime *(waktu tindakan)* · `sealed_at` datetime · `fingerprint` char(64) *(HMAC kunci aplikasi)*
 
 **`numbering_formats` — Format nomor.** 🔑`id` bigint · ◆`document_type` varchar(30) · `pattern` varchar(80) *({KODE}/{GUDANG}/{TAHUN}/{BULAN}/{URUT})* · `reset_period` enum *(monthly|yearly|never)* · `pad` int *(4)* · `warehouse_segment` enum *(origin|fulfilling|all ([A-43](04-keputusan-dan-asumsi.md#a-43)))*
 

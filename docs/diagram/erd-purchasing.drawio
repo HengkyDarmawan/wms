@@ -11,10 +11,10 @@
           <mxGeometry y="26" width="260" height="152" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_orders" value="purchase_orders" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="40" width="260" height="306" as="geometry"/>
+          <mxGeometry x="360" y="40" width="260" height="338" as="geometry"/>
         </mxCell>
-        <mxCell id="purchase_orders_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ vendor_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;status : enum&lt;br&gt;order_date : date&lt;br&gt;eta_date : date&lt;br&gt;currency : char(3)&lt;br&gt;total_amount : decimal(18,2)&lt;br&gt;payment_terms : varchar(60)&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;↗ submitted_by : bigint&lt;br&gt;↗ approved_by : bigint&lt;br&gt;↗ reject_reason_id : bigint&lt;br&gt;↗ close_reason_id : bigint&lt;br&gt;closed_at : datetime&lt;br&gt;completed_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_orders">
-          <mxGeometry y="26" width="260" height="280" as="geometry"/>
+        <mxCell id="purchase_orders_cols" value="🔑 id : bigint&lt;br&gt;◆ number : varchar(40)&lt;br&gt;↗ vendor_id : bigint&lt;br&gt;↗ warehouse_id : bigint&lt;br&gt;status : enum&lt;br&gt;order_date : date&lt;br&gt;eta_date : date&lt;br&gt;currency : char(3)&lt;br&gt;price_includes_tax : boolean&lt;br&gt;total_amount : decimal(18,2)&lt;br&gt;payment_terms : varchar(60)&lt;br&gt;↗ approval_snapshot_id : bigint&lt;br&gt;↗ submitted_by : bigint&lt;br&gt;↗ approved_by : bigint&lt;br&gt;↗ reject_reason_id : bigint&lt;br&gt;↗ close_reason_id : bigint&lt;br&gt;closed_at : datetime&lt;br&gt;completed_at : datetime&lt;br&gt;vendor_choice_note : varchar(255)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_orders">
+          <mxGeometry y="26" width="260" height="312" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_order_lines" value="purchase_order_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="680" y="40" width="260" height="226" as="geometry"/>
@@ -29,31 +29,31 @@
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_request_lines" value="purchase_request_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="40" y="396" width="260" height="50" as="geometry"/>
+          <mxGeometry x="40" y="428" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_request_lines_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_request_lines">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_request_order_lines" value="purchase_request_order_lines" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="360" y="396" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="428" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_request_order_lines_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_request_order_lines">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_request_orders" value="purchase_request_orders" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="396" width="260" height="50" as="geometry"/>
+          <mxGeometry x="680" y="428" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="purchase_request_orders_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="purchase_request_orders">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="vendors" value="vendors" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="396" width="260" height="50" as="geometry"/>
+          <mxGeometry x="1000" y="428" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="vendors_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="vendors">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="warehouses" value="warehouses" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="40" y="496" width="260" height="50" as="geometry"/>
+          <mxGeometry x="40" y="528" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="warehouses_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="warehouses">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>

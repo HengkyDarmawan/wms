@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `platform` (Platform & Langganan)
 
-**Versi:** 0.6
+**Versi:** 0.7
 **Tanggal:** 25 September 2026
 **Status:** selesai Fase 1 — v0.1 mencatat login Super Admin & gerbang langganan yang dibangun tanpa spesifikasi; v0.2 modul Platform penuh (modul kelima belas setelah [Purchase Request](26-purchase-request.md)): pembuatan company otomatis, paket & trial, tagihan & bukti bayar manual, siklus status terjadwal, penangguhan manual, flag fitur, masuk lewat akses dukungan, dan penyelesaian temuan §13.2 v0.1. Keputusan yang tidak tertulis di dokumen dicatat sebagai [A-176](04-keputusan-dan-asumsi.md#a-176)–[A-184](04-keputusan-dan-asumsi.md#a-184) (*Perlu validasi*); v0.3: ekspor PDF laporan (`reports.pdf`) ikut diizinkan saat langganan diakhiri ([27-pendukung-f1](27-pendukung-f1.md), [A-190](04-keputusan-dan-asumsi.md#a-190))
 **Modul:** `platform` (`app/Domain/Platform`, `app/Http/Controllers/Platform`)
@@ -95,7 +95,7 @@ payment_status:
 | bukti bayar | `Actions\SubmitSubscriptionPayment` (`billing.pay`) | berkas foto ≤ 5 MB di disk company |
 | verifikasi / tolak | `Actions\VerifySubscriptionPayment` | lunas → langganan `active` sampai akhir periode tagihan; tenggang & penangguhan dihapus |
 | tangguh / aktifkan | `Actions\ChangeCompanyStatus` | efek hanya-baca seperti `suspended` |
-| flag fitur | `Actions\SetFeatureFlag` | kunci `whatsapp`, `offline_sync`, `rfid` (stub) |
+| flag fitur | `Actions\SetFeatureFlag` | kunci `whatsapp` (dipakai sejak Fase 2a, [31-whatsapp](31-whatsapp.md)), `offline_sync`, `rfid` (stub); detail company menampilkan **Pemakaian WhatsApp bulan ini** per kategori & kuota paket ([A-278](04b-asumsi-lanjutan.md#a-278)) |
 | akses dukungan | `Actions\EnterSupportAccess` → `Access\Actions\StartSupportSession` | sesi hanya-baca atas nama Admin pemberi izin |
 | paket | `Actions\SavePlan` | tanpa hapus (P-03) |
 

@@ -47,49 +47,73 @@
           <mxGeometry y="26" width="260" height="152" as="geometry"/>
         </mxCell>
         <mxCell id="document_templates" value="document_templates" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="332" width="260" height="162" as="geometry"/>
+          <mxGeometry x="1000" y="332" width="260" height="178" as="geometry"/>
         </mxCell>
-        <mxCell id="document_templates_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;name : varchar(80)&lt;br&gt;↗ layout_id : bigint&lt;br&gt;body_html : text&lt;br&gt;paper : varchar(20)&lt;br&gt;is_default : bool&lt;br&gt;version : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_templates">
+        <mxCell id="document_templates_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;name : varchar(80)&lt;br&gt;↗ layout_id : bigint&lt;br&gt;body_html : text&lt;br&gt;paper : varchar(20)&lt;br&gt;↗ label_format_id : bigint&lt;br&gt;is_default : bool&lt;br&gt;version : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_templates">
+          <mxGeometry y="26" width="260" height="152" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_formats" value="label_formats" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="608" width="260" height="274" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_formats_cols" value="🔑 id : bigint&lt;br&gt;◆ code : varchar(20)&lt;br&gt;name : varchar(80)&lt;br&gt;media : varchar(10)&lt;br&gt;width_mm : decimal(6,2)&lt;br&gt;height_mm : decimal(6,2)&lt;br&gt;page_width_mm : decimal(6,2)&lt;br&gt;page_height_mm : decimal(6,2)&lt;br&gt;columns : tinyint&lt;br&gt;rows : tinyint&lt;br&gt;margin_top_mm : decimal(6,2)&lt;br&gt;margin_left_mm : decimal(6,2)&lt;br&gt;gap_x_mm : decimal(6,2)&lt;br&gt;gap_y_mm : decimal(6,2)&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="label_formats">
+          <mxGeometry y="26" width="260" height="248" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_designs" value="label_designs" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="360" y="608" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_designs_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;↗ label_format_id : bigint&lt;br&gt;code_mode : varchar(10)&lt;br&gt;elements : json&lt;br&gt;↗ updated_by : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="label_designs">
+          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        </mxCell>
+        <mxCell id="print_logs" value="print_logs" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="608" width="260" height="162" as="geometry"/>
+        </mxCell>
+        <mxCell id="print_logs_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;document_id : bigint&lt;br&gt;document_number : varchar(60)&lt;br&gt;copy_no : int&lt;br&gt;↗ printed_by : bigint&lt;br&gt;printed_at : datetime&lt;br&gt;ip : varchar(45)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="print_logs">
           <mxGeometry y="26" width="260" height="136" as="geometry"/>
         </mxCell>
+        <mxCell id="signature_seals" value="signature_seals" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="608" width="260" height="242" as="geometry"/>
+        </mxCell>
+        <mxCell id="signature_seals_cols" value="🔑 id : bigint&lt;br&gt;◆ token : char(40)&lt;br&gt;document_type : varchar(30)&lt;br&gt;document_id : bigint&lt;br&gt;document_number : varchar(60)&lt;br&gt;block_no : tinyint&lt;br&gt;block_label : varchar(40)&lt;br&gt;↗ signer_user_id : bigint&lt;br&gt;signer_name : varchar(120)&lt;br&gt;signer_title : varchar(120)&lt;br&gt;acted_at : datetime&lt;br&gt;sealed_at : datetime&lt;br&gt;fingerprint : char(64)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="signature_seals">
+          <mxGeometry y="26" width="260" height="216" as="geometry"/>
+        </mxCell>
         <mxCell id="numbering_formats" value="numbering_formats" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="608" width="260" height="130" as="geometry"/>
+          <mxGeometry x="40" y="932" width="260" height="130" as="geometry"/>
         </mxCell>
         <mxCell id="numbering_formats_cols" value="🔑 id : bigint&lt;br&gt;◆ document_type : varchar(30)&lt;br&gt;pattern : varchar(80)&lt;br&gt;reset_period : enum&lt;br&gt;pad : int&lt;br&gt;warehouse_segment : enum" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="numbering_formats">
           <mxGeometry y="26" width="260" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="document_sequences" value="document_sequences" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="608" width="260" height="114" as="geometry"/>
+          <mxGeometry x="360" y="932" width="260" height="114" as="geometry"/>
         </mxCell>
         <mxCell id="document_sequences_cols" value="🔑 id : bigint&lt;br&gt;document_type : varchar(30)&lt;br&gt;segment : varchar(20)&lt;br&gt;period : varchar(7)&lt;br&gt;last_number : int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="document_sequences">
           <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="import_batches" value="import_batches" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="608" width="260" height="146" as="geometry"/>
+          <mxGeometry x="680" y="932" width="260" height="146" as="geometry"/>
         </mxCell>
         <mxCell id="import_batches_cols" value="🔑 id : bigint&lt;br&gt;target : varchar(30)&lt;br&gt;↗ file_attachment_id : bigint&lt;br&gt;status : enum&lt;br&gt;total_rows : int&lt;br&gt;error_rows : int&lt;br&gt;committed_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="import_batches">
           <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="import_rows" value="import_rows" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="608" width="260" height="130" as="geometry"/>
+          <mxGeometry x="1000" y="932" width="260" height="130" as="geometry"/>
         </mxCell>
         <mxCell id="import_rows_cols" value="🔑 id : bigint&lt;br&gt;↗ import_batch_id : bigint&lt;br&gt;row_no : int&lt;br&gt;data : json&lt;br&gt;errors : json&lt;br&gt;result_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="import_rows">
           <mxGeometry y="26" width="260" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="sync_queue" value="sync_queue" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="804" width="260" height="194" as="geometry"/>
+          <mxGeometry x="40" y="1128" width="260" height="194" as="geometry"/>
         </mxCell>
         <mxCell id="sync_queue_cols" value="🔑 id : uuid&lt;br&gt;↗ device_id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;action : varchar(40)&lt;br&gt;payload : json&lt;br&gt;temp_number : varchar(50)&lt;br&gt;status : enum&lt;br&gt;conflict_reason : varchar(255)&lt;br&gt;received_at : datetime&lt;br&gt;processed_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="sync_queue">
           <mxGeometry y="26" width="260" height="168" as="geometry"/>
         </mxCell>
         <mxCell id="devices" value="devices" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="360" y="804" width="260" height="50" as="geometry"/>
+          <mxGeometry x="360" y="1128" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="devices_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="devices">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
         </mxCell>
         <mxCell id="users" value="users" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="804" width="260" height="50" as="geometry"/>
+          <mxGeometry x="680" y="1128" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="users_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="users">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>
@@ -115,13 +139,25 @@
         <mxCell id="r6" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="document_layouts" target="document_templates">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r7" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="import_batches" target="import_rows">
+        <mxCell id="r7" value="bawaan label" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="label_formats" target="document_templates">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r8" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="devices" target="sync_queue">
+        <mxCell id="r8" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="label_formats" target="label_designs">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r9" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="devices" target="attachments">
+        <mxCell id="r9" value="pencetak" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="print_logs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r10" value="penanda tangan" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="signature_seals">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r11" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="import_batches" target="import_rows">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r12" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="devices" target="sync_queue">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r13" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="devices" target="attachments">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
       </root>

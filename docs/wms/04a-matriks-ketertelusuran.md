@@ -1,6 +1,6 @@
 # Matriks ketertelusuran keputusan & asumsi
 
-**Versi:** 1.0 · **Tanggal:** 25 September 2026 · **Induk:** [04-keputusan-dan-asumsi](04-keputusan-dan-asumsi.md) (dipisah pada v0.31 agar berkas induk ≤ 450 baris; isi tidak berubah)
+**Versi:** 1.1 · **Tanggal:** 28 September 2026 · **Induk:** [04-keputusan-dan-asumsi](04-keputusan-dan-asumsi.md) (dipisah pada v0.31 agar berkas induk ≤ 450 baris; isi tidak berubah)
 
 ## Matriks
 Dari keputusan/asumsi ke tempat penerapannya. Kolom BR menunjuk [Aturan Bisnis](05-aturan-bisnis.md); KS = [Katalog Status](06-katalog-status-dan-enum.md).
@@ -34,3 +34,4 @@ Dari keputusan/asumsi ke tempat penerapannya. Kolom BR menunjuk [Aturan Bisnis](
 | D-28, D-29, A-208–A-218 | §15, §18 (1b) | BR-APR-07, BR-GRN-01, BR-GRN-05, KS 2.17; [purchasing/02](../purchasing/02-purchasing-inti.md) |
 | D-06, O-07, O-08, A-220–A-225 | §17, §18 (landing) | [30-landing-page](30-landing-page.md) |
 | Pemilik produk 23 Sep 2026 (form: field wajib `*`, keterangan tolak/batal opsional) | §6.3a | BR-GEN-02, BR-GEN-11, KS §1 |
+| Pemilik produk 28 Sep 2026 (label kemasan tertelusur), A-296–A-303 | §6.4, §6.5, §6.10 | BR-LBL-01–05, KS §3 `package_label_status`, `document_template_type`; [18](18-template-dokumen-label.md), [19](19-receipt-putaway.md), [15](15-picking-shipment.md), [22](22-retur-transfer.md), [23](23-pemakaian.md), [16](16-shared-laporan-berkas.md) |

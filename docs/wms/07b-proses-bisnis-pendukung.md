@@ -33,8 +33,8 @@ Sesi opname bulanan/tahunan/ad-hoc dengan pembekuan bin opsional, hitung buta, k
 | 8 | Kepala Gudang / Auditor | Override dengan alasan; bin ditandai hitung ulang | [BR-OPN-02](05-aturan-bisnis.md#br-opn) |
 | 9 | Sistem | Klasifikasi selisih per baris: kecil / sedang / besar (ambang relatif & absolut) | variance_class; [BR-OPN-04](05-aturan-bisnis.md#br-opn) |
 | 10 | Sistem | ◇ Kelas selisih? |  |
-| 11 | Kepala Gudang / Auditor | Isi kategori akar masalah untuk selisih besar | root_cause_category; [BR-OPN-07](05-aturan-bisnis.md#br-opn) |
-| 12 | Penghitung (Staf) | Hitung ulang oleh penghitung berbeda | OPN recount; [BR-OPN-05](05-aturan-bisnis.md#br-opn) |
+| 11 | Kepala Gudang / Auditor | Isi kategori akar masalah untuk selisih yang tetap besar setelah hitung ulang | root_cause_category; [BR-OPN-07](05-aturan-bisnis.md#br-opn) |
+| 12 | Penghitung (Staf) | Hitung ulang oleh penghitung berbeda (baris sedang dan besar, satu putaran) | OPN recount; [BR-OPN-05](05-aturan-bisnis.md#br-opn); A-259 |
 | 13 | Kepala Gudang / Auditor | Rekonsiliasi: tinjau semua baris; draf ADJ per gudang | OPN reconciling; ADJ submitted |
 | 14 | Approver | Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen) | OPN approved; [A-09](04-keputusan-dan-asumsi.md#a-09); [BR-OPN-06](05-aturan-bisnis.md#br-opn); [BR-OPN-09](05-aturan-bisnis.md#br-opn) |
 | 15 | Sistem | ADJ posted; stock_adjusted; buka bin; laporan PDF; dashboard akurasi | OPN closed |
@@ -45,7 +45,7 @@ Sesi opname bulanan/tahunan/ad-hoc dengan pembekuan bin opsional, hitung buta, k
 | Gateway | Cabang → langkah |
 |---|---|
 | Ada PCK berjalan di cakupan (bila pembekuan)? | *ya* → Selesaikan atau batalkan PCK dulu · *tidak* → Bekukan bin; snapshot saldo fisik (termasuk dicadangkan & Loading Area) |
-| Kelas selisih? | *sedang* → Hitung ulang oleh penghitung berbeda · *besar* → Isi kategori akar masalah untuk selisih besar · *kecil* → Rekonsiliasi: tinjau semua baris; draf ADJ per gudang |
+| Kelas selisih? | *sedang / besar (putaran 1)* → Hitung ulang oleh penghitung berbeda (baris sedang dan besar, satu putaran) · *tetap besar setelah hitung ulang* → Isi kategori akar masalah untuk selisih yang tetap besar setelah hitung ulang · *kecil, atau sedang setelah hitung ulang* → Rekonsiliasi: tinjau semua baris; draf ADJ per gudang |
 | SJ mendesak dari bin beku? | *ya* → Override dengan alasan; bin ditandai hitung ulang |
 
 ### Diagram (Mermaid)
@@ -56,14 +56,14 @@ flowchart LR
     f8_s(("Jadwal opname / permintaan audit"))
     f8_t1["Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak"]
     f8_t2["Selesaikan atau batalkan PCK dulu"]
-    f8_t7["Isi kategori akar masalah untuk selisih besar"]
+    f8_t7["Isi kategori akar masalah untuk selisih yang tetap besar setelah hitung ulang"]
     f8_t8["Rekonsiliasi: tinjau semua baris; draf ADJ per gudang"]
     f8_g3{"SJ mendesak dari bin beku?"}
     f8_t11["Override dengan alasan; bin ditandai hitung ulang"]
   end
   subgraph L1["Penghitung (Staf)"]
     f8_t4["Hitung buta per bin di PWA (scan bin, input jumlah; draf lokal bila offline)"]
-    f8_t6["Hitung ulang oleh penghitung berbeda"]
+    f8_t6["Hitung ulang oleh penghitung berbeda (baris sedang dan besar, satu putaran)"]
   end
   subgraph L2["Approver"]
     f8_t9["Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen)"]
@@ -84,10 +84,10 @@ flowchart LR
   f8_t3 --> f8_t4
   f8_t4 --> f8_t5
   f8_t5 --> f8_g2
-  f8_g2 -->|"sedang"| f8_t6
+  f8_g2 -->|"sedang / besar (putaran 1)"| f8_t6
   f8_t6 -.-> f8_t5
-  f8_g2 -->|"besar"| f8_t7
-  f8_g2 -->|"kecil"| f8_t8
+  f8_g2 -->|"tetap besar setelah hitung ulang"| f8_t7
+  f8_g2 -->|"kecil, atau sedang setelah hitung ulang"| f8_t8
   f8_t7 --> f8_t8
   f8_t8 --> f8_t9
   f8_t9 -->|"disetujui"| f8_t10

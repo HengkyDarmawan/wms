@@ -1,8 +1,8 @@
 # Spesifikasi Modul — Pendukung Fase 1
 
-**Versi:** 0.6
-**Tanggal:** 26 September 2026
-**Status:** selesai Fase 1 — kumpulan pekerjaan pendukung setelah modul [Platform](17-platform-login.md) (urutan prompt serah terima §2 butir 5); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-185](04-keputusan-dan-asumsi.md#a-185)–[A-193](04-keputusan-dan-asumsi.md#a-193) (*Perlu validasi*); v0.4: pindai di form REQ & ISU ([A-206](04-keputusan-dan-asumsi.md#a-206)), impor vendor & saldo awal ([A-207](04-keputusan-dan-asumsi.md#a-207)); v0.6: impor struktur gudang — zona, rak, level, bin ([A-258](04b-asumsi-lanjutan.md#a-258))
+**Versi:** 0.9
+**Tanggal:** 27 September 2026
+**Status:** selesai Fase 1 — kumpulan pekerjaan pendukung setelah modul [Platform](17-platform-login.md) (urutan prompt serah terima §2 butir 5); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-185](04-keputusan-dan-asumsi.md#a-185)–[A-193](04-keputusan-dan-asumsi.md#a-193) (*Perlu validasi*); v0.4: pindai di form REQ & ISU ([A-206](04-keputusan-dan-asumsi.md#a-206)), impor vendor & saldo awal ([A-207](04-keputusan-dan-asumsi.md#a-207)); v0.6: impor struktur gudang — zona, rak, level, bin ([A-258](04b-asumsi-lanjutan.md#a-258)); v0.7: A-190–A-193 disetujui 27 Sep 2026; pindai kamera di semua browser, dipasang atau lewat web biasa ([A-266](04b-asumsi-lanjutan.md#a-266))
 **Modul:** lintas modul — `stock` (strategi pengambilan), `shared` (Beranda, laporan, PDF), `master` (penutupan proyek, wizard setup, impor Excel), `request` (konfirmasi & keberatan terima), `notification` (baru), PWA
 **Fase:** F1; WhatsApp `[F2]`, PWA offline penuh `[F2]`
 **Dokumen terkait:** [Blueprint §6.9a, §10, §11, §18](01-blueprint.md) · [Aturan Bisnis BR-STK-04/10/12, BR-PRJ-02/04, BR-REQ-10, BR-SJ-10](05-aturan-bisnis.md) · [Model data 08c `notifications`](08c-model-data-pendukung.md) · [A-49](04-keputusan-dan-asumsi.md#a-49), [A-63](04-keputusan-dan-asumsi.md#a-63), [A-77](04-keputusan-dan-asumsi.md#a-77)
@@ -23,10 +23,10 @@ Menutup butir Fase 1 [Blueprint §18](01-blueprint.md#18-peta-modul--fase-rilis)
 | 5 | Notifikasi in-app & email | Lonceng, halaman notifikasi, preferensi kanal per kejadian, email opsional, pengingat harian |
 | 6 | Laporan inti §6.9a + ekspor PDF | Saldo stok, mutasi periode, permintaan terbuka & barang rusak, konversi & waste, akurasi stok; PDF untuk semua laporan |
 | 7 | Wizard setup awal | Checklist langkah dari data company, persetujuan ketentuan (NFR-11), tanda selesai |
-| 8 | Impor dari Excel | Item, proyek (+klien baru), vendor, saldo awal (menjadi ADJ per gudang), dan struktur gudang (zona, rak, level, bin untuk gudang yang sudah ada), semua-atau-tidak, lewat aturan form yang sama |
+| 8 | Impor dari Excel | Item, proyek (+klien baru), vendor, saldo awal (menjadi ADJ per gudang), gudang (beserta bin bawaan, [A-272](04b-asumsi-lanjutan.md#a-272)), dan struktur gudang (zona, rak, level, bin untuk gudang yang sudah ada), semua-atau-tidak, lewat aturan form yang sama |
 | 9 | PWA | Installable (manifest + service worker + halaman offline), pindai kamera (termasuk form REQ & ISU), draf lokal hitung opname & bukti terima (A-49) |
 
-Tidak termasuk: WhatsApp `[F2]`; PWA offline penuh & antrean sinkron `[F2]`; impor gudang (bin sudah, [A-258](04b-asumsi-lanjutan.md#a-258)); editor naskah ketentuan final (O-11); landing page (Part 5).
+Tidak termasuk: WhatsApp `[F2]`; PWA offline penuh & antrean sinkron `[F2]`; impor gudang (bin sudah, [A-258](04b-asumsi-lanjutan.md#a-258); gudang sejak 27 Sep 2026, [A-272](04b-asumsi-lanjutan.md#a-272)); editor naskah ketentuan final (O-11); landing page (Part 5).
 
 ## 2. Aktor & permission
 
@@ -40,7 +40,7 @@ Tidak ada permission baru. Setiap butir memakai izin modul asalnya:
 | Notifikasi | setiap user untuk notifikasinya sendiri |
 | Laporan baru | `stock.view` (saldo, mutasi), `request.view` (permintaan terbuka), `conversion.view`, `count.view` |
 | Wizard setup | `company_setting.manage` |
-| Impor item / proyek / vendor / saldo awal / struktur gudang | `item.create` / `project.create` (+`client.create` untuk klien baru) / `vendor.create` / `adjustment.create` / `bin.manage` |
+| Impor item / proyek / vendor / saldo awal / gudang / struktur gudang | `item.create` / `project.create` (+`client.create` untuk klien baru) / `vendor.create` / `adjustment.create` / `warehouse.create` / `bin.manage` |
 
 ## 3. Entitas & data
 
@@ -91,11 +91,11 @@ Tanpa status baru. Perubahan perilaku:
 | `/` (Beranda) | spanduk *Lanjutkan setup* (pengelola pengaturan), kartu pekerjaan menunggu bertaut ke daftar tersaring, penugasan role |
 | Detail REQ & `/portal/requests/{id}` | kartu **Pengiriman & konfirmasi terima**: SJ, bukti terima, batas tanggapan, tombol *Terima* dan *Ajukan keberatan* (form per baris + foto) |
 | `POST /requests/{id}/receipts/{pod}/confirm · dispute` (juga di `/portal/…`) | tanggapan pemohon |
-| Header (lonceng) · `/notifications` · `/notifications/preferences` | 5 notifikasi belum dibaca, tandai dibaca lewat POST, semua notifikasi, preferensi lonceng/email per kejadian |
+| Header (lonceng) · `/notifications` · `/notifications/preferences` | 5 notifikasi belum dibaca, tandai dibaca lewat POST, semua notifikasi, preferensi lonceng/email per kejadian; sejak Fase 2a kolom **WhatsApp** untuk kejadian yang diizinkan company ([31-whatsapp](31-whatsapp.md), [A-276](04b-asumsi-lanjutan.md#a-276)) |
 | `/reports/{kunci}` · `/reports/{kunci}/pdf` | 5 laporan baru; tombol **Ekspor PDF** di semua laporan |
 | `/setup` · `POST /setup/terms · complete` | wizard setup (menu Administrasi → Setup awal, palet) |
-| `/imports` · `/imports/{items,projects,vendors,opening-stock,bins}/template` · `POST /imports/{…}` | impor item, proyek, vendor, saldo awal, struktur gudang (tombol *Impor Excel* di daftar item, proyek, vendor, bin; *Impor saldo awal* di daftar penyesuaian; palet; langkah wizard *Saldo awal*) |
-| PWA | `/manifest.webmanifest`, `/sw.js`, `/offline.html`; tombol kamera pada input ber-`data-scan` (lot temuan opname, lot GRN, **Pindai item** di form REQ, **Pindai barang** di form ISU); status draf pada hitung opname & dialog bukti terima |
+| `/imports` · `/imports/{items,projects,vendors,opening-stock,warehouses,bins}/template` · `POST /imports/{…}` | impor item, proyek, vendor, saldo awal, gudang, struktur gudang (tombol *Impor Excel* di daftar item, proyek, vendor, gudang, bin; *Impor saldo awal* di daftar penyesuaian; palet; langkah wizard *Saldo awal*) |
+| PWA | `/manifest.webmanifest`, `/sw.js`, `/offline.html`; tombol kamera pada input ber-`data-scan` (lot temuan opname, lot GRN, **Pindai item** di form REQ, **Pindai barang** di form ISU) — di aplikasi terpasang maupun browser HP biasa, termasuk iPhone; `BarcodeDetector` bila ada, selain itu ZXing dimuat saat dipakai; butuh HTTPS/`localhost` ([A-266](04b-asumsi-lanjutan.md#a-266)); status draf pada hitung opname & dialog bukti terima |
 
 ## 7. Kejadian stok & integrasi
 
@@ -156,6 +156,7 @@ Kartu stok per item tetap layar `/stock/items/{id}` (13-stock). Total 14 laporan
 | TC-MST-24 | `Count/OpeningStockImportTest` | impor vendor: kontak kosong (A-53), jenis asing, email salah → tidak ada yang tersimpan; jenis/status boleh label; kode dari nama; kode ganda ditolak |
 | TC-ADJ-12 | sama | impor saldo awal: bin gudang lain, lot baru tanpa kedaluwarsa, serial ganda di berkas, item & kondisi asing → tidak ada ADJ; benar → satu ADJ `OPENING` per gudang menunggu approval, stok bergerak setelah disetujui (lot/serial/potongan dibuat saat posting) |
 | TC-WH-26 … 26d | `Warehouse/WarehouseStructureImportTest` | impor struktur gudang: hierarki dibuat & zona lama dipakai; satu baris salah → nol tersimpan; kode ada/ganda ditolak; staf 403, Kepala Gudang hanya kartu ini & cakupan dijaga ([12](12-warehouse.md) §10) |
+| TC-WH-28 … 28c | `Warehouse/WarehouseImportTest` | impor gudang: induk dari baris sebelumnya, Site berproyek, kepala via email, bin bawaan; satu baris salah → nol gudang; tanpa `warehouse.create` 403 ([A-272](04b-asumsi-lanjutan.md#a-272)) |
 | TC-REQ-34 | `Request/RequestScreenTest` | pindai kode, barcode, QR lot: item mengisi baris kosong/baru jumlah 1, pindai ulang +1; kode asing ditolak |
 | TC-ISU-18 | `Issue/IssueScreenTest` | pindai item tanpa lacak +1; item berlacak wajib nomor lot/serial/potongan; potongan terisi utuh, pindai ulang ditolak |
 | TC-PWA-01 | `Shared/PwaTest` | manifest, ikon, service worker tanpa POST, offline, tautan manifest, penanda draf & pindai |
@@ -166,7 +167,7 @@ Kartu stok per item tetap layar `/stock/items/{id}` (13-stock). Total 14 laporan
 
 ## 11. Di luar lingkup
 
-WhatsApp; offline penuh & antrean sinkron; impor gudang (struktur zona–bin sudah, [A-258](04b-asumsi-lanjutan.md#a-258)); naskah final ketentuan (O-11); ringkasan email harian; dashboard konsolidasi opname & waste berbentuk grafik.
+WhatsApp; offline penuh & antrean sinkron; ~~impor gudang~~ (struktur zona–bin [A-258](04b-asumsi-lanjutan.md#a-258), gudang [A-272](04b-asumsi-lanjutan.md#a-272) — selesai); naskah final ketentuan (O-11); ringkasan email harian; dashboard konsolidasi opname & waste berbentuk grafik.
 
 ## 12. Definisi selesai
 
@@ -191,10 +192,13 @@ WhatsApp; offline penuh & antrean sinkron; impor gudang (struktur zona–bin sud
 11. **Tinjauan kode (25 Sep 2026 malam)** — perbaikan: email notifikasi setelah commit (A-199); bayar terlambat memulai periode baru (A-195, [17](17-platform-login.md)); update Livewire cari/halaman lolos di mode hanya-baca (A-196); tautan akses dukungan sekali pakai (A-199, migrasi pusat `000030`); keberatan dibatasi baris REQ sendiri + kunci (A-197); `still_needed` keberatan membuka lagi baris REQ (A-198); checklist penutupan diperluas & dalam transaksi (A-187). Uji: TC-NTF-05, TC-PLT-12, TC-ACC-28g, TC-REQ-33; TC-MST-20 & TC-PLT-11 diperluas. `TenantTestCase` kini memakai manajer transaksi uji Laravel sehingga `DB::afterCommit` berjalan di uji.
 12. **Sesi kantor 25 Sep 2026** — pindai di form REQ & ISU (`ScanCode`, [A-206](04-keputusan-dan-asumsi.md#a-206)); impor vendor & saldo awal (`Master\Actions\ImportVendors`, `Adjustment\Actions\ImportOpeningStock`, alasan penyesuaian `OPENING` di `MasterReferenceSeeder`, [A-207](04-keputusan-dan-asumsi.md#a-207)). Uji TC-REQ-34, TC-ISU-18, TC-MST-24, TC-ADJ-12.
 13. **Sesi kantor 26 Sep 2026** — impor struktur gudang (`Warehouse\Actions\ImportWarehouseStructure`, kartu `bins` di `ImportController`, `bin.manage`; [A-258](04b-asumsi-lanjutan.md#a-258), [12](12-warehouse.md) §13.4c). Uji TC-WH-26–26d.
+14. **Sesi 27 Sep 2026 (sisa kecil)** — impor gudang (`Warehouse\Actions\ImportWarehouses`, kartu `warehouses`, `warehouse.create`; [A-272](04b-asumsi-lanjutan.md#a-272), [12](12-warehouse.md) §13.4e). Uji TC-WH-28–28c.
 
 ### 13.2 Sisa pekerjaan
 
 1. ~~2FA Super Admin~~ — selesai (opsional, [A-200](04-keputusan-dan-asumsi.md#a-200), [17](17-platform-login.md)).
-2. ~~Impor vendor & saldo awal~~ — selesai ([A-207](04-keputusan-dan-asumsi.md#a-207)); bin kini juga bisa diimpor beserta hierarki zona–rak–level ([A-258](04b-asumsi-lanjutan.md#a-258), 26 Sep 2026); *Buat bin massal* (`GenerateBins`) tetap ada.
+2. ~~Impor vendor & saldo awal~~ — selesai ([A-207](04-keputusan-dan-asumsi.md#a-207)); bin kini juga bisa diimpor beserta hierarki zona–rak–level ([A-258](04b-asumsi-lanjutan.md#a-258), 26 Sep 2026), dan gudangnya sendiri lewat kartu *Gudang* ([A-272](04b-asumsi-lanjutan.md#a-272), 27 Sep 2026); *Buat bin massal* (`GenerateBins`) tetap ada.
 3. ~~Pemindaian di form REQ/ISU~~ — selesai ([A-206](04-keputusan-dan-asumsi.md#a-206)); lot/serial di PCK sudah wajib sejak A-203; pencarian Item/Saldo/Aset, bin tujuan Put-away ([A-201](04-keputusan-dan-asumsi.md#a-201)) dan alur bin → item di PCK ([A-203](04-keputusan-dan-asumsi.md#a-203)) sudah bisa dipindai.
 4. ~~Email pengingat tagihan langganan~~ — selesai lewat `Platform\Support\BillingNotifier` ([A-202](04-keputusan-dan-asumsi.md#a-202)).
+5. ~~Pindai kamera di iPhone/browser tanpa `BarcodeDetector`~~ — selesai 27 Sep 2026 lewat cadangan ZXing di `resources/js/wms/scan.js` ([A-266](04b-asumsi-lanjutan.md#a-266)); diuji di Chromium tanpa `BarcodeDetector` dengan kamera palsu (Code128 `BRG-001` terbaca, Enter terkirim).
+15. **Fase 2a (27 Sep 2026)** — `Notifier::send()` menerima `whatsapp:` dan meneruskan kejadian bermode *Langsung* ke `WhatsAppNotifier` setelah commit; `notifications:daily` menambah ringkasan WhatsApp ([31-whatsapp](31-whatsapp.md), [A-276](04b-asumsi-lanjutan.md#a-276), [A-280](04b-asumsi-lanjutan.md#a-280)).

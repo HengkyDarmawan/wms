@@ -1,9 +1,88 @@
-# Catatan Perubahan — Arsip (v0.2–v0.12)
+# Catatan Perubahan — Arsip (v0.2–v0.22)
 
-**Versi:** 1.6
-**Tanggal:** 26 September 2026
-**Status:** arsip — dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), dan v0.52 (blok v0.12) agar README tetap ≤ 450 baris; isi tidak diubah
+**Versi:** 1.13
+**Tanggal:** 28 September 2026
+**Status:** arsip — v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
 **Dokumen terkait:** [README](README.md)
+
+### v0.22 — 24 September 2026 (modul Receipt/Putaway selesai Fase 1)
+- **Berkas baru `wms/19-receipt-putaway.md` v0.2 (selesai Fase 1):** GRN vendor manual dan GRN transfer masuk, QC per baris, PUT dengan saran bin, RTV; dua belas aksi (satu per permission), delapan layar, menu *Penerimaan*; 39 uji TC-GRN-01–21, TC-PUT-01–08, TC-RTV-01–09.
+- **Lima belas permission baru** modul `receipt` (6), `putaway` (3), `vendor_return` (6), termasuk `receipt.qc`. Pembagian role mengikuti kolom *Aktor* Katalog: Staf Gudang tanpa `receipt.cancel`, `putaway.cancel`, `vendor_return.approve`.
+- **Asumsi baru [A-78](wms/04-keputusan-dan-asumsi.md#a-78)–[A-84](wms/04-keputusan-dan-asumsi.md#a-84)** (*Perlu validasi*, `04` → v0.13, §2.6): efek QC pada stok, QC dua lapis, `receipt.qc` + approval RTV tanpa modul approval, `stock_transferred` saat GRN transfer, GRN transfer setelah bukti terima, cross-dock hanya saran, aturan saran bin.
+- **Katalog Status v0.8:** enum `receipt_type` didaftarkan; catatan §2.5 menyebut `receipt.qc`. **Tidak ada status baru.**
+- **Model data v0.8** (`_generate_erd.py` → `08a`–`08c`): `number` pada `goods_receipts`, `putaway_tasks`, `vendor_returns`; `goods_receipts.received_by`; isian draf `lot_no`, `expiry_date`, `serial_no`, `piece_length`, `qc_reason_id`, `notes` pada `goods_receipt_lines`; `from_bin_id`, `override_reason` pada `putaway_task_lines`; `submitted_by`, `approved_by`, `approved_at`, `reject_reason_id` pada `vendor_returns`; `bin_id`, `stock_status` pada `vendor_return_lines`.
+- **`15-picking-shipment.md` → v0.4:** §13.1 no. 7 — `CreatePickTask` hanya mengalokasikan dari bin `storage` (A-84); sebelumnya stok di Dalam Perjalanan ikut dipetik.
+- **Laporan progres v1.2:** baris *Penerimaan (GRN), QC, put-away, RTV* ✅. **Pengujian:** 324 → **363 uji / 2.240 asersi**, hijau di MariaDB 10.4.
+
+### v0.21 — 24 September 2026 (perbaikan pengiriman → REQ)
+- **Bug laporan progres §5.1 diperbaiki:** `RequestFulfillment` mencatat `qty_shipped` saat SJ berangkat dan `qty_received` saat bukti terima, lalu menurunkan status REQ `partially_fulfilled`/`completed`. Pembatalan REQ yang sudah dikirim kini ditolak BR-REQ-09.
+- **`14-request.md` → v0.4:** TC-REQ-27, TC-REQ-28, TC-REQ-29 (uji alur penuh); layar REQ dan portal punya kolom *Terkirim / Diterima*.
+- **Asumsi baru [A-77](wms/04-keputusan-dan-asumsi.md#a-77)** (*Perlu validasi*, `04` → v0.12, §2.6): REQ selesai tanpa menunggu konfirmasi pemohon sampai layar BR-REQ-10 ada.
+
+### v0.20 — 24 September 2026 (E2E dan peta progres)
+- **Berkas baru `00-laporan-progres-2026-09-24.md`:** delapan skenario [00-setup-lokal §5](00-setup-lokal.md#5-skenario-uji-manual) dijalankan di Chrome headless (9/9 lulus); 178/178 TC spesifikasi 10–17 punya uji dan lulus; Fase 1 = 5 selesai, 6 sebagian, 12 belum dari 23 butir Blueprint §18.
+- **Bug berat ditemukan, belum diperbaiki:** pengiriman tidak memperbarui `material_request_lines.qty_shipped/qty_received`, sehingga REQ yang barangnya sudah diterima bisa dibatalkan (melanggar BR-REQ-09) dan REQ tidak pernah *completed*. Lihat laporan progres §5.1.
+- **`00-setup-lokal.md` → v1.3:** tabel §5 mengikuti alur sebenarnya (langkah tinjau 2b oleh Kepala Gudang).
+
+### v0.19 — 24 September 2026 (perilaku template NexaDash)
+- **Perbaikan front-end, tanpa perubahan ID bisnis:** (1) `resources/js/globals.js` baru memasang jQuery, Bootstrap, dan SimpleBar ke `window` dan diimpor paling awal. Sebelumnya `nexadash/app.js` berjalan sebelum `window.jQuery` diisi (impor ES dievaluasi lebih dulu) lalu gagal, sehingga toggle sidebar, tema, palet ⌘K, dan tooltip mati. (2) SimpleBar dipasang lokal (`simplebar` di `package.json`, tanpa CDN) dengan cadangan `overflow-y` supaya sidebar bisa di-scroll. (3) Tombol tampilkan password (`.btn-toggle-pw`) diport dari `template/assets/js/pages/auth.js` ke `resources/js/wms/ui.js` dengan delegasi event. (4) `layouts/app.blade.php` diberi `data-nx-layout="app"` dan `#nxSidebarBackdrop`. Pencocokan menu aktif di `nexadash/app.js` disesuaikan untuk rute Laravel.
+- **Diverifikasi di Chrome headless:** 27 halaman menu tanpa error console; scroll sidebar, tombol mata, toggle sidebar, tema, ⌘K, dropdown pengguna, dan sidebar HP berfungsi. `00-setup-lokal.md` → v1.2.
+
+### v0.18 — 24 September 2026 (tampilan halaman company tanpa gaya)
+- **Perbaikan:** `config/tenancy.php` `asset_helper_tenancy` → `false`. Saat aktif, stancl/tenancy mengarahkan `asset()` dan `@vite` di halaman company ke `/tenancy/assets/…` (storage company), sehingga CSS/JS/logo 404 dan seluruh back-office dan portal tampil berantakan. Halaman pusat tidak kena. Berkas company tetap lewat route berotorisasi ([A-68](wms/04-keputusan-dan-asumsi.md#a-68)).
+- **`wms/16-shared-laporan-berkas.md` → v0.2:** uji baru TC-FIL-02, TC-FIL-02b; §13 mencatat alasannya. **`00-setup-lokal.md` → v1.1:** baris pemecahan masalah.
+- **Pengujian:** 319 → **321 uji**, hijau.
+
+### v0.17 — 24 September 2026 (pencocokan dokumen dengan kode + setup mesin kantor)
+- **Asumsi baru A-72 s.d. A-76, semuanya *Perlu validasi*** (`04-keputusan-dan-asumsi.md` → v0.11, §2.5): A-72 stok awal demo lewat seeder; A-73 satu kelas aksi memegang beberapa transisi (`ProcessPickTask`, `ShipShipment`, `GrantSupportAccess`); A-74 kolom konvensi `created_by`/`updated_by`, `submitted_at`, `line_no`, `uom_id`, `qty_input`, `proofs_of_delivery.disputed_at`/`device_id` belum ada di kode; A-75 `audit_logs` memakai skema spatie; A-76 dev kantor di MariaDB 10.4.
+- **Spesifikasi baru untuk kode yang dibangun tanpa spesifikasi:** `wms/16-shared-laporan-berkas.md` v0.1 (kerangka laporan, tujuh laporan, `StoreUpload`; TC-RPT-01, TC-FIL-01) dan `wms/17-platform-login.md` v0.1 (login Super Admin, `EnsureSubscriptionState`, seeder pusat; TC-PLT-01, TC-PLT-02), plus `prompts/16-shared.md` dan `prompts/17-platform-login.md`. §13 keduanya mencatat dua belas selisih kode dengan aturan, antara lain BR-SUB-03 (`terminated` lebih longgar), BR-SUB-01/P-03 (`TenantDeleted` menghapus database), dan laporan tanpa ekspor PDF (Blueprint §6.9a).
+- **Model data v0.7** (`_generate_erd.py` → `08a`–`08c`): tabel `login_attempts`, `password_histories` (114 tabel); kolom `users` 2FA/penguncian, `roles.is_active`, `permissions.name/guard_name/label`, `role_assignments.assigned_by`, `user_invitations.sent_count`, `is_active` di enam tabel master/organisasi, `stock_events.source_number`, `platform_users.last_login_at`, `companies.data`, `notes` di `material_request_lines` dan `proofs_of_delivery`; `audit_logs` diganti skema sebenarnya (A-75).
+- **Katalog Status v0.7:** tujuh belas enum yang sudah dipakai kode didaftarkan (`request_line_status`, `fulfillment_source`, `destination_type`, `ownership_effect`, `proof_channel`, `discrepancy_origin`, `capacity_mode`, `reason_context`, `login_result`, dan lain-lain). **Tidak ada status baru.**
+- **Status basi diperbarui:** `10-access` v0.5 (100 uji, `InviteUser`, `ManageTwoFactor`, tanda tangan 5 MB), `11-master` v0.3 (guard BR-PRJ-02 belum ada; enam kunci pengaturan company tanpa layar), `12-warehouse` v0.4 (delapan aksi, laporan selesai, A-67 disetujui), `13-stock` v0.3 (TC-STK-34), `14-request` v0.3 (sepuluh aksi, bukan sebelas seperti v0.15), `15-picking-shipment` v0.3, `08-arsitektur` v0.7 (§4 keadaan kode, §10 profil XAMPP, §12 A-50), laporan audit §9, checklist, `cek.md`.
+- **Setup lokal:** berkas baru `00-setup-lokal.md`; `00-akun-uji.md` → v1.2: stok awal dan kendaraan demo, `--tenants=1` menggantikan `--tenants=demo` yang gagal, klaim bahwa `ProductionSeeder` menyeed data acuan tenant dikoreksi. `CLAUDE.md` mendapat profil kantor.
+- **Kode:** `StockDemoSeeder` (A-72) dipanggil `DemoSeeder`; `.env.example` `CACHE_STORE=array`, karena `database` tidak mendukung tag yang dibutuhkan stancl/tenancy sehingga setiap halaman tenant galat (AD-11 menetapkan Redis).
+- **Pengujian:** 318 → **319 uji / 1.830 asersi**, hijau di MariaDB 10.4.
+
+### v0.16 — 24 September 2026 (modul Picking & Shipment selesai Fase 1)
+- **`wms/15-picking-shipment.md` v0.2 (selesai Fase 1):** sepuluh tabel, tujuh aksi domain, enam layar, dua belas permission; 44 uji TC-PCK, TC-SJ, dan TC-DSC.
+- **Tidak ada aturan baru:** BR-SJ-01 s.d. BR-SJ-10 sudah lengkap sejak Part 2 dan kini ditegakkan di kode. Status PCK, SJ, dan DSC diambil apa adanya dari Katalog Status §2.2–§2.4.
+- **Buku besar stok diperluas dua kali** (`13-stock.md` tidak berubah versinya karena kontraknya tetap): `MovementRequest::$fromStockStatus` membolehkan bin asal sama dengan bin tujuan bila kondisi stoknya berubah — bentuk yang dituntut BR-SJ-10 dan akan dipakai QC; `StockLedger::emitEvent()` menerbitkan kejadian tanpa pergerakan, yang dituntut BR-SJ-04 saat barang diterima gudang tujuan tetapi masih milik gudang asal.
+- **Efek `delivered` per tujuan dan kepemilikan** (BR-SJ-04) ditegakkan: ke gudang tetap *Dalam Perjalanan*, jual putus keluar ledger, aset pindah ke bin On-site proyek.
+- **Kurang dan rusak tidak hilang dari pembukuan** (BR-SJ-10): keduanya tetap tercatat milik gudang asal sampai DSC diselesaikan; rusak berkondisi `damaged` sejak bukti terima.
+- **Kolom baru di luar ERD** dicatat di §13.1 dan digenerate ulang ke `08a`–`08c`: `number` pada `pick_tasks`, `shipments`, dan `delivery_discrepancies`; `shipments.destination_vendor_id`; berkas tanda tangan, foto, dan foto kerusakan sebagai path ([A-68](wms/04-keputusan-dan-asumsi.md#a-68)) karena tabel `attachments` belum ada.
+- **Dua belas permission baru** modul `picking` dan `shipment`. Kepala Gudang tidak memegang `shipment.confirm_delivery`: bukti terima diisi driver atau penerima, bukan yang mengirim.
+- **Pengujian:** 274 → **318 uji / 1.796 asersi**, semua hijau.
+
+### v0.15 — 24 September 2026 (modul Request selesai Fase 1)
+- **`wms/14-request.md` v0.2 (selesai Fase 1):** dua tabel REQ, sebelas aksi domain, lima layar termasuk dua halaman portal klien, empat belas permission; 36 uji TC-REQ-01–26.
+- **Tidak ada aturan baru:** BR-REQ-01 s.d. BR-REQ-15 sudah lengkap sejak Part 2 dan kini ditegakkan di kode. Status diambil apa adanya dari Katalog Status §2.1.
+- **REQ tidak menyentuh kartu stok.** Satu-satunya sentuhannya ke gudang adalah reservasi lunak lewat `ManageReservation` saat `approved` (BR-REQ-05), dan pelepasannya saat `cancelled`, `closed_short`, penolakan penggantian (BR-REQ-13), atau pembatalan baris yang dikonfirmasi staf (BR-REQ-15).
+- **Klien sebagai pihak kedua:** tambahan setelah `approved` melahirkan REQ Tambahan bernomor sendiri (BR-REQ-12); diam sampai tenggat penggantian dianggap setuju (BR-REQ-13); pembatalan baris dua langkah (BR-REQ-15).
+- **Kolom baru di luar ERD** dicatat di §13.1 dan digenerate ulang ke `08a`–`08c`: `material_requests.number`, `approved_by`, `approved_at`, `cancel_reason_id`; `material_request_lines.mapped_at`, `cancel_confirmed_at`, dan `status` per baris.
+- **`request.approve` hanya dipegang Admin Company** sampai modul `approval` ada ([BR-GEN-10](wms/05-aturan-bisnis.md#br-gen)); Kepala Gudang meninjau, bukan menyetujui.
+- **Pengujian:** 238 → **274 uji / 1.353 asersi**, semua hijau.
+
+### v0.14 — 24 September 2026 (modul Stock selesai Fase 1)
+- **`wms/13-stock.md` v0.2 (selesai Fase 1):** lima tabel area Stok, lima layar, `StockLedger` sebagai satu-satunya pintu tulis saldo (P-01, AD-04), reservasi lunak dan keras, outbox kejadian, penguncian periode, penomoran dokumen; 46 uji TC-STK-01–33.
+- **Aturan baru BR-LED-01 s.d. BR-LED-06** (`05-aturan-bisnis.md` → v0.10): pergerakan wajib punya asal atau tujuan, arah ditentukan pasangan bin bukan tanda bilangan, pelacakan wajib disebut sesuai mode item, satu serial hanya di satu bin, koreksi lewat baris pembalik sekali saja, dan outbox ditulis dalam transaksi yang sama.
+- **Asumsi baru A-71** (`04-keputusan-dan-asumsi.md` → v0.10): pelepasan reservasi manual sebagai katup darurat, karena BR-STK-05 dan BR-STK-16 menulis pelepasan hanya lewat aksi dokumen sedangkan modul dokumennya belum lengkap di Fase 1. **Disetujui**; tidak ada lagi asumsi berstatus *Perlu validasi*.
+- **BR-GEN-04 akhirnya ditegakkan:** `StockGuard` menolak menonaktifkan gudang, bin, atau item yang masih bersaldo atau punya reservasi aktif — sisa pekerjaan yang tercatat di `12-warehouse` §13.4 nomor 2 (`12-warehouse.md` → v0.3).
+- **P-01 dijaga dua lapis:** selain `booted()` di model, `stock_movements` punya trigger `BEFORE UPDATE` dan `BEFORE DELETE`. Kunci unik saldo memakai kolom turunan `COALESCE(x, 0)` supaya NULL tidak meloloskan baris kembar.
+- **Lima permission baru** modul `stock`: `stock.view`, `stock.lock_period`, `reservation.view`, `reservation.release`, `stock_event.view`. Tidak ada `stock.post` — memposting stok adalah akibat dokumen, izinnya melekat pada aksi dokumen.
+- **Generator ERD diselaraskan** (`08a`–`08c` → v0.6): `stock_movements` ditambah `document_number` dan `notes` serta kunci unik `reverses_movement_id`, kunci unik `stock_balances` memakai kolom turunan, `stock_reservations` ditambah `released_at`, dan `document_sequences` memakai nama kolom yang benar-benar dipakai (`segment`, `last_number`).
+- **Pengujian:** 192 → **238 uji / 1.160 asersi**, semua hijau.
+
+### v0.13 — 24 September 2026 (audit menyeluruh + modul Warehouse)
+- **Audit menyeluruh** dokumentasi, kode, dan infrastruktur; hasilnya di [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md). **Empat cacat kritis ditutup:** aksi Livewire yang berjalan di luar middleware tenant (melanggar BR-SUB-02, BR-SUB-03, BR-PRJ-07), dua form yang bisa dipakai menaikkan hak sendiri menjadi Admin Company (BR-GEN-09), dan seeder produksi yang membuat company demo beserta databasenya.
+- **`wms/12-warehouse.md` v0.2 (selesai Fase 1):** enam tabel area Gudang & lokasi, empat layar, delapan aksi domain, seeder gudang demo, 28 uji TC-WH-01–20.
+- **Aturan baru BR-WH-01 s.d. BR-WH-07** (`05-aturan-bisnis.md` → v0.9): kode bin hierarkis dan terkunci, bin bawaan dan bin virtual otomatis, bin on-site per proyek, Gudang Site wajib proyek, hierarki tidak melingkar, kapasitas peringatan atau blokir, gudang dan bin dinonaktifkan bukan dihapus.
+- **Asumsi baru** `04-keputusan-dan-asumsi.md` → v0.8: **A-67** kolom `bins.count_flag` (istilahnya sudah ada di glosarium dan dipakai BR-SJ-02 tetapi kolomnya belum pernah ada) dan **A-68** penyimpanan berkas di disk lokal per company sampai O-14 diputuskan. Keduanya **menunggu validasi**.
+- **BR-ACC-05 akhirnya ditegakkan:** trait pembatas cakupan yang sejak modul Access tidak dipakai satu model pun kini dipasang di `Warehouse` dan `Bin`; arti "cakupan kosong" yang sebelumnya berbeda di tiga tempat disatukan.
+- **Kode mati dihidupkan:** pengaturan verifikasi dua langkah di profil (QR + kode pemulihan), route masuk Super Admin, tujuh laporan Access §9 / Master §9 / Warehouse §9 dengan ekspor Excel, serta unggah tanda tangan dan foto item.
+- **Paket dipasang** sesuai AD-08 dan AD-09: `maatwebsite/excel` 4.0.3, `bacon/bacon-qr-code` 3.1.1, `barryvdh/laravel-dompdf` 3.1.2, `picqer/php-barcode-generator` 3.3.0.
+- **Generator ERD diselaraskan:** `projects.site_warehouse_id` dihapus (A-40), ditambah `item_uom_conversions.is_active`, `is_active` pada zona/rak/level/tipe gudang, serta `bins.count_flag` dan `bins.freeze_reason`; 08a–08c dan seluruh `.drawio` dibuat ulang.
+- **Antarmuka:** 72 tautan mati berbahasa Inggris dari template dibuang dari bundel produksi dan diganti menu sungguhan yang disaring izin; menu "Master data" yang tersembunyi bagi pemegang `item_category.view` diperbaiki.
+- **Pengujian:** 119 → **192 uji / 997 asersi**, semua hijau; delapan uji unit pertama, dan uji HTTP yang menembak endpoint Livewire sungguhan.
 
 ### v0.12 — 23 September 2026 (modul Master selesai Fase 1)
 - **`wms/11-master.md` → v0.2 (selesai Fase 1):** §13 baru berisi penyimpangan implementasi, keputusan implementasi, daftar sembilan layar, dan sisa pekerjaan. Definisi selesai §12 dicentang.

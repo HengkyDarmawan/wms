@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `access` (Akses, Autentikasi, Role & Cakupan, Organisasi)
 
-**Versi:** 0.8
-**Tanggal:** 24 September 2026
-**Status:** **selesai untuk Fase 1** — kerangka aplikasi, autentikasi, seluruh layar §6.1–§6.7, domain, seeder, dan 100 pengujian sudah jalan. Sisa pekerjaan kecil & penyimpangan: §13
+**Versi:** 0.12
+**Tanggal:** 26 September 2026
+**Status:** **selesai untuk Fase 1** — kerangka aplikasi, autentikasi, seluruh layar §6.1–§6.7, domain, seeder, dan 100 pengujian sudah jalan. Sisa pekerjaan kecil & penyimpangan: §13; v0.10: §6.2 kanvas tanda tangan profil jalan, §13 butir 1 (A-264)
 **Modul:** `access`
 **Fase:** F1 (SSO F3 dan auditor eksternal F2 hanya stub)
 **Dokumen terkait:** [Blueprint §4](01-blueprint.md#4-pengguna--peran), [§6.2](01-blueprint.md#62-struktur-organisasi--gudang), [§13](01-blueprint.md#13-autentikasi--sso) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium §11](03-glosarium.md#11-role--akses) · [Model data akses](08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant), [pusat](08a-model-data-inti.md#area-database-pusat-platform) · [Arsitektur §3–§4](08-arsitektur.md#3-tenancy--siklus-request) · [Akun uji](../00-akun-uji.md)
@@ -262,6 +262,7 @@ Tidak ada kejadian stok. Audit log (`spatie/laravel-activitylog`, [AD-07](08-ars
 | TC-ACC-25 | Admin mengubah permission role bawaan lalu menyalin ke role baru | simpan | role baru punya permission yang sama; role bawaan tidak bisa dihapus | — |
 | TC-ACC-26 | penugasan role dengan `valid_until` kemarin | user buka data cakupan itu | tidak tampil; login tetap bisa bila ada penugasan lain | BR-ACC-01, BR-ACC-05 |
 | TC-ACC-27 | seeder demo dijalankan | login setiap akun di [00-akun-uji](../00-akun-uji.md) | semua berhasil dengan role & cakupan sesuai tabel | — |
+| TC-ACC-27c | `BlankDemoSeeder` dijalankan pada tenant kosong | hitung user, gudang, item, proyek | hanya `admin@demo.wms.test` (Admin Company, bisa masuk); 0 gudang/item/proyek; role & permission bawaan ada | — |
 | TC-ACC-31 | Admin Company login | masuk sebagai Staf Gudang, lalu *Kembali* | bekerja sebagai staf dengan spanduk; kembali → sesi Admin, spanduk hilang | A-260 |
 | TC-ACC-32 | Admin Company login | masuk sebagai user Klien | diarahkan ke `/portal` dengan spanduk; *Kembali* berhasil dari portal | A-260, BR-PRJ-07 |
 | TC-ACC-33 | Kepala Gudang login | buka `/impersonate` / POST masuk sebagai staf | 403; sesi tidak berubah | A-260 |
@@ -358,9 +359,10 @@ Aturan yang diuji lewat layar: TC-ACC-UI-01–11 (pengguna), 20–27 (role), 30�
 
 Seluruh layar §6 sudah ada. Yang masih terbuka:
 
-1. ~~Unggah tanda tangan di profil~~ — **selesai 24 Sep 2026** memakai disk lokal per company ([A-68](04-keputusan-dan-asumsi.md#a-68)); legalitas tanda tangan tetap menunggu [O-13](04-keputusan-dan-asumsi.md#o-13).
+1. ~~Unggah tanda tangan di profil~~ — **selesai 24 Sep 2026** memakai disk lokal per company ([A-68](04-keputusan-dan-asumsi.md#a-68)); **gambar di kanvas** selesai 26 Sep 2026 bersama segel QR di cetakan ([A-264](04b-asumsi-lanjutan.md#a-264)); legalitas tanda tangan tetap menunggu [O-13](04-keputusan-dan-asumsi.md#o-13).
 2. ~~Pengaturan 2FA di profil~~ — **selesai 24 Sep 2026**: kode QR, konfirmasi, delapan kode pemulihan sekali pakai, dan pematian yang menuntut password.
 3. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 24 Sep 2026** lewat layar laporan bersama di `/reports`.
 4. ~~Pemilihan gudang/proyek pada cakupan memakai id angka~~ — **selesai 24 Sep 2026**: keduanya kini memakai daftar nama; klien pada form pengguna menyusul **25 Sep 2026** (daftar klien aktif, `exists:clients`).
 5. ~~Kolom *(impl.)* dimasukkan ke generator ERD~~ — **selesai 24 Sep 2026**; 08a–08c dibuat ulang. Kolom `users` untuk 2FA, penguncian, dan riwayat password serta tabel `login_attempts` dan `password_histories` baru masuk ERD pada pencocokan 24 Sep 2026 (08a v0.7).
 6. **Kolom `created_by`/`updated_by` dan skema `audit_logs`** berbeda dari ERD — menunggu [A-74](04-keputusan-dan-asumsi.md#a-74) dan [A-75](04-keputusan-dan-asumsi.md#a-75).
+7. **Nomor WhatsApp di profil (27 Sep 2026)** — isian nomor pindah dari form *Data diri* ke kartu *WhatsApp* (`whatsapp.number`) dengan verifikasi kode; nomor yang diubah di mana pun kehilangan status terverifikasi (`User::booted`) — [A-275](04b-asumsi-lanjutan.md#a-275), [31-whatsapp](31-whatsapp.md).

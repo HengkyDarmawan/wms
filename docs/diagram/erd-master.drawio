@@ -112,14 +112,20 @@
         <mxCell id="company_settings_cols" value="🔑 key : varchar(60)&lt;br&gt;value : json" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="company_settings">
           <mxGeometry y="26" width="260" height="40" as="geometry"/>
         </mxCell>
+        <mxCell id="holidays" value="holidays" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="680" y="1240" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="holidays_cols" value="🔑 id : bigint&lt;br&gt;◆ date : date&lt;br&gt;name : varchar(120)&lt;br&gt;kind : enum&lt;br&gt;is_active : boolean&lt;br&gt;↗ created_by : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="holidays">
+          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        </mxCell>
         <mxCell id="feature_settings" value="feature_settings" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="1240" width="260" height="82" as="geometry"/>
+          <mxGeometry x="1000" y="1240" width="260" height="82" as="geometry"/>
         </mxCell>
         <mxCell id="feature_settings_cols" value="🔑 key : varchar(60)&lt;br&gt;enabled : bool&lt;br&gt;config : json" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="feature_settings">
           <mxGeometry y="26" width="260" height="56" as="geometry"/>
         </mxCell>
         <mxCell id="users" value="users" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#F5F5F5;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="1240" width="260" height="50" as="geometry"/>
+          <mxGeometry x="40" y="1468" width="260" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="users_cols" value="…" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="users">
           <mxGeometry y="26" width="260" height="24" as="geometry"/>

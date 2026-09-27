@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `purchase_request` (Purchase Request)
 
-**Versi:** 0.4
-**Tanggal:** 25 September 2026
-**Status:** selesai Fase 1 — modul keempat belas setelah [Aset](25-aset.md); menyambung baris REQ bersumber pembelian ([BR-REQ-05](05-aturan-bisnis.md#br-req)) dan rujukan baris GRN vendor yang sebelumnya stub ([19-receipt-putaway](19-receipt-putaway.md) §3); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-170](04-keputusan-dan-asumsi.md#a-170)–[A-175](04-keputusan-dan-asumsi.md#a-175) (*Perlu validasi*); v0.2: notifikasi PRQ disetujui & draf titik pesan ulang ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189))
+**Versi:** 0.6
+**Tanggal:** 28 September 2026
+**Status:** selesai Fase 1 — modul keempat belas setelah [Aset](25-aset.md); menyambung baris REQ bersumber pembelian ([BR-REQ-05](05-aturan-bisnis.md#br-req)) dan rujukan baris GRN vendor yang sebelumnya stub ([19-receipt-putaway](19-receipt-putaway.md) §3); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-170](04-keputusan-dan-asumsi.md#a-170)–[A-175](04-keputusan-dan-asumsi.md#a-175) (*Perlu validasi*); v0.2: notifikasi PRQ disetujui & draf titik pesan ulang ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.5: hanya bagian **Baik** GRN yang menambah `qty_received`; Rusak & Kurang tetap sisa pesanan ([A-287](04b-asumsi-lanjutan.md#a-287), [A-289](04b-asumsi-lanjutan.md#a-289))
 **Modul:** `purchase_request` (PRQ)
 **Fase:** F1 manual (PRQ dari backorder REQ, titik pesan ulang, dan manual; approval opsional; catatan pemesanan per vendor oleh Penindak Lanjut PR; GRN vendor merujuk catatan pemesanan; reservasi otomatis ke REQ penunggu); sambungan ke modul Purchasing (`po_created`) `[F3]`
 **Dokumen terkait:** [Blueprint §6.3a](01-blueprint.md#63a-master-data-lain) · [Aturan Bisnis §BR-REQ](05-aturan-bisnis.md#br-req), [§BR-GRN](05-aturan-bisnis.md#br-grn), [§14 matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status §2.15, §3](06-katalog-status-dan-enum.md) · [Model data 08b](08b-model-data-stok-dokumen.md) · [A-47](04-keputusan-dan-asumsi.md#a-47), [A-51](04-keputusan-dan-asumsi.md#a-51)–[A-53](04-keputusan-dan-asumsi.md#a-53) · [14-request](14-request.md), [19-receipt-putaway](19-receipt-putaway.md), [20-approval](20-approval.md)
@@ -88,7 +88,7 @@ purchase_request:
 | `draft → submitted` | `Actions\SubmitPurchaseRequest` (`pr.submit`) | sama dengan manual |
 | approval | `Actions\ApprovePurchaseRequest` → `DecideApproval`; `Support\PurchaseRequestApprovalHandler` | tolak = `rejected` + Alasan `*` |
 | catatan pemesanan | `Actions\OrderPurchaseRequest` (`pr.order`) | `approved → forwarded` pada catatan pertama; catatan boleh ditambah selama *Diteruskan/Sebagian Terpenuhi* |
-| GRN diterima | `Receipt\Actions\ReceiveGoodsReceipt` → `Support\PurchaseReceipts::received` | `qty_received` baris catatan & PRQ; `partially_fulfilled`/`fulfilled` |
+| GRN diterima | `Receipt\Actions\ReceiveGoodsReceipt` → `Support\PurchaseReceipts::received` | `qty_received` baris catatan & PRQ; `partially_fulfilled`/`fulfilled` Hanya bagian Baik; Rusak & Kurang tetap sisa pesanan; batas GRN = baik + rusak ≤ sisa ([A-287](04b-asumsi-lanjutan.md#a-287), [A-289](04b-asumsi-lanjutan.md#a-289)). |
 | put-away selesai | `Receipt\Actions\CompletePutaway` → `BackorderPurchases::reserveArrivals` | reservasi lunak ke baris REQ penunggu |
 | batal | `Actions\CancelPurchaseRequest` (`pr.cancel`) | `purchase_request_cancelled` (bila pernah diajukan); approval menunggu ditarik |
 | REQ batal/tutup | `CancelRequest`, `CancelRequestLine`, `CloseRequestShort` → `BackorderPurchases::releaseForRequestLines` | PRQ backorder yang belum diteruskan ikut batal |
@@ -149,7 +149,7 @@ Uji di `tests/Feature/PurchaseRequest` (12 uji): `PurchaseRequestTest`, `Purchas
 |---|---|---|---|---|
 | TC-PRQ-01 | Tanpa aturan | PRQ manual 2 baris | `PRQ…`, asal manual, `approved`; `purchase_requested` 2 baris tanpa harga | KS 2.15, A-08 |
 | TC-PRQ-02 | — | tanpa baris; jumlah 0; item nonaktif; gudang di luar cakupan | BR-GEN-11, BR-LED-02, BR-MST-05, BR-ACC-05 | BR-ACC-05 |
-| TC-PRQ-03 | Aturan toko online 2 lapis; vendor tetap baut = toko online | PRQ baut; putus; PRQ semen; tolak tanpa/dengan alasan | `pending_approval`; pembuat & Manajemen belum boleh, Kepala ya; `approved` setelah 2 lapis; semen `approved` langsung; BR-GEN-11 lalu `rejected`, tak bisa dipesan | BR-APR-07, BR-APR-03 |
+| TC-PRQ-03 | Aturan PRQ lama berkondisi jenis vendor + aturan 2 lapis jumlah ≥ 50 ([A-308](04b-asumsi-lanjutan.md#a-308)) | PRQ baut; putus; PRQ semen; tolak tanpa/dengan alasan | `pending_approval`; pembuat & Manajemen belum boleh, Kepala ya; `approved` setelah 2 lapis; semen `approved` langsung; BR-GEN-11 lalu `rejected`, tak bisa dipesan | BR-APR-07, BR-APR-03 |
 | TC-PRQ-04 | PRQ 100 | pesan 120, 0; pesan 60; 40 ke toko baru; 1 lagi | BR-REQ-08, BR-GEN-11; `forwarded`; vendor `provisional`, rujukan "INV · resi"; Σ dipesan 100; BR-REQ-08 | A-51, A-53 |
 | TC-PRQ-05 | PRQ 100 dipesan | GRN vendor lain, item lain, 101; draf 70 lalu 40 | BR-GRN-01 ×2, BR-GRN-05 ×2; terima 70 → `partially_fulfilled`, `goods_received` membawa PRQ & PO; terima 30 → `fulfilled`, tak bisa dibatalkan | BR-GRN-01/05 |
 | TC-PRQ-06 | PRQ disetujui | batal tanpa/dengan alasan; batal setelah GRN; izin | BR-GEN-11; `cancelled` + `purchase_request_cancelled`; BR-GEN-01; staf tak batal/pesan, Penindak Lanjut pesan | KS 2.15 |
@@ -157,8 +157,9 @@ Uji di `tests/Feature/PurchaseRequest` (12 uji): `PurchaseRequestTest`, `Purchas
 | TC-PRQ-08 | REQ pembelian | batal sebelum dipesan; batal setelah dipesan | PRQ `cancelled`; PRQ tetap `forwarded` | BR-REQ-09/15 |
 | TC-PRQ-09 | Baut titik 10, minimum 30, stok 5 | job dua kali; tinjau 50; ajukan | satu draf 25 di CKG; tidak dobel; `approved` 50 | BR-REQ-11 |
 | TC-PRQ-10 | Role & cakupan | buka layar, menu | 200/403/404 sesuai §2; ubah non-draf 403; staf BKS 404; menu & palet | BR-GEN-09, BR-ACC-05 |
-| TC-PRQ-11 | Layar | form (jumlah 0 lalu benar) → daftar → catat pemesanan (vendor tetap tersaran) → batal lewat dialog | BR-LED-02; `approved` tanpa proyek; `forwarded`, semen tak dipesan; Alasan wajib lalu `cancelled` | §6 |
+| TC-PRQ-11 | Layar | form (jumlah 0 lalu benar) → daftar → catat pemesanan (vendor terakhir dari riwayat tersaran) → batal lewat dialog | BR-LED-02; `approved` tanpa proyek; `forwarded`, semen tak dipesan; Alasan wajib lalu `cancelled` | §6 |
 | TC-PRQ-12 | PRQ dipesan | form GRN vendor: *Tambah* pesanan, ubah 20, simpan, buka draf | nomor PRQ tampil; baris terisi & terkunci; rujukan tersimpan & dimuat ulang | A-174 |
+| TC-PRQ-13 | Baut pernah di-PO ke Toko Murah (1.000, 60 hari lalu) & vendor fixture (1.500, 3 hari lalu) | buka *Catat pemesanan* sebagai pemegang `po.view`, lalu sebagai peran tanpa `po.view`; ganti vendor + alasan | bawaan vendor fixture (terakhir); "Termurah 6 bln: Toko Murah" tanpa angka/Rp; tanpa `po.view` saran termurah tidak tampil; catatan tersimpan ke vendor pilihan dengan alasannya | [A-304](04b-asumsi-lanjutan.md#a-304) |
 
 Uji modul lain yang berubah: TC-ACC-27b (6 permission `purchase_request`), TC-APR-17 (jenis di luar katalog; semua jenis Katalog sudah tersambung), TC-APR-21 (7 aturan demo, termasuk PRQ toko online).
 
@@ -193,6 +194,10 @@ Domain `app/Domain/PurchaseRequest`: 5 aksi (`CreatePurchaseRequest` dengan `upd
 1. **PRQ backorder tidak menunggu tinjauan**: langsung diajukan seperti PRQ manual, karena REQ-nya sudah disetujui ([A-171](04-keputusan-dan-asumsi.md#a-171)).
 2. **Jenis vendor untuk aturan** dibaca sebelum ada catatan pemesanan dari vendor tetap item ([A-173](04-keputusan-dan-asumsi.md#a-173)).
 3. **Rujukan GRN per baris layar**, bukan per GRN: satu GRN boleh memuat beberapa PRQ dari vendor yang sama dan baris tanpa rujukan ([A-174](04-keputusan-dan-asumsi.md#a-174)).
+
+### 13.4 Saran vendor dari riwayat (28 September 2026)
+
+Dialog *Catat pemesanan* menyarankan vendor terakhir & termurah 6 bulan per item dari riwayat (`Purchasing\Support\VendorSuggestions`), menggantikan vendor tetap item ([A-304](04b-asumsi-lanjutan.md#a-304), [A-305](04b-asumsi-lanjutan.md#a-305)); termurah hanya nama vendor dan hanya bagi `po.view` (D-07). Alasan pilihan tetap opsional (`vendor_note`). Kondisi approval jenis vendor tidak lagi dinilai di PRQ ([A-308](04b-asumsi-lanjutan.md#a-308)); keputusan implementasi no. 2 di atas digantikan.
 
 ### 13.3 Sisa pekerjaan
 

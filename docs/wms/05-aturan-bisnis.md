@@ -1,8 +1,8 @@
 # Aturan Bisnis, Relasi Dokumen & Matriks Kejadian
 
-**Versi:** 0.11
-**Tanggal:** 26 September 2026
-**Status:** aturan dari A-25–A-49 dan A-51–A-66 berlaku (23 Sep 2026); BR-PRJ-02, BR-RET-02, BR-SJ-07 memuat bagian dari A-50 (menunggu validasi); baru: BR-GEN-11, BR-STK-15–16, BR-REQ-11–15, BR-SJ-09–10, BR-OPN-09–10, BR-PRJ-09 [F2], BR-AST-08; v0.6: BR-SJ-05/06, BR-REQ-10, BR-RET-05 diubah; v0.7: BR-ACC-01–06 (modul Access); v0.8: BR-MST-01–05 (modul Master); v0.9: BR-WH-01–07 (modul Warehouse); v0.10: BR-LED-01–06 (modul Stock); v0.11: BR-RET-02, BR-RET-03, BR-SJ-07 dan matriks §14 diperjelas untuk SJ tanpa PCK, SJ jemput, dan TRF aset On-site antar proyek ([A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248), [A-249](04b-asumsi-lanjutan.md#a-249))
+**Versi:** 0.18
+**Tanggal:** 28 September 2026
+**Status:** aturan dari A-25–A-49 dan A-51–A-66 berlaku (23 Sep 2026); BR-PRJ-02, BR-RET-02, BR-SJ-07 memuat bagian dari A-50 (menunggu validasi); baru: BR-GEN-11, BR-STK-15–16, BR-REQ-11–15, BR-SJ-09–10, BR-OPN-09–10, BR-PRJ-09 [F2], BR-AST-08; v0.6: BR-SJ-05/06, BR-REQ-10, BR-RET-05 diubah; v0.7: BR-ACC-01–06 (modul Access); v0.8: BR-MST-01–05 (modul Master); v0.9: BR-WH-01–07 (modul Warehouse); v0.10: BR-LED-01–06 (modul Stock); v0.11: BR-RET-02, BR-RET-03, BR-SJ-07 dan matriks §14 diperjelas untuk SJ tanpa PCK, SJ jemput, dan TRF aset On-site antar proyek ([A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248), [A-249](04b-asumsi-lanjutan.md#a-249)); v0.12: BR-OPN-05 dan BR-OPN-07 — selisih besar ikut dihitung ulang ([A-259](04b-asumsi-lanjutan.md#a-259)); v0.13: BR-GRN-05 — bonus vendor di luar batas pesanan ([A-267](04b-asumsi-lanjutan.md#a-267)); v0.14: BR-REQ-14 — hari kerja memakai kalender libur company ([A-270](04b-asumsi-lanjutan.md#a-270)); v0.15: BR-WA-01–04 WhatsApp Fase 2a ([31-whatsapp](31-whatsapp.md)); v0.16: BR-GEN-12 dan BR-MST-06 baru, BR-REQ-06 dan BR-CNV-03 diubah — tiga jenis barang ([A-283](04b-asumsi-lanjutan.md#a-283)–[A-286](04b-asumsi-lanjutan.md#a-286)); v0.17: BR-GRN-01, 02, 04, 05 dan matriks §14 diperluas — penerimaan Baik/Rusak/Kurang tanpa QC ([A-287](04b-asumsi-lanjutan.md#a-287), [A-289](04b-asumsi-lanjutan.md#a-289), [A-290](04b-asumsi-lanjutan.md#a-290)); v0.18: §6a `BR-LBL-01`–`05` label kemasan & pemindaian wajib keluar gudang ([A-296](04b-asumsi-lanjutan.md#a-296)–[A-301](04b-asumsi-lanjutan.md#a-301), perlu validasi)
 **Dokumen terkait:** [Blueprint](01-blueprint.md) · [Katalog Status & Enum](06-katalog-status-dan-enum.md) · [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · [Akuntansi](../akuntansi/01-lingkup-dan-integrasi-wms.md) · [Purchasing](../purchasing/01-lingkup-dan-integrasi-wms.md)
 
 Dokumen ini mengumpulkan aturan bisnis yang sebelumnya tersebar di prosa Blueprint, memberinya **ID stabil** agar bisa dirujuk spesifikasi modul (Part 4), kasus uji, dan prompt Claude Code (Part 6).
@@ -70,6 +70,7 @@ Setiap dokumen menyimpan `source_type` + `source_id` (polimorfik) ke induknya, d
 | BR-GEN-09 | Cakupan akses melekat pada **penugasan role × scope** (user bisa Kepala Gudang di A dan Staf di B). Role Klien tidak bisa digabung dengan role internal. | F1 | [A-46](04-keputusan-dan-asumsi.md#a-46) |
 | BR-GEN-10 | Kebutuhan bertag `[F2]`/`[F3]` di Fase 1 dibangun sebagai *stub*: tabel & titik sambung ada, UI tidak ditampilkan. | F1 | audit |
 | BR-GEN-11 | **Form:** setiap field wajib ditandai `*` di label. Pada aksi **tolak/batal**: *Alasan* (master Alasan) wajib `*`, kolom *Keterangan* (teks bebas, `notes`) **opsional**. Berlaku untuk semua dokumen dan master. | F1 | Pemilik produk, 23 Sep 2026 |
+| BR-GEN-12 | **Saklar fitur company (P-08 lapis 1):** saklar yang mati menyembunyikan pilihan dan layar khususnya, dan aksi **menolak data baru** yang memakainya (item baru/kombinasi baru, konversi Potong baru). Item, stok, dan draf yang sudah ada tetap berjalan (P-03). | F1 | [A-284](04b-asumsi-lanjutan.md#a-284) |
 
 <a id="br-mst"></a>
 ## 13b. Master data — `BR-MST`
@@ -83,6 +84,7 @@ Aturan yang lahir dari [spesifikasi modul Master](11-master.md); melengkapi P-03
 | BR-MST-03 | Setiap kategori satuan wajib punya satu **satuan acuan** dengan `factor_to_reference = 1`; faktor satuan lain relatif terhadapnya. | F1 | Blueprint 6.5 |
 | BR-MST-04 | **Proyek Internal** ([A-06](04-keputusan-dan-asumsi.md#a-06)) tidak boleh punya klien, dan company wajib punya minimal satu Proyek Internal aktif selama fitur konversi atau peminjaman ke orang dipakai. | F1 | [A-06](04-keputusan-dan-asumsi.md#a-06), [BR-AST-02](#br-ast) |
 | BR-MST-05 | Master hanya bisa dinonaktifkan bila tidak sedang dipakai data aktif (mis. kategori dengan item aktif, klien dengan proyek aktif, satuan yang menjadi satuan dasar item aktif). Penonaktifan memakai Alasan `*` ([BR-GEN-11](#br-gen)). | F1 | P-03 |
+| BR-MST-06 | **Jenis barang** item (Barang biasa / Barang berkedaluwarsa / Alat bernomor seri) tidak bisa diubah setelah item punya pergerakan stok. Item di luar tiga jenis (*Jenis khusus*) tetap bisa dibuka; pengaturan teknisnya read-only. | F1 | [A-283](04b-asumsi-lanjutan.md#a-283) |
 
 <a id="br-wh"></a>
 ## 13c. Gudang & lokasi — `BR-WH`
@@ -145,7 +147,7 @@ Aturan yang lahir dari [spesifikasi modul Stock](13-stock.md); melengkapi P-01 d
 | BR-REQ-03 | Baris non-katalog wajib **dipetakan** oleh staf ke item yang ada atau item baru berstatus `provisional` sebelum meninggalkan `under_review`. Item `provisional` harus dilengkapi Admin sebelum GRN pertama. | F1 | [A-39](04-keputusan-dan-asumsi.md#a-39) |
 | BR-REQ-04 | **Gudang sumber** per baris ditetapkan sebelum `pending_approval` (oleh staf untuk REQ klien, oleh pemohon/sistem untuk REQ internal); sistem menyarankan gudang terdekat/induk dengan stok tersedia. Satu baris boleh **dipecah** menjadi beberapa baris dengan gudang sumber berbeda (`split_from_line_id`, total tetap); sistem menyarankan pemecahan bila satu gudang tidak cukup, dan tiap gudang mengirim langsung ke tujuan tanpa transfer dulu. | F1 | [A-31](04-keputusan-dan-asumsi.md#a-31), [A-56](04-keputusan-dan-asumsi.md#a-56) |
 | BR-REQ-05 | Saat `approved`, tiap baris harus punya sumber: (a) stok tersedia → reservasi lunak; (b) transfer dari gudang lain → TRF dibuat; (c) pembelian → PRQ dibuat. Baris tanpa sumber menahan approval. Ini menggantikan P-02 v0.2. | F1 | [A-30](04-keputusan-dan-asumsi.md#a-30) |
-| BR-REQ-06 | Untuk item `both`, baris menyimpan `line_ownership` = `buy` atau `loan` (default dari item). Baris `loan` hanya untuk item berserial. | F1 | [A-38](04-keputusan-dan-asumsi.md#a-38) |
+| BR-REQ-06 | Baris menyimpan `line_ownership` dari jenis barang: Alat bernomor seri (`asset`) = `loan`, lainnya = `buy`; nilainya ditetapkan aksi simpan, bukan layar. Hanya item `both` yang memakai pilihan pemohon (default dari item). Baris `loan` hanya untuk item berserial. | F1 | [A-38](04-keputusan-dan-asumsi.md#a-38), [A-286](04b-asumsi-lanjutan.md#a-286) |
 | BR-REQ-07 | Pemohon tidak boleh menjadi approver dokumennya sendiri (SoD). | F1 | [A-45](04-keputusan-dan-asumsi.md#a-45) |
 | BR-REQ-08 | Barang backorder yang tiba (GRN merujuk PRQ/TRF) otomatis direservasi ke REQ penunggu dengan urutan `required_date`, lalu disarankan **cross-dock**. | F1 | [A-47](04-keputusan-dan-asumsi.md#a-47) |
 | BR-REQ-09 | REQ `partially_fulfilled` boleh ditutup dengan sisa (`closed_short`) oleh Kepala Gudang atau pemohon; sisa reservasi & PRQ yang belum diteruskan dibatalkan. | F1 | [A-30](04-keputusan-dan-asumsi.md#a-30) |
@@ -153,7 +155,7 @@ Aturan yang lahir dari [spesifikasi modul Stock](13-stock.md); melengkapi P-01 d
 | BR-REQ-11 | **Titik pesan ulang:** job harian membuat **draf** PRQ (`origin = reorder_point`) per gudang untuk item yang stok tersedianya < titik pesan ulang (jumlah = stok minimum − tersedia, minimal sebesar titik pesan ulang); Kepala Gudang meninjau lalu `pr.submit` atau `pr.cancel`. Tidak dibuat ulang selama masih ada draf/PRQ terbuka untuk item & gudang yang sama. | F1 | [A-52](04-keputusan-dan-asumsi.md#a-52), Blueprint 6.4 |
 | BR-REQ-12 | **Klien menambah baris:** boleh menambah (bukan mengurangi/menghapus) selama `draft`/`submitted`/`under_review`; saat `pending_approval`, penambahan mengembalikan REQ ke `under_review` dan snapshot approval dibuang. Setelah `approved`, tambahan menjadi **REQ Tambahan** (`origin = supplement`, `parent_request_id`), nomor & approval sendiri, tampil sebagai anak di REQ induk. | F1 | [A-54](04-keputusan-dan-asumsi.md#a-54) |
 | BR-REQ-13 | **Penggantian item:** saat staf memetakan baris klien ke item lain, sistem memberi tahu klien "X diganti menjadi Y"; klien boleh menolak baris itu (`substitution_response = rejected`, alasan `*`) sampai `substitution_deadline_at` (= saat penggantian + `substitution_objection_days`, default 1 hari); lewat batas = `expired` (dianggap setuju). REQ tidak tertahan; baris yang ditolak `cancelled` dan reservasinya dilepas (BR-STK-05). | F1 | [A-55](04-keputusan-dan-asumsi.md#a-55) |
-| BR-REQ-14 | **SLA tinjau & tanggal janji:** REQ klien di `under_review` lebih dari `review_sla_days` (default 1 hari kerja) → pengingat ke staf & Kepala Gudang, diulang harian. Staf mengisi `promised_date` per baris saat tinjau/penetapan sumber (default = `required_date` bila stok tersedia); tampil di portal; perubahan tercatat di timeline dan diberitahukan ke klien. | F1 | [A-60](04-keputusan-dan-asumsi.md#a-60) |
+| BR-REQ-14 | **SLA tinjau & tanggal janji:** REQ klien di `under_review` lebih dari `review_sla_days` (default 1 hari kerja — hari kerja per minggu company dikurangi kalender libur, [A-270](04b-asumsi-lanjutan.md#a-270)) → pengingat ke staf & Kepala Gudang, diulang harian. Staf mengisi `promised_date` per baris saat tinjau/penetapan sumber (default = `required_date` bila stok tersedia); tampil di portal; perubahan tercatat di timeline dan diberitahukan ke klien. | F1 | [A-60](04-keputusan-dan-asumsi.md#a-60) |
 | BR-REQ-15 | **Permintaan pembatalan oleh klien:** setelah `approved`, klien mengajukan `request.request_cancel` per baris yang belum ada SJ `shipped` (alasan `*`); staf/Kepala Gudang `request.confirm_cancel` → baris `cancelled`, reservasi/PCK/PRQ/TRF terkait dilepas; ditolak → baris tetap, klien diberi tahu. Sebelum `approved` klien membatalkan langsung (`request.cancel`). | F1 | [A-61](04-keputusan-dan-asumsi.md#a-61) |
 
 <a id="br-sj"></a>
@@ -177,11 +179,22 @@ Aturan yang lahir dari [spesifikasi modul Stock](13-stock.md); melengkapi P-01 d
 
 | ID | Aturan | Fase | Sumber |
 |---|---|---|---|
-| BR-GRN-01 | Ledger diposting saat GRN `received` ke bin `receiving`, atau ke `quarantine` bila item/company mewajibkan QC. Kejadian stok terbit pada saat yang sama. Baris GRN vendor merujuk baris **catatan pemesanan** PRQ bila ada ([A-51](04-keputusan-dan-asumsi.md#a-51)). | F1 | [A-34](04-keputusan-dan-asumsi.md#a-34) |
-| BR-GRN-02 | QC adalah langkah per baris dengan hasil `passed`/`quarantined`/`rejected`; `rejected` menunggu RTV, `quarantined` menunggu keputusan ulang. | F1 | [A-34](04-keputusan-dan-asumsi.md#a-34) |
+| BR-GRN-01 | Ledger diposting saat GRN `received` ke bin `receiving`, atau ke `quarantine` bila item/company mewajibkan QC. Kejadian stok terbit pada saat yang sama. Baris GRN vendor merujuk baris **catatan pemesanan** PRQ bila ada ([A-51](04-keputusan-dan-asumsi.md#a-51)). Baris GRN vendor mencatat Baik, Rusak (+ alasan), dan Kurang; Baik ke `receiving`/`quarantine` seperti di atas, Rusak ke bin `quarantine` berkondisi `damaged` tanpa QC, Kurang tidak menyentuh stok; hanya Baik yang dihitung diterima pesanan ([A-287](04b-asumsi-lanjutan.md#a-287)). | F1 | [A-34](04-keputusan-dan-asumsi.md#a-34), [A-287](04b-asumsi-lanjutan.md#a-287) |
+| BR-GRN-02 | QC adalah langkah per baris dengan hasil `passed`/`quarantined`/`rejected`; `rejected` menunggu RTV, `quarantined` menunggu keputusan ulang. QC hanya untuk bagian Baik; bagian Rusak saat penerimaan tidak melewati QC ([A-287](04b-asumsi-lanjutan.md#a-287)). | F1 | [A-34](04-keputusan-dan-asumsi.md#a-34), [A-287](04b-asumsi-lanjutan.md#a-287) |
 | BR-GRN-03 | Put-away menyarankan bin berdasarkan kategori penyimpanan item, kapasitas, dan kedekatan zona; staf boleh mengganti. | F1 | Blueprint 6.3 |
-| BR-GRN-04 | Retur ke vendor (RTV) hanya dari bin `quarantine`; barang pengganti masuk lewat GRN baru yang merujuk RTV. | F1 | [A-34](04-keputusan-dan-asumsi.md#a-34) |
-| BR-GRN-05 | GRN dari SJ/RET tidak boleh menerima lebih dari yang dikirim; kelebihan dicatat sebagai baris tanpa rujukan dan memicu ADJ. | F1 | audit |
+| BR-GRN-04 | Retur ke vendor (RTV) hanya dari bin `quarantine`; barang pengganti masuk lewat GRN baru yang merujuk RTV. RTV juga boleh langsung dari bagian Rusak yang dicatat saat GRN (bin `quarantine`, kondisi `damaged`), dihitung terpisah dari bagian hasil QC ([A-290](04b-asumsi-lanjutan.md#a-290)). | F1 | [A-34](04-keputusan-dan-asumsi.md#a-34), [A-290](04b-asumsi-lanjutan.md#a-290) |
+| BR-GRN-05 | GRN dari SJ/RET tidak boleh menerima lebih dari yang dikirim; kelebihan dicatat sebagai baris tanpa rujukan dan memicu ADJ. GRN vendor tidak boleh menerima lebih dari sisa pesanan PRQ/PO pada baris yang merujuknya; barang bonus vendor dicatat sebagai baris terpisah bertanda bonus dengan keterangan ([A-267](04b-asumsi-lanjutan.md#a-267)). Batas sisa pesanan dihitung dari Baik + Rusak (termasuk draf lain); jumlah menurut surat jalan vendor boleh melebihi ([A-289](04b-asumsi-lanjutan.md#a-289)). | F1 | audit, [A-289](04b-asumsi-lanjutan.md#a-289) |
+
+<a id="br-lbl"></a>
+## 6a. Label kemasan & penelusuran — `BR-LBL`
+
+| ID | Aturan | Fase | Sumber |
+|---|---|---|---|
+| BR-LBL-01 | Label kemasan adalah lapisan penelusuran di atas stok: membuat, memindai, membuka lagi, atau membatalkan label **tidak pernah** mengubah stok; perubahan label berjalan di transaksi yang sama dengan gerakan stok dokumen yang memicunya dan tercatat di riwayat label. | F1 | P-01, [A-296](04b-asumsi-lanjutan.md#a-296) |
+| BR-LBL-02 | Label induk hanya untuk bagian **Baik** (tanpa QC atau lolos QC) baris GRN vendor yang sudah selesai, item Barang biasa/berkedaluwarsa; jumlah kemasan 1–1000, isi > 0, semua kemasan terisi dan jumlah isi = sisa Baik yang belum berlabel. Label isi hanya dari label induk Di gudang yang masih berisi (maks. 1000). | F1 | [A-296](04b-asumsi-lanjutan.md#a-296) |
+| BR-LBL-03 | Label yang dipindai keluar harus berstatus Di gudang, berada di gudang dokumen, untuk item & lot baris itu, dan jumlah yang diambil ≤ isi yang tersisa; label induk yang isinya sudah dipecah dipindai lewat label isinya. | F1 | [A-299](04b-asumsi-lanjutan.md#a-299) |
+| BR-LBL-04 | Barang berlabel yang keluar gudang (PCK selesai, ISU dikonfirmasi) wajib dipindai: per item + lot, isi label yang dipindai ≥ min(jumlah keluar, isi label Di gudang di gudang itu, saldo gudang); jumlah diambil tidak boleh kurang dari isi label yang sudah dipindai. | F1 | [A-299](04b-asumsi-lanjutan.md#a-299) |
+| BR-LBL-05 | Hanya label Di gudang yang bisa dibatalkan, dengan alasan (BR-GEN-11); label Keluar kembali Di gudang hanya lewat GRN tujuan/retur atau ISU pembalik. | F1 | [A-300](04b-asumsi-lanjutan.md#a-300), [A-301](04b-asumsi-lanjutan.md#a-301) |
 
 <a id="br-ret"></a>
 ## 7. Transfer & retur — `BR-RET`
@@ -201,7 +214,7 @@ Aturan yang lahir dari [spesifikasi modul Stock](13-stock.md); melengkapi P-01 d
 |---|---|---|---|
 | BR-CNV-01 | Konversi wajib proyek (Proyek Internal untuk persiapan stok) dan terjadi di satu gudang. | F1 | D-10, [A-06](04-keputusan-dan-asumsi.md#a-06) |
 | BR-CNV-02 | Neraca ukuran wajib seimbang: Σ input = Σ output + Σ offcut + waste + kerf (toleransi pembulatan satuan). | F1 | Blueprint 6.7 |
-| BR-CNV-03 | Sisa ≥ `min_offcut_length` → offcut (potongan baru, item sama); sisa < minimum → waste. `min_offcut_length` wajib untuk item yang bisa dipotong. | F1 | [A-19](04-keputusan-dan-asumsi.md#a-19) |
+| BR-CNV-03 | Sisa ≥ `min_offcut_length` → offcut (potongan baru, item sama); sisa < minimum → waste. `min_offcut_length` wajib untuk item yang bisa dipotong. Tanda *Bisa dipotong* hanya disyaratkan untuk konversi **Potong**; Ganti kemasan, Rakit, Bongkar menerima barang habis pakai tanpa tanda itu. | F1 | [A-19](04-keputusan-dan-asumsi.md#a-19), [A-285](04b-asumsi-lanjutan.md#a-285) |
 | BR-CNV-04 | Setiap output/offcut menyimpan `parent_piece_id`/`parent_lot_id` (silsilah dua arah). | F1 | Blueprint 6.7 |
 | BR-CNV-05 | Pembalikan CNV hanya bila semua output & offcut masih ada di bin dan belum dipakai dokumen lain. | F1 | P-03 |
 | BR-CNV-06 | Resep konversi: template input→output; tidak mengunci hasil nyata. | F2 | Blueprint 6.7 |
@@ -229,9 +242,9 @@ Aturan yang lahir dari [spesifikasi modul Stock](13-stock.md); melengkapi P-01 d
 | BR-OPN-02 | Pembekuan: bin `frozen` menolak PCK/PUT/SJ/ISU baru. Sesi tidak bisa dimulai bila ada PCK `in_progress` di cakupan; Kepala Gudang dapat **override** untuk SJ mendesak dengan alasan, dan bin itu dihitung ulang setelahnya. | F1 | [A-42](04-keputusan-dan-asumsi.md#a-42) |
 | BR-OPN-03 | Transaksi PWA offline yang tiba saat bin beku masuk antrean tinjauan, tidak diposting otomatis. | F2 | [A-42](04-keputusan-dan-asumsi.md#a-42) |
 | BR-OPN-04 | Toleransi: selisih diklasifikasi `minor` bila ≤ ambang **relatif** dan ≤ ambang **absolut** (default 1 % dan 1 unit dasar); `moderate` bila ≤ 5 %; selebihnya `major`. Ambang bisa diatur per company & kategori item. | F1 | [A-42](04-keputusan-dan-asumsi.md#a-42) (mengubah A-16) |
-| BR-OPN-05 | Hitung ulang wajib oleh penghitung berbeda dari hitungan pertama. | F1 | Blueprint 9 |
+| BR-OPN-05 | Hitung ulang wajib oleh penghitung berbeda dari hitungan pertama; berlaku untuk baris selisih `moderate` **dan** `major` (satu putaran, angka akhir = hitung ulang). | F1 | Blueprint 9, [A-259](04b-asumsi-lanjutan.md#a-259) |
 | BR-OPN-06 | Rekonsiliasi menghasilkan satu ADJ per gudang; persetujuan di tingkat sesi menggantikan approval per ADJ. | F1 | [A-09](04-keputusan-dan-asumsi.md#a-09) |
-| BR-OPN-07 | Selisih `major` wajib kategori akar masalah sebelum sesi disetujui. | F1 | Blueprint 9 |
+| BR-OPN-07 | Selisih yang tetap `major` setelah hitung ulang wajib kategori akar masalah sebelum sesi direkonsiliasi. | F1 | Blueprint 9, [A-259](04b-asumsi-lanjutan.md#a-259) |
 | BR-OPN-08 | Auditor: read-only terhadap mutasi stok, tetapi boleh membuat sesi, menginput hitungan, dan menyetujui rekonsiliasi sesuai role. Auditor eksternal dibatasi gudang & periode. | F1/F2 | [A-46](04-keputusan-dan-asumsi.md#a-46) |
 | BR-OPN-09 | **Pemisahan tugas opname:** penghitung suatu sesi tidak boleh menyetujui sesi itu; sesi `annual` dan sesi audit (`adhoc`/`spot_check` yang dibuat Auditor) disetujui oleh Auditor Internal atau Manajemen, bukan Kepala Gudang gudang dalam cakupan. Diterapkan lewat guard `count.approve` dan aturan approval bawaan OPN. | F1 | Pemilik produk 23 Sep 2026, BR-APR-03 |
 | BR-OPN-10 | **Pemeriksaan mendadak** (`count_type = spot_check`) oleh Auditor/Kepala Gudang: cakupan beberapa bin/item, **tanpa pembekuan** (BR-OPN-02 tidak berlaku), hitung buta, klasifikasi selisih sama (BR-OPN-04), hasil masuk dashboard akurasi. Sesi spot check tidak memposting ADJ sendiri; selisih `major` ditindaklanjuti lewat sesi opname biasa atau ADJ manual. | F1 | Pemilik produk 23 Sep 2026 |
@@ -252,6 +265,16 @@ Aturan yang lahir dari [spesifikasi modul Stock](13-stock.md); melengkapi P-01 d
 | BR-APR-09 | Cara putus "cukup salah satu": keputusan pertama yang tercatat menang; keputusan berikutnya ditolak dengan pesan. | F1 | [A-45](04-keputusan-dan-asumsi.md#a-45) |
 | BR-APR-10 | Keputusan via WhatsApp mencatat nomor pengirim, `wa_message_id`, id token, dan waktu; token sekali pakai dan kedaluwarsa. | F2 | Blueprint 8.2 |
 | BR-APR-11 | Simulasi aturan wajib tersedia sebelum aturan disimpan ("siapa yang akan approve dokumen contoh ini?"). | F1 | Blueprint 8.1 |
+
+<a id="br-wa"></a>
+### 11a. WhatsApp — `BR-WA` (Fase 2a)
+
+| ID | Aturan | Fase | Sumber |
+|---|---|---|---|
+| BR-WA-01 | Pesan WhatsApp hanya ke nomor **terverifikasi** (kode lewat WhatsApp) milik user aktif; nomor pengirim tombol approval harus sama dengan nomor terverifikasi approver tugas itu; nomor yang berganti harus diverifikasi ulang. | F2 | [A-275](04b-asumsi-lanjutan.md#a-275) |
+| BR-WA-02 | Tiga lapis izin: fitur `whatsapp` company (Super Admin) → kejadian diizinkan Admin Company (langsung/ringkasan) atau lapis aturan *Web & WhatsApp* → preferensi user. Tanpa salah satunya tidak ada pesan. | F2 | Blueprint §10, [A-276](04b-asumsi-lanjutan.md#a-276), [A-277](04b-asumsi-lanjutan.md#a-277) |
+| BR-WA-03 | Kuota bulanan pesan template per company = `plans.wa_quota`; habis → WhatsApp berhenti sampai bulan berikutnya, lonceng/email tetap, Admin Company diberi tahu sekali per bulan. | F2 | [A-278](04b-asumsi-lanjutan.md#a-278), [O-04](04-keputusan-dan-asumsi.md#o-04) |
+| BR-WA-04 | Webhook diproses hanya bila tanda tangan `X-Hub-Signature-256` sah; satu `wa_message_id` masuk diproses sekali. | F2 | [A-274](04b-asumsi-lanjutan.md#a-274) |
 
 <a id="br-prj"></a>
 ## 12. Proyek, klien, portal — `BR-PRJ`
@@ -302,7 +325,7 @@ Satu kejadian per satu pergerakan ledger. Ini menyelesaikan tumpang tindih di Ak
 
 | Pergerakan ledger | Dokumen & status pemicu | Kejadian | Penanda tambahan |
 |---|---|---|---|
-| Masuk dari vendor → bin receiving/quarantine | GRN (vendor) `received` | `goods_received` | `po_ref` bila ada |
+| Masuk dari vendor → bin receiving/quarantine (Baik) dan quarantine berkondisi Rusak (A-287) | GRN (vendor) `received` | `goods_received` | `po_ref` bila ada; `stock_status`, `qty_short` |
 | Karantina → keluar ke vendor | RTV `shipped` | `goods_rejected` | `grn_ref` |
 | Bin → Loading Area | PCK `completed` | *(tidak ada kejadian; internal gudang)* | — |
 | Loading Area → in_transit | SJ `shipped` | `goods_shipped` | tujuan (proyek/klien/gudang) |

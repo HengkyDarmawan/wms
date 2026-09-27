@@ -1,6 +1,6 @@
 # Spesifikasi Modul — `issue` (Pemakaian Material di Site)
 
-**Versi:** 0.5
+**Versi:** 0.6
 **Tanggal:** 24 September 2026
 **Status:** selesai Fase 1 — modul kesebelas setelah [Transfer/Retur](22-retur-transfer.md) dan [Template dokumen & label](18-template-dokumen-label.md); ISU pembalik diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-117](04-keputusan-dan-asumsi.md#a-117)–[A-119](04-keputusan-dan-asumsi.md#a-119) dan [A-150](04-keputusan-dan-asumsi.md#a-150)–[A-152](04-keputusan-dan-asumsi.md#a-152) (*Perlu validasi*)
 **Modul:** `issue` (ISU)
@@ -186,6 +186,8 @@ Uji di `tests/Feature/Issue` (17 uji): `IssueTest`, `IssueReversalTest`, `IssueC
 | TC-ISU-16 | Layar | ubah draf pemohon; batal lewat dialog; tolak pembalik lewat dialog | jumlah terganti; Alasan wajib, `cancelled`; tetap draf + pesan ajukan ulang | §6, BR-GEN-11 |
 | TC-ISU-17 | ISU dikonfirmasi & draf dibatalkan | cetak | HTML memuat nomor, judul, item, keperluan, blok *PIC proyek*, tanpa nilai uang; PDF 200; staf CKG 404; driver 403; tanda air DIBATALKAN; tombol di detail | 18 §5.1, D-07, A-152 |
 | TC-ISU-18 | ISU dikonfirmasi | unggah foto pemakaian (POST) | lampiran `photo` tersimpan & terbuka lewat `/attachments/{id}`; staf gudang lain 404; PDF ditolak; tanpa `issue.create` 403; kartu *Foto pemakaian* di detail | A-238, NFR-14 |
+| TC-ISU-20 | kabel 24 berlabel dikirim ke KRW1 (PCK memindai label) | ISU 12 tanpa pindai; layar ISU pindai induk (dialog 12) lalu simpan & konfirmasi | label Di gudang KRW1 di bin penyimpanan site; tanpa pindai BR-LBL-04; klaim tersimpan di baris; label Keluar "Keluar (dipakai)" | BR-LBL-04, [A-299](04b-asumsi-lanjutan.md#a-299) |
+| TC-ISU-21 | ISU 12 dengan label dikonfirmasi | ISU pembalik disetujui | label kembali Di gudang isi 12, "Kembali (pembalik pemakaian)" | [A-300](04b-asumsi-lanjutan.md#a-300) |
 
 Uji modul lain yang berubah: TC-ACC-27b (5 permission modul `issue`), TC-RPT-01 (8 laporan).
 
@@ -221,6 +223,10 @@ Domain `app/Domain/Issue` ([Arsitektur §4](08-arsitektur.md#4-struktur-kode) `I
 2. **ISU pembalik tanpa status baru** ([A-150](04-keputusan-dan-asumsi.md#a-150)): menunggu approval ditandai snapshot, bukan status; ditolak tetap `draft`.
 3. **Laporan Material per Proyek dari kartu stok** ([A-151](04-keputusan-dan-asumsi.md#a-151)); **cetak ISU** ([A-152](04-keputusan-dan-asumsi.md#a-152)).
 4. **Draf tidak memegang stok.** Stok diperiksa saat draf disimpan dan diulang saat konfirmasi di dalam transaksi yang mengunci ISU; `StockLedger` tetap penjaga terakhir saldo bin.
+
+### 13.4 Label kemasan (28 September 2026)
+
+`IssueForm::pindai` mengenali label kemasan (klaim per kunci calon, dialog jumlah isi untuk induk); `IssuableStock::normalize` membawa `labels` ke `material_issue_lines.labels`; `ConfirmMaterialIssue` memeriksa cakupan lalu memposting label Keluar; `IssuePoster::reverse` membuka lagi label baris asal ([A-299](04b-asumsi-lanjutan.md#a-299), [A-300](04b-asumsi-lanjutan.md#a-300)).
 
 ### 13.3 Sisa pekerjaan
 

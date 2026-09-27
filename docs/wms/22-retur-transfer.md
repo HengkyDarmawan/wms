@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `transfer`, `return` (Transfer & Retur dari Proyek)
 
-**Versi:** 0.7
-**Tanggal:** 26 September 2026
-**Status:** selesai Fase 1 — modul kesepuluh setelah [Count/Adjustment](21-opname-penyesuaian.md); TRF dan RET diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-106](04-keputusan-dan-asumsi.md#a-106)–[A-116](04-keputusan-dan-asumsi.md#a-116) (*Perlu validasi*); v0.7: TRF aset On-site antar proyek ([A-249](04b-asumsi-lanjutan.md#a-249), [A-250](04b-asumsi-lanjutan.md#a-250)); SJ jemput tanpa PCK untuk barang di tangan klien & aset On-site ([A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248), mengubah A-111)
+**Versi:** 0.10
+**Tanggal:** 28 September 2026
+**Status:** selesai Fase 1 — modul kesepuluh setelah [Count/Adjustment](21-opname-penyesuaian.md); TRF dan RET diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-106](04-keputusan-dan-asumsi.md#a-106)–[A-116](04-keputusan-dan-asumsi.md#a-116) (*Perlu validasi*); v0.7: TRF aset On-site antar proyek ([A-249](04b-asumsi-lanjutan.md#a-249), [A-250](04b-asumsi-lanjutan.md#a-250)); SJ jemput tanpa PCK untuk barang di tangan klien & aset On-site ([A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248), mengubah A-111); v0.8: jumlah retur boleh diketik dalam kemasan item; batas retur tetap dalam satuan dasar ([A-291](04b-asumsi-lanjutan.md#a-291), §6, §10 TC-RET-22)
 **Modul:** `transfer` (TRF), `return` (RET)
 **Fase:** F1 (TRF antar gudang, antar proyek, dalam proyek; TRF dari backorder REQ; RET dari Gudang Site, aset On-site, barang terkirim ke klien, barang rusak ditinggal ekspedisi; GRN retur; pemilahan); pemeriksaan aset saat kembali (modul Aset) sebagai titik sambung
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-RET](05-aturan-bisnis.md#br-ret), [§BR-REQ](05-aturan-bisnis.md#br-req), [§BR-SJ](05-aturan-bisnis.md#br-sj) · [Katalog Status §2.7, §2.8, §3](06-katalog-status-dan-enum.md) · [Glosarium §5](03-glosarium.md#5-dokumen-transaksi) · [Model data 08b](08b-model-data-stok-dokumen.md) · [Alur 4 & 5](07a-proses-bisnis-lanjutan.md) · [A-26](04-keputusan-dan-asumsi.md#a-26), [A-33](04-keputusan-dan-asumsi.md#a-33), [A-40](04-keputusan-dan-asumsi.md#a-40), [A-50](04-keputusan-dan-asumsi.md#a-50), [A-65](04-keputusan-dan-asumsi.md#a-65)
@@ -125,7 +125,7 @@ Tabel transisi di Katalog §2.7–§2.8; di sini implementasinya. Semua transisi
 | `/transfers/create` | `transfer.transfer-form` | Gudang asal `*`, tujuan `*` (jenis transfer tampil), keterangan; baris item `*` × jumlah `*` dengan stok tersedia gudang asal |
 | `/transfers/{id}` | `transfer.transfer-detail` | Baris (jumlah/dikirim/diterima/REQ), PCK → SJ → GRN, setujui/tolak (dialog Alasan `*`), batal, *Buat tugas picking*, *Susun surat jalan* (prefill `?pick_task=`), *Terima di gudang tujuan*, *Riwayat approval*, riwayat |
 | `/returns`, `/portal/returns` | `return.return-list` | Cari, filter status; proyek, gudang tujuan, pengangkutan |
-| `/returns/create`, `/portal/returns/create` | `return.return-form` | Proyek `*`, gudang tujuan `*`, pengangkutan `*`; daftar barang yang bisa diretur per asal + jumlah maks |
+| `/returns/create`, `/portal/returns/create` | `return.return-form` | Proyek `*`, gudang tujuan `*`, pengangkutan `*`; daftar barang yang bisa diretur per asal + jumlah maks Jumlah retur punya pemilih satuan kemasan (bukan untuk serial/potongan); `goods_return_lines` menyimpan `uom_id`/`qty_input`/`uom_qty_base` ([A-291](04b-asumsi-lanjutan.md#a-291)). |
 | `/returns/{id}`, `/portal/returns/{id}` | `return.return-detail` | Baris & hasil pilah, setujui/tolak, batal, PCK & SJ balik, **Buat SJ jemput** (cara jemput, kendaraan master atau plat bebas, sopir pengguna atau nama bebas — [A-247](04b-asumsi-lanjutan.md#a-247)), *Terima retur (GRN)* (jemput: setelah SJ jemput tiba), **pemilahan** per baris dengan beberapa bagian (hasil, jumlah, bin, Alasan, panjang offcut), *Riwayat approval* (bukan portal), riwayat |
 
 Menu sidebar **Transfer & retur** (Transfer · Retur dari proyek; klien ke portal) dan palet Ctrl+K (*Transfer*, *Transfer baru*, *Retur dari proyek*, *Retur baru*), disaring permission. Layar lain yang berubah: form GRN menerima sumber *Retur dari proyek* (`?goods_return=`), detail GRN merujuk RET-nya, form SJ menerima `?pick_task=`, detail REQ menampilkan TRF backorder, daftar picking menampilkan baris REQ transfer yang barangnya sudah tiba.
@@ -198,10 +198,13 @@ Uji di `tests/Feature/Transfer` (17 uji) dan `tests/Feature/Return` (17 uji). Fi
 | TC-TRF-18 | aset belum dipinjam / proyek sama / tanpa aset / tujuan tanpa On-site / diajukan dua kali; SJ antar site | buat TRF aset; SJ tanpa plat, SJ kedua, batal SJ, batal TRF | BR-RET-02, BR-RET-01, BR-WH-03, BR-RET-02; BR-SJ-07, BR-RET-02; TRF kembali `approved`; `cancelled` | A-249 |
 | TC-TRF-19 | aset sedang diretur | TRF aset | BR-RET-02 | A-249 |
 | TC-TRF-20 | aset + 12 baut di KRW1 | pindahkan sisa ke P2 (Gudang Site P2); Gudang Site bukan milik P2 | TRF aset + TRF stok KRW1 → SBY1 ber-PCK; BR-RET-02, tidak ada TRF tertinggal; riwayat pindahan di kedua hub | A-250 |
+| TC-TRF-21 | PCK ke BKS memindai induk A utuh (10) & B sebagian (5) | SJ diterima GRN transfer BKS | A Di gudang BKS di bin Penerimaan "Diterima di gudang tujuan"; B tetap di CKG sisa 5 | [A-300](04b-asumsi-lanjutan.md#a-300) |
 | TC-RET-18 | 10 terkirim ke klien | RET 3 dijemput; SJ jemput tanpa plat/sopir/cara; SJ jemput bebas; berangkat; GRN sebelum tiba; tiba 2 baik 1 rusak (tanpa/dengan foto); GRN retur; pilah | tanpa PCK, `approved`; BR-SJ-07 ×3; `in_progress`, baris ber-`source_line_id`; tanpa pergerakan; BR-SJ-04; BR-SJ-05, `delivered` tanpa DSC, tiba 3; dari luar ke bin Retur; `sorted` | A-247, A-248 |
 | TC-RET-19 | stok KRW1 + barang klien | RET campuran dijemput; RET stok site SJ balik; diantar sendiri | BR-RET-03; lewat PCK & SJ jemput ditolak; `in_progress` | A-111, A-248 |
 | TC-RET-20 | RET jemput | SJ jemput dibatalkan; batal RET saat SJ `prepared`; batal setelah berangkat | RET kembali `approved`; RET & SJ `cancelled`; BR-GEN-03 | A-248 |
 | TC-RET-21 | layar | detail RET staf vs pemohon; form jemput tanpa plat lalu lengkap; detail SJ | tombol hanya pemegang `shipment.create`; galat plat lalu SJ; "Dijemput dari", plat, asal SJ | §6, A-247 |
+| TC-RET-22 | 30 baut di Gudang Site, DUS = 12 | retur 3 DUS, lalu 2 DUS | 36 > 30 ditolak BR-RET-03; 2 DUS tersimpan 24 + "2 DUS" | [A-291](04b-asumsi-lanjutan.md#a-291) |
+| TC-RET-23 | kabel berlabel terkirim ke klien (label Keluar) | retur penjualan 12 diterima GRN retur; pilah baik 4 rusak 8 | label kembali Di gudang di bin Retur; isi label 4, kejadian "Dipilah rusak/waste"; laporan vendor: retur rusak 8, dilacak "GRN, label" | [A-300](04b-asumsi-lanjutan.md#a-300), [A-301](04b-asumsi-lanjutan.md#a-301), [A-303](04b-asumsi-lanjutan.md#a-303) |
 
 TC-SJ-19 ([15-picking-shipment](15-picking-shipment.md)) menguji SJ jemput aset On-site + barang klien dalam satu SJ dan kolom asal per baris.
 
@@ -241,6 +244,14 @@ Domain `app/Domain/Transfer` (3 aksi: `CreateTransfer`, `ApproveTransfer`, `Canc
 2. **Asal baris RET** ([A-110](04-keputusan-dan-asumsi.md#a-110)), **SJ balik** ([A-111](04-keputusan-dan-asumsi.md#a-111)), **GRN retur** ([A-112](04-keputusan-dan-asumsi.md#a-112)), **pemilahan** ([A-113](04-keputusan-dan-asumsi.md#a-113)), **kolom di luar ERD** ([A-115](04-keputusan-dan-asumsi.md#a-115)).
 3. **DSC `returned_to_warehouse` tidak diubah** ([A-114](04-keputusan-dan-asumsi.md#a-114)): barang rusak yang dibawa balik sudah berada di bin Retur gudang asal berkondisi Rusak — setara pemilahan `damaged` — tanpa GRN retur.
 4. **Kegagalan PCK otomatis tidak membatalkan persetujuan**: dibungkus savepoint; alasan kegagalan masuk riwayat dokumen.
+
+### 13.4 Label kemasan (28 September 2026)
+
+GRN transfer dan GRN retur lewat SJ balik membuka lagi label yang keluar utuh lewat PCK SJ itu; retur penjualan membuka label dari PCK SJ asal (`ReceiveGoodsReceipt::bukaLabel`). `SortGoodsReturn` pilah rusak/waste memanggil `PackageLabelLedger::writeOffReturn` (label Batal beralasan bila habis). RET diantar sendiri dari Gudang Site tanpa PCK belum memindah label — ditelusuri lewat lot ([A-299](04b-asumsi-lanjutan.md#a-299)–[A-301](04b-asumsi-lanjutan.md#a-301)).
+
+### 13.5 Perapian tampilan (28 September 2026)
+
+Form Retur: kotak jumlah berakhiran satuan terpilih dan isian *Kemasan lain…* di baris tabel sendiri, sama dengan GRN & Permintaan ([A-291](04b-asumsi-lanjutan.md#a-291)); aturan tidak berubah.
 
 ### 13.3 Sisa pekerjaan
 

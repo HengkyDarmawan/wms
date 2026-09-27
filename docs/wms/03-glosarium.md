@@ -1,8 +1,8 @@
 # Glosarium
 
-**Versi:** 0.9
-**Tanggal:** 24 September 2026
-**Status:** istilah dari A-29–A-49 berlaku (validasi 23 Sep 2026); istilah yang bergantung pada [A-50](04-keputusan-dan-asumsi.md#a-50) mengikuti status validasinya; v0.7: istilah mesin approval (Tugas Approval, Cara Putus, Jenis Approver, Approver Cadangan, Simulasi Aturan) dari modul [20-approval](20-approval.md); v0.8: istilah cetak (Layout Induk, Template Dokumen, Label, Blok Tanda Tangan — [18](18-template-dokumen-label.md)); v0.9: istilah Purchasing inti Fase 1b (Purchase Order, Baris PO, Harga Beli Vendor, Harga Satuan, Nilai PO — [purchasing/02](../purchasing/02-purchasing-inti.md)); satu-satunya istilah bernilai uang di aplikasi ([A-208](04-keputusan-dan-asumsi.md#a-208))
+**Versi:** 0.21
+**Tanggal:** 28 September 2026
+**Status:** istilah dari A-29–A-49 berlaku (validasi 23 Sep 2026); istilah yang bergantung pada [A-50](04-keputusan-dan-asumsi.md#a-50) mengikuti status validasinya; v0.7: istilah mesin approval (Tugas Approval, Cara Putus, Jenis Approver, Approver Cadangan, Simulasi Aturan) dari modul [20-approval](20-approval.md); v0.8: istilah cetak (Layout Induk, Template Dokumen, Label, Blok Tanda Tangan — [18](18-template-dokumen-label.md)); v0.9: istilah Purchasing inti Fase 1b (Purchase Order, Baris PO, Harga Beli Vendor, Harga Satuan, Nilai PO — [purchasing/02](../purchasing/02-purchasing-inti.md)); satu-satunya istilah bernilai uang di aplikasi ([A-208](04-keputusan-dan-asumsi.md#a-208)); v0.10: istilah *Masuk sebagai* (impersonasi, [A-260](04b-asumsi-lanjutan.md#a-260)); v0.11: Ukuran Label, Desain Label (A-261, A-262); v0.12: Riwayat Cetak, Segel Tanda Tangan (A-263, A-264); v0.13: Harga sudah termasuk PPN (A-265); v0.14: Bonus Vendor (A-267); v0.15: Kalender Libur, Hari Kerja, Hanya dari Divisi Pemohon (A-269, A-270); v0.16: *OTP bukti terima otomatis*, *Kanal pesan* (A-273); v0.18: *Jenis Barang*, *Barang Biasa*, *Barang Berkedaluwarsa*, *Alat Bernomor Seri*, *Jenis Khusus* — istilah yang dilihat pengguna menggantikan mode pelacakan & kepemilikan di form item (A-283); v0.19: *Kemasan*, *Dikirim Vendor*, *Baik / Rusak / Kurang* (A-287, A-291); *Satuan Dasar* = satuan terkecil yang dikeluarkan; v0.20: *Label Kemasan*, *Label Induk*, *Label Isi*, *Label Serial*, *Telusuri Label*, *Batch Vendor* (A-296–A-303); v0.21: *Saran Vendor*, *Riwayat Harga Beli*; *Vendor Tetap* tidak dipakai lagi (A-304–A-310)
 **Dokumen terkait:** [Blueprint](01-blueprint.md) · [Katalog Status & Enum](06-katalog-status-dan-enum.md) (nilai status **tidak** diulang di sini) · [Aturan Bisnis](05-aturan-bisnis.md)
 
 Istilah di bawah **wajib dipakai sama persis** di UI, dokumen, dan kode. Kolom *Nama di kode* adalah acuan penamaan tabel/model/variabel (Inggris, `snake_case` untuk tabel; model = bentuk `PascalCase` tunggal). Kolom *Rujukan* menunjuk bagian Blueprint (BP) atau aturan bisnis (BR).
@@ -61,24 +61,34 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 |---|---|---|---|
 | Item / Barang | `item` | Master barang; status `item_status` (aktif / sementara / nonaktif) | BP 6.4 |
 | Item Sementara *(baru)* | `item` (status = provisional) | Item yang dibuat dari baris non-katalog, harus dilengkapi Admin | BR-REQ-03 |
+| Jenis Barang *(baru)* | `item_kind` (turunan, tanpa kolom) | Satu pilihan di form item yang menentukan pelacakan, kepemilikan, kedaluwarsa, dan Beli/Pinjam: Barang Biasa, Barang Berkedaluwarsa, Alat Bernomor Seri. Istilah yang dipakai di layar; *Mode Pelacakan* dan *Model Kepemilikan* hanya tampil untuk Jenis Khusus | [A-283](04b-asumsi-lanjutan.md#a-283), BR-MST-06 |
+| Barang Biasa *(baru)* | `item_kind = standard` | Habis pakai / dibeli putus: `none` + `consumable`, Beli, FIFO. Memotong termasuk pemakaian. Contoh: paku, pipa, besi | A-283 |
+| Barang Berkedaluwarsa *(baru)* | `item_kind = expiring` | Habis pakai dengan tanggal kedaluwarsa: `lot` + `consumable` + kedaluwarsa, Beli, FEFO. Contoh: semen, cat | A-283 |
+| Alat Bernomor Seri *(baru)* | `item_kind = serial_tool` | Dipinjamkan ke proyek dan pasti kembali: `serial` + `asset`, Pinjam. Contoh: genset, alat berat | A-283 |
+| Jenis Khusus *(baru)* | `item_kind = null` | Item lama di luar tiga jenis barang (mis. per potong, Keduanya); tetap dipakai, pengaturan teknisnya read-only | A-283 |
 | Kategori Barang | `item_category` | Pengelompokan item; membawa default penyimpanan, strategi, ambang toleransi | BP 6.3a |
 | Model Kepemilikan | `ownership_model` | `consumable`, `asset`, `both` | BP 6.4 |
 | Kepemilikan Baris *(baru)* | `line_ownership` | Pilihan `buy` / `loan` per baris permintaan untuk item `both` | BR-REQ-06 |
 | Mode Pelacakan | `tracking_mode` | `none`, `lot`, `serial`, `piece` | BP 6.4 |
-| Lot / Batch | `lot` | Kelompok barang dengan asal/tanggal produksi sama | BP 6.4 |
+| Lot / Batch | `lot` | Kelompok barang dengan asal/tanggal produksi sama. Untuk Barang berkedaluwarsa dari vendor, nomor lot dibuat otomatis = nomor GRN + urutan baris ([A-297](04b-asumsi-lanjutan.md#a-297)) | BP 6.4 |
+| Batch Vendor *(baru)* | `goods_receipt_lines.vendor_batch_no`, `lots.attributes.vendor_batch` | Nomor batch yang tertera dari vendor; opsional di GRN, disimpan di lot otomatis | [A-297](04b-asumsi-lanjutan.md#a-297) |
 | Serial Number | `serial` | Identitas unik satu unit | BP 6.4 |
 | Potongan | `piece` | Satu batang/lembar fisik berukuran tertentu | BP 6.7 |
 | Ukuran Potongan *(baru)* | `piece_length` | Panjang (atau dimensi) satu potongan dalam satuan dasar | BR-STK-09 |
 | Panjang Minimum Offcut *(baru)* | `min_offcut_length` | Batas sisa yang masih menjadi offcut | BR-CNV-03 |
 | Satuan | `uom` | Unit of measure | BP 6.5 |
 | Kategori Satuan | `uom_category` | Jumlah, panjang, berat, volume, luas | BP 6.5 |
-| Satuan Dasar | `base_uom` | Satuan penyimpanan stok untuk satu item | BP 6.5 |
+| Satuan Dasar | `base_uom` | Satuan penyimpanan stok untuk satu item — satuan terkecil yang dikeluarkan (mis. BOX); semua jumlah stok dicatat dalam satuan ini | BP 6.5, [A-291](04b-asumsi-lanjutan.md#a-291) |
 | Konversi Satuan | `uom_conversion` | Faktor antar satuan (global atau khusus item) | BP 6.5 |
+| Kemasan *(baru)* | `item_uom_conversion` | Satuan kemasan khusus item, mis. 1 DUS = 12 BOX; dipakai mengetik jumlah di GRN, Permintaan, Retur dan menguraikan saldo ("9 DUS 8 BOX"). Tab *Kemasan* di form item | [A-291](04b-asumsi-lanjutan.md#a-291)–[A-294](04b-asumsi-lanjutan.md#a-294) |
+| Dikirim Vendor *(baru)* | `qty_vendor` | Jumlah menurut surat jalan vendor di baris GRN vendor | [A-287](04b-asumsi-lanjutan.md#a-287) |
+| Baik / Rusak / Kurang *(baru)* | `qty_received` / `qty_damaged` / `qty_short` | Kondisi barang per baris GRN vendor: Baik masuk stok Tersedia, Rusak masuk bin Karantina berkondisi Rusak menunggu retur ke vendor, Kurang tetap sisa pesanan | [A-287](04b-asumsi-lanjutan.md#a-287) |
 | Titik Pesan Ulang | `reorder_point` | Batas stok yang memicu draf Purchase Request harian | BP 6.4, BR-REQ-11 |
 | Kelas ABC | `abc_class` | Klasifikasi item untuk cycle count | BP 9 |
 | Vendor | `vendor` | Pemasok barang; jenis `vendor_type` (perusahaan / toko / toko online / perorangan) | BP 6.3a, A-52 |
 | Vendor Sementara *(baru)* | `vendor` (status = provisional) | Vendor yang dibuat cepat saat memesan, dilengkapi Admin kemudian | A-53 |
-| Vendor Tetap *(baru)* | `item_vendor` | Vendor pilihan per item (prioritas, tanpa harga) yang disarankan saat memesan | A-52 |
+| Vendor Tetap *(tidak dipakai lagi)* | `item_vendor` | Dahulu vendor pilihan per item yang disarankan saat memesan; sejak A-305 data lama disimpan tetapi tidak dipakai — lihat *Saran Vendor* | A-52, [A-305](04b-asumsi-lanjutan.md#a-305) |
+| Saran Vendor *(baru)* | `VendorSuggestions` | Vendor terakhir dan vendor termurah 6 bulan untuk item, dari riwayat catatan pemesanan & PO; hanya saran — Purchasing bebas memilih vendor lain | [A-304](04b-asumsi-lanjutan.md#a-304) |
 | Klien | `client` | Pemilik proyek, pelanggan dari company | BP 6.3a |
 | Kendaraan *(baru)* | `vehicle` | Kendaraan pengiriman milik company | BP 6.3a |
 | Ekspedisi Pihak Ketiga *(baru)* | `carrier` | Jasa pengiriman luar; SJ mencatat nama & resi | BR-SJ-07 |
@@ -136,6 +146,12 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Keberatan Terima *(baru)* | `receipt_dispute` (`receipt_confirmation`) | Pemohon menolak sebagian bukti terima (kurang/rusak) dalam batas konfirmasi; membuka DSC | BR-REQ-10, A-63 |
 | Batas Konfirmasi Terima *(baru)* | `receipt_confirm_days` | Lama pemohon boleh konfirmasi/keberatan (default 3 hari) | BR-REQ-10 |
 | Tautan Bukti Terima *(baru)* | `delivery_token` | Token sekali pakai + OTP untuk penerima tanpa akun | BR-SJ-05 |
+| OTP bukti terima otomatis *(baru)* | `otp_auto` (`feature_settings`), `delivery_tokens.otp_sent_at` | Saklar company: OTP tautan penerima dikirim ke WhatsApp/SMS penerima, tidak tampil ke driver; *Kirim ulang* dari halaman penerima | A-273 |
+| Kanal pesan *(baru)* | `MessageGateway` (driver `none`/`log`/`http`) | Jalur kirim WhatsApp/SMS milik platform; penyedianya diatur di `.env` | A-273, O-15 |
+| Nomor WhatsApp terverifikasi *(baru)* | `users.phone`, `phone_verified_at` | Nomor yang lolos kode verifikasi; satu-satunya penerima pesan WA & pengirim tombol approval yang sah | BR-WA-01 |
+| Ringkasan harian (WhatsApp) *(baru)* | `wa_event_mode = digest`, `wms_ringkasan` | Notifikasi beberapa kejadian digabung satu pesan per hari | A-280 |
+| Tombol approval WhatsApp *(baru)* | `approval_steps.channel = both`, `approval_tokens` | Setujui/Tolak/Lihat detail di pesan WA; Tolak membuka web untuk alasan | BR-APR-10, A-277 |
+| Pemakaian WhatsApp *(baru)* | `wa_message_logs` (pusat) | Jumlah pesan per company per kategori per bulan; dasar kuota paket | BR-WA-03 |
 | Konfirmasi Terima Pemohon *(baru)* | `receipt_confirmation` | Konfirmasi pemohon setelah bukti terima driver | BR-REQ-10 |
 | Selisih Pengiriman *(baru)* | `delivery_discrepancy` (`DSC`) | Dokumen penyelesaian barang kurang atau rusak saat tiba | KS 2.4, BR-SJ-10 |
 | Jenis Selisih *(baru)* | `discrepancy_type` | Kurang / Rusak per baris DSC | BR-SJ-10 |
@@ -162,7 +178,13 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Purchase Order *(baru)* | `purchase_order` (`PO`) | Pesanan pembelian ke satu vendor untuk satu gudang tujuan, dari baris PRQ, dengan harga beli; disetujui menjadi catatan pemesanan (Fase 1b) | KS 2.17, A-210 |
 | Baris PO *(baru)* | `purchase_order_line` | Baris PRQ × jumlah × harga satuan; mencatat jumlah diterima dan ditutup | A-210, A-214 |
 | Harga Beli Vendor *(baru)* | `vendor_price` | Harga per satuan dasar item dari satu vendor, berlaku mulai tanggal tertentu; harga lama tetap sebagai riwayat | A-211 |
+| Riwayat Harga Beli *(baru)* | laporan `riwayat-harga-beli`, rute `items.price-history` | Semua harga satuan item di baris PO beserta ringkasan terakhir/termurah/rata-rata per vendor; hanya pemegang izin lihat PO | [A-309](04b-asumsi-lanjutan.md#a-309) |
 | Harga Satuan *(baru)* | `unit_price` | Harga per satuan dasar pada harga beli vendor dan baris PO (Rupiah) | A-211 |
+| Harga sudah termasuk PPN *(baru)* | `price_includes_tax` | Tanda pada PO bahwa harga satuan sudah memuat PPN (bawaan ya); keterangan saja, nilai PO tidak menghitung pajak | A-265 |
+| Bonus Vendor *(baru)* | `goods_receipt_lines.is_bonus` | Barang gratis dari vendor (mis. promo beli 2 gratis 1) yang diterima di GRN vendor sebagai baris terpisah: masuk stok, tidak mengurangi pesanan PO/PRQ | A-267 |
+| Kalender Libur *(baru)* | `holiday` | Daftar hari libur company: libur nasional & cuti bersama (terisi otomatis dari SKB 3 Menteri) dan libur company; dinonaktifkan bila tetap bekerja | A-270 |
+| Hari Kerja *(baru)* | `work_days_per_week` | Hari kerja per minggu company (5 = Senin–Jumat, 6 = Senin–Sabtu, 7 = setiap hari) dikurangi kalender libur; dasar SLA tinjau | A-270 |
+| Hanya dari Divisi Pemohon *(baru)* | `approval_steps.same_org_unit` | Pilihan lapis approval Role/Jabatan: approver hanya dari unit organisasi pemohon atau unit induknya | A-269 |
 | Nilai PO *(baru)* | `total_amount` | Σ jumlah × harga baris PO; dasar kondisi approval nilai | A-212 |
 | Timeline Dokumen *(baru)* | `document_timeline` | Riwayat status/pelaku/waktu/kanal per dokumen (untuk user) | BR-GEN-05 |
 | Jejak Audit *(baru)* | `audit_log` | Catatan teknis nilai lama → baru (untuk Admin) | BR-GEN-05 |
@@ -172,7 +194,16 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Tanda Tangan *(baru)* | `signature` | Gambar tanda tangan dari profil atau perangkat | BP 12 |
 | Layout Induk *(baru)* | `document_layout` | Kop cetak per company: logo, teks kop, warna aksen, footer, blok tanda tangan | BP 12, [18](18-template-dokumen-label.md) |
 | Template Dokumen *(baru)* | `document_template` | Bentuk cetak per jenis dokumen/label beserta kertasnya; F1 bawaan, editor [F2] | BP 12, A-122 |
-| Label *(baru)* | `label` (`label_bin`, `label_item`, `label_lot`, `label_piece`) | Stiker cetak berisi teks, barcode Code128, dan QR untuk ditempel pada bin atau barang | BP 6.10, A-120 |
+| Label *(baru)* | `label` (`label_bin`, `label_item`, `label_lot`, `label_piece`, `label_package`, `label_serial`) | Stiker cetak berisi teks, barcode Code128, dan QR untuk ditempel pada bin atau barang | BP 6.10, A-120 |
+| Label Kemasan *(baru)* | `package_label` (jenis cetak `label_package`) | Label QR/barcode yang ditempel pada setiap kemasan barang masuk dari vendor dan bisa ditelusuri ke penerimaan, catatan pemesanan/PO, vendor, dan tanggal. Status Di gudang / Keluar / Batal; tidak mengubah stok | [A-296](04b-asumsi-lanjutan.md#a-296) |
+| Label Induk *(baru)* | `package_label` dengan `parent_id` kosong | Label satu kemasan (dus), kode = kode item + nomor urut 4 digit, mis. `PAKU-0001`; dibuat saat GRN vendor diselesaikan | [A-296](04b-asumsi-lanjutan.md#a-296) |
+| Label Isi *(baru)* | `package_label` dengan `parent_id` | Label untuk isi satu kemasan, mis. `PAKU-0001-0003`; dibuat bila diminta lewat *Cetak label isi*, isinya diambil dari label induk | [A-296](04b-asumsi-lanjutan.md#a-296) |
+| Label Serial *(baru)* | jenis cetak `label_serial` | Label satu alat bernomor seri: nomor seri, item, tanggal masuk, vendor, GRN | [A-298](04b-asumsi-lanjutan.md#a-298) |
+| Telusuri Label *(baru)* | rute `labels.trace` | Halaman untuk memindai/mengetik kode label dan melihat asal (GRN, vendor, PO) serta riwayat keluar-masuknya | [A-302](04b-asumsi-lanjutan.md#a-302) |
+| Ukuran Label *(baru)* | `label_format` | Ukuran kertas label milik company: gulungan thermal (satu label per halaman) atau lembar berisi kolom × baris label | BP 6.10, [A-261](04b-asumsi-lanjutan.md#a-261) |
+| Desain Label *(baru)* | `label_design` | Tata letak isi label per jenis × ukuran: posisi teks, barcode, QR, logo, dan pilihan kode yang dicetak | BP 6.10, [A-262](04b-asumsi-lanjutan.md#a-262) |
+| Riwayat Cetak *(baru)* | `print_log` | Catatan setiap kali dokumen dicetak: cetakan ke-n, oleh siapa, kapan; cetakan ulang SJ/Bukti Terima/PO bercap *CETAK ULANG* | [A-263](04b-asumsi-lanjutan.md#a-263) |
+| Segel Tanda Tangan *(baru)* | `signature_seal` | QR bertanda waktu di kotak tanda tangan cetakan; dipindai membuka halaman verifikasi publik (dokumen, company, penanda tangan, waktu) | [A-264](04b-asumsi-lanjutan.md#a-264) |
 | Blok Tanda Tangan *(baru)* | `signature_blocks` | Kotak tanda tangan di kaki dokumen cetak, mis. "Pengemudi", "Penerima" | A-125 |
 
 ## 6. Konversi, offcut, waste
@@ -261,6 +292,7 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Penindak Lanjut PR *(baru, menggantikan "Purchasing")* | `pr_follow_up` | Mencatat tindak lanjut PRQ secara manual di Fase 1 | BP 4.2 |
 | Klien (role) | `client_user` | User dari pemilik proyek di portal | BP 4.2 |
 | Portal Klien | `client_portal` | Area login user klien (`/portal`) | BR-PRJ-07 |
+| Masuk sebagai *(baru)* | `impersonation` (permission `user.impersonate`) | Admin Company bekerja atas nama user lain, mis. untuk presentasi alur; spanduk *Kembali ke Admin*; jejak audit `impersonated_by` | A-260 |
 
 ## 12. Proyek
 
@@ -275,4 +307,3 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Rencana Kebutuhan Material *(baru)* | `project_material_plan` | BoQ kuantitas per proyek (item × jumlah rencana) [F2] | BR-PRJ-09 |
 
 *Singkatan rujukan:* BP = Blueprint, BR = Aturan Bisnis, KS = Katalog Status & Enum, NFR = kebutuhan non-fungsional.
-| Masuk sebagai *(baru)* | `impersonation` (permission `user.impersonate`) | Admin Company bekerja atas nama user lain, mis. untuk presentasi alur; spanduk *Kembali ke Admin*; jejak audit `impersonated_by` | A-260 |

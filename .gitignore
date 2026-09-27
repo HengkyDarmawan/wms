@@ -45,3 +45,6 @@ Thumbs.db
 
 # Cache Python generator dokumen
 __pycache__/
+
+# Tangkapan layar uji sesi agen (tidak di-commit)
+/Claude outputs/

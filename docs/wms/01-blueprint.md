@@ -1,7 +1,7 @@
 # Blueprint WMS Proyek
 
-**Versi:** 0.7 (pasca-validasi & diskusi lanjutan 23 Sep 2026 — lihat [laporan validasi](../00-laporan-validasi-2026-09-23.md), [laporan audit](../00-laporan-audit-dokumentasi.md), dan catatan perubahan di [README](../README.md))
-**Tanggal:** 23 September 2026
+**Versi:** 0.8 (v0.8: §9 selisih besar ikut dihitung ulang, A-259; pasca-validasi & diskusi lanjutan 23 Sep 2026 — lihat [laporan validasi](../00-laporan-validasi-2026-09-23.md), [laporan audit](../00-laporan-audit-dokumentasi.md), dan catatan perubahan di [README](../README.md))
+**Tanggal:** 26 September 2026
 **Status:** D-01–D-29; A-01–A-49 dan A-51–A-66 disetujui (A-40 diubah); [A-50](04-keputusan-dan-asumsi.md#a-50) menunggu validasi
 **Sumber:** sesi diskusi kebutuhan dengan pemilik produk · audit prototipe ([00-audit](../00-audit/README.md)) · [riset](02-riset-wms-sejenis.md)
 **Dokumen terkait:** [Glosarium](03-glosarium.md) · [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status & Enum](06-katalog-status-dan-enum.md)
@@ -303,7 +303,7 @@ Tanpa aturan, dokumen langsung disetujui ([A-08](04-keputusan-dan-asumsi.md#a-08
 - **Cakupan:** per gudang, zona, atau daftar bin/item. Semua sesi terkonsolidasi di satu dashboard.
 - **Angka pembanding = saldo fisik** per bin (termasuk dicadangkan & Loading Area) — [BR-OPN-01](05-aturan-bisnis.md#br-opn).
 - **Pembekuan lokasi** per sesi: bin beku menolak tugas baru; override SJ mendesak oleh Kepala Gudang dengan alasan ([BR-OPN-02](05-aturan-bisnis.md#br-opn)).
-- **Hitung buta** dan **toleransi berjenjang** dengan ambang **relatif dan absolut** (default ≤ 1 % *dan* ≤ 1 unit = kecil; ≤ 5 % = sedang → hitung ulang oleh orang berbeda; selebihnya besar → approval + akar masalah) — [A-42](04-keputusan-dan-asumsi.md#a-42).
+- **Hitung buta** dan **toleransi berjenjang** dengan ambang **relatif dan absolut** (default ≤ 1 % *dan* ≤ 1 unit = kecil; ≤ 5 % = sedang; selebihnya besar; sedang **dan** besar dihitung ulang oleh orang berbeda, yang tetap besar → approval + akar masalah) — [A-42](04-keputusan-dan-asumsi.md#a-42), [A-259](04b-asumsi-lanjutan.md#a-259).
 - **Rekonsiliasi** menghasilkan satu ADJ per gudang, **disetujui di tingkat sesi** ([A-09](04-keputusan-dan-asumsi.md#a-09)).
 - **Auditor** internal / `[F2]` eksternal (akun tamu berbatas gudang & periode, nonaktif otomatis). **Pemisahan tugas:** penghitung tidak menyetujui sesinya; sesi tahunan/audit disetujui Auditor Internal atau Manajemen ([BR-OPN-09](05-aturan-bisnis.md#br-opn)).
 - **Riwayat audit** lengkap per sesi dan **dashboard opname** (progres, akurasi, tren, top selisih, akar masalah).

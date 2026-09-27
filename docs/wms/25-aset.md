@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `asset` (Aset Dipinjamkan)
 
-**Versi:** 0.7
-**Tanggal:** 26 September 2026
-**Status:** selesai Fase 1 — modul ketiga belas setelah [Konversi & Waste](24-konversi-waste.md); melengkapi stub pemeriksaan aset di retur ([A-116](04-keputusan-dan-asumsi.md#a-116)); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-163](04-keputusan-dan-asumsi.md#a-163)–[A-169](04-keputusan-dan-asumsi.md#a-169) (*Perlu validasi*); v0.3: pengingat harian aset lewat jatuh tempo lewat notifikasi ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.7: **transfer aset On-site antar proyek** (TRF aset + SJ antar site, AST `transferred`, kejadian `asset_transferred`), pindahan sisa proyek dari hub, jejak lokasi aset ([A-249](04b-asumsi-lanjutan.md#a-249), [A-250](04b-asumsi-lanjutan.md#a-250), [A-251](04b-asumsi-lanjutan.md#a-251))
+**Versi:** 0.8
+**Tanggal:** 28 September 2026
+**Status:** selesai Fase 1 — modul ketiga belas setelah [Konversi & Waste](24-konversi-waste.md); melengkapi stub pemeriksaan aset di retur ([A-116](04-keputusan-dan-asumsi.md#a-116)); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-163](04-keputusan-dan-asumsi.md#a-163)–[A-169](04-keputusan-dan-asumsi.md#a-169) (*Perlu validasi*); v0.3: pengingat harian aset lewat jatuh tempo lewat notifikasi ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.7: **transfer aset On-site antar proyek** (TRF aset + SJ antar site, AST `transferred`, kejadian `asset_transferred`), pindahan sisa proyek dari hub, jejak lokasi aset ([A-249](04b-asumsi-lanjutan.md#a-249), [A-250](04b-asumsi-lanjutan.md#a-250), [A-251](04b-asumsi-lanjutan.md#a-251)); v0.8: aset dipinjamkan = jenis barang **Alat bernomor seri** di form item ([A-283](04b-asumsi-lanjutan.md#a-283), §13.4)
 **Modul:** `asset` (AST)
 **Fase:** F1 (serah terima otomatis dari SJ, kembali lewat RET/GRN, pemeriksaan grade + skor + foto + meter, state aset mengikuti lokasi, aset hilang → ADJ, laporan aset dipinjamkan, cetak BA Serah Terima Aset); jadwal maintenance & pemicu meter `[F2]` stub ([BR-AST-07](05-aturan-bisnis.md#br-ast)); notifikasi jatuh tempo menunggu modul notifikasi
 **Dokumen terkait:** [Blueprint §6.8](01-blueprint.md#68-aset-dipinjamkan) · [Aturan Bisnis §BR-AST](05-aturan-bisnis.md#br-ast), [§14 matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status §2.11, §3](06-katalog-status-dan-enum.md) · [Model data 08c](08c-model-data-pendukung.md) · [A-29](04-keputusan-dan-asumsi.md#a-29), [A-66](04-keputusan-dan-asumsi.md#a-66), [A-116](04-keputusan-dan-asumsi.md#a-116) · [22-retur-transfer](22-retur-transfer.md), [15-picking-shipment](15-picking-shipment.md), [21-opname-penyesuaian](21-opname-penyesuaian.md)
@@ -199,6 +199,10 @@ Domain `app/Domain/Asset`: 4 aksi (`UpdateAssetHandover`, `UpdateAssetProfile`, 
 1. **State aset lewat observer**, bukan panggilan di setiap modul: setiap pergerakan serial aset dari modul mana pun memperbarui state sesuai BR-AST-01 ([A-164](04-keputusan-dan-asumsi.md#a-164)). State `inspection` dari Katalog belum dipakai F1 — aset langsung dari `returned` ke hasil pemeriksaan.
 2. **Pemeriksaan lewat POST form** (foto), sama dengan penutupan WST.
 3. **AST susulan** untuk aset yang sudah di On-site tanpa AST (data sebelum modul ini), supaya pemeriksaan selalu punya induk.
+
+### 13.4 Alat bernomor seri (28 September 2026)
+
+Di form item, aset dipinjamkan dibuat dengan memilih jenis barang **Alat bernomor seri** (`serial` + `asset`, strategi manual) — pilihan itu hanya tampil bila saklar `serial` menyala; baris REQ untuk alat otomatis *Pinjam* dan tidak bisa diubah ([A-283](04b-asumsi-lanjutan.md#a-283), [A-286](04b-asumsi-lanjutan.md#a-286)). Item lama berkepemilikan *Keduanya* tampil sebagai *Jenis khusus* dan tetap memakai pilihan Beli/Pinjam per baris. Alur aset (BR-AST-*) tidak berubah.
 
 ### 13.3 Sisa pekerjaan
 

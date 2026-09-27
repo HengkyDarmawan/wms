@@ -1,24 +1,24 @@
 # Model Data — Pusat, akses & organisasi, master, gudang & lokasi
 
-**Versi:** 0.22 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026, Purchasing inti Fase 1b, lampiran generik, dan tinjauan pemilik produk 26 Sep 2026)
-**Tanggal:** 26 September 2026
-**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194, Purchasing inti A-208–A-215, lampiran A-238, override bin beku A-240, kelebihan terima A-245, tinjauan pemilik produk A-246 dst. ([04b](04b-asumsi-lanjutan.md)). Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
+**Versi:** 0.32 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026, Purchasing inti Fase 1b, lampiran generik, tinjauan pemilik produk 26 Sep 2026, ukuran & desain label A-261/A-262, riwayat cetak & segel tanda tangan A-263/A-264, tanda harga PO termasuk PPN A-265, bonus vendor di GRN A-267, approver sedivisi A-269, kalender libur A-270, OTP bukti terima otomatis A-273, WhatsApp Fase 2a A-274–A-280, kondisi terima Baik/Rusak/Kurang & satuan kemasan di baris dokumen A-287–A-291, label kemasan induk/isi & lot otomatis A-296–A-299, serta saran vendor dari riwayat A-304–A-305)
+**Tanggal:** 28 September 2026
+**Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194, Purchasing inti A-208–A-215, lampiran A-238, override bin beku A-240, kelebihan terima A-245, tinjauan pemilik produk A-246 dst. dan OTP otomatis A-273, WhatsApp A-274–A-280 ([04b](04b-asumsi-lanjutan.md)). Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md) · [Pendukung](08c-model-data-pendukung.md)
 
-Daftar area (119 tabel):
+Daftar area (126 tabel):
 
 - [Database pusat (platform)](08a-model-data-inti.md#area-database-pusat-platform) — 13 tabel
 - [User, role, cakupan, struktur organisasi (tenant)](08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) — 11 tabel
-- [Master data (tenant)](08a-model-data-inti.md#area-master-data-tenant) — 19 tabel
+- [Master data (tenant)](08a-model-data-inti.md#area-master-data-tenant) — 20 tabel
 - [Gudang & lokasi (tenant)](08a-model-data-inti.md#area-gudang--lokasi-tenant) — 6 tabel
-- [Stok: ledger, saldo, reservasi, kejadian (tenant)](08b-model-data-stok-dokumen.md#area-stok-ledger-saldo-reservasi-kejadian-tenant) — 4 tabel
+- [Stok: ledger, saldo, reservasi, kejadian (tenant)](08b-model-data-stok-dokumen.md#area-stok-ledger-saldo-reservasi-kejadian-tenant) — 6 tabel
 - [Permintaan, picking, pengiriman, bukti terima, selisih (tenant)](08b-model-data-stok-dokumen.md#area-permintaan-picking-pengiriman-bukti-terima-selisih-tenant) — 12 tabel
 - [Penerimaan, put-away, retur ke vendor, PR, transfer, retur, pemakaian (tenant)](08b-model-data-stok-dokumen.md#area-penerimaan-put-away-retur-ke-vendor-pr-transfer-retur-pemakaian-tenant) — 16 tabel
 - [Purchasing inti: harga beli vendor & PO (tenant, Fase 1b)](08c-model-data-pendukung.md#area-purchasing-inti-harga-beli-vendor--po-tenant-fase-1b) — 3 tabel
 - [Konversi, resep, waste, aset (tenant)](08c-model-data-pendukung.md#area-konversi-resep-waste-aset-tenant) — 9 tabel
 - [Stock opname & penyesuaian (tenant)](08c-model-data-pendukung.md#area-stock-opname--penyesuaian-tenant) — 6 tabel
 - [Approval engine (tenant)](08c-model-data-pendukung.md#area-approval-engine-tenant) — 7 tabel
-- [Timeline, audit, lampiran, notifikasi, template, penomoran, impor, sinkron (tenant)](08c-model-data-pendukung.md#area-timeline-audit-lampiran-notifikasi-template-penomoran-impor-sinkron-tenant) — 13 tabel
+- [Timeline, audit, lampiran, notifikasi, template, penomoran, impor, sinkron (tenant)](08c-model-data-pendukung.md#area-timeline-audit-lampiran-notifikasi-template-penomoran-impor-sinkron-tenant) — 17 tabel
 
 **Konvensi yang tidak diulang di setiap tabel:**
 - Semua tabel tenant: `id BIGINT PK`, `created_at`, `updated_at`, `created_by`, `updated_by` (FK `users`). Semua waktu UTC ([BR-GEN-07](05-aturan-bisnis.md#br-gen)).
@@ -197,7 +197,7 @@ erDiagram
 
 ### Entitas
 
-**`users` — User.** 🔑`id` bigint · `name` varchar(100) · ◆`email` varchar(150) · `phone` varchar(20) *(WA untuk approval/OTP)* · `password` varchar(255) *(nullable bila hanya SSO)* · ↗`client_id` bigint *(terisi = user klien)* · ↗`org_unit_id` bigint · ↗`position_id` bigint · ↗`manager_id` bigint *(atasan langsung (self))* · `signature_path` varchar(255) · `is_active` bool · `locked_until` datetime *(kunci akun)* · `failed_login_count` tinyint *(reset saat login berhasil (NFR-04))* · `two_factor_secret` text · `two_factor_recovery_codes` text · `two_factor_confirmed_at` datetime · `two_factor_last_step` bigint *(A-205)* · ◆`sso_sub` varchar(191) *(nullable)* · `email_verified_at` datetime · `last_login_at` datetime · `password_changed_at` datetime · `remember_token` varchar(100)
+**`users` — User.** 🔑`id` bigint · `name` varchar(100) · ◆`email` varchar(150) · `phone` varchar(20) *(WA untuk approval/OTP, disimpan 62… (A-275))* · `phone_verified_at` datetime *(nomor WA terverifikasi ([BR-WA-01](05-aturan-bisnis.md#br-wa)))* · `wa_code_hash` varchar(255) *(kode verifikasi (hash))* · `wa_code_expires_at` datetime · `wa_code_attempts` tinyint *(maks 5 salah)* · `wa_digest_sent_at` datetime *(ringkasan WA terakhir (A-280))* · `password` varchar(255) *(nullable bila hanya SSO)* · ↗`client_id` bigint *(terisi = user klien)* · ↗`org_unit_id` bigint · ↗`position_id` bigint · ↗`manager_id` bigint *(atasan langsung (self))* · `signature_path` varchar(255) · `is_active` bool · `locked_until` datetime *(kunci akun)* · `failed_login_count` tinyint *(reset saat login berhasil (NFR-04))* · `two_factor_secret` text · `two_factor_recovery_codes` text · `two_factor_confirmed_at` datetime · `two_factor_last_step` bigint *(A-205)* · ◆`sso_sub` varchar(191) *(nullable)* · `email_verified_at` datetime · `last_login_at` datetime · `password_changed_at` datetime · `remember_token` varchar(100)
 
 **`roles` — Role.** 🔑`id` bigint · ◆`code` varchar(40) *(warehouse_head, …)* · `name` varchar(80) · `guard_name` varchar(30) *(wajib spatie/laravel-permission)* · `is_builtin` bool *(template bawaan)* · `is_client_role` bool *(tidak bisa digabung role internal)* · `is_active` bool
   ↳ UK(name, guard_name)
@@ -299,6 +299,10 @@ erDiagram
   company_settings {
     varchar_60 key PK
   }
+  holidays {
+    bigint id PK
+    date date UK
+  }
   feature_settings {
     varchar_60 key PK
   }
@@ -334,7 +338,7 @@ erDiagram
 **`vendors` — Vendor.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(150) · `tax_id` varchar(30) · `contact_name` varchar(100) · `phone` varchar(20) · `email` varchar(150) · `address` text · `payment_terms` varchar(60) *(teks, tanpa nilai)* · `vendor_type` enum *(company|shop|online_marketplace|individual ([A-52](04-keputusan-dan-asumsi.md#a-52)))* · `status` enum *(vendor_status: active|provisional|inactive ([A-53](04-keputusan-dan-asumsi.md#a-53)))* · `is_active` bool
   ↳ Dimiliki WMS sampai Purchasing aktif
 
-**`item_vendors` — Vendor tetap per item.** 🔑`id` bigint · ↗`item_id` bigint · ↗`vendor_id` bigint · `priority` int *(1 = utama)* · `is_preferred` bool · `notes` varchar(255)
+**`item_vendors` — Vendor tetap per item (tidak dipakai sejak A-305).** 🔑`id` bigint · ↗`item_id` bigint · ↗`vendor_id` bigint · `priority` int *(1 = utama)* · `is_preferred` bool · `notes` varchar(255)
   ↳ UK(item_id, vendor_id); tanpa harga ([A-52](04-keputusan-dan-asumsi.md#a-52))
 
 **`project_material_plans` — Rencana kebutuhan material (F2).** 🔑`id` bigint · ↗`project_id` bigint · ↗`item_id` bigint · `version` int · `planned_qty_base` decimal(18,4) · ↗`import_batch_id` bigint *(unggah Excel)* · `is_current` bool
@@ -372,7 +376,10 @@ erDiagram
 **`company_settings` — Pengaturan company.** 🔑`key` varchar(60) · `value` json
   ↳ zona waktu, ambang toleransi default, kapasitas bin, konfirmasi terima otomatis (3 hari), stock_lock_date ([BR-STK-15](05-aturan-bisnis.md#br-stk)), reservation_alert_days ([BR-STK-16](05-aturan-bisnis.md#br-stk)), review_sla_days ([BR-REQ-14](05-aturan-bisnis.md#br-req)), substitution_objection_days ([BR-REQ-13](05-aturan-bisnis.md#br-req)), receipt_confirm_days ([BR-REQ-10](05-aturan-bisnis.md#br-req)), asset_life_alert_pct ([BR-AST-08](05-aturan-bisnis.md#br-ast)), dll.
 
-**`feature_settings` — Pengaturan fitur stok.** 🔑`key` varchar(60) *(lot|serial|piece|expiry|fefo|rfid|qc)* · `enabled` bool · `config` json
+**`holidays` — Kalender libur.** 🔑`id` bigint · ◆`date` date · `name` varchar(120) · `kind` enum *(holiday_kind (A-270))* · `is_active` boolean *(nonaktif = tetap bekerja)* · ↗`created_by` bigint
+  ↳ libur nasional & cuti bersama terisi otomatis dari SKB; tidak dihapus (A-270)
+
+**`feature_settings` — Pengaturan fitur stok.** 🔑`key` varchar(60) *(lot|serial|piece|expiry|fefo|rfid|qc|otp_auto)* · `enabled` bool · `config` json
   ↳ Lapis 1 dari P-08
 
 ## Area: Gudang & lokasi (tenant)

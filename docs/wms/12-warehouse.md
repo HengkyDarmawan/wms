@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `warehouse` (Gudang, Zona, Rak, Level, Bin)
 
-**Versi:** 0.10
-**Tanggal:** 26 September 2026
-**Status:** **selesai untuk Fase 1** — empat layar, delapan aksi domain, dan 28 uji hijau; penyimpangan implementasi dicatat §13; v0.6: label bin Code128 + QR dicetak lewat modul Template ([18](18-template-dokumen-label.md)), ukuran sementara [A-120](04-keputusan-dan-asumsi.md#a-120); v0.9: **denah gudang 2D** dengan ukuran/posisi opsional, rak area & bin ikut terpakai untuk barang besar, tanggal masuk & FIFO, kolom zona/rak/level dan ubah bin di `/bins` ([A-254](04b-asumsi-lanjutan.md#a-254), [A-255](04b-asumsi-lanjutan.md#a-255), [A-256](04b-asumsi-lanjutan.md#a-256)); v0.10: impor struktur gudang (zona, rak, level, bin) dari Excel ([A-258](04b-asumsi-lanjutan.md#a-258), §13.4c)
+**Versi:** 0.13
+**Tanggal:** 28 September 2026
+**Status:** **selesai untuk Fase 1** — empat layar, delapan aksi domain, dan 28 uji hijau; penyimpangan implementasi dicatat §13; v0.6: label bin Code128 + QR dicetak lewat modul Template ([18](18-template-dokumen-label.md)), ukuran sementara [A-120](04-keputusan-dan-asumsi.md#a-120); v0.9: **denah gudang 2D** dengan ukuran/posisi opsional, rak area & bin ikut terpakai untuk barang besar, tanggal masuk & FIFO, kolom zona/rak/level dan ubah bin di `/bins` ([A-254](04b-asumsi-lanjutan.md#a-254), [A-255](04b-asumsi-lanjutan.md#a-255), [A-256](04b-asumsi-lanjutan.md#a-256)); v0.10: impor struktur gudang (zona, rak, level, bin) dari Excel ([A-258](04b-asumsi-lanjutan.md#a-258), §13.4c); v0.11: zona/rak/level/bin ditambah langsung dari denah ([A-271](04b-asumsi-lanjutan.md#a-271)) dan impor gudang dari Excel ([A-272](04b-asumsi-lanjutan.md#a-272)); v0.12: rak di denah berisi petak bin per level, label level di luar ([A-281](04b-asumsi-lanjutan.md#a-281)); v0.13: panel isi bin denah menampilkan uraian kemasan ([A-293](04b-asumsi-lanjutan.md#a-293), TC-WH-30)
 **Modul:** `warehouse`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.2](01-blueprint.md#62-struktur-organisasi--gudang), [§6.3](01-blueprint.md#63-lokasi-rak--bin--wajib) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data gudang](08a-model-data-inti.md#area-gudang--lokasi-tenant) · [Akun uji](../00-akun-uji.md)
@@ -122,8 +122,9 @@ Aturan baru modul ini (`BR-WH`, ditambahkan ke [05-aturan-bisnis](05-aturan-bisn
 |---|---|---|
 | `/warehouses` | `warehouse.warehouse-list` | Pohon gudang dengan tipe, induk, proyek, kepala gudang, jumlah bin; form sebaris; nonaktifkan dengan Alasan `*` |
 | `/warehouses/{id}` | `warehouse.warehouse-detail` | Tab Zona & rak (dengan pembuat bin massal), Bin, dan Riwayat; tombol **Denah gudang** |
-| `/warehouses/{id}/layout` | `warehouse.warehouse-layout` | **Denah 2D** ([A-254](04b-asumsi-lanjutan.md#a-254)): zona → rak berwarna status atau umur stok; klik rak → level → bin → isi (item, jumlah, lot/serial/potongan, tanggal masuk, umur, *tertua — ambil dulu*); cari bin/item/lot/serial/potongan; mode **Atur denah** (`bin.manage`): ukuran zona, ukuran/posisi/arah rak (geser di grid 0,5 m), rak area, tandai bin ikut terpakai ([A-255](04b-asumsi-lanjutan.md#a-255)) |
+| `/warehouses/{id}/layout` | `warehouse.warehouse-layout` | **Denah 2D** ([A-254](04b-asumsi-lanjutan.md#a-254)): zona → rak = kotak berisi **petak bin per level** (label `L1`… di luar kotak, `L1` paling bawah), tiap petak berwarna status atau umur stok ([A-281](04b-asumsi-lanjutan.md#a-281)); klik rak → level → bin → isi (item, jumlah, lot/serial/potongan, tanggal masuk, umur, *tertua — ambil dulu*); cari bin/item/lot/serial/potongan; mode **Atur denah** (`bin.manage`): nama & ukuran zona, ukuran/posisi/arah rak (geser di grid 0,5 m), rak area, tandai bin ikut terpakai ([A-255](04b-asumsi-lanjutan.md#a-255)); **tambah zona, rak (+ level + bin), level, dan bin** langsung dari denah ([A-271](04b-asumsi-lanjutan.md#a-271)) Isi bin menampilkan jumlah + uraian kemasan, mis. "116 BOX (9 DUS 8 BOX)" ([A-293](04b-asumsi-lanjutan.md#a-293)). |
 | `/bins` | `warehouse.bin-list` | Seluruh bin lintas gudang; filter gudang, jenis, status, **zona, rak**; kolom zona · rak · level & kapasitas lengkap; **Ubah** (kategori, kapasitas, mode kapasitas per bin); bekukan dan cairkan; cetak label |
+| `/imports` kartu *Gudang* | `ImportController` + `ImportWarehouses` | Impor gudang baru (tipe, induk, proyek Gudang Site, kepala gudang, alamat) beserta bin bawaannya; templat `/imports/warehouses/template`; izin `warehouse.create`; tombol *Impor Excel* di `/warehouses` ([A-272](04b-asumsi-lanjutan.md#a-272)) |
 | `/imports` kartu *Struktur gudang* | `ImportController` + `ImportWarehouseStructure` | Impor zona, rak, level, dan bin untuk gudang yang sudah ada; templat `/imports/bins/template`; semua-atau-tidak, galat per baris; tombol *Impor Excel* di `/bins` ([A-258](04b-asumsi-lanjutan.md#a-258)) |
 | `/warehouse-types` | `warehouse.type-list` | Master tipe gudang; tipe bawaan hanya bisa diubah namanya |
 
@@ -179,6 +180,12 @@ Tidak ada kejadian stok. Modul `stock` membaca `bins` untuk saldo dan `warehouse
 | TC-WH-26b | — | 1 baris benar + gudang asing, jenis `receiving`, kapasitas −5, level kosong, jenis asing, `on_site` | galat baris 3–8, baris 2 tidak; nol zona/rak/level/bin | A-258, A-207 |
 | TC-WH-26c | Bin CKG-A-R01-L1-B01 kapasitas 50 | impor kode yang sama; kode sama dua kali di berkas | "sudah dipakai", kapasitas tetap 50; "ganda di berkas (sama dengan baris 2)"; nol tersimpan | BR-WH-01 |
 | TC-WH-26d | Staf gudang; Kepala Gudang CKG; Kepala Gudang BKS | templat & unggah; buka `/imports`; impor baris CKG | 403; hanya kartu struktur gudang; "di luar cakupan", baris BKS ikut batal | BR-GEN-09, BR-ACC-05 |
+| TC-WH-27 | Zona D, Kepala Gudang di denah mode atur | rak R05 3 level × 2 bin kapasitas 40; level tanpa kode; rak ganda / 0 level / 51 bin; level di rak area; layar: zona E → rak 2×3 → level → 2 bin → ubah nama zona; staf | kode `CKG-D-R05-L1-B01`…`L3-B02`, `L4`; BR-WH-01/BR-GEN-11 tanpa sisa; BR-WH-06; `CKG-E-R01-L3-B01`, `…-L1-B05`; nama baru; 403 | A-271 |
+| TC-WH-28 | CKG ada, proyek PRJ-201, user kepala.sby | impor SBY (induk CKG, kepala via email), SBY2 (tipe dari nama, induk SBY dari baris sebelumnya), Site PRJ-201 | 3 gudang; induk & proyek & kepala terisi; bin bawaan + in_transit; log impor | A-272, BR-WH-02 |
+| TC-WH-28b | — | 1 baris benar + kode ada, Site tanpa proyek, cabang berproyek, tipe/induk/kepala asing, kode kosong | galat baris 3–9, baris 2 tidak; nol gudang & bin tersimpan | A-272, A-207, BR-WH-04 |
+| TC-WH-28c | Kepala Gudang tanpa `warehouse.create` | buka `/imports`, templat, unggah | kartu Gudang tidak tampil; 403; tidak ada gudang | BR-GEN-09 |
+| TC-WH-29 | Zona D: R01 (1 level × 3 bin, B01 berisi), R02 4 level × 6 bin, R03 2 × 2 | data denah; layar denah | R02 `kolom` 6, gambar 5,0 × 2,2 m, fisik tetap 2 m; level urut L4…L1; petak B01…B06; status petak B01 terisi, B02 kosong; rak sebaris tidak bertumpuk; SVG memuat `data-rak="R02"`, B06, L4 | A-281 |
+| TC-WH-30 | Baut 100 di bin, DUS = 12 | panel isi bin | uraian "8 DUS 4 …" | [A-293](04b-asumsi-lanjutan.md#a-293) |
 | TC-WH-20 | Seeder demo dijalankan | periksa gudang | CKG, BKS, KRW1, KRW2 sesuai [00-akun-uji](../00-akun-uji.md) §2 | — |
 
 ## 11. Di luar lingkup modul ini
@@ -257,11 +264,24 @@ Migrasi tenant `000280_add_layout_columns_to_warehouse_tables` (semua kolom opsi
 
 `Actions\ImportWarehouseStructure` (`bin.manage`) meniru impor Master: `Master\Support\ExcelRows` membaca berkas, `ImportBatch` menjalankan semua baris dalam satu transaksi dan membatalkan semuanya bila ada satu galat. Per baris: gudang dicari tanpa global scope lalu diperiksa `canAccessWarehouse` dan aktif; zona → rak → level dicari dulu (baris sebelumnya ikut terlihat karena satu transaksi), yang belum ada dibuat `SaveLocation`, yang nonaktif menolak baris; bin lewat `SaveBin` sehingga BR-WH-01/02/03, AD-14, dan log *Bin dibuat* sama dengan layar. `WarehouseRuleException` dibungkus menjadi `MasterRuleException` agar tampil sebagai galat baris. Kode bin ganda di dalam berkas ditolak sebelum `SaveBin`. Satu log ringkas `Impor struktur gudang dari Excel: n bin`. Pintu masuk: kartu `#impor-bins` di `/imports`, menu *Impor Excel* (kini juga untuk `bin.manage`), palet, tombol di `/bins`. Uji TC-WH-26–26d; `ui-check` 6c ([A-258](04b-asumsi-lanjutan.md#a-258)).
 
+### 13.4d Tambah struktur dari denah (27 September 2026)
+
+`SaveWarehouseLayout::newRack` (rak + level `L1`…`Ln` + `GenerateBins` per level, satu transaksi; batas 20 level × 50 bin) dan `newLevel` (kode kosong = `L` berikutnya; rak area ditolak BR-WH-06); `zone()` kini juga menerima nama. `Livewire\WarehouseLayout`: `tambahZona` (`SaveLocation::saveZone`), `tambahRak`, `tambahLevel`, `tambahBin`, semuanya `manageLayout` dan mengosongkan galat lama sebelum dijalankan. Uji TC-WH-27 ([A-271](04b-asumsi-lanjutan.md#a-271)).
+
+### 13.4f Tampilan denah berisi petak bin (28 September 2026)
+
+`WarehouseLayoutData`: skala `SKALA` 80 px/m; per rak `kolom` (bin terbanyak per level), ukuran gambar `w`/`h` = maks(ukuran fisik, `kolom` × 0,8 m + bingkai / level × 0,5 m + bingkai), status per bin (`beku` › `terpakai` › `penuh` › `terisi` › `kosong`) dan akhiran kode `short`; tata otomatis dua langkah memakai ukuran gambar (maks 4 rak atau 12 m per baris, jarak 0,5 m, baris 1 m); gambar zona selalu memuat semua rak. View: nama rak di atas kotak, label level di kiri luar, petak bin + `<title>` kode lengkap, teks memakai `currentColor` agar terbaca di tema gelap. `pos_x/pos_y`, `moveRack`, dan penjepitan di zona tetap memakai ukuran fisik. Uji TC-WH-29; `ui-check` 6b ([A-281](04b-asumsi-lanjutan.md#a-281)).
+
+### 13.4e Impor gudang (27 September 2026)
+
+`Actions\ImportWarehouses` (`warehouse.create`) memakai pola impor yang sama (`ExcelRows`, `ImportBatch` semua-atau-tidak) dan `SaveWarehouse` per baris, sehingga kode huruf besar, BR-WH-02/04/05, dan log *Gudang dibuat* sama dengan form; `WarehouseRuleException` dibungkus menjadi galat baris. Tipe dicari dari kode atau nama tipe aktif; induk tanpa global scope + `canAccessWarehouse`; proyek + `canAccessProject`; kepala gudang dari email user aktif. Kartu `#impor-warehouses`, tombol di `/warehouses`, menu *Impor Excel* & palet untuk `warehouse.create`. Uji TC-WH-28–28c ([A-272](04b-asumsi-lanjutan.md#a-272)).
+
 ### 13.5 Sisa pekerjaan modul ini
 
 1. ~~**Label bin barcode dan QR**~~ — **selesai** lewat modul Template ([18-template-dokumen-label](18-template-dokumen-label.md) §5.3): tautan *Cetak label* di `/bins`. Ukuran kertas final dan jenis printer tetap menunggu [O-09](04-keputusan-dan-asumsi.md#o-09); sampai itu, [A-120](04-keputusan-dan-asumsi.md#a-120).
 2. ~~**Penjagaan saldo dan reservasi nol** sebelum menonaktifkan gudang atau bin ([BR-GEN-04](05-aturan-bisnis.md#br-gen))~~ — selesai di modul [`stock`](13-stock.md) lewat `StockGuard`.
 3. ~~Penutupan Gudang Site otomatis saat proyek ditutup~~ — **selesai** ([BR-PRJ-04](05-aturan-bisnis.md#br-prj)): `Master\Actions\ChangeProjectStatus` menonaktifkan Gudang Site yang sudah kosong (bin ikut nonaktif + jejak) saat proyek ditutup; gudang berisi stok menahan penutupan lewat `ProjectClosureChecklist` ([A-187](04-keputusan-dan-asumsi.md#a-187), TC-MST-25b).
-4. ~~**Impor Excel bin**~~ — **selesai 26 Sep 2026**: zona, rak, level, dan bin untuk gudang yang sudah ada (§13.4c, [A-258](04b-asumsi-lanjutan.md#a-258)). **Impor gudang** sendiri tetap menunggu [O-12](04-keputusan-dan-asumsi.md#o-12).
+4. ~~**Impor Excel bin**~~ — **selesai 26 Sep 2026**: zona, rak, level, dan bin untuk gudang yang sudah ada (§13.4c, [A-258](04b-asumsi-lanjutan.md#a-258)). **Impor gudang** sendiri ~~menunggu O-12~~ — **selesai 27 Sep 2026** (§13.4e, [A-272](04b-asumsi-lanjutan.md#a-272)).
 5. ~~**Laporan §9** beserta ekspor Excel~~ — **selesai 24 Sep 2026**: *Daftar Gudang* dan *Daftar Bin* di `/reports` ([16-shared-laporan-berkas](16-shared-laporan-berkas.md)).
 6. ~~**`count_flag` menunggu persetujuan**~~ — [A-67](04-keputusan-dan-asumsi.md#a-67) disetujui 24 Sep 2026; kolomnya dipakai modul Picking untuk short pick.
+7. ~~**Tambah zona/rak/level langsung dari denah**~~ — **selesai 27 Sep 2026** (§13.4d, [A-271](04b-asumsi-lanjutan.md#a-271)).

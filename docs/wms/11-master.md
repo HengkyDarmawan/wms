@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `master` (Klien, Proyek, Vendor, Item, Satuan, Referensi)
 
-**Versi:** 0.8
-**Tanggal:** 26 September 2026
-**Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192)); v0.6: layar Pengaturan company ([A-230](04-keputusan-dan-asumsi.md#a-230), §6, §13.5 no. 8); v0.8: hub proyek — *Pindahkan ke proyek lain* dan *Riwayat pindahan antar proyek* ([A-250](04b-asumsi-lanjutan.md#a-250), §13.4)
+**Versi:** 0.15
+**Tanggal:** 28 September 2026
+**Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192)); v0.6: layar Pengaturan company ([A-230](04-keputusan-dan-asumsi.md#a-230), §6, §13.5 no. 8); v0.8: hub proyek — *Pindahkan ke proyek lain* dan *Riwayat pindahan antar proyek* ([A-250](04b-asumsi-lanjutan.md#a-250), §13.4); v0.9: hari kerja per minggu & kalender libur company ([A-270](04b-asumsi-lanjutan.md#a-270), §3.6, §6, §13.5 no. 9); v0.10: saklar OTP bukti terima otomatis ([A-273](04b-asumsi-lanjutan.md#a-273)); v0.12: **Jenis barang** menggantikan isian teknis form item, saklar fitur benar-benar menyaring, bawaan company baru tanpa per potong & QC ([A-283](04b-asumsi-lanjutan.md#a-283), [A-284](04b-asumsi-lanjutan.md#a-284), §6, §10 TC-MST-30–35, §13.7); v0.13: tab *Kemasan* (dulu Konversi satuan), kemasan nonaktif tidak dimuat lagi, kemasan diingat dari form dokumen, uraian "9 DUS 8 BOX", satuan DUS & PACK ([A-291](04b-asumsi-lanjutan.md#a-291)–[A-294](04b-asumsi-lanjutan.md#a-294); §6, §10 TC-MST-36–37, §13.8)
 **Modul:** `master`
 **Fase:** F1 (rencana kebutuhan material `[F2]` hanya stub)
 **Dokumen terkait:** [Blueprint §6.3a](01-blueprint.md#63a-master-data-lain), [§6.4](01-blueprint.md#64-item-barang), [§6.5](01-blueprint.md#65-satuan-dinamis-uom), [§6.9](01-blueprint.md#69-proyek) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data master](08a-model-data-inti.md#area-master-data-tenant) · [Akun uji](../00-akun-uji.md)
@@ -78,7 +78,7 @@ Semua tabel di database **tenant**. Kolom umum (`id`, `created_at`, `updated_at`
 `reason_codes`: `context` enum (`reject`, `cancel`, `adjustment`, `waste`, `damage`, `short_pick`, `discrepancy`, `lost`), `code`, `label`, `is_active`. `UK(context, code)`. Wajib ada isinya sebelum dokumen bisa ditolak/dibatalkan ([BR-GEN-02](05-aturan-bisnis.md#br-gen)).
 `vehicles`: `plate_no` UK, `type`, `default_driver_id` FK `users`, `is_active`.
 `carriers`: `name`, `phone`, `is_active`.
-`company_settings`: `key` PK, `value` json. `feature_settings`: `key` PK, `enabled`, `config` json (lapis 1 dari P-08).
+`company_settings`: `key` PK, `value` json. `feature_settings`: `key` PK, `enabled`, `config` json (lapis 1 dari P-08). `holidays`: `date` unik, `name`, `kind` (Katalog §3 `holiday_kind`), `is_active`, `created_by` — kalender libur company; libur nasional & cuti bersama diisi otomatis dari `Support\NationalHolidays`, tidak dihapus ([A-270](04b-asumsi-lanjutan.md#a-270)).
 `project_material_plans` `[F2]`: stub ([BR-PRJ-09](05-aturan-bisnis.md#br-prj)).
 
 ```mermaid
@@ -123,7 +123,9 @@ Status item (`active`, `provisional`, `inactive`) dan vendor (`active`, `provisi
 | [BR-STK-09](05-aturan-bisnis.md#br-stk), [BR-STK-10](05-aturan-bisnis.md#br-stk) | Item `piece`: satuan dasar wajib kategori **panjang**; konversi kemasan hanya `is_nominal_piece` |
 | [BR-STK-11](05-aturan-bisnis.md#br-stk) | Kombinasi `tracking_mode` × `removal_strategy` × kedaluwarsa × `ownership_model` mengikuti [matriks BR §15](05-aturan-bisnis.md#15-matriks-kombinasi-pelacakan); di luar matriks ditolak saat menyimpan |
 | [BR-STK-12](05-aturan-bisnis.md#br-stk) | Kedaluwarsa hanya `lot`/`serial`; `fefo` menuntut `has_expiry` |
-| [BR-CNV-03](05-aturan-bisnis.md#br-cnv) | `min_offcut_length` wajib bila `is_cuttable` |
+| [BR-CNV-03](05-aturan-bisnis.md#br-cnv) | `min_offcut_length` wajib bila `is_cuttable` (isian tidak lagi di form; berlaku untuk item Jenis khusus) |
+| [BR-MST-06](05-aturan-bisnis.md#br-mst) | Jenis barang terkunci setelah item punya pergerakan stok ([A-283](04b-asumsi-lanjutan.md#a-283)) |
+| [BR-GEN-12](05-aturan-bisnis.md#br-gen) | Jenis/kombinasi yang saklarnya mati ditolak untuk item baru atau bila kombinasinya diubah ([A-284](04b-asumsi-lanjutan.md#a-284)) |
 | [BR-REQ-03](05-aturan-bisnis.md#br-req) | Item `provisional` harus dilengkapi Admin sebelum GRN pertama; ditandai di daftar |
 | [BR-REQ-11](05-aturan-bisnis.md#br-req) | `reorder_point` & `min_stock` memicu draf PRQ harian (modul `purchase-request`) |
 | [BR-PRJ-01](05-aturan-bisnis.md#br-prj) | Hanya proyek `active` menerima dokumen baru |
@@ -138,6 +140,7 @@ Aturan baru modul ini (diusulkan masuk [05-aturan-bisnis](05-aturan-bisnis.md) s
 - **BR-MST-03** Kategori satuan wajib punya satuan acuan dengan `factor_to_reference = 1`.
 - **BR-MST-04** Proyek Internal tidak boleh punya klien dan tidak bisa dinonaktifkan/ditutup selama masih dipakai konversi.
 - **BR-MST-05** Master hanya bisa dinonaktifkan bila tidak dipakai data aktif (item aktif di kategori, proyek aktif milik klien, dan seterusnya).
+- **BR-MST-06** Jenis barang item tidak bisa diubah setelah item punya pergerakan stok ([A-283](04b-asumsi-lanjutan.md#a-283)).
 
 ## 6. Layar
 
@@ -149,13 +152,13 @@ Semua layar memakai layout back-office dan komponen Livewire, mengikuti pola mod
 | `/projects` | `master.project-list` | Daftar + form proyek (kode, nama, klien atau Proyek Internal, PIC, tanggal, alamat & titik peta); nama menaut ke hub |
 | `/projects/{id}` | `master.project-detail` | **Hub proyek** (Blueprint §6.9, [A-228](04-keputusan-dan-asumsi.md#a-228)): kepala + Gudang Site, tombol aksi (permintaan, transfer ke proyek lain, pemakaian, konversi, retur, laporan material), kartu ringkas (stok on-site, permintaan terbuka, aset di proyek, menunggu approval), tab Permintaan · Pengiriman · Stok on-site (Di Gudang Site / Aset di proyek / Terkirim ke klien) · Pemakaian · Konversi & waste · Retur & transfer · Aset · Approval · Riwayat; ubah status / tutup proyek dengan checklist BR-PRJ-02 |
 | `/vendors` | `master.vendor-list` | Daftar + form vendor (jenis, status, kontak, termin); menandai vendor `provisional` yang perlu dilengkapi |
-| `/items` | `master.item-list` | Daftar item dengan filter kategori, mode pelacakan, kepemilikan, status; penanda item Sementara |
-| `/items/create`, `/items/{id}/edit` | `master.item-form` | Form item lengkap dengan validasi matriks kombinasi, konversi satuan khusus, dan vendor tetap |
-| `/items/{id}` | `master.item-detail` | Ringkasan, konversi satuan, vendor tetap, lot/serial/potongan (baca-saja), riwayat |
+| `/items` | `master.item-list` | Daftar item dengan filter kategori, **jenis barang** (tiga jenis + *Jenis khusus*), status; kolom Jenis barang; penanda item Sementara ([A-283](04b-asumsi-lanjutan.md#a-283)) |
+| `/items/create`, `/items/{id}/edit` | `master.item-form` | Identitas (kode, nama, kategori, satuan dasar, status, barcode, *Wajib QC* hanya bila saklar `qc` menyala) + satu pilihan wajib **Jenis barang** (kartu Barang biasa / Barang berkedaluwarsa / Alat bernomor seri dengan teks bantuan & contoh; Alat hanya bila saklar `serial`, Berkedaluwarsa bila `lot` + `expiry`); jenis terkunci setelah ada pergerakan stok; item lama di luar tiga jenis tampil **Jenis khusus** dengan pengaturan teknis read-only; kartu *Pengaturan tambahan* (opsional) berisi tab *Stok minimum* dan *Konversi satuan* — isian potong dan tab Vendor tetap tidak lagi ada ([A-283](04b-asumsi-lanjutan.md#a-283)) Tab *Kemasan* ("1 DUS = 12 BOX"), terisi juga dari form penerimaan barang; hanya kemasan aktif yang dimuat ([A-294](04b-asumsi-lanjutan.md#a-294)). |
+| `/items/{id}` | `master.item-detail` | Ringkasan (Jenis barang; rincian teknis hanya untuk Jenis khusus; pemotongan hanya bila saklar `piece`), konversi satuan, vendor tetap (baca-saja), lot/serial (baca-saja), tab Potongan hanya bila saklar `piece` menyala, riwayat ([A-284](04b-asumsi-lanjutan.md#a-284)) |
 | `/item-categories` | `master.item-category-list` | Pohon kategori + form (kategori penyimpanan default, strategi, ambang toleransi) |
 | `/uoms` | `master.uom-list` | Kategori satuan + satuan di dalamnya, faktor ke satuan acuan |
 | `/references` | `master.reference-list` | Tab: Alasan, Kategori penyimpanan, Kendaraan, Ekspedisi |
-| `/settings/company` | `master.company-settings-form` | **Pengaturan company** ([A-230](04-keputusan-dan-asumsi.md#a-230)): ambang hari/persen dari `company_settings` (§13.5 no. 8 + `count_*`, `asset_life_alert_pct`) berkelompok dengan bawaan & rentang; saklar fitur lapis 1 (P-08) dengan penanda *dipakai n item*; zona waktu company; kunci periode hanya ditautkan. `company_setting.view` melihat, `company_setting.manage` menyimpan (`SaveCompanySettings`: hanya kunci yang berubah ditulis) |
+| `/settings/company` | `master.company-settings-form` | **Pengaturan company** ([A-230](04-keputusan-dan-asumsi.md#a-230)): ambang hari/persen dari `company_settings` (§13.5 no. 8 + `count_*`, `asset_life_alert_pct`) berkelompok dengan bawaan & rentang; saklar fitur lapis 1 (P-08) dengan penanda *dipakai n item* — bawaan company baru: `lot`, `expiry`, `fefo`, `serial` menyala, `piece` dan `qc` mati; mematikan saklar menyembunyikan layar khususnya dan menolak data baru ([A-284](04b-asumsi-lanjutan.md#a-284), BR-GEN-12), termasuk **OTP bukti terima otomatis** (`otp_auto`, bawaan mati; peringatan bila kanal WhatsApp/SMS platform belum diatur — [A-273](04b-asumsi-lanjutan.md#a-273)); zona waktu company; kunci periode hanya ditautkan; kunci `work_days_per_week` (5/6/7, bawaan 6) dan kartu **Kalender libur** (`master.holiday-calendar`: tahun, daftar libur dengan sakelar aktif, *Isi libur nasional <tahun>*, tambah libur company — [A-270](04b-asumsi-lanjutan.md#a-270)). `company_setting.view` melihat, `company_setting.manage` menyimpan (`SaveCompanySettings`: hanya kunci yang berubah ditulis; `SaveHoliday`) |
 
 ## 7. Kejadian stok & integrasi
 
@@ -197,12 +200,24 @@ Tidak ada kejadian stok. Master vendor dan item dibaca modul Purchasing ([purcha
 | TC-MST-15 | Item `is_cuttable` | `min_offcut_length` kosong | ditolak | BR-CNV-03 |
 | TC-MST-16 | Item punya lot | ubah satuan dasar | ditolak | BR-MST-02 |
 | TC-MST-17 | Item dengan konversi "1 batang = 6 m" | simpan | konversi tersimpan, ditandai potongan nominal | BR-STK-09 |
-| TC-MST-18 | Item dengan dua vendor tetap | simpan prioritas 1 dan 2 | urutan vendor tersimpan | A-52 |
+| TC-MST-18 | Vendor aktif | simpan item dengan isian vendor; simpan ulang item yang punya vendor tetap lama | isian diabaikan; data lama tetap ada | [A-305](04b-asumsi-lanjutan.md#a-305) |
 | TC-MST-19 | Kategori barang punya item aktif | nonaktifkan kategori | ditolak | BR-MST-05 |
 | TC-MST-20 | Master alasan konteks `cancel` | simpan | tersedia untuk dialog pembatalan | BR-GEN-02 |
 | TC-MST-21 | Kendaraan dengan driver bawaan | simpan | relasi ke user driver tersimpan | Blueprint §6.3a |
 | TC-MST-22 | User tanpa `item.create` | buka form item | 403 | BR-GEN-09 |
 | TC-MST-23 | Seeder demo dijalankan | periksa master | klien, proyek, vendor sesuai [00-akun-uji](../00-akun-uji.md) | — |
+| TC-MST-28 | Company baru, tahun 2026 | pakai kalender; atur 5 hari kerja; nonaktifkan cuti bersama 24 Des; tambah libur company 31 Des (dua kali); tahun 2030; user tanpa `manage` | 17 libur nasional + 8 cuti bersama terisi sekali; Sabtu kerja (6 hari) / tidak (5 hari); mundur 1 hari kerja dari 25 Mar 2026 = 17 Mar; 24 Des jadi hari kerja dan tidak terisi ulang; 31 Des libur, ganda ditolak; 2030 tanpa data → pesan; ubah 403 | [A-270](04b-asumsi-lanjutan.md#a-270) |
+| TC-MST-29 | Admin Company di form item | buka form; tab vendor; tab tak dikenal; titik pesan ulang −5 dari tab vendor lalu Simpan; pelacakan Serial + Keduanya | tab stok terbuka, vendor tidak; tab vendor tampil; kembali ke stok; galat `min` dan tab stok terbuka otomatis dengan "Minimal 0." & "Wajib diisi." (tanpa `validation.`); *Otomatis: Beli* berganti pilihan *Ditentukan per baris* | [A-282](04b-asumsi-lanjutan.md#a-282) |
+| TC-MST-30 | Kombinasi pelacakan × kepemilikan × kedaluwarsa | klasifikasi & pemetaan Jenis barang | tiga kombinasi → tiga jenis; per potong, Keduanya, serial habis pakai, serial aset berkedaluwarsa → Jenis khusus; FEFO bila saklar `fefo`, FIFO bila mati; impor menerima biasa/kedaluwarsa/alat | [A-283](04b-asumsi-lanjutan.md#a-283) |
+| TC-MST-31 | Simpan item lewat Jenis barang | buat tiap jenis; Alat saat `serial` mati; Berkedaluwarsa saat `expiry` mati; item per potong teknis saat `piece` mati; ganti jenis setelah ada pergerakan; simpan ulang item FIFO berkedaluwarsa | kolom teknis terisi sesuai pemetaan; ditolak BR-GEN-12 ×3; ditolak BR-MST-06; strategi lama dipertahankan | BR-GEN-12, BR-MST-06 |
+| TC-MST-32 | Admin Company di form item | buka form baru; matikan `serial`; buka item Keduanya; buka item bersaldo; simpan item dengan vendor tetap | tiga kartu jenis tanpa isian teknis/potong/vendor/QC; kartu Alat hilang; *Jenis khusus* read-only dan tersimpan tanpa mengubah teknis; kartu terkunci; `item_vendors` tidak berubah | [A-283](04b-asumsi-lanjutan.md#a-283) |
+| TC-MST-33 | Company baru / seed ulang | jalankan seeder acuan; nyalakan `piece` lalu seed ulang; jalankan seeder DEMO | `piece` & `qc` mati, lainnya menyala; `piece` tetap menyala; DEMO: `piece` & `qc` mati, PIPA-PVC-4 Barang biasa | [A-284](04b-asumsi-lanjutan.md#a-284) |
+| TC-MST-34 | Impor Excel item | templat; berkas kolom `jenis_barang`; nilai jenis salah; berkas templat lama | kolom Jenis barang tanpa kolom teknis; item sesuai jenis; galat baris; berkas lama tetap diterima | [A-283](04b-asumsi-lanjutan.md#a-283) |
+| TC-MST-35 | Daftar & detail item | saring jenis; saring Jenis khusus; buka tab Potongan saat `piece` mati/menyala | hanya jenis itu; hanya item lama; tab tersembunyi & kembali ke Ringkasan / tampil | [A-284](04b-asumsi-lanjutan.md#a-284) |
+| TC-MST-36 | Item ber-kemasan DUS aktif & PACK nonaktif | buka form; kemasan SET diingat dari GRN saat form terbuka lalu simpan; ingat DUS/PACK lagi; satuan input | PACK tidak dimuat; DUS & SET tetap aktif; tidak ditimpa/dihidupkan; 3 DUS = 36, 2 ROLL (1 = 5) = 10, tanpa isi ditolak | [A-292](04b-asumsi-lanjutan.md#a-292), [A-294](04b-asumsi-lanjutan.md#a-294) |
+| TC-MST-37 | DUS = 12, PACK = 4 | uraikan 116, 117, −12, 3 | "9 DUS 2 PACK", "9 DUS 2 PACK 1 BOX", "−1 DUS", kosong | [A-293](04b-asumsi-lanjutan.md#a-293) |
+| TC-MST-38 | label kemasan semen `…-0001` | pindai kode label (huruf kecil) | `ScanCode::label` menemukan labelnya; `resolve` memberi item + lot label | [A-296](04b-asumsi-lanjutan.md#a-296) |
+| TC-MST-39 | Vendor dengan PO disetujui & catatan pemesanan belum diterima | *Nonaktifkan*: tanpa alasan, lalu dengan alasan | dialog menampilkan nomor PO & PRQ; alasan wajib; vendor Nonaktif, PO tetap Disetujui | [A-310](04b-asumsi-lanjutan.md#a-310) |
 
 ## 11. Di luar lingkup modul ini
 
@@ -285,6 +300,26 @@ dan `MasterScreenTest` (TC-MST-22–23).
 
 **Tab Riwayat ([A-252](04b-asumsi-lanjutan.md#a-252)):** linimasa semua dokumen proyek (REQ, SJ dikirim ke / dijemput dari proyek, ISU, CNV, WST, RET, TRF asal/tujuan, PRQ, AST; 60 terbaru, bertaut, hanya yang boleh dilihat) di atas log perubahan proyek. Uji TC-DOC-02.
 
+### 13.6 Form item ringkas & pesan validasi (28 September 2026)
+
+`ItemForm::$tabTambahan` (`stok` | `konversi` | `vendor` — sejak §13.7 tinggal `stok` | `konversi`, nilai lain kembali ke `stok`); view menandai tab bergalat dan membukanya otomatis. `Item::defaultLineOwnershipValue()` (aset → `loan`, habis pakai → `buy`, Keduanya → `default_line_ownership` ?? `buy`) dipakai form REQ. `lang/id/{validation,auth,pagination,passwords}.php` ditambahkan — sebelumnya berkas bahasa `id` tidak ada sehingga layar menampilkan kunci mentah seperti `validation.required`; pesan dibuat tanpa `:attribute` karena tampil tepat di bawah isiannya. Uji TC-MST-29 ([A-282](04b-asumsi-lanjutan.md#a-282)).
+
+### 13.7 Jenis barang & saklar fitur (28 September 2026)
+
+`App\Domain\Master\Enums\ItemKind` (`standard` | `expiring` | `serial_tool`) **diturunkan** dari (`tracking_mode`, `ownership_model`, `has_expiry`) lewat `ItemKind::classify()` — tanpa kolom/migrasi; `null` = Jenis khusus. `App\Domain\Master\Support\StockFeatures` satu-satunya pembaca saklar stok (`piece()`, `qc()`, `fefo()`, `kindAvailable()`, `kindOptions()`, `inactiveFor()`). `SaveItem` menerima `item_kind` (`terapkanJenis`: kunci BR-MST-06 via `Item::hasStockMovements()`, saklar BR-GEN-12, strategi lama dipertahankan bila sah) di samping jalur kolom teknis lama (impor lama, item khusus, uji) yang juga diperiksa saklarnya bila kombinasinya berubah. `ItemForm` mengirim kolom teknis item khusus dari database, bukan dari layar, dan `$vendors = null` sehingga `item_vendors` tidak disentuh. `Item::scopeOfKind()` dipakai daftar item & laporan *Daftar item*. `FeatureSetting::seed($map, $overwrite)` menulis saklar dari seeder tanpa log; `MasterReferenceSeeder::FEATURES` = bawaan company baru. `TenantTestCase` memakai bawaan baru; fixture penerimaan (QC), konversi, dan opname menyalakan saklarnya sendiri. Uji TC-MST-30–35 ([A-283](04b-asumsi-lanjutan.md#a-283), [A-284](04b-asumsi-lanjutan.md#a-284)).
+
+### 13.8 Kemasan (28 September 2026)
+
+`Item::activeConversions()` (aktif, isi terbesar dulu) dan `Item::unitOptions()`; `Master\Support\QtyFormat` (`number`, `withUnit`, `packaging` → "9 DUS 8 BOX"; `PrintFormat::qty` mendelegasi), `Master\Support\UnitInput::resolve()` (kemasan aktif atau isian "1 X = …", `qty_base = round(input × isi, 4)`, item per potong hanya satuan dasar), `Master\Actions\RememberItemPackaging` (hanya menambah, log riwayat item), concern `Livewire\Concerns\PicksItemUnit` + partial `livewire.master.partials.unit-picker` untuk form GRN, Permintaan, Retur. `ItemForm::$kemasanDimuat` → `SaveItem::syncConversions($dimuat)` hanya menonaktifkan kemasan yang dimuat form. Satuan DUS & PACK di `MasterReferenceSeeder` dan migrasi 000400 (bersama alasan kerusakan `VENDOR`). Uji TC-MST-36–37 ([A-291](04b-asumsi-lanjutan.md#a-291)–[A-294](04b-asumsi-lanjutan.md#a-294)).
+
+### 13.9 Pemindai mengenali label kemasan (28 September 2026)
+
+`ScanCode::label()` mencari kode label kemasan persis; `resolve()` ikut mengembalikan item & lot label itu, sehingga REQ/CNV yang memindai label mendapat itemnya ([A-296](04b-asumsi-lanjutan.md#a-296)).
+
+### 13.10 Vendor tetap berhenti dipakai & dampak nonaktif (28 September 2026)
+
+`SaveItem` mengabaikan isian vendor, detail item mengganti kartu *Vendor tetap* dengan *Saran vendor (dari riwayat)* + tombol *Riwayat harga beli* (hanya `po.view`), daftar vendor menampilkan *Pesanan 12 bln* ([A-305](04b-asumsi-lanjutan.md#a-305)). `Support\VendorImpact` menampilkan dokumen terbuka di dialog nonaktif ([A-310](04b-asumsi-lanjutan.md#a-310)).
+
 ### 13.5 Sisa pekerjaan modul ini
 
 1. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 24 Sep 2026** lewat layar laporan bersama di `/reports`.
@@ -305,3 +340,4 @@ dan `MasterScreenTest` (TC-MST-22–23).
    | `discrepancy_alert_days` | 7 | `DiscrepancyList` ([15-picking-shipment](15-picking-shipment.md)) | Umur DSC terbuka yang ditandai |
    | `reservation_alert_days` | 7 | `ReservationList` ([13-stock](13-stock.md)) | Umur reservasi yang ditandai menggantung |
    | `stock_lock_date` | kosong | `LockStockPeriod`, `StockLedger` ([BR-STK-15](05-aturan-bisnis.md#br-stk)) | Tanggal kunci periode stok |
+9. ~~Hari kerja & kalender libur~~ — **selesai 27 Sep 2026** ([A-270](04b-asumsi-lanjutan.md#a-270), TC-MST-28 `WorkCalendarTest`): `Support\WorkCalendar` (`isWorkday`, `subWorkdays`, isi otomatis per tahun), `Support\NationalHolidays` (SKB 2026–2027, perbarui tiap SKB baru), migrasi tenant 000340; dipakai `MaterialRequest::scopeReviewOverdue` (SLA tinjau, BR-REQ-14).

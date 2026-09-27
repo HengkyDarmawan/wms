@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `count`, `adjustment` (Stock Opname & Penyesuaian Stok)
 
-**Versi:** 0.6
-**Tanggal:** 24 September 2026
-**Status:** selesai Fase 1 — modul kesembilan setelah [Approval](20-approval.md); OPN dan ADJ manual diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-95](04-keputusan-dan-asumsi.md#a-95)–[A-105](04-keputusan-dan-asumsi.md#a-105) (*Perlu validasi*); v0.3: asal `asset_lost` tersambung dari modul Aset ([25-aset](25-aset.md), [A-167](04-keputusan-dan-asumsi.md#a-167))
+**Versi:** 0.7
+**Tanggal:** 26 September 2026
+**Status:** selesai Fase 1 — modul kesembilan setelah [Approval](20-approval.md); OPN dan ADJ manual diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-95](04-keputusan-dan-asumsi.md#a-95)–[A-105](04-keputusan-dan-asumsi.md#a-105) (*Perlu validasi*); v0.3: asal `asset_lost` tersambung dari modul Aset ([25-aset](25-aset.md), [A-167](04-keputusan-dan-asumsi.md#a-167)); v0.7: selisih besar ikut hitung ulang — §1, §4, §10 (TC-OPN-09 diubah, TC-OPN-22 baru), §13.2 ([A-259](04b-asumsi-lanjutan.md#a-259))
 **Modul:** `count` (OPN), `adjustment` (ADJ)
 **Fase:** F1 (sesi bulanan/tahunan/ad-hoc/pemeriksaan mendadak, hitung buta, hitung ulang, approval sesi, ADJ manual & pembalik); cycle count ABC, PWA luring, auditor eksternal berbatas periode `[F2]`
 **Dokumen terkait:** [Blueprint §9](01-blueprint.md#9-stock-opname--audit) · [Aturan Bisnis §BR-OPN](05-aturan-bisnis.md#br-opn), [§BR-LED](05-aturan-bisnis.md#br-led) · [Katalog Status §2.12, §2.13, §3](06-katalog-status-dan-enum.md) · [Glosarium §8](03-glosarium.md#8-stock-opname) · [Model data 08c](08c-model-data-pendukung.md#area-stock-opname--penyesuaian-tenant) · [Alur 8](07b-proses-bisnis-pendukung.md#alur-8--stock-opname-sesi-hitung-buta-hitung-ulang-rekonsiliasi) · [D-22](04-keputusan-dan-asumsi.md#d-22), [D-23](04-keputusan-dan-asumsi.md#d-23), [A-09](04-keputusan-dan-asumsi.md#a-09), [A-42](04-keputusan-dan-asumsi.md#a-42), [A-46](04-keputusan-dan-asumsi.md#a-46), [A-67](04-keputusan-dan-asumsi.md#a-67)
@@ -12,7 +12,7 @@
 
 ## 1. Tujuan & lingkup
 
-**Stock opname (OPN)** membandingkan saldo fisik per bin dengan hitungan fisik: Kepala Gudang atau Auditor merencanakan sesi (jenis, cakupan gudang/zona/bin/item, tim, pembekuan), sistem membekukan bin dan mengambil snapshot, penghitung menghitung **buta** dari halaman ramah HP, selisih diklasifikasi kecil/sedang/besar dengan ambang relatif **dan** absolut, selisih sedang dihitung ulang oleh orang lain, selisih besar wajib akar masalah, lalu hasil sesi diajukan ke approval. Setelah disetujui, satu ADJ per gudang diposting ke kartu stok, bin dibuka, sesi ditutup, dan sesi bulanan mengunci periode stok.
+**Stock opname (OPN)** membandingkan saldo fisik per bin dengan hitungan fisik: Kepala Gudang atau Auditor merencanakan sesi (jenis, cakupan gudang/zona/bin/item, tim, pembekuan), sistem membekukan bin dan mengambil snapshot, penghitung menghitung **buta** dari halaman ramah HP, selisih diklasifikasi kecil/sedang/besar dengan ambang relatif **dan** absolut, selisih sedang dan besar dihitung ulang oleh orang lain ([A-259](04b-asumsi-lanjutan.md#a-259)), selisih yang tetap besar wajib akar masalah, lalu hasil sesi diajukan ke approval. Setelah disetujui, satu ADJ per gudang diposting ke kartu stok, bin dibuka, sesi ditutup, dan sesi bulanan mengunci periode stok.
 
 **Penyesuaian stok (ADJ)** manual mengoreksi stok ± per bin/lot/serial/potongan dengan Alasan wajib, selalu lewat minimal satu lapis approval ([A-09](04-keputusan-dan-asumsi.md#a-09)), dan dikoreksi hanya lewat ADJ pembalik.
 
@@ -79,7 +79,7 @@ Tabel transisi di Katalog §2.12–§2.13; di sini hanya implementasinya. Semua 
 | `planned → in_progress` | `StartStockCount` | guard PCK berjalan & bin beku sesi lain (BR-OPN-02); `ChangeBinStatus::freeze`; snapshot `count_lines`; penugasan putaran 1 bergiliran, bin ber-`count_flag` dulu |
 | — | `AssignCounter` (`count.assign`) | ganti penghitung; putaran 2 ≠ penghitung putaran 1 |
 | — | `RecordCount::save/addLine/finish` (`count.record`) | hitung buta; setelah `finish` → `CountProgress::evaluate` |
-| `in_progress → recount` | otomatis `CountProgress` | semua bin putaran 1 selesai + ada selisih sedang → penugasan putaran 2 ke anggota tim lain |
+| `in_progress → recount` | otomatis `CountProgress` | semua bin putaran 1 selesai + ada selisih sedang atau besar ([A-259](04b-asumsi-lanjutan.md#a-259)) → penugasan putaran 2 ke anggota tim lain |
 | — | `RecordCountRootCause` (`count.reconcile`) | akar masalah + catatan per baris |
 | `in_progress`/`recount → reconciling` | `ReconcileStockCount` | guard semua terhitung & akar masalah besar; draf ADJ per gudang (`submitted`, kecuali spot check); `ApprovalEngine::submit` |
 | `reconciling` (ditolak) | `StockCountApprovalHandler::onRejected` | tetap `reconciling`, Alasan dicatat; ajukan ulang lewat `ReconcileStockCount` ([A-97](04-keputusan-dan-asumsi.md#a-97)) |
@@ -165,7 +165,7 @@ Uji di `tests/Feature/Count` (36 uji). Fixture `Concerns\CountFixtures`: gudang 
 | TC-OPN-06 | Penugasan bin B | selesai dengan baris kosong; serial; temuan baut/serial/lot tak dikenal/lot tercatat | ditolak; serial = ada/tidak; temuan tercatat `system 0`; ditolak BR-LED-03/BR-OPN-01 | A-100 |
 | TC-OPN-07 | Ambang bawaan & kategori | klasifikasi | kecil/sedang/besar; sistem nol = besar; kategori induk menang; `count_moderate_pct` | BR-OPN-04, A-99 |
 | TC-OPN-08 | Selisih sedang | putaran 1 selesai; tugaskan ulang | `recount`, putaran 2 ke orang lain; penghitung pertama ditolak; akhir = putaran 2 | BR-OPN-05 |
-| TC-OPN-09 | Selisih besar tanpa sedang | putaran 1 selesai | tetap `in_progress`; kelas & selisih terisi | BR-OPN-04 |
+| TC-OPN-09 | Selisih besar (baut −20 %, serial hilang) | putaran 1 selesai; putaran 2 mengonfirmasi | `recount`, kedua bin ke penghitung berbeda; setelah putaran 2 tetap besar, selisih terisi | BR-OPN-04, BR-OPN-05, A-259 |
 | TC-OPN-10 | Belum/sudah terhitung | rekonsiliasi tanpa/dengan akar masalah | BR-OPN-05/BR-OPN-07; `reconciling`, draf ADJ `submitted` tanpa approval sendiri; lapis minimum ke atasan perekonsiliasi | BR-OPN-06, BR-OPN-07, A-96 |
 | TC-OPN-11 | Sesi direkonsiliasi | Kepala Gudang setuju | `closed`; ADJ `posted`; saldo = hitungan; 2 kejadian `stock_adjusted` + `count_session_ref`; bin dibuka; ⚑ dilepas; saldo = kartu stok | BR-OPN-06, BR-STK-01, A-101 |
 | TC-OPN-12 | Menunggu approval | ubah akar masalah; tolak tanpa/dengan alasan; ajukan ulang | BR-APR-01; BR-GEN-11; tetap `reconciling`, bin beku; ADJ lama `cancelled`, baru `posted` | A-97 |
@@ -179,6 +179,7 @@ Uji di `tests/Feature/Count` (36 uji). Fixture `Concerns\CountFixtures`: gudang 
 | TC-OPN-18 | Role berbeda | buka halaman; PDF sebelum/sesudah | 200/403 sesuai §2; PDF 403 lalu `application/pdf` | BR-GEN-09 |
 | TC-OPN-20 | Sesi disetujui → ditutup | unduh laporan | lampiran `report` (PDF) tersimpan, `report_attachment_id` terisi; unduhan = isi arsip | A-238 |
 | TC-OPN-21 | Bin A dibeku sesi berjalan, PCK `pending` dari bin A, hitungan r1 sudah masuk | staf mencoba override; Kepala Gudang override tanpa alasan lalu dengan alasan; PCK dimulai & diselesaikan 5 | staf tidak boleh; tanpa alasan BR-GEN-11; stok bin A −5, bin tetap beku & ⚑, `system_qty` dan `counted_qty_r1` −5; pergerakan lain dari bin A tetap BR-OPN-02 | BR-OPN-02, A-240 |
+| TC-OPN-22 | Selisih besar baut & genset di putaran 1 | isi akar masalah sebelum hitung ulang; putaran 2: baut cocok, genset tetap hilang; rekonsiliasi | ditolak BR-OPN-05 (*Menunggu hitung ulang*); baut tanpa kelas & tanpa akar masalah; genset wajib akar masalah (BR-OPN-07); ADJ hanya baris genset | BR-OPN-05, BR-OPN-07, A-259 |
 | TC-OPN-18b | Layar | form → detail mulai → ganti penghitung → hitung HP (tanpa angka) → rekonsiliasi (akar masalah) → setuju | berjalan dari layar; angka tersembunyi bagi penghitung | §6 |
 | TC-OPN-18c | Layar | batal & tolak lewat dialog; staf setujui | Alasan wajib; 403 | BR-GEN-11 |
 | TC-OPN-19 | Kepala Gudang / staf / driver | buka beranda | menu & palet sesuai izin | §6 |
@@ -226,7 +227,7 @@ Domain `app/Domain/Count` (7 aksi, `Support\CountScope`, `VarianceClassifier`, `
 ### 13.2 Keputusan implementasi
 
 1. **Approval sesi minimal satu lapis dan SoD lewat konteks** ([A-96](04-keputusan-dan-asumsi.md#a-96)); tanpa mengubah mesin approval — hanya `ApprovalDocumentType::conditions()` untuk ADJ dan penangkap galat layar.
-2. **Klasifikasi & hitung ulang** ([A-99](04-keputusan-dan-asumsi.md#a-99)), **cakupan & snapshot** ([A-100](04-keputusan-dan-asumsi.md#a-100)), **penutupan** ([A-101](04-keputusan-dan-asumsi.md#a-101)), **baris ADJ & pembalik** ([A-102](04-keputusan-dan-asumsi.md#a-102)), **batas hitung buta** ([A-103](04-keputusan-dan-asumsi.md#a-103)).
+2. **Klasifikasi & hitung ulang** ([A-99](04-keputusan-dan-asumsi.md#a-99); sejak 26 Sep 2026 selisih besar ikut dihitung ulang dan akar masalah baru diisi setelahnya, [A-259](04b-asumsi-lanjutan.md#a-259)), **cakupan & snapshot** ([A-100](04-keputusan-dan-asumsi.md#a-100)), **penutupan** ([A-101](04-keputusan-dan-asumsi.md#a-101)), **baris ADJ & pembalik** ([A-102](04-keputusan-dan-asumsi.md#a-102)), **batas hitung buta** ([A-103](04-keputusan-dan-asumsi.md#a-103)).
 3. **Urutan saat disetujui:** bin dibuka lebih dulu (buku besar menolak bin beku), lalu ADJ diposting dengan `occurred_at` = saat disetujui (koreksi di periode berjalan, BR-STK-15), lalu kunci periode dimajukan. Selisih dihitung dari snapshot; bila bin tidak dibeku dan saldo berubah sejak snapshot, posting kurangi yang melebihi saldo ditolak buku besar dan keputusan dibatalkan.
 4. **Auditor Internal** kini memegang `count.approve` sehingga melihat *Tugas approval saya* (TC-APR-20 disesuaikan, ID tetap); aturan demo ADJ/OPN diseed ([A-105](04-keputusan-dan-asumsi.md#a-105), TC-APR-21: enam aturan).
 

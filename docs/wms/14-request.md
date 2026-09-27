@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `request` (Permintaan Material)
 
-**Versi:** 0.11
-**Tanggal:** 25 September 2026
-**Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md)); v0.6: baris bersumber transfer melahirkan TRF backorder ([22-retur-transfer](22-retur-transfer.md)); v0.7: baris bersumber pembelian melahirkan PRQ backorder ([26-purchase-request](26-purchase-request.md), [A-171](04-keputusan-dan-asumsi.md#a-171)); v0.8: konfirmasi & keberatan terima pemohon (BR-REQ-10) di layar REQ & portal, konfirmasi otomatis harian; notifikasi REQ perlu ditinjau ([27-pendukung-f1](27-pendukung-f1.md), [A-188](04-keputusan-dan-asumsi.md#a-188), [A-189](04-keputusan-dan-asumsi.md#a-189))
+**Versi:** 0.15
+**Tanggal:** 28 September 2026
+**Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md)); v0.6: baris bersumber transfer melahirkan TRF backorder ([22-retur-transfer](22-retur-transfer.md)); v0.7: baris bersumber pembelian melahirkan PRQ backorder ([26-purchase-request](26-purchase-request.md), [A-171](04-keputusan-dan-asumsi.md#a-171)); v0.8: konfirmasi & keberatan terima pemohon (BR-REQ-10) di layar REQ & portal, konfirmasi otomatis harian; notifikasi REQ perlu ditinjau ([27-pendukung-f1](27-pendukung-f1.md), [A-188](04-keputusan-dan-asumsi.md#a-188), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.13: Beli/Pinjam baris mengikuti jenis barang dan ditetapkan aksi simpan; pilihan hanya untuk item Keduanya ([A-286](04b-asumsi-lanjutan.md#a-286), §6, §10 TC-REQ-36, §13.2 no. 9); v0.14: jumlah baris boleh diketik dalam kemasan item (mis. 2 DUS), disimpan `uom_id`/`qty_input` ([A-291](04b-asumsi-lanjutan.md#a-291), §3.2, §6, §10 TC-REQ-37)
 **Modul:** `request`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status §2.1](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
@@ -134,7 +134,7 @@ Transisi hanya lewat POST, tidak pernah lewat GET. Aksi tingkat baris tidak meng
 | Route | Komponen | Isi |
 |---|---|---|
 | `/requests` | `request.request-list` | Daftar REQ dengan penyaring status, proyek, pemohon, tanggal; penanda SLA tinjau terlampaui |
-| `/requests/create` | `request.request-form` | Pembuatan REQ: proyek, tanggal dibutuhkan, baris katalog dan non-katalog |
+| `/requests/create` | `request.request-form` | Pembuatan REQ: proyek, tanggal dibutuhkan, baris katalog dan non-katalog; kolom Beli/Pinjam berupa **teks** dari jenis barang (Alat bernomor seri = Pinjam, lainnya = Beli), pilihan hanya untuk item lama *Keduanya* ([A-286](04b-asumsi-lanjutan.md#a-286)) Kolom jumlah punya pemilih satuan (satuan dasar, kemasan item, atau *Kemasan lain…* "1 DUS = … BOX" + *Ingat untuk item ini*) dan hasil "2 DUS = 24 BOX"; pindai menambah 1 dalam satuan terpilih ([A-291](04b-asumsi-lanjutan.md#a-291), [A-292](04b-asumsi-lanjutan.md#a-292)). |
 | `/requests/{req}` | `request.request-detail` | Header, baris, timeline, dan seluruh aksi status sesuai izin |
 | `/portal/requests` | `request.portal-request-list` | Daftar REQ milik klien; tanggal janji dan penanda menunggu tanggapan |
 | `/portal/requests/{req}` | `request.portal-request-detail` | Klien menambah baris, menanggapi penggantian, meminta pembatalan, mengonfirmasi terima |
@@ -198,6 +198,10 @@ Kejadian outbox: tidak ada yang lahir dari modul ini. `purchase_requested` lahir
 | TC-REQ-27 | REQ 50 dipetik lalu SJ berangkat | coba batalkan REQ | baris REQ `qty_shipped` 50, `qty_reserved` 0; pembatalan ditolak | KS §2.1, BR-REQ-09 |
 | TC-REQ-28 | SJ diterima baik 48, kurang 2 | lalu DSC diputus klien *tidak perlu* | REQ `partially_fulfilled` (diterima 48), lalu `completed` | KS §2.1, BR-SJ-10, A-77 |
 | TC-REQ-29 | SJ diterima penuh | isi bukti terima | baris `closed`, REQ `completed` | KS §2.1, A-77 |
+| TC-REQ-35 | Item aset berserial, item Keduanya bawaan Pinjam, item Keduanya tanpa bawaan, baut | pilih item di baris, ubah manual, pindai label | aset → Pinjam, baut → Beli, Keduanya → Pinjam lalu tetap Beli setelah diubah manual; tanpa bawaan → Beli; pindai aset → Pinjam | A-38, A-282 |
+| TC-REQ-36 | Genset (Alat bernomor seri), baut (Barang biasa), bor lama *Keduanya* bawaan Pinjam | pilih item di form; simpan dengan Beli/Pinjam kiriman yang salah; ubah REQ yang barisnya sudah tersimpan | genset & baut berupa teks, bor berupa pilihan; tersimpan Pinjam/Beli/Beli (bor memakai kiriman); baris lama dengan item sama tidak berubah | [A-286](04b-asumsi-lanjutan.md#a-286), BR-REQ-06 |
+| TC-REQ-37 | Baut dengan kemasan DUS = 12 | baris 2 DUS, simpan, buka lagi | `qty_base` 24, `uom_id` DUS, `qty_input` 2, detail "2 DUS"; draf dibuka lagi dalam DUS | [A-291](04b-asumsi-lanjutan.md#a-291) |
+| TC-REQ-38 | Baut, kemasan DUS | form Permintaan: pilih baut, DUS, lalu *Kemasan lain…* | kotak jumlah berakhiran PCS lalu DUS; isian kemasan lain di baris tabel sendiri; kolom **Beli/Pinjam**, placeholder "Pindai atau ketik kode barang" | [A-291](04b-asumsi-lanjutan.md#a-291), [A-283](04b-asumsi-lanjutan.md#a-283) |
 
 ## 11. Di luar lingkup modul ini
 
@@ -261,6 +265,16 @@ Sepuluh aksi domain di `app/Domain/Request/Actions`: `SaveRequest`, `SubmitReque
    scope pada `project_id` membuat REQ milik proyek lain tidak ditemukan sama sekali.
 7. **Penuaan tenggat penggantian dibuat sebagai metode biasa** (`RespondSubstitution::expireOverdue()`),
    bukan hanya isi job, supaya bisa diuji tanpa menjalankan penjadwal.
+8. **Beli/Pinjam bawaan dari item** (28 Sep 2026, [A-38](04-keputusan-dan-asumsi.md#a-38), [A-282](04b-asumsi-lanjutan.md#a-282)):
+   memilih item di baris (atau memindai labelnya) mengisi sifat baris lewat `Item::defaultLineOwnershipValue()`
+   — sebelumnya selalu *Beli*, sehingga aset seperti genset bisa tercatat jual putus bila pemohon lupa mengganti.
+   Hanya dijalankan saat item berganti (`RequestForm::updatedLines`, select item `wire:model.live`), jadi pilihan
+   manual sesudahnya tetap. Uji TC-REQ-35.
+9. **Beli/Pinjam mengikuti jenis barang** (28 Sep 2026, [A-286](04b-asumsi-lanjutan.md#a-286)): kolom itu kini teks
+   kecuali item *Keduanya*; `SaveRequest::kepemilikanBaris` menghitung ulang dari item (`both` memakai masukan,
+   baris tersimpan dengan item sama dipertahankan, baris non-katalog seperti sebelumnya) sehingga layar yang
+   dimanipulasi tidak bisa mencatat genset sebagai Beli. Uji TC-REQ-36; TC-REQ-09 kini memeriksa baris baut
+   tersimpan *Beli*.
 
 ### 13.3 Layar yang sudah ada
 

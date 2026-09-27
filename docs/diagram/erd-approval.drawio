@@ -11,10 +11,10 @@
           <mxGeometry y="26" width="260" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="approval_steps" value="approval_steps" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="40" width="260" height="210" as="geometry"/>
+          <mxGeometry x="360" y="40" width="260" height="226" as="geometry"/>
         </mxCell>
-        <mxCell id="approval_steps_cols" value="🔑 id : bigint&lt;br&gt;↗ approval_rule_id : bigint&lt;br&gt;step_no : int&lt;br&gt;approver_type : enum&lt;br&gt;approver_ref_id : bigint&lt;br&gt;decision_mode : enum&lt;br&gt;backup_approver_type : enum&lt;br&gt;backup_ref_id : bigint&lt;br&gt;timeout_hours : int&lt;br&gt;channel : enum&lt;br&gt;require_pin : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="approval_steps">
-          <mxGeometry y="26" width="260" height="184" as="geometry"/>
+        <mxCell id="approval_steps_cols" value="🔑 id : bigint&lt;br&gt;↗ approval_rule_id : bigint&lt;br&gt;step_no : int&lt;br&gt;approver_type : enum&lt;br&gt;approver_ref_id : bigint&lt;br&gt;decision_mode : enum&lt;br&gt;same_org_unit : boolean&lt;br&gt;backup_approver_type : enum&lt;br&gt;backup_ref_id : bigint&lt;br&gt;timeout_hours : int&lt;br&gt;channel : enum&lt;br&gt;require_pin : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="approval_steps">
+          <mxGeometry y="26" width="260" height="200" as="geometry"/>
         </mxCell>
         <mxCell id="approval_snapshots" value="approval_snapshots" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="680" y="40" width="260" height="242" as="geometry"/>

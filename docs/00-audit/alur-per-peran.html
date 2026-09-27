@@ -801,20 +801,20 @@ sequenceDiagram
   P2-&gt;&gt;P4: 9. Klasifikasi selisih per baris – kecil /&lt;br/&gt;sedang / besar (ambang relatif &amp;amp ·&lt;br/&gt;absolut)
   Note right of P4: variance_class · BR-OPN-04
   Note over P4: ◇ 10. Kelas selisih?
-  alt sedang
-    P4-&gt;&gt;P2: 12. Hitung ulang oleh penghitung berbeda
+  alt sedang / besar (putaran 1)
+    P4-&gt;&gt;P2: 12. Hitung ulang oleh penghitung berbeda&lt;br/&gt;(baris sedang dan besar, satu putaran)
     Note over P2: lanjut ke langkah 12
-  else besar
-    P4-&gt;&gt;P1: 11. Isi kategori akar masalah untuk selisih&lt;br/&gt;besar
+  else tetap besar setelah hitung ulang
+    P4-&gt;&gt;P1: 11. Isi kategori akar masalah untuk selisih&lt;br/&gt;yang tetap besar setelah hitung ulang
     Note over P1: lanjut ke langkah 11
-  else kecil
+  else kecil, atau sedang setelah hitung ulang
     P4-&gt;&gt;P1: 13. Rekonsiliasi – tinjau semua baris · draf&lt;br/&gt;ADJ per gudang
     Note over P1: lanjut ke langkah 13
   end
-  P1-&gt;&gt;P1: 11. Isi kategori akar masalah untuk selisih&lt;br/&gt;besar
+  P1-&gt;&gt;P1: 11. Isi kategori akar masalah untuk selisih&lt;br/&gt;yang tetap besar setelah hitung ulang
   Note over P1: root_cause_category · BR-OPN-07
-  P2-&gt;&gt;P2: 12. Hitung ulang oleh penghitung berbeda
-  Note over P2: OPN recount · BR-OPN-05
+  P2-&gt;&gt;P2: 12. Hitung ulang oleh penghitung berbeda&lt;br/&gt;(baris sedang dan besar, satu putaran)
+  Note over P2: OPN recount · BR-OPN-05 · A-259
   P1-&gt;&gt;P1: 13. Rekonsiliasi – tinjau semua baris · draf&lt;br/&gt;ADJ per gudang
   Note over P1: OPN reconciling · ADJ submitted
   P1-&gt;&gt;P3: 14. Setujui sesi (tingkat sesi · approver&lt;br/&gt;bukan penghitung · sesi tahunan/audit oleh&lt;br/&gt;Auditor Internal / Manajemen)
@@ -826,7 +826,7 @@ sequenceDiagram
 </pre></div>
     <details><summary>Rincian 16 langkah (nomor sama dengan di diagram)</summary>
       <div class="tw"><table><thead><tr><th>#</th><th>Jenis</th><th>Pelaku</th><th>Langkah</th>
-      <th>Status / efek / aturan</th></tr></thead><tbody><tr><td class="k">1</td><td class="k">Mulai</td><td>Kepala Gudang / Auditor</td><td>Jadwal opname / permintaan audit</td><td class="ref">—</td></tr><tr><td class="k">2</td><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak</td><td class="ref">OPN planned; BR-OPN-10</td></tr><tr><td class="k">3</td><td class="k">Keputusan</td><td>Sistem</td><td>Ada PCK berjalan di cakupan (bila pembekuan)?</td><td class="ref">BR-OPN-02</td></tr><tr><td class="k">4</td><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Selesaikan atau batalkan PCK dulu</td><td class="ref">—</td></tr><tr><td class="k">5</td><td class="k">Langkah</td><td>Sistem</td><td>Bekukan bin; snapshot saldo fisik (termasuk dicadangkan &amp; Loading Area)</td><td class="ref">OPN in_progress; bin frozen; BR-OPN-01</td></tr><tr><td class="k">6</td><td class="k">Keputusan</td><td>Kepala Gudang / Auditor</td><td>SJ mendesak dari bin beku?</td><td class="ref">—</td></tr><tr><td class="k">7</td><td class="k">Langkah</td><td>Penghitung (Staf)</td><td>Hitung buta per bin di PWA (scan bin, input jumlah; draf lokal bila offline)</td><td class="ref">count_assignment; blind_count</td></tr><tr><td class="k">8</td><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Override dengan alasan; bin ditandai hitung ulang</td><td class="ref">BR-OPN-02</td></tr><tr><td class="k">9</td><td class="k">Langkah</td><td>Sistem</td><td>Klasifikasi selisih per baris: kecil / sedang / besar (ambang relatif &amp; absolut)</td><td class="ref">variance_class; BR-OPN-04</td></tr><tr><td class="k">10</td><td class="k">Keputusan</td><td>Sistem</td><td>Kelas selisih?</td><td class="ref">—</td></tr><tr><td class="k">11</td><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Isi kategori akar masalah untuk selisih besar</td><td class="ref">root_cause_category; BR-OPN-07</td></tr><tr><td class="k">12</td><td class="k">Langkah</td><td>Penghitung (Staf)</td><td>Hitung ulang oleh penghitung berbeda</td><td class="ref">OPN recount; BR-OPN-05</td></tr><tr><td class="k">13</td><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Rekonsiliasi: tinjau semua baris; draf ADJ per gudang</td><td class="ref">OPN reconciling; ADJ submitted</td></tr><tr><td class="k">14</td><td class="k">Langkah</td><td>Approver</td><td>Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen)</td><td class="ref">OPN approved; A-09; BR-OPN-06; BR-OPN-09</td></tr><tr><td class="k">15</td><td class="k">Langkah</td><td>Sistem</td><td>ADJ posted; stock_adjusted; buka bin; laporan PDF; dashboard akurasi</td><td class="ref">OPN closed</td></tr><tr><td class="k">16</td><td class="k">Selesai</td><td>Sistem</td><td>Sesi ditutup</td><td class="ref">—</td></tr></tbody></table></div>
+      <th>Status / efek / aturan</th></tr></thead><tbody><tr><td class="k">1</td><td class="k">Mulai</td><td>Kepala Gudang / Auditor</td><td>Jadwal opname / permintaan audit</td><td class="ref">—</td></tr><tr><td class="k">2</td><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak</td><td class="ref">OPN planned; BR-OPN-10</td></tr><tr><td class="k">3</td><td class="k">Keputusan</td><td>Sistem</td><td>Ada PCK berjalan di cakupan (bila pembekuan)?</td><td class="ref">BR-OPN-02</td></tr><tr><td class="k">4</td><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Selesaikan atau batalkan PCK dulu</td><td class="ref">—</td></tr><tr><td class="k">5</td><td class="k">Langkah</td><td>Sistem</td><td>Bekukan bin; snapshot saldo fisik (termasuk dicadangkan &amp; Loading Area)</td><td class="ref">OPN in_progress; bin frozen; BR-OPN-01</td></tr><tr><td class="k">6</td><td class="k">Keputusan</td><td>Kepala Gudang / Auditor</td><td>SJ mendesak dari bin beku?</td><td class="ref">—</td></tr><tr><td class="k">7</td><td class="k">Langkah</td><td>Penghitung (Staf)</td><td>Hitung buta per bin di PWA (scan bin, input jumlah; draf lokal bila offline)</td><td class="ref">count_assignment; blind_count</td></tr><tr><td class="k">8</td><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Override dengan alasan; bin ditandai hitung ulang</td><td class="ref">BR-OPN-02</td></tr><tr><td class="k">9</td><td class="k">Langkah</td><td>Sistem</td><td>Klasifikasi selisih per baris: kecil / sedang / besar (ambang relatif &amp; absolut)</td><td class="ref">variance_class; BR-OPN-04</td></tr><tr><td class="k">10</td><td class="k">Keputusan</td><td>Sistem</td><td>Kelas selisih?</td><td class="ref">—</td></tr><tr><td class="k">11</td><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Isi kategori akar masalah untuk selisih yang tetap besar setelah hitung ulang</td><td class="ref">root_cause_category; BR-OPN-07</td></tr><tr><td class="k">12</td><td class="k">Langkah</td><td>Penghitung (Staf)</td><td>Hitung ulang oleh penghitung berbeda (baris sedang dan besar, satu putaran)</td><td class="ref">OPN recount; BR-OPN-05; A-259</td></tr><tr><td class="k">13</td><td class="k">Langkah</td><td>Kepala Gudang / Auditor</td><td>Rekonsiliasi: tinjau semua baris; draf ADJ per gudang</td><td class="ref">OPN reconciling; ADJ submitted</td></tr><tr><td class="k">14</td><td class="k">Langkah</td><td>Approver</td><td>Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen)</td><td class="ref">OPN approved; A-09; BR-OPN-06; BR-OPN-09</td></tr><tr><td class="k">15</td><td class="k">Langkah</td><td>Sistem</td><td>ADJ posted; stock_adjusted; buka bin; laporan PDF; dashboard akurasi</td><td class="ref">OPN closed</td></tr><tr><td class="k">16</td><td class="k">Selesai</td><td>Sistem</td><td>Sesi ditutup</td><td class="ref">—</td></tr></tbody></table></div>
     </details>
   </article>
   <article class="alur">
@@ -1242,7 +1242,7 @@ flowchart TD
   kagud8_t2["Selesaikan atau batalkan PCK dulu"]:::kagud
   kagud8_g3{"SJ mendesak dari bin beku?"}:::kagud
   kagud8_t11["Override dengan alasan; bin ditandai hitung ulang"]:::kagud
-  kagud8_t7["Isi kategori akar masalah untuk selisih besar"]:::kagud
+  kagud8_t7["Isi kategori akar masalah untuk selisih yang tetap besar setelah hitung ulang"]:::kagud
   kagud8_t8["Rekonsiliasi: tinjau semua baris; draf ADJ per gudang"]:::kagud
   kagud8_t9["Setujui sesi #40;tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen#41;"]:::kagud
   kagud8_s --&gt; kagud8_t1
@@ -1251,8 +1251,8 @@ flowchart TD
   kagud8_g1 --&gt;|"ya"| kagud8_t2
   kagud8_t2 -.-&gt; kagud8_g1
   kagud8_g2{"Kelas selisih?"}:::sys
-  kagud8_g2 --&gt;|"besar"| kagud8_t7
-  kagud8_g2 --&gt;|"kecil"| kagud8_t8
+  kagud8_g2 --&gt;|"tetap besar setelah hitung ulang"| kagud8_t7
+  kagud8_g2 --&gt;|"kecil, atau sedang setelah hitung ulang"| kagud8_t8
   kagud8_t7 --&gt; kagud8_t8
   kagud8_t8 --&gt; kagud8_t9
   kagud8_t10["ADJ posted; stock_adjusted; buka bin; laporan PDF; dashboard akurasi"]:::sys
@@ -1265,7 +1265,7 @@ flowchart TD
 </pre></div>
     <details><summary>Rincian 8 langkah</summary>
       <div class="tw"><table><thead><tr><th>Jenis</th><th>Langkah</th><th>Lane asal</th>
-      <th>Status / efek / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Jadwal opname / permintaan audit</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Langkah</td><td>Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak</td><td>Kepala Gudang / Auditor</td><td class="ref">OPN planned; BR-OPN-10</td></tr><tr><td class="k">Langkah</td><td>Selesaikan atau batalkan PCK dulu</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Keputusan</td><td>SJ mendesak dari bin beku?</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Langkah</td><td>Override dengan alasan; bin ditandai hitung ulang</td><td>Kepala Gudang / Auditor</td><td class="ref">BR-OPN-02</td></tr><tr><td class="k">Langkah</td><td>Isi kategori akar masalah untuk selisih besar</td><td>Kepala Gudang / Auditor</td><td class="ref">root_cause_category; BR-OPN-07</td></tr><tr><td class="k">Langkah</td><td>Rekonsiliasi: tinjau semua baris; draf ADJ per gudang</td><td>Kepala Gudang / Auditor</td><td class="ref">OPN reconciling; ADJ submitted</td></tr><tr><td class="k">Langkah</td><td>Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen)</td><td>Approver</td><td class="ref">OPN approved; A-09; BR-OPN-06; BR-OPN-09</td></tr></tbody></table></div>
+      <th>Status / efek / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Jadwal opname / permintaan audit</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Langkah</td><td>Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak</td><td>Kepala Gudang / Auditor</td><td class="ref">OPN planned; BR-OPN-10</td></tr><tr><td class="k">Langkah</td><td>Selesaikan atau batalkan PCK dulu</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Keputusan</td><td>SJ mendesak dari bin beku?</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Langkah</td><td>Override dengan alasan; bin ditandai hitung ulang</td><td>Kepala Gudang / Auditor</td><td class="ref">BR-OPN-02</td></tr><tr><td class="k">Langkah</td><td>Isi kategori akar masalah untuk selisih yang tetap besar setelah hitung ulang</td><td>Kepala Gudang / Auditor</td><td class="ref">root_cause_category; BR-OPN-07</td></tr><tr><td class="k">Langkah</td><td>Rekonsiliasi: tinjau semua baris; draf ADJ per gudang</td><td>Kepala Gudang / Auditor</td><td class="ref">OPN reconciling; ADJ submitted</td></tr><tr><td class="k">Langkah</td><td>Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen)</td><td>Approver</td><td class="ref">OPN approved; A-09; BR-OPN-06; BR-OPN-09</td></tr></tbody></table></div>
     </details>
   </article>
   <article class="alur">
@@ -1669,20 +1669,20 @@ flowchart TD
   classDef audit fill:#cfe8d4,stroke:#3f8a54,stroke-width:1.5px,color:#1b2430
   classDef super fill:#f1dff0,stroke:#8a4a8a,stroke-width:1.5px,color:#1b2430
   staf8_t4["Hitung buta per bin di PWA #40;scan bin, input jumlah; draf lokal bila offline#41;"]:::staf
-  staf8_t6["Hitung ulang oleh penghitung berbeda"]:::staf
+  staf8_t6["Hitung ulang oleh penghitung berbeda #40;baris sedang dan besar, satu putaran#41;"]:::staf
   staf8_t3["Bekukan bin; snapshot saldo fisik #40;termasuk dicadangkan #amp; Loading Area#41;"]:::sys
   staf8_t3 --&gt; staf8_t4
   staf8_t5["Klasifikasi selisih per baris: kecil / sedang / besar #40;ambang relatif #amp; absolut#41;"]:::sys
   staf8_t4 --&gt; staf8_t5
   staf8_g2{"Kelas selisih?"}:::sys
-  staf8_g2 --&gt;|"sedang"| staf8_t6
+  staf8_g2 --&gt;|"sedang / besar #40;putaran 1#41;"| staf8_t6
   staf8_t6 -.-&gt; staf8_t5
   staf8_in_t11_t4(["dari: Kepala Gudang / Auditor"]):::kagud
   staf8_in_t11_t4 -.-&gt; staf8_t4
 </pre></div>
     <details><summary>Rincian 2 langkah</summary>
       <div class="tw"><table><thead><tr><th>Jenis</th><th>Langkah</th><th>Lane asal</th>
-      <th>Status / efek / aturan</th></tr></thead><tbody><tr><td class="k">Langkah</td><td>Hitung buta per bin di PWA (scan bin, input jumlah; draf lokal bila offline)</td><td>Penghitung (Staf)</td><td class="ref">count_assignment; blind_count</td></tr><tr><td class="k">Langkah</td><td>Hitung ulang oleh penghitung berbeda</td><td>Penghitung (Staf)</td><td class="ref">OPN recount; BR-OPN-05</td></tr></tbody></table></div>
+      <th>Status / efek / aturan</th></tr></thead><tbody><tr><td class="k">Langkah</td><td>Hitung buta per bin di PWA (scan bin, input jumlah; draf lokal bila offline)</td><td>Penghitung (Staf)</td><td class="ref">count_assignment; blind_count</td></tr><tr><td class="k">Langkah</td><td>Hitung ulang oleh penghitung berbeda (baris sedang dan besar, satu putaran)</td><td>Penghitung (Staf)</td><td class="ref">OPN recount; BR-OPN-05; A-259</td></tr></tbody></table></div>
     </details>
   </article>
   <article class="alur">
@@ -2326,7 +2326,7 @@ flowchart TD
   audit8_t2["Selesaikan atau batalkan PCK dulu"]:::audit
   audit8_g3{"SJ mendesak dari bin beku?"}:::audit
   audit8_t11["Override dengan alasan; bin ditandai hitung ulang"]:::audit
-  audit8_t7["Isi kategori akar masalah untuk selisih besar"]:::audit
+  audit8_t7["Isi kategori akar masalah untuk selisih yang tetap besar setelah hitung ulang"]:::audit
   audit8_t8["Rekonsiliasi: tinjau semua baris; draf ADJ per gudang"]:::audit
   audit8_s --&gt; audit8_t1
   audit8_g1{"Ada PCK berjalan di cakupan #40;bila pembekuan#41;?"}:::sys
@@ -2334,8 +2334,8 @@ flowchart TD
   audit8_g1 --&gt;|"ya"| audit8_t2
   audit8_t2 -.-&gt; audit8_g1
   audit8_g2{"Kelas selisih?"}:::sys
-  audit8_g2 --&gt;|"besar"| audit8_t7
-  audit8_g2 --&gt;|"kecil"| audit8_t8
+  audit8_g2 --&gt;|"tetap besar setelah hitung ulang"| audit8_t7
+  audit8_g2 --&gt;|"kecil, atau sedang setelah hitung ulang"| audit8_t8
   audit8_t7 --&gt; audit8_t8
   audit8_out_t8_t9(["ke: Approver"]):::apr
   audit8_t8 --&gt; audit8_out_t8_t9
@@ -2347,7 +2347,7 @@ flowchart TD
 </pre></div>
     <details><summary>Rincian 7 langkah</summary>
       <div class="tw"><table><thead><tr><th>Jenis</th><th>Langkah</th><th>Lane asal</th>
-      <th>Status / efek / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Jadwal opname / permintaan audit</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Langkah</td><td>Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak</td><td>Kepala Gudang / Auditor</td><td class="ref">OPN planned; BR-OPN-10</td></tr><tr><td class="k">Langkah</td><td>Selesaikan atau batalkan PCK dulu</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Keputusan</td><td>SJ mendesak dari bin beku?</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Langkah</td><td>Override dengan alasan; bin ditandai hitung ulang</td><td>Kepala Gudang / Auditor</td><td class="ref">BR-OPN-02</td></tr><tr><td class="k">Langkah</td><td>Isi kategori akar masalah untuk selisih besar</td><td>Kepala Gudang / Auditor</td><td class="ref">root_cause_category; BR-OPN-07</td></tr><tr><td class="k">Langkah</td><td>Rekonsiliasi: tinjau semua baris; draf ADJ per gudang</td><td>Kepala Gudang / Auditor</td><td class="ref">OPN reconciling; ADJ submitted</td></tr></tbody></table></div>
+      <th>Status / efek / aturan</th></tr></thead><tbody><tr><td class="k">Mulai</td><td>Jadwal opname / permintaan audit</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Langkah</td><td>Rencanakan sesi: jenis (bulanan / tahunan / ad-hoc / pemeriksaan mendadak tanpa pembekuan), cakupan, tim, pembekuan ya/tidak</td><td>Kepala Gudang / Auditor</td><td class="ref">OPN planned; BR-OPN-10</td></tr><tr><td class="k">Langkah</td><td>Selesaikan atau batalkan PCK dulu</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Keputusan</td><td>SJ mendesak dari bin beku?</td><td>Kepala Gudang / Auditor</td><td class="ref">—</td></tr><tr><td class="k">Langkah</td><td>Override dengan alasan; bin ditandai hitung ulang</td><td>Kepala Gudang / Auditor</td><td class="ref">BR-OPN-02</td></tr><tr><td class="k">Langkah</td><td>Isi kategori akar masalah untuk selisih yang tetap besar setelah hitung ulang</td><td>Kepala Gudang / Auditor</td><td class="ref">root_cause_category; BR-OPN-07</td></tr><tr><td class="k">Langkah</td><td>Rekonsiliasi: tinjau semua baris; draf ADJ per gudang</td><td>Kepala Gudang / Auditor</td><td class="ref">OPN reconciling; ADJ submitted</td></tr></tbody></table></div>
     </details>
   </article>
   <article class="alur">

@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `picking` & `shipment` (Picking, Surat Jalan, Bukti Terima, Selisih)
 
-**Versi:** 0.14
-**Tanggal:** 26 September 2026
-**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188)); v0.9: halaman penerima bertoken `/terima/{token}` dan unggah foto/tanda tangan bukti terima ([A-231](04-keputusan-dan-asumsi.md#a-231), §6, §13.3); v0.14: **SJ tanpa PCK** — SJ jemput retur dari proyek, identitas barang di baris SJ, sopir & plat bebas, kolom asal per baris ([A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248))
+**Versi:** 0.16
+**Tanggal:** 27 September 2026
+**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188)); v0.9: halaman penerima bertoken `/terima/{token}` dan unggah foto/tanda tangan bukti terima ([A-231](04-keputusan-dan-asumsi.md#a-231), §6, §13.3); v0.14: **SJ tanpa PCK** — SJ jemput retur dari proyek, identitas barang di baris SJ, sopir & plat bebas, kolom asal per baris ([A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248)); v0.15: OTP bukti terima dikirim otomatis ke HP penerima lewat kanal pesan platform ([A-273](04b-asumsi-lanjutan.md#a-273))
 **Modul:** `picking`, `shipment`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-SJ](05-aturan-bisnis.md#br-sj) · [Katalog Status §2.2–§2.4](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
@@ -141,8 +141,8 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 | `/picks/{pck}` | `shipment.pick-detail` | Baris alokasi, pencatatan jumlah diambil, short pick dengan Alasan `*` |
 | `/shipments` | `shipment.shipment-list` | Daftar SJ dengan penyaring status, tujuan, cara kirim |
 | `/shipments/create` | `shipment.shipment-form` | Memilih PCK `completed` di Loading Area dengan tujuan sama; kelengkapan cara kirim |
-| `/shipments/{sj}` | `shipment.shipment-detail` | Muat, kirim, bukti terima (foto serah terima, tanda tangan kanvas, foto rusak per baris), tautan penerima + OTP tampil sekali, dan DSC yang lahir darinya |
-| `/terima/{token}` | `DeliveryTokenController` (tanpa login) | Penerima tanpa akun: OTP → formulir bukti terima per baris (foto wajib bila rusak, tanda tangan) → ringkasan; tautan kedaluwarsa/terpakai → 410 ([A-231](04-keputusan-dan-asumsi.md#a-231)) |
+| `/shipments/{sj}` | `shipment.shipment-detail` | Muat, kirim, bukti terima (foto serah terima, tanda tangan kanvas, foto rusak per baris), tautan penerima + OTP tampil sekali — atau, bila **OTP otomatis** aktif, tautan & OTP dikirim ke HP penerima dan OTP tidak tampil ([A-273](04b-asumsi-lanjutan.md#a-273)) — dan DSC yang lahir darinya |
+| `/terima/{token}` | `DeliveryTokenController` (tanpa login) | Penerima tanpa akun: OTP (menyebut nomor tujuan bila dikirim otomatis; *Kirim ulang* `POST /terima/{token}/kirim-ulang`, jeda 60 detik, maks 4 kiriman, [A-273](04b-asumsi-lanjutan.md#a-273)) → formulir bukti terima per baris (foto wajib bila rusak, tanda tangan) → ringkasan; tautan kedaluwarsa/terpakai → 410 ([A-231](04-keputusan-dan-asumsi.md#a-231)) |
 | `/discrepancies` | `shipment.discrepancy-list` | DSC terbuka dengan umur dan disposisi per baris |
 
 ## 7. Kejadian stok & integrasi
@@ -191,6 +191,10 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 | TC-PCK-08 | PCK `in_progress` | batalkan dengan alasan | alokasi dilepas, tidak ada stok pindah | — |
 | TC-PCK-17 | REQ 20, PCK pertama diambil 15 (kurang, beralasan) | buat PCK lagi (2×) | PCK baru 5; yang ketiga ditolak selama PCK kedua berjalan | [A-204](04-keputusan-dan-asumsi.md#a-204), BR-SJ-02 |
 | TC-PCK-18 | item ber-lot, PCK berjalan | pindai kode item; pindai nomor lot (huruf kecil) | ditolak; baris tercatat | [A-203](04-keputusan-dan-asumsi.md#a-203) |
+| TC-PCK-19 | baut 36 berlabel (3 dus × 12; dus 3 dipecah 12 label isi), PCK 20 | pindai induk 1 (dialog 12), 1 label isi, Catat 20, Selesaikan; pindai induk 2 (dialog 7) | "Label wajib: 13 dari 20"; BR-LBL-04; selesai: induk 1 & isi Keluar, induk 2 sisa 5 Di gudang | BR-LBL-03/04, [A-299](04b-asumsi-lanjutan.md#a-299) |
+| TC-PCK-20 | 50 baut tanpa label + 12 berlabel | PCK 30 tanpa pindai; batalkan label; PCK kabel tanpa label | "baru 0 dari 12" (BR-LBL-04); setelah label batal selesai; kabel tidak terpengaruh | BR-LBL-04 |
+| TC-PCK-21 | 3 label baut, 1 label kabel | pindai label kabel di PCK baut; klaim 13 dari isi 12; dua PCK mengklaim label sama; jumlah ambil 3 < label 5 | ditolak; BR-LBL-03; PCK kedua BR-LBL-03 & tetap Dikerjakan; BR-LBL-04 | BR-LBL-03/04 |
+| TC-PCK-22 | label diklaim di PCK | PCK dibatalkan | label tetap Di gudang isi 12 | [A-299](04b-asumsi-lanjutan.md#a-299) |
 | TC-PCK-16 | PCK `in_progress`, item ber-barcode | pindai kode asing; pindai kode bin; pindai barcode item; selesaikan | galat tanpa pencatatan; bin aktif; baris tercatat sejumlah alokasi & disorot; PCK `completed` | [A-203](04-keputusan-dan-asumsi.md#a-203) |
 | TC-SJ-01 | Dua PCK `completed` tujuan sama | buat SJ | satu SJ memuat keduanya | BR-SJ-09 |
 | TC-SJ-02 | PCK tujuan berbeda | buat satu SJ | ditolak | BR-SJ-09 |
@@ -213,6 +217,12 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 | TC-SJ-14 | Klien proyek lain | buka SJ | 404 | BR-ACC-05 |
 | TC-SJ-19 | Aset On-site + barang terkirim (REQ lain) satu proyek | RET dijemput → SJ jemput berangkat; asal baris; cetak; tiba (serial baik, baut 3 baik 1 kurang); GRN retur | aset tetap On-site sampai GRN; asal "Aset, AST/…" dan REQ + SJ asal; cetak memuat "Dijemput dari", RET, plat; `partially_delivered`; GRN 1 + 3 | A-247, A-248 |
 | TC-SJ-18 | SJ aset berserial (1 unit) terkirim | bukti terima dibagi 0,5 baik + 0,5 rusak; lalu seluruhnya baik | pembagian ditolak BR-SJ-05; layar driver menawarkan satu pilihan kondisi berserial; baris `proof_of_delivery_units` (serial, `good`) | BR-SJ-05, A-64, [A-244](04-keputusan-dan-asumsi.md#a-244) |
+| TC-SJ-20 | OTP otomatis aktif, kanal ada | terbitkan tautan dengan 0812-3456-7890 | pesan ke `6281234567890` memuat nomor SJ, tautan, OTP; OTP tidak tampil ke staf; `otp_sent_at`; halaman penerima menyebut `62812****7890`; kode dari pesan membuka formulir | A-273 |
+| TC-SJ-20b | Kanal menolak / nomor `12345` | terbitkan tautan | OTP tampil (jalur manual) + galat; riwayat *gagal dikirim*; nomor tidak sah tidak dikirim | A-273 |
+| TC-SJ-20c | Saklar mati; atau saklar menyala tanpa kanal | terbitkan tautan; buka Pengaturan company | perilaku lama; peringatan kanal belum diatur | A-273 |
+| TC-SJ-20d | Tautan ber-OTP otomatis | kirim ulang terlalu cepat; setelah 2 menit; sampai 4 kiriman; tautan manual | ditolak; kode baru (lama mati); kiriman ke-5 ditolak & tombol hilang; manual ditolak | A-273, NFR-04 |
+| TC-SJ-20e | — | bakukan nomor; gateway HTTP form/json, ditolak, galat 500, tanpa URL | `62…` / null; header token + field terkonfigurasi + field tetap; `MessageNotSent`; tidak tersedia | A-273 |
+| TC-SJ-21 | PCK dengan 2 label dipindai | SJ berangkat | kejadian label keluar membawa `shipment_id` SJ | [A-299](04b-asumsi-lanjutan.md#a-299) |
 
 ## 11. Di luar lingkup modul ini
 
@@ -312,12 +322,20 @@ Uji yang menopangnya ada di `tests/Feature/Shipment`: `PickTaskTest` (TC-PCK-01�
 
 ### 13.4 Sisa pekerjaan modul ini
 
-1. ~~Halaman penerima bertoken~~ — **selesai 25 Sep 2026** ([A-231](04-keputusan-dan-asumsi.md#a-231)); pengiriman OTP otomatis menunggu [O-15](04-keputusan-dan-asumsi.md#o-15).
+1. ~~Halaman penerima bertoken~~ — **selesai 25 Sep 2026** ([A-231](04-keputusan-dan-asumsi.md#a-231)); ~~pengiriman OTP otomatis~~ — **selesai 27 Sep 2026** (§13.6, [A-273](04b-asumsi-lanjutan.md#a-273)); tinggal memilih penyedia ([O-15](04-keputusan-dan-asumsi.md#o-15)) dan mengisi `.env`.
 2. ~~Bukti terima per unit~~ untuk item berserial dan per potong — selesai 25 Sep 2026: satu baris SJ = satu unit, dinilai utuh baik/rusak/kurang (pilihan kondisi di layar driver & halaman penerima), dicatat di `proof_of_delivery_units` ([A-244](04-keputusan-dan-asumsi.md#a-244), TC-SJ-18); pemindaian PWA tetap `[F2]`.
 3. ~~Konfirmasi dan keberatan pemohon~~ — **selesai** ([BR-REQ-10](05-aturan-bisnis.md#br-req), [A-188](04-keputusan-dan-asumsi.md#a-188)): kartu bukti terima di REQ back-office & portal klien, keberatan berfoto membuka DSC, konfirmasi otomatis lewat batas ([27-pendukung-f1](27-pendukung-f1.md)).
-4. **Cross-dock dari GRN** ([BR-SJ-03](05-aturan-bisnis.md#br-sj), [A-83](04-keputusan-dan-asumsi.md#a-83)) — menunggu keputusan A-83. GRN retur
+4. **Cross-dock dari GRN** ([BR-SJ-03](05-aturan-bisnis.md#br-sj), [A-83](04-keputusan-dan-asumsi.md#a-83)) — A-83 *Setuju* 26 Sep 2026: tetap **saran** di Fase 1 (detail GRN menampilkan REQ penunggu), tidak dibangun. GRN retur
    untuk barang rusak yang dibawa balik tidak dibuat ([A-114](04-keputusan-dan-asumsi.md#a-114)); modul Retur sudah ada ([22](22-retur-transfer.md)).
 5. *(catatan implementasi, bukan sisa)* **Aset dipinjamkan** (v0.6): `ConfirmDelivery` memanggil `Asset\Support\AssetCustody::checkOut` untuk baris `loan` berserial sebelum memindahkannya ke bin On-site; state aset (`reserved` → `in_transit` → `on_loan`) diperbarui observer kartu stok modul Aset ([25-aset §13](25-aset.md)).
 6. ~~Unggah tanda tangan dan foto lewat layar~~ — **selesai 25 Sep 2026**: layar driver dan halaman penerima mengunggah foto serah terima, tanda tangan kanvas (data URL → PNG), foto kerusakan per baris (`StoreUpload::handleDataUrl`, NFR-14).
 7. **Mode offline driver** ([BR-SJ-08](05-aturan-bisnis.md#br-sj)) `[F2]`.
 8. **Notifikasi §8** belum lengkap; ~~laporan §9~~ — **selesai 25 Sep 2026**: *Daftar pengiriman*, *Short pick*, *Posisi barang rusak & selisih*, *Kinerja pengiriman* di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-232](04-keputusan-dan-asumsi.md#a-232)).
+
+### 13.6 OTP otomatis (27 September 2026)
+
+`Shared\Messaging`: antarmuka `MessageGateway` (`available()`, `send()` → `MessageNotSent`), driver `NullGateway` (`none`, bawaan), `LogGateway` (`log`), `HttpGateway` (`http`: satu POST, token di header terkonfigurasi, field nomor/pesan & format form/json dari `config('wms.messaging.http')`, jawaban non-2xx atau `status: false` = gagal); dipilih di `AppServiceProvider`. `PhoneNumber::normalize()` (`08…`/`+62…`/`8…` → `62…`, selain HP → null) dan `mask()`. `Shipment\Support\DeliveryOtpSender`: aktif bila `FeatureSetting::enabled('otp_auto')` **dan** kanal tersedia; mengirim pesan berisi nomor SJ, gudang, tautan, OTP, dan batas berlaku (tanpa harga); sukses → `otp_sent_at`, `otp_send_count` + log *OTP bukti terima dikirim otomatis*; gagal → log *gagal dikirim*. `IssueDeliveryToken::handle` kini mengembalikan `otp` = null bila terkirim, plus `sent/phone/error`; `resend()` mengganti hash OTP (kode lama mati) dengan batas jeda & jumlah. Migrasi tenant `000350`. Uji TC-SJ-20–20e ([A-273](04b-asumsi-lanjutan.md#a-273)).
+
+### 13.7 Pemindaian label kemasan wajib (28 September 2026)
+
+`PickDetail::pindai` mengenali urutan bin → label kemasan (`ScanCode::label`) → item. Label induk membuka dialog jumlah isi (bawaan = sisa alokasi baris dibatasi isi label), label isi diklaim utuh (`CapturesPackageLabels`); chip klaim per baris dengan tombol lepas, dan petunjuk "Label wajib: X dari Y" per item+lot. `ProcessPickTask::claimLabel/releaseLabel` menyimpan klaim di `pick_task_lines.labels`; baris tercatat bila label menutup alokasi. `complete` memeriksa cakupan (`PackageLabelLedger::assertCoverage`, BR-LBL-04) sebelum transaksi lalu memposting label Keluar setelah gerakan stok; `ShipShipment` menempel nomor SJ ke kejadian label ([A-299](04b-asumsi-lanjutan.md#a-299)).

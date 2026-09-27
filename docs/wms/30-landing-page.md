@@ -1,8 +1,8 @@
 # Spesifikasi Modul — Landing page produk
 
-**Versi:** 0.1
-**Tanggal:** 25 September 2026
-**Status:** selesai Fase 1 (Part 5); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-220](04-keputusan-dan-asumsi.md#a-220)–[A-225](04-keputusan-dan-asumsi.md#a-225) (*Perlu validasi*)
+**Versi:** 0.2
+**Tanggal:** 27 September 2026
+**Status:** selesai Fase 1 (Part 5); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-220](04-keputusan-dan-asumsi.md#a-220)–[A-225](04-keputusan-dan-asumsi.md#a-225) (*Perlu validasi*); v0.2: A-220–A-225 divalidasi 27 Sep 2026; kartu paket tanpa harga ([A-268](04b-asumsi-lanjutan.md#a-268))
 **Modul:** `central` (landing page di domain pusat)
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §1, §2, §4, §14, §17, §18](01-blueprint.md) · [Riset §2.7](02-riset-wms-sejenis.md#27-pasar-indonesia) · [D-02](04-keputusan-dan-asumsi.md#d-02), [D-06](04-keputusan-dan-asumsi.md#d-06), [D-07](04-keputusan-dan-asumsi.md#d-07), [D-26](04-keputusan-dan-asumsi.md#d-26) · [O-07](04-keputusan-dan-asumsi.md#o-07), [O-08](04-keputusan-dan-asumsi.md#o-08), [O-11](04-keputusan-dan-asumsi.md#o-11) · [Glosarium](03-glosarium.md)
@@ -33,7 +33,7 @@ Landing hanya **membaca** database pusat; tidak ada tabel baru dan tidak ada pen
 
 | Sumber | Kolom dipakai | Keterangan |
 |---|---|---|
-| `plans` (pusat) | `code`, `name`, `monthly_price`, `trial_days`, `storage_quota_mb`, `is_active` | hanya `is_active = true`, urut harga lalu nama ([A-222](04-keputusan-dan-asumsi.md#a-222)). Harga = harga langganan platform ([D-02](04-keputusan-dan-asumsi.md#d-02)), bukan nilai barang ([D-07](04-keputusan-dan-asumsi.md#d-07)) |
+| `plans` (pusat) | `code`, `name`, `monthly_price`, `trial_days`, `storage_quota_mb`, `is_active` | hanya `is_active = true`, urut harga lalu nama ([A-222](04-keputusan-dan-asumsi.md#a-222)); harga tidak ditampilkan ([A-268](04b-asumsi-lanjutan.md#a-268)). Harga = harga langganan platform ([D-02](04-keputusan-dan-asumsi.md#d-02)), bukan nilai barang ([D-07](04-keputusan-dan-asumsi.md#d-07)) |
 | `config/wms.php` → `wms.sales_email` | env `WMS_SALES_EMAIL`, bawaan `halo@wms.test` | tujuan tombol *Minta demo* ([A-220](04-keputusan-dan-asumsi.md#a-220)) |
 | `config('app.name')`, `public/img/logo.svg` | — | nama & logo sementara sampai [O-07](04-keputusan-dan-asumsi.md#o-07) |
 | `config('tenancy.central_domains.0')` | — | domain dasar untuk alamat company |
@@ -46,7 +46,7 @@ Tidak ada. Landing tidak punya dokumen atau status.
 
 | Aturan | Catatan implementasi |
 |---|---|
-| [D-07](04-keputusan-dan-asumsi.md#d-07) | Tidak ada harga/nilai barang. Satu-satunya angka rupiah adalah harga paket langganan dari `plans.monthly_price`. FAQ menjelaskan bahwa WMS hanya kuantitas |
+| [D-07](04-keputusan-dan-asumsi.md#d-07) | Tidak ada harga/nilai barang. Landing tidak menampilkan angka Rupiah sama sekali; harga paket hanya di master paket & tagihan ([A-268](04b-asumsi-lanjutan.md#a-268)). FAQ menjelaskan bahwa WMS hanya kuantitas |
 | [D-02](04-keputusan-dan-asumsi.md#d-02) | Paket ditampilkan "flat per company", tanpa batas user/gudang/proyek |
 | [D-06](04-keputusan-dan-asumsi.md#d-06) | Ilustrasi dibuat sendiri (SVG di `public/img/landing/` dan SVG inline); tidak ada gambar dari luar ([A-223](04-keputusan-dan-asumsi.md#a-223)) |
 | [BR-GEN-10](05-aturan-bisnis.md#br-gen) | Fitur `[F2]` hanya disebut "menyusul" (approval WhatsApp, offline penuh); tidak diiklankan sebagai tersedia |
@@ -86,9 +86,9 @@ Layout sendiri `layouts/landing` dengan bundel `resources/css/landing.css` + `re
 | Elemen | Aturan |
 |---|---|
 | Nama | `plans.name` |
-| Harga | `monthly_price > 0` → "Rp 1.500.000 / bulan per company" (pemisah ribuan titik); `= 0` → "Hubungi kami" ([O-08](04-keputusan-dan-asumsi.md#o-08)) |
+| Harga | tidak ditampilkan: semua kartu "Hubungi kami untuk penawaran", walau `monthly_price` diisi ([A-268](04b-asumsi-lanjutan.md#a-268)) |
 | Butir | Semua fitur WMS di setiap paket · User, gudang, dan proyek tanpa batas · Portal klien & PWA · Penyimpanan berkas *n* GB (bila `storage_quota_mb`) · Trial *n* hari (bila `trial_days > 0`). Kuota WhatsApp tidak ditampilkan sampai `[F2]` |
-| Tombol | mailto `wms.sales_email` dengan subjek "Paket <nama> — <app>"; label *Minta demo* (berharga) / *Hubungi kami* (harga 0) |
+| Tombol | mailto `wms.sales_email` dengan subjek "Paket <nama> — <app>"; label *Hubungi kami* ([A-268](04b-asumsi-lanjutan.md#a-268)) |
 
 ### 6.2 Masuk ke company — `GET /masuk?company=&as=` — `Central\LandingController@enter`
 
@@ -120,7 +120,7 @@ Uji fitur: `tests/Feature/Platform/LandingPageTest.php`. Uji peramban: `tests/e2
 | ID | Given | When | Then | Aturan |
 |---|---|---|---|---|
 | TC-LND-01 | domain pusat | `GET /` | 200; nama produk, h1 hero, judul bagian Fitur, Konversi, Cara kerja, Untuk siapa, Paket, Masuk, FAQ; tautan mailto `wms.sales_email` | §6.1 |
-| TC-LND-02 | paket aktif harga 0, paket aktif Rp 1.500.000 trial 30 hari, paket nonaktif | `GET /` | harga 0 → "Hubungi kami"; "Rp 1.500.000"; "Trial 30 hari"; paket nonaktif tidak tampil | [A-222](04-keputusan-dan-asumsi.md#a-222), [D-07](04-keputusan-dan-asumsi.md#d-07) |
+| TC-LND-02 | paket aktif harga 0, paket aktif Rp 1.500.000 trial 30 hari, paket nonaktif | `GET /` | kedua paket aktif tampil dengan "Hubungi kami", tanpa "Rp" maupun "1.500.000"; "Trial 30 hari"; paket nonaktif tidak tampil | [A-268](04b-asumsi-lanjutan.md#a-268), [D-07](04-keputusan-dan-asumsi.md#d-07) |
 | TC-LND-03 | — | `GET /` | tidak ada `manifest.webmanifest`, `serviceWorker`, `sw.js`, `livewire`, `wire:`, `/admin/login` | [A-224](04-keputusan-dan-asumsi.md#a-224), [A-221](04-keputusan-dan-asumsi.md#a-221) |
 | TC-LND-04 | — | `GET /masuk?company=Demo&as=team`, `…demo&as=portal`, `…belum-ada-123` | 302 ke `http://demo.<domain>/login`, `…/portal/login`, dan `http://belum-ada-123.<domain>/login` (tanpa cek keberadaan) | [A-221](04-keputusan-dan-asumsi.md#a-221) |
 | TC-LND-05 | — | `GET /masuk` dengan `''`, `www`, `admin`, `nama_salah`, `-awal`, `akhir-`, `a.b`, `evil.com/x`; lalu `as=admin` | 302 ke `…#masuk` dengan galat `company` / `as`; tidak pernah mengalihkan ke host lain | [A-176](04-keputusan-dan-asumsi.md#a-176) |
@@ -140,7 +140,7 @@ Uji fitur: `tests/Feature/Platform/LandingPageTest.php`. Uji peramban: `tests/e2
 - [x] Route `central.home` & `central.enter` (nama hanya di domain pusat pertama, domain lain alias)
 - [x] Bundel Vite terpisah `landing.css`/`landing.js` tanpa CDN; `alpinejs` sebagai dependensi npm
 - [x] Semua TC ditulis (`LandingPageTest`) dan cek E2E ditambahkan
-- [x] Tidak ada harga barang; harga hanya paket langganan
+- [x] Tidak ada harga barang maupun harga paket di landing (A-268)
 - [x] Responsif 390 px, tema terang/gelap, aksesibilitas dasar
 - [x] Dokumen ini dibuat; asumsi [A-220](04-keputusan-dan-asumsi.md#a-220)–[A-225](04-keputusan-dan-asumsi.md#a-225) dicatat
 
