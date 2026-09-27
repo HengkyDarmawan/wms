@@ -28,17 +28,13 @@
                             <div class="form-text">{{ __('Email diubah oleh Admin Company.') }}</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label" for="phone">{{ __('Nomor WhatsApp') }}</label>
-                            <input class="form-control @error('phone') is-invalid @enderror" type="text"
-                                   id="phone" name="phone" value="{{ old('phone', $user->phone) }}" maxlength="20">
-                            @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        </div>
-
                         <button class="btn btn-primary" type="submit">{{ __('Simpan') }}</button>
                     </form>
                 </div>
             </div>
+
+            {{-- Fase 2a (A-275): nomor WhatsApp terverifikasi untuk notifikasi & approval bertombol. --}}
+            <livewire:whatsapp.number />
         </div>
 
         <div class="col-12 col-lg-6">

@@ -8,13 +8,17 @@ use App\Domain\Access\Models\User;
 use App\Domain\Notification\Models\Notification;
 use App\Domain\Notification\Models\NotificationPreference;
 use App\Domain\Notification\Notifications\EventMail;
+use App\Domain\WhatsApp\Support\WhatsAppNotifier;
+use App\Domain\WhatsApp\Support\WhatsAppSettings;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Pengirim notifikasi Fase 1 (Blueprint §10, A-189): baris lonceng `in_app`
- * dan, bila preferensi user mengizinkan, email. WhatsApp `[F2]`.
+ * Pengirim notifikasi (Blueprint §10, A-189): baris lonceng `in_app` dan,
+ * bila preferensi user mengizinkan, email; sejak Fase 2a juga WhatsApp
+ * langsung bila company mengizinkan kejadiannya (31-whatsapp, A-276) —
+ * kejadian bermode ringkasan dikirim job harian dari baris lonceng.
  *
  * - Penerima tidak aktif dan pelaku kejadian itu sendiri dilewati.
  * - Notifikasi in-app yang sama (kejadian + dokumen) yang belum dibaca tidak
@@ -27,8 +31,9 @@ class Notifier
     /**
      * @param  iterable<int, User>|User  $users
      * @param  array<string, mixed>  $data
+     * @param  bool  $whatsapp  false bila kanal WA sudah ditangani pemanggil (mis. approval bertombol)
      */
-    public function send(iterable|User $users, string $event, string $title, ?string $body = null, ?string $url = null, ?string $documentType = null, ?int $documentId = null, array $data = [], ?User $actor = null): int
+    public function send(iterable|User $users, string $event, string $title, ?string $body = null, ?string $url = null, ?string $documentType = null, ?int $documentId = null, array $data = [], ?User $actor = null, bool $whatsapp = true): int
     {
         $penerima = collect($users instanceof User ? [$users] : $users)
             ->filter(fn ($u) => $u instanceof User && $u->is_active && $u->id !== $actor?->id)
@@ -42,6 +47,8 @@ class Notifier
             ->whereIn('user_id', $penerima->pluck('id'))->get()->keyBy('user_id');
 
         $jumlah = 0;
+        $wa = $whatsapp ? app(WhatsAppNotifier::class) : null;
+        $waLangsung = $wa?->modeFor($event) === WhatsAppSettings::INSTANT;
 
         foreach ($penerima as $user) {
             /** @var NotificationPreference|null $p */
@@ -63,6 +70,17 @@ class Notifier
                         $this->simpan($user, 'email', $event, $title, $body, $url, $documentType, $documentId, $data, now());
                     } catch (\Throwable $e) {
                         Log::warning('Email notifikasi gagal: '.$e->getMessage(), ['event' => $event, 'user' => $user->id]);
+                    }
+                });
+            }
+
+            if ($waLangsung) {
+                // Sama dengan email: setelah commit, galat hanya dicatat (A-276).
+                DB::afterCommit(function () use ($wa, $user, $event, $title, $body, $url, $documentType, $documentId) {
+                    try {
+                        $wa->instant($user, $event, $title, $body, $url, $documentType, $documentId);
+                    } catch (\Throwable $e) {
+                        Log::warning('WhatsApp notifikasi gagal: '.$e->getMessage(), ['event' => $event, 'user' => $user->id]);
                     }
                 });
             }

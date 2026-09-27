@@ -7,7 +7,7 @@ namespace App\Domain\Notification\Support;
 use App\Domain\Access\Models\User;
 
 /**
- * Daftar kejadian notifikasi Fase 1 (Blueprint §10, A-189). Kunci stabil
+ * Daftar kejadian notifikasi (Blueprint §10, A-189; kuota WhatsApp Fase 2a, A-278). Kunci stabil
  * dipakai tabel `notifications.type` dan `notification_preferences.event_key`.
  * Email bawaan mati kecuali kejadian yang menuntut tindakan segera.
  */
@@ -36,6 +36,7 @@ final class NotificationEvents
         'request.line_cancel_requested' => ['label' => 'Klien meminta pembatalan baris', 'email' => false, 'permission' => 'request.confirm_cancel'],
         'request.line_cancel_decided' => ['label' => 'Permintaan pembatalan baris saya diputus', 'email' => false, 'permission' => 'request.request_cancel'],
         'subscription.billing' => ['label' => 'Tagihan & status langganan company', 'email' => true, 'permission' => 'billing.view'],
+        'whatsapp.quota_exhausted' => ['label' => 'Kuota WhatsApp company bulan ini habis', 'email' => true, 'permission' => 'company_setting.manage'],
     ];
 
     /**

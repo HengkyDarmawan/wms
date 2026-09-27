@@ -12,6 +12,7 @@ use App\Domain\Shipment\Actions\IssueDeliveryToken;
 use App\Domain\Shipment\Actions\ShipShipment;
 use App\Domain\Shipment\Livewire\Concerns\HandlesShipmentRules;
 use App\Domain\Shipment\Models\Shipment;
+use App\Domain\Shipment\Support\DeliveryOtpSender;
 use App\Domain\Shipment\Support\ProofFiles;
 use App\Domain\Shipment\Support\ShipmentLineOrigins;
 use Illuminate\Support\Collection;
@@ -69,6 +70,15 @@ class ShipmentDetail extends Component
     /** OTP tautan bertoken; hanya ditampilkan sekali setelah diterbitkan. */
     public ?string $otpSekali = null;
 
+    /** A-273: nomor (disamarkan) yang menerima OTP otomatis; null = OTP manual. */
+    public ?string $otpTerkirimKe = null;
+
+    /** A-273: alasan OTP otomatis gagal terkirim, bila ada. */
+    public ?string $otpGagal = null;
+
+    /** A-279: `whatsapp` = kode lewat template autentikasi (tanpa tautan) — tautan tetap dibagikan staf. */
+    public ?string $otpVia = null;
+
     public function mount(Shipment $shipment): void
     {
         $this->authorize('view', $shipment);
@@ -90,6 +100,7 @@ class ShipmentDetail extends Component
             'selisih' => $sj->discrepancies()->with('lines.shipmentLine.item')->orderByDesc('id')->get(),
             'alasan' => $this->pilihanAlasan(ReasonContext::Cancel),
             'riwayat' => $this->riwayat($sj),
+            'otpOtomatis' => app(DeliveryOtpSender::class)->enabled(),
         ]);
     }
 
@@ -121,6 +132,9 @@ class ShipmentDetail extends Component
         $this->reasonCode = '';
         $this->otpSekali = null;
         $this->tautanSekali = null;
+        $this->otpTerkirimKe = null;
+        $this->otpGagal = null;
+        $this->otpVia = null;
         $this->ruleError = '';
         $this->resetValidation();
 
@@ -240,9 +254,9 @@ class ShipmentDetail extends Component
     /**
      * Menerbitkan tautan bertoken untuk penerima tanpa akun.
      *
-     * OTP-nya ditampilkan sekali di layar ini dan tidak pernah tersimpan
-     * sebagai teks; staf menyampaikannya sendiri sampai pengiriman lewat
-     * WhatsApp atau SMS tersedia.
+     * Bila OTP otomatis aktif (A-273), OTP dikirim ke HP penerima dan tidak
+     * tampil di sini; kalau tidak atau gagal terkirim, OTP ditampilkan sekali
+     * dan tidak pernah tersimpan sebagai teks — staf menyampaikannya sendiri.
      */
     public function terbitkanTautan(IssueDeliveryToken $action): void
     {
@@ -261,8 +275,13 @@ class ShipmentDetail extends Component
         }
 
         $this->otpSekali = $hasil['otp'];
+        $this->otpTerkirimKe = $hasil['sent'] ? $hasil['phone'] : null;
+        $this->otpVia = $hasil['sent'] ? ($hasil['via'] ?? null) : null;
+        $this->otpGagal = $hasil['error'];
         $this->tautanSekali = route('terima.show', $hasil['token']->token);
-        $this->dispatch('pesan', teks: __('Tautan bukti terima diterbitkan.'));
+        $this->dispatch('pesan', teks: $hasil['sent']
+            ? __('Tautan & OTP dikirim ke :hp.', ['hp' => $hasil['phone']])
+            : __('Tautan bukti terima diterbitkan.'));
     }
 
     private function alasanId(string $code): ?int

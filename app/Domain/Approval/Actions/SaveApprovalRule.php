@@ -149,10 +149,13 @@ class SaveApprovalRule
                 'approver_type' => $jenis->value,
                 'approver_ref_id' => $ref,
                 'decision_mode' => $mode->value,
+                // A-269: bawaan menyala; hanya berarti untuk Role/Jabatan.
+                'same_org_unit' => $jenis->limitableToOrgUnit() && filter_var($s['same_org_unit'] ?? true, FILTER_VALIDATE_BOOLEAN),
                 'backup_approver_type' => $cadangan?->value,
                 'backup_ref_id' => $refCadangan,
                 'timeout_hours' => $jam,
-                'channel' => 'web',          // WhatsApp: Fase 2a (BR-GEN-10)
+                // Fase 2a (A-277): `both` = Web & WhatsApp bertombol; nilai lain = web.
+                'channel' => ($s['channel'] ?? 'web') === 'both' ? 'both' : 'web',
                 'require_pin' => false,
             ];
         }

@@ -6,6 +6,7 @@ namespace App\Domain\Notification\Console;
 
 use App\Domain\Notification\Support\DailyReminders;
 use App\Domain\Platform\Support\OperatingCompanies;
+use App\Domain\WhatsApp\Support\WhatsAppNotifier;
 use Illuminate\Console\Command;
 
 /**
@@ -13,6 +14,8 @@ use Illuminate\Console\Command;
  * tinjau REQ (BR-REQ-14), reservasi menggantung (BR-STK-16), aset lewat jatuh
  * tempo (BR-AST-06), dan sisa umur aset (BR-AST-08). Notifikasi yang sama dan
  * belum dibaca tidak digandakan; company ditangguhkan dilewati (BR-SUB-02).
+ * Sesudahnya ringkasan harian WhatsApp (Fase 2a, A-280) menggabungkan
+ * notifikasi kejadian bermode *Ringkasan harian*.
  *
  * Tanpa --tenants: bila tenancy sudah aktif, hanya company itu; bila belum,
  * semua company.
@@ -27,7 +30,8 @@ class SendDailyNotificationsCommand extends Command
     {
         if (tenancy()->initialized && $this->option('tenants') === []) {
             $company = tenant();
-            $this->laporkan((string) $company?->getTenantKey(), $company !== null && OperatingCompanies::halted($company) ? 0 : app(DailyReminders::class)->run());
+            $berhenti = $company !== null && OperatingCompanies::halted($company);
+            $this->laporkan((string) $company?->getTenantKey(), $berhenti ? 0 : app(DailyReminders::class)->run(), $berhenti ? 0 : app(WhatsAppNotifier::class)->digest());
 
             return self::SUCCESS;
         }
@@ -35,14 +39,14 @@ class SendDailyNotificationsCommand extends Command
         $ids = $this->option('tenants') ?: null;
 
         OperatingCompanies::each($ids, function ($company) {
-            $this->laporkan((string) $company->getTenantKey(), app(DailyReminders::class)->run());
+            $this->laporkan((string) $company->getTenantKey(), app(DailyReminders::class)->run(), app(WhatsAppNotifier::class)->digest());
         }, $this);
 
         return self::SUCCESS;
     }
 
-    private function laporkan(string $company, int $jumlah): void
+    private function laporkan(string $company, int $jumlah, int $ringkasan = 0): void
     {
-        $this->info(sprintf('Company %s: %d notifikasi pengingat dikirim.', $company, $jumlah));
+        $this->info(sprintf('Company %s: %d notifikasi pengingat dikirim, %d ringkasan WhatsApp.', $company, $jumlah, $ringkasan));
     }
 }

@@ -6,6 +6,7 @@ namespace App\Domain\Access\Models;
 
 use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Access\Enums\UserStatus;
+use App\Domain\Shared\Messaging\PhoneNumber;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,6 +44,7 @@ class User extends Authenticatable
         'remember_token',
         'two_factor_secret',
         'two_factor_recovery_codes',
+        'wa_code_hash',
     ];
 
     /** Cache per instance agar satu request tidak menghitung ulang. */
@@ -59,7 +61,23 @@ class User extends Authenticatable
             'password_changed_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'failed_login_count' => 'integer',
+            'phone_verified_at' => 'datetime',
+            'wa_code_expires_at' => 'datetime',
+            'wa_code_attempts' => 'integer',
+            'wa_digest_sent_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // BR-WA-01 / A-275: nomor WhatsApp yang berganti harus diverifikasi ulang
+        // (mis. diubah Admin Company di form user).
+        static::saving(function (User $user): void {
+            if ($user->isDirty('phone') && ! $user->isDirty('phone_verified_at')
+                && PhoneNumber::normalize($user->getOriginal('phone')) !== PhoneNumber::normalize($user->phone)) {
+                $user->phone_verified_at = null;
+            }
+        });
     }
 
     // ------------------------------------------------------------------ relasi
@@ -281,7 +299,7 @@ class User extends Authenticatable
         return LogOptions::defaults()
             ->useLogName('access')
             ->logOnly([
-                'name', 'email', 'phone', 'client_id', 'org_unit_id',
+                'name', 'email', 'phone', 'phone_verified_at', 'client_id', 'org_unit_id',
                 'position_id', 'manager_id', 'is_active', 'locked_until',
             ])
             ->logOnlyDirty()

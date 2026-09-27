@@ -16,6 +16,7 @@ use App\Domain\Platform\Models\PlatformAuditLog;
 use App\Domain\Platform\Models\PlatformUser;
 use App\Domain\Platform\Models\SubscriptionInvoice;
 use App\Domain\Platform\Models\SupportAccess;
+use App\Domain\WhatsApp\Models\WaMessageLog;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,6 +65,10 @@ class CompanyController extends Controller
             'enabled' => $c->featureFlags->where('enabled', true)->pluck('key')->all(),
             'history' => PlatformAuditLog::query()->where('subject_type', $c->getMorphClass())->where('subject_id', $c->id)
                 ->latest('id')->limit(20)->get(),
+            // Fase 2a (A-278): pemakaian WhatsApp bulan ini per kategori, kuota dari paket.
+            'waUsage' => WaMessageLog::query()->where('company_id', $c->id)->thisMonth()
+                ->selectRaw('category, count(*) as jumlah')->groupBy('category')->pluck('jumlah', 'category')->all(),
+            'waQuota' => $c->plan?->wa_quota,
         ]);
     }
 

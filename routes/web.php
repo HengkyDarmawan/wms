@@ -10,6 +10,9 @@ use App\Http\Controllers\Platform\PlanController;
 use App\Http\Controllers\Platform\PlatformDashboardController;
 use App\Http\Controllers\Platform\PlatformLoginController;
 use App\Http\Controllers\Platform\PlatformTwoFactorController;
+use App\Http\Controllers\WhatsApp\WhatsAppRedirectController;
+use App\Http\Controllers\WhatsApp\WhatsAppWebhookController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,6 +43,20 @@ foreach ($centralDomains as $index => $domain) {
         if ($utama) {
             $home->name('central.home');
             $masuk->name('central.enter');
+        }
+
+        // WhatsApp Fase 2a (31-whatsapp §6, Arsitektur §8): webhook Meta (tanpa CSRF,
+        // bertanda tangan) dan pengalih tombol URL ke subdomain company (A-276).
+        $waGet = Route::get('/api/webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify']);
+        $waPost = Route::post('/api/webhooks/whatsapp', [WhatsAppWebhookController::class, 'receive'])
+            ->withoutMiddleware([ValidateCsrfToken::class])->middleware('throttle:600,1');
+        $buka = Route::get('/buka/{kode}/{path?}', WhatsAppRedirectController::class)
+            ->where('kode', '[A-Za-z0-9\-]+')->where('path', '.*')->middleware('throttle:120,1');
+
+        if ($utama) {
+            $waGet->name('whatsapp.webhook.verify');
+            $waPost->name('whatsapp.webhook');
+            $buka->name('whatsapp.open');
         }
 
         // Login Super Admin (Blueprint §4.1). Guard `platform` dan tabel

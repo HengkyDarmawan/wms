@@ -40,12 +40,11 @@ class ProfileController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
+        // Nomor WhatsApp diatur kartu *WhatsApp* (verifikasi kode, A-275), bukan di sini.
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'phone' => ['nullable', 'string', 'max:20'],
         ], [], [
             'name' => 'Nama',
-            'phone' => 'Nomor WhatsApp',
         ]);
 
         $request->user()->fill($data)->save();
@@ -83,11 +82,27 @@ class ProfileController extends Controller
      */
     public function updateSignature(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        // A-264: tanda tangan boleh digambar di kanvas profil (data URL PNG).
+        if ($request->filled('signature_data') && ! $request->hasFile('signature')) {
+            $request->validate(['signature_data' => ['required', 'string', 'max:2000000']], attributes: ['signature_data' => __('Tanda tangan')]);
+
+            try {
+                $path = $this->files->handleDataUrl((string) $request->input('signature_data'), 'signatures', $user->id.'-'.now()->format('YmdHis'));
+            } catch (\RuntimeException $e) {
+                throw ValidationException::withMessages(['signature_data' => $e->getMessage()]);
+            }
+
+            $this->files->delete($user->signature_path);
+            $user->forceFill(['signature_path' => $path])->save();
+
+            return back()->with('status', __('Tanda tangan disimpan.'));
+        }
+
         $request->validate([
             'signature' => ['required', ...StoreUpload::ATURAN_FOTO],
         ], attributes: ['signature' => __('Tanda tangan')]);
-
-        $user = $request->user();
 
         try {
             // A-257: tanda tangan tetap PNG (transparansi), hanya dikecilkan bila perlu.
