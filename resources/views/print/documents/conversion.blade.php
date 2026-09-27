@@ -42,7 +42,7 @@
                     <td>{{ $l->item?->name }}</td>
                     <td>{{ PrintFormat::tracking($l->lot, null, $l->piece) }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_base) }}</td>
-                    <td>{{ $l->item?->baseUom?->code }}</td>
+                    <td>{{ $l->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($l->item, $l->qty_base)) <br><small>{{ $kemasan }}</small>@endif</td>
                 </tr>
             @endforeach
         </tbody>
@@ -73,7 +73,7 @@
                     <td>{{ $o->item?->name }}</td>
                     <td>{{ PrintFormat::tracking($o->lot, null, $o->newPiece) ?: $o->lot_no }}</td>
                     <td class="r">{{ PrintFormat::qty($o->qty_base) }}</td>
-                    <td>{{ $o->item?->baseUom?->code }}</td>
+                    <td>{{ $o->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($o->item, $o->qty_base)) <br><small>{{ $kemasan }}</small>@endif</td>
                     <td>{{ $o->parentInput?->piece?->piece_no }}</td>
                 </tr>
             @endforeach

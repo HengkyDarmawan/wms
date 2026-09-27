@@ -44,7 +44,9 @@
                         <th class="text-end" scope="col">{{ __('Dicadangkan') }}</th>
                         <th class="text-end" scope="col">{{ __('Karantina') }}</th>
                         <th class="text-end" scope="col">{{ __('Rusak') }}</th>
-                        <th class="text-end" scope="col">{{ __('Potongan') }}</th>
+                        @if ($tampilPotongan)
+                            <th class="text-end" scope="col">{{ __('Potongan') }}</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -62,8 +64,12 @@
                                 {{ $b->warehouse_code }}
                                 <div class="small text-muted">{{ $b->warehouse_name }}</div>
                             </td>
+                            @php($itemBaris = $itemHalaman[$b->item_id] ?? null)
                             <td class="text-end {{ $tersedia < 0 ? 'text-danger fw-semibold' : '' }}">
-                                {{ number_format($tersedia, 2, ',', '.') }}
+                                {{ \App\Domain\Master\Support\QtyFormat::withUnit($tersedia, $itemBaris?->baseUom?->code) }}
+                                @if ($kemasan = \App\Domain\Master\Support\QtyFormat::packaging($itemBaris, $tersedia))
+                                    <div class="small text-muted">{{ $kemasan }}</div>
+                                @endif
                             </td>
                             <td class="text-end">
                                 @if ($dicadangkan > 0)
@@ -74,17 +80,19 @@
                             </td>
                             <td class="text-end">{{ number_format((float) $b->qty_quarantine, 2, ',', '.') }}</td>
                             <td class="text-end">{{ number_format((float) $b->qty_damaged, 2, ',', '.') }}</td>
-                            <td class="text-end">
-                                @if ($this->pakaiPotongan((string) $b->tracking_mode))
-                                    {{ number_format((int) $b->piece_count, 0, ',', '.') }}
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
+                            @if ($tampilPotongan)
+                                <td class="text-end">
+                                    @if ($this->pakaiPotongan((string) $b->tracking_mode))
+                                        {{ number_format((int) $b->piece_count, 0, ',', '.') }}
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-center text-muted py-4" colspan="7">
+                            <td class="text-center text-muted py-4" colspan="{{ $tampilPotongan ? 7 : 6 }}">
                                 {{ __('Belum ada saldo stok yang cocok dengan penyaring ini.') }}
                             </td>
                         </tr>

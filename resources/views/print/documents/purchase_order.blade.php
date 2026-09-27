@@ -48,19 +48,19 @@
                     <td>{{ $l->item?->code }}</td>
                     <td>{{ $l->item?->name }} <span class="muted">({{ $l->requestLine?->purchaseRequest?->number }})</span></td>
                     <td class="r">{{ PrintFormat::qty($l->qty_base) }}</td>
-                    <td>{{ $l->item?->baseUom?->code }}</td>
+                    <td>{{ $l->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($l->item, $l->qty_base)) <br><small>{{ $kemasan }}</small>@endif</td>
                     <td class="r">{{ Money::format($l->unit_price) }}</td>
                     <td class="r">{{ Money::format($l->line_amount) }}</td>
                 </tr>
             @endforeach
             <tr>
-                <th class="r" colspan="6">{{ __('Nilai PO') }}</th>
+                <th class="r" colspan="6">{{ __('Nilai PO') }} ({{ $po->price_includes_tax ? __('sudah termasuk PPN') : __('belum termasuk PPN') }})</th>
                 <th class="r">{{ Money::format($po->total_amount) }}</th>
             </tr>
         </tbody>
     </table>
 
-    <p class="catatan muted">{{ __('Harga belum termasuk pajak. Mohon cantumkan nomor PO pada surat jalan dan faktur.') }}</p>
+    <p class="catatan muted">{{ $po->taxNote() }}. {{ __('Mohon cantumkan nomor PO pada surat jalan dan faktur.') }}</p>
 
     @if ($po->notes)
         <p class="catatan"><strong>{{ __('Catatan') }}:</strong> {{ $po->notes }}</p>

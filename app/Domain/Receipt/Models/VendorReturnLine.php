@@ -33,6 +33,7 @@ class VendorReturnLine extends Model
         return [
             'stock_status' => StockStatus::class,
             'qty_base' => 'decimal:4',
+            'is_receipt_damage' => 'boolean',
         ];
     }
 

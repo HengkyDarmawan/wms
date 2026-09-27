@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace App\Domain\Receipt\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Actions\RememberItemPackaging;
+use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Enums\VendorStatus;
 use App\Domain\Master\Models\Item;
+use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Master\Models\Uom;
 use App\Domain\Master\Models\Vendor;
+use App\Domain\Master\Support\UnitInput;
 use App\Domain\PurchaseRequest\Support\PurchaseReceipts;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Enums\ReceiptType;
@@ -25,6 +30,7 @@ use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Shipment\Models\ShipmentLine;
 use App\Domain\Stock\Support\DocumentNumber;
 use App\Domain\Warehouse\Models\Warehouse;
+use DomainException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -35,7 +41,11 @@ use Illuminate\Support\Facades\DB;
  *
  * - **vendor** — manual tanpa PO (Purchasing baru di Fase 1b, D-29). Baris
  *   diisi item, jumlah, dan isian pelacakan sesuai mode item; boleh merujuk
- *   baris catatan pemesanan PRQ (A-51, 26-purchase-request).
+ *   baris catatan pemesanan PRQ (A-51, 26-purchase-request). Baris **bonus
+ *   vendor** (A-267) tidak merujuk pesanan dan wajib berketerangan. Tiap
+ *   baris mencatat **Baik** (`qty_received`), **Rusak** (+ alasan) dan
+ *   **Kurang** terhadap jumlah menurut surat jalan vendor (A-287, A-288);
+ *   jumlah boleh diketik dalam kemasan item, mis. 10 DUS (A-291).
  * - **transfer** — SJ yang tujuannya gudang ini dan sudah punya bukti terima.
  *   Barisnya diturunkan dari baris SJ; jumlahnya tidak boleh melebihi jumlah
  *   **baik** yang diterima (BR-GRN-05), karena yang rusak dan kurang masih
@@ -48,6 +58,14 @@ use Illuminate\Support\Facades\DB;
  */
 class SaveGoodsReceipt
 {
+    /**
+     * A-292: kemasan baru yang dicentang "ingat" — disimpan di dalam transaksi
+     * GRN supaya tidak tertinggal bila GRN gagal disimpan.
+     *
+     * @var array<int, array{item: Item, uom: int, factor: float}>
+     */
+    private array $kemasanBaru = [];
+
     public function __construct(
         private readonly DocumentNumber $nomor,
         private readonly TrackingRecords $pelacakan,
@@ -70,6 +88,7 @@ class SaveGoodsReceipt
         }
 
         $gudang = $this->gudang($receipt, $header);
+        $this->kemasanBaru = [];
 
         [$kolom, $baris] = match ($jenis) {
             ReceiptType::Vendor => $this->dariVendor($receipt, $gudang, $header, $lines),
@@ -96,6 +115,14 @@ class SaveGoodsReceipt
 
             foreach ($baris as $b) {
                 GoodsReceiptLine::create($b + ['goods_receipt_id' => $receipt->id]);
+            }
+
+            foreach ($this->kemasanBaru as $k) {
+                $uom = Uom::query()->find($k['uom']);
+
+                if ($uom !== null) {
+                    app(RememberItemPackaging::class)->handle($k['item'], $uom, $k['factor'], $actor, $receipt->number);
+                }
             }
 
             activity('receipt')
@@ -186,14 +213,31 @@ class SaveGoodsReceipt
                 throw ReceiptRuleException::field('BR-GRN-01', 'item_id', 'Baris '.($i + 1).': item wajib dipilih.');
             }
 
+            $label = 'Baris '.($i + 1).' ('.$item->code.')';
+            [$l, $satuan] = $this->keSatuanDasar($item, $l, $label);
             $b = $this->pelacakan->normalize($item, $l, $i);
+            $b = $this->kondisi($b, $l, $label) + $satuan;
 
             // A-51: baris boleh merujuk baris catatan pemesanan PRQ (26-purchase-request).
             $ref = is_numeric($l['purchase_request_order_line_id'] ?? null) ? (int) $l['purchase_request_order_line_id'] : 0;
 
+            // A-267: bonus vendor (mis. beli 2 gratis 1) — masuk stok biasa, di luar pesanan.
+            $bonus = filter_var($l['is_bonus'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+            if ($bonus && $ref > 0) {
+                throw ReceiptRuleException::field('A-267', 'purchase_request_order_line_id', 'Baris '.($i + 1).' ('.$item->code.'): barang bonus tidak mengurangi pesanan PRQ/PO; tulis sebagai baris terpisah tanpa rujukan pesanan.');
+            }
+
+            if ($bonus && $b['notes'] === null) {
+                throw ReceiptRuleException::field('A-267', 'notes', 'Baris '.($i + 1).' ('.$item->code.'): keterangan bonus wajib diisi, mis. "promo beli 2 gratis 1".');
+            }
+
+            $b['is_bonus'] = $bonus;
+
             if ($ref > 0) {
                 // Jumlah kumulatif baris yang merujuk catatan yang sama (serial = satu baris per unit).
-                $pesanan[$ref] = ($pesanan[$ref] ?? 0) + (float) $b['qty_received'];
+                // A-289: baik + rusak dibatasi sisa pesanan; yang kurang belum datang.
+                $pesanan[$ref] = ($pesanan[$ref] ?? 0) + (float) $b['qty_received'] + (float) $b['qty_damaged'];
                 app(PurchaseReceipts::class)->guard($ref, (int) $gudang->id, (int) $vendor->id, (int) $item->id, $pesanan[$ref], $receipt?->id, 'Baris '.($i + 1).' ('.$item->code.')');
                 $b['purchase_request_order_line_id'] = $ref;
             }
@@ -453,6 +497,100 @@ class SaveGoodsReceipt
                 'Surat jalan '.$sj->number.' sudah diterima lewat '.$lain.'.',
             );
         }
+    }
+
+    /**
+     * A-291: jumlah baris vendor boleh diketik dalam kemasan item (mis. 10 DUS);
+     * semua jumlah baris (vendor, baik, rusak, kurang) memakai satuan yang sama
+     * dan diubah ke satuan dasar di sini. Serial & potongan selalu per unit.
+     *
+     * @param  array<string, mixed>  $l
+     * @return array{0: array<string, mixed>, 1: array{uom_id: ?int, qty_input: ?float, uom_qty_base: ?float}}
+     */
+    private function keSatuanDasar(Item $item, array $l, string $label): array
+    {
+        $perUnit = $item->tracksSerial() || $item->tracksPiece();
+
+        try {
+            $s = $perUnit
+                ? ['uom_id' => null, 'uom_qty_base' => 1.0]
+                : UnitInput::resolve($item, 1, $l['uom_id'] ?? null, $l['uom_factor'] ?? null);
+        } catch (DomainException $e) {
+            throw ReceiptRuleException::field('A-291', 'uom_id', $label.': '.$e->getMessage());
+        }
+
+        $faktor = (float) $s['uom_qty_base'];
+        $diketik = is_numeric($l['qty_vendor'] ?? null)
+            ? (float) $l['qty_vendor']
+            : (float) ($l['qty_received'] ?? 0) + (float) ($l['qty_damaged'] ?? 0);
+
+        if ($faktor !== 1.0) {
+            foreach (['qty_received', 'qty_damaged', 'qty_vendor', 'qty_short'] as $kolom) {
+                if (is_numeric($l[$kolom] ?? null)) {
+                    $l[$kolom] = round((float) $l[$kolom] * $faktor, 4);
+                }
+            }
+        }
+
+        if ($s['uom_id'] !== null && ! $item->activeConversions()->where('uom_id', $s['uom_id'])->exists()
+            && filter_var($l['remember_uom'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            $this->kemasanBaru[$item->id.'|'.$s['uom_id']] = ['item' => $item, 'uom' => (int) $s['uom_id'], 'factor' => $faktor];
+        }
+
+        return [$l, [
+            'uom_id' => $s['uom_id'],
+            'qty_input' => $perUnit || $s['uom_id'] === null ? null : round($diketik, 4),
+            'uom_qty_base' => $s['uom_id'] === null ? null : $faktor,
+        ]];
+    }
+
+    /**
+     * A-287/A-288: Rusak wajib beralasan (konteks Kerusakan); Kurang dihitung
+     * dari jumlah menurut surat jalan vendor − baik − rusak. Kurang boleh diisi
+     * sendiri bila jumlah vendor tidak diketik; bila keduanya diisi harus cocok.
+     *
+     * @param  array<string, mixed>  $b  hasil TrackingRecords::normalize (satuan dasar)
+     * @param  array<string, mixed>  $l  isian (satuan dasar)
+     * @return array<string, mixed>
+     */
+    private function kondisi(array $b, array $l, string $label): array
+    {
+        $diterima = (float) $b['qty_received'] + (float) $b['qty_damaged'];
+        $vendor = is_numeric($l['qty_vendor'] ?? null) ? round((float) $l['qty_vendor'], 4) : null;
+        $kurang = is_numeric($l['qty_short'] ?? null) ? round((float) $l['qty_short'], 4) : null;
+
+        if (($vendor !== null && $vendor < 0) || ($kurang !== null && $kurang < 0)) {
+            throw ReceiptRuleException::field('BR-LED-02', 'qty_short', $label.': jumlah vendor dan kurang tidak boleh negatif.');
+        }
+
+        if ($vendor !== null) {
+            $hitung = max(0.0, round($vendor - $diterima, 4));
+
+            if ($kurang !== null && abs($kurang - $hitung) > 0.00005) {
+                throw ReceiptRuleException::field('A-288', 'qty_short', $label.': baik + rusak + kurang harus sama dengan jumlah menurut surat jalan vendor ('.rtrim(rtrim(number_format($vendor, 4, ',', '.'), '0'), ',').').');
+            }
+
+            $kurang = $hitung;
+        }
+
+        $kurang ??= 0.0;
+        $b['qty_short'] = $kurang;
+        $b['qty_vendor'] = round($diterima + $kurang, 4);
+
+        $alasan = is_numeric($l['damage_reason_id'] ?? null) ? (int) $l['damage_reason_id'] : null;
+
+        if ((float) $b['qty_damaged'] > 0) {
+            $sah = $alasan !== null && ReasonCode::query()->whereKey($alasan)
+                ->whereIn('context', [ReasonContext::Damage->value, ReasonContext::Reject->value])->exists();
+
+            if (! $sah) {
+                throw ReceiptRuleException::field('BR-GEN-11', 'damage_reason_id', $label.': alasan barang rusak wajib dipilih.');
+            }
+        }
+
+        $b['damage_reason_id'] = (float) $b['qty_damaged'] > 0 ? $alasan : null;
+
+        return $b;
     }
 
     private function teks(mixed $nilai): ?string

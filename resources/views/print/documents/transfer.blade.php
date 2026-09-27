@@ -45,7 +45,7 @@
                     <td class="r">{{ PrintFormat::qty($l->qty_base) }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_shipped) }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_received) }}</td>
-                    <td>{{ $l->item?->baseUom?->code }}</td>
+                    <td>{{ $l->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($l->item, $l->qty_base)) <br><small>{{ $kemasan }}</small>@endif</td>
                 </tr>
             @endforeach
         </tbody>

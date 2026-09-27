@@ -49,7 +49,7 @@
                     <td class="r">{{ PrintFormat::qty($l->qty_good) }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_damaged) }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_missing) }}</td>
-                    <td>{{ $p?->item?->baseUom?->code }}</td>
+                    <td>{{ $p?->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($p?->item, $l->shipmentLine?->qty_shipped)) <br><small>{{ $kemasan }}</small>@endif</td>
                 </tr>
             @endforeach
         </tbody>

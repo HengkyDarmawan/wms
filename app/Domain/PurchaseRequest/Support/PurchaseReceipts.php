@@ -15,6 +15,7 @@ use App\Domain\Receipt\Exceptions\ReceiptRuleException;
 use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Receipt\Models\GoodsReceiptLine;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Sambungan GRN vendor ↔ catatan pemesanan PRQ (BR-GRN-01, A-47, A-51, A-174).
@@ -67,16 +68,21 @@ class PurchaseReceipts
             ->where('purchase_request_order_line_id', $orderLineId)
             ->whereHas('receipt', fn ($q) => $q->withoutGlobalScopes()->where('status', GoodsReceiptStatus::Draft->value)
                 ->when($receiptId !== null, fn ($r) => $r->whereKeyNot($receiptId)))
-            ->sum('qty_received');
+            ->sum(DB::raw('qty_received + qty_damaged'));
 
+        // A-289: baik + rusak (yang benar-benar datang) dibatasi sisa pesanan; yang kurang belum datang.
         $sisa = round($ol->outstandingQty() - $drafLain, 4);
 
         if ($qty - $sisa > 0.00005) {
-            throw ReceiptRuleException::field('BR-GRN-05', 'qty_received', $label.': diterima '.$qty.' melebihi sisa pesanan '.$prq->number.' ('.max(0, $sisa).').');
+            throw ReceiptRuleException::field('BR-GRN-05', 'qty_received', $label.': baik + rusak '.$qty.' melebihi sisa pesanan '.$prq->number.' ('.max(0, $sisa).'). Bila kelebihannya bonus dari vendor, catat sebagai baris Bonus terpisah (A-267).');
         }
     }
 
-    /** GRN `received`: jumlah diterima dicatat, status PRQ diturunkan (Katalog §2.15). */
+    /**
+     * GRN `received`: jumlah diterima dicatat, status PRQ diturunkan (Katalog §2.15).
+     * A-287: hanya bagian **Baik**; Rusak dan Kurang tetap sisa pesanan sehingga
+     * barang pengganti diterima atas pesanan yang sama.
+     */
     public function received(GoodsReceipt $receipt, ?User $actor = null): void
     {
         $prqIds = [];
@@ -90,6 +96,10 @@ class PurchaseReceipts
             }
 
             $qty = (float) $gl->qty_received;
+
+            if ($qty <= 0) {
+                continue;
+            }
 
             if ($qty - $ol->outstandingQty() > 0.00005) {
                 throw ReceiptRuleException::rule('BR-GRN-05', 'Baris '.$gl->item?->code.' melebihi sisa pesanan PRQ ('.$ol->outstandingQty().').');

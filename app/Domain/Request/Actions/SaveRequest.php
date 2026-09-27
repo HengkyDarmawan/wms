@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Domain\Request\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Enums\OwnershipModel;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
+use App\Domain\Master\Support\UnitInput;
 use App\Domain\Request\Enums\LineOwnership;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Enums\RequesterType;
@@ -15,6 +17,7 @@ use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Request\Models\MaterialRequestLine;
 use App\Domain\Request\Support\RequestNumber;
+use DomainException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -26,6 +29,9 @@ use Illuminate\Support\Facades\DB;
  */
 class SaveRequest
 {
+    /** Pembuat dokumen — pencatat kemasan baru yang diingat (A-292). */
+    private ?User $aktor = null;
+
     public function __construct(private readonly RequestNumber $nomor) {}
 
     /**
@@ -35,6 +41,7 @@ class SaveRequest
     public function handle(?MaterialRequest $request, array $data, array $lines, ?User $actor = null): MaterialRequest
     {
         $baru = $request === null;
+        $this->aktor = $actor;
 
         if (! $baru && ! $request->status->isEditable()) {
             throw RequestRuleException::rule(
@@ -107,20 +114,40 @@ class SaveRequest
         }
 
         $qty = (float) ($data['qty_base'] ?? 0);
+        $satuan = ['uom_id' => null, 'qty_input' => null, 'uom_qty_base' => null];
+
+        // A-291: jumlah boleh diketik dalam kemasan item (mis. 10 DUS); `qty_input`
+        // = jumlah yang diketik, `qty_base` dihitung dari faktor kemasan.
+        if ($itemId !== null && is_numeric($data['uom_id'] ?? null)) {
+            $item = Item::query()->with('baseUom')->findOrFail($itemId);
+
+            try {
+                $s = UnitInput::resolve($item, $data['qty_input'] ?? $data['qty_base'] ?? 0, $data['uom_id'], $data['uom_factor'] ?? null,
+                    filter_var($data['remember_uom'] ?? false, FILTER_VALIDATE_BOOLEAN), $this->aktor, $req->number);
+            } catch (DomainException $e) {
+                throw RequestRuleException::field('A-291', 'uom_id', 'Baris '.$item->code.': '.$e->getMessage());
+            }
+
+            $qty = $s['qty_base'];
+
+            if ($s['uom_id'] !== null) {
+                $satuan = ['uom_id' => $s['uom_id'], 'qty_input' => $s['qty_input'], 'uom_qty_base' => $s['uom_qty_base']];
+            }
+        }
 
         if ($qty <= 0) {
             throw RequestRuleException::field('BR-REQ-01', 'qty_base', 'Jumlah harus lebih dari nol.');
         }
 
-        $kepemilikan = LineOwnership::tryFrom((string) ($data['line_ownership'] ?? 'buy')) ?? LineOwnership::Buy;
+        $baris = isset($data['id']) && $data['id'] !== ''
+            ? $req->lines()->findOrFail((int) $data['id'])
+            : new MaterialRequestLine(['material_request_id' => $req->id]);
+
+        $kepemilikan = $this->kepemilikanBaris($itemId, $data, $baris);
 
         if ($itemId !== null) {
             $this->pastikanKepemilikanSah($itemId, $kepemilikan);
         }
-
-        $baris = isset($data['id']) && $data['id'] !== ''
-            ? $req->lines()->findOrFail((int) $data['id'])
-            : new MaterialRequestLine(['material_request_id' => $req->id]);
 
         $baris->fill([
             'material_request_id' => $req->id,
@@ -128,6 +155,7 @@ class SaveRequest
             'non_catalog_text' => $teks,
             'line_ownership' => $kepemilikan,
             'qty_base' => $qty,
+            ...$satuan,
             'nominal_length' => isset($data['nominal_length']) && $data['nominal_length'] !== ''
                 ? (float) $data['nominal_length']
                 : null,
@@ -138,6 +166,35 @@ class SaveRequest
         $baris->save();
 
         return $baris;
+    }
+
+    /**
+     * A-286 / BR-REQ-06: Beli/Pinjam ditentukan jenis barang — aset = Pinjam,
+     * habis pakai = Beli. Hanya item lama *Keduanya* yang memakai pilihan
+     * pemohon. Baris tersimpan yang itemnya tidak berganti dipertahankan agar
+     * dokumen lama tidak berubah diam-diam.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function kepemilikanBaris(?int $itemId, array $data, MaterialRequestLine $baris): LineOwnership
+    {
+        $masukan = LineOwnership::tryFrom((string) ($data['line_ownership'] ?? 'buy')) ?? LineOwnership::Buy;
+
+        if ($itemId === null) {
+            return $masukan;
+        }
+
+        $item = Item::query()->findOrFail($itemId);
+
+        if ($item->ownership_model === OwnershipModel::Both) {
+            return $masukan;
+        }
+
+        if ($baris->exists && (int) $baris->item_id === $itemId && $baris->line_ownership !== null) {
+            return $baris->line_ownership;
+        }
+
+        return LineOwnership::from($item->defaultLineOwnershipValue());
     }
 
     /** BR-REQ-06: hanya barang berserial yang bisa dipinjamkan lalu ditagih balik. */

@@ -9,6 +9,8 @@ use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Enums\ApproverType;
 use App\Domain\Master\Enums\ItemStatus;
+use App\Domain\Master\Enums\LineOwnership as ItemLineOwnership;
+use App\Domain\Master\Enums\OwnershipModel;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Lot;
@@ -237,6 +239,32 @@ class RequestScreenTest extends TenantTestCase
         $this->assertStringContainsString('data-scan', (string) file_get_contents(resource_path('views/livewire/request/request-form.blade.php')));
     }
 
+    /** TC-REQ-35 — A-38: memilih item mengisi Beli/Pinjam dari item; pilihan manual sesudahnya tidak ditimpa. */
+    #[Test]
+    public function tc_req_35_beli_pinjam_bawaan_dari_item(): void
+    {
+        $pcs = Uom::query()->where('code', 'PCS')->value('id');
+        $baru = fn (string $kode, OwnershipModel $model, ?ItemLineOwnership $bawaan = null) => Item::create([
+            'code' => $kode, 'name' => $kode, 'status' => ItemStatus::Active, 'tracking_mode' => TrackingMode::Serial,
+            'ownership_model' => $model, 'default_line_ownership' => $bawaan, 'base_uom_id' => $pcs,
+        ]);
+        $genset = $baru('GENSET-X', OwnershipModel::Asset);
+        $bor = $baru('BOR-X', OwnershipModel::Both, ItemLineOwnership::Loan);
+        $gerinda = $baru('GERINDA-X', OwnershipModel::Both);
+
+        $pemohon = $this->makeUser('internal_requester');
+        $pemohon->forgetPermissionCache();
+
+        Livewire::actingAs($pemohon)->test(RequestForm::class)
+            ->set('lines.0.item_id', (string) $genset->id)->assertSet('lines.0.line_ownership', 'loan')
+            ->set('lines.0.item_id', (string) $this->item->id)->assertSet('lines.0.line_ownership', 'buy')
+            ->set('lines.0.item_id', (string) $bor->id)->assertSet('lines.0.line_ownership', 'loan')
+            ->set('lines.0.line_ownership', 'buy')->set('lines.0.qty_base', '1')->assertSet('lines.0.line_ownership', 'buy')
+            ->call('tambahBaris')
+            ->set('lines.1.item_id', (string) $gerinda->id)->assertSet('lines.1.line_ownership', 'buy')
+            ->set('kodePindai', 'GENSET-X')->call('pindai')->assertSet('lines.2.line_ownership', 'loan');
+    }
+
     #[Test]
     public function tc_req_26d_layar_detail_menjalankan_tinjau_dan_approval(): void
     {
@@ -337,7 +365,7 @@ class RequestScreenTest extends TenantTestCase
         $klien = $this->klienUntuk($this->proyek);
         $req = app(SubmitRequest::class)->handle($this->buatReq(null, $klien), $klien);
 
-        $req->forceFill(['created_at' => now()->subDays(4)])->save();
+        $req->forceFill(['created_at' => now()->subDays(20)])->save();
 
         $admin = $this->makeUser('company_admin');
 
@@ -345,7 +373,7 @@ class RequestScreenTest extends TenantTestCase
             ->test(RequestList::class)
             ->assertOk()
             ->assertSee($req->number)
-            ->assertSee('Ditinjau 4 hari')
+            ->assertSee('Ditinjau 20 hari')
             ->set('hanyaTerlambat', true)
             ->assertSee($req->number);
     }

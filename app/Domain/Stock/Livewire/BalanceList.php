@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Stock\Livewire;
 
 use App\Domain\Master\Enums\TrackingMode;
+use App\Domain\Master\Models\Item;
+use App\Domain\Master\Support\StockFeatures;
 use App\Domain\Stock\Enums\ReservationStatus;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockReservation;
@@ -62,6 +64,11 @@ class BalanceList extends Component
             'baris' => $baris,
             'reservasi' => $this->reservasiPerBaris($baris),
             'warehouses' => Warehouse::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
+            // A-284: kolom potongan hanya bila saklar per potong menyala.
+            'tampilPotongan' => StockFeatures::piece(),
+            // A-293: satuan dasar + uraian kemasan ("9 DUS 8 BOX") per item di halaman ini.
+            'itemHalaman' => Item::query()->with('baseUom:id,code', 'activeConversions.uom:id,code')
+                ->whereIn('id', collect($baris->items())->pluck('item_id')->unique()->all())->get()->keyBy('id'),
         ]);
     }
 

@@ -61,7 +61,8 @@ class SplitRequestLine
                 $hasil[] = $this->buatPecahan($line, $bagian);
             }
 
-            $line->forceFill(['qty_base' => (float) $line->qty_base - $total])->save();
+            // A-291: jumlah berubah, jadi jumlah yang diketik (mis. 10 DUS) tidak berlaku lagi.
+            $line->forceFill(['qty_base' => (float) $line->qty_base - $total, 'uom_id' => null, 'qty_input' => null, 'uom_qty_base' => null])->save();
 
             activity('request')
                 ->performedOn($line->request)

@@ -7,6 +7,8 @@ namespace App\Domain\Request\Models;
 use App\Domain\Access\Models\User;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Master\Models\Uom;
+use App\Domain\Master\Support\QtyFormat;
 use App\Domain\Request\Enums\FulfillmentSource;
 use App\Domain\Request\Enums\LineOwnership;
 use App\Domain\Request\Enums\RequestLineStatus;
@@ -65,6 +67,8 @@ class MaterialRequestLine extends Model
             'cancel_requested_at' => 'datetime',
             'cancel_confirmed_at' => 'datetime',
             'qty_base' => 'decimal:4',
+            'qty_input' => 'decimal:4',
+            'uom_qty_base' => 'decimal:4',
             'qty_reserved' => 'decimal:4',
             'qty_shipped' => 'decimal:4',
             'qty_received' => 'decimal:4',
@@ -76,6 +80,20 @@ class MaterialRequestLine extends Model
     public function request(): BelongsTo
     {
         return $this->belongsTo(MaterialRequest::class, 'material_request_id');
+    }
+
+    /** A-291: satuan yang diketik pemohon (null = satuan dasar). */
+    public function uom(): BelongsTo
+    {
+        return $this->belongsTo(Uom::class);
+    }
+
+    /** "10 DUS" bila jumlah diketik dalam kemasan, selain itu null. */
+    public function typedQuantity(): ?string
+    {
+        return $this->uom_id === null || $this->qty_input === null
+            ? null
+            : QtyFormat::withUnit($this->qty_input, $this->uom?->code);
     }
 
     public function item(): BelongsTo

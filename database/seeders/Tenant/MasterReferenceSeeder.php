@@ -33,6 +33,9 @@ class MasterReferenceSeeder extends Seeder
                 ['PCS', 'Pieces', 1],
                 ['LSN', 'Lusin', 12],
                 ['BOX', 'Box', 1],
+                // A-294: satuan kemasan; isinya ditentukan per item (kemasan item).
+                ['DUS', 'Dus', 1],
+                ['PACK', 'Pack', 1],
                 ['SET', 'Set', 1],
                 ['ROLL', 'Roll', 1],
                 ['BATANG', 'Batang', 1],
@@ -113,6 +116,7 @@ class MasterReferenceSeeder extends Seeder
             'HANDLING' => 'Rusak saat penanganan gudang',
             'WEATHER' => 'Rusak karena cuaca',
             'USE' => 'Rusak saat pemakaian di proyek',
+            'VENDOR' => 'Cacat dari vendor',
             'OTHER' => 'Alasan lain',
         ],
         'short_pick' => [
@@ -145,14 +149,17 @@ class MasterReferenceSeeder extends Seeder
         'KARANTINA' => ['name' => 'Karantina & barang rusak', 'mode' => CapacityMode::Block],
     ];
 
-    /** Saklar fitur stok lapis 1 (P-08). */
-    private const FEATURES = [
+    /**
+     * Saklar fitur stok lapis 1 (P-08) untuk company **baru** (A-284): tiga
+     * jenis barang menyala; per potong dan QC penerimaan mati.
+     */
+    public const FEATURES = [
         'lot' => true,
         'serial' => true,
-        'piece' => true,
+        'piece' => false,
         'expiry' => true,
         'fefo' => true,
-        'qc' => true,
+        'qc' => false,
         'rfid' => false,
     ];
 
@@ -219,8 +226,8 @@ class MasterReferenceSeeder extends Seeder
 
     private function seedFeatures(): void
     {
-        foreach (self::FEATURES as $kunci => $aktif) {
-            FeatureSetting::updateOrCreate(['key' => $kunci], ['enabled' => $aktif]);
-        }
+        // A-284: hanya menulis saklar yang belum ada, supaya seed ulang tidak
+        // mengembalikan pilihan company ke bawaan.
+        FeatureSetting::seed(self::FEATURES);
     }
 }

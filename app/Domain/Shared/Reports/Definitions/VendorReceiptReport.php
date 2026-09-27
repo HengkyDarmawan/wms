@@ -39,12 +39,12 @@ class VendorReceiptReport extends Report
 
     public function description(): string
     {
-        return 'GRN dari vendor yang diterima dalam periode: vendor, gudang, tanggal terima, jumlah baris, dan total jumlah diterima.';
+        return 'GRN dari vendor yang diterima dalam periode: vendor, gudang, tanggal terima, jumlah baris, total diterima baik, rusak, dan kurang.';
     }
 
     public function columns(): array
     {
-        return ['grn' => 'GRN', 'vendor' => 'Vendor', 'gudang' => 'Gudang', 'diterima' => 'Tanggal terima', 'surat_jalan' => 'SJ vendor', 'baris' => 'Jumlah baris', 'jumlah' => 'Total diterima', 'status' => 'Status'];
+        return ['grn' => 'GRN', 'vendor' => 'Vendor', 'gudang' => 'Gudang', 'diterima' => 'Tanggal terima', 'surat_jalan' => 'SJ vendor', 'baris' => 'Jumlah baris', 'jumlah' => 'Total diterima', 'rusak' => 'Rusak', 'kurang' => 'Kurang', 'status' => 'Status'];
     }
 
     public function filters(): array
@@ -66,6 +66,8 @@ class VendorReceiptReport extends Report
             ->with('vendor:id,code,name', 'warehouse:id,code')
             ->withCount('lines')
             ->withSum('lines', 'qty_received')
+            ->withSum('lines', 'qty_damaged')
+            ->withSum('lines', 'qty_short')
             ->where('receipt_type', ReceiptType::Vendor->value)
             ->whereIn('status', [GoodsReceiptStatus::Received->value, GoodsReceiptStatus::Completed->value])
             ->whereBetween('received_at', [$dari, $sampai])
@@ -81,6 +83,9 @@ class VendorReceiptReport extends Report
                 'surat_jalan' => $g->vendor_doc_no ?? '—',
                 'baris' => (int) $g->lines_count,
                 'jumlah' => round((float) $g->lines_sum_qty_received, 4),
+                // A-295: kondisi barang saat diterima (A-287).
+                'rusak' => round((float) $g->lines_sum_qty_damaged, 4),
+                'kurang' => round((float) $g->lines_sum_qty_short, 4),
                 'status' => $g->status->label(),
             ]);
     }

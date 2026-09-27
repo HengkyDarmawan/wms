@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Domain\Master\Models;
 
+use App\Domain\Master\Enums\ItemKind;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\LineOwnership;
 use App\Domain\Master\Enums\OwnershipModel;
 use App\Domain\Master\Enums\RemovalStrategy;
 use App\Domain\Master\Enums\TrackingMode;
+use App\Domain\Master\Support\TrackingCombination;
+use App\Domain\Stock\Models\StockMovement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +25,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * Item — master barang (Blueprint §6.6). Mode pelacakan, model kepemilikan,
  * strategi pengambilan, dan kedaluwarsa saling terikat matriks
  * [BR §15](../../../../docs/wms/05-aturan-bisnis.md); pemeriksaannya ada di
- * {@see \App\Domain\Master\Support\TrackingCombination}.
+ * {@see TrackingCombination}.
  *
  * @property ItemStatus $status
  * @property OwnershipModel $ownership_model
@@ -79,6 +82,32 @@ class Item extends Model
         return $this->hasMany(ItemUomConversion::class);
     }
 
+    /** A-294: kemasan yang berlaku, dari isi terbesar (mis. DUS = 12 sebelum PACK = 4). */
+    public function activeConversions(): HasMany
+    {
+        return $this->hasMany(ItemUomConversion::class)->where('is_active', true)->orderByDesc('qty_base');
+    }
+
+    /**
+     * A-291: satuan yang bisa diketik di baris dokumen — satuan dasar (faktor 1)
+     * lalu kemasan aktif. Item per potong hanya satuan dasar (BR-STK-09).
+     *
+     * @return array<int, array{uom_id: ?int, code: string, factor: float}>
+     */
+    public function unitOptions(): array
+    {
+        $dasar = [['uom_id' => null, 'code' => (string) $this->baseUom?->code, 'factor' => 1.0]];
+
+        if ($this->tracksPiece()) {
+            return $dasar;
+        }
+
+        return array_merge($dasar, $this->activeConversions
+            ->filter(fn (ItemUomConversion $k) => ! $k->is_nominal_piece && (int) $k->uom_id !== (int) $this->base_uom_id)
+            ->map(fn (ItemUomConversion $k) => ['uom_id' => (int) $k->uom_id, 'code' => (string) $k->uom?->code, 'factor' => (float) $k->qty_base])
+            ->values()->all());
+    }
+
     public function vendors(): BelongsToMany
     {
         return $this->belongsToMany(Vendor::class, 'item_vendors')
@@ -117,6 +146,27 @@ class Item extends Model
         return $query->whereIn('status', [ItemStatus::Active->value, ItemStatus::Provisional->value]);
     }
 
+    /**
+     * A-283: saring menurut Jenis barang; `null` = Jenis khusus (di luar tiga jenis).
+     */
+    public function scopeOfKind(Builder $query, ?ItemKind $jenis): Builder
+    {
+        $cocok = fn (Builder $q, ItemKind $j) => $q
+            ->where('tracking_mode', $j->trackingMode()->value)
+            ->where('ownership_model', $j->ownershipModel()->value)
+            ->where('has_expiry', $j->hasExpiry());
+
+        if ($jenis !== null) {
+            return $cocok($query, $jenis);
+        }
+
+        foreach (ItemKind::cases() as $j) {
+            $query->whereNot(fn (Builder $q) => $cocok($q, $j));
+        }
+
+        return $query;
+    }
+
     /** Strategi efektif: milik item, kalau kosong warisi kategori, terakhir FIFO (A-10). */
     public function effectiveRemovalStrategy(): RemovalStrategy
     {
@@ -148,6 +198,20 @@ class Item extends Model
         return in_array($this->ownership_model, [OwnershipModel::Asset, OwnershipModel::Both], true);
     }
 
+    /**
+     * A-38: sifat baris (Beli/Pinjam) yang diisikan saat item ini dipilih di
+     * baris permintaan — aset = Pinjam, habis pakai = Beli, Keduanya = sifat
+     * baris bawaan item (kosong = Beli). Pemohon tetap bisa mengubahnya.
+     */
+    public function defaultLineOwnershipValue(): string
+    {
+        return match ($this->ownership_model) {
+            OwnershipModel::Asset => LineOwnership::Loan->value,
+            OwnershipModel::Both => $this->default_line_ownership?->value ?? LineOwnership::Buy->value,
+            default => LineOwnership::Buy->value,
+        };
+    }
+
     /** BR-MST-02: satuan dasar terkunci begitu ada lot/serial/potong. */
     public function baseUomIsLocked(): bool
     {
@@ -156,6 +220,12 @@ class Item extends Model
             || $this->serials()->exists()
             || $this->pieces()->exists()
         );
+    }
+
+    /** BR-MST-06: jenis barang terkunci begitu item punya pergerakan stok. */
+    public function hasStockMovements(): bool
+    {
+        return $this->exists && StockMovement::query()->where('item_id', $this->id)->exists();
     }
 
     /** BR-MST-05: item yang sudah punya turunan tidak boleh dihapus, hanya dinonaktifkan. */

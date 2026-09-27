@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Receipt\Livewire;
 
+use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Enums\TrackingMode;
+use App\Domain\Master\Livewire\Concerns\PicksItemUnit;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Vendor;
 use App\Domain\PurchaseRequest\Models\PurchaseRequestOrderLine;
@@ -32,10 +34,16 @@ use Livewire\Component;
  * Satu baris layar bisa melahirkan beberapa baris GRN: untuk item berserial,
  * setiap nomor serial menjadi satu baris; untuk item per potong, setiap panjang
  * menjadi satu potongan (BR-LED-03, BR-STK-09).
+ *
+ * Baris vendor mencatat **Dikirim vendor**, **Baik**, **Rusak** (+ alasan) dan
+ * **Kurang** (A-287); Baik terisi otomatis = dikirim − rusak − kurang, Kurang
+ * otomatis bila dikosongkan. Jumlah boleh diketik dalam kemasan item
+ * (mis. 10 DUS), termasuk kemasan baru "1 DUS = … BOX" (A-291, A-292).
  */
 class ReceiptForm extends Component
 {
     use HandlesReceiptRules;
+    use PicksItemUnit;
 
     #[Locked]
     public ?int $receiptId = null;
@@ -99,7 +107,21 @@ class ReceiptForm extends Component
 
     public function tambahBaris(): void
     {
-        $this->rows[] = ['item_id' => '', 'qty' => '', 'lot_no' => '', 'expiry_date' => '', 'units' => '', 'notes' => '', 'order_line_id' => ''];
+        $this->rows[] = $this->barisKosong();
+    }
+
+    /**
+     * @param  array<string, mixed>  $isi
+     * @return array<string, mixed>
+     */
+    private function barisKosong(array $isi = []): array
+    {
+        return $isi + [
+            'item_id' => '', 'vendor' => '', 'qty' => '', 'damaged' => '', 'short' => '', 'damage_reason' => '',
+            'uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'ingat' => false,
+            'lot_no' => '', 'expiry_date' => '', 'units' => '', 'units_damaged' => '', 'ada_rusak' => false,
+            'notes' => '', 'order_line_id' => '', 'bonus' => false,
+        ];
     }
 
     /** A-174: tambah baris yang merujuk baris catatan pemesanan PRQ; jumlah bawaan = sisa pesanan. */
@@ -111,13 +133,75 @@ class ReceiptForm extends Component
             return;
         }
 
-        $baris = ['item_id' => (string) $ol->line->item_id, 'qty' => (string) $ol->outstandingQty(), 'lot_no' => '', 'expiry_date' => '', 'units' => '', 'notes' => '', 'order_line_id' => (string) $ol->id];
+        $sisa = (string) $ol->outstandingQty();
+        $baris = $this->barisKosong(['item_id' => (string) $ol->line->item_id, 'vendor' => $sisa, 'qty' => $sisa, 'order_line_id' => (string) $ol->id]);
         $kosong = collect($this->rows)->search(fn ($r) => ($r['item_id'] ?? '') === '' && ($r['qty'] ?? '') === '');
 
         if ($kosong === false) {
             $this->rows[] = $baris;
         } else {
             $this->rows[$kosong] = $baris;
+        }
+    }
+
+    /**
+     * A-267: jumlah di atas sisa pesanan dipisah menjadi baris Bonus vendor
+     * (mis. PO 100, datang 150 karena promo beli 2 gratis 1).
+     */
+    public function pisahkanBonus(int $index): void
+    {
+        $r = $this->rows[$index] ?? null;
+        $ol = $r === null ? null : $this->pesananTerbuka()->firstWhere('id', (int) ($r['order_line_id'] ?? 0));
+
+        // Pemisahan dihitung dalam satuan dasar; baris berkemasan diubah dulu ke satuan dasar oleh staf.
+        if (! $ol instanceof PurchaseRequestOrderLine || ! is_numeric($r['qty'] ?? null) || ($r['uom'] ?? '') !== '') {
+            return;
+        }
+
+        $rusak = is_numeric($r['damaged'] ?? null) ? (float) $r['damaged'] : 0.0;
+        $sisaBaik = round(max(0, $ol->outstandingQty() - $rusak), 4);
+        $lebih = round((float) $r['qty'] - $sisaBaik, 4);
+
+        if ($lebih <= 0.00005) {
+            return;
+        }
+
+        $this->rows[$index]['qty'] = (string) $sisaBaik;
+        $this->rows[$index]['vendor'] = '';
+        $this->rows[$index]['short'] = '';
+        array_splice($this->rows, $index + 1, 0, [$this->barisKosong([
+            'item_id' => $r['item_id'], 'qty' => (string) $lebih, 'lot_no' => $r['lot_no'] ?? '', 'expiry_date' => $r['expiry_date'] ?? '',
+            'notes' => __('Bonus vendor'), 'bonus' => true,
+        ])]);
+    }
+
+    /** Baris ditandai bonus = lepas dari pesanan (A-267). */
+    public function updatedRows(mixed $value, string $key): void
+    {
+        [$i, $kolom] = array_pad(explode('.', $key, 2), 2, null);
+
+        if (! isset($this->rows[(int) $i])) {
+            return;
+        }
+
+        $r = &$this->rows[(int) $i];
+
+        if ($kolom === 'bonus' && $value) {
+            $r['order_line_id'] = '';
+        }
+
+        if ($kolom === 'item_id') {
+            $r = array_merge($r, ['uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'ingat' => false]);
+        }
+
+        // A-287: Baik = dikirim vendor − rusak − kurang; mengubah Baik membuat Kurang dihitung ulang.
+        if (in_array($kolom, ['vendor', 'damaged', 'short'], true) && is_numeric($r['vendor'] ?? null)) {
+            $sisa = (float) $r['vendor'] - (float) (is_numeric($r['damaged'] ?? null) ? $r['damaged'] : 0) - (float) (is_numeric($r['short'] ?? null) ? $r['short'] : 0);
+            $r['qty'] = (string) round(max(0, $sisa), 4);
+        }
+
+        if ($kolom === 'qty') {
+            $r['short'] = '';
         }
     }
 
@@ -207,7 +291,16 @@ class ReceiptForm extends Component
             'returnDocs' => $this->retMenunggu(),
             'ret' => $this->ret(),
             'retLines' => ($r = $this->ret()) === null ? [] : $this->barisRetur($r),
-            'openOrders' => $this->pesananTerbuka(),
+            'openOrders' => $pesanan = $this->pesananTerbuka(),
+            'sisaPesanan' => $pesanan->mapWithKeys(fn ($ol) => [(int) $ol->id => $ol->outstandingQty()])->all(),
+            'unitOpsi' => $opsi = $this->opsiSatuan($itemIds),
+            'satuanLain' => $this->satuanKemasan(),
+            'hasilSatuan' => collect($this->rows)->map(fn (array $r) => $this->hasilSatuan(
+                $r,
+                is_numeric($r['vendor'] ?? null) ? $r['vendor'] : (float) ($r['qty'] ?: 0) + (float) ($r['damaged'] ?: 0),
+                $opsi[(int) ($r['item_id'] ?: 0)] ?? null,
+            ))->all(),
+            'alasanRusak' => $this->pilihanAlasan(ReasonContext::Damage),
         ]);
     }
 
@@ -222,24 +315,41 @@ class ReceiptForm extends Component
 
         foreach ($this->rows as $r) {
             $mode = $modes[(int) ($r['item_id'] ?? 0)] ?? null;
+            $alasan = $this->alasanId((string) ($r['damage_reason'] ?? ''), ReasonContext::Damage);
             $dasar = [
                 'item_id' => (int) ($r['item_id'] ?? 0),
                 'qty_received' => $r['qty'] ?? '',
+                'qty_damaged' => $r['damaged'] ?? '',
+                'qty_vendor' => $r['vendor'] ?? '',
+                'qty_short' => $r['short'] ?? '',
+                'damage_reason_id' => $alasan,
                 'lot_no' => $r['lot_no'] ?? '',
                 'expiry_date' => $r['expiry_date'] ?? '',
                 'notes' => $r['notes'] ?? '',
                 'purchase_request_order_line_id' => $r['order_line_id'] ?? '',
-            ];
-
-            $unit = collect(preg_split('/[\r\n,;]+/', (string) ($r['units'] ?? '')) ?: [])
-                ->map(fn ($v) => trim($v))->filter()->values();
+                'is_bonus' => (bool) ($r['bonus'] ?? false),
+            ] + $this->isianSatuan($r);
 
             if ($mode === TrackingMode::Serial || $mode === TrackingMode::Piece) {
+                $baik = $this->daftarUnit($r['units'] ?? '');
+                $rusak = ($r['ada_rusak'] ?? false) ? $this->daftarUnit($r['units_damaged'] ?? '') : collect();
+                $unit = $baik->map(fn ($u) => [$u, false])->merge($rusak->map(fn ($u) => [$u, true]));
+
+                // Kurang (serial): jumlah unit menurut surat jalan vendor − unit yang datang.
+                $kurang = is_numeric($r['vendor'] ?? null) && $mode === TrackingMode::Serial
+                    ? max(0, (int) $r['vendor'] - $unit->count())
+                    : (is_numeric($r['short'] ?? null) ? (float) $r['short'] : 0);
+
                 // Tanpa isian unit: biarkan aksi menolak dengan pesan yang tepat.
-                foreach ($unit->isEmpty() ? collect(['']) : $unit as $u) {
-                    $hasil[] = $dasar + ($mode === TrackingMode::Serial
-                        ? ['serial_no' => $u, 'qty_received' => 1]
-                        : ['piece_length' => str_replace(',', '.', $u)]);
+                foreach ($unit->isEmpty() ? collect([['', false]]) : $unit as $n => [$u, $unitRusak]) {
+                    $hasil[] = array_merge($dasar, [
+                        'qty_received' => '', 'qty_damaged' => '', 'qty_vendor' => '',
+                        'qty_short' => $n === 0 ? $kurang : 0,
+                        'damaged_unit' => $unitRusak,
+                        'damage_reason_id' => $unitRusak ? $alasan : null,
+                    ], $mode === TrackingMode::Serial
+                        ? ['serial_no' => $u]
+                        : ['piece_length' => str_replace(',', '.', (string) $u)]);
                 }
 
                 continue;
@@ -249,6 +359,12 @@ class ReceiptForm extends Component
         }
 
         return $hasil;
+    }
+
+    /** @return Collection<int, string> */
+    private function daftarUnit(mixed $teks): Collection
+    {
+        return collect(preg_split('/[\r\n,;]+/', (string) $teks) ?: [])->map(fn ($v) => trim($v))->filter()->values();
     }
 
     private function muatDraf(GoodsReceipt $grn): void
@@ -266,7 +382,10 @@ class ReceiptForm extends Component
             'notes' => (string) ($grn->notes ?? ''),
         ];
 
-        foreach ($grn->lines()->orderBy('id')->get() as $l) {
+        $lines = $grn->lines()->with('damageReason:id,code')->orderBy('id')->get();
+        $opsi = $this->opsiSatuan($lines->pluck('item_id')->all());
+
+        foreach ($lines as $l) {
             if ($grn->receipt_type === ReceiptType::Transfer) {
                 $this->transferQty[$l->shipment_line_id] = (string) (float) $l->qty_received;
 
@@ -279,15 +398,28 @@ class ReceiptForm extends Component
                 continue;
             }
 
-            $this->rows[] = [
+            // A-291: jumlah dibuka lagi dalam satuan yang diketik (mis. 10 DUS).
+            $f = $l->uom_id !== null && (float) $l->uom_qty_base > 0 ? (float) $l->uom_qty_base : 1.0;
+            $angka = fn ($v) => $v === null ? '' : (string) round((float) $v / $f, 4);
+            $unit = (string) ($l->serial_no ?? ($l->piece_length !== null ? (float) $l->piece_length : ''));
+            $unitRusak = ($l->serial_no !== null || $l->piece_length !== null) && (float) $l->qty_damaged > 0;
+
+            $this->rows[] = $this->barisKosong([
                 'item_id' => (string) $l->item_id,
-                'qty' => (string) (float) $l->qty_received,
-                'lot_no' => (string) ($l->lot_no ?? ''),
+                'vendor' => $l->serial_no !== null || $l->piece_length !== null ? '' : $angka($l->qty_vendor),
+                'qty' => $angka($l->qty_received),
+                'damaged' => (float) $l->qty_damaged > 0 && ! $unitRusak ? $angka($l->qty_damaged) : '',
+                'short' => (float) $l->qty_short > 0 ? $angka($l->qty_short) : '',
+                'damage_reason' => (string) ($l->damageReason?->code ?? ''),
+                'lot_no' => (string) ($l->vendor_batch_no ?? $l->lot_no ?? ''),
                 'expiry_date' => (string) ($l->expiry_date?->toDateString() ?? ''),
-                'units' => (string) ($l->serial_no ?? ($l->piece_length !== null ? (float) $l->piece_length : '')),
+                'units' => $unitRusak ? '' : $unit,
+                'units_damaged' => $unitRusak ? $unit : '',
+                'ada_rusak' => $unitRusak,
                 'notes' => (string) ($l->notes ?? ''),
                 'order_line_id' => (string) ($l->purchase_request_order_line_id ?? ''),
-            ];
+                'bonus' => (bool) $l->is_bonus,
+            ] + $this->satuanTersimpan($l->uom_id === null ? null : (int) $l->uom_id, $l->uom_qty_base, $opsi[(int) $l->item_id] ?? null));
         }
     }
 

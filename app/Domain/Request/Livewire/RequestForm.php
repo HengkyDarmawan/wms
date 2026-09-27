@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Request\Livewire;
 
 use App\Domain\Master\Enums\ItemStatus;
+use App\Domain\Master\Livewire\Concerns\PicksItemUnit;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Support\ScanCode;
@@ -27,6 +28,7 @@ use Livewire\Component;
 class RequestForm extends Component
 {
     use HandlesRequestRules;
+    use PicksItemUnit;
 
     #[Locked]
     public ?int $requestId = null;
@@ -58,15 +60,19 @@ class RequestForm extends Component
                 'notes' => (string) ($request->notes ?? ''),
             ];
 
-            $this->lines = $request->openLines()->orderBy('id')->get()->map(fn ($l) => [
+            $baris = $request->openLines()->orderBy('id')->get();
+            $opsi = $this->opsiSatuan($baris->pluck('item_id')->all());
+
+            // A-291: jumlah dibuka lagi dalam satuan yang diketik (mis. 10 DUS).
+            $this->lines = $baris->map(fn ($l) => [
                 'id' => (string) $l->id,
                 'item_id' => (string) ($l->item_id ?? ''),
                 'non_catalog_text' => (string) ($l->non_catalog_text ?? ''),
-                'qty_base' => (string) (float) $l->qty_base,
+                'qty_base' => (string) (float) ($l->uom_id !== null ? $l->qty_input : $l->qty_base),
                 'line_ownership' => $l->line_ownership->value,
                 'required_date' => $l->required_date?->toDateString() ?? '',
                 'notes' => (string) ($l->notes ?? ''),
-            ])->all();
+            ] + $this->satuanTersimpan($l->uom_id === null ? null : (int) $l->uom_id, $l->uom_qty_base, $opsi[(int) $l->item_id] ?? null))->all();
 
             return;
         }
@@ -95,7 +101,51 @@ class RequestForm extends Component
             'line_ownership' => LineOwnership::Buy->value,
             'required_date' => '',
             'notes' => '',
+            'uom' => '',
+            'uom_lain' => '',
+            'uom_factor' => '',
+            'ingat' => false,
         ];
+    }
+
+    /**
+     * A-38: memilih item di baris mengisi Beli/Pinjam dari item (aset → Pinjam,
+     * Keduanya → sifat baris bawaan). Hanya saat item berganti, jadi pilihan
+     * manual sesudahnya tidak ditimpa.
+     */
+    public function updatedLines(mixed $nilai, string $kunci): void
+    {
+        if (! str_ends_with($kunci, '.item_id')) {
+            return;
+        }
+
+        $i = (int) explode('.', $kunci)[0];
+        $this->isiKepemilikan($i);
+        $this->lines[$i] = array_merge($this->lines[$i], ['uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'ingat' => false]);
+    }
+
+    /**
+     * Baris layar → isian aksi: bila satuan kemasan dipilih, jumlah yang diketik
+     * dikirim sebagai `qty_input` + `uom_id` (A-291).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function barisAksi(): array
+    {
+        return array_map(function (array $l) {
+            $satuan = $this->isianSatuan($l);
+
+            return $satuan['uom_id'] === null ? $l : $l + $satuan + ['qty_input' => $l['qty_base'] ?? ''];
+        }, $this->lines);
+    }
+
+    private function isiKepemilikan(int $index): void
+    {
+        $item = isset($this->lines[$index]) && $this->lines[$index]['item_id'] !== ''
+            ? Item::query()->find((int) $this->lines[$index]['item_id'])
+            : null;
+
+        $this->lines[$index]['line_ownership'] = $item?->defaultLineOwnershipValue() ?? LineOwnership::Buy->value;
     }
 
     /**
@@ -164,6 +214,7 @@ class RequestForm extends Component
         }
 
         $this->lines[$kosong]['item_id'] = $itemId;
+        $this->isiKepemilikan((int) $kosong);
         $this->lines[$kosong]['qty_base'] = is_numeric($this->lines[$kosong]['qty_base']) && (float) $this->lines[$kosong]['qty_base'] > 0
             ? $this->lines[$kosong]['qty_base'] : '1';
         $this->sorot = (int) $kosong;
@@ -185,7 +236,7 @@ class RequestForm extends Component
         $tersimpan = null;
 
         $berhasil = $this->jalankan(function () use ($action, $request, &$tersimpan) {
-            $tersimpan = $action->handle($request, $this->form, $this->lines, auth()->user());
+            $tersimpan = $action->handle($request, $this->form, $this->barisAksi(), auth()->user());
         });
 
         if (! $berhasil || $tersimpan === null) {
@@ -209,7 +260,7 @@ class RequestForm extends Component
         $tersimpan = null;
 
         $berhasil = $this->jalankan(function () use ($simpan, $ajukan, $request, &$tersimpan) {
-            $tersimpan = $simpan->handle($request, $this->form, $this->lines, auth()->user());
+            $tersimpan = $simpan->handle($request, $this->form, $this->barisAksi(), auth()->user());
             $tersimpan = $ajukan->handle($tersimpan, auth()->user());
         });
 
@@ -227,8 +278,11 @@ class RequestForm extends Component
             'items' => Item::query()
                 ->whereIn('status', [ItemStatus::Active->value, ItemStatus::Provisional->value])
                 ->orderBy('code')
-                ->get(['id', 'code', 'name', 'tracking_mode']),
+                ->get(['id', 'code', 'name', 'tracking_mode', 'ownership_model', 'default_line_ownership']),
             'ownerships' => LineOwnership::options(),
+            'unitOpsi' => $opsi = $this->opsiSatuan(array_column($this->lines, 'item_id')),
+            'satuanLain' => $this->satuanKemasan(),
+            'hasilSatuan' => array_map(fn (array $l) => $this->hasilSatuan($l, $l['qty_base'] ?? null, $opsi[(int) ($l['item_id'] ?: 0)] ?? null), $this->lines),
             'isBaru' => $this->requestId === null,
         ]);
     }

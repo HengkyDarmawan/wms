@@ -43,7 +43,7 @@
                     </td>
                     <td>{{ $l->discrepancy_type?->label() }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_base) }}</td>
-                    <td>{{ $p?->item?->baseUom?->code }}</td>
+                    <td>{{ $p?->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($p?->item, $l->qty_base)) <br><small>{{ $kemasan }}</small>@endif</td>
                     <td>
                         {{ $l->disposition?->label() ?? '—' }}
                         @if ($l->client_decision)<br><span class="muted">{{ $l->client_decision->label() }}</span>@endif

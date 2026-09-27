@@ -51,7 +51,9 @@
                         <th scope="col">{{ __('Lot / Serial') }}</th>
                         <th scope="col">{{ __('Kondisi') }}</th>
                         <th class="text-end" scope="col">{{ __('Jumlah') }}</th>
-                        <th class="text-end" scope="col">{{ __('Potongan') }}</th>
+                        @if ($tampilPotongan)
+                            <th class="text-end" scope="col">{{ __('Potongan') }}</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -61,14 +63,21 @@
                             <td>{{ $s->bin?->code ?? '—' }}</td>
                             <td>{{ $s->serial?->serial_no ?? $s->lot?->lot_no ?? '—' }}</td>
                             <td><span class="badge text-bg-light">{{ $s->stock_status->label() }}</span></td>
-                            <td class="text-end">{{ number_format((float) $s->qty_base, 2, ',', '.') }}</td>
                             <td class="text-end">
-                                {{ $s->piece_count > 0 ? number_format((int) $s->piece_count, 0, ',', '.') : '—' }}
+                                {{ \App\Domain\Master\Support\QtyFormat::withUnit($s->qty_base, $item->baseUom?->code) }}
+                                @if ($kemasan = \App\Domain\Master\Support\QtyFormat::packaging($item, $s->qty_base))
+                                    <div class="small text-muted">{{ $kemasan }}</div>
+                                @endif
                             </td>
+                            @if ($tampilPotongan)
+                                <td class="text-end">
+                                    {{ $s->piece_count > 0 ? number_format((int) $s->piece_count, 0, ',', '.') : '—' }}
+                                </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-center text-muted py-3" colspan="6">
+                            <td class="text-center text-muted py-3" colspan="{{ $tampilPotongan ? 6 : 5 }}">
                                 {{ __('Tidak ada saldo untuk item ini pada penyaring yang dipilih.') }}
                             </td>
                         </tr>
@@ -102,7 +111,12 @@
                             <td class="text-nowrap">{{ $m->occurred_at?->lokal()->format('d/m/Y H:i') }}</td>
                             <td>{{ $m->fromBin?->code ?? __('Luar') }}</td>
                             <td>{{ $m->toBin?->code ?? __('Luar') }}</td>
-                            <td class="text-end">{{ number_format((float) $m->qty_base, 2, ',', '.') }}</td>
+                            <td class="text-end">
+                                {{ \App\Domain\Master\Support\QtyFormat::number($m->qty_base) }}
+                                @if ($kemasan = \App\Domain\Master\Support\QtyFormat::packaging($item, $m->qty_base))
+                                    <div class="small text-muted">{{ $kemasan }}</div>
+                                @endif
+                            </td>
                             <td>
                                 {{ $m->document_number ?? '—' }}
                                 @if ($m->reverses_movement_id !== null)

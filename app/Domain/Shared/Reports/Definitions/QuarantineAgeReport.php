@@ -9,6 +9,7 @@ use App\Domain\Shared\Reports\Concerns\PeriodFilter;
 use App\Domain\Shared\Reports\Report;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Models\StockBalance;
+use App\Domain\Warehouse\Enums\BinType;
 use Illuminate\Support\Collection;
 
 /**
@@ -43,12 +44,12 @@ class QuarantineAgeReport extends Report
 
     public function description(): string
     {
-        return 'Saldo berkondisi Karantina yang menunggu QC: bin, item, jumlah, dokumen masuk terakhir, dan umurnya dalam hari.';
+        return 'Barang di bin Karantina — menunggu QC, atau Rusak menunggu retur ke vendor: bin, item, kondisi, jumlah, dokumen masuk terakhir, dan umurnya dalam hari.';
     }
 
     public function columns(): array
     {
-        return ['gudang' => 'Gudang', 'bin' => 'Bin', 'item' => 'Item', 'pelacakan' => 'Lot / serial / potongan', 'jumlah' => 'Jumlah', 'satuan' => 'Satuan', 'dokumen' => 'Dokumen masuk', 'masuk' => 'Masuk', 'umur' => 'Umur (hari)'];
+        return ['gudang' => 'Gudang', 'bin' => 'Bin', 'item' => 'Item', 'pelacakan' => 'Lot / serial / potongan', 'kondisi' => 'Kondisi', 'jumlah' => 'Jumlah', 'satuan' => 'Satuan', 'dokumen' => 'Dokumen masuk', 'masuk' => 'Masuk', 'umur' => 'Umur (hari)'];
     }
 
     public function filters(): array
@@ -63,7 +64,10 @@ class QuarantineAgeReport extends Report
 
         $saldo = StockBalance::query()
             ->with('item:id,code,base_uom_id', 'item.baseUom:id,code', 'bin:id,code,warehouse_id', 'bin.warehouse:id,code', 'lot:id,lot_no', 'serial:id,serial_no', 'piece:id,piece_no')
-            ->where('stock_status', StockStatus::Quarantine->value)
+            // A-295: termasuk barang Rusak di bin Karantina (dicatat saat GRN) yang menunggu RTV.
+            ->where(fn ($q) => $q->where('stock_status', StockStatus::Quarantine->value)
+                ->orWhere(fn ($w) => $w->where('stock_status', StockStatus::Damaged->value)
+                    ->whereHas('bin', fn ($b) => $b->where('bin_type', BinType::Quarantine->value))))
             ->where('qty_base', '>', 0)
             ->whereHas('bin', fn ($q) => $q->when($gudang !== null, fn ($w) => $w->whereIn('warehouse_id', $gudang)))
             ->get();
@@ -78,6 +82,7 @@ class QuarantineAgeReport extends Report
                 'bin' => $b->bin?->code,
                 'item' => $b->item?->code,
                 'pelacakan' => $b->lot?->lot_no ?? $b->serial?->serial_no ?? $b->piece?->piece_no ?? '—',
+                'kondisi' => $b->stock_status?->label(),
                 'jumlah' => round((float) $b->qty_base, 4),
                 'satuan' => $b->item?->baseUom?->code,
                 'dokumen' => $m?->document_number ?? '—',

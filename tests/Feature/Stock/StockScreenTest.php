@@ -100,8 +100,8 @@ class StockScreenTest extends TenantTestCase
             ->test(BalanceList::class)
             ->assertOk()
             ->assertSee('BAUT-M12')
-            // 20 saldo − 5 reservasi = 15 tersedia, ditulis dengan format Indonesia.
-            ->assertSee('15,00')
+            // 20 saldo − 5 reservasi = 15 tersedia, bersatuan dasar (A-293); reservasi format Indonesia.
+            ->assertSee('15 PCS')
             ->assertSee('5,00');
 
         // Hasil pindai barcode item menemukan saldonya (A-201).
@@ -143,7 +143,7 @@ class StockScreenTest extends TenantTestCase
             ->assertOk()
             ->assertSee('Baut M12')
             ->assertSee('CKG-A-R01-L1-B01')
-            ->assertSee('20,00');
+            ->assertSee('20 PCS');
     }
 
     #[Test]

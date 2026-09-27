@@ -18,15 +18,22 @@ use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Receipt\Models\GoodsReceiptLine;
 use App\Domain\Receipt\Models\VendorReturn;
 use App\Domain\Receipt\Models\VendorReturnLine;
+use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Support\DocumentNumber;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Permission: `vendor_return.create` — RTV `submitted` (Katalog §2.16).
  *
- * Baris hanya dari baris GRN vendor yang masih di bin Karantina dengan hasil
- * QC `rejected` (atau `quarantined` — "alasan lain"), BR-GRN-04. Jumlahnya
- * tidak boleh melebihi yang belum dimuat RTV lain yang masih berjalan.
+ * Dua sumber per baris GRN vendor (BR-GRN-04, A-290):
+ *
+ * - bagian **Rusak** yang dicatat saat GRN (`qty_damaged`, bin Karantina
+ *   berkondisi Rusak) — tanpa QC, `part = damage`;
+ * - bagian hasil **QC** lama: masih di bin Karantina dengan hasil `rejected`
+ *   (atau `quarantined` — "alasan lain"), `part = qc`.
+ *
+ * Jumlah tiap bagian tidak boleh melebihi yang belum dimuat RTV lain yang
+ * masih berjalan; kedua bagian dihitung terpisah.
  *
  * RTV langsung diteruskan ke `pending_approval` dan diputus lewat mesin
  * approval (20-approval §13): approver ditentukan aturan RTV, bukan role;
@@ -40,7 +47,7 @@ class CreateVendorReturn
     ) {}
 
     /**
-     * @param  array<int, array{goods_receipt_line_id: int|string, qty_base: float|string, reason_code_id?: int|string|null}>  $lines
+     * @param  array<int, array{goods_receipt_line_id: int|string, qty_base: float|string, reason_code_id?: int|string|null, part?: string}>  $lines
      */
     public function handle(GoodsReceipt $receipt, array $lines, ?string $notes = null, ?User $actor = null): VendorReturn
     {
@@ -53,6 +60,7 @@ class CreateVendorReturn
         }
 
         $milik = $receipt->lines()->with('item', 'receivingBin')->get()->keyBy('id');
+        $dipakai = [];
         $baris = [];
 
         foreach ($lines as $isi) {
@@ -69,27 +77,36 @@ class CreateVendorReturn
                 throw ReceiptRuleException::rule('BR-GRN-04', 'Ada baris retur yang bukan milik GRN ini.');
             }
 
-            if (! $l->receivingBinIsQuarantine()
-                || ! in_array($l->qc_result, [QcResult::Rejected, QcResult::Quarantined], true)) {
+            $bisaQc = $l->receivingBinIsQuarantine()
+                && in_array($l->qc_result, [QcResult::Rejected, QcResult::Quarantined], true);
+            $bisaRusak = (float) $l->qty_damaged > 0 && $l->damaged_bin_id !== null;
+            $bagian = ($isi['part'] ?? null) === 'damage' || (($isi['part'] ?? null) === null && ! $bisaQc) ? 'damage' : 'qc';
+
+            if (($bagian === 'qc' && ! $bisaQc) || ($bagian === 'damage' && ! $bisaRusak)) {
                 throw ReceiptRuleException::rule(
                     'BR-GRN-04',
-                    'Baris '.$l->item->code.' tidak di Karantina dengan hasil QC Ditolak atau Karantina; tidak bisa diretur.',
+                    'Baris '.$l->item->code.' tidak punya barang rusak atau hasil QC Ditolak/Karantina di bin Karantina; tidak bisa diretur.',
                 );
             }
 
-            $sisa = (float) $l->qty_received - $this->sudahDiretur($l);
+            $rusak = $bagian === 'damage';
+            $kunci = $l->id.'|'.$bagian;
+            $dipakai[$kunci] = round(($dipakai[$kunci] ?? 0) + $qty, 4);
+            $jatah = $rusak ? (float) $l->qty_damaged : (float) $l->qty_received;
+            $sisa = round($jatah - $this->sudahDiretur($l, $rusak), 4);
 
-            if ($qty - $sisa > 0.00005) {
+            if ($dipakai[$kunci] - $sisa > 0.00005) {
                 throw ReceiptRuleException::field(
                     'BR-GRN-04',
                     'qty_base',
-                    'Baris '.$l->item->code.': retur '.$qty.' melebihi sisa yang bisa diretur ('.$sisa.').',
+                    'Baris '.$l->item->code.': retur '.$dipakai[$kunci].' melebihi sisa '.($rusak ? 'barang rusak ' : '').'yang bisa diretur ('.$sisa.').',
                 );
             }
 
-            $alasan = (int) ($isi['reason_code_id'] ?? 0) ?: (int) ($l->qc_reason_id ?? 0);
+            $alasan = (int) ($isi['reason_code_id'] ?? 0) ?: (int) (($rusak ? $l->damage_reason_id : $l->qc_reason_id) ?? 0);
+            $konteks = $rusak ? [ReasonContext::Reject->value, ReasonContext::Damage->value] : [ReasonContext::Reject->value];
 
-            if ($alasan === 0 || ! ReasonCode::query()->whereKey($alasan)->where('context', ReasonContext::Reject->value)->exists()) {
+            if ($alasan === 0 || ! ReasonCode::query()->whereKey($alasan)->whereIn('context', $konteks)->exists()) {
                 throw ReceiptRuleException::field('BR-GEN-11', 'reason_code_id', 'Baris '.$l->item->code.': alasan retur wajib dipilih.');
             }
 
@@ -99,8 +116,9 @@ class CreateVendorReturn
                 'lot_id' => $l->lot_id,
                 'serial_id' => $l->serial_id,
                 'piece_id' => $l->piece_id,
-                'bin_id' => $l->receiving_bin_id,
-                'stock_status' => $l->quarantineStockStatus(),
+                'bin_id' => $rusak ? $l->damaged_bin_id : $l->receiving_bin_id,
+                'stock_status' => $rusak ? StockStatus::Damaged : $l->quarantineStockStatus(),
+                'is_receipt_damage' => $rusak,
                 'qty_base' => $qty,
                 'reason_code_id' => $alasan,
             ];
@@ -142,10 +160,11 @@ class CreateVendorReturn
         });
     }
 
-    private function sudahDiretur(GoodsReceiptLine $line): float
+    private function sudahDiretur(GoodsReceiptLine $line, bool $rusak): float
     {
         return (float) VendorReturnLine::query()
             ->where('goods_receipt_line_id', $line->id)
+            ->where('is_receipt_damage', $rusak)
             ->whereHas('vendorReturn', fn ($q) => $q->whereNotIn('status', [
                 VendorReturnStatus::Rejected->value,
                 VendorReturnStatus::Cancelled->value,

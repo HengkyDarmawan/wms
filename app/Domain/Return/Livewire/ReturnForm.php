@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Return\Livewire;
 
+use App\Domain\Master\Livewire\Concerns\PicksItemUnit;
 use App\Domain\Master\Models\Project;
 use App\Domain\Return\Actions\CreateGoodsReturn;
 use App\Domain\Return\Enums\ReturnSource;
@@ -26,12 +27,16 @@ use Livewire\Component;
 class ReturnForm extends Component
 {
     use HandlesTransferRules;
+    use PicksItemUnit;
 
     /** @var array<string, string> */
     public array $form = ['project_id' => '', 'to_warehouse_id' => '', 'self_delivered' => '1', 'notes' => ''];
 
     /** @var array<string, string> kunci calon (':' → '_') => jumlah */
     public array $qty = [];
+
+    /** @var array<string, array<string, mixed>> kunci calon => pilihan satuan (A-291) */
+    public array $satuan = [];
 
     #[Locked]
     public bool $portal = false;
@@ -52,6 +57,7 @@ class ReturnForm extends Component
     public function updatedFormProjectId(): void
     {
         $this->qty = [];
+        $this->satuan = [];
     }
 
     public function simpan(CreateGoodsReturn $action): void
@@ -67,7 +73,11 @@ class ReturnForm extends Component
 
         foreach ($this->qty as $kunci => $jumlah) {
             if ((float) $jumlah > 0) {
-                $baris[] = ['key' => str_replace('_', ':', (string) $kunci), 'qty_base' => $jumlah];
+                $pilih = $this->isianSatuan($this->satuan[$kunci] ?? []);
+
+                // A-291: jumlah dalam kemasan dikirim sebagai qty_input + uom_id.
+                $baris[] = ['key' => str_replace('_', ':', (string) $kunci), 'qty_base' => $jumlah]
+                    + ($pilih['uom_id'] === null ? [] : $pilih + ['qty_input' => $jumlah]);
             }
         }
 
@@ -84,11 +94,17 @@ class ReturnForm extends Component
 
     public function render(): View
     {
+        $calon = $this->calon();
+        $opsi = $this->opsiSatuan($calon->pluck('item_id')->all());
+
         return view('livewire.return.return-form', [
             'projects' => $this->proyek(),
             'warehouses' => $this->gudangTujuan(),
-            'calon' => $this->calon(),
+            'calon' => $calon,
             'rute' => $this->portal ? 'portal.returns' : 'returns',
+            'unitOpsi' => $opsi,
+            'satuanLain' => $this->satuanKemasan(),
+            'hasilSatuan' => $calon->mapWithKeys(fn (array $c, string $kunci) => [$kunci => $this->hasilSatuan($this->satuan[$kunci] ?? [], $this->qty[$kunci] ?? null, $opsi[(int) $c['item_id']] ?? null)])->all(),
         ]);
     }
 

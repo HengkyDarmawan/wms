@@ -118,9 +118,10 @@ class ModuleReportTest extends TenantTestCase
         $this->assertSame(0, $karantina['umur']);
         $this->assertTrue($this->rows('karantina-umur', ['min_age_days' => 1])->isEmpty());
 
-        // QC menolak kabel → keluar dari Karantina; GRN selesai → PUT baut tertunda; RTV kabel terbuka.
+        // QC menolak kabel → tetap di bin Karantina berkondisi Rusak, menunggu retur (A-295);
+        // GRN selesai → PUT baut tertunda; RTV kabel terbuka.
         $this->qc($grn, 0, QcResult::Rejected);
-        $this->assertTrue($this->rows('karantina-umur')->isEmpty(), 'Barang ditolak QC berkondisi Rusak, bukan Karantina.');
+        $this->assertSame(['KABEL-NYM', 'Rusak'], [$this->rows('karantina-umur')->sole()['item'], $this->rows('karantina-umur')->sole()['kondisi']]);
         $put = app(CompleteGoodsReceipt::class)->handle($grn->refresh(), $this->makeUser())->putawayTasks()->sole();
         $rtv = $this->rtv($grn);
 

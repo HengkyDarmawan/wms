@@ -65,7 +65,9 @@ class RecordQcResult
 
         // Barang yang sudah dimuat RTV berjalan tidak boleh diputus ulang: RTV
         // itu akan mengambilnya dari Karantina (BR-GRN-04).
+        // A-290: RTV bagian Rusak saat GRN tidak mengunci QC bagian Baik.
         $dimuatRtv = $line->vendorReturnLines()
+            ->where('is_receipt_damage', false)
             ->whereHas('vendorReturn', fn ($q) => $q->whereNotIn('status', [
                 VendorReturnStatus::Rejected->value,
                 VendorReturnStatus::Cancelled->value,

@@ -53,7 +53,7 @@
                     <td>{{ PrintFormat::tracking($p?->lot, $p?->serial, $p?->piece) }}</td>
                     <td>{{ $asal[$l->id] ?? '—' }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_shipped) }}</td>
-                    <td>{{ $p?->item?->baseUom?->code }}</td>
+                    <td>{{ $p?->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($p?->item, $l->qty_shipped)) <br><small>{{ $kemasan }}</small>@endif</td>
                     <td></td>
                 </tr>
             @endforeach

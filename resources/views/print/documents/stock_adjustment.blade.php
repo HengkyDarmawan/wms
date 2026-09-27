@@ -44,7 +44,7 @@
                     <td>{{ $l->trackingLabel() }}</td>
                     <td>{{ $l->stock_status?->label() }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_delta, true) }}</td>
-                    <td>{{ $l->item?->baseUom?->code }}</td>
+                    <td>{{ $l->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($l->item, $l->qty_delta)) <br><small>{{ $kemasan }}</small>@endif</td>
                 </tr>
             @endforeach
         </tbody>

@@ -2,7 +2,7 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
             <h1 class="h3 mb-1">{{ __('RTV baru') }}</h1>
-            <p class="text-muted mb-0">{{ __('Hanya barang di Karantina dengan hasil QC Ditolak atau Karantina yang bisa diretur.') }}</p>
+            <p class="text-muted mb-0">{{ __('Barang yang dicatat Rusak saat penerimaan, atau barang di Karantina dengan hasil QC Ditolak/Karantina.') }}</p>
         </div>
         <a class="btn btn-outline-secondary" href="{{ route('vendor-returns.index') }}">{{ __('Kembali') }}</a>
     </div>
@@ -46,6 +46,25 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @foreach ($linesRusak as $l)
+                        <tr wire:key="rtv-rusak-{{ $l->id }}">
+                            <td>{{ $l->item?->code }} <div class="small text-muted">{{ $l->trackingLabel() }}</div></td>
+                            <td><span class="badge text-bg-danger">{{ __('Rusak saat diterima') }}</span></td>
+                            <td class="text-end">{{ \App\Domain\Master\Support\QtyFormat::number($l->damagedReturnable()) }}</td>
+                            <td>
+                                <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
+                                       wire:model="rusak.{{ $l->id }}.qty">
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm" wire:model="rusak.{{ $l->id }}.reason">
+                                    <option value="">{{ __('Pilih alasan…') }}</option>
+                                    @foreach ($alasanRusak as $kode => $label)
+                                        <option value="{{ $kode }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                        </tr>
+                    @endforeach
                     @forelse ($lines as $l)
                         <tr wire:key="rtv-line-{{ $l->id }}">
                             <td>{{ $l->item?->code }} <div class="small text-muted">{{ $l->trackingLabel() }}</div></td>
@@ -65,9 +84,11 @@
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td class="text-center text-muted py-4" colspan="5">{{ __('Pilih GRN yang punya barang ditolak atau dikarantina.') }}</td>
-                        </tr>
+                        @if ($linesRusak->isEmpty())
+                            <tr>
+                                <td class="text-center text-muted py-4" colspan="5">{{ __('Pilih GRN yang punya barang rusak, ditolak, atau dikarantina.') }}</td>
+                            </tr>
+                        @endif
                     @endforelse
                 </tbody>
             </table>

@@ -37,7 +37,7 @@
                     <td>{{ $l->item?->name }}</td>
                     <td>{{ PrintFormat::tracking($l->lot, $l->serial, $l->piece) }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_base) }}</td>
-                    <td>{{ $l->item?->baseUom?->code }}</td>
+                    <td>{{ $l->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($l->item, $l->qty_base)) <br><small>{{ $kemasan }}</small>@endif</td>
                     <td>{{ $l->reason?->label }}</td>
                 </tr>
             @endforeach

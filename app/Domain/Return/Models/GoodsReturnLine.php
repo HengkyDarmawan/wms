@@ -9,6 +9,8 @@ use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Piece;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Serial;
+use App\Domain\Master\Models\Uom;
+use App\Domain\Master\Support\QtyFormat;
 use App\Domain\Return\Enums\ReturnOwnership;
 use App\Domain\Return\Enums\ReturnSorting;
 use App\Domain\Return\Enums\ReturnSource;
@@ -54,6 +56,8 @@ class GoodsReturnLine extends Model
             'sorting' => ReturnSorting::class,
             'stock_status' => StockStatus::class,
             'qty_base' => 'decimal:4',
+            'qty_input' => 'decimal:4',
+            'uom_qty_base' => 'decimal:4',
             'qty_received' => 'decimal:4',
             'sorted_qty' => 'decimal:4',
         ];
@@ -62,6 +66,20 @@ class GoodsReturnLine extends Model
     public function goodsReturn(): BelongsTo
     {
         return $this->belongsTo(GoodsReturn::class)->withoutGlobalScopes();
+    }
+
+    /** A-291: satuan yang diketik pemohon retur (null = satuan dasar). */
+    public function uom(): BelongsTo
+    {
+        return $this->belongsTo(Uom::class);
+    }
+
+    /** "2 DUS" bila jumlah diketik dalam kemasan, selain itu null (A-291). */
+    public function typedQuantity(): ?string
+    {
+        return $this->uom_id === null || $this->qty_input === null
+            ? null
+            : QtyFormat::withUnit($this->qty_input, $this->uom?->code);
     }
 
     public function item(): BelongsTo

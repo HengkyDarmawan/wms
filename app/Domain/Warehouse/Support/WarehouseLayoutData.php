@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Warehouse\Support;
 
+use App\Domain\Master\Support\QtyFormat;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockMovement;
 use App\Domain\Warehouse\Enums\BinStatus;
@@ -14,6 +15,7 @@ use App\Domain\Warehouse\Models\Zone;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * Data denah gudang 2D (A-254): zona → rak → level → bin → isi.
@@ -26,6 +28,10 @@ use Illuminate\Support\Collection;
  *   (pola A-241); per item, baris dengan tanggal masuk tertua di gudang ini
  *   ditandai **tertua** — ambil dulu (FIFO, A-185).
  * - Pencarian: kode bin, kode/nama item, nomor lot/serial/potongan.
+ * - Tampilan (A-281): rak digambar sebagai kotak berisi petak bin per level
+ *   (level teratas di atas, label level di luar kotak). Ukuran gambar =
+ *   ukuran fisik, diperbesar bila petak bin tidak muat (`w`/`h`, meter
+ *   gambar); `len`/`wid` tetap ukuran fisik untuk geser & batas zona.
  */
 class WarehouseLayoutData
 {
@@ -36,6 +42,19 @@ class WarehouseLayoutData
     public const JARAK = 0.5;
 
     public const PER_BARIS = 4;
+
+    /** Tata otomatis pindah baris bila lebar baris gambar melewati ini (meter). */
+    public const LEBAR_BARIS = 12.0;
+
+    /** Piksel per meter gambar (A-281). */
+    public const SKALA = 80;
+
+    /** Ukuran minimum satu petak bin & bingkai dalam rak, dalam meter gambar. */
+    public const SEL_LEBAR = 0.8;
+
+    public const SEL_TINGGI = 0.5;
+
+    public const BINGKAI = 0.1;
 
     /** @return array{zones: array<int, array<string, mixed>>, hasil: array<int, array<string, mixed>>} */
     public function build(Warehouse $gudang, string $cari = ''): array
@@ -54,17 +73,13 @@ class WarehouseLayoutData
         $hasil = [];
 
         $zones = $zona->map(function (Zone $z) use ($bins, $isi, $q, &$hasil) {
-            $racks = $z->racks->values()->map(function (Rack $r, int $i) use ($bins, $isi, $q, &$hasil) {
+            $racks = $z->racks->values()->map(function (Rack $r) use ($bins, $isi, $q, &$hasil) {
                 $panjang = (float) ($r->length_m ?? self::RAK_PANJANG);
                 $lebar = (float) ($r->width_m ?? self::RAK_LEBAR);
 
                 if ($r->orientation === 'v') {
                     [$panjang, $lebar] = [$lebar, $panjang];
                 }
-
-                $otomatis = $r->pos_x === null || $r->pos_y === null;
-                $x = $otomatis ? self::JARAK + ($i % self::PER_BARIS) * (self::RAK_PANJANG + self::JARAK) : (float) $r->pos_x;
-                $y = $otomatis ? self::JARAK + intdiv($i, self::PER_BARIS) * (self::RAK_LEBAR + self::JARAK * 2) : (float) $r->pos_y;
 
                 $levels = $r->levels->sortByDesc('code')->values()->map(function ($l) use ($bins, $isi, $q, $r, &$hasil) {
                     return [
@@ -82,16 +97,27 @@ class WarehouseLayoutData
                                     'isi' => collect($baris)->map(fn ($s) => $s['item_code'].($s['tracking'] !== '' ? ' '.$s['tracking'] : ''))->implode(', ')];
                             }
 
+                            $penuh = $b->capacity_qty !== null && $total + 0.00005 >= (float) $b->capacity_qty && $total > 0;
+                            $beku = $b->bin_status === BinStatus::Frozen;
+
                             return [
                                 'id' => (int) $b->id,
                                 'code' => (string) $b->code,
+                                'short' => Str::afterLast((string) $b->code, '-'),
                                 'total' => $total,
                                 'capacity_qty' => $b->capacity_qty !== null ? (float) $b->capacity_qty : null,
-                                'penuh' => $b->capacity_qty !== null && $total + 0.00005 >= (float) $b->capacity_qty && $total > 0,
-                                'beku' => $b->bin_status === BinStatus::Frozen,
+                                'penuh' => $penuh,
+                                'beku' => $beku,
                                 'nonaktif' => $b->bin_status === BinStatus::Inactive,
                                 'terpakai_oleh' => $b->occupiedBy?->code,
                                 'occupied_reason' => $b->occupied_reason,
+                                'status' => match (true) {
+                                    $beku => 'beku',
+                                    $b->occupiedBy !== null => 'terpakai',
+                                    $penuh => 'penuh',
+                                    $total > 0 => 'terisi',
+                                    default => 'kosong',
+                                },
                                 'isi' => $baris,
                                 'umur' => $baris === [] ? null : max(array_column($baris, 'umur')),
                                 'cocok' => $cocok,
@@ -101,26 +127,66 @@ class WarehouseLayoutData
                 })->all();
 
                 $semuaBin = collect($levels)->flatMap(fn ($l) => $l['bins']);
+                $kolom = max(1, (int) collect($levels)->max(fn ($l) => count($l['bins'])));
+                $baris = max(1, count($levels));
 
                 return [
                     'id' => (int) $r->id,
                     'code' => (string) $r->code,
                     'name' => $r->name,
                     'is_area' => (bool) $r->is_area,
-                    'x' => $x, 'y' => $y, 'len' => $panjang, 'wid' => $lebar,
+                    'pos_x' => $r->pos_x, 'pos_y' => $r->pos_y,
+                    'len' => $panjang, 'wid' => $lebar,
+                    // A-281: ukuran gambar — petak bin selalu terbaca.
+                    'w' => $r->is_area ? $panjang : max($panjang, $kolom * self::SEL_LEBAR + 2 * self::BINGKAI),
+                    'h' => $r->is_area ? $lebar : max($lebar, $baris * self::SEL_TINGGI + 2 * self::BINGKAI),
+                    'kolom' => $kolom,
                     'height_m' => $r->height_m !== null ? (float) $r->height_m : null,
                     'orientation' => $r->orientation,
-                    'otomatis' => $otomatis,
+                    'otomatis' => $r->pos_x === null || $r->pos_y === null,
                     'status' => $this->status($r, $semuaBin),
                     'umur' => $semuaBin->pluck('umur')->filter(fn ($u) => $u !== null)->max(),
                     'cocok' => $semuaBin->contains('cocok', true) || ($q !== '' && str_contains(mb_strtolower($r->code.' '.$r->name), $q)),
                     'jumlah_bin' => $semuaBin->count(),
                     'levels' => $levels,
                 ];
-            });
+            })->all();
 
-            $lebarZona = $z->length_m !== null ? (float) $z->length_m : max(4.0, (float) ($racks->max(fn ($r) => $r['x'] + $r['len']) ?? 0) + self::JARAK);
-            $tinggiZona = $z->width_m !== null ? (float) $z->width_m : max(2.0, (float) ($racks->max(fn ($r) => $r['y'] + $r['wid']) ?? 0) + self::JARAK);
+            // Tata otomatis per baris memakai ukuran gambar agar rak tidak bertumpuk.
+            $kursorX = self::JARAK;
+            $kursorY = self::JARAK;
+            $tinggiBaris = 0.0;
+            $n = 0;
+
+            foreach ($racks as $i => $r) {
+                if ($r['otomatis']) {
+                    if ($n > 0 && ($n >= self::PER_BARIS || $kursorX + $r['w'] > self::LEBAR_BARIS)) {
+                        $kursorX = self::JARAK;
+                        $kursorY += $tinggiBaris + self::JARAK * 2;
+                        $tinggiBaris = 0.0;
+                        $n = 0;
+                    }
+
+                    $racks[$i]['x'] = $kursorX;
+                    $racks[$i]['y'] = $kursorY;
+                    $kursorX += $r['w'] + self::JARAK;
+                    $tinggiBaris = max($tinggiBaris, $r['h']);
+                    $n++;
+                } else {
+                    $racks[$i]['x'] = (float) $r['pos_x'];
+                    $racks[$i]['y'] = (float) $r['pos_y'];
+                }
+
+                unset($racks[$i]['pos_x'], $racks[$i]['pos_y']);
+            }
+
+            $racks = collect($racks);
+
+            // Gambar zona selalu memuat semua rak (ukuran gambar bisa > ukuran fisik).
+            $kanan = (float) ($racks->max(fn ($r) => $r['x'] + $r['w']) ?? 0) + self::JARAK;
+            $bawah = (float) ($racks->max(fn ($r) => $r['y'] + $r['h']) ?? 0) + self::JARAK;
+            $lebarZona = max($z->length_m !== null ? (float) $z->length_m : 6.0, $kanan);
+            $tinggiZona = max($z->width_m !== null ? (float) $z->width_m : 2.5, $bawah);
 
             return [
                 'id' => (int) $z->id,
@@ -162,7 +228,7 @@ class WarehouseLayoutData
         }
 
         $saldo = StockBalance::query()->withoutGlobalScopes()
-            ->with('item:id,code,name,base_uom_id', 'item.baseUom:id,code', 'lot:id,lot_no', 'serial:id,serial_no', 'piece:id,piece_no')
+            ->with('item:id,code,name,base_uom_id,tracking_mode', 'item.baseUom:id,code', 'item.activeConversions.uom:id,code', 'lot:id,lot_no', 'serial:id,serial_no', 'piece:id,piece_no')
             ->whereIn('bin_id', $binIds)->where('qty_base', '>', 0.00005)
             ->get();
 
@@ -187,6 +253,8 @@ class WarehouseLayoutData
                 'item_name' => (string) $s->item?->name,
                 'uom' => $s->item?->baseUom?->code,
                 'qty' => (float) $s->qty_base,
+                // A-293: uraian kemasan, mis. "9 DUS 8 BOX"; null bila item tanpa kemasan.
+                'kemasan' => QtyFormat::packaging($s->item, $s->qty_base),
                 'status' => $s->stock_status?->label(),
                 'tracking' => $tracking,
                 'masuk' => $tanggal,

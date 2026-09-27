@@ -7,7 +7,11 @@ namespace App\Domain\Return\Actions;
 use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalEngine;
+use App\Domain\Master\Actions\RememberItemPackaging;
+use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
+use App\Domain\Master\Models\Uom;
+use App\Domain\Master\Support\UnitInput;
 use App\Domain\Return\Enums\GoodsReturnStatus;
 use App\Domain\Return\Enums\ReturnSource;
 use App\Domain\Return\Exceptions\ReturnRuleException;
@@ -17,6 +21,7 @@ use App\Domain\Return\Support\ReturnableStock;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Stock\Support\DocumentNumber;
 use App\Domain\Warehouse\Models\Warehouse;
+use DomainException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -55,10 +60,12 @@ class CreateGoodsReturn
         $tersedia = $this->calon->forProject($proyek);
         $baris = [];
 
+        $kemasanBaru = [];
+
         foreach (array_values($lines) as $i => $l) {
             $qty = round((float) ($l['qty_base'] ?? 0), 4);
 
-            if ($qty <= 0) {
+            if ($qty <= 0 && ! is_numeric($l['qty_input'] ?? null)) {
                 continue;
             }
 
@@ -67,6 +74,34 @@ class CreateGoodsReturn
 
             if ($c === null) {
                 throw ReturnRuleException::field('BR-RET-03', 'key', $label.': barang ini tidak tercatat bisa diretur dari proyek '.$proyek->code.'.');
+            }
+
+            // A-291: jumlah dalam kemasan item (mis. 2 DUS) diubah ke satuan dasar;
+            // batas retur, serial, dan potongan tetap diperiksa dalam satuan dasar.
+            $satuan = ['uom_id' => null, 'qty_input' => null, 'uom_qty_base' => null];
+
+            if (is_numeric($l['uom_id'] ?? null)) {
+                $item = Item::query()->with('baseUom')->findOrFail((int) $c['item_id']);
+
+                try {
+                    $s = UnitInput::resolve($item, $l['qty_input'] ?? $l['qty_base'] ?? 0, $l['uom_id'], $l['uom_factor'] ?? null);
+                } catch (DomainException $e) {
+                    throw ReturnRuleException::field('A-291', 'uom_id', $label.' ('.$c['item_code'].'): '.$e->getMessage());
+                }
+
+                $qty = $s['qty_base'];
+
+                if ($s['uom_id'] !== null) {
+                    $satuan = ['uom_id' => $s['uom_id'], 'qty_input' => $s['qty_input'], 'uom_qty_base' => $s['uom_qty_base']];
+
+                    if (filter_var($l['remember_uom'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                        $kemasanBaru[] = [$item, (int) $s['uom_id'], (float) $s['uom_qty_base']];
+                    }
+                }
+            }
+
+            if ($qty <= 0) {
+                continue;
             }
 
             /** @var ReturnSource $asal */
@@ -89,7 +124,7 @@ class CreateGoodsReturn
                 throw ReturnRuleException::field('BR-STK-09', 'qty_base', $label.' ('.$c['item_code'].'): potongan diretur utuh; pemotongan dicatat saat dipilah (offcut).');
             }
 
-            $baris[] = ['c' => $c, 'qty' => $qty, 'notes' => $this->teks($l['notes'] ?? null)];
+            $baris[] = ['c' => $c, 'qty' => $qty, 'satuan' => $satuan, 'notes' => $this->teks($l['notes'] ?? null)];
         }
 
         if ($baris === []) {
@@ -118,7 +153,7 @@ class CreateGoodsReturn
 
         $sjAsal = $this->sjAsal($header, $proyek, $baris);
 
-        return DB::transaction(function () use ($proyek, $tujuan, $sendiri, $gudangSite, $sjAsal, $baris, $header, $actor) {
+        return DB::transaction(function () use ($proyek, $tujuan, $sendiri, $gudangSite, $sjAsal, $baris, $header, $actor, $kemasanBaru) {
             $ret = GoodsReturn::create([
                 'number' => $this->nomor->next('RET', (string) $tujuan->code),
                 'project_id' => $proyek->id,
@@ -146,8 +181,18 @@ class CreateGoodsReturn
                     'ownership' => $c['ownership'],
                     'stock_status' => $c['stock_status'],
                     'qty_base' => $b['qty'],
+                    ...$b['satuan'],
                     'notes' => $b['notes'],
                 ]);
+            }
+
+            // A-292: kemasan baru yang dicentang "ingat" disimpan bersama RET.
+            foreach ($kemasanBaru as [$item, $uomId, $faktor]) {
+                $uom = Uom::query()->find($uomId);
+
+                if ($uom !== null) {
+                    app(RememberItemPackaging::class)->handle($item, $uom, $faktor, $actor, $ret->number);
+                }
             }
 
             activity('return')->performedOn($ret)->causedBy($actor)

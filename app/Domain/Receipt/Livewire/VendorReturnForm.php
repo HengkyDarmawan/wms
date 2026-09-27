@@ -18,8 +18,9 @@ use Illuminate\View\View;
 use Livewire\Component;
 
 /**
- * Layar 19-receipt-putaway §6.7 — mengajukan RTV dari baris GRN yang ada di
- * Karantina dengan hasil QC Ditolak atau Karantina (BR-GRN-04).
+ * Layar 19-receipt-putaway §6.7 — mengajukan RTV dari barang yang dicatat
+ * **Rusak** saat GRN (tanpa QC, A-290) dan dari baris hasil QC lama di
+ * Karantina (Ditolak atau Karantina, BR-GRN-04).
  */
 class VendorReturnForm extends Component
 {
@@ -27,8 +28,11 @@ class VendorReturnForm extends Component
 
     public string $receiptId = '';
 
-    /** @var array<int|string, array<string, string>> line_id => [qty, reason] */
+    /** @var array<int|string, array<string, string>> line_id => [qty, reason] — bagian hasil QC */
     public array $isian = [];
+
+    /** @var array<int|string, array<string, string>> line_id => [qty, reason] — bagian Rusak saat GRN */
+    public array $rusak = [];
 
     /** @var array<string, string> */
     public array $form = ['notes' => ''];
@@ -48,6 +52,14 @@ class VendorReturnForm extends Component
     public function updatedReceiptId(): void
     {
         $this->isian = [];
+        $this->rusak = [];
+
+        foreach ($this->barisRusak() as $l) {
+            $this->rusak[$l->id] = [
+                'qty' => (string) $l->damagedReturnable(),
+                'reason' => (string) ($l->damageReason?->code ?? ''),
+            ];
+        }
 
         foreach ($this->barisLayak() as $l) {
             $this->isian[$l->id] = [
@@ -69,11 +81,17 @@ class VendorReturnForm extends Component
             return;
         }
 
-        $baris = collect($this->isian)->map(fn ($v, $id) => [
+        $baris = collect($this->rusak)->map(fn ($v, $id) => [
             'goods_receipt_line_id' => (int) $id,
+            'part' => 'damage',
+            'qty_base' => (float) ($v['qty'] ?? 0),
+            'reason_code_id' => $this->alasanId((string) ($v['reason'] ?? ''), ReasonContext::Damage),
+        ])->values()->merge(collect($this->isian)->map(fn ($v, $id) => [
+            'goods_receipt_line_id' => (int) $id,
+            'part' => 'qc',
             'qty_base' => (float) ($v['qty'] ?? 0),
             'reason_code_id' => $this->alasanId((string) ($v['reason'] ?? ''), ReasonContext::Reject),
-        ])->values()->all();
+        ])->values())->all();
 
         $rtv = null;
 
@@ -93,12 +111,35 @@ class VendorReturnForm extends Component
                 ->with('vendor:id,name')
                 ->where('receipt_type', ReceiptType::Vendor->value)
                 ->whereIn('status', [GoodsReceiptStatus::Received->value, GoodsReceiptStatus::Completed->value])
-                ->whereHas('lines', fn ($q) => $q->whereIn('qc_result', [QcResult::Rejected->value, QcResult::Quarantined->value]))
+                ->whereHas('lines', fn ($q) => $q->where(fn ($w) => $w
+                    ->whereIn('qc_result', [QcResult::Rejected->value, QcResult::Quarantined->value])
+                    ->orWhere('qty_damaged', '>', 0)))
                 ->orderByDesc('id')
                 ->get(['id', 'number', 'vendor_id']),
             'lines' => $this->barisLayak(),
+            'linesRusak' => $this->barisRusak(),
             'alasan' => $this->pilihanAlasan(ReasonContext::Reject),
+            'alasanRusak' => $this->pilihanAlasan(ReasonContext::Damage),
         ]);
+    }
+
+    /** @return Collection<int, GoodsReceiptLine> A-290: baris dengan barang Rusak yang belum diretur. */
+    private function barisRusak(): Collection
+    {
+        $grn = GoodsReceipt::query()->find((int) $this->receiptId);
+
+        if ($grn === null) {
+            return collect();
+        }
+
+        return $grn->lines()
+            ->with('item:id,code,name', 'damagedBin:id,code', 'damageReason:id,code,label', 'lot', 'serial', 'piece')
+            ->where('qty_damaged', '>', 0)
+            ->whereNotNull('damaged_bin_id')
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (GoodsReceiptLine $l) => $l->damagedReturnable() > 0)
+            ->values();
     }
 
     /** @return Collection<int, GoodsReceiptLine> */

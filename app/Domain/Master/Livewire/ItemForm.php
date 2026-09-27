@@ -5,32 +5,37 @@ declare(strict_types=1);
 namespace App\Domain\Master\Livewire;
 
 use App\Domain\Master\Actions\SaveItem;
+use App\Domain\Master\Enums\ItemKind;
 use App\Domain\Master\Enums\ItemStatus;
-use App\Domain\Master\Enums\LineOwnership;
-use App\Domain\Master\Enums\OwnershipModel;
-use App\Domain\Master\Enums\RemovalStrategy;
-use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Livewire\Concerns\HandlesMasterRules;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\ItemCategory;
 use App\Domain\Master\Models\Uom;
-use App\Domain\Master\Models\Vendor;
-use App\Domain\Master\Support\TrackingCombination;
+use App\Domain\Master\Support\StockFeatures;
+use BackedEnum;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
- * Layar 11-master §6 — form item lengkap.
+ * Layar 11-master §6 — form item.
  *
- * Matriks kombinasi pelacakan diperiksa dua kali: di layar sebagai petunjuk
- * langsung saat mengubah pilihan, dan di {@see SaveItem} sebagai penjaga
- * sebenarnya. Layar boleh salah, aksi tidak boleh.
+ * A-283: pengguna memilih satu *Jenis barang*; mode pelacakan, kepemilikan,
+ * sifat baris, kedaluwarsa, dan strategi pengambilan diturunkan oleh
+ * {@see SaveItem}. Item lama dengan kombinasi lain tampil sebagai *Jenis
+ * khusus*: pengaturan teknisnya hanya bisa dilihat. Isian potong dan vendor
+ * tetap tidak lagi ada di form; datanya tidak disentuh (P-03).
  */
 class ItemForm extends Component
 {
     use HandlesMasterRules;
+
+    /** Kolom teknis yang dikirim apa adanya untuk item Jenis khusus. */
+    private const KOLOM_TEKNIS = [
+        'tracking_mode', 'ownership_model', 'default_line_ownership', 'has_expiry',
+        'removal_strategy', 'is_cuttable', 'min_offcut_length', 'kerf',
+    ];
 
     #[Locked]
     public ?int $itemId = null;
@@ -41,16 +46,9 @@ class ItemForm extends Component
         'name' => '',
         'item_category_id' => '',
         'status' => 'active',
-        'ownership_model' => 'consumable',
-        'default_line_ownership' => '',
-        'tracking_mode' => 'none',
-        'has_expiry' => false,
+        'item_kind' => 'standard',
         'base_uom_id' => '',
-        'is_cuttable' => false,
-        'min_offcut_length' => '',
-        'kerf' => '',
         'requires_qc' => false,
-        'removal_strategy' => '',
         'reorder_point' => '',
         'min_stock' => '',
         'barcode' => '',
@@ -61,10 +59,27 @@ class ItemForm extends Component
     /** @var array<int, array<string, mixed>> */
     public array $conversions = [];
 
-    /** @var array<int, array<string, mixed>> */
-    public array $vendorRows = [];
+    /**
+     * A-294: satuan kemasan yang dimuat form; hanya ini yang dinonaktifkan bila dilepas,
+     * supaya kemasan yang diingat dari GRN saat form terbuka tidak ikut mati.
+     *
+     * @var array<int, int>
+     */
+    #[Locked]
+    public array $kemasanDimuat = [];
 
     public bool $baseUomLocked = false;
+
+    /** Item lama di luar tiga jenis barang (A-283). */
+    #[Locked]
+    public bool $jenisKhusus = false;
+
+    /** BR-MST-06: jenis tidak bisa diganti setelah ada pergerakan stok. */
+    #[Locked]
+    public bool $jenisTerkunci = false;
+
+    /** Tab bagian opsional yang terbuka: stok | konversi. */
+    public string $tabTambahan = 'stok';
 
     public function mount(?Item $item = null): void
     {
@@ -80,24 +95,21 @@ class ItemForm extends Component
 
     private function isiDari(Item $item): void
     {
+        $jenis = ItemKind::fromItem($item);
+
         $this->itemId = $item->id;
         $this->baseUomLocked = $item->baseUomIsLocked();
+        $this->jenisKhusus = $jenis === null;
+        $this->jenisTerkunci = $item->hasStockMovements();
 
         $this->form = [
             'code' => (string) $item->code,
             'name' => (string) $item->name,
             'item_category_id' => (string) $item->item_category_id,
             'status' => $item->status->value,
-            'ownership_model' => $item->ownership_model->value,
-            'default_line_ownership' => $item->default_line_ownership?->value ?? '',
-            'tracking_mode' => $item->tracking_mode->value,
-            'has_expiry' => (bool) $item->has_expiry,
+            'item_kind' => $jenis?->value ?? '',
             'base_uom_id' => (string) $item->base_uom_id,
-            'is_cuttable' => (bool) $item->is_cuttable,
-            'min_offcut_length' => (string) $item->min_offcut_length,
-            'kerf' => (string) $item->kerf,
             'requires_qc' => (bool) $item->requires_qc,
-            'removal_strategy' => $item->removal_strategy?->value ?? '',
             'reorder_point' => (string) $item->reorder_point,
             'min_stock' => (string) $item->min_stock,
             'barcode' => (string) $item->barcode,
@@ -105,7 +117,8 @@ class ItemForm extends Component
             'weight_uom_id' => (string) $item->weight_uom_id,
         ];
 
-        $this->conversions = $item->uomConversions()
+        // Kemasan nonaktif tidak dimuat: menyimpan ulang tidak boleh menghidupkannya lagi.
+        $this->conversions = $item->activeConversions()
             ->get()
             ->map(fn ($k) => [
                 'uom_id' => (string) $k->uom_id,
@@ -114,16 +127,14 @@ class ItemForm extends Component
             ])
             ->all();
 
-        $this->vendorRows = $item->itemVendors()
-            ->ordered()
-            ->get()
-            ->map(fn ($v) => [
-                'vendor_id' => (string) $v->vendor_id,
-                'priority' => (int) $v->priority,
-                'is_preferred' => (bool) $v->is_preferred,
-                'notes' => (string) $v->notes,
-            ])
-            ->all();
+        $this->kemasanDimuat = array_map(fn (array $k) => (int) $k['uom_id'], $this->conversions);
+    }
+
+    public function updatedTabTambahan(string $nilai): void
+    {
+        if (! in_array($nilai, ['stok', 'konversi'], true)) {
+            $this->tabTambahan = 'stok';
+        }
     }
 
     public function tambahKonversi(): void
@@ -137,22 +148,6 @@ class ItemForm extends Component
         $this->conversions = array_values($this->conversions);
     }
 
-    public function tambahVendor(): void
-    {
-        $this->vendorRows[] = [
-            'vendor_id' => '',
-            'priority' => count($this->vendorRows) + 1,
-            'is_preferred' => false,
-            'notes' => '',
-        ];
-    }
-
-    public function hapusVendor(int $index): void
-    {
-        unset($this->vendorRows[$index]);
-        $this->vendorRows = array_values($this->vendorRows);
-    }
-
     public function simpan(SaveItem $action): void
     {
         $item = $this->itemId === null ? null : Item::findOrFail($this->itemId);
@@ -163,13 +158,10 @@ class ItemForm extends Component
             'form.code' => ['required', 'string', 'max:40'],
             'form.name' => ['required', 'string', 'max:150'],
             'form.base_uom_id' => ['required'],
-            'form.tracking_mode' => ['required', Rule::enum(TrackingMode::class)],
-            'form.ownership_model' => ['required', Rule::enum(OwnershipModel::class)],
+            'form.item_kind' => $this->jenisKhusus
+                ? ['nullable']
+                : ['required', Rule::in(array_keys($this->pilihanJenis($item)))],
             'form.status' => ['required', Rule::enum(ItemStatus::class)],
-            'form.removal_strategy' => ['nullable', Rule::enum(RemovalStrategy::class)],
-            'form.default_line_ownership' => ['nullable', Rule::enum(LineOwnership::class)],
-            'form.min_offcut_length' => ['nullable', 'numeric', 'min:0'],
-            'form.kerf' => ['nullable', 'numeric', 'min:0'],
             'form.reorder_point' => ['nullable', 'numeric', 'min:0'],
             'form.min_stock' => ['nullable', 'numeric', 'min:0'],
             'form.weight' => ['nullable', 'numeric', 'min:0'],
@@ -177,18 +169,34 @@ class ItemForm extends Component
             'form.code' => __('Kode item'),
             'form.name' => __('Nama item'),
             'form.base_uom_id' => __('Satuan dasar'),
-            'form.tracking_mode' => __('Mode pelacakan'),
-            'form.ownership_model' => __('Model kepemilikan'),
+            'form.item_kind' => __('Jenis barang'),
         ]);
+
+        $data = $this->form + ['conversion_uoms_loaded' => $this->kemasanDimuat];
+
+        if ($this->jenisKhusus && $item !== null) {
+            // Jenis khusus: pengaturan teknis dibaca ulang dari database, bukan dari layar.
+            unset($data['item_kind']);
+
+            foreach (self::KOLOM_TEKNIS as $kolom) {
+                $nilai = $item->getAttribute($kolom);
+                $data[$kolom] = $nilai instanceof BackedEnum ? $nilai->value : $nilai;
+            }
+        }
+
+        // A-284: saklar QC mati → isian disembunyikan, nilai item tidak diubah.
+        if (! StockFeatures::qc()) {
+            unset($data['requires_qc']);
+        }
 
         $tersimpan = null;
 
-        $berhasil = $this->jalankan(function () use ($action, $item, &$tersimpan): void {
+        $berhasil = $this->jalankan(function () use ($action, $item, $data, &$tersimpan): void {
             $tersimpan = $action->handle(
                 $item,
-                $this->form,
+                $data,
                 array_values($this->conversions),
-                array_values($this->vendorRows),
+                null, // vendor tetap tidak lagi diubah dari form (A-283); data lama dipertahankan
                 auth()->user(),
             );
         });
@@ -202,60 +210,25 @@ class ItemForm extends Component
         $this->redirectRoute('items.show', $tersimpan, navigate: true);
     }
 
-    /**
-     * Petunjuk langsung di layar dari matriks kombinasi, supaya user tahu
-     * kenapa sebuah pilihan tidak tersedia sebelum menekan Simpan.
-     *
-     * @return array<string, string>
-     */
-    public function petunjuk(TrackingCombination $combination): array
+    /** @return array<string, ItemKind> */
+    private function pilihanJenis(?Item $item): array
     {
-        $pelacakan = TrackingMode::tryFrom((string) $this->form['tracking_mode']) ?? TrackingMode::None;
-        $kepemilikan = OwnershipModel::tryFrom((string) $this->form['ownership_model']) ?? OwnershipModel::Consumable;
-        $strategi = RemovalStrategy::tryFrom((string) $this->form['removal_strategy']);
-
-        $satuan = $this->form['base_uom_id'] === ''
-            ? null
-            : Uom::query()->with('category')->find((int) $this->form['base_uom_id']);
-
-        return $combination->violations(
-            $pelacakan,
-            $kepemilikan,
-            $strategi,
-            (bool) $this->form['has_expiry'],
-            (bool) $this->form['is_cuttable'],
-            $this->form['min_offcut_length'] === '' ? null : (float) $this->form['min_offcut_length'],
-            $satuan?->category?->isLength(),
-        );
+        return StockFeatures::kindOptions($item === null ? null : ItemKind::fromItem($item));
     }
 
-    public function render(TrackingCombination $combination): View
+    public function render(): View
     {
-        $pelacakan = TrackingMode::tryFrom((string) $this->form['tracking_mode']) ?? TrackingMode::None;
-
-        $strategiTersedia = [];
-
-        foreach ($pelacakan->allowedRemovalStrategies() as $strategi) {
-            $strategiTersedia[$strategi->value] = $strategi->label();
-        }
-
-        $kepemilikanTersedia = [];
-
-        foreach ($pelacakan->allowedOwnershipModels() as $model) {
-            $kepemilikanTersedia[$model->value] = $model->label();
-        }
+        $item = $this->itemId === null ? null : Item::query()->with('category')->find($this->itemId);
 
         return view('livewire.master.item-form', [
             'categories' => ItemCategory::query()->active()->orderBy('name')->get(['id', 'name']),
             'uoms' => Uom::query()->active()->with('category:id,name')->orderBy('code')->get(),
-            'vendors' => Vendor::query()->active()->orderBy('name')->get(['id', 'name']),
-            'trackingModes' => TrackingMode::options(),
-            'ownerships' => $kepemilikanTersedia,
-            'lineOwnerships' => LineOwnership::options(),
-            'strategies' => $strategiTersedia,
             'statuses' => ItemStatus::options(),
-            'bolehKedaluwarsa' => $pelacakan->allowsExpiry(),
-            'petunjuk' => $this->petunjuk($combination),
+            'jenisOpsi' => $this->pilihanJenis($item),
+            'jenisTerpilih' => ItemKind::tryFrom((string) $this->form['item_kind']),
+            'itemKhusus' => $this->jenisKhusus ? $item : null,
+            'qcAktif' => StockFeatures::qc(),
+            'pieceAktif' => StockFeatures::piece(),
         ]);
     }
 }
