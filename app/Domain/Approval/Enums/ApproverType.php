@@ -32,6 +32,12 @@ enum ApproverType: string
     }
 
     /** Jenis yang menunjuk baris lain lewat `approver_ref_id`. */
+    /** Jenis yang bisa dibatasi pada divisi pemohon (A-269). */
+    public function limitableToOrgUnit(): bool
+    {
+        return in_array($this, [self::Position, self::Role], true);
+    }
+
     public function needsReference(): bool
     {
         return in_array($this, [self::User, self::Position, self::Role], true);

@@ -54,6 +54,24 @@ class ApprovalPlanner
         $keAdmin = false;
 
         $kandidat = $this->resolver->resolve($jenis, $ref, $ctx);
+        $satuDivisi = $jenis->limitableToOrgUnit() && (bool) ($step['same_org_unit'] ?? false);
+
+        // A-269: hanya approver dari divisi pemohon (atau divisi induknya).
+        if ($satuDivisi) {
+            $divisi = $this->resolver->requesterOrgUnits($ctx);
+
+            if ($divisi === null) {
+                $catatan[] = 'Pemohon tanpa divisi; batas divisi pemohon tidak diterapkan.';
+            } else {
+                $diDivisi = $this->resolver->inOrgUnits($kandidat, $divisi);
+
+                if (count($diDivisi) < count($kandidat)) {
+                    $catatan[] = 'Di luar divisi pemohon dilewati: '.$this->nama(array_values(array_diff($kandidat, $diDivisi))).'.';
+                }
+
+                $kandidat = $diDivisi;
+            }
+        }
         $kenaSod = array_values(array_intersect($kandidat, $pemohon));
         $sisa = array_values(array_diff($kandidat, $pemohon));
 
@@ -117,6 +135,7 @@ class ApprovalPlanner
             'approver_ref_id' => $ref,
             'approver_label' => $this->resolver->label($jenis, $ref),
             'decision_mode' => DecisionMode::tryFrom((string) ($step['decision_mode'] ?? ''))?->value ?? DecisionMode::Any->value,
+            'same_org_unit' => $satuDivisi,
             'backup_approver_type' => $step['backup_approver_type'] ?? null,
             'backup_ref_id' => $step['backup_ref_id'] ?? null,
             'timeout_hours' => max(1, (int) ($step['timeout_hours'] ?? 24)),

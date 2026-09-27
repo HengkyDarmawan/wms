@@ -41,6 +41,7 @@ class PurchaseOrder extends Model
     protected $attributes = [
         'status' => 'draft',
         'currency' => 'IDR',
+        'price_includes_tax' => true,
     ];
 
     protected function casts(): array
@@ -50,6 +51,7 @@ class PurchaseOrder extends Model
             'order_date' => 'date',
             'eta_date' => 'date',
             'total_amount' => 'decimal:2',
+            'price_includes_tax' => 'boolean',
             'submitted_at' => 'datetime',
             'approved_at' => 'datetime',
             'cancelled_at' => 'datetime',
@@ -119,6 +121,12 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseRequestOrder::class);
     }
 
+    /** Keterangan harga untuk layar & cetak (A-265); nilai PO tidak menghitung pajak. */
+    public function taxNote(): string
+    {
+        return $this->price_includes_tax ? __('Harga sudah termasuk PPN') : __('Harga belum termasuk PPN');
+    }
+
     public function isAwaitingApproval(): bool
     {
         return $this->status === PurchaseOrderStatus::PendingApproval
@@ -134,7 +142,7 @@ class PurchaseOrder extends Model
     {
         return LogOptions::defaults()
             ->useLogName('purchase_order')
-            ->logOnly(['number', 'status', 'eta_date', 'approved_by'])
+            ->logOnly(['number', 'status', 'eta_date', 'price_includes_tax', 'approved_by'])
             ->logOnlyDirty();
     }
 }

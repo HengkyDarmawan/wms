@@ -203,9 +203,10 @@ class ModuleNotificationTest extends TenantTestCase
         $kepala = $this->makeUser('warehouse_head');
         $staf = $this->makeUser('warehouse_staff');
 
-        // SLA tinjau: REQ klien menunggu tinjau lebih lama dari ambang (1 hari).
+        // SLA tinjau: REQ klien menunggu tinjau lebih lama dari ambang (1 hari
+        // kerja, A-270) — 20 hari kalender pasti melewati libur apa pun.
         $telat = $this->reqKlien();
-        $telat->forceFill(['created_at' => now()->subDays(2)])->save();
+        $telat->forceFill(['created_at' => now()->subDays(20)])->save();
 
         // Reservasi menggantung: REQ disetujui, reservasinya lewat 7 hari.
         $req = $this->reqDisetujui($staf);
@@ -240,7 +241,7 @@ class ModuleNotificationTest extends TenantTestCase
     public function tc_ntf_11_company_ditangguhkan_tidak_menerima_pengingat(): void
     {
         $staf = $this->makeUser('warehouse_staff');
-        $this->reqKlien()->forceFill(['created_at' => now()->subDays(3)])->save();
+        $this->reqKlien()->forceFill(['created_at' => now()->subDays(20)])->save();
 
         $this->setSubscriptionStatus(SubscriptionStatus::Suspended);
         $this->artisan('notifications:daily')->assertSuccessful();

@@ -1,15 +1,19 @@
 /* ============================================================
-   Pindai barcode/QR dengan kamera (Blueprint §6.10, §11, A-193)
-   Setiap input ber-atribut data-scan mendapat tombol kamera. Memakai
-   BarcodeDetector bawaan browser (Chrome/Edge Android); bila tidak
-   tersedia, tombol tidak muncul dan scanner USB/Bluetooth (mode
-   keyboard) tetap bisa dipakai langsung di input.
+   Pindai barcode/QR dengan kamera (Blueprint §6.10, §11, A-193, A-266)
+   Setiap input ber-atribut data-scan mendapat tombol kamera — di
+   aplikasi terpasang (PWA) maupun di browser HP biasa. Memakai
+   BarcodeDetector bawaan browser bila ada (Chrome/Edge Android); bila
+   tidak (Safari/Chrome iPhone, Firefox, desktop), pembaca ZXing
+   (paket npm, di-bundle Vite, dimuat hanya saat tombol ditekan).
+   Kamera butuh HTTPS (atau localhost); tanpa kamera, tombol tidak
+   muncul dan scanner USB/Bluetooth (mode keyboard) tetap dipakai.
    ============================================================ */
 
 (function () {
   'use strict';
 
-  var didukung = 'BarcodeDetector' in window && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  var didukung = !!(window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  var bawaan = 'BarcodeDetector' in window;
 
   function tombol(input) {
     if (input.__scanTombol || !didukung) return;
@@ -49,30 +53,59 @@
       if (aliran) aliran.getTracks().forEach(function (t) { t.stop(); });
       lapis.remove();
     };
-    lapis.querySelector('button').addEventListener('click', tutup);
+    lapis.querySelector('button').addEventListener('click', function () { tutup(); });
 
-    var detektor = new window.BarcodeDetector();
-    var loop = function () {
+    var isi = function (teks) {
       if (selesai) return;
-      detektor.detect(video).then(function (hasil) {
-        if (hasil.length > 0) {
-          input.value = hasil[0].rawValue;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-          // Seperti scanner keyboard yang mengirim Enter (alur pindai PCK, A-203).
-          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-          tutup();
-        } else {
-          requestAnimationFrame(loop);
-        }
-      }).catch(function () { requestAnimationFrame(loop); });
+      input.value = teks;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      // Seperti scanner keyboard yang mengirim Enter (alur pindai PCK, A-203).
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      tutup();
+    };
+
+    // Detektor bawaan browser.
+    var pakaiBawaan = function () {
+      var detektor = new window.BarcodeDetector();
+      var loop = function () {
+        if (selesai) return;
+        detektor.detect(video).then(function (hasil) {
+          if (hasil.length > 0) {
+            isi(hasil[0].rawValue);
+          } else {
+            requestAnimationFrame(loop);
+          }
+        }).catch(function () { requestAnimationFrame(loop); });
+      };
+      loop();
+    };
+
+    // Cadangan ZXing untuk browser tanpa BarcodeDetector (iPhone dll.).
+    var pakaiZxing = function () {
+      return import('@zxing/browser').then(function (zx) {
+        if (selesai) return;
+        var pembaca = new zx.BrowserMultiFormatReader();
+        return pembaca.decodeFromVideoElement(video, function (hasil, galat, kendali) {
+          if (selesai) { kendali.stop(); return; }
+          if (hasil) {
+            kendali.stop();
+            isi(hasil.getText());
+          }
+        }).then(function (kendali) {
+          var tutupLama = tutup;
+          tutup = function () { kendali.stop(); tutupLama(); };
+        });
+      });
     };
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (s) {
       aliran = s;
       video.srcObject = s;
       return video.play();
-    }).then(loop).catch(function () {
+    }).then(function () {
+      return bawaan ? pakaiBawaan() : pakaiZxing();
+    }).catch(function () {
       tutup();
       console.warn('Kamera tidak bisa dibuka; ketik atau pakai scanner.');
     });

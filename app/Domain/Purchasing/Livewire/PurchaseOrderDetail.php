@@ -15,7 +15,9 @@ use App\Domain\Purchasing\Actions\UpdatePurchaseOrderEta;
 use App\Domain\Purchasing\Enums\PurchaseOrderStatus;
 use App\Domain\Purchasing\Livewire\Concerns\HandlesPurchasingRules;
 use App\Domain\Purchasing\Models\PurchaseOrder;
+use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Models\GoodsReceipt;
+use App\Domain\Receipt\Models\GoodsReceiptLine;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -51,13 +53,19 @@ class PurchaseOrderDetail extends Component
         $lines = $po->lines()->with('item:id,code,name,base_uom_id', 'item.baseUom:id,code', 'requestLine.purchaseRequest:id,number', 'orderLine:id,purchase_order_line_id')->orderBy('id')->get();
         $orderLineIds = $lines->pluck('orderLine.id')->filter()->all();
 
+        $receipts = $orderLineIds === [] ? collect() : GoodsReceipt::query()->withoutGlobalScopes()
+            ->whereHas('lines', fn ($q) => $q->whereIn('purchase_request_order_line_id', $orderLineIds))
+            ->orderBy('id')->get(['id', 'number', 'status', 'received_at']);
+
         return view('livewire.purchasing.purchase-order-detail', [
             'po' => $po,
             'lines' => $lines,
             'prqs' => $lines->map(fn ($l) => $l->requestLine?->purchaseRequest)->filter()->unique('id')->values(),
-            'receipts' => $orderLineIds === [] ? collect() : GoodsReceipt::query()->withoutGlobalScopes()
-                ->whereHas('lines', fn ($q) => $q->whereIn('purchase_request_order_line_id', $orderLineIds))
-                ->orderBy('id')->get(['id', 'number', 'status', 'received_at']),
+            'receipts' => $receipts,
+            // A-267: bonus vendor yang datang bersama barang PO ini (tanpa harga).
+            'bonus' => $receipts->isEmpty() ? collect() : GoodsReceiptLine::query()->with('item:id,code,name,base_uom_id', 'item.baseUom:id,code', 'receipt:id,number')
+                ->whereIn('goods_receipt_id', $receipts->where('status', '!=', GoodsReceiptStatus::Cancelled)->pluck('id'))
+                ->where('is_bonus', true)->orderBy('id')->get(),
             'menunggu' => $po->isAwaitingApproval(),
             'alasanTolak' => $this->pilihanAlasan(ReasonContext::Reject),
             'alasanBatal' => $this->pilihanAlasan(ReasonContext::Cancel),

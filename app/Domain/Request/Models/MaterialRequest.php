@@ -8,6 +8,7 @@ use App\Domain\Access\Models\User;
 use App\Domain\Access\Support\ScopedToUser;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Master\Support\WorkCalendar;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Enums\RequesterType;
 use App\Domain\Request\Enums\RequestOrigin;
@@ -132,11 +133,12 @@ class MaterialRequest extends Model
      * Dihitung dari `created_at`, bukan dari saat masuk `under_review`: yang
      * dirasakan klien adalah lamanya menunggu sejak mengajukan.
      */
+    /** BR-REQ-14: lebih lama dari N **hari kerja** di tinjauan (A-60, A-270). */
     public function scopeReviewOverdue(Builder $query, int $days): Builder
     {
         return $query
             ->where('status', MaterialRequestStatus::UnderReview->value)
-            ->where('created_at', '<=', now()->subDays($days));
+            ->where('created_at', '<=', app(WorkCalendar::class)->subWorkdays(now(), $days));
     }
 
     public function isFromClient(): bool

@@ -358,13 +358,14 @@ class ClientInteractionTest extends TenantTestCase
         $lama = $this->reqKlien();
         $this->reqKlien();
 
-        $lama->forceFill(['created_at' => now()->subDays(3)])->save();
+        // 20 hari kalender pasti > 1 hari kerja walau melewati libur (A-270).
+        $lama->forceFill(['created_at' => now()->subDays(20)])->save();
 
         $terlambat = MaterialRequest::query()->reviewOverdue(1)->get();
 
         $this->assertCount(1, $terlambat, 'BR-REQ-14: hanya yang melewati SLA yang muncul.');
         $this->assertSame((int) $lama->id, (int) $terlambat->first()->id);
-        $this->assertSame(3, $terlambat->first()->reviewAgeInDays());
+        $this->assertSame(20, $terlambat->first()->reviewAgeInDays());
     }
 
     #[Test]

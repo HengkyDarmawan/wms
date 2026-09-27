@@ -21,7 +21,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Permission: `po.create` — PO draf dari baris PRQ (Katalog §2.17 `→ draft`,
  * A-210): satu vendor aktif × satu gudang tujuan dalam cakupan, jumlah dan
- * harga satuan per baris (A-211). `update()` mengganti isi draf.
+ * harga satuan per baris (A-211), tanda harga termasuk PPN (A-265, bawaan
+ * ya). `update()` mengganti isi draf.
  */
 class CreatePurchaseOrder
 {
@@ -31,7 +32,7 @@ class CreatePurchaseOrder
     ) {}
 
     /**
-     * @param  array{vendor_id?: mixed, warehouse_id?: mixed, eta_date?: mixed, notes?: mixed}  $header
+     * @param  array{vendor_id?: mixed, warehouse_id?: mixed, eta_date?: mixed, notes?: mixed, vendor_choice_note?: mixed, price_includes_tax?: mixed}  $header
      * @param  array<int, array<string, mixed>>  $lines  purchase_request_line_id, qty_base, unit_price, notes
      */
     public function handle(array $header, array $lines, ?User $actor = null): PurchaseOrder
@@ -48,9 +49,11 @@ class CreatePurchaseOrder
                 'order_date' => now()->toDateString(),
                 'eta_date' => $eta,
                 'currency' => Money::CURRENCY,
+                'price_includes_tax' => $this->termasukPajak($header),
                 'total_amount' => $isi['total'],
                 'payment_terms' => $vendor->payment_terms,
                 'notes' => $this->teks($header['notes'] ?? null),
+                'vendor_choice_note' => $this->teks($header['vendor_choice_note'] ?? null),
                 'created_by' => $actor?->id,
             ]);
 
@@ -65,7 +68,7 @@ class CreatePurchaseOrder
     }
 
     /**
-     * @param  array{vendor_id?: mixed, warehouse_id?: mixed, eta_date?: mixed, notes?: mixed}  $header
+     * @param  array{vendor_id?: mixed, warehouse_id?: mixed, eta_date?: mixed, notes?: mixed, vendor_choice_note?: mixed, price_includes_tax?: mixed}  $header
      * @param  array<int, array<string, mixed>>  $lines
      */
     public function update(PurchaseOrder $po, array $header, array $lines, ?User $actor = null): PurchaseOrder
@@ -85,9 +88,11 @@ class CreatePurchaseOrder
                 'vendor_id' => $vendor->id,
                 'warehouse_id' => $gudang->id,
                 'eta_date' => $eta,
+                'price_includes_tax' => $this->termasukPajak($header),
                 'total_amount' => $isi['total'],
                 'payment_terms' => $vendor->payment_terms,
                 'notes' => $this->teks($header['notes'] ?? null),
+                'vendor_choice_note' => $this->teks($header['vendor_choice_note'] ?? null),
             ])->save();
 
             $this->simpanBaris($po, $isi['lines']);
@@ -141,6 +146,16 @@ class CreatePurchaseOrder
         foreach ($lines as $l) {
             PurchaseOrderLine::create($l + ['purchase_order_id' => $po->id]);
         }
+    }
+
+    /** Tanpa isian = termasuk PPN (A-265). */
+    private function termasukPajak(array $header): bool
+    {
+        if (! array_key_exists('price_includes_tax', $header) || $header['price_includes_tax'] === null || $header['price_includes_tax'] === '') {
+            return true;
+        }
+
+        return filter_var($header['price_includes_tax'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
     }
 
     private function teks(mixed $nilai): ?string

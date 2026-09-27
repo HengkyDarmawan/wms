@@ -74,7 +74,7 @@
                             </td>
                             <td class="small">
                                 @foreach ($r->steps as $s)
-                                    <div>{{ $s->step_no }}. {{ $resolver->label($s->approver_type, $s->approver_ref_id) }} <span class="text-muted">({{ $s->decision_mode->label() }}, {{ $s->timeout_hours }} {{ __('jam') }})</span></div>
+                                    <div>{{ $s->step_no }}. {{ $resolver->label($s->approver_type, $s->approver_ref_id) }}@if ($s->same_org_unit && $s->approver_type->limitableToOrgUnit()) <span class="badge text-bg-light">{{ __('divisi pemohon') }}</span>@endif <span class="text-muted">({{ $s->decision_mode->label() }}, {{ $s->timeout_hours }} {{ __('jam') }})</span></div>
                                 @endforeach
                             </td>
                             <td>

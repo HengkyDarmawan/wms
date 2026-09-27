@@ -36,6 +36,7 @@ class ApprovalStep extends Model
             'timeout_hours' => 'integer',
             'channel' => ApprovalChannel::class,
             'require_pin' => 'boolean',
+            'same_org_unit' => 'boolean',
         ];
     }
 
@@ -56,6 +57,7 @@ class ApprovalStep extends Model
             'approver_type' => $this->approver_type->value,
             'approver_ref_id' => $this->approver_ref_id,
             'decision_mode' => $this->decision_mode->value,
+            'same_org_unit' => (bool) $this->same_org_unit,
             'backup_approver_type' => $this->backup_approver_type?->value,
             'backup_ref_id' => $this->backup_ref_id,
             'timeout_hours' => $this->timeout_hours ?: 24,

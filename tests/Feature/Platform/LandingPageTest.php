@@ -68,11 +68,12 @@ class LandingPageTest extends TenantTestCase
 
         $this->get($this->centralUrl('/'))
             ->assertOk()
-            // Paket harga 0 (paket uji bawaan) → "Hubungi kami" (O-08, A-222).
+            // Landing tanpa harga: semua kartu "Hubungi kami" (A-268).
             ->assertSee('Paket Uji')
             ->assertSee('Hubungi kami')
             ->assertSee('Paket Landing Uji')
-            ->assertSee('Rp 1.500.000')
+            ->assertDontSee('1.500.000')
+            ->assertDontSee('Rp ')
             ->assertSee('Trial 30 hari')
             ->assertDontSee('Paket Nonaktif Uji')
             ->assertDontSee('999.000');

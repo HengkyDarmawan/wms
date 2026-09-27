@@ -12,3 +12,4 @@ import './wms/offline-draft.js';
 import './wms/scan.js';
 import './wms/signature.js';
 import './wms/pwa.js';
+import './wms/label-designer.js';

@@ -195,16 +195,20 @@ class ApprovalEngine
             ->first();
     }
 
-    public function approve(ApprovalTask $task, User $actor, ?string $comment = null): ApprovalSnapshot
+    /**
+     * @param  array{channel?: string, wa_from_number?: string, wa_message_id?: string, approval_token_id?: int}  $via
+     *                                                                                                                  kanal keputusan; WhatsApp mencatat nomor, id pesan, token (BR-APR-10)
+     */
+    public function approve(ApprovalTask $task, User $actor, ?string $comment = null, array $via = []): ApprovalSnapshot
     {
-        return DB::transaction(function () use ($task, $actor, $comment) {
+        return DB::transaction(function () use ($task, $actor, $comment, $via) {
             [$snapshot, $task, $handler, $document] = $this->kunciUntukKeputusan($task, $actor);
 
-            $this->putuskan($task, ApprovalDecisionType::Approved, $actor->id, $comment);
+            $this->putuskan($task, ApprovalDecisionType::Approved, $actor->id, $comment, via: $via);
 
-            $this->catat($handler, $document, $actor, 'Lapis '.$task->step_no.' disetujui', [
+            $this->catat($handler, $document, $actor, 'Lapis '.$task->step_no.' disetujui'.(($via['channel'] ?? 'web') === 'whatsapp' ? ' lewat WhatsApp' : ''), [
                 'snapshot' => $snapshot->id, 'tugas' => $task->id, 'komentar' => $comment,
-            ]);
+            ] + (($via['channel'] ?? 'web') === 'whatsapp' ? ['kanal' => 'whatsapp', 'nomor' => $via['wa_from_number'] ?? null] : []));
 
             $this->maju($snapshot, $handler, $document, $actor);
 
@@ -651,15 +655,19 @@ class ApprovalEngine
         ?string $comment = null,
         ?int $reasonCodeId = null,
         ApprovalTaskStatus $status = ApprovalTaskStatus::Decided,
+        array $via = [],
     ): void {
         ApprovalDecision::create([
             'approval_task_id' => $task->id,
             'decision' => $decision,
             'decided_by' => $by,
             'decided_at' => now(),
-            'channel' => 'web',
+            'channel' => ($via['channel'] ?? 'web') === 'whatsapp' ? 'whatsapp' : 'web',
             'reason_code_id' => $reasonCodeId,
             'comment' => $comment !== null ? mb_substr($comment, 0, 255) : null,
+            'wa_from_number' => $via['wa_from_number'] ?? null,
+            'wa_message_id' => $via['wa_message_id'] ?? null,
+            'approval_token_id' => $via['approval_token_id'] ?? null,
         ]);
 
         $task->forceFill(['status' => $status])->save();

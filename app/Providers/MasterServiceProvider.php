@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Domain\Master\Livewire\ClientList;
 use App\Domain\Master\Livewire\CompanySettingsForm;
+use App\Domain\Master\Livewire\HolidayCalendar;
 use App\Domain\Master\Livewire\ItemCategoryList;
 use App\Domain\Master\Livewire\ItemDetail;
 use App\Domain\Master\Livewire\ItemForm;
@@ -77,6 +78,7 @@ class MasterServiceProvider extends ServiceProvider
         Livewire::component('master.project-list', ProjectList::class);
         Livewire::component('master.project-detail', ProjectDetail::class);
         Livewire::component('master.company-settings-form', CompanySettingsForm::class);
+        Livewire::component('master.holiday-calendar', HolidayCalendar::class);
         Livewire::component('master.vendor-list', VendorList::class);
         Livewire::component('master.item-list', ItemList::class);
         Livewire::component('master.item-form', ItemForm::class);

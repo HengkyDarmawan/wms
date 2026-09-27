@@ -23,8 +23,9 @@ use Tests\Feature\Purchasing\Concerns\PurchasingFixtures;
 use Tests\TenantTestCase;
 
 /**
- * TC-PO-09, TC-PO-10, TC-VPR-01 — izin & cakupan, layar PO dari PRQ sampai
- * cetak, dan harga beli vendor (purchasing/02 §2, §6, A-211, A-216, A-217).
+ * TC-PO-09, TC-PO-10, TC-PO-12, TC-VPR-01 — izin & cakupan, layar PO dari PRQ
+ * sampai cetak, tanda harga termasuk PPN, dan harga beli vendor (purchasing/02
+ * §2, §6, A-211, A-216, A-217, A-265).
  */
 class PurchaseOrderScreenTest extends TenantTestCase
 {
@@ -156,5 +157,46 @@ class PurchaseOrderScreenTest extends TenantTestCase
 
         Livewire::actingAs($this->makeUser('management'))->test(VendorPriceList::class)->assertOk()->assertDontSee(__('Harga baru'));
         $this->actingAs($this->makeUser('warehouse_staff'))->get($this->tenantUrl('vendor-prices'))->assertForbidden();
+    }
+
+    #[Test]
+    public function tc_po_12_tanda_harga_termasuk_ppn_bawaan_ya_tanpa_menghitung_pajak(): void
+    {
+        $prq = $this->prqManual([['item_id' => $this->baut->id, 'qty_base' => 100]]);
+        $baris = $prq->lines()->sole();
+
+        // Bawaan: termasuk PPN, nilai PO = jumlah × harga (tidak ditambah pajak).
+        $po = $this->poDraf($prq, [['purchase_request_line_id' => $baris->id, 'qty_base' => 10, 'unit_price' => 11100]]);
+        $this->assertTrue($po->price_includes_tax);
+        $this->assertSame(111000.0, (float) $po->total_amount);
+
+        $html = app(DocumentPrinter::class)->view(DocumentTemplateType::PurchaseOrder, $po)->render();
+        $this->assertStringContainsString(__('Harga sudah termasuk PPN'), $html);
+
+        // Centang dihilangkan di form draf → belum termasuk PPN; nilai tetap sama.
+        Livewire::actingAs($this->pembeli)
+            ->test(PurchaseOrderForm::class, ['purchaseOrder' => $po])
+            ->assertSet('form.price_includes_tax', true)
+            ->assertSee(__('Harga sudah termasuk PPN'))
+            ->set('form.price_includes_tax', false)
+            ->assertSee(__('belum termasuk PPN'))
+            ->call('simpan')
+            ->assertSet('ruleError', '')
+            ->assertRedirect();
+
+        $po->refresh();
+        $this->assertFalse($po->price_includes_tax);
+        $this->assertSame(111000.0, (float) $po->total_amount);
+
+        Livewire::actingAs($this->pembeli)->test(PurchaseOrderDetail::class, ['purchaseOrder' => $po])->assertSee(__('Harga belum termasuk PPN'));
+        $html = app(DocumentPrinter::class)->view(DocumentTemplateType::PurchaseOrder, $po)->render();
+        $this->assertStringContainsString(__('Harga belum termasuk PPN'), $html);
+        $this->assertStringNotContainsString(__('Harga sudah termasuk PPN'), $html);
+
+        // Lewat aksi: nilai "0"/false dihormati, isian kosong = bawaan ya.
+        $prq2 = $this->prqManual([['item_id' => $this->semen->id, 'qty_base' => 5]]);
+        $this->assertFalse($this->poDraf($prq2, null, ['price_includes_tax' => '0'])->price_includes_tax);
+        $prq3 = $this->prqManual([['item_id' => $this->semen->id, 'qty_base' => 5]]);
+        $this->assertTrue($this->poDraf($prq3, null, ['price_includes_tax' => ''])->price_includes_tax);
     }
 }

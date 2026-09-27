@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Approval\Support;
 
 use App\Domain\Access\Enums\ScopeType;
+use App\Domain\Access\Models\OrgUnit;
 use App\Domain\Access\Models\Position;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\RoleAssignment;
@@ -45,6 +46,49 @@ class ApproverResolver
         sort($ids);
 
         return $ids;
+    }
+
+    /**
+     * A-269: divisi pemohon = unit organisasinya beserta unit induknya
+     * (approver di Divisi A atau Direksi di atasnya). Null bila pemohon
+     * tanpa unit — batas divisi tidak bisa diterapkan.
+     *
+     * @return array<int, int>|null
+     */
+    public function requesterOrgUnits(ApprovalContext $ctx): ?array
+    {
+        $pemohon = $ctx->requesterId ?? ($ctx->requesterIds[0] ?? null);
+        $unit = $pemohon === null ? null : User::query()->whereKey($pemohon)->value('org_unit_id');
+
+        if ($unit === null) {
+            return null;
+        }
+
+        $hasil = [];
+        $id = (int) $unit;
+
+        while ($id > 0 && ! in_array($id, $hasil, true) && count($hasil) < 20) {
+            $hasil[] = $id;
+            $id = (int) OrgUnit::query()->whereKey($id)->value('parent_id');
+        }
+
+        return $hasil;
+    }
+
+    /**
+     * @param  array<int, int>  $ids
+     * @param  array<int, int>  $units
+     * @return array<int, int>
+     */
+    public function inOrgUnits(array $ids, array $units): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $boleh = User::query()->whereIn('id', $ids)->whereIn('org_unit_id', $units)->pluck('id')->map(fn ($v) => (int) $v)->all();
+
+        return array_values(array_filter($ids, fn (int $id) => in_array($id, $boleh, true)));
     }
 
     public function isEligible(int $userId, string $permission): bool

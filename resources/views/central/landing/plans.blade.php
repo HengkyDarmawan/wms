@@ -1,7 +1,7 @@
 {{--
-    Paket dari tabel pusat `plans` (aktif saja). Harga di sini adalah harga
-    langganan platform (D-02), bukan nilai barang (D-07). Harga 0 = belum
-    ditetapkan → "Hubungi kami" (O-08, A-222).
+    Paket dari tabel pusat `plans` (aktif saja). Landing tidak menampilkan
+    harga: setiap kartu bertombol "Hubungi kami", walau harga di master diisi
+    (A-268, mengganti bagian harga A-222).
 --}}
 <section class="lp-section lp-section-alt" id="paket" aria-labelledby="plansTitle">
     <div class="container">
@@ -21,20 +21,13 @@
             <div class="row g-4 justify-content-center">
                 @foreach ($plans as $plan)
                     @php
-                        $harga = (float) $plan->monthly_price;
                         $gb = $plan->storage_quota_mb ? $plan->storage_quota_mb / 1024 : null;
                         $planHref = 'mailto:'.$salesEmail.'?subject='.rawurlencode(__('Paket :plan — :app', ['plan' => $plan->name, 'app' => $appName]));
                     @endphp
                     <div class="col-md-6 col-lg-4">
                         <article class="lp-plan {{ $plans->count() === 1 ? 'is-featured' : '' }}" data-plan="{{ $plan->code }}">
                             <h3>{{ $plan->name }}</h3>
-                            <p class="lp-price">
-                                @if ($harga > 0)
-                                    Rp {{ number_format($harga, 0, ',', '.') }} <small>/ {{ __('bulan per company') }}</small>
-                                @else
-                                    {{ __('Hubungi kami') }}
-                                @endif
-                            </p>
+                            <p class="lp-price">{{ __('Hubungi kami') }} <small>{{ __('untuk penawaran') }}</small></p>
                             <ul class="lp-check-list">
                                 <li><i class="bi bi-check2-circle" aria-hidden="true"></i><span>{{ __('Semua fitur WMS di setiap paket') }}</span></li>
                                 <li><i class="bi bi-check2-circle" aria-hidden="true"></i><span>{{ __('User, gudang, dan proyek tanpa batas') }}</span></li>
@@ -46,9 +39,7 @@
                                     <li><i class="bi bi-check2-circle" aria-hidden="true"></i><span>{{ __('Trial :n hari', ['n' => (int) $plan->trial_days]) }}</span></li>
                                 @endif
                             </ul>
-                            <a class="lp-btn {{ $harga > 0 ? 'lp-btn-primary' : 'lp-btn-ghost' }}" href="{{ $planHref }}">
-                                {{ $harga > 0 ? __('Minta demo') : __('Hubungi kami') }}
-                            </a>
+                            <a class="lp-btn lp-btn-primary" href="{{ $planHref }}">{{ __('Hubungi kami') }}</a>
                         </article>
                     </div>
                 @endforeach
