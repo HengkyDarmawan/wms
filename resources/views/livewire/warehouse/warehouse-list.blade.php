@@ -8,9 +8,15 @@
         </div>
 
         @can('create', \App\Domain\Warehouse\Models\Warehouse::class)
-            <button class="btn btn-primary" type="button" wire:click="buat">
-                <i class="bi bi-plus-lg"></i> {{ __('Tambah gudang') }}
-            </button>
+            <div class="d-flex flex-wrap gap-2">
+                {{-- A-272: impor banyak gudang sekaligus. --}}
+                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-warehouses">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
+                </a>
+                <button class="btn btn-primary" type="button" wire:click="buat">
+                    <i class="bi bi-plus-lg"></i> {{ __('Tambah gudang') }}
+                </button>
+            </div>
         @endcan
     </div>
 

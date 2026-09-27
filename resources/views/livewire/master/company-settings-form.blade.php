@@ -45,6 +45,12 @@
                 </div>
             @endforeach
 
+            {{-- A-270: hari libur untuk menghitung hari kerja. --}}
+            @livewire('master.holiday-calendar', key('kalender-libur'))
+
+            {{-- Fase 2a (31-whatsapp §6): kejadian WhatsApp; tampil bila fitur company menyala. --}}
+            @livewire('whatsapp.company-settings', key('whatsapp-company'))
+
             <div class="card mb-3">
                 <div class="card-header"><strong>{{ __('Zona waktu & periode') }}</strong></div>
                 <div class="card-body">
@@ -93,6 +99,10 @@
                                 @endif
                             </label>
                             <div class="small text-muted">{{ __($def['hint']) }}</div>
+                            @if ($kunci === 'otp_auto' && ! $kanalPesan)
+                                {{-- A-273: tanpa kanal platform, saklar menyala tetap memakai jalur manual. --}}
+                                <div class="small text-warning">{{ __('Kanal WhatsApp/SMS belum diatur oleh platform; sampai itu, OTP tetap disampaikan driver.') }}</div>
+                            @endif
                         </div>
                     @endforeach
                 </div>

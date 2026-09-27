@@ -9,6 +9,7 @@ use App\Domain\Master\Actions\ImportItems;
 use App\Domain\Master\Actions\ImportProjects;
 use App\Domain\Master\Actions\ImportVendors;
 use App\Domain\Master\Exceptions\MasterRuleException;
+use App\Domain\Warehouse\Actions\ImportWarehouses;
 use App\Domain\Warehouse\Actions\ImportWarehouseStructure;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -18,14 +19,14 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/** Impor dari Excel (A-192, A-207, A-258): item, proyek (+klien), vendor, saldo awal, dan struktur gudang — templat, unggah (POST), galat per baris. */
+/** Impor dari Excel (A-192, A-207, A-258, A-272): item, proyek (+klien), vendor, saldo awal, gudang, dan struktur gudang — templat, unggah (POST), galat per baris. */
 class ImportController extends Controller
 {
     /** @var array<string, array{permission: string, action: class-string, sheet: string, example: array<int, mixed>, route: string, label: string, message?: string}> */
     private const JENIS = [
         'items' => [
             'permission' => 'item.create', 'action' => ImportItems::class, 'sheet' => 'Item', 'route' => 'items.index', 'label' => 'item',
-            'example' => ['', 'Baut M12 x 50', '', 'PCS', 'none', 'tidak', 'consumable', 'fifo', 100, 300, 'tidak', ''],
+            'example' => ['', 'Baut M12 x 50', '', 'PCS', 'biasa', 100, 300, 'tidak', ''],
         ],
         'projects' => [
             'permission' => 'project.create', 'action' => ImportProjects::class, 'sheet' => 'Proyek', 'route' => 'projects.index', 'label' => 'proyek',
@@ -40,6 +41,11 @@ class ImportController extends Controller
             'message' => ':n :jenis diajukan sebagai penyesuaian stok per gudang; stok masuk setelah disetujui.',
             'example' => ['CKG', 'CKG-A-R01-L1-B01', 'BAUT-M12', 250, 'tersedia', '', '', '', '', 'Hasil hitung pembukaan'],
         ],
+        'warehouses' => [
+            'permission' => 'warehouse.create', 'action' => ImportWarehouses::class, 'sheet' => 'Gudang', 'route' => 'warehouses.index', 'label' => 'gudang',
+            'message' => ':n :jenis diimpor beserta bin bawaannya; lanjutkan dengan impor struktur gudang atau Atur denah.',
+            'example' => ['SBY', 'Gudang Surabaya', 'BRANCH', 'CKG', '', '', 'Jl. Rungkut Industri 5, Surabaya'],
+        ],
         'bins' => [
             'permission' => 'bin.manage', 'action' => ImportWarehouseStructure::class, 'sheet' => 'Struktur gudang', 'route' => 'bins.index', 'label' => 'bin',
             'message' => ':n :jenis diimpor; zona, rak, dan level yang belum ada dibuat otomatis.',
@@ -48,7 +54,7 @@ class ImportController extends Controller
     ];
 
     /** Izin tiap kartu di layar impor. */
-    public const PERMISSIONS = ['items' => 'item.create', 'projects' => 'project.create', 'vendors' => 'vendor.create', 'opening-stock' => 'adjustment.create', 'bins' => 'bin.manage'];
+    public const PERMISSIONS = ['items' => 'item.create', 'projects' => 'project.create', 'vendors' => 'vendor.create', 'opening-stock' => 'adjustment.create', 'warehouses' => 'warehouse.create', 'bins' => 'bin.manage'];
 
     public function index(Request $request): View
     {
@@ -59,12 +65,14 @@ class ImportController extends Controller
             'projects' => ImportProjects::COLUMNS,
             'vendors' => ImportVendors::COLUMNS,
             'opening' => ImportOpeningStock::COLUMNS,
+            'warehouses' => ImportWarehouses::COLUMNS,
             'bins' => ImportWarehouseStructure::COLUMNS,
             'max' => [
                 'items' => ImportItems::MAX_ROWS,
                 'projects' => ImportProjects::MAX_ROWS,
                 'vendors' => ImportVendors::MAX_ROWS,
                 'opening-stock' => ImportOpeningStock::MAX_ROWS,
+                'warehouses' => ImportWarehouses::MAX_ROWS,
                 'bins' => ImportWarehouseStructure::MAX_ROWS,
             ],
         ]);

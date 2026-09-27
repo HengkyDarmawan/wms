@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Shipment;
 
 use App\Domain\Shared\Files\StoreUpload;
+use App\Domain\Shared\Messaging\PhoneNumber;
 use App\Domain\Shipment\Actions\ConfirmDelivery;
 use App\Domain\Shipment\Actions\IssueDeliveryToken;
 use App\Domain\Shipment\Enums\PodUnitCondition;
 use App\Domain\Shipment\Enums\ProofChannel;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Models\DeliveryToken;
+use App\Domain\Shipment\Support\DeliveryOtpSender;
 use App\Domain\Shipment\Support\ProofFiles;
 use App\Http\Controllers\Controller;
 use Illuminate\Contracts\View\View;
@@ -20,8 +22,9 @@ use Illuminate\Http\Response;
 
 /**
  * Halaman penerima bertoken (A-41, A-231, BR-SJ-05): penerima tanpa akun
- * membuka tautan, memasukkan OTP yang disampaikan driver, lalu mengisi bukti
- * terima per baris (baik/rusak/kurang, foto wajib bila rusak, tanda tangan).
+ * membuka tautan, memasukkan OTP — dikirim otomatis ke HP-nya (A-273) atau
+ * disampaikan driver — lalu mengisi bukti terima per baris (baik/rusak/kurang,
+ * foto wajib bila rusak, tanda tangan).
  *
  * Tanpa `auth`: identitasnya adalah token + OTP. Sesi OTP berlaku 30 menit dan
  * hanya untuk token itu; percobaan OTP dibatasi di `IssueDeliveryToken::verify`
@@ -50,7 +53,16 @@ class DeliveryTokenController extends Controller
         }
 
         if (! $this->terverifikasi($request, $token)) {
-            return view('shipment.terima.otp', ['sj' => $sj, 'token' => $token, 'terkunci' => $baris->isLockedOut()]);
+            $otomatis = $baris->otp_sent_at !== null && app(DeliveryOtpSender::class)->enabled();
+
+            return view('shipment.terima.otp', [
+                'sj' => $sj,
+                'token' => $token,
+                'terkunci' => $baris->isLockedOut(),
+                // A-273: OTP dikirim ke HP penerima → tampilkan nomornya (disamarkan) & tombol kirim ulang.
+                'terkirimKe' => $otomatis ? PhoneNumber::mask((string) PhoneNumber::normalize($baris->phone)) : null,
+                'bolehKirimUlang' => $otomatis && $baris->otp_send_count < DeliveryOtpSender::MAKS_KIRIM,
+            ]);
         }
 
         return view('shipment.terima.form', ['sj' => $sj, 'token' => $token]);
@@ -69,6 +81,18 @@ class DeliveryTokenController extends Controller
         $request->session()->put($this->kunciSesi($token), now()->timestamp);
 
         return redirect()->route('terima.show', $token);
+    }
+
+    /** A-273: penerima meminta kode baru ke HP-nya; kode lama tidak berlaku. */
+    public function resend(string $token, IssueDeliveryToken $action): RedirectResponse
+    {
+        try {
+            $action->resend($token);
+        } catch (ShipmentRuleException $e) {
+            return back()->withErrors(['otp' => $e->getMessage()]);
+        }
+
+        return redirect()->route('terima.show', $token)->with('status', __('Kode OTP baru sudah dikirim.'));
     }
 
     public function store(Request $request, string $token, ConfirmDelivery $action, IssueDeliveryToken $tokens, ProofFiles $berkas): RedirectResponse

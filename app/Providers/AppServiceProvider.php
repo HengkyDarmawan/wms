@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domain\Shared\Livewire\ReportViewer;
+use App\Domain\Shared\Messaging\HttpGateway;
+use App\Domain\Shared\Messaging\LogGateway;
+use App\Domain\Shared\Messaging\MessageGateway;
+use App\Domain\Shared\Messaging\NullGateway;
 use App\Http\Middleware\EnsureClientPortal;
 use App\Http\Middleware\EnsureInternalArea;
 use App\Http\Middleware\EnsureSubscriptionState;
@@ -25,6 +29,13 @@ class AppServiceProvider extends ServiceProvider
         // menetapkannya lebih awal, route bawaan tanpa middleware tenant tidak
         // pernah lahir sehingga tidak ada jalur pintas yang tertinggal.
         $this->secureLivewireEndpoint();
+
+        // A-273: kanal WhatsApp/SMS platform; penyedia dipilih lewat konfigurasi (O-15).
+        $this->app->bind(MessageGateway::class, fn () => match (config('wms.messaging.driver')) {
+            'http' => new HttpGateway((array) config('wms.messaging.http', [])),
+            'log' => new LogGateway,
+            default => new NullGateway,
+        });
     }
 
     public function boot(): void

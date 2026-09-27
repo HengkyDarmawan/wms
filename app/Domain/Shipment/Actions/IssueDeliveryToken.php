@@ -9,6 +9,7 @@ use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Models\DeliveryToken;
 use App\Domain\Shipment\Models\Shipment;
+use App\Domain\Shipment\Support\DeliveryOtpSender;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -20,10 +21,10 @@ use Illuminate\Support\Str;
  * yang mungkin hanya ditemui sekali akan menumpuk akun mati; tautan sekali
  * pakai berumur 24 jam dengan OTP adalah jalan tengahnya.
  *
- * OTP hanya dikembalikan **sekali**, saat diterbitkan, dan tidak pernah
- * disimpan sebagai teks. Pengirimannya lewat WhatsApp atau SMS menunggu
- * [O-06](docs/wms/04-keputusan-dan-asumsi.md#o-06); sampai itu ada, OTP
- * disampaikan lisan oleh staf yang menerbitkannya.
+ * OTP tidak pernah disimpan sebagai teks. Bila company menyalakan OTP
+ * otomatis dan platform punya kanal WhatsApp/SMS (A-273, O-15), OTP dikirim
+ * ke HP penerima dan **tidak** dikembalikan ke layar; kalau tidak, atau gagal
+ * terkirim, OTP dikembalikan sekali untuk disampaikan staf/driver.
  */
 class IssueDeliveryToken
 {
@@ -31,8 +32,11 @@ class IssueDeliveryToken
 
     private const MAKS_PERCOBAAN = 5;
 
+    public function __construct(private readonly DeliveryOtpSender $sender) {}
+
     /**
-     * @return array{token: DeliveryToken, otp: string}  OTP hanya ada di sini
+     * @return array{token: DeliveryToken, otp: ?string, sent: bool, phone: ?string, error: ?string}
+     *                                                                                               `otp` null bila sudah terkirim ke penerima
      */
     public function handle(Shipment $shipment, ?string $phone = null, ?User $actor = null): array
     {
@@ -51,7 +55,7 @@ class IssueDeliveryToken
         // supaya tidak ada dua orang yang merasa berhak menandatangani.
         $shipment->tokens()->usable()->update(['used_at' => now()]);
 
-        $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $otp = $this->otpBaru();
 
         $token = DeliveryToken::create([
             'shipment_id' => $shipment->id,
@@ -67,7 +71,56 @@ class IssueDeliveryToken
             ->withProperties(['telepon' => $phone, 'berlaku_sampai' => $token->expires_at?->toDateTimeString()])
             ->log('Tautan bukti terima diterbitkan');
 
-        return ['token' => $token, 'otp' => $otp];
+        $kirim = $this->sender->send($token, $otp, $shipment);
+
+        return ['token' => $token->refresh(), 'otp' => $kirim['sent'] ? null : $otp] + $kirim;
+    }
+
+    /**
+     * Kirim ulang OTP dari halaman penerima (A-273): OTP lama tidak berlaku,
+     * kode baru dikirim ke nomor yang sama. Dibatasi {@see DeliveryOtpSender::MAKS_KIRIM}
+     * kiriman per tautan dan jeda {@see DeliveryOtpSender::JEDA_DETIK} detik;
+     * hitungan percobaan salah tidak di-nol-kan (NFR-04).
+     */
+    public function resend(string $token): DeliveryToken
+    {
+        $baris = DeliveryToken::query()->where('token', $token)->first();
+
+        if ($baris === null || ! $baris->isUsable()) {
+            throw ShipmentRuleException::rule('BR-SJ-05', 'Tautan bukti terima tidak berlaku atau sudah kedaluwarsa.');
+        }
+
+        if ($baris->isLockedOut(self::MAKS_PERCOBAAN)) {
+            throw ShipmentRuleException::rule('NFR-04', 'Tautan ini terkunci karena terlalu banyak percobaan.');
+        }
+
+        if (! $this->sender->enabled() || $baris->otp_sent_at === null) {
+            throw ShipmentRuleException::rule('BR-SJ-05', 'Kode OTP tautan ini disampaikan driver; minta kodenya kepada driver.');
+        }
+
+        if ($baris->otp_send_count >= DeliveryOtpSender::MAKS_KIRIM) {
+            throw ShipmentRuleException::rule('NFR-04', 'Kode sudah dikirim ulang terlalu sering. Minta driver menerbitkan tautan baru.');
+        }
+
+        if ($baris->otp_sent_at->diffInSeconds(now()) < DeliveryOtpSender::JEDA_DETIK) {
+            throw ShipmentRuleException::rule('NFR-04', 'Tunggu satu menit sebelum meminta kode baru.');
+        }
+
+        $otp = $this->otpBaru();
+        $baris->forceFill(['otp_hash' => Hash::make($otp)])->save();
+
+        $hasil = $this->sender->send($baris, $otp, $baris->shipment);
+
+        if (! $hasil['sent']) {
+            throw ShipmentRuleException::rule('BR-SJ-05', 'Kode baru gagal dikirim. Minta kode kepada driver.');
+        }
+
+        return $baris->refresh();
+    }
+
+    private function otpBaru(): string
+    {
+        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     }
 
     /**

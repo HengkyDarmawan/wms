@@ -16,7 +16,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * tidak punya akun; ini jalan supaya ia tetap bisa menandatangani tanpa kita
  * membuatkan akun untuk orang yang mungkin hanya ditemui sekali.
  *
- * OTP disimpan sebagai hash, tidak pernah sebagai teks.
+ * OTP disimpan sebagai hash, tidak pernah sebagai teks. Sejak A-273 OTP bisa
+ * dikirim otomatis ke HP penerima (`otp_sent_at` terisi) sehingga driver tidak
+ * pernah melihatnya.
  */
 class DeliveryToken extends Model
 {
@@ -30,6 +32,7 @@ class DeliveryToken extends Model
 
     protected $attributes = [
         'attempts' => 0,
+        'otp_send_count' => 0,
     ];
 
     protected function casts(): array
@@ -38,6 +41,8 @@ class DeliveryToken extends Model
             'expires_at' => 'datetime',
             'used_at' => 'datetime',
             'attempts' => 'integer',
+            'otp_sent_at' => 'datetime',
+            'otp_send_count' => 'integer',
         ];
     }
 

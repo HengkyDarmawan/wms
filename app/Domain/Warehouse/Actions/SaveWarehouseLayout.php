@@ -26,18 +26,37 @@ class SaveWarehouseLayout
 {
     public const GRID = 0.5;
 
+    /** Batas susun dari denah: level per rak dan bin per level (A-271). */
+    public const MAKS_LEVEL = 20;
+
+    public const MAKS_BIN_PER_LEVEL = 50;
+
     public function __construct(
         private readonly SaveLocation $lokasi,
         private readonly SaveBin $bin,
+        private readonly GenerateBins $binMassal,
     ) {}
 
-    /** @param  array<string, mixed>  $data  length_m, width_m */
+    /** @param  array<string, mixed>  $data  length_m, width_m, name (opsional) */
     public function zone(Zone $zone, array $data, ?User $actor = null): Zone
     {
         $zone->fill([
             'length_m' => $this->ukuran($data['length_m'] ?? null, 'length_m'),
             'width_m' => $this->ukuran($data['width_m'] ?? null, 'width_m'),
-        ])->save();
+        ]);
+
+        // A-271: nama zona boleh diubah dari denah; kodenya tetap (BR-WH-01).
+        if (array_key_exists('name', $data)) {
+            $nama = trim((string) $data['name']);
+
+            if ($nama === '') {
+                throw WarehouseRuleException::fields(['name' => 'Nama zona wajib diisi.'], 'BR-GEN-11');
+            }
+
+            $zone->fill(['name' => mb_substr($nama, 0, 60)]);
+        }
+
+        $zone->save();
 
         activity('warehouse')->performedOn($zone)->causedBy($actor)->log('Ukuran zona diubah');
 
@@ -92,6 +111,78 @@ class SaveWarehouseLayout
     }
 
     /**
+     * Rak baru langsung dari denah (A-271): rak + level `L1`…`Ln` + bin
+     * opsional per level dalam satu transaksi. Kode rak/level lewat
+     * {@see SaveLocation} dan bin lewat {@see GenerateBins}, jadi BR-WH-01 dan
+     * jejak audit sama dengan tab *Zona & rak*. Posisi kosong = ditata otomatis.
+     *
+     * @param  array<string, mixed>  $data  code, name, levels, bins_per_level, prefix, capacity_qty
+     */
+    public function newRack(Zone $zone, array $data, ?User $actor = null): Rack
+    {
+        $this->zonaAktif($zone);
+        $jumlahLevel = $this->bilangan($data['levels'] ?? 1, 'levels', 1, self::MAKS_LEVEL, 'Jumlah level');
+        $binPerLevel = $this->bilangan($data['bins_per_level'] ?? 0, 'bins_per_level', 0, self::MAKS_BIN_PER_LEVEL, 'Bin per level');
+
+        return DB::transaction(function () use ($zone, $data, $jumlahLevel, $binPerLevel, $actor): Rack {
+            $rak = $this->lokasi->saveRack($zone, null, ['code' => $data['code'] ?? ''], $actor);
+            $nama = trim((string) ($data['name'] ?? ''));
+
+            if ($nama !== '') {
+                $rak->forceFill(['name' => mb_substr($nama, 0, 60)])->save();
+            }
+
+            for ($i = 1; $i <= $jumlahLevel; $i++) {
+                $level = $this->lokasi->saveLevel($rak, null, ['code' => 'L'.$i], $actor);
+                $this->isiBin($level, $binPerLevel, $data, $actor);
+            }
+
+            activity('warehouse')->performedOn($rak)->causedBy($actor)
+                ->withProperties(['level' => $jumlahLevel, 'bin_per_level' => $binPerLevel])
+                ->log('Rak dibuat dari denah');
+
+            return $rak->refresh();
+        });
+    }
+
+    /**
+     * Level baru di rak yang sudah ada (A-271). Kode kosong = `L` + nomor
+     * berikutnya yang belum dipakai.
+     *
+     * @param  array<string, mixed>  $data  code, bins, prefix, capacity_qty
+     */
+    public function newLevel(Rack $rack, array $data, ?User $actor = null): RackLevel
+    {
+        if (! $rack->is_active) {
+            throw WarehouseRuleException::rule('BR-WH-07', 'Rak '.$rack->code.' nonaktif.');
+        }
+
+        if ($rack->is_area) {
+            throw WarehouseRuleException::rule('BR-WH-06', 'Rak area hanya punya satu level dan satu bin (A-255).');
+        }
+
+        $jumlahBin = $this->bilangan($data['bins'] ?? 0, 'bins', 0, self::MAKS_BIN_PER_LEVEL, 'Jumlah bin');
+        $kode = trim((string) ($data['code'] ?? ''));
+
+        if ($kode === '') {
+            $n = $rack->levels()->count() + 1;
+
+            while ($rack->levels()->where('code', 'L'.$n)->exists()) {
+                $n++;
+            }
+
+            $kode = 'L'.$n;
+        }
+
+        return DB::transaction(function () use ($rack, $kode, $jumlahBin, $data, $actor): RackLevel {
+            $level = $this->lokasi->saveLevel($rack, null, ['code' => $kode], $actor);
+            $this->isiBin($level, $jumlahBin, $data, $actor);
+
+            return $level->refresh();
+        });
+    }
+
+    /**
      * Rak area untuk barang besar (A-255): satu rak berisi satu level dan
      * **satu bin** yang mewakili seluruh rak — atau seluruh zona bila
      * `seluruh_zona` (ukuran = ukuran zona, posisi 0,0). Bin berkapasitas
@@ -132,6 +223,41 @@ class SaveWarehouseLayout
 
             return $bin->refresh();
         });
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function isiBin(RackLevel $level, int $jumlah, array $data, ?User $actor): void
+    {
+        if ($jumlah < 1) {
+            return;
+        }
+
+        $this->binMassal->handle($level, $jumlah, [
+            'prefix' => $data['prefix'] ?? 'B',
+            'capacity_qty' => $data['capacity_qty'] ?? null,
+        ], $actor);
+    }
+
+    private function zonaAktif(Zone $zone): void
+    {
+        if (! $zone->is_active) {
+            throw WarehouseRuleException::rule('BR-WH-07', 'Zona '.$zone->code.' nonaktif.');
+        }
+    }
+
+    private function bilangan(mixed $nilai, string $kolom, int $min, int $maks, string $label): int
+    {
+        $teks = trim((string) $nilai);
+
+        if ($teks === '' && $min === 0) {
+            return 0;
+        }
+
+        if (! ctype_digit($teks) || (int) $teks < $min || (int) $teks > $maks) {
+            throw WarehouseRuleException::fields([$kolom => $label.' harus bilangan bulat '.$min.'–'.$maks.'.'], 'BR-GEN-11');
+        }
+
+        return (int) $teks;
     }
 
     /** @return array{0: ?float, 1: ?float} */
