@@ -8,7 +8,7 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
             <h1 class="h3 mb-1">{{ __('Denah gudang') }} {{ $gudang->code }}</h1>
-            <p class="text-muted mb-0">{{ $gudang->name }} · {{ __('klik rak untuk melihat level, bin, dan isinya') }}</p>
+            <p class="text-muted mb-0">{{ $gudang->name }} · {{ __('tampak atas: kotak besar = rak, petak di dalamnya = bin, L1/L2 di kiri = tingkat rak (L1 paling bawah). Klik rak untuk melihat isinya.') }}</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             @if ($bolehUbah)
@@ -66,7 +66,7 @@
                         </span>
                     </div>
                     <div class="card-body overflow-auto">
-                        {{-- A-254: SVG ringan, satu kotak per rak; geser di grid saat mode atur. --}}
+                        {{-- A-254/A-281: SVG ringan, satu kotak per rak berisi petak bin; geser di grid saat mode atur. --}}
                         <svg width="{{ $z['w'] * $skala }}" height="{{ $z['h'] * $skala }}" role="img" aria-label="{{ __('Denah zona') }} {{ $z['code'] }}"
                              style="background-image: linear-gradient(#e9ecef 1px, transparent 1px), linear-gradient(90deg, #e9ecef 1px, transparent 1px); background-size: {{ $skala / 2 }}px {{ $skala / 2 }}px; touch-action: none"
                              x-data="{ drag: null, sx: 0, sy: 0, skala: {{ $skala }},
@@ -78,13 +78,44 @@
                              x-on:pointermove="gerak($event)" x-on:pointerup="lepas($event)">
                             @foreach ($z['racks'] as $r)
                                 @php($isiWarna = $mode === 'umur' ? $warnaUmur($r['umur']) : $warnaStatus[$r['status']])
-                                <g wire:key="rak-{{ $r['id'] }}" style="cursor: {{ $edit ? 'move' : 'pointer' }}"
+                                @php([$X, $Y, $W, $H] = [$r['x'] * $skala, $r['y'] * $skala, $r['w'] * $skala, $r['h'] * $skala])
+                                @php($dipilih = $rakId === $r['id'])
+                                <g wire:key="rak-{{ $r['id'] }}" style="cursor: {{ $edit ? 'move' : 'pointer' }}" data-rak="{{ $r['code'] }}"
                                    @if ($edit) x-on:pointerdown.prevent="mulai($event, {{ $r['id'] }}, {{ $r['x'] }}, {{ $r['y'] }})" @else wire:click="pilihRak({{ $r['id'] }})" @endif>
-                                    <rect x="{{ $r['x'] * $skala }}" y="{{ $r['y'] * $skala }}" width="{{ $r['len'] * $skala }}" height="{{ $r['wid'] * $skala }}" rx="3"
-                                          fill="{{ $isiWarna }}" stroke="{{ $r['cocok'] ? '#f76707' : ($rakId === $r['id'] ? '#1c7ed6' : '#868e96') }}"
-                                          stroke-width="{{ $r['cocok'] || $rakId === $r['id'] ? 3 : 1 }}" @if ($r['is_area']) stroke-dasharray="6 3" @endif />
-                                    <text x="{{ ($r['x'] + 0.1) * $skala }}" y="{{ ($r['y'] + 0.4) * $skala }}" font-size="12" fill="#212529">{{ $r['code'] }}{{ $r['is_area'] ? ' ▦' : '' }}</text>
-                                    <text x="{{ ($r['x'] + 0.1) * $skala }}" y="{{ ($r['y'] + 0.75) * $skala }}" font-size="10" fill="#495057">{{ $r['jumlah_bin'] }} {{ __('bin') }}@if ($mode === 'umur' && $r['umur'] !== null) · {{ $r['umur'] }} {{ __('hr') }}@endif</text>
+                                    {{-- A-281: nama rak di atas kotak --}}
+                                    <text x="{{ $X }}" y="{{ $Y - 7 }}" font-size="13" font-weight="600" fill="currentColor">{{ $r['code'] }}{{ $r['is_area'] ? ' ▦' : '' }}@if ($r['name']) <tspan font-weight="400" fill="currentColor" fill-opacity="0.65">· {{ \Illuminate\Support\Str::limit($r['name'], 18) }}</tspan>@endif</text>
+                                    @if ($r['is_area'])
+                                        <rect x="{{ $X }}" y="{{ $Y }}" width="{{ $W }}" height="{{ $H }}" rx="6" fill="{{ $isiWarna }}"
+                                              stroke="{{ $r['cocok'] ? '#f76707' : ($dipilih ? '#1c7ed6' : '#868e96') }}" stroke-width="{{ $r['cocok'] || $dipilih ? 3 : 1.5 }}" stroke-dasharray="6 3" />
+                                        <text x="{{ $X + $W / 2 }}" y="{{ $Y + $H / 2 + 4 }}" font-size="12" text-anchor="middle" fill="#495057">{{ __('Area') }} · {{ $r['jumlah_bin'] }} {{ __('bin') }}</text>
+                                    @else
+                                        {{-- A-281: kotak rak berisi petak bin per level; label level di luar (kiri) --}}
+                                        <rect x="{{ $X }}" y="{{ $Y }}" width="{{ $W }}" height="{{ $H }}" rx="6" fill="#ffffff"
+                                              stroke="{{ $r['cocok'] ? '#f76707' : ($dipilih ? '#1c7ed6' : '#495057') }}" stroke-width="{{ $r['cocok'] || $dipilih ? 3 : 1.5 }}" />
+                                        @php($p = \App\Domain\Warehouse\Support\WarehouseLayoutData::BINGKAI * $skala)
+                                        @php($jumlahLevel = max(1, count($r['levels'])))
+                                        @php($tinggiBaris = ($H - 2 * $p) / $jumlahLevel)
+                                        @php($lebarSel = ($W - 2 * $p) / $r['kolom'])
+                                        @forelse ($r['levels'] as $i => $l)
+                                            @php($yb = $Y + $p + $i * $tinggiBaris)
+                                            <text x="{{ $X - 5 }}" y="{{ $yb + $tinggiBaris / 2 + 4 }}" font-size="11" font-weight="600" text-anchor="end" fill="currentColor">{{ $l['code'] }}</text>
+                                            @if ($i > 0)
+                                                <line x1="{{ $X + 2 }}" x2="{{ $X + $W - 2 }}" y1="{{ $yb }}" y2="{{ $yb }}" stroke="#adb5bd" stroke-width="1" />
+                                            @endif
+                                            @forelse ($l['bins'] as $j => $b)
+                                                @php($warnaBin = $b['nonaktif'] ? '#dee2e6' : ($mode === 'umur' ? $warnaUmur($b['umur']) : $warnaStatus[$b['status']]))
+                                                <rect x="{{ $X + $p + $j * $lebarSel + 2 }}" y="{{ $yb + 2 }}" width="{{ max(1, $lebarSel - 4) }}" height="{{ max(1, $tinggiBaris - 4) }}" rx="3"
+                                                      fill="{{ $warnaBin }}" stroke="{{ $b['cocok'] ? '#f76707' : '#ced4da' }}" stroke-width="{{ $b['cocok'] ? 2.5 : 1 }}"><title>{{ $b['code'] }}{{ $b['total'] > 0 ? ' · '.$angka($b['total']) : ' · '.__('kosong') }}</title></rect>
+                                                @if ($lebarSel >= 28 && $tinggiBaris >= 16)
+                                                    <text x="{{ $X + $p + ($j + 0.5) * $lebarSel }}" y="{{ $yb + $tinggiBaris / 2 + 4 }}" font-size="{{ $lebarSel >= 44 ? 12 : 10 }}" text-anchor="middle" fill="#212529" pointer-events="none">{{ $b['short'] }}</text>
+                                                @endif
+                                            @empty
+                                                <text x="{{ $X + $W / 2 }}" y="{{ $yb + $tinggiBaris / 2 + 4 }}" font-size="10" font-style="italic" text-anchor="middle" fill="#868e96">{{ __('belum ada bin') }}</text>
+                                            @endforelse
+                                        @empty
+                                            <text x="{{ $X + $W / 2 }}" y="{{ $Y + $H / 2 + 4 }}" font-size="10" font-style="italic" text-anchor="middle" fill="#868e96">{{ __('belum ada level') }}</text>
+                                        @endforelse
+                                    @endif
                                 </g>
                             @endforeach
                         </svg>
@@ -94,18 +125,75 @@
                     </div>
                     @if ($edit)
                         <div class="card-footer d-flex flex-wrap align-items-end gap-2 small">
+                            <div>
+                                <label class="form-label mb-0" for="zona-n-{{ $z['id'] }}">{{ __('Nama zona') }}</label>
+                                <input class="form-control form-control-sm @error('formZona.'.$z['id'].'.name') is-invalid @enderror" id="zona-n-{{ $z['id'] }}" type="text" maxlength="60" wire:model="formZona.{{ $z['id'] }}.name">
+                                @error('formZona.'.$z['id'].'.name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
                             <div><label class="form-label mb-0" for="zona-p-{{ $z['id'] }}">{{ __('Panjang zona (m)') }}</label><input class="form-control form-control-sm" id="zona-p-{{ $z['id'] }}" type="number" step="0.5" min="0" wire:model="formZona.{{ $z['id'] }}.length_m" placeholder="{{ __('opsional') }}"></div>
                             <div><label class="form-label mb-0" for="zona-l-{{ $z['id'] }}">{{ __('Lebar zona (m)') }}</label><input class="form-control form-control-sm" id="zona-l-{{ $z['id'] }}" type="number" step="0.5" min="0" wire:model="formZona.{{ $z['id'] }}.width_m" placeholder="{{ __('opsional') }}"></div>
-                            <button class="btn btn-sm btn-outline-primary" type="button" wire:click="simpanZona({{ $z['id'] }})">{{ __('Simpan ukuran zona') }}</button>
+                            <button class="btn btn-sm btn-outline-primary" type="button" wire:click="simpanZona({{ $z['id'] }})">{{ __('Simpan zona') }}</button>
                             <span class="text-muted">{{ __('Seret rak untuk memindahkan (kelipatan 0,5 m).') }}</span>
                         </div>
                     @endif
                 </div>
             @empty
-                <div class="alert alert-info">{{ __('Gudang ini belum punya zona. Tambahkan zona, rak, dan level di halaman gudang (tab Zona & rak).') }}</div>
+                <div class="alert alert-info">{{ $bolehUbah ? __('Gudang ini belum punya zona. Klik Atur denah lalu Tambah zona.') : __('Gudang ini belum punya zona.') }}</div>
             @endforelse
 
             @if ($edit)
+                {{-- A-271: bangun struktur langsung dari denah — zona, lalu rak dengan level & bin sekaligus. --}}
+                <div class="card mb-3" id="tambah-struktur">
+                    <div class="card-header"><strong>{{ __('Tambah zona & rak') }}</strong> <span class="small text-muted">{{ __('kode tidak bisa diubah setelah dibuat karena membentuk kode bin') }}</span></div>
+                    <div class="card-body small">
+                        <div class="fw-semibold mb-1">{{ __('Zona baru') }}</div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label mb-0" for="zb-kode">{{ __('Kode zona') }} <span class="wajib">*</span></label>
+                                <input class="form-control form-control-sm @error('formZonaBaru.code') is-invalid @enderror" id="zb-kode" type="text" maxlength="10" wire:model="formZonaBaru.code" placeholder="mis. C">
+                                @error('formZonaBaru.code') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label mb-0" for="zb-nama">{{ __('Nama zona') }} <span class="wajib">*</span></label>
+                                <input class="form-control form-control-sm @error('formZonaBaru.name') is-invalid @enderror" id="zb-nama" type="text" maxlength="60" wire:model="formZonaBaru.name" placeholder="{{ __('mis. Zona besi') }}">
+                                @error('formZonaBaru.name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end"><button class="btn btn-sm btn-primary" type="button" wire:click="tambahZona">{{ __('Tambah zona') }}</button></div>
+                        </div>
+
+                        <div class="fw-semibold mb-1">{{ __('Rak baru') }}</div>
+                        <div class="row g-2">
+                            <div class="col-md-2">
+                                <label class="form-label mb-0" for="rb-zona">{{ __('Zona') }} <span class="wajib">*</span></label>
+                                <select class="form-select form-select-sm @error('formRakBaru.zone_id') is-invalid @enderror" id="rb-zona" wire:model="formRakBaru.zone_id">
+                                    <option value="">—</option>
+                                    @foreach ($denah['zones'] as $z) <option value="{{ $z['id'] }}">{{ $z['code'] }}</option> @endforeach
+                                </select>
+                                @error('formRakBaru.zone_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label mb-0" for="rb-kode">{{ __('Kode rak') }} <span class="wajib">*</span></label>
+                                <input class="form-control form-control-sm @error('formRakBaru.code') is-invalid @enderror" id="rb-kode" type="text" maxlength="10" wire:model="formRakBaru.code" placeholder="mis. R05">
+                                @error('formRakBaru.code') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-3"><label class="form-label mb-0" for="rb-nama">{{ __('Nama rak') }}</label><input class="form-control form-control-sm" id="rb-nama" type="text" maxlength="60" wire:model="formRakBaru.name" placeholder="{{ __('opsional') }}"></div>
+                            <div class="col-md-1">
+                                <label class="form-label mb-0" for="rb-level">{{ __('Level') }}</label>
+                                <input class="form-control form-control-sm @error('formRakBaru.levels') is-invalid @enderror" id="rb-level" type="number" min="1" max="{{ \App\Domain\Warehouse\Actions\SaveWarehouseLayout::MAKS_LEVEL }}" wire:model="formRakBaru.levels">
+                                @error('formRakBaru.levels') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label mb-0" for="rb-bin">{{ __('Bin per level') }}</label>
+                                <input class="form-control form-control-sm @error('formRakBaru.bins_per_level') is-invalid @enderror" id="rb-bin" type="number" min="0" max="{{ \App\Domain\Warehouse\Actions\SaveWarehouseLayout::MAKS_BIN_PER_LEVEL }}" wire:model="formRakBaru.bins_per_level">
+                                @error('formRakBaru.bins_per_level') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-2"><label class="form-label mb-0" for="rb-kap">{{ __('Kapasitas bin') }}</label><input class="form-control form-control-sm" id="rb-kap" type="number" min="0" step="any" wire:model="formRakBaru.capacity_qty" placeholder="{{ __('opsional') }}"></div>
+                        </div>
+                        <div class="text-muted mt-1">{{ __('Level diberi kode L1, L2, …; bin B01, B02, … per level. Rak baru ditata otomatis — geser untuk memindahkan.') }}</div>
+                    </div>
+                    <div class="card-footer"><button class="btn btn-sm btn-primary" type="button" wire:click="tambahRak">{{ __('Tambah rak') }}</button></div>
+                </div>
+
                 {{-- A-255: rak area untuk alat berat — satu bin mewakili seluruh rak atau zona. --}}
                 <div class="card mb-3">
                     <div class="card-header"><strong>{{ __('Rak area untuk barang besar (alat berat)') }}</strong> <span class="small text-muted">{{ __('satu bin untuk seluruh rak atau seluruh zona; isi kedua ditolak') }}</span></div>
@@ -167,7 +255,7 @@
                                             <div class="d-flex flex-wrap gap-2 mt-1">
                                                 <span>{{ $s['item_code'] }}</span>
                                                 <span class="text-muted">{{ $s['item_name'] }}</span>
-                                                <span>{{ $angka($s['qty']) }} {{ $s['uom'] }}</span>
+                                                <span>{{ $angka($s['qty']) }} {{ $s['uom'] }}@if ($s['kemasan'] ?? null) <span class="text-muted">({{ $s['kemasan'] }})</span>@endif</span>
                                                 @if ($s['tracking'] !== '') <span class="text-muted">{{ $s['tracking'] }}</span> @endif
                                                 @if ($s['status'] && $s['status'] !== __('Tersedia')) <span class="badge text-bg-light border">{{ $s['status'] }}</span> @endif
                                                 <span class="text-muted">{{ __('masuk') }} {{ $s['masuk']?->lokal()->format('d/m/Y') }} · {{ $s['umur'] }} {{ __('hari') }}</span>
@@ -179,6 +267,14 @@
                                 @empty
                                     <div class="text-muted">{{ __('Belum ada bin di level ini.') }}</div>
                                 @endforelse
+                                @if ($edit && ! $rak['is_area'])
+                                    {{-- A-271: tambah bin di level ini (nomor berikutnya). --}}
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <input class="form-control form-control-sm @error('formBinBaru.'.$lv['id']) is-invalid @enderror" style="max-width: 5rem" type="number" min="1" max="{{ \App\Domain\Warehouse\Actions\SaveWarehouseLayout::MAKS_BIN_PER_LEVEL }}" wire:model="formBinBaru.{{ $lv['id'] }}" placeholder="1" aria-label="{{ __('Jumlah bin baru di level') }} {{ $lv['code'] }}">
+                                        <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tambahBin({{ $lv['id'] }})">{{ __('Tambah bin') }}</button>
+                                        @error('formBinBaru.'.$lv['id']) <span class="text-danger">{{ $message }}</span> @enderror
+                                    </div>
+                                @endif
                             </div>
                         @endforeach
                     </div>
@@ -202,6 +298,22 @@
                                 @endforeach
                             </div>
                             <button class="btn btn-sm btn-primary mt-2" type="button" wire:click="simpanRak">{{ __('Simpan rak') }}</button>
+
+                            @if (! $rak['is_area'])
+                                {{-- A-271: level baru di rak ini. --}}
+                                <div class="fw-semibold mt-3 mb-1">{{ __('Tambah level') }}</div>
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <input class="form-control form-control-sm @error('formLevelBaru.code') is-invalid @enderror" type="text" maxlength="10" wire:model="formLevelBaru.code" placeholder="{{ __('Kode (kosong = otomatis)') }}" aria-label="{{ __('Kode level') }}">
+                                        @error('formLevelBaru.code') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-4">
+                                        <input class="form-control form-control-sm @error('formLevelBaru.bins') is-invalid @enderror" type="number" min="0" max="{{ \App\Domain\Warehouse\Actions\SaveWarehouseLayout::MAKS_BIN_PER_LEVEL }}" wire:model="formLevelBaru.bins" aria-label="{{ __('Jumlah bin di level baru') }}">
+                                        @error('formLevelBaru.bins') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-4"><button class="btn btn-sm btn-outline-primary w-100" type="button" wire:click="tambahLevel">{{ __('Tambah level') }}</button></div>
+                                </div>
+                            @endif
 
                             {{-- A-255: barang besar tak terduga memakan bin sebelahnya. --}}
                             <div class="fw-semibold mt-3 mb-1">{{ __('Tandai bin ikut terpakai barang besar') }}</div>

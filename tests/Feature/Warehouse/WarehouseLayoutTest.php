@@ -28,7 +28,9 @@ use Tests\TenantTestCase;
 
 /**
  * TC-WH-21 s.d. TC-WH-25 — denah gudang 2D (A-254), rak area & bin ikut
- * terpakai untuk barang besar (A-255), tanggal masuk & FIFO (A-256).
+ * terpakai untuk barang besar (A-255), tanggal masuk & FIFO (A-256);
+ * TC-WH-27 — zona, rak, level, dan bin ditambah langsung dari denah (A-271);
+ * TC-WH-29 — rak digambar berisi petak bin per level, label level di luar (A-281).
  */
 class WarehouseLayoutTest extends TenantTestCase
 {
@@ -197,5 +199,94 @@ class WarehouseLayoutTest extends TenantTestCase
             ->call('simpanBin')->assertHasNoErrors();
         $this->assertSame(20.0, (float) $b1->refresh()->capacity_qty);
         $this->assertSame('block', $b1->capacity_mode);
+    }
+
+    #[Test]
+    public function tc_wh_27_tambah_zona_rak_level_bin_dari_denah(): void
+    {
+        $layout = app(SaveWarehouseLayout::class);
+
+        // Aksi: rak + 3 level + 2 bin per level dalam satu transaksi.
+        $rak = $layout->newRack($this->zona, ['code' => 'r05', 'name' => 'Rak besi', 'levels' => '3', 'bins_per_level' => '2', 'capacity_qty' => '40']);
+        $this->assertSame('R05', $rak->code);
+        $this->assertSame('Rak besi', $rak->name);
+        $this->assertSame(['L1', 'L2', 'L3'], $rak->levels()->orderBy('code')->pluck('code')->all());
+        $bins = Bin::query()->whereIn('rack_level_id', $rak->levels()->pluck('id'))->orderBy('code')->get();
+        $this->assertSame(['CKG-D-R05-L1-B01', 'CKG-D-R05-L1-B02', 'CKG-D-R05-L2-B01', 'CKG-D-R05-L2-B02', 'CKG-D-R05-L3-B01', 'CKG-D-R05-L3-B02'], $bins->pluck('code')->all());
+        $this->assertSame(40.0, (float) $bins->first()->capacity_qty);
+
+        // Level berikutnya otomatis L4; kode rak ganda & jumlah di luar batas ditolak tanpa sisa.
+        $this->assertSame('L4', $layout->newLevel($rak->refresh(), ['bins' => '1'])->code);
+        $this->gagal(fn () => $layout->newRack($this->zona, ['code' => 'R05']), 'BR-WH-01');
+        $this->gagal(fn () => $layout->newRack($this->zona, ['code' => 'R06', 'levels' => '0']), 'BR-GEN-11');
+        $this->gagal(fn () => $layout->newRack($this->zona, ['code' => 'R07', 'levels' => '2', 'bins_per_level' => '51']), 'BR-GEN-11');
+        $this->assertFalse(Rack::query()->whereIn('code', ['R06', 'R07'])->exists());
+
+        // Rak area tidak boleh ditambah level (A-255).
+        $area = app(SaveWarehouseLayout::class)->areaRack($this->zona, ['code' => 'AR']);
+        $this->gagal(fn () => $layout->newLevel($area->rackLevel->rack, []), 'BR-WH-06');
+
+        // Layar: Kepala Gudang membangun zona baru → rak → level → bin tanpa pindah halaman.
+        $this->actingAs($this->makeUser('warehouse_head'));
+        $c = Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang])
+            ->call('aturEdit', true)->assertSee(__('Tambah zona & rak'))
+            ->set('formZonaBaru.code', 'e')->set('formZonaBaru.name', 'Zona besi')->call('tambahZona')->assertHasNoErrors();
+        $zonaE = Zone::query()->where('warehouse_id', $this->gudang->id)->where('code', 'E')->sole();
+        $c->assertSet('formRakBaru.zone_id', (string) $zonaE->id)
+            ->set('formRakBaru.code', 'R01')->set('formRakBaru.levels', '2')->set('formRakBaru.bins_per_level', '3')->call('tambahRak')->assertHasNoErrors();
+        $rakE = Rack::query()->where('zone_id', $zonaE->id)->sole();
+        $c->assertSet('rakId', (int) $rakE->id)->assertSee('CKG-E-R01-L2-B03')
+            ->set('formLevelBaru.bins', '1')->call('tambahLevel')->assertHasNoErrors()->assertSee('CKG-E-R01-L3-B01');
+        $l1 = $rakE->levels()->where('code', 'L1')->sole();
+        $c->set('formBinBaru.'.$l1->id, '2')->call('tambahBin', $l1->id)->assertHasNoErrors()->assertSee('CKG-E-R01-L1-B05');
+        $c->set('formBinBaru.'.$l1->id, '0')->call('tambahBin', $l1->id)->assertHasErrors('formBinBaru.'.$l1->id);
+        $c->set('formZona.'.$zonaE->id.'.name', 'Zona besi & pipa')->call('simpanZona', $zonaE->id)->assertHasNoErrors();
+        $this->assertSame('Zona besi & pipa', $zonaE->refresh()->name);
+        $c->set('formZona.'.$zonaE->id.'.name', '')->call('simpanZona', $zonaE->id)->assertHasErrors('formZona.'.$zonaE->id.'.name');
+        $c->set('formZonaBaru.code', 'E')->set('formZonaBaru.name', 'Ganda')->call('tambahZona')->assertHasErrors('formZonaBaru.code');
+
+        // Staf tanpa bin.manage tidak bisa menambah.
+        $this->actingAs($this->makeUser('warehouse_staff'));
+        Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang])
+            ->set('formZonaBaru.code', 'F')->set('formZonaBaru.name', 'X')->call('tambahZona')->assertForbidden();
+        $this->assertFalse(Zone::query()->where('code', 'F')->exists());
+    }
+
+    #[Test]
+    public function tc_wh_29_rak_berisi_petak_bin_dan_tidak_bertumpuk(): void
+    {
+        $layout = app(SaveWarehouseLayout::class);
+        $layout->newRack($this->zona, ['code' => 'R02', 'levels' => '4', 'bins_per_level' => '6']);
+        $layout->newRack($this->zona, ['code' => 'R03', 'levels' => '2', 'bins_per_level' => '2']);
+        $this->masuk($this->bin[0], $this->baut, 5);
+
+        $racks = collect(collect(app(WarehouseLayoutData::class)->build($this->gudang)['zones'])->firstWhere('code', 'D')['racks'])->keyBy('code');
+
+        // Ukuran gambar membesar agar 6 petak × 4 level terbaca; ukuran fisik tetap.
+        $r02 = $racks['R02'];
+        $this->assertSame(6, $r02['kolom']);
+        $this->assertEqualsWithDelta(6 * WarehouseLayoutData::SEL_LEBAR + 2 * WarehouseLayoutData::BINGKAI, $r02['w'], 0.0001);
+        $this->assertEqualsWithDelta(4 * WarehouseLayoutData::SEL_TINGGI + 2 * WarehouseLayoutData::BINGKAI, $r02['h'], 0.0001);
+        $this->assertSame(2.0, $r02['len'], 'Ukuran fisik bawaan tidak berubah.');
+        $this->assertSame(['L4', 'L3', 'L2', 'L1'], array_column($r02['levels'], 'code'), 'Level teratas digambar di atas.');
+        $this->assertSame(['B01', 'B02', 'B03', 'B04', 'B05', 'B06'], array_column($r02['levels'][0]['bins'], 'short'));
+
+        // Status per petak bin (warna), bukan hanya per rak.
+        $petak = collect($racks['R01']['levels'][0]['bins'])->keyBy('short');
+        $this->assertSame('terisi', $petak['B01']['status']);
+        $this->assertSame('kosong', $petak['B02']['status']);
+
+        // Tata otomatis memakai ukuran gambar: rak sebaris tidak bertumpuk.
+        $urut = $racks->sortBy('x')->values();
+        for ($i = 1; $i < $urut->count(); $i++) {
+            if ($urut[$i]['y'] === $urut[$i - 1]['y']) {
+                $this->assertGreaterThanOrEqual($urut[$i - 1]['x'] + $urut[$i - 1]['w'], $urut[$i]['x'], 'Rak '.$urut[$i]['code'].' bertumpuk.');
+            }
+        }
+
+        // Layar: petak bin & label level tampil di SVG.
+        $this->actingAs($this->makeUser('warehouse_head'));
+        Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang])
+            ->assertSeeHtml('data-rak="R02"')->assertSee('B06')->assertSee('L4');
     }
 }
