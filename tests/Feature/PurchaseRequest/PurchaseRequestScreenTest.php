@@ -6,7 +6,6 @@ namespace Tests\Feature\PurchaseRequest;
 
 use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Master\Enums\ReasonContext;
-use App\Domain\Master\Models\ItemVendor;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\PurchaseRequest\Enums\PurchaseRequestStatus;
 use App\Domain\PurchaseRequest\Livewire\PurchaseRequestDetail;
@@ -97,14 +96,16 @@ class PurchaseRequestScreenTest extends TenantTestCase
 
         $pr = $this->makeUser('pr_follow_up');
         $semen = $prq->lines()->where('item_id', $this->semen->id)->sole();
-        ItemVendor::create(['item_id' => $this->baut->id, 'vendor_id' => $this->vendor->id, 'priority' => 1]);
+        // A-304: saran dari riwayat — PRQ baut sebelumnya dipesan ke vendor fixture.
+        $this->pesan($this->prqManual([['item_id' => $this->baut->id, 'qty_base' => 5]]));
 
         Livewire::actingAs($pr)->test(PurchaseRequestDetail::class, ['purchaseRequest' => $prq])
             ->assertSee(__('Catat pemesanan'))
             ->call('mintaDialog', 'pesan')
             ->assertSet('orderQty.'.$semen->id, '12')
             ->assertSet('order.vendor_id', (string) $this->vendor->id)
-            ->assertSee(__('vendor tetap item'))
+            ->assertSee(__('disarankan'))
+            ->assertSee(__('Saran dari riwayat (bebas diganti):'))
             ->set('orderQty.'.$semen->id, '0')
             ->set('order.external_po_no', 'PO-LAYAR-1')
             ->call('catatPesanan')

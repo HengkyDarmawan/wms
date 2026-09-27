@@ -21,6 +21,7 @@ use App\Domain\Master\Enums\VendorType;
 use App\Domain\Master\Models\ItemCategory;
 use App\Domain\Master\Models\Project;
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\WhatsApp\Support\WhatsAppChannel;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -84,7 +85,9 @@ class RuleForm extends Component
                 'approver_type' => $s->approver_type->value,
                 'approver_ref_id' => (string) ($s->approver_ref_id ?? ''),
                 'decision_mode' => $s->decision_mode->value,
+                'same_org_unit' => (bool) $s->same_org_unit,
                 'timeout_hours' => (string) $s->timeout_hours,
+                'channel' => $s->channel?->value === 'both' ? 'both' : 'web',
                 'backup_approver_type' => $s->backup_approver_type?->value ?? '',
                 'backup_ref_id' => (string) ($s->backup_ref_id ?? ''),
             ])->all();
@@ -102,8 +105,12 @@ class RuleForm extends Component
         $jenis = ApprovalDocumentType::tryFrom((string) $this->form['document_type']);
 
         return view('livewire.approval.rule-form', [
+            // Fase 2a (A-277): kanal lapis Web & WhatsApp berlaku bila WhatsApp company aktif.
+            'waAktif' => app(WhatsAppChannel::class)->enabled(),
             'types' => app(ApprovalRegistry::class)->typeOptions(),
             'allowed' => $jenis?->conditions() ?? [],
+            // A-308: aturan PRQ lama berkondisi jenis vendor — kondisi itu tidak lagi dinilai.
+            'kondisiUsang' => array_values(array_diff(array_keys(array_filter($this->conditions, fn ($v) => $v !== [] && $v !== '' && $v !== null)), array_merge(['match'], $jenis?->conditions() ?? [], ['order_value_min']))),
             'approverTypes' => ApproverType::options(),
             'modes' => DecisionMode::options(),
             'matches' => ConditionMatch::options(),
@@ -124,7 +131,9 @@ class RuleForm extends Component
             'approver_type' => ApproverType::WarehouseHead->value,
             'approver_ref_id' => '',
             'decision_mode' => DecisionMode::Any->value,
+            'same_org_unit' => true,
             'timeout_hours' => '24',
+            'channel' => 'web',
             'backup_approver_type' => '',
             'backup_ref_id' => '',
         ];

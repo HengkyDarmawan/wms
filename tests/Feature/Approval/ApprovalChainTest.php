@@ -124,10 +124,12 @@ class ApprovalChainTest extends TenantTestCase
         $this->assertSame(1, ApprovalRule::query()->where('name', ApprovalDemoSeeder::REQ_LAINNYA)->sole()->steps()->count());
         $this->assertSame(ApprovalDocumentType::VendorReturn, ApprovalRule::query()->where('name', ApprovalDemoSeeder::RTV)->sole()->document_type);
 
-        $prq = ApprovalRule::query()->where('name', ApprovalDemoSeeder::PRQ_ONLINE)->with('steps')->sole();
-        $this->assertSame(ApprovalDocumentType::PurchaseRequest, $prq->document_type);
-        $this->assertSame(['match' => 'all', 'vendor_types' => ['online_marketplace']], $prq->conditions);
-        $this->assertSame([ApproverType::WarehouseHead, ApproverType::Role], $prq->steps->pluck('approver_type')->all());
+        // A-308: jenis vendor dinilai di PO; aturan PRQ toko online tidak dibuat lagi.
+        $this->assertFalse(ApprovalRule::query()->active()->where('name', ApprovalDemoSeeder::PRQ_ONLINE)->exists());
+        $online = ApprovalRule::query()->where('name', ApprovalDemoSeeder::PO_ONLINE)->with('steps')->sole();
+        $this->assertSame(ApprovalDocumentType::PurchaseOrder, $online->document_type);
+        $this->assertSame(['match' => 'all', 'vendor_types' => ['online_marketplace']], $online->conditions);
+        $this->assertSame([ApproverType::WarehouseHead, ApproverType::Role], $online->steps->pluck('approver_type')->all());
 
         // Satu-satunya kondisi nilai uang: PO (D-28, A-212).
         $po = ApprovalRule::query()->where('name', ApprovalDemoSeeder::PO_BESAR)->with('steps')->sole();

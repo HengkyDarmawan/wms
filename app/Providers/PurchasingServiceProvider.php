@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalRegistry;
 use App\Domain\PurchaseRequest\Events\OrderLinesReceived;
+use App\Domain\Purchasing\Livewire\PriceHistory;
 use App\Domain\Purchasing\Livewire\PurchaseOrderDetail;
 use App\Domain\Purchasing\Livewire\PurchaseOrderForm;
 use App\Domain\Purchasing\Livewire\PurchaseOrderList;
@@ -43,5 +44,6 @@ class PurchasingServiceProvider extends ServiceProvider
         Livewire::component('purchasing.purchase-order-form', PurchaseOrderForm::class);
         Livewire::component('purchasing.purchase-order-detail', PurchaseOrderDetail::class);
         Livewire::component('purchasing.vendor-price-list', VendorPriceList::class);
+        Livewire::component('purchasing.price-history', PriceHistory::class);
     }
 }

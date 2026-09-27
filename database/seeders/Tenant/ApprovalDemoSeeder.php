@@ -39,6 +39,9 @@ class ApprovalDemoSeeder extends Seeder
 
     public const PO_BESAR = 'PO bernilai ≥ Rp 50 juta';
 
+    /** A-308: pengganti aturan PRQ toko online. */
+    public const PO_ONLINE = 'PO toko online';
+
     public function run(): void
     {
         if (app()->environment('production')) {
@@ -95,19 +98,15 @@ class ApprovalDemoSeeder extends Seeder
         $this->aturan(ApprovalDocumentType::StockCount, self::OPN_AUDIT, 10,
             ['match' => 'all', 'count_types' => ['annual', 'spot_check']],
             [
-                [ApproverType::Role, $auditor->id, DecisionMode::Any],
+                // Auditor independen dari divisi pemohon (A-269).
+                [ApproverType::Role, $auditor->id, DecisionMode::Any, false],
             ],
         );
 
-        // §5 baris PRQ: jenis vendor toko online → kepala gudang tujuan → Manajemen (A-52).
-        // PRQ lain tanpa aturan = disetujui otomatis (A-08).
-        $this->aturan(ApprovalDocumentType::PurchaseRequest, self::PRQ_ONLINE, 10,
-            ['match' => 'all', 'vendor_types' => ['online_marketplace']],
-            [
-                [ApproverType::WarehouseHead, null, DecisionMode::Any],
-                [ApproverType::Role, $manajemen->id, DecisionMode::Any],
-            ],
-        );
+        // A-308: jenis vendor dinilai di PO (vendor dipilih Purchasing setelah PRQ
+        // disetujui). Aturan PRQ lama dinonaktifkan, tidak dihapus (P-03).
+        ApprovalRule::query()->where('document_type', ApprovalDocumentType::PurchaseRequest->value)
+            ->where('name', self::PRQ_ONLINE)->update(['is_active' => false]);
 
         // §5 baris PO: nilai PO ≥ Rp 50.000.000 → Manajemen (D-28, A-212, A-218).
         // PO lain tanpa aturan = disetujui otomatis (A-08).
@@ -118,12 +117,21 @@ class ApprovalDemoSeeder extends Seeder
             ],
         );
 
+        // §5 baris PO: vendor toko online → kepala gudang tujuan → Manajemen (A-52, A-308).
+        $this->aturan(ApprovalDocumentType::PurchaseOrder, self::PO_ONLINE, 20,
+            ['match' => 'all', 'vendor_types' => ['online_marketplace']],
+            [
+                [ApproverType::WarehouseHead, null, DecisionMode::Any],
+                [ApproverType::Role, $manajemen->id, DecisionMode::Any],
+            ],
+        );
+
         $this->command?->info('Aturan approval demo siap: '.ApprovalRule::count().' aturan.');
     }
 
     /**
      * @param  array<string, mixed>  $conditions
-     * @param  array<int, array{0: ApproverType, 1: int|null, 2: DecisionMode}>  $steps
+     * @param  array<int, array{0: ApproverType, 1: int|null, 2: DecisionMode, 3?: bool}>  $steps  [3] = hanya divisi pemohon (A-269, bawaan ya)
      */
     private function aturan(ApprovalDocumentType $type, string $name, int $priority, array $conditions, array $steps): void
     {
@@ -132,13 +140,16 @@ class ApprovalDemoSeeder extends Seeder
             ['priority' => $priority, 'conditions' => $conditions, 'is_active' => true],
         );
 
-        foreach ($steps as $i => [$approver, $ref, $mode]) {
+        foreach ($steps as $i => $lapis) {
+            [$approver, $ref, $mode] = $lapis;
+
             ApprovalStep::updateOrCreate(
                 ['approval_rule_id' => $rule->id, 'step_no' => $i + 1],
                 [
                     'approver_type' => $approver->value,
                     'approver_ref_id' => $ref,
                     'decision_mode' => $mode->value,
+                    'same_org_unit' => $approver->limitableToOrgUnit() && ($lapis[3] ?? true),
                     'timeout_hours' => 24,
                     'channel' => 'web',
                     'require_pin' => false,

@@ -145,6 +145,8 @@ for (const url of links) {
   const sebelum = errors.length;
   await go(`${BASE}/warehouses/1/layout`);
   cek('denah gudang: svg zona', await ev('document.querySelectorAll("main svg rect").length > 0'));
+  // A-281: petak bin di dalam kotak rak, label level (L1…) di luar kotak.
+  cek('denah gudang: petak bin & label level', await ev('document.querySelectorAll("main svg g[data-rak] rect").length > 2 && [...document.querySelectorAll("main svg g[data-rak] text")].some(t => /^L\\d+$/.test(t.textContent.trim()))'));
   await ev('document.querySelector("main svg g")?.dispatchEvent(new MouseEvent("click", { bubbles: true }))');
   await sleep(900);
   cek('denah gudang: panel rak', await ev('!!document.querySelector("main .border-primary")'));
@@ -165,7 +167,105 @@ for (const url of links) {
   await go(`${BASE}/imports`);
   cek('impor: kartu struktur gudang', await ev('!!document.querySelector(`#impor-bins form[action$="/imports/bins"]`)'));
   cek('impor: templat struktur gudang', (await ev('fetch("/imports/bins/template").then(r => r.status)')) === 200);
+  // 6c2. Impor gudang (A-272).
+  cek('impor: kartu gudang', await ev('!!document.querySelector(`#impor-warehouses form[action$="/imports/warehouses"]`)'));
+  cek('impor: templat gudang', (await ev('fetch("/imports/warehouses/template").then(r => r.status)')) === 200);
   cek('impor: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
+}
+
+// 6c3. Tambah zona & rak dari denah (A-271): mode Atur denah → zona baru → rak 2 level × 2 bin.
+{
+  const sebelum = errors.length;
+  const kode = 'Z' + (Date.now() % 1000);
+  await go(`${BASE}/warehouses/1/layout`);
+  await ev('[...document.querySelectorAll("main button")].find(b => /Atur denah/.test(b.textContent)).click()');
+  await sleep(1200);
+  cek('denah: kartu tambah zona & rak', await ev('!!document.getElementById("tambah-struktur")'));
+  const isi = (id, v) => ev(`(() => { const i = document.getElementById('${id}'); i.value = '${v}'; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  await isi('zb-kode', kode); await isi('zb-nama', 'Zona uji denah');
+  await sleep(500);
+  await ev('[...document.querySelectorAll("main button")].find(b => b.textContent.trim() === "Tambah zona").click()');
+  await sleep(1500);
+  cek('denah: zona baru tampil', await ev(`[...document.querySelectorAll("main .card-header strong")].some(h => h.textContent.includes('${kode}'))`));
+  await isi('rb-kode', 'R01'); await isi('rb-level', '2'); await isi('rb-bin', '2');
+  await sleep(500);
+  await ev('[...document.querySelectorAll("main button")].find(b => b.textContent.trim() === "Tambah rak").click()');
+  await sleep(1800);
+  cek('denah: rak baru + bin', await ev(`document.querySelector("main").textContent.includes('-${kode}-R01-L2-B02')`));
+  cek('denah: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
+}
+
+// 6d. Ukuran & desain label (A-261, A-262): tambah ukuran, geser elemen di kanvas, simpan, contoh PDF.
+{
+  const sebelum = errors.length;
+  const kode = 'UJI-' + (Date.now() % 100000);
+  await go(`${BASE}/settings/label-formats`);
+  await ev('[...document.querySelectorAll("main button")].find(b => /Tambah ukuran/.test(b.textContent)).click()');
+  await sleep(900);
+  await ev(`(() => { const isi = (id, v) => { const i = document.getElementById(id); i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); };
+    isi('fmt-kode', '${kode}'); isi('fmt-nama', 'Thermal uji 60x40'); isi('fmt-w', '60'); isi('fmt-h', '40'); })()`);
+  await sleep(900);
+  await ev('[...document.querySelectorAll("main button")].find(b => /Simpan ukuran/.test(b.textContent)).click()');
+  await sleep(1200);
+  cek('ukuran label: tambah', await ev(`[...document.querySelectorAll("main td.font-monospace")].some(t => t.textContent.trim() === '${kode}')`));
+
+  await go(`${BASE}/settings/label-designs?type=label_item`);
+  cek('desain label: kanvas', await ev('document.querySelectorAll(".ld-kanvas .ld-el").length === 6'));
+  const awal = await ev('(() => { const r = document.querySelector(\'.ld-el[data-el="title"]\').getBoundingClientRect(); return { x: r.left + 8, y: r.top + r.height / 2, mm: Alpine.$data(document.querySelector(".ld-designer")).elements.title.x }; })()');
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: awal.x, y: awal.y, button: 'left', buttons: 1, clickCount: 1 });
+  for (let i = 1; i <= 8; i++) {
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: awal.x + i * 5, y: awal.y, button: 'left', buttons: 1 });
+    await sleep(30);
+  }
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: awal.x + 40, y: awal.y, button: 'left', buttons: 0, clickCount: 1 });
+  await sleep(300);
+  const geser = await ev('Alpine.$data(document.querySelector(".ld-designer")).elements.title.x');
+  cek('desain label: geser elemen', geser > awal.mm, `${awal.mm} → ${geser} mm`);
+  await ev('document.getElementById("ld-kode-qr").click()');
+  await sleep(200);
+  cek('desain label: QR saja menyembunyikan barcode', await ev('getComputedStyle(document.querySelector(\'.ld-el[data-el="barcode"]\')).display === "none"'));
+  await ev('[...document.querySelectorAll(".ld-designer button")].find(b => /Simpan desain/.test(b.textContent)).click()');
+  await sleep(1500);
+  await go(`${BASE}/settings/label-designs?type=label_item`);
+  const tersimpan = await ev('(() => { const d = Alpine.$data(document.querySelector(".ld-designer")); return { x: d.elements.title.x, mode: d.codeMode }; })()');
+  cek('desain label: tersimpan', Math.abs(tersimpan.x - geser) < 0.11 && tersimpan.mode === 'qr', JSON.stringify(tersimpan));
+  const pdf = await ev('fetch(document.querySelector(\'a[href*="/settings/label-designs/preview"]\').href).then(r => r.headers.get("content-type"))');
+  cek('desain label: contoh PDF', /pdf/.test(pdf || ''), pdf);
+  await ev('document.getElementById("ld-kode-both").click()');
+  await ev('[...document.querySelectorAll(".ld-designer button")].find(b => /Simpan desain/.test(b.textContent)).click()');
+  await sleep(1200);
+  cek('label: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
+}
+
+// 6e. Label kemasan (A-296, A-302): halaman Telusuri label (pindai → daftar/riwayat) dan jenis cetak Label kemasan.
+{
+  const sebelum = errors.length;
+  await go(`${BASE}/labels/trace`);
+  cek('telusuri label: isian pindai', await ev('!!document.querySelector("#trace-kode[data-scan]")'));
+  await go(`${BASE}/labels/trace?code=TIDAK-ADA-999`);
+  cek('telusuri label: kode tak dikenal', await ev('/bukan label kemasan/.test(document.querySelector("main").textContent)'));
+  await go(`${BASE}/labels?type=label_package`);
+  cek('cetak label: jenis Label kemasan', await ev('[...document.querySelectorAll("main select option")].some(o => o.value === "label_package" && o.selected)'));
+  cek('label kemasan: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
+}
+
+// 6f. Riwayat harga beli (A-309): dari detail item (Admin Company memegang po.view).
+{
+  const sebelum = errors.length;
+  await go(`${BASE}/items`);
+  const detail = await ev(`[...document.querySelectorAll("main a[href*='/items/']")].map(a => a.href).find(h => /\\/items\\/\\d+$/.test(h)) || ""`);
+  if (detail) {
+    await go(detail);
+    const riwayat = await ev(`document.querySelector("main a[href*='/price-history']")?.href || ""`);
+    cek('detail item: tombol riwayat harga beli', !!riwayat);
+    if (riwayat) {
+      await go(riwayat);
+      cek('riwayat harga beli: ringkasan per vendor', await ev('/Ringkasan per vendor/.test(document.querySelector("main").textContent)'));
+    }
+  } else {
+    cek('detail item: tautan item ditemukan', false);
+  }
+  cek('riwayat harga: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
 }
 
 // 7. Layar Super Admin di domain pusat (akun dari docs/00-akun-uji.md)

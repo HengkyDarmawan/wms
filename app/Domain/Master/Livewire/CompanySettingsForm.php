@@ -9,6 +9,8 @@ use App\Domain\Master\Exceptions\MasterRuleException;
 use App\Domain\Master\Livewire\Concerns\HandlesMasterRules;
 use App\Domain\Master\Models\CompanySetting;
 use App\Domain\Master\Support\CompanySettingCatalog;
+use App\Domain\Shared\Messaging\MessageGateway;
+use App\Domain\WhatsApp\Support\WhatsAppChannel;
 use Illuminate\View\View;
 use Livewire\Component;
 
@@ -64,10 +66,11 @@ class CompanySettingsForm extends Component
     public function render(): View
     {
         return view('livewire.master.company-settings-form', [
-            'katalog' => CompanySettingCatalog::nilai(),
-            'grup' => collect(CompanySettingCatalog::nilai())->groupBy('grup', true)->map(fn ($k) => $k->keys()->all())->all(),
+            'katalog' => $this->katalog(),
+            'grup' => collect($this->katalog())->groupBy('grup', true)->map(fn ($k) => $k->keys()->all())->all(),
             'daftarFitur' => CompanySettingCatalog::fitur(),
             'pemakai' => CompanySettingCatalog::pemakaiFitur(),
+            'kanalPesan' => app(MessageGateway::class)->available() || app(WhatsAppChannel::class)->enabled(),
             'zona' => CompanySettingCatalog::ZONA_WAKTU,
             'kunciPeriode' => CompanySetting::get('stock_lock_date'),
             'bolehUbah' => auth()->user()?->hasPermission('company_setting.manage') ?? false,
@@ -79,5 +82,13 @@ class CompanySettingsForm extends Component
         $this->nilai = CompanySettingCatalog::nilaiSaatIni();
         $this->fitur = CompanySettingCatalog::fiturSaatIni();
         $this->timezone = (string) (tenant()?->timezone ?? 'Asia/Jakarta');
+    }
+
+    /** A-306: pengaturan Purchasing hanya tampil bagi pemegang `po.view` (D-07). */
+    private function katalog(): array
+    {
+        $katalog = CompanySettingCatalog::nilai();
+
+        return auth()->user()?->can('po.view') ? $katalog : array_filter($katalog, fn (array $k) => $k['grup'] !== 'Purchasing');
     }
 }

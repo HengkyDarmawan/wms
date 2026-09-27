@@ -61,9 +61,9 @@ class MasterDemoSeeder extends Seeder
     {
         $clients = $this->seedClients();
         $this->seedProjects($clients);
-        $vendors = $this->seedVendors();
+        $this->seedVendors();
         $categories = $this->seedCategories();
-        $this->seedItems($categories, $vendors);
+        $this->seedItems($categories);
         $this->seedCarriers();
 
         $this->command?->info('Master demo siap: '.Client::count().' klien, '
@@ -153,9 +153,8 @@ class MasterDemoSeeder extends Seeder
      * bisa dicoba tanpa membuat data sendiri.
      *
      * @param  array<string, ItemCategory>  $categories
-     * @param  array<string, Vendor>  $vendors
      */
-    private function seedItems(array $categories, array $vendors): void
+    private function seedItems(array $categories): void
     {
         $meter = Uom::query()->where('code', 'M')->value('id');
         $pcs = Uom::query()->where('code', 'PCS')->value('id');
@@ -167,14 +166,14 @@ class MasterDemoSeeder extends Seeder
                 'name' => 'Pipa PVC 4 inci',
                 'category' => 'PIPA',
                 'base_uom_id' => $meter,
-                'tracking_mode' => TrackingMode::Piece,
+                // A-283: Barang biasa — memotong termasuk pemakaian, stok dalam meter.
+                'tracking_mode' => TrackingMode::None,
                 'ownership_model' => OwnershipModel::Consumable,
-                'removal_strategy' => RemovalStrategy::OffcutFirst,
-                'is_cuttable' => true,
-                'min_offcut_length' => 0.5,
-                'kerf' => 0.005,
+                'removal_strategy' => RemovalStrategy::Fifo,
+                'is_cuttable' => false,
+                'min_offcut_length' => null,
+                'kerf' => null,
                 'reorder_point' => 100,
-                'vendors' => ['BAJA-PRIMA', 'BESI-JAYA'],
             ],
             [
                 'code' => 'BAUT-M12',
@@ -186,7 +185,6 @@ class MasterDemoSeeder extends Seeder
                 'removal_strategy' => RemovalStrategy::Fifo,
                 'reorder_point' => 500,
                 'min_stock' => 200,
-                'vendors' => ['BESI-JAYA'],
             ],
             [
                 'code' => 'SEMEN-PCC-50',
@@ -198,7 +196,6 @@ class MasterDemoSeeder extends Seeder
                 'removal_strategy' => RemovalStrategy::Fefo,
                 'has_expiry' => true,
                 'reorder_point' => 1000,
-                'vendors' => ['BAJA-PRIMA'],
             ],
             [
                 'code' => 'GENSET-5KVA',
@@ -209,15 +206,20 @@ class MasterDemoSeeder extends Seeder
                 'ownership_model' => OwnershipModel::Asset,
                 'removal_strategy' => RemovalStrategy::Manual,
                 'requires_qc' => true,
-                'vendors' => ['TOKO-ALAT'],
             ],
         ];
 
         foreach ($definisi as $data) {
             $kategori = $categories[$data['category']]->id;
-            $pemasok = $data['vendors'];
+            unset($data['category']);
 
-            unset($data['category'], $data['vendors']);
+            // DEMO lama yang masih punya potongan PIPA tidak diubah diam-diam (P-03).
+            $lama = Item::query()->where('code', $data['code'])->first();
+
+            if ($lama !== null && $lama->pieces()->exists()) {
+                $this->command?->warn('Item '.$lama->code.' masih punya potongan; pengaturan pelacakannya tidak diubah. Reset DEMO untuk data baru.');
+                $data = array_diff_key($data, array_flip(['tracking_mode', 'removal_strategy', 'is_cuttable', 'min_offcut_length', 'kerf']));
+            }
 
             $item = Item::updateOrCreate(
                 ['code' => $data['code']],
@@ -227,26 +229,17 @@ class MasterDemoSeeder extends Seeder
                 ],
             );
 
-            $pasangan = [];
-
-            foreach ($pemasok as $urutan => $kodeVendor) {
-                $pasangan[$vendors[$kodeVendor]->id] = [
-                    'priority' => $urutan + 1,
-                    'is_preferred' => $urutan === 0,
-                ];
-            }
-
-            $item->vendors()->sync($pasangan);
+            // A-305: vendor tetap tidak dipakai lagi; saran vendor dari riwayat PO/pesanan.
         }
 
-        // BR-STK-09: pipa dijual per batang 6 m, tapi disimpan dalam meter.
+        // Pipa dibeli per batang 6 m, tapi disimpan dalam meter.
         $pipa = Item::query()->where('code', 'PIPA-PVC-4')->first();
         $batang = Uom::query()->where('code', 'BATANG')->value('id');
 
         if ($pipa !== null && $batang !== null) {
             $pipa->uomConversions()->updateOrCreate(
                 ['uom_id' => $batang],
-                ['qty_base' => 6, 'is_nominal_piece' => true],
+                ['qty_base' => 6, 'is_nominal_piece' => false],
             );
         }
     }

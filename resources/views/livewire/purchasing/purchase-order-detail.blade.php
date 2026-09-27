@@ -16,7 +16,9 @@
                 @if ($po->approved_at && $po->status !== \App\Domain\Purchasing\Enums\PurchaseOrderStatus::Rejected) · {{ __('Disetujui') }} {{ $po->approver?->name ?? __('otomatis') }} @endif
             </p>
             @if ($po->payment_terms) <p class="small mb-0">{{ __('Termin') }}: {{ $po->payment_terms }}</p> @endif
+            <p class="small mb-0">{{ $po->taxNote() }}</p>
             @if ($po->notes) <p class="small mb-0">{{ $po->notes }}</p> @endif
+            @if ($po->vendor_choice_note) <p class="small mb-0 text-muted">{{ __('Alasan memilih vendor') }}: {{ $po->vendor_choice_note }}</p> @endif
             @if ($po->rejectReason) <p class="text-danger small mb-0">{{ __('Ditolak') }} {{ $po->approver?->name }}: {{ $po->rejectReason->label }}</p> @endif
             @if ($po->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $po->cancelReason->label }}</p> @endif
             @if ($po->closeReason) <p class="small mb-0">{{ __('Ditutup dengan sisa') }}: {{ $po->closeReason->label }}</p> @endif
@@ -120,7 +122,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th class="text-end" colspan="6">{{ __('Nilai PO') }}</th>
+                        <th class="text-end" colspan="6">{{ __('Nilai PO') }} <span class="fw-normal text-muted small">({{ \Illuminate\Support\Str::lower($po->taxNote()) }})</span></th>
                         <th class="text-end text-nowrap">{{ $rp($po->total_amount) }}</th>
                     </tr>
                 </tfoot>
@@ -161,6 +163,16 @@
                 <li class="list-group-item text-muted">{{ __('Belum ada barang diterima.') }}</li>
             @endforelse
         </ul>
+        @if ($bonus->isNotEmpty())
+            <div class="card-body border-top">
+                <strong class="small">{{ __('Bonus dari vendor') }}</strong>
+                <ul class="small mb-0">
+                    @foreach ($bonus as $b)
+                        <li>{{ $b->item?->code }} {{ $b->item?->name }} — {{ rtrim(rtrim(number_format((float) $b->qty_received, 4, ',', '.'), '0'), ',') }} {{ $b->item?->baseUom?->code }} ({{ $b->receipt?->number }}){{ $b->notes ? ': '.$b->notes : '' }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
     </div>
 
     {{-- A-252: dokumen asal & turunan. --}}
@@ -173,7 +185,7 @@
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $r)
-                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
+                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ \App\Domain\Shared\Support\ActivityText::label($r->description) }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
             @endforelse

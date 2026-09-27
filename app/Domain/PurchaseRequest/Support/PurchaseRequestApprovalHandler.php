@@ -10,13 +10,11 @@ use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Models\ApprovalSnapshot;
 use App\Domain\Approval\Support\ApprovalContext;
 use App\Domain\Master\Models\Item;
-use App\Domain\Master\Models\ItemVendor;
 use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\PurchaseRequest\Enums\PurchaseRequestStatus;
 use App\Domain\PurchaseRequest\Exceptions\PurchaseRequestRuleException;
 use App\Domain\PurchaseRequest\Models\PurchaseRequest;
 use App\Domain\PurchaseRequest\Models\PurchaseRequestLine;
-use App\Domain\PurchaseRequest\Models\PurchaseRequestOrder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -25,7 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Kondisi khusus PRQ: **asal PRQ** dan **jenis vendor** — PRQ belum punya
  * vendor saat diajukan, jadi jenis vendor dibaca dari vendor utama item di
- * `item_vendors` (A-52, A-173).
+ * riwayat (A-52, A-173; jenis vendor dinilai di PO sejak A-308).
  */
 class PurchaseRequestApprovalHandler implements ApprovalHandler
 {
@@ -81,7 +79,8 @@ class PurchaseRequestApprovalHandler implements ApprovalHandler
             ownershipModels: $item->map(fn (Item $i) => $i->ownership_model?->value)->filter()->unique()->values()->all(),
             lineCount: $baris->count(),
             maxLineQty: (float) ($baris->max(fn (PurchaseRequestLine $l) => (float) $l->qty_base) ?? 0),
-            vendorType: $this->jenisVendor((int) $document->getKey(), $itemIds),
+            // A-308: kondisi jenis vendor tidak lagi dinilai untuk PRQ.
+            vendorType: null,
             purchaseRequestOrigin: $document->origin?->value,
             requesterId: $document->submitted_by !== null ? (int) $document->submitted_by : ($document->created_by !== null ? (int) $document->created_by : null),
             requesterIds: array_values(array_unique(array_filter([(int) $document->created_by, (int) $document->submitted_by]))),
@@ -135,37 +134,5 @@ class PurchaseRequestApprovalHandler implements ApprovalHandler
         activity('purchase_request')->performedOn($document)->causedBy($actor)
             ->withProperties(['reason_code_id' => $reasonCodeId, 'keterangan' => $notes])
             ->log('PRQ ditolak');
-    }
-
-    /**
-     * Jenis vendor untuk kondisi approval (A-173): vendor catatan pemesanan bila
-     * sudah ada, selain itu vendor utama item (`item_vendors`). Bila beberapa
-     * jenis, dipakai yang paling berisiko: toko online → perorangan → toko →
-     * perusahaan.
-     *
-     * @param  array<int, int>  $itemIds
-     */
-    private function jenisVendor(int $prqId, array $itemIds): ?string
-    {
-        $jenis = PurchaseRequestOrder::query()->with('vendor:id,vendor_type')
-            ->where('purchase_request_id', $prqId)->get()
-            ->map(fn ($o) => $o->vendor?->vendor_type?->value);
-
-        if ($jenis->filter()->isEmpty()) {
-            $jenis = ItemVendor::query()->with('vendor:id,vendor_type')
-                ->whereIn('item_id', $itemIds)
-                ->orderByDesc('is_preferred')->orderBy('priority')
-                ->get()
-                ->groupBy('item_id')
-                ->map(fn ($g) => $g->first()?->vendor?->vendor_type?->value);
-        }
-
-        foreach (['online_marketplace', 'individual', 'shop', 'company'] as $urut) {
-            if ($jenis->contains($urut)) {
-                return $urut;
-            }
-        }
-
-        return null;
     }
 }

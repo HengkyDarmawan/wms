@@ -11,7 +11,6 @@ use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Enums\VendorStatus;
 use App\Domain\Master\Enums\VendorType;
-use App\Domain\Master\Models\ItemVendor;
 use App\Domain\Master\Models\Vendor;
 use App\Domain\PurchaseRequest\Actions\ApprovePurchaseRequest;
 use App\Domain\PurchaseRequest\Actions\CancelPurchaseRequest;
@@ -81,15 +80,18 @@ class PurchaseRequestTest extends TenantTestCase
     }
 
     #[Test]
-    public function tc_prq_03_aturan_jenis_vendor_toko_online_dua_lapis_dan_tolak(): void
+    public function tc_prq_03_aturan_dua_lapis_dan_tolak_tanpa_kondisi_jenis_vendor(): void
     {
-        $toko = Vendor::create(['code' => 'V-TOKO', 'name' => 'Tokopedia Toko Alat', 'vendor_type' => VendorType::OnlineMarketplace, 'status' => VendorStatus::Active, 'is_active' => true]);
-        ItemVendor::create(['item_id' => $this->baut->id, 'vendor_id' => $toko->id, 'priority' => 1, 'is_preferred' => true]);
+        // A-308: aturan PRQ lama berkondisi jenis vendor tidak pernah cocok lagi.
+        // Disimpan langsung seperti data lama: form aturan kini membuang kondisi itu.
+        $this->aturan(ApprovalDocumentType::PurchaseRequest, [$this->lapisRole('management')], ['match' => 'all', 'line_qty_min' => 1], 5, 'PRQ toko online (lama)')
+            ->forceFill(['conditions' => ['match' => 'all', 'vendor_types' => ['online_marketplace']]])->save();
+        $this->assertNotContains('vendor_types', ApprovalDocumentType::PurchaseRequest->conditions());
 
         $this->aturan(ApprovalDocumentType::PurchaseRequest, [
             $this->lapis(ApproverType::WarehouseHead),
             $this->lapisRole('management'),
-        ], ['match' => 'all', 'vendor_types' => ['online_marketplace']], 10, 'PRQ toko online');
+        ], ['match' => 'all', 'line_qty_min' => 50], 10, 'PRQ jumlah besar');
 
         $kepala = $this->makeUser('warehouse_head', ScopeType::Warehouse, $this->gudang->id);
         $manajemen = $this->makeUser('management');
@@ -108,7 +110,7 @@ class PurchaseRequestTest extends TenantTestCase
         app(ApprovePurchaseRequest::class)->approve($prq, $manajemen);
         $this->assertSame(PurchaseRequestStatus::Approved, $prq->refresh()->status);
 
-        // PRQ tanpa vendor toko online tidak kena aturan.
+        // PRQ kecil tidak kena aturan; aturan jenis vendor lama pun tidak.
         $semen = $this->prqManual([['item_id' => $this->semen->id, 'qty_base' => 5]]);
         $this->assertSame(PurchaseRequestStatus::Approved, $semen->status);
 

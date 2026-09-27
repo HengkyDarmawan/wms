@@ -47,6 +47,17 @@
                 <label class="form-label" for="po-catatan">{{ __('Keterangan') }}</label>
                 <input class="form-control" id="po-catatan" type="text" maxlength="255" wire:model="form.notes" placeholder="{{ __('Opsional') }}">
             </div>
+            <div class="col-md-6">
+                <label class="form-label" for="po-alasan-vendor">{{ __('Alasan memilih vendor ini') }}</label>
+                <input class="form-control" id="po-alasan-vendor" type="text" maxlength="255" wire:model="form.vendor_choice_note" placeholder="{{ __('Opsional, mis. kualitas atau layanan purnajual lebih baik') }}">
+            </div>
+            <div class="col-12">
+                <div class="form-check">
+                    <input class="form-check-input" id="po-ppn" type="checkbox" wire:model.live="form.price_includes_tax">
+                    <label class="form-check-label" for="po-ppn">{{ __('Harga sudah termasuk PPN') }}</label>
+                </div>
+                <div class="form-text">{{ __('Keterangan untuk vendor dan cetakan PO. Nilai PO tidak menghitung pajak; hilangkan centang bila harga vendor belum termasuk PPN.') }}</div>
+            </div>
         </div>
     </div>
 
@@ -79,8 +90,14 @@
                             </td>
                             <td>
                                 {{ $l->item?->code }}
-                                @if (in_array((int) $l->item_id, $tetap, true)) <span class="badge text-bg-info" title="{{ __('Vendor tetap item ini') }}">{{ __('vendor tetap') }}</span> @endif
                                 <div class="small text-muted">{{ $l->item?->name }}</div>
+                                @php($rw = $riwayat[(int) $l->item_id] ?? ['terakhir' => null, 'termurah' => null])
+                                @if ($rw['terakhir'])
+                                    <div class="small text-muted" data-harga-terakhir>{{ __('Terakhir') }}: {{ \App\Domain\Purchasing\Support\Money::format($rw['terakhir']['price']) }} · {{ $rw['terakhir']['vendor']?->name }} · {{ \Illuminate\Support\Carbon::parse($rw['terakhir']['date'])->format('d/m/Y') }}</div>
+                                @endif
+                                @if ($rw['termurah'])
+                                    <div class="small text-muted">{{ __('Termurah 6 bln') }}: {{ \App\Domain\Purchasing\Support\Money::format($rw['termurah']['price']) }} · {{ $rw['termurah']['vendor']?->name }}</div>
+                                @endif
                             </td>
                             <td class="text-end">{{ number_format($r['available'], 2, ',', '.') }} <span class="small text-muted">{{ $l->item?->baseUom?->code }}</span></td>
                             <td>
@@ -91,7 +108,14 @@
                                     <input class="form-control form-control-sm mt-1" type="text" maxlength="255" wire:model="reason.{{ $l->id }}" placeholder="{{ __('Alasan, mis. MOQ vendor') }}" aria-label="{{ __('Alasan pesan lebih') }} {{ $l->item?->code }}">
                                 @endif
                             </td>
-                            <td><input class="form-control form-control-sm" type="number" step="0.01" min="0" wire:model.live.debounce.500ms="price.{{ $l->id }}" aria-label="{{ __('Harga satuan') }} {{ $l->item?->code }}"></td>
+                            <td>
+                                <input class="form-control form-control-sm" type="number" step="0.01" min="0" wire:model.live.debounce.500ms="price.{{ $l->id }}" aria-label="{{ __('Harga satuan') }} {{ $l->item?->code }}">
+                                @php($naik = $this->kenaikan($l->id, $rw['terakhir']))
+                                @if ($naik !== null && $naik > $batasNaik)
+                                    {{-- A-306: harga lebih dari X % di atas harga PO terakhir. --}}
+                                    <span class="badge text-bg-warning mt-1" data-naik>{{ __('Naik :p % dari harga terakhir', ['p' => number_format($naik, 1, ',', '.')]) }}</span>
+                                @endif
+                            </td>
                             <td class="text-end text-nowrap">{{ $this->nilai($l->id) > 0 ? \App\Domain\Purchasing\Support\Money::format($this->nilai($l->id)) : '—' }}</td>
                         </tr>
                     @empty
@@ -105,7 +129,7 @@
                 @if ($terbuka->isNotEmpty())
                     <tfoot>
                         <tr>
-                            <th class="text-end" colspan="5">{{ __('Nilai PO') }}</th>
+                            <th class="text-end" colspan="5">{{ __('Nilai PO') }} <span class="fw-normal text-muted small">({{ $form['price_includes_tax'] ? __('sudah termasuk PPN') : __('belum termasuk PPN') }})</span></th>
                             <th class="text-end text-nowrap">{{ \App\Domain\Purchasing\Support\Money::format($total) }}</th>
                         </tr>
                     </tfoot>

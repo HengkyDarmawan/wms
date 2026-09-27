@@ -28,8 +28,8 @@ class ReportTest extends TenantTestCase
         $admin = $this->makeUser('company_admin');
         $admin->forgetPermissionCache();
 
-        $this->assertCount(41, $registry->all(), 'Empat puluh satu laporan terdaftar (enam belas laporan §9 modul 19–22 sejak A-241; sebelas laporan §9 Stock/Request/Shipment sejak A-232; (Material per proyek sejak modul Issue, Aset dipinjamkan sejak modul Aset, lima laporan inti Blueprint §6.9a sejak Pendukung F1).');
-        $this->assertCount(41, $registry->availableTo($admin), 'Admin Company membuka semuanya.');
+        $this->assertCount(43, $registry->all(), 'Empat puluh tiga laporan terdaftar (Riwayat harga beli sejak A-309; Barang bermasalah per vendor sejak A-303; enam belas laporan §9 modul 19–22 sejak A-241; sebelas laporan §9 Stock/Request/Shipment sejak A-232; (Material per proyek sejak modul Issue, Aset dipinjamkan sejak modul Aset, lima laporan inti Blueprint §6.9a sejak Pendukung F1).');
+        $this->assertCount(43, $registry->availableTo($admin), 'Admin Company membuka semuanya.');
 
         // Driver hanya punya item.view, project.view, warehouse.view, dan stock.view.
         $driver = $this->makeUser('driver');
@@ -90,11 +90,12 @@ class ReportTest extends TenantTestCase
         $laporan = app(ReportRegistry::class)->find('daftar-item');
 
         $semua = $laporan->rows([]);
-        $perPotong = $laporan->rows(['tracking_mode' => 'piece']);
+        $kedaluwarsa = $laporan->rows(['jenis' => 'expiring']);
 
         $this->assertSame(4, $semua->count());
-        $this->assertSame(1, $perPotong->count());
-        $this->assertSame('PIPA-PVC-4', $perPotong->first()['kode']);
+        $this->assertSame(1, $kedaluwarsa->count());
+        $this->assertSame('SEMEN-PCC-50', $kedaluwarsa->first()['kode']);
+        $this->assertSame(0, $laporan->rows(['jenis' => 'khusus'])->count(), 'A-283: seluruh item demo masuk tiga jenis barang.');
     }
 
     #[Test]

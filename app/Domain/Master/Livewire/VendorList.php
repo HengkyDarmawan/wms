@@ -11,12 +11,13 @@ use App\Domain\Master\Enums\VendorStatus;
 use App\Domain\Master\Enums\VendorType;
 use App\Domain\Master\Livewire\Concerns\HandlesMasterRules;
 use App\Domain\Master\Models\Vendor;
+use App\Domain\Master\Support\VendorImpact;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\View\View;
 use Illuminate\Validation\Rule;
-use Livewire\Attributes\Url;
+use Illuminate\View\View;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -220,13 +221,16 @@ class VendorList extends Component
             'jenis' => VendorType::options(),
             'statuses' => VendorStatus::options(),
             'alasan' => $this->pilihanAlasan(ReasonContext::Cancel),
+            // A-310: dokumen terbuka yang masih menunjuk vendor ini.
+            'dampak' => $this->deactivatingId === null ? null : app(VendorImpact::class)->for(Vendor::findOrFail($this->deactivatingId)),
         ]);
     }
 
     private function vendors(): LengthAwarePaginator
     {
         return Vendor::query()
-            ->withCount('itemVendors')
+            // A-305: vendor tetap tidak dipakai lagi; yang berguna = pesanan 12 bulan.
+            ->withCount(['requestOrders as pesanan_count' => fn (Builder $q) => $q->where('ordered_at', '>=', now()->subMonths(12))])
             ->when($this->search !== '', function (Builder $q): void {
                 $cari = '%'.$this->search.'%';
                 $q->where(fn (Builder $s) => $s->where('name', 'like', $cari)

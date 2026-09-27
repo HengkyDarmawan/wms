@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Purchasing\Livewire;
 
 use App\Domain\Master\Enums\VendorStatus;
-use App\Domain\Master\Models\ItemVendor;
+use App\Domain\Master\Models\CompanySetting;
 use App\Domain\Master\Models\Vendor;
 use App\Domain\PurchaseRequest\Models\PurchaseRequest;
 use App\Domain\PurchaseRequest\Models\PurchaseRequestLine;
@@ -16,6 +16,7 @@ use App\Domain\Purchasing\Models\PurchaseOrder;
 use App\Domain\Purchasing\Support\Money;
 use App\Domain\Purchasing\Support\PurchaseOrderLines;
 use App\Domain\Purchasing\Support\VendorPrices;
+use App\Domain\Purchasing\Support\VendorSuggestions;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -26,6 +27,7 @@ use Livewire\Component;
  * Layar purchasing/02 §6 — PO baru / ubah draf: vendor `*`, gudang tujuan `*`,
  * lalu jumlah & harga satuan per baris PRQ terbuka gudang itu (A-210, A-211).
  * Harga bawaan dari daftar harga vendor; vendor tetap item ditandai (A-52).
+ * Centang "harga sudah termasuk PPN" bawaan menyala (A-265).
  */
 class PurchaseOrderForm extends Component
 {
@@ -34,8 +36,8 @@ class PurchaseOrderForm extends Component
     #[Locked]
     public ?int $poId = null;
 
-    /** @var array<string, string> */
-    public array $form = ['vendor_id' => '', 'warehouse_id' => '', 'eta_date' => '', 'notes' => ''];
+    /** @var array<string, string|bool> */
+    public array $form = ['vendor_id' => '', 'warehouse_id' => '', 'eta_date' => '', 'notes' => '', 'vendor_choice_note' => '', 'price_includes_tax' => true];
 
     /** @var array<int|string, string> purchase_request_line_id => jumlah */
     public array $qty = [];
@@ -57,6 +59,8 @@ class PurchaseOrderForm extends Component
                 'warehouse_id' => (string) $purchaseOrder->warehouse_id,
                 'eta_date' => $purchaseOrder->eta_date?->toDateString() ?? '',
                 'notes' => (string) $purchaseOrder->notes,
+                'vendor_choice_note' => (string) $purchaseOrder->vendor_choice_note,
+                'price_includes_tax' => (bool) $purchaseOrder->price_includes_tax,
             ];
 
             foreach ($purchaseOrder->lines as $l) {
@@ -81,13 +85,11 @@ class PurchaseOrderForm extends Component
                 }
             }
 
-            // Vendor tetap utama item PRQ disarankan (A-52).
-            $saran = ItemVendor::query()->whereIn('item_id', $prq->lines()->pluck('item_id'))
-                ->whereHas('vendor', fn ($q) => $q->where('is_active', true)->where('status', VendorStatus::Active->value))
-                ->orderByDesc('is_preferred')->orderBy('priority')->value('vendor_id');
+            // A-304: bawaan = vendor terakhir item-item PRQ; Purchasing bebas mengganti.
+            $saran = app(VendorSuggestions::class)->defaultVendor($prq->lines()->pluck('item_id')->map(fn ($v) => (int) $v)->all());
 
             if ($saran !== null) {
-                $this->form['vendor_id'] = (string) $saran;
+                $this->form['vendor_id'] = (string) $saran->id;
                 $this->isiHarga(true);
             }
         }
@@ -148,7 +150,8 @@ class PurchaseOrderForm extends Component
             'warehouses' => Warehouse::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
             'vendors' => Vendor::query()->where('is_active', true)->where('status', VendorStatus::Active->value)->orderBy('name')->get(['id', 'code', 'name', 'vendor_type', 'payment_terms']),
             'terbuka' => $terbuka,
-            'tetap' => $this->form['vendor_id'] === '' ? [] : ItemVendor::query()->where('vendor_id', (int) $this->form['vendor_id'])->whereIn('item_id', $itemIds)->pluck('item_id')->map(fn ($v) => (int) $v)->all(),
+            'riwayat' => $this->riwayatHarga($itemIds),
+            'batasNaik' => (float) CompanySetting::get('po_price_increase_pct', 10),
             'total' => Money::round($terbuka->sum(fn ($r) => $this->nilai($r['line']->id))),
             'nomor' => $this->poId !== null ? PurchaseOrder::query()->whereKey($this->poId)->value('number') : null,
         ]);
@@ -160,6 +163,37 @@ class PurchaseOrderForm extends Component
         $h = $this->price[$lineId] ?? '';
 
         return is_numeric($q) && is_numeric($h) ? Money::round((float) $q * (float) $h) : 0.0;
+    }
+
+    /**
+     * A-304/A-306: per item harga PO terakhir (pembanding kenaikan) dan vendor
+     * termurah 6 bulan.
+     *
+     * @param  array<int, int>  $itemIds
+     * @return array<int, array{terakhir: ?array, termurah: ?array}>
+     */
+    private function riwayatHarga(array $itemIds): array
+    {
+        $saran = app(VendorSuggestions::class);
+        $hasil = [];
+
+        foreach (array_unique($itemIds) as $id) {
+            $hasil[$id] = ['terakhir' => $saran->lastPrice($id, $this->poId), 'termurah' => $saran->cheapest($id)];
+        }
+
+        return $hasil;
+    }
+
+    /** Persen kenaikan harga isian terhadap harga PO terakhir, atau null. */
+    public function kenaikan(int|string $lineId, ?array $terakhir): ?float
+    {
+        $h = $this->price[$lineId] ?? '';
+
+        if ($terakhir === null || ! is_numeric($h) || $terakhir['price'] <= 0) {
+            return null;
+        }
+
+        return round(((float) $h - $terakhir['price']) / $terakhir['price'] * 100, 1);
     }
 
     /** Jumlah isian di atas sisa permintaan (A-246). */

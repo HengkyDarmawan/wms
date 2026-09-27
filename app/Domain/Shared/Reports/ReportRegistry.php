@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Shared\Reports;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Purchasing\Reports\PurchasePriceHistoryReport;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -46,6 +47,9 @@ class ReportRegistry
         Definitions\DeliveryPerformanceReport::class,
         // Sisa Fase 1 2d: §9 modul 19–22 (A-241).
         Definitions\VendorReceiptReport::class,
+        Definitions\VendorProblemReport::class,
+        // Satu-satunya laporan bernilai uang: domain Purchasing, izin po.view (D-07, A-309).
+        PurchasePriceHistoryReport::class,
         Definitions\QuarantineAgeReport::class,
         Definitions\PendingPutawayReport::class,
         Definitions\OpenVendorReturnReport::class,

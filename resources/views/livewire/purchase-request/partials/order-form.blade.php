@@ -6,10 +6,18 @@
             <select class="form-select @error('order.vendor_id') is-invalid @enderror" id="po-vendor" wire:model="order.vendor_id">
                 <option value="">{{ __('Pilih vendor…') }}</option>
                 @foreach ($vendors as $v)
-                    <option value="{{ $v->id }}">{{ $v->name }} ({{ $vendorTypes[$v->vendor_type?->value] ?? '' }}){{ in_array((int) $v->id, $suggested, true) ? ' — '.__('vendor tetap item') : '' }}</option>
+                    <option value="{{ $v->id }}">{{ $v->name }} ({{ $vendorTypes[$v->vendor_type?->value] ?? '' }}){{ in_array((int) $v->id, $saran['ids'] ?? [], true) ? ' — '.__('disarankan') : '' }}</option>
                 @endforeach
             </select>
             @error('order.vendor_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            @if (($saran['baris'] ?? []) !== [])
+                <div class="small text-muted mt-1" id="po-saran">
+                    {{ __('Saran dari riwayat (bebas diganti):') }}
+                    @foreach ($saran['baris'] as $sb)
+                        <div>{{ $sb['item'] }} — {{ __('Terakhir') }}: {{ $sb['terakhir'] ?? '—' }}@can('po.view') · {{ __('Termurah 6 bln') }}: {{ $sb['termurah'] ?? '—' }}@endcan</div>
+                    @endforeach
+                </div>
+            @endif
         </div>
         <div class="col-md-8">
             <div class="small text-muted mb-1">{{ __('Atau vendor baru sementara (dilengkapi Admin Master Data nanti):') }}</div>
@@ -50,7 +58,7 @@
         </div>
         <div class="col-md-6">
             <label class="form-label" for="po-catv">{{ __('Alasan memilih vendor ini') }}</label>
-            <input class="form-control" id="po-catv" type="text" wire:model="order.vendor_note" placeholder="{{ __('Opsional, bila bukan vendor tetap item') }}">
+            <input class="form-control" id="po-catv" type="text" wire:model="order.vendor_note" placeholder="{{ __('Opsional, mis. kualitas atau layanan purnajual lebih baik') }}">
         </div>
         <div class="col-md-6">
             <label class="form-label" for="po-ket">{{ __('Keterangan') }}</label>

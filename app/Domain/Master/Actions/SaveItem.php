@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Master\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Enums\ItemKind;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\LineOwnership;
 use App\Domain\Master\Enums\OwnershipModel;
@@ -15,6 +16,7 @@ use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Uom;
 use App\Domain\Master\Support\EnumInput;
 use App\Domain\Master\Support\MasterCode;
+use App\Domain\Master\Support\StockFeatures;
 use App\Domain\Master\Support\TrackingCombination;
 use Illuminate\Support\Facades\DB;
 
@@ -35,7 +37,7 @@ class SaveItem
     /**
      * @param  array<string, mixed>  $attributes
      * @param  array<int, array<string, mixed>>|null  $conversions
-     * @param  array<int, array<string, mixed>>|null  $vendors
+     * @param  array<int, array<string, mixed>>|null  $vendors  diabaikan sejak A-305 (vendor tetap tidak dipakai lagi)
      */
     public function handle(
         ?Item $item,
@@ -60,6 +62,13 @@ class SaveItem
 
         if ($bentrok) {
             throw MasterRuleException::fields(['code' => 'Kode item "'.$kode.'" sudah dipakai.'], 'BR-MST-01');
+        }
+
+        // A-283: form & impor mengirim Jenis barang; kolom teknis diturunkan darinya.
+        $jenis = EnumInput::optional(ItemKind::class, $attributes['item_kind'] ?? null, 'item_kind');
+
+        if ($jenis !== null) {
+            $attributes = $this->terapkanJenis($jenis, $baru ? null : $item, $attributes);
         }
 
         $pelacakan = EnumInput::required(TrackingMode::class, $attributes['tracking_mode'] ?? null, $item?->tracking_mode ?? TrackingMode::None, 'tracking_mode');
@@ -92,6 +101,8 @@ class SaveItem
             throw MasterRuleException::fields($pelanggaran);
         }
 
+        $this->pastikanSaklarAktif($baru ? null : $item, $pelacakan, $adaKedaluwarsa, $strategi);
+
         $data = [
             'code' => $kode,
             'name' => $nama,
@@ -120,7 +131,13 @@ class SaveItem
             'weight_uom_id' => $this->idAtauNull($attributes['weight_uom_id'] ?? null),
         ];
 
-        $item = DB::transaction(function () use ($item, $baru, $data, $conversions, $vendors, $satuanDasar): Item {
+        // A-294: form item mengirim satuan kemasan yang dimuatnya; hanya kemasan itu yang boleh
+        // dinonaktifkan, supaya kemasan yang baru diingat dari GRN tidak ikut mati.
+        $kemasanDimuat = isset($attributes['conversion_uoms_loaded']) && is_array($attributes['conversion_uoms_loaded'])
+            ? array_map('intval', $attributes['conversion_uoms_loaded'])
+            : null;
+
+        $item = DB::transaction(function () use ($item, $baru, $data, $conversions, $satuanDasar, $kemasanDimuat): Item {
             if ($baru) {
                 $item = Item::create($data);
             } else {
@@ -128,11 +145,7 @@ class SaveItem
             }
 
             if ($conversions !== null) {
-                $this->syncConversions($item, $conversions, $satuanDasar);
-            }
-
-            if ($vendors !== null) {
-                $this->syncVendors($item, $vendors);
+                $this->syncConversions($item, $conversions, $satuanDasar, $kemasanDimuat);
             }
 
             return $item;
@@ -145,6 +158,80 @@ class SaveItem
             ->log($baru ? 'Item dibuat' : 'Item diubah');
 
         return $item->refresh();
+    }
+
+    /**
+     * A-283: Jenis barang → kolom teknis. Jenis terkunci setelah item punya
+     * pergerakan stok (BR-MST-06); jenis yang saklarnya mati tidak bisa dipilih
+     * untuk item baru atau sebagai jenis pengganti (BR-GEN-12). Strategi lama
+     * dipertahankan bila masih sah untuk jenis itu.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function terapkanJenis(ItemKind $jenis, ?Item $item, array $attributes): array
+    {
+        $jenisLama = $item === null ? null : ItemKind::fromItem($item);
+
+        if ($item !== null && $jenisLama !== $jenis && $item->hasStockMovements()) {
+            throw MasterRuleException::fields(
+                ['item_kind' => 'Jenis barang tidak bisa diubah karena item ini sudah punya pergerakan stok.'], // BR-MST-06
+                'BR-MST-06',
+            );
+        }
+
+        if ($jenisLama !== $jenis && ! StockFeatures::kindAvailable($jenis)) {
+            throw MasterRuleException::fields(
+                ['item_kind' => 'Jenis "'.$jenis->label().'" tidak aktif di company ini; nyalakan saklarnya di Pengaturan company.'], // BR-GEN-12
+                'BR-GEN-12',
+            );
+        }
+
+        $strategiLama = $item?->removal_strategy;
+        $strategiSah = $strategiLama !== null
+            && in_array($strategiLama, $jenis->trackingMode()->allowedRemovalStrategies(), true)
+            && (! $strategiLama->requiresExpiry() || $jenis->hasExpiry());
+
+        $strategi = match (true) {
+            $item === null => $jenis->defaultStrategy(StockFeatures::fefo()),
+            $strategiSah => $strategiLama,
+            $strategiLama === null && $jenisLama === $jenis => null,
+            default => $jenis->defaultStrategy(StockFeatures::fefo()),
+        };
+
+        return array_merge($attributes, [
+            'tracking_mode' => $jenis->trackingMode()->value,
+            'ownership_model' => $jenis->ownershipModel()->value,
+            'has_expiry' => $jenis->hasExpiry(),
+            'default_line_ownership' => null,
+            'removal_strategy' => $strategi?->value,
+        ]);
+    }
+
+    /**
+     * BR-GEN-12: kombinasi teknis yang saklarnya mati ditolak untuk item baru
+     * atau bila kombinasinya diubah; item lama yang tidak diubah tetap bisa
+     * disimpan (P-03).
+     */
+    private function pastikanSaklarAktif(?Item $item, TrackingMode $pelacakan, bool $adaKedaluwarsa, ?RemovalStrategy $strategi): void
+    {
+        $berubah = $item === null
+            || $item->tracking_mode !== $pelacakan
+            || (bool) $item->has_expiry !== $adaKedaluwarsa
+            || $item->removal_strategy !== $strategi;
+
+        if (! $berubah) {
+            return;
+        }
+
+        $mati = StockFeatures::inactiveFor($pelacakan, $adaKedaluwarsa, $strategi);
+
+        if ($mati !== []) {
+            throw MasterRuleException::fields(
+                ['tracking_mode' => 'Fitur '.implode(', ', $mati).' dimatikan di Pengaturan company; item baru tidak bisa memakainya.'], // BR-GEN-12
+                'BR-GEN-12',
+            );
+        }
     }
 
     /**
@@ -187,7 +274,8 @@ class SaveItem
      *
      * @param  array<int, array<string, mixed>>  $conversions
      */
-    private function syncConversions(Item $item, array $conversions, Uom $baseUom): void
+    /** @param  array<int, int>|null  $dimuat  satuan kemasan yang dimuat form; null = semua kemasan item */
+    private function syncConversions(Item $item, array $conversions, Uom $baseUom, ?array $dimuat = null): void
     {
         $idDipakai = [];
 
@@ -227,33 +315,10 @@ class SaveItem
 
         // P-03: baris yang dilepas dari form dinonaktifkan, tidak dihapus,
         // karena dokumen yang sudah terjadi memakainya sebagai dasar hitung.
-        $item->uomConversions()->whereNotIn('uom_id', $idDipakai ?: [0])->update(['is_active' => false]);
-    }
-
-    /**
-     * A-52: vendor tetap per item dengan urutan prioritas, tanpa harga (D-07).
-     *
-     * @param  array<int, array<string, mixed>>  $vendors
-     */
-    private function syncVendors(Item $item, array $vendors): void
-    {
-        $pasangan = [];
-
-        foreach ($vendors as $urutan => $baris) {
-            $vendorId = $this->idAtauNull($baris['vendor_id'] ?? null);
-
-            if ($vendorId === null) {
-                continue;
-            }
-
-            $pasangan[$vendorId] = [
-                'priority' => (int) ($baris['priority'] ?? $urutan + 1),
-                'is_preferred' => (bool) ($baris['is_preferred'] ?? false),
-                'notes' => $this->kosongJadiNull($baris['notes'] ?? null),
-            ];
-        }
-
-        $item->vendors()->sync($pasangan);
+        $item->uomConversions()
+            ->whereNotIn('uom_id', $idDipakai ?: [0])
+            ->when($dimuat !== null, fn ($q) => $q->whereIn('uom_id', $dimuat ?: [0]))
+            ->update(['is_active' => false]);
     }
 
     private function kosongJadiNull(mixed $value): ?string

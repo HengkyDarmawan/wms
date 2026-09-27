@@ -113,6 +113,30 @@
     @if ($deactivatingId)
         <div class="card border-danger mb-3">
             <div class="card-header text-danger"><strong>{{ __('Nonaktifkan vendor') }}</strong></div>
+            @if ($dampak)
+                {{-- A-310: dampak — dokumen terbuka tetap berjalan; vendor hilang dari pilihan & saran baru. --}}
+                <div class="card-body border-bottom small" id="vendor-dampak">
+                    @if ($dampak['po']->isEmpty() && $dampak['pesanan']->isEmpty())
+                        <div class="text-muted">{{ __('Tidak ada PO atau catatan pemesanan terbuka untuk vendor ini.') }}</div>
+                    @else
+                        <div class="mb-1">{{ __('Masih terbuka — tetap berjalan, bisa ditutup atau dibatalkan dari dokumennya:') }}</div>
+                        @if ($dampak['po']->isNotEmpty())
+                            <div>{{ __('PO') }} ({{ $dampak['po']->count() }}):
+                                @foreach ($dampak['po'] as $po)
+                                    @can('view', $po)<a href="{{ route('purchase-orders.show', $po) }}" wire:navigate>{{ $po->number }}</a>@else{{ $po->number }}@endcan <span class="text-muted">({{ $po->status->label() }})</span>@if (! $loop->last), @endif
+                                @endforeach
+                            </div>
+                        @endif
+                        @if ($dampak['pesanan']->isNotEmpty())
+                            <div>{{ __('Catatan pemesanan belum diterima penuh') }} ({{ $dampak['pesanan']->count() }}) {{ __('pada PRQ') }}:
+                                @foreach ($dampak['prq'] as $prq)
+                                    @can('view', $prq)<a href="{{ route('purchase-requests.show', $prq) }}" wire:navigate>{{ $prq->number }}</a>@else{{ $prq->number }}@endcan @if (! $loop->last), @endif
+                                @endforeach
+                            </div>
+                        @endif
+                    @endif
+                </div>
+            @endif
             <div class="card-body row g-3">
                 <div class="col-md-5">
                     <label class="form-label" for="vendor-alasan">{{ __('Alasan') }} <span class="wajib">*</span></label>
@@ -174,7 +198,7 @@
                         <th>{{ __('Vendor') }}</th>
                         <th>{{ __('Jenis') }}</th>
                         <th>{{ __('Kontak') }}</th>
-                        <th class="text-end">{{ __('Item dipasok') }}</th>
+                        <th class="text-end">{{ __('Pesanan 12 bln') }}</th>
                         <th>{{ __('Status') }}</th>
                         <th class="text-end">{{ __('Aksi') }}</th>
                     </tr>
@@ -191,7 +215,7 @@
                                 <div>{{ $vendor->contact_name ?: '—' }}</div>
                                 <div class="small text-muted">{{ $vendor->phone ?: $vendor->email ?: '—' }}</div>
                             </td>
-                            <td class="text-end">{{ $vendor->item_vendors_count }}</td>
+                            <td class="text-end">{{ $vendor->pesanan_count }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $vendor->statusBadge() }}">
                                     {{ $vendor->status->label() }}

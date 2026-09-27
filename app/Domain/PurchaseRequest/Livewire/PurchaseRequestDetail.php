@@ -9,7 +9,6 @@ use App\Domain\Approval\Support\ApprovalHistory;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Enums\VendorStatus;
 use App\Domain\Master\Enums\VendorType;
-use App\Domain\Master\Models\ItemVendor;
 use App\Domain\Master\Models\Vendor;
 use App\Domain\PurchaseRequest\Actions\ApprovePurchaseRequest;
 use App\Domain\PurchaseRequest\Actions\CancelPurchaseRequest;
@@ -18,6 +17,7 @@ use App\Domain\PurchaseRequest\Actions\SubmitPurchaseRequest;
 use App\Domain\PurchaseRequest\Enums\PurchaseRequestStatus;
 use App\Domain\PurchaseRequest\Livewire\Concerns\HandlesPurchaseRequestRules;
 use App\Domain\PurchaseRequest\Models\PurchaseRequest;
+use App\Domain\Purchasing\Support\VendorSuggestions;
 use App\Domain\Receipt\Models\GoodsReceipt;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
@@ -72,9 +72,8 @@ class PurchaseRequestDetail extends Component
                 ? Vendor::query()->where('is_active', true)->where('status', '!=', VendorStatus::Inactive->value)->orderBy('name')->get(['id', 'code', 'name', 'vendor_type'])
                 : collect(),
             'vendorTypes' => VendorType::options(),
-            'suggested' => $this->dialog === 'pesan'
-                ? ItemVendor::query()->whereIn('item_id', $prq->lines()->pluck('item_id'))->pluck('vendor_id')->map(fn ($v) => (int) $v)->unique()->all()
-                : [],
+            // A-304: saran dari riwayat; termurah hanya nama & hanya bagi po.view (D-07).
+            'saran' => $this->dialog === 'pesan' ? $this->saranVendor($prq) : [],
             'menunggu' => $prq->isAwaitingApproval(),
             'alasanTolak' => $this->pilihanAlasan(ReasonContext::Reject),
             'alasanBatal' => $this->pilihanAlasan(ReasonContext::Cancel),
@@ -132,14 +131,35 @@ class PurchaseRequestDetail extends Component
                 }
             }
 
-            // A-52: vendor tetap item disarankan; memilih vendor lain boleh dengan keterangan.
-            $saran = ItemVendor::query()->whereIn('item_id', $this->prq()->lines()->pluck('item_id'))
-                ->whereHas('vendor', fn ($q) => $q->where('is_active', true)->where('status', '!=', VendorStatus::Inactive->value))
-                ->orderByDesc('is_preferred')->orderBy('priority')->value('vendor_id');
-            $this->order['vendor_id'] = $saran === null ? '' : (string) $saran;
+            // A-304: bawaan = vendor terakhir item-item PRQ; Purchasing bebas mengganti.
+            $saran = app(VendorSuggestions::class)->defaultVendor($this->prq()->lines()->pluck('item_id')->map(fn ($v) => (int) $v)->all());
+            $this->order['vendor_id'] = $saran === null ? '' : (string) $saran->id;
         }
 
         $this->resetValidation();
+    }
+
+    /**
+     * Per baris PRQ: vendor terakhir & termurah 6 bulan (nama saja).
+     *
+     * @return array{baris: list<array{item: string, terakhir: ?string, termurah: ?string}>, ids: list<int>}
+     */
+    private function saranVendor(PurchaseRequest $prq): array
+    {
+        $bolehHarga = auth()->user()?->can('po.view') ?? false;
+        $lines = $prq->lines()->with('item:id,code,name')->orderBy('id')->get();
+        $saran = app(VendorSuggestions::class)->forItems($lines->pluck('item_id')->map(fn ($v) => (int) $v)->all());
+        $baris = [];
+        $ids = [];
+
+        foreach ($lines->unique('item_id') as $l) {
+            $s = $saran[(int) $l->item_id] ?? ['terakhir' => null, 'termurah' => null];
+            $termurah = $bolehHarga ? $s['termurah'] : null;
+            $baris[] = ['item' => (string) $l->item?->code, 'terakhir' => $s['terakhir']?->name, 'termurah' => $termurah?->name];
+            $ids = array_merge($ids, array_filter([$s['terakhir']?->id, $termurah?->id]));
+        }
+
+        return ['baris' => $baris, 'ids' => array_values(array_unique(array_map('intval', $ids)))];
     }
 
     public function tutupDialog(): void

@@ -8,13 +8,15 @@ use App\Domain\Master\Actions\SaveItem;
 use App\Domain\Master\Enums\OwnershipModel;
 use App\Domain\Master\Enums\RemovalStrategy;
 use App\Domain\Master\Enums\TrackingMode;
+use App\Domain\Master\Enums\VendorStatus;
+use App\Domain\Master\Enums\VendorType;
 use App\Domain\Master\Exceptions\MasterRuleException;
+use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\Item;
+use App\Domain\Master\Models\ItemCategory;
 use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Uom;
 use App\Domain\Master\Models\Vendor;
-use App\Domain\Master\Enums\VendorStatus;
-use App\Domain\Master\Enums\VendorType;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TenantTestCase;
 
@@ -24,6 +26,14 @@ use Tests\TenantTestCase;
  */
 class ItemTest extends TenantTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // A-284: uji matriks kombinasi memakai item per potong; saklarnya dinyalakan sendiri.
+        FeatureSetting::seed(['piece' => true], overwrite: true);
+    }
+
     private function uomId(string $code): int
     {
         return (int) Uom::query()->where('code', $code)->value('id');
@@ -231,41 +241,27 @@ class ItemTest extends TenantTestCase
     }
 
     #[Test]
-    public function tc_mst_18_vendor_tetap_tersimpan_berurutan(): void
+    public function tc_mst_18_vendor_tetap_tidak_lagi_ditulis_dan_data_lama_utuh(): void
     {
         $utama = Vendor::create([
             'code' => 'V-UTAMA', 'name' => 'Vendor Utama',
             'vendor_type' => VendorType::Company, 'status' => VendorStatus::Active, 'is_active' => true,
         ]);
 
-        $cadangan = Vendor::create([
-            'code' => 'V-CADANGAN', 'name' => 'Vendor Cadangan',
-            'vendor_type' => VendorType::Shop, 'status' => VendorStatus::Active, 'is_active' => true,
-        ]);
+        // A-305: isian vendor diabaikan — saran vendor dari riwayat PO/pesanan.
+        $item = $this->simpan(vendors: [['vendor_id' => $utama->id, 'priority' => 1, 'is_preferred' => true]]);
+        $this->assertSame(0, $item->itemVendors()->count());
 
-        $item = $this->simpan(vendors: [
-            ['vendor_id' => $utama->id, 'priority' => 1, 'is_preferred' => true],
-            ['vendor_id' => $cadangan->id, 'priority' => 2],
-        ]);
-
-        $urutan = $item->itemVendors()->ordered()->get();
-
-        $this->assertCount(2, $urutan);
-        $this->assertSame($utama->id, $urutan[0]->vendor_id);
-        $this->assertTrue($urutan[0]->is_preferred);
-        $this->assertSame($cadangan->id, $urutan[1]->vendor_id);
-        $this->assertSame(2, $urutan[1]->priority);
-
-        // Menyimpan ulang tanpa vendor cadangan melepasnya dari item.
-        $item = $this->simpan([], $item, vendors: [['vendor_id' => $utama->id, 'is_preferred' => true]]);
-
+        // Data lama tetap tersimpan (P-03) walau item disimpan ulang.
+        $item->itemVendors()->create(['vendor_id' => $utama->id, 'priority' => 1, 'is_preferred' => true]);
+        $item = $this->simpan([], $item, vendors: []);
         $this->assertSame(1, $item->itemVendors()->count());
     }
 
     #[Test]
     public function tc_mst_18b_strategi_efektif_diwarisi_kategori(): void
     {
-        $kategori = \App\Domain\Master\Models\ItemCategory::create([
+        $kategori = ItemCategory::create([
             'code' => 'KAT-FIFO',
             'name' => 'Kategori FIFO',
             'removal_strategy' => RemovalStrategy::Fifo,

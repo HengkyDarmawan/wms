@@ -11,6 +11,11 @@
             @can('update', $item)
                 <a class="btn btn-outline-secondary" href="{{ route('items.edit', $item) }}">{{ __('Ubah') }}</a>
             @endcan
+            @can('po.view')
+                <a class="btn btn-outline-secondary" href="{{ route('items.price-history', $item) }}" wire:navigate>
+                    <i class="bi bi-graph-up"></i> {{ __('Riwayat harga beli') }}
+                </a>
+            @endcan
             @can('label.print')
                 <a class="btn btn-outline-secondary" target="_blank" rel="noopener"
                    href="{{ route('labels.print', ['type' => 'label_item', 'ids' => $item->id]) }}">
@@ -26,13 +31,14 @@
     @endif
 
     <ul class="nav nav-tabs mb-3">
-        @foreach ([
+        @foreach (array_filter([
             'ringkasan' => __('Ringkasan'),
             'lot' => __('Lot'),
             'serial' => __('Serial'),
-            'potongan' => __('Potongan'),
+            // A-284: layar potongan hanya bila saklar per potong menyala.
+            'potongan' => $pieceAktif ? __('Potongan') : null,
             'riwayat' => __('Riwayat'),
-        ] as $kunci => $label)
+        ]) as $kunci => $label)
             <li class="nav-item">
                 <button class="nav-link {{ $tab === $kunci ? 'active' : '' }}" type="button"
                         wire:click="pilihTab('{{ $kunci }}')">{{ $label }}</button>
@@ -56,20 +62,31 @@
                                 <span class="text-muted">({{ $item->baseUom?->category?->name }})</span>
                             </dd>
 
-                            <dt class="col-sm-5">{{ __('Mode pelacakan') }}</dt>
-                            <dd class="col-sm-7">{{ $item->tracking_mode->label() }}</dd>
+                            <dt class="col-sm-5">{{ __('Jenis barang') }}</dt>
+                            <dd class="col-sm-7">
+                                {{ $jenis?->label() ?? __('Jenis khusus') }}
+                                <span class="text-muted small d-block">{{ $item->defaultLineOwnershipValue() === 'loan' ? __('Dipinjamkan ke proyek, kembali ke gudang') : __('Diberikan ke proyek, tidak kembali') }}</span>
+                            </dd>
 
-                            <dt class="col-sm-5">{{ __('Model kepemilikan') }}</dt>
-                            <dd class="col-sm-7">{{ $item->ownership_model->label() }}</dd>
+                            {{-- A-283: rincian teknis hanya untuk item Jenis khusus. --}}
+                            @if ($jenis === null)
+                                <dt class="col-sm-5">{{ __('Mode pelacakan') }}</dt>
+                                <dd class="col-sm-7">{{ $item->tracking_mode->label() }}</dd>
 
-                            <dt class="col-sm-5">{{ __('Strategi pengambilan') }}</dt>
-                            <dd class="col-sm-7">{{ $item->effectiveRemovalStrategy()->label() }}</dd>
+                                <dt class="col-sm-5">{{ __('Model kepemilikan') }}</dt>
+                                <dd class="col-sm-7">{{ $item->ownership_model->label() }}</dd>
 
-                            <dt class="col-sm-5">{{ __('Kedaluwarsa') }}</dt>
-                            <dd class="col-sm-7">{{ $item->has_expiry ? __('Ya') : __('Tidak') }}</dd>
+                                <dt class="col-sm-5">{{ __('Strategi pengambilan') }}</dt>
+                                <dd class="col-sm-7">{{ $item->effectiveRemovalStrategy()->label() }}</dd>
 
-                            <dt class="col-sm-5">{{ __('Wajib QC') }}</dt>
-                            <dd class="col-sm-7">{{ $item->requires_qc ? __('Ya') : __('Tidak') }}</dd>
+                                <dt class="col-sm-5">{{ __('Kedaluwarsa') }}</dt>
+                                <dd class="col-sm-7">{{ $item->has_expiry ? __('Ya') : __('Tidak') }}</dd>
+                            @endif
+
+                            @if ($qcAktif)
+                                <dt class="col-sm-5">{{ __('Wajib QC') }}</dt>
+                                <dd class="col-sm-7">{{ $item->requires_qc ? __('Ya') : __('Tidak') }}</dd>
+                            @endif
                         </dl>
                     </div>
                 </div>
@@ -77,19 +94,22 @@
 
             <div class="col-lg-6">
                 <div class="card h-100">
-                    <div class="card-header"><strong>{{ __('Pemotongan & ambang stok') }}</strong></div>
+                    @php($tampilPotong = $pieceAktif && ($item->tracksPiece() || $item->is_cuttable))
+                    <div class="card-header"><strong>{{ $tampilPotong ? __('Pemotongan & ambang stok') : __('Ambang stok') }}</strong></div>
                     <div class="card-body">
                         <dl class="row mb-0">
-                            <dt class="col-sm-6">{{ __('Bisa dipotong') }}</dt>
-                            <dd class="col-sm-6">{{ $item->is_cuttable ? __('Ya') : __('Tidak') }}</dd>
+                            @if ($tampilPotong)
+                                <dt class="col-sm-6">{{ __('Bisa dipotong') }}</dt>
+                                <dd class="col-sm-6">{{ $item->is_cuttable ? __('Ya') : __('Tidak') }}</dd>
 
-                            <dt class="col-sm-6">{{ __('Panjang minimum offcut') }}</dt>
-                            <dd class="col-sm-6">
-                                {{ $item->min_offcut_length ? (float) $item->min_offcut_length : '—' }}
-                            </dd>
+                                <dt class="col-sm-6">{{ __('Panjang minimum offcut') }}</dt>
+                                <dd class="col-sm-6">
+                                    {{ $item->min_offcut_length ? (float) $item->min_offcut_length : '—' }}
+                                </dd>
 
-                            <dt class="col-sm-6">{{ __('Susut mata potong') }}</dt>
-                            <dd class="col-sm-6">{{ $item->kerf ? (float) $item->kerf : '—' }}</dd>
+                                <dt class="col-sm-6">{{ __('Susut mata potong') }}</dt>
+                                <dd class="col-sm-6">{{ $item->kerf ? (float) $item->kerf : '—' }}</dd>
+                            @endif
 
                             <dt class="col-sm-6">{{ __('Titik pesan ulang') }}</dt>
                             <dd class="col-sm-6">{{ $item->reorder_point ? (float) $item->reorder_point : '—' }}</dd>
@@ -112,27 +132,27 @@
 
             <div class="col-lg-6">
                 <div class="card h-100">
-                    <div class="card-header"><strong>{{ __('Konversi satuan') }}</strong></div>
+                    <div class="card-header"><strong>{{ __('Kemasan') }}</strong></div>
                     <div class="table-responsive">
                         <table class="table mb-0">
                             <thead>
                                 <tr>
-                                    <th>{{ __('Satuan') }}</th>
-                                    <th class="text-end">{{ __('Setara satuan dasar') }}</th>
+                                    <th>{{ __('Kemasan') }}</th>
+                                    <th>{{ __('Isi') }}</th>
                                     <th>{{ __('Batang utuh') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($item->uomConversions as $konversi)
+                                @forelse ($item->activeConversions as $konversi)
                                     <tr>
                                         <td>{{ $konversi->uom?->code }} — {{ $konversi->uom?->name }}</td>
-                                        <td class="text-end">{{ (float) $konversi->qty_base }}</td>
+                                        <td>1 {{ $konversi->uom?->code }} = {{ \App\Domain\Master\Support\QtyFormat::withUnit($konversi->qty_base, $item->baseUom?->code) }}</td>
                                         <td>{{ $konversi->is_nominal_piece ? __('Ya') : '—' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="3" class="text-muted text-center py-3">
-                                            {{ __('Belum ada konversi khusus.') }}
+                                            {{ __('Belum ada kemasan.') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -144,37 +164,19 @@
 
             <div class="col-lg-6">
                 <div class="card h-100">
-                    <div class="card-header"><strong>{{ __('Vendor tetap') }}</strong></div>
-                    <div class="table-responsive">
-                        <table class="table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>{{ __('Vendor') }}</th>
-                                    <th class="text-end">{{ __('Prioritas') }}</th>
-                                    <th>{{ __('Catatan') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($item->itemVendors as $pemasok)
-                                    <tr>
-                                        <td>
-                                            {{ $pemasok->vendor?->name }}
-                                            @if ($pemasok->is_preferred)
-                                                <span class="badge text-bg-success">{{ __('Utama') }}</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-end">{{ $pemasok->priority }}</td>
-                                        <td class="small text-muted">{{ $pemasok->notes ?: '—' }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3" class="text-muted text-center py-3">
-                                            {{ __('Belum ada vendor tetap.') }}
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                    <div class="card-header d-flex align-items-center">
+                        <strong class="me-auto">{{ __('Saran vendor (dari riwayat)') }}</strong>
+                        @can('po.view')
+                            <a class="btn btn-sm btn-outline-primary" href="{{ route('items.price-history', $item) }}" wire:navigate>{{ __('Riwayat harga beli') }}</a>
+                        @endcan
+                    </div>
+                    <div class="card-body small">
+                        {{-- A-304: pemilihan vendor tugas Purchasing; sistem hanya menyarankan. --}}
+                        <div>{{ __('Vendor terakhir') }}: <strong>{{ $saranVendor['terakhir']?->name ?? '—' }}</strong></div>
+                        @can('po.view')
+                            <div>{{ __('Termurah 6 bulan') }}: <strong>{{ $saranVendor['termurah']?->name ?? '—' }}</strong></div>
+                        @endcan
+                        <div class="text-muted mt-1">{{ __('Diambil dari catatan pemesanan dan PO; Purchasing bebas memilih vendor lain.') }}</div>
                     </div>
                 </div>
             </div>
@@ -332,7 +334,7 @@
                         @forelse ($riwayat as $baris)
                             <tr>
                                 <td class="small">{{ $baris->created_at?->lokal()->format('d/m/Y H:i') }}</td>
-                                <td>{{ $baris->description }}</td>
+                                <td>{{ \App\Domain\Shared\Support\ActivityText::label($baris->description) }}</td>
                                 <td>{{ $baris->causer?->name ?? __('Sistem') }}</td>
                             </tr>
                         @empty

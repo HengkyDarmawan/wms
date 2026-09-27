@@ -6,6 +6,7 @@ namespace App\Domain\Master\Models;
 
 use App\Domain\Master\Enums\VendorStatus;
 use App\Domain\Master\Enums\VendorType;
+use App\Domain\PurchaseRequest\Models\PurchaseRequestOrder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -50,6 +51,12 @@ class Vendor extends Model
     public function itemVendors(): HasMany
     {
         return $this->hasMany(ItemVendor::class);
+    }
+
+    /** Catatan pemesanan PRQ (termasuk yang lahir dari PO) ke vendor ini. */
+    public function requestOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseRequestOrder::class);
     }
 
     public function lots(): HasMany
