@@ -39,6 +39,12 @@ class DocumentTemplate extends Model
         return $this->belongsTo(DocumentLayout::class, 'layout_id');
     }
 
+    /** Format label bawaan untuk jenis label (A-261). */
+    public function labelFormat(): BelongsTo
+    {
+        return $this->belongsTo(LabelFormat::class, 'label_format_id');
+    }
+
     /** Template bawaan untuk jenis ini; dibuat otomatis bila belum di-seed (TC-TPL-11). */
     public static function forType(DocumentTemplateType $type): self
     {
@@ -52,6 +58,7 @@ class DocumentTemplate extends Model
                 'name' => self::NAMA_BAWAAN,
                 'layout_id' => DocumentLayout::current()->id,
                 'paper' => $type->defaultPaper(),
+                'label_format_id' => $type->isLabel() ? LabelFormat::fromLegacyPaper($type->defaultPaper())?->id : null,
                 'is_default' => true,
                 'version' => 1,
             ]);

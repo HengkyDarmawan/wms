@@ -7,9 +7,11 @@ namespace App\Http\Controllers\Template;
 use App\Domain\Template\Actions\PrintLabels;
 use App\Domain\Template\Enums\DocumentTemplateType;
 use App\Domain\Template\Enums\PaperSize;
+use App\Domain\Template\Models\LabelFormat;
 use App\Domain\Template\Support\DocumentPrinter;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -42,12 +44,17 @@ class PrintController extends Controller
         $ids = $request->query('ids', []);
         $ids = is_array($ids) ? $ids : explode(',', (string) $ids);
 
-        return $action->handle(
-            $jenis,
-            $ids,
-            PaperSize::tryFrom((string) $request->query('paper')),
-            (int) $request->query('copies', 1),
-            $request->user(),
-        );
+        // `format` = id ukuran label (A-261); `paper` lama (A-120) tetap diterima.
+        $format = match (true) {
+            $request->filled('format') => LabelFormat::query()->find((int) $request->query('format')),
+            $request->filled('paper') => LabelFormat::fromLegacyPaper(PaperSize::tryFrom((string) $request->query('paper'))),
+            default => LabelFormat::defaultFor($jenis),
+        };
+
+        if ($format === null && ($request->filled('format') || $request->filled('paper'))) {
+            throw ValidationException::withMessages(['format' => __('Pilih ukuran label yang aktif.')]);
+        }
+
+        return $action->handle($jenis, $ids, $format, (int) $request->query('copies', 1), $request->user());
     }
 }

@@ -136,7 +136,20 @@ class CountScreenTest extends TenantTestCase
 
         $this->assertTrue($tugas->refresh()->isDone());
 
-        // Rekonsiliasi (akar masalah wajib untuk selisih besar) lalu approval.
+        // Selisih besar ikut dihitung ulang (A-259): akar masalah belum bisa diisi.
+        $this->assertSame(StockCountStatus::Recount, $sesi->refresh()->status);
+        Livewire::actingAs($this->auditor)
+            ->test(StockCountDetail::class, ['stockCount' => $sesi])
+            ->assertSee(__('Menunggu hitung ulang'))
+            ->set('akar.'.$baut->id.'.root_cause', 'mispick')
+            ->call('simpanAkar', $baut->id)
+            ->assertSet('ruleCode', 'BR-OPN-05');
+        $this->assertNull($baut->refresh()->root_cause);
+
+        // Staf1 (bukan penghitung pertama) mengonfirmasi 80.
+        $this->hitungPutaran($sesi, 2, [$baut->id => 80]);
+
+        // Rekonsiliasi (akar masalah wajib untuk selisih yang tetap besar) lalu approval.
         $detail = Livewire::actingAs($this->auditor)
             ->test(StockCountDetail::class, ['stockCount' => $sesi])
             ->call('rekonsiliasi')

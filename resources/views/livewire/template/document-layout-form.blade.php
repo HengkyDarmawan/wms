@@ -109,7 +109,7 @@
                             <tr><th>{{ __('Jenis') }}</th><th>{{ __('Kertas') }}</th></tr>
                         </thead>
                         <tbody>
-                            @foreach ([$dokumen, $label] as $kelompok)
+                            @foreach ([$dokumen] as $kelompok)
                                 @foreach ($kelompok as $type)
                                     <tr>
                                         <td>
@@ -120,7 +120,7 @@
                                             <select class="form-select form-select-sm @error('papers.'.$type->value) is-invalid @enderror"
                                                     aria-label="{{ __('Kertas') }} {{ $type->label() }}"
                                                     wire:model="papers.{{ $type->value }}">
-                                                @foreach ($type->isLabel() ? $kertasLabel : $kertasDokumen as $kertas)
+                                                @foreach ($kertasDokumen as $kertas)
                                                     <option value="{{ $kertas->value }}">{{ $kertas->label() }}</option>
                                                 @endforeach
                                             </select>
@@ -128,6 +128,13 @@
                                     </tr>
                                 @endforeach
                             @endforeach
+                            <tr>
+                                <td>{{ __('Label bin, item, lot, potongan') }}</td>
+                                <td>
+                                    <a href="{{ route('label-designs.index') }}">{{ __('Desain label') }}</a> ·
+                                    <a href="{{ route('label-formats.index') }}">{{ __('Ukuran label') }}</a>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

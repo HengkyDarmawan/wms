@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Template\Livewire;
 
+use App\Domain\Master\Support\StockFeatures;
 use App\Domain\Template\Actions\SaveDocumentLayout;
 use App\Domain\Template\Enums\DocumentTemplateType;
 use App\Domain\Template\Enums\PaperSize;
@@ -49,7 +50,7 @@ class DocumentLayoutForm extends Component
             $this->blocks[$type->value] = implode("\n", $layout->signatureBlocksFor($type));
         }
 
-        foreach (DocumentTemplateType::cases() as $type) {
+        foreach (DocumentTemplateType::documents() as $type) {
             $this->papers[$type->value] = DocumentTemplate::forType($type)->paper->value;
         }
     }
@@ -80,9 +81,9 @@ class DocumentLayoutForm extends Component
         return view('livewire.template.document-layout-form', [
             'layout' => DocumentLayout::current(),
             'dokumen' => DocumentTemplateType::documents(),
-            'label' => DocumentTemplateType::labels(),
+            'label' => DocumentTemplateType::labels(StockFeatures::piece()),
             'kertasDokumen' => PaperSize::forDocuments(),
-            'kertasLabel' => PaperSize::forLabels(),
+            'bisaDesainLabel' => true,
         ]);
     }
 }

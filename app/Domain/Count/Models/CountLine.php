@@ -96,6 +96,12 @@ class CountLine extends Model
         return $this->serial_id !== null || $this->piece_id !== null;
     }
 
+    /** Baris selisih sedang/besar yang hasil hitung ulangnya belum masuk (BR-OPN-05, A-259). */
+    public function awaitingRecount(): bool
+    {
+        return (bool) $this->is_recount && $this->counted_qty_r2 === null;
+    }
+
     public function hasVariance(): bool
     {
         return $this->variance_qty !== null && abs((float) $this->variance_qty) > 0.00005;

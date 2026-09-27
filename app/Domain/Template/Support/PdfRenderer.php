@@ -22,4 +22,12 @@ class PdfRenderer
             ->loadHTML($html)
             ->setPaper($ukuran, $arah);
     }
+
+    /** Halaman berukuran bebas dalam mm, untuk label (A-261). 1 mm = 2,8346 pt. */
+    public static function makeCustom(string $html, float $widthMm, float $heightMm): DomPdf
+    {
+        return Pdf::setOption(['isFontSubsettingEnabled' => true])
+            ->loadHTML($html)
+            ->setPaper([0, 0, round($widthMm * 2.8346, 2), round($heightMm * 2.8346, 2)], 'portrait');
+    }
 }

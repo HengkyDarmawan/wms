@@ -45,7 +45,6 @@ class DocumentLayoutTest extends TenantTestCase
             ->set('accent', '#AA3300')
             ->set('blocks.shipment', "Petugas gudang\nSopir")
             ->set('blocks.pick_task', "Picker\nDiperiksa")
-            ->set('papers.label_bin', PaperSize::Label50x30->value)
             ->set('papers.pick_task', PaperSize::A4Landscape->value)
             ->call('save')
             ->assertHasNoErrors();
@@ -56,7 +55,8 @@ class DocumentLayoutTest extends TenantTestCase
         $this->assertSame('#aa3300', $layout->accent());
         $this->assertSame(['Petugas gudang', 'Sopir'], $layout->signatureBlocksFor(DocumentTemplateType::Shipment));
         $this->assertArrayNotHasKey('pick_task', $layout->signature_blocks ?? [], 'Blok sama dengan bawaan tidak disimpan.');
-        $this->assertSame(PaperSize::Label50x30, DocumentTemplate::forType(DocumentTemplateType::LabelBin)->paper);
+        // Sejak A-261 kertas label tidak lagi diatur di layar ini.
+        $this->assertArrayNotHasKey('label_bin', Livewire::actingAs($admin)->test(DocumentLayoutForm::class)->get('papers'));
         $this->assertSame(PaperSize::A4Landscape, DocumentTemplate::forType(DocumentTemplateType::PickTask)->paper);
         $this->assertSame(1, DocumentLayout::query()->count(), 'F1 satu layout per company (A-123).');
 

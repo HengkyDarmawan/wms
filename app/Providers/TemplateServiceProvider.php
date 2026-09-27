@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domain\Template\Livewire\DocumentLayoutForm;
+use App\Domain\Template\Livewire\LabelDesigner;
+use App\Domain\Template\Livewire\LabelFormatManager;
 use App\Domain\Template\Livewire\LabelPrint;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -16,5 +18,7 @@ class TemplateServiceProvider extends ServiceProvider
     {
         Livewire::component('template.document-layout-form', DocumentLayoutForm::class);
         Livewire::component('template.label-print', LabelPrint::class);
+        Livewire::component('template.label-format-manager', LabelFormatManager::class);
+        Livewire::component('template.label-designer', LabelDesigner::class);
     }
 }

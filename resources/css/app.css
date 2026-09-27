@@ -45,3 +45,22 @@ label .wajib {
     margin-bottom: 1rem;
     font-size: 0.875rem;
 }
+
+/* Desainer label (A-262): kanvas bergaris 1 mm dan 5 mm, elemen bisa digeser. */
+.ld-wadah { overflow: auto; padding: 12px; }
+.ld-kanvas {
+    position: relative; margin: 0 auto; background-color: #fff; box-shadow: 0 0 0 1px #adb5bd, 0 4px 14px rgba(0, 0, 0, .12);
+    background-image:
+        linear-gradient(to right, rgba(13, 110, 253, .06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(13, 110, 253, .06) 1px, transparent 1px),
+        linear-gradient(to right, rgba(13, 110, 253, .14) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(13, 110, 253, .14) 1px, transparent 1px);
+    color: #000; touch-action: none; user-select: none;
+}
+.ld-el { position: absolute; overflow: hidden; outline: 1px dashed rgba(108, 117, 125, .6); cursor: move; touch-action: none; box-sizing: border-box; }
+.ld-el.ld-aktif { outline: 2px solid #0d6efd; z-index: 2; }
+.ld-el:hover .ld-tag, .ld-el.ld-aktif .ld-tag { display: block; }
+.ld-tag { display: none; position: absolute; right: 0; bottom: 0; font-size: 10px; line-height: 1; padding: 1px 3px; background: #0d6efd; color: #fff; pointer-events: none; }
+.ld-teks { overflow: hidden; white-space: normal; word-break: break-word; font-family: "DejaVu Sans", Verdana, sans-serif; }
+.ld-img { display: block; width: 100%; image-rendering: pixelated; pointer-events: none; }
+.ld-el img { pointer-events: none; -webkit-user-drag: none; }

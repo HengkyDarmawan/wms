@@ -105,12 +105,17 @@ class CountChainTest extends TenantTestCase
         $this->assertSame(VarianceClass::Major, $semenLine->refresh()->variance_class);
         $this->assertSame(VarianceClass::Major, $gensetLine->refresh()->variance_class);
 
-        // 3. Hitung ulang oleh penghitung lain (BR-OPN-05): baut ternyata lengkap.
-        $ulang = CountAssignment::query()->where('stock_count_id', $sesi->id)->where('round', 2)->sole();
-        $this->assertNotSame((int) $pertamaBaut->counter_user_id, (int) $ulang->counter_user_id);
-        $this->assertContains((int) $ulang->counter_user_id, [$dedi->id, $eko->id]);
-        $this->hitung($sesi, 2, [$bautLine->id => 1000]);
+        // 3. Hitung ulang oleh penghitung lain (BR-OPN-05) untuk selisih sedang DAN besar (A-259):
+        //    baut ternyata lengkap; semen dan genset terkonfirmasi kurang.
+        $ulang = CountAssignment::query()->where('stock_count_id', $sesi->id)->where('round', 2)->get();
+        $this->assertCount(3, $ulang, 'Bin baut, semen, dan genset dihitung ulang.');
+        $ulangBaut = $ulang->firstWhere('bin_id', $bautLine->bin_id);
+        $this->assertNotSame((int) $pertamaBaut->counter_user_id, (int) $ulangBaut->counter_user_id);
+        $this->assertContains((int) $ulangBaut->counter_user_id, [$dedi->id, $eko->id]);
+        $this->hitung($sesi, 2, [$bautLine->id => 1000, $semenLine->id => 1800, $gensetLine->id => 0]);
         $this->assertNull($bautLine->refresh()->variance_class, 'Hasil hitung ulang menggantikan hitungan pertama.');
+        $this->assertSame(VarianceClass::Major, $semenLine->refresh()->variance_class, 'Tetap besar setelah hitung ulang.');
+        $this->assertSame(1800.0, (float) $semenLine->final_qty);
 
         // 4. Andi mengisi akar masalah lalu merekonsiliasi.
         app(RecordCountRootCause::class)->handle($semenLine, 'unrecorded_txn', 'Pemakaian proyek belum dicatat', $andi);

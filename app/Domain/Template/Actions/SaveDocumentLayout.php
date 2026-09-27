@@ -139,8 +139,15 @@ class SaveDocumentLayout
         foreach ($papers as $jenis => $kertas) {
             $type = DocumentTemplateType::tryFrom((string) $jenis);
             $paper = PaperSize::tryFrom((string) $kertas);
-            $cocok = $type !== null && $paper !== null
-                && in_array($paper, $type->isLabel() ? PaperSize::forLabels() : PaperSize::forDocuments(), true);
+
+            if ($type?->isLabel()) {
+                // Sejak A-261 ukuran label diatur di master ukuran label & desain label.
+                $galat['papers.'.$jenis] = __('Ukuran label diatur di Desain label.');
+
+                continue;
+            }
+
+            $cocok = $type !== null && $paper !== null && in_array($paper, PaperSize::forDocuments(), true);
 
             if (! $cocok) {
                 $galat['papers.'.$jenis] = __('Kertas tidak cocok untuk jenis ini.');

@@ -7,7 +7,9 @@ namespace Tests\Feature\Count;
 use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Count\Actions\AssignCounter;
 use App\Domain\Count\Actions\CancelStockCount;
+use App\Domain\Count\Actions\ReconcileStockCount;
 use App\Domain\Count\Actions\RecordCount;
+use App\Domain\Count\Actions\RecordCountRootCause;
 use App\Domain\Count\Actions\StartStockCount;
 use App\Domain\Count\Enums\StockCountStatus;
 use App\Domain\Count\Enums\VarianceClass;
@@ -40,7 +42,7 @@ use Tests\Feature\Count\Concerns\CountFixtures;
 use Tests\TenantTestCase;
 
 /**
- * TC-OPN-01 s.d. TC-OPN-09 dan TC-OPN-15 — sesi opname dari rencana sampai
+ * TC-OPN-01 s.d. TC-OPN-09, TC-OPN-15, dan TC-OPN-22 — sesi opname dari rencana sampai
  * siap rekonsiliasi: cakupan, pembekuan, snapshot, hitung buta, klasifikasi
  * selisih, hitung ulang oleh orang berbeda, pembatalan (Katalog §2.13).
  */
@@ -335,22 +337,65 @@ class StockCountTest extends TenantTestCase
     }
 
     #[Test]
-    public function tc_opn_09_klasifikasi_sesi_setelah_putaran_pertama(): void
+    public function tc_opn_09_selisih_besar_ikut_hitung_ulang_lalu_tetap_besar(): void
     {
         $sesi = $this->sesiBerjalan();
-
-        $this->hitungPutaran($sesi, 1, [
+        $isian = [
             $this->baris($sesi, $this->baut)->id => 80,       // besar
             $this->baris($sesi, $this->genset)->id => 0,      // serial hilang: besar
-        ]);
+        ];
 
-        $sesi->refresh();
-        $this->assertSame(StockCountStatus::InProgress, $sesi->status, 'Tanpa selisih sedang tidak ada hitung ulang.');
+        $sesi = $this->hitungPutaran($sesi, 1, $isian);
+
+        $this->assertSame(StockCountStatus::Recount, $sesi->status, 'Selisih besar juga dihitung ulang (A-259).');
         $this->assertSame(VarianceClass::Major, $this->baris($sesi, $this->baut)->variance_class);
+        $this->assertTrue($this->baris($sesi, $this->baut)->is_recount);
+        $this->assertTrue($this->baris($sesi, $this->genset)->is_recount);
+        $this->assertFalse($this->baris($sesi, $this->semen)->is_recount, 'Baris tanpa selisih tidak dihitung ulang.');
+        $this->assertNull($this->baris($sesi, $this->semen)->variance_class);
+
+        $pertama = CountAssignment::query()->where('stock_count_id', $sesi->id)->where('round', 1)->pluck('counter_user_id', 'bin_id');
+        $ulang = CountAssignment::query()->where('stock_count_id', $sesi->id)->where('round', 2)->get();
+        $this->assertCount(2, $ulang, 'Bin baut dan bin genset.');
+        foreach ($ulang as $u) {
+            $this->assertNotSame((int) $pertama[$u->bin_id], (int) $u->counter_user_id, 'Penghitung ulang berbeda (BR-OPN-05).');
+        }
+
+        $sesi = $this->hitungPutaran($sesi, 2, $isian);
+
+        $this->assertSame(VarianceClass::Major, $this->baris($sesi, $this->baut)->variance_class, 'Terkonfirmasi: tetap besar.');
         $this->assertSame(-20.0, (float) $this->baris($sesi, $this->baut)->variance_qty);
         $this->assertSame(-1.0, (float) $this->baris($sesi, $this->genset)->variance_qty);
-        $this->assertNull($this->baris($sesi, $this->semen)->variance_class);
         $this->assertSame(0, CountLine::query()->where('stock_count_id', $sesi->id)->whereNull('final_qty')->count());
+    }
+
+    #[Test]
+    public function tc_opn_22_akar_masalah_menunggu_hitung_ulang_dan_hitung_ulang_cocok_membebaskan(): void
+    {
+        $sesi = $this->sesiBerjalan();
+        $baut = $this->baris($sesi, $this->baut);
+        $genset = $this->baris($sesi, $this->genset);
+
+        $sesi = $this->hitungPutaran($sesi, 1, [$baut->id => 80, $genset->id => 0]);
+
+        // Kelas akhir baru diketahui setelah putaran 2: akar masalah ditolak dulu.
+        $this->assertTrue($baut->refresh()->awaitingRecount());
+        $this->tolak(fn () => app(RecordCountRootCause::class)->handle($baut, 'mispick', null, $this->kepala), 'BR-OPN-05');
+
+        // Hitung ulang: baut ternyata lengkap (salah hitung), genset memang hilang.
+        $sesi = $this->hitungPutaran($sesi, 2, [$baut->id => 100, $genset->id => 0]);
+
+        $this->assertFalse($baut->refresh()->awaitingRecount());
+        $this->assertNull($baut->variance_class, 'Salah hitung terkoreksi; tidak perlu akar masalah.');
+        $this->assertSame(100.0, (float) $baut->final_qty);
+        $this->assertSame(VarianceClass::Major, $genset->refresh()->variance_class);
+
+        $this->tolak(fn () => app(ReconcileStockCount::class)->handle($sesi, $this->kepala), 'BR-OPN-07');
+        app(RecordCountRootCause::class)->handle($genset, 'damaged_lost', 'Hilang di site', $this->kepala);
+        $sesi = app(ReconcileStockCount::class)->handle($sesi, $this->kepala);
+
+        $this->assertSame(StockCountStatus::Reconciling, $sesi->status);
+        $this->assertSame(1, $sesi->adjustments()->sole()->lines()->count(), 'Hanya genset yang disesuaikan.');
     }
 
     #[Test]

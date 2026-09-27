@@ -56,7 +56,7 @@ class CountReportTest extends TenantTestCase
 
         // Sesi dua bin: baut −20 dan genset hilang −1 (besar), semen & pipa cocok.
         $sesi = $this->sesiBerjalan();
-        $sesi = $this->hitungPutaran($sesi, 1, [
+        $sesi = $this->hitungDenganUlang($sesi, [
             $this->baris($sesi, $this->baut)->id => 80,
             $this->baris($sesi, $this->genset)->id => 0,
         ]);

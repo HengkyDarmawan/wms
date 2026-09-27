@@ -16,12 +16,13 @@ use App\Domain\Count\Models\StockCount;
  * Menilai sesi setiap kali satu penugasan selesai dihitung.
  *
  * - Putaran 1 selesai semua → setiap baris diklasifikasi (BR-OPN-04). Bila ada
- *   selisih **sedang**, sesi otomatis ke `recount` (Katalog §2.13) dan bin
- *   yang bersangkutan mendapat penugasan putaran 2 kepada anggota tim yang
- *   **berbeda** dari penghitung pertama (BR-OPN-05, A-99).
+ *   selisih **sedang atau besar**, sesi otomatis ke `recount` (Katalog §2.13)
+ *   dan bin yang bersangkutan mendapat penugasan putaran 2 kepada anggota tim
+ *   yang **berbeda** dari penghitung pertama (BR-OPN-05, A-99 diubah oleh
+ *   A-259: selisih besar paling sering salah hitung, jadi ikut dihitung ulang).
  * - Putaran 2 selesai semua → baris hitung ulang memakai hasil putaran 2 dan
- *   diklasifikasi ulang. Tidak ada putaran 3; sisa selisih diputus di
- *   rekonsiliasi.
+ *   diklasifikasi ulang. Tidak ada putaran 3; baris yang tetap besar wajib
+ *   akar masalah sebelum rekonsiliasi (BR-OPN-07).
  */
 class CountProgress
 {
@@ -45,13 +46,15 @@ class CountProgress
         if ($count->status === StockCountStatus::InProgress && ! $this->adaPutaran2($count)) {
             $this->klasifikasi($count, 1);
 
+            $kelasUlang = [VarianceClass::Moderate->value, VarianceClass::Major->value];
+
             $binUlang = CountLine::query()->where('stock_count_id', $count->id)
-                ->where('variance_class', VarianceClass::Moderate->value)
+                ->whereIn('variance_class', $kelasUlang)
                 ->distinct()->pluck('bin_id')->map(fn ($v) => (int) $v)->all();
 
             if ($binUlang !== []) {
                 CountLine::query()->where('stock_count_id', $count->id)
-                    ->where('variance_class', VarianceClass::Moderate->value)
+                    ->whereIn('variance_class', $kelasUlang)
                     ->update(['is_recount' => true, 'updated_at' => now()]);
 
                 $this->buatPutaran2($count, $binUlang);
@@ -60,7 +63,7 @@ class CountProgress
 
                 activity('count')->performedOn($count)->causedBy($actor)
                     ->withProperties(['bin' => count($binUlang)])
-                    ->log('Selisih sedang ditemukan: hitung ulang oleh penghitung berbeda'); // BR-OPN-05
+                    ->log('Selisih sedang/besar ditemukan: hitung ulang oleh penghitung berbeda'); // BR-OPN-05, A-259
             } else {
                 activity('count')->performedOn($count)->causedBy($actor)
                     ->log('Semua bin terhitung; siap direkonsiliasi');

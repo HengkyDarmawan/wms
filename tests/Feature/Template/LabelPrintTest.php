@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature\Template;
 
 use App\Domain\Access\Enums\ScopeType;
+use App\Domain\Access\Models\User;
 use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Piece;
 use App\Domain\Template\Actions\PrintLabels;
 use App\Domain\Template\Enums\DocumentTemplateType;
 use App\Domain\Template\Enums\PaperSize;
 use App\Domain\Template\Livewire\LabelPrint;
+use App\Domain\Template\Models\LabelFormat;
 use App\Domain\Template\Support\LabelPayload;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Bin;
@@ -41,9 +43,10 @@ class LabelPrintTest extends TenantTestCase
         $this->potongan = Piece::create(['item_id' => $this->pipa->id, 'piece_no' => 'P-000123', 'length' => 6]);
     }
 
-    private function html(DocumentTemplateType $type, array $ids, PaperSize $paper, int $copies = 1, ?\App\Domain\Access\Models\User $actor = null): string
+    private function html(DocumentTemplateType $type, array $ids, PaperSize $paper, int $copies = 1, ?User $actor = null): string
     {
-        return app(PrintLabels::class)->view($type, $ids, $paper, $copies, $actor ?? $this->makeUser('warehouse_head'))->render();
+        // Kertas lama (A-120) = preset ukuran label (A-261).
+        return app(PrintLabels::class)->view($type, $ids, LabelFormat::fromLegacyPaper($paper), $copies, $actor ?? $this->makeUser('warehouse_head'))->render();
     }
 
     #[Test]
@@ -67,7 +70,7 @@ class LabelPrintTest extends TenantTestCase
         // Thermal: satu label per halaman → 2 bin × 2 salinan = 4 halaman.
         $thermal = $this->html(DocumentTemplateType::LabelBin, [$this->binA->id, $this->binB->id], PaperSize::Label50x30, 2, $kepala);
         $this->assertSame(4, substr_count($thermal, 'class="halaman'));
-        $this->assertSame(4, substr_count($thermal, '<div class="label">'));
+        $this->assertSame(4, substr_count($thermal, '<div class="label"'));
         $this->assertStringContainsString('CKG-A-R01-L1-B01', $thermal);
         $this->assertStringContainsString('Gudang Utama Cakung', $thermal);
 
@@ -76,7 +79,7 @@ class LabelPrintTest extends TenantTestCase
             'warehouse_id' => $this->gudang->id, 'code' => sprintf('CKG-A-R02-L1-B%02d', $n), 'bin_type' => BinType::Storage,
         ])->id)->all();
         $a4 = $this->html(DocumentTemplateType::LabelBin, $binLain, PaperSize::LabelA4Grid, 2, $kepala);
-        $this->assertSame(26, substr_count($a4, '<div class="label">'));
+        $this->assertSame(26, substr_count($a4, '<div class="label"'));
         $this->assertSame(2, substr_count($a4, 'class="halaman'));
 
         $item = $this->html(DocumentTemplateType::LabelItem, [$this->baut->id], PaperSize::Label50x30);
@@ -118,7 +121,7 @@ class LabelPrintTest extends TenantTestCase
         $this->actingAs($staf)->getJson($this->tenantUrl('labels/print?type=label_bin&paper=label_50x30&copies=11&ids='.$this->binA->id))
             ->assertStatus(422)->assertJsonValidationErrors('copies');
         $this->actingAs($staf)->getJson($this->tenantUrl('labels/print?type=label_bin&paper=a4&ids='.$this->binA->id))
-            ->assertStatus(422)->assertJsonValidationErrors('paper');
+            ->assertStatus(422)->assertJsonValidationErrors('format');
         $this->actingAs($staf)->getJson($this->tenantUrl('labels/print?type=label_bin&paper=label_50x30&ids='))
             ->assertStatus(422)->assertJsonValidationErrors('ids');
         $this->actingAs($staf)->get($this->tenantUrl('labels/print?type=shipment&ids=1'))->assertNotFound();
@@ -166,13 +169,13 @@ class LabelPrintTest extends TenantTestCase
 
         // Layar: pilih bin, kertas, salinan → tautan cetak memuat pilihan.
         Livewire::actingAs($kepala)->test(LabelPrint::class)
-            ->assertSet('paper', PaperSize::LabelA4Grid->value)
+            ->assertSet('formatId', (string) LabelFormat::query()->where('code', 'A4-3X8')->value('id'))
             ->call('selectPage', [$this->binA->id, $this->binB->id])
             ->set('copies', 3)
             ->assertSee('Cetak 6 label')
             ->set('type', 'label_lot')
             ->assertSet('selected', [])
-            ->assertSet('paper', PaperSize::Label50x30->value)
+            ->assertSet('formatId', (string) LabelFormat::query()->where('code', 'THERMAL-50X30')->value('id'))
             ->assertSee('LOT-2609-A');
     }
 }

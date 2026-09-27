@@ -22,11 +22,18 @@
         .kaki { position: fixed; bottom: -12mm; left: 0; right: 0; font-size: 8px; color: #666; }
         .batal { position: fixed; top: 40%; left: 0; right: 0; text-align: center; font-size: 72px;
                  color: #c0392b; opacity: 0.18; transform: rotate(-30deg); }
+        /* A-263: cetakan kedua dst. dokumen yang rawan dipakai ganda. */
+        .ulang { position: fixed; top: -8mm; right: 0; border: 2px solid #c0392b; color: #c0392b;
+                 font-size: 11px; font-weight: bold; padding: 2px 6px; }
     </style>
 </head>
 <body>
     @if ($batal)
         <div class="batal">{{ __('DIBATALKAN') }}</div>
+    @endif
+
+    @if ($cetakUlang ?? false)
+        <div class="ulang">{{ __('CETAK ULANG ke-:n', ['n' => $cetakKe]) }}</div>
     @endif
 
     @include('print.partials.kop')
@@ -39,7 +46,7 @@
         <table>
             <tr>
                 <td>{{ $kop['footer'] }}</td>
-                <td class="r">{{ __('Dicetak') }} {{ now()->format('d/m/Y H:i') }} · {{ ($bernilai ?? false) ? __('nilai dalam Rupiah') : __('tanpa nilai uang') }}</td>
+                 <td class="r">{{ __('Dicetak') }} {{ now()->lokal()->format('d/m/Y H:i') }}@if ($cetakKe ?? null) · {{ __('cetakan ke-:n', ['n' => $cetakKe]) }}@endif · {{ ($bernilai ?? false) ? __('nilai dalam Rupiah') : __('tanpa nilai uang') }}</td>
             </tr>
         </table>
     </div>

@@ -51,7 +51,7 @@ class CountApprovalTest extends TenantTestCase
     {
         $sesi = $this->sesiBerjalan($data, $pembuat);
 
-        return $this->hitungPutaran($sesi, 1, [
+        return $this->hitungDenganUlang($sesi, [
             $this->baris($sesi, $this->baut)->id => 80,
             $this->baris($sesi, $this->genset)->id => 0,
         ]);
@@ -71,6 +71,14 @@ class CountApprovalTest extends TenantTestCase
         $this->tolakCount(fn () => app(ReconcileStockCount::class)->handle($sesi, $this->kepala), 'BR-OPN-05');
 
         $sesi = $this->hitungPutaran($sesi, 1, [
+            $this->baris($sesi, $this->baut)->id => 80,
+            $this->baris($sesi, $this->genset)->id => 0,
+        ]);
+
+        $this->assertSame(StockCountStatus::Recount, $sesi->status, 'Selisih besar ikut dihitung ulang (A-259).');
+        $this->tolakCount(fn () => app(ReconcileStockCount::class)->handle($sesi, $this->kepala), 'BR-OPN-05');
+
+        $sesi = $this->hitungPutaran($sesi, 2, [
             $this->baris($sesi, $this->baut)->id => 80,
             $this->baris($sesi, $this->genset)->id => 0,
         ]);

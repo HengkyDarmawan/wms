@@ -7,11 +7,11 @@ namespace App\Domain\Count\Actions;
 use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalEngine;
+use App\Domain\Count\Enums\RootCauseCategory;
 use App\Domain\Count\Enums\StockCountStatus;
 use App\Domain\Count\Exceptions\CountRuleException;
 use App\Domain\Count\Models\CountLine;
 use App\Domain\Count\Models\StockCount;
-use App\Domain\Count\Enums\RootCauseCategory;
 
 /**
  * Permission: `count.reconcile` — mengisi kategori akar masalah dan catatan
@@ -20,7 +20,8 @@ use App\Domain\Count\Enums\RootCauseCategory;
  * Boleh setelah baris diklasifikasi dan selama hasil belum menunggu
  * approval; setelah ditolak approver, akar masalah boleh diperbaiki sebelum
  * diajukan ulang (A-97). Data yang sedang diputus approver tidak berubah
- * (BR-APR-01).
+ * (BR-APR-01). Baris yang sedang menunggu hitung ulang belum boleh diisi:
+ * kelas akhirnya baru diketahui setelah putaran 2 (A-259).
  */
 class RecordCountRootCause
 {
@@ -28,6 +29,7 @@ class RecordCountRootCause
 
     public function handle(CountLine $line, ?string $rootCause, ?string $note = null, ?User $actor = null): CountLine
     {
+        $line->refresh(); // penjaga di bawah menilai keadaan terbaru, bukan salinan pemanggil
         $count = StockCount::withoutGlobalScopes()->findOrFail($line->stock_count_id);
 
         $boleh = $count->status->isCounting()
@@ -40,6 +42,10 @@ class RecordCountRootCause
 
         if ($line->final_qty === null) {
             throw CountRuleException::rule('BR-OPN-04', 'Baris ini belum selesai dihitung dan diklasifikasi.');
+        }
+
+        if ($line->awaitingRecount()) {
+            throw CountRuleException::rule('BR-OPN-05', 'Baris ini sedang dihitung ulang; isi akar masalah setelah hitung ulang selesai.');
         }
 
         $kategori = $rootCause === null || $rootCause === '' ? null : RootCauseCategory::tryFrom($rootCause);
