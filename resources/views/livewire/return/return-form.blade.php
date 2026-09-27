@@ -62,7 +62,7 @@
                         <th scope="col">{{ __('Item') }}</th>
                         <th scope="col">{{ __('Lokasi / SJ asal') }}</th>
                         <th class="text-end" scope="col">{{ __('Maks') }}</th>
-                        <th scope="col">{{ __('Jumlah retur') }}</th>
+                        <th scope="col" style="min-width: 12rem">{{ __('Jumlah retur') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -72,10 +72,26 @@
                             <td>{{ $c['item_code'] }} <div class="small text-muted">{{ $c['item_name'] }} @if ($c['tracking']) · {{ $c['tracking'] }} @endif</div></td>
                             <td class="small">{{ $c['bin_code'] ?? ($c['shipment_number'] ?? '—') }}</td>
                             <td class="text-end">{{ number_format((float) $c['max'], 2, ',', '.') }}</td>
-                            <td style="max-width: 9rem">
-                                <input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model="qty.{{ $kunci }}">
+                            <td style="max-width: 14rem">
+                                @php($opsiBaris = $c['serial_id'] === null && $c['piece_id'] === null ? ($unitOpsi[(int) $c['item_id']] ?? null) : null)
+                                @php($kodeSatuan = \App\Domain\Master\Support\UnitInput::selectedCode($satuan[$kunci] ?? [], $opsiBaris, $satuanLain))
+                                <div class="input-group input-group-sm">
+                                    <input class="form-control" type="number" step="0.0001" min="0" wire:model.live.debounce.500ms="qty.{{ $kunci }}">
+                                    @if ($kodeSatuan) <span class="input-group-text" data-akhiran-satuan>{{ $kodeSatuan }}</span> @endif
+                                </div>
+                                @if ($opsiBaris !== null)
+                                    @include('livewire.master.partials.unit-picker', ['prefix' => 'satuan.'.$kunci, 'row' => $satuan[$kunci] ?? [], 'opsi' => $opsiBaris, 'satuanLain' => $satuanLain, 'hasil' => $hasilSatuan[$kunci] ?? null, 'idAwal' => 'ret-'.$kunci])
+                                @endif
                             </td>
                         </tr>
+                        @if ($opsiBaris !== null && (($satuan[$kunci]['uom'] ?? '') === 'lain'))
+                            {{-- A-291: isian kemasan baru selebar baris. --}}
+                            <tr wire:key="ret-lain-{{ $kunci }}">
+                                <td colspan="5" class="pt-0 border-top-0">
+                                    @include('livewire.master.partials.unit-picker-lain', ['prefix' => 'satuan.'.$kunci, 'row' => $satuan[$kunci], 'opsi' => $opsiBaris, 'satuanLain' => $satuanLain, 'idAwal' => 'ret-'.$kunci])
+                                </td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
                             <td class="text-center text-muted py-4" colspan="5">{{ __('Tidak ada barang proyek ini yang bisa diretur.') }}</td>
@@ -84,7 +100,7 @@
                 </tbody>
             </table>
         </div>
-        @foreach (['key', 'qty_base'] as $f)
+        @foreach (['key', 'qty_base', 'uom_id'] as $f)
             @error('form.'.$f) <div class="text-danger small px-3 pb-2">{{ $message }}</div> @enderror
         @endforeach
     </div>

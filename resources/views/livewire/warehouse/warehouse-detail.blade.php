@@ -274,7 +274,7 @@
                                 <td class="small">
                                     {{ $baris->created_at?->lokal()->format('d/m/Y H:i') }}
                                 </td>
-                                <td>{{ $baris->description }}</td>
+                                <td>{{ \App\Domain\Shared\Support\ActivityText::label($baris->description) }}</td>
                                 <td>{{ $baris->causer?->name ?? __('Sistem') }}</td>
                             </tr>
                         @empty

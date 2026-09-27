@@ -56,7 +56,7 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label" for="sim-milik">{{ __('Model kepemilikan') }}</label>
+                    <label class="form-label" for="sim-milik">{{ __('Jenis barang (aset/habis pakai)') }}</label>
                     <select class="form-select" id="sim-milik" multiple size="3" wire:model="manual.ownership_models">
                         @foreach ($ownerships as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
                     </select>

@@ -161,7 +161,7 @@
                     @forelse ($riwayat as $catatan)
                         <li class="border-bottom py-2" wire:key="log-{{ $catatan->id }}">
                             <div class="d-flex justify-content-between gap-2">
-                                <span>{{ $catatan->description }}</span>
+                                <span>{{ \App\Domain\Shared\Support\ActivityText::label($catatan->description) }}</span>
                                 <span class="small text-muted text-nowrap">
                                     {{ $catatan->created_at?->lokal()->format('d M Y H:i') }}
                                 </span>

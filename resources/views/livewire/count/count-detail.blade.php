@@ -140,7 +140,7 @@
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between">
             <strong>{{ __('Rekonsiliasi') }}</strong>
-            <span class="small text-muted">{{ __('Kecil ≤ ambang relatif & absolut · Sedang ≤ 5 % (hitung ulang) · Besar: akar masalah wajib') }}</span>
+            <span class="small text-muted">{{ __('Kecil ≤ ambang relatif & absolut · Sedang ≤ 5 % (hitung ulang) · Besar: hitung ulang, lalu akar masalah wajib bila masih besar') }}</span>
         </div>
         @if (! $bolehLihat)
             <div class="card-body text-muted">{{ __('Hitung buta: angka sistem dan hasil hitung disembunyikan selama Anda masih punya penugasan hitung di sesi ini, atau sampai sesi masuk rekonsiliasi.') }}</div>
@@ -178,7 +178,9 @@
                                 </td>
                                 <td>@if ($l->variance_class) <span class="badge {{ $l->variance_class->badge() }}">{{ $l->variance_class->label() }}</span> @endif</td>
                                 <td style="min-width: 16rem">
-                                    @if ($l->variance_class && $bisaUbahAkar)
+                                    @if ($l->awaitingRecount())
+                                        <span class="small text-muted">{{ __('Menunggu hitung ulang') }}</span>
+                                    @elseif ($l->variance_class && $bisaUbahAkar)
                                         <div class="input-group input-group-sm">
                                             <select class="form-select" wire:model="akar.{{ $l->id }}.root_cause">
                                                 <option value="">{{ $l->variance_class->value === 'major' ? __('Pilih… *') : __('—') }}</option>
@@ -227,7 +229,7 @@
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $r)
-                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
+                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ \App\Domain\Shared\Support\ActivityText::label($r->description) }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
             @endforelse

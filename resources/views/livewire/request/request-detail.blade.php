@@ -184,7 +184,10 @@
                                     <span class="badge text-bg-light">{{ __('Pecahan') }}</span>
                                 @endif
                             </td>
-                            <td class="text-end">{{ number_format((float) $l->qty_base, 2, ',', '.') }}</td>
+                            <td class="text-end">
+                                {{ number_format((float) $l->qty_base, 2, ',', '.') }}
+                                @if ($l->typedQuantity()) <div class="small text-muted">{{ $l->typedQuantity() }}</div> @endif
+                            </td>
                             <td class="text-end text-nowrap">
                                 {{ number_format((float) $l->qty_shipped, 2, ',', '.') }}
                                 <span class="text-muted">/</span>
@@ -355,7 +358,7 @@
             @forelse ($riwayat as $log)
                 <li class="list-group-item">
                     <div class="d-flex justify-content-between">
-                        <span>{{ $log->description }}</span>
+                        <span>{{ \App\Domain\Shared\Support\ActivityText::label($log->description) }}</span>
                         <span class="text-muted small">{{ $log->created_at?->lokal()->format('d/m/Y H:i') }}</span>
                     </div>
                     <div class="small text-muted">{{ $log->causer?->name ?? __('Sistem') }}</div>

@@ -83,10 +83,17 @@
             @endif
             @if (in_array('ownership_models', $allowed, true))
                 <div class="col-md-4">
-                    <label class="form-label" for="kondisi-kepemilikan">{{ __('Model kepemilikan') }}</label>
+                    <label class="form-label" for="kondisi-kepemilikan">{{ __('Jenis barang (aset/habis pakai)') }}</label>
                     <select class="form-select" id="kondisi-kepemilikan" multiple size="3" wire:model="conditions.ownership_models">
                         @foreach ($ownerships as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
                     </select>
+                </div>
+            @endif
+            @if (in_array('vendor_types', $kondisiUsang, true))
+                <div class="col-12">
+                    <div class="alert alert-warning py-2 mb-0" role="alert">
+                        {{ __('Aturan ini memakai kondisi Jenis vendor yang tidak lagi dinilai untuk jenis dokumen ini — vendor baru dipilih di PO. Buat aturan PO untuk jenis vendor; bila aturan ini disimpan, kondisi itu dihapus dan aturan berlaku menurut kondisi lainnya.') }}
+                    </div>
                 </div>
             @endif
             @if (in_array('vendor_types', $allowed, true))
@@ -141,7 +148,7 @@
                         <th scope="col">#</th>
                         <th scope="col">{{ __('Approver') }} <span class="wajib">*</span></th>
                         <th scope="col">{{ __('Cara putus') }} <span class="wajib">*</span></th>
-                        <th scope="col">{{ __('Batas waktu (jam)') }} <span class="wajib">*</span></th>
+                        <th scope="col">{{ __('Batas waktu (jam)') }} <span class="wajib">*</span> · {{ __('Kanal') }}</th>
                         <th scope="col">{{ __('Approver cadangan') }}</th>
                         <th scope="col"></th>
                     </tr>
@@ -155,6 +162,13 @@
                                     @foreach ($approverTypes as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
                                 </select>
                                 @include('livewire.approval.partials.approver-ref', ['jenis' => $s['approver_type'] ?? '', 'model' => 'steps.'.$i.'.approver_ref_id'])
+                                @if (in_array($s['approver_type'] ?? '', ['role', 'position'], true))
+                                    {{-- A-269: approver hanya dari divisi pemohon atau divisi induknya. --}}
+                                    <div class="form-check small mt-1">
+                                        <input class="form-check-input" id="lapis-divisi-{{ $i }}" type="checkbox" wire:model="steps.{{ $i }}.same_org_unit">
+                                        <label class="form-check-label" for="lapis-divisi-{{ $i }}">{{ __('Hanya dari divisi pemohon') }}</label>
+                                    </div>
+                                @endif
                             </td>
                             <td>
                                 <select class="form-select form-select-sm" wire:model="steps.{{ $i }}.decision_mode" aria-label="{{ __('Cara putus') }}">
@@ -163,6 +177,11 @@
                             </td>
                             <td style="max-width: 7rem">
                                 <input class="form-control form-control-sm" type="number" min="1" max="720" wire:model="steps.{{ $i }}.timeout_hours" aria-label="{{ __('Batas waktu') }}">
+                                {{-- Fase 2a (A-277, BR-APR-10): tombol Setujui/Tolak lewat WhatsApp. --}}
+                                <select class="form-select form-select-sm mt-1" wire:model="steps.{{ $i }}.channel" aria-label="{{ __('Kanal lapis') }}" title="{{ $waAktif ? '' : __('WhatsApp belum aktif untuk company ini; lapis tetap lewat web') }}">
+                                    <option value="web">{{ __('Web') }}</option>
+                                    <option value="both">{{ __('Web & WhatsApp') }}</option>
+                                </select>
                             </td>
                             <td>
                                 <select class="form-select form-select-sm mb-1" wire:model.live="steps.{{ $i }}.backup_approver_type" aria-label="{{ __('Jenis approver cadangan') }}">

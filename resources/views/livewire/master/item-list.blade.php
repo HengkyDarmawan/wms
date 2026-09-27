@@ -3,7 +3,7 @@
         <div>
             <h1 class="h3 mb-1">{{ __('Item') }}</h1>
             <p class="text-muted mb-0">
-                {{ __('Master barang beserta mode pelacakan, kepemilikan, dan satuan dasarnya.') }}
+                {{ __('Daftar barang beserta jenis dan satuan dasarnya.') }}
             </p>
         </div>
 
@@ -67,22 +67,14 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-lg-2">
-                <label class="form-label" for="filter-pelacakan">{{ __('Pelacakan') }}</label>
-                <select class="form-select" id="filter-pelacakan" wire:model.live="trackingFilter">
+            <div class="col-lg-4">
+                <label class="form-label" for="filter-jenis">{{ __('Jenis barang') }}</label>
+                <select class="form-select" id="filter-jenis" wire:model.live="kindFilter">
                     <option value="">{{ __('Semua') }}</option>
-                    @foreach ($trackingModes as $nilai => $label)
-                        <option value="{{ $nilai }}">{{ $label }}</option>
+                    @foreach ($kinds as $jenis)
+                        <option value="{{ $jenis->value }}">{{ $jenis->label() }}</option>
                     @endforeach
-                </select>
-            </div>
-            <div class="col-lg-2">
-                <label class="form-label" for="filter-kepemilikan">{{ __('Kepemilikan') }}</label>
-                <select class="form-select" id="filter-kepemilikan" wire:model.live="ownershipFilter">
-                    <option value="">{{ __('Semua') }}</option>
-                    @foreach ($ownerships as $nilai => $label)
-                        <option value="{{ $nilai }}">{{ $label }}</option>
-                    @endforeach
+                    <option value="khusus">{{ __('Jenis khusus') }}</option>
                 </select>
             </div>
             <div class="col-lg-2">
@@ -105,8 +97,7 @@
                         <th>{{ __('Item') }}</th>
                         <th>{{ __('Kategori') }}</th>
                         <th>{{ __('Satuan dasar') }}</th>
-                        <th>{{ __('Pelacakan') }}</th>
-                        <th>{{ __('Kepemilikan') }}</th>
+                        <th>{{ __('Jenis barang') }}</th>
                         <th class="text-end">{{ __('Titik pesan ulang') }}</th>
                         <th>{{ __('Status') }}</th>
                         <th class="text-end">{{ __('Aksi') }}</th>
@@ -123,13 +114,7 @@
                             </td>
                             <td>{{ $item->category?->name ?? '—' }}</td>
                             <td>{{ $item->baseUom?->code ?? '—' }}</td>
-                            <td>
-                                {{ $item->tracking_mode->label() }}
-                                @if ($item->has_expiry)
-                                    <span class="badge text-bg-light">{{ __('Kedaluwarsa') }}</span>
-                                @endif
-                            </td>
-                            <td>{{ $item->ownership_model->label() }}</td>
+                            <td>{{ \App\Domain\Master\Enums\ItemKind::fromItem($item)?->label() ?? __('Jenis khusus') }}</td>
                             <td class="text-end">{{ $item->reorder_point ? (float) $item->reorder_point : '—' }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $item->statusBadge() }}">

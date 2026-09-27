@@ -62,7 +62,7 @@
             <label class="form-label" for="req-pindai">{{ __('Pindai item') }}</label>
             <input class="form-control @error('kodePindai') is-invalid @enderror" id="req-pindai" type="text" data-scan
                    autocomplete="off" wire:model="kodePindai" wire:keydown.enter.prevent="pindai"
-                   placeholder="{{ __('Kode item, barcode, atau label lot/serial/potongan') }}">
+                   placeholder="{{ __('Pindai atau ketik kode barang') }}">
             @error('kodePindai') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
             <div class="form-text">{{ __('Item baru masuk ke baris kosong dengan jumlah 1; memindai item yang sama menambah jumlahnya.') }}</div>
         </div>
@@ -73,7 +73,7 @@
                         <th scope="col" style="width: 30%">{{ __('Item katalog') }}</th>
                         <th scope="col" style="width: 25%">{{ __('Atau tulis sendiri') }}</th>
                         <th scope="col" style="width: 12%">{{ __('Jumlah') }} <span class="wajib">*</span></th>
-                        <th scope="col" style="width: 13%">{{ __('Kepemilikan') }}</th>
+                        <th scope="col" style="width: 13%">{{ __('Beli/Pinjam') }}</th>
                         <th scope="col" style="width: 15%">{{ __('Dibutuhkan') }}</th>
                         <th scope="col" style="width: 5%"></th>
                     </tr>
@@ -82,7 +82,7 @@
                     @foreach ($lines as $i => $baris)
                         <tr wire:key="baris-{{ $i }}" @class(['table-active' => $sorot === $i])>
                             <td>
-                                <select class="form-select form-select-sm" wire:model="lines.{{ $i }}.item_id">
+                                <select class="form-select form-select-sm" wire:model.live="lines.{{ $i }}.item_id">
                                     <option value="">{{ __('— tidak dari katalog —') }}</option>
                                     @foreach ($items as $item)
                                         <option value="{{ $item->id }}">{{ $item->code }} — {{ $item->name }}</option>
@@ -95,15 +95,27 @@
                                        placeholder="{{ __('Nama barang') }}">
                             </td>
                             <td>
-                                <input class="form-control form-control-sm @error('form.qty_base') is-invalid @enderror"
-                                       type="number" step="0.0001" min="0" wire:model="lines.{{ $i }}.qty_base">
+                                @php($opsiBaris = $unitOpsi[(int) ($baris['item_id'] ?: 0)] ?? null)
+                                @php($kodeSatuan = \App\Domain\Master\Support\UnitInput::selectedCode($baris, $opsiBaris, $satuanLain))
+                                <div class="input-group input-group-sm">
+                                    <input class="form-control @error('form.qty_base') is-invalid @enderror"
+                                           type="number" step="0.0001" min="0" wire:model.live.debounce.500ms="lines.{{ $i }}.qty_base">
+                                    @if ($kodeSatuan) <span class="input-group-text" data-akhiran-satuan>{{ $kodeSatuan }}</span> @endif
+                                </div>
+                                @include('livewire.master.partials.unit-picker', ['prefix' => 'lines.'.$i, 'row' => $baris, 'opsi' => $opsiBaris, 'satuanLain' => $satuanLain, 'hasil' => $hasilSatuan[$i] ?? null, 'idAwal' => 'req-baris-'.$i])
                             </td>
                             <td>
-                                <select class="form-select form-select-sm" wire:model="lines.{{ $i }}.line_ownership">
-                                    @foreach ($ownerships as $nilai => $label)
-                                        <option value="{{ $nilai }}">{{ $label }}</option>
-                                    @endforeach
-                                </select>
+                                {{-- A-286: Beli/Pinjam mengikuti jenis barang; hanya item lama Keduanya yang bisa dipilih. --}}
+                                @php($itemBaris = $baris['item_id'] === '' ? null : $items->firstWhere('id', (int) $baris['item_id']))
+                                @if ($itemBaris?->ownership_model?->value === 'both')
+                                    <select class="form-select form-select-sm" wire:model="lines.{{ $i }}.line_ownership">
+                                        @foreach ($ownerships as $nilai => $label)
+                                            <option value="{{ $nilai }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <span class="small" data-kepemilikan="{{ $baris['line_ownership'] }}">{{ $ownerships[$baris['line_ownership']] ?? __('Beli') }}</span>
+                                @endif
                             </td>
                             <td>
                                 <input class="form-control form-control-sm" type="date"
@@ -116,12 +128,21 @@
                                 </button>
                             </td>
                         </tr>
+                        @if (($baris['uom'] ?? '') === 'lain')
+                            {{-- A-291: isian kemasan baru selebar baris. --}}
+                            <tr wire:key="baris-lain-{{ $i }}">
+                                <td colspan="6" class="pt-0 border-top-0">
+                                    @include('livewire.master.partials.unit-picker-lain', ['prefix' => 'lines.'.$i, 'row' => $baris, 'opsi' => $opsiBaris, 'satuanLain' => $satuanLain, 'idAwal' => 'req-baris-'.$i])
+                                </td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
             </table>
         </div>
         @error('form.item_id') <div class="card-footer text-danger">{{ $message }}</div> @enderror
         @error('form.qty_base') <div class="card-footer text-danger">{{ $message }}</div> @enderror
+        @error('form.uom_id') <div class="card-footer text-danger">{{ $message }}</div> @enderror
         @error('form.line_ownership') <div class="card-footer text-danger">{{ $message }}</div> @enderror
     </div>
 

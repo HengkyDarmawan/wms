@@ -36,20 +36,38 @@
         </div>
     @endif
 
-    @if ($otpSekali !== null)
-        <div class="alert alert-info" role="alert">
-            {{ __('Kode OTP untuk penerima') }}: <strong class="fs-5">{{ $otpSekali }}</strong>
-            @if ($tautanSekali)
-                <div class="mt-1">{{ __('Tautan') }}: <a href="{{ $tautanSekali }}" target="_blank" rel="noopener" class="text-break">{{ $tautanSekali }}</a></div>
+    @if ($tautanSekali !== null)
+        <div class="alert {{ $otpTerkirimKe ? 'alert-success' : 'alert-info' }}" role="alert">
+            @if ($otpTerkirimKe)
+                {{-- A-273: OTP hanya sampai di HP penerima; driver tidak melihatnya. --}}
+                <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                {{ $otpVia === 'whatsapp'
+                    ? __('Kode OTP sudah dikirim lewat WhatsApp ke :hp. Bagikan tautan di bawah kepada penerima; kodenya tidak ditampilkan di sini.', ['hp' => $otpTerkirimKe])
+                    : __('Tautan dan kode OTP sudah dikirim ke :hp. Kode tidak ditampilkan di sini; penerima memasukkannya sendiri.', ['hp' => $otpTerkirimKe]) }}
+            @else
+                @if ($otpGagal)
+                    <div class="text-danger small mb-1">{{ __('OTP otomatis tidak terkirim') }}: {{ $otpGagal }}</div>
+                @endif
+                {{ __('Kode OTP untuk penerima') }}: <strong class="fs-5">{{ $otpSekali }}</strong>
+            @endif
+            <div class="mt-1">{{ __('Tautan') }}: <a href="{{ $tautanSekali }}" target="_blank" rel="noopener" class="text-break">{{ $tautanSekali }}</a></div>
+            @if ($otpTerkirimKe && $otpVia === 'whatsapp')
+                {{-- A-279: template autentikasi WhatsApp tidak boleh memuat tautan; tautan dibagikan tanpa kode. --}}
+                <a class="btn btn-sm btn-success mt-2" target="_blank" rel="noopener"
+                   href="https://wa.me/?text={{ rawurlencode(__('Konfirmasi penerimaan barang :sj: :url (kode OTP sudah dikirim ke WhatsApp Anda).', ['sj' => $sj->number, 'url' => $tautanSekali])) }}">
+                    <i class="bi bi-whatsapp" aria-hidden="true"></i> {{ __('Kirim tautan via WA') }}
+                </a>
+            @endif
+            @unless ($otpTerkirimKe)
                 {{-- A-251: berbagi lewat aplikasi WhatsApp (tanpa API); OTP tetap disampaikan driver. --}}
                 <a class="btn btn-sm btn-success mt-2" target="_blank" rel="noopener"
                    href="https://wa.me/?text={{ rawurlencode(__('Konfirmasi penerimaan barang :sj: :url (kode OTP dari driver).', ['sj' => $sj->number, 'url' => $tautanSekali])) }}">
                     <i class="bi bi-whatsapp" aria-hidden="true"></i> {{ __('Kirim tautan via WA') }}
                 </a>
-            @endif
-            <div class="small">
-                {{ __('Kode ini hanya ditampilkan sekali dan tidak tersimpan. Bagikan tautannya dan sampaikan kode langsung kepada penerima.') }}
-            </div>
+                <div class="small">
+                    {{ __('Kode ini hanya ditampilkan sekali dan tidak tersimpan. Bagikan tautannya dan sampaikan kode langsung kepada penerima.') }}
+                </div>
+            @endunless
         </div>
     @endif
 
@@ -81,9 +99,14 @@
                 <p class="text-muted small">
                     {{ __('Untuk penerima yang tidak punya akun. Tautan berlaku 24 jam, sekali pakai, dan dilindungi OTP.') }}
                 </p>
-                <label class="form-label" for="sj-telepon">{{ __('Nomor telepon penerima') }}</label>
-                <input class="form-control" id="sj-telepon" type="text" wire:model="form.phone"
+                <label class="form-label" for="sj-telepon">{{ __('Nomor telepon penerima') }} @if ($otpOtomatis) <span class="wajib">*</span> @endif</label>
+                <input class="form-control" id="sj-telepon" type="text" inputmode="tel" wire:model="form.phone"
                        placeholder="08…">
+                <div class="form-text">
+                    {{ $otpOtomatis
+                        ? __('Tautan dan kode OTP dikirim otomatis ke WhatsApp/SMS nomor ini; driver tidak melihat kodenya.')
+                        : __('Kode OTP tampil sekali setelah diterbitkan untuk disampaikan kepada penerima.') }}
+                </div>
             </div>
             <div class="card-footer d-flex gap-2">
                 <button class="btn btn-primary" type="button" wire:click="terbitkanTautan">{{ __('Terbitkan') }}</button>
@@ -350,7 +373,7 @@
             @forelse ($riwayat as $log)
                 <li class="list-group-item">
                     <div class="d-flex justify-content-between">
-                        <span>{{ $log->description }}</span>
+                        <span>{{ \App\Domain\Shared\Support\ActivityText::label($log->description) }}</span>
                         <span class="text-muted small">{{ $log->created_at?->lokal()->format('d/m/Y H:i') }}</span>
                     </div>
                     <div class="small text-muted">{{ $log->causer?->name ?? __('Sistem') }}</div>

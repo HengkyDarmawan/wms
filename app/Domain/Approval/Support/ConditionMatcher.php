@@ -22,7 +22,7 @@ class ConditionMatcher
         'warehouse_ids' => 'Gudang',
         'project_ids' => 'Proyek',
         'category_ids' => 'Kategori barang',
-        'ownership_models' => 'Model kepemilikan',
+        'ownership_models' => 'Jenis barang (aset/habis pakai)',
         'line_count_min' => 'Jumlah baris ≥',
         'line_qty_min' => 'Jumlah satuan dasar per baris ≥',
         'from_client' => 'Permintaan dari klien',

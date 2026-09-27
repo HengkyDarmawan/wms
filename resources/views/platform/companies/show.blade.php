@@ -75,7 +75,7 @@
                 <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
                 <ul class="list-group list-group-flush small">
                     @forelse ($history as $h)
-                        <li class="list-group-item">{{ $h->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $h->description }}</li>
+                        <li class="list-group-item">{{ $h->created_at?->lokal()->format('d/m/Y H:i') }} · {{ \App\Domain\Shared\Support\ActivityText::label($h->description) }}</li>
                     @empty
                         <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
                     @endforelse
@@ -120,6 +120,17 @@
                             </form>
                         </li>
                     @endforeach
+                </ul>
+            </div>
+
+            {{-- Fase 2a (A-278): pemakaian WhatsApp bulan ini; dasar kuota & harga (O-04). --}}
+            <div class="card mb-3" id="whatsapp-usage">
+                <div class="card-header"><strong>{{ __('Pemakaian WhatsApp bulan ini') }}</strong></div>
+                <ul class="list-group list-group-flush small">
+                    @foreach (['utility_template' => __('Template utility'), 'authentication' => __('Template autentikasi'), 'service' => __('Pesan layanan (balasan)'), 'inbound' => __('Pesan masuk')] as $k => $label)
+                        <li class="list-group-item d-flex justify-content-between"><span>{{ $label }}</span><strong>{{ $waUsage[$k] ?? 0 }}</strong></li>
+                    @endforeach
+                    <li class="list-group-item d-flex justify-content-between"><span>{{ __('Kuota template / bulan') }}</span><strong>{{ $waQuota ?? __('tanpa batas') }}</strong></li>
                 </ul>
             </div>
 

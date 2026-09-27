@@ -76,7 +76,10 @@
                             <td class="small">{{ $l->isSplit() ? '↳ '.__('hasil pilah') : $l->source()->label() }} @if ($l->fromBin) <div class="text-muted">{{ $l->fromBin->code }}</div> @endif</td>
                             <td>{{ $l->item?->code }} <div class="small text-muted">{{ $l->item?->name }} @if ($l->trackingLabel()) · {{ $l->trackingLabel() }} @endif</div></td>
                             <td class="small">{{ $l->ownership->label() }} <div class="text-muted">{{ $l->stock_status->label() }}</div></td>
-                            <td class="text-end">{{ $l->isSplit() ? '—' : number_format((float) $l->qty_base, 2, ',', '.') }}</td>
+                            <td class="text-end">
+                                {{ $l->isSplit() ? '—' : number_format((float) $l->qty_base, 2, ',', '.') }}
+                                @if (! $l->isSplit() && $l->typedQuantity()) <div class="small text-muted">{{ $l->typedQuantity() }}</div> @endif
+                            </td>
                             <td class="text-end">{{ $l->isSplit() ? '—' : number_format((float) $l->qty_received, 2, ',', '.') }}</td>
                             <td class="small">
                                 @if ($l->sorting)
@@ -231,7 +234,7 @@
         <div class="card-header"><strong>{{ __('Riwayat') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $r)
-                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
+                <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ \App\Domain\Shared\Support\ActivityText::label($r->description) }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
             @endforelse

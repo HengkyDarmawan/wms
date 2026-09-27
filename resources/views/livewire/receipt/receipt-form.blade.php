@@ -211,14 +211,22 @@
             </div>
             <div class="card-body">
                 <p class="text-muted small">
-                    {{ __('Item berserial: tulis satu nomor serial per baris di kolom Serial/Potongan. Item per potong: tulis panjang tiap potongan.') }}
+                    {{ __('Catat per baris: jumlah menurut surat jalan vendor, yang Baik, yang Rusak (dengan alasan), dan yang Kurang. Baik terisi otomatis; Kurang dihitung otomatis bila dikosongkan. Barang rusak masuk bin Karantina dan bisa langsung diretur ke vendor.') }}
+                    {{-- Bantuan hanya untuk jenis barang yang saklarnya menyala (A-284). --}}
+                    @if (\App\Domain\Master\Support\StockFeatures::on('serial')) {{ __('Item berserial: tulis satu nomor serial per baris.') }} @endif
+                    @if (\App\Domain\Master\Support\StockFeatures::piece()) {{ __('Item per potong: tulis panjang tiap potongan.') }} @endif
                 </p>
                 @foreach ($rows as $i => $r)
                     @php($mode = $modes[(int) ($r['item_id'] ?: 0)] ?? null)
+                    @php($opsi = $unitOpsi[(int) ($r['item_id'] ?: 0)] ?? null)
+                    @php($perUnit = in_array($mode?->value, ['serial', 'piece'], true))
+                    {{-- A-291: satuan terpilih tampil sebagai akhiran kotak jumlah. --}}
+                    @php($kodeSatuan = \App\Domain\Master\Support\UnitInput::selectedCode($r, $opsi, $satuanLain))
                     <div class="row g-2 align-items-end border-bottom pb-2 mb-2" wire:key="grn-row-{{ $i }}">
                         <div class="col-md-3">
                             <label class="form-label small" for="row-item-{{ $i }}">{{ __('Item') }} <span class="wajib">*</span>
                                 @if (($r['order_line_id'] ?? '') !== '') <span class="badge text-bg-info">{{ __('PRQ') }}</span> @endif
+                                @if ($r['bonus'] ?? false) <span class="badge text-bg-success">{{ __('Bonus') }}</span> @endif
                             </label>
                             <select class="form-select form-select-sm" id="row-item-{{ $i }}" wire:model.live="rows.{{ $i }}.item_id" @disabled(($r['order_line_id'] ?? '') !== '')>
                                 <option value="">{{ __('Pilih item…') }}</option>
@@ -227,16 +235,57 @@
                                 @endforeach
                             </select>
                         </div>
-                        @if ($mode === null || in_array($mode->value, ['none', 'lot'], true))
+                        @if (! $perUnit)
                             <div class="col-md-2">
-                                <label class="form-label small" for="row-qty-{{ $i }}">{{ __('Jumlah') }} <span class="wajib">*</span></label>
-                                <input class="form-control form-control-sm" id="row-qty-{{ $i }}" type="number" step="0.0001" min="0"
-                                       wire:model="rows.{{ $i }}.qty">
+                                @include('livewire.master.partials.unit-picker', ['prefix' => 'rows.'.$i, 'row' => $r, 'opsi' => $opsi, 'satuanLain' => $satuanLain, 'hasil' => $hasilSatuan[$i] ?? null, 'idAwal' => 'row-'.$i])
+                            </div>
+                        @endif
+                        @if ($mode?->value !== 'piece')
+                            <div class="col-6 col-md-3 col-xl-2">
+                                <label class="form-label small" for="row-vendor-{{ $i }}" title="{{ __('Jumlah menurut surat jalan vendor') }}">{{ __('Dikirim vendor') }}</label>
+                                <div class="input-group input-group-sm">
+                                    <input class="form-control" id="row-vendor-{{ $i }}" type="number" step="0.0001" min="0"
+                                           wire:model.live.debounce.500ms="rows.{{ $i }}.vendor">
+                                    @if ($kodeSatuan) <span class="input-group-text" data-akhiran-satuan>{{ $kodeSatuan }}</span> @endif
+                                </div>
+                            </div>
+                        @endif
+                        @if (! $perUnit)
+                            <div class="col-6 col-md-3 col-xl-2">
+                                <label class="form-label small" for="row-qty-{{ $i }}">{{ __('Baik') }} <span class="wajib">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <input class="form-control" id="row-qty-{{ $i }}" type="number" step="0.0001" min="0"
+                                           wire:model.live.debounce.500ms="rows.{{ $i }}.qty">
+                                    @if ($kodeSatuan) <span class="input-group-text" data-akhiran-satuan>{{ $kodeSatuan }}</span> @endif
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 col-xl-2">
+                                <label class="form-label small" for="row-rusak-{{ $i }}">{{ __('Rusak') }}</label>
+                                <div class="input-group input-group-sm">
+                                    <input class="form-control" id="row-rusak-{{ $i }}" type="number" step="0.0001" min="0"
+                                           wire:model.live.debounce.500ms="rows.{{ $i }}.damaged">
+                                    @if ($kodeSatuan) <span class="input-group-text" data-akhiran-satuan>{{ $kodeSatuan }}</span> @endif
+                                </div>
+                                @if ($rusakDasar = \App\Domain\Master\Support\UnitInput::baseText($r, $opsi, $satuanLain, $r['damaged'] ?? null))
+                                    <div class="form-text" data-rusak-dasar>{{ $rusakDasar }}</div>
+                                @endif
+                            </div>
+                        @endif
+                        @if ($mode?->value !== 'piece')
+                            <div class="col-6 col-md-3 col-xl-2">
+                                @php($otomatis = is_numeric($r['vendor'] ?? null) ? max(0, (float) $r['vendor'] - (float) ($r['qty'] ?: 0) - (float) ($r['damaged'] ?: 0)) : null)
+                                <label class="form-label small" for="row-kurang-{{ $i }}">{{ __('Kurang') }}</label>
+                                <div class="input-group input-group-sm">
+                                    <input class="form-control" id="row-kurang-{{ $i }}" type="number" step="0.0001" min="0"
+                                           wire:model.live.debounce.500ms="rows.{{ $i }}.short"
+                                           placeholder="{{ $otomatis === null ? '' : __('otomatis').' '.\App\Domain\Master\Support\QtyFormat::number($otomatis) }}">
+                                    @if ($kodeSatuan) <span class="input-group-text" data-akhiran-satuan>{{ $kodeSatuan }}</span> @endif
+                                </div>
                             </div>
                         @endif
                         @if ($mode?->value === 'lot')
                             <div class="col-md-2">
-                                <label class="form-label small" for="row-lot-{{ $i }}">{{ __('No. lot') }} <span class="wajib">*</span></label>
+                                <label class="form-label small" for="row-lot-{{ $i }}">{{ __('Batch vendor') }} <span class="text-muted" title="{{ __('Nomor lot dibuat otomatis dari nomor GRN saat diterima') }}">({{ __('opsional') }})</span></label>
                                 <input class="form-control form-control-sm" id="row-lot-{{ $i }}" type="text" data-scan wire:model="rows.{{ $i }}.lot_no">
                             </div>
                         @endif
@@ -246,22 +295,70 @@
                                 <input class="form-control form-control-sm" id="row-exp-{{ $i }}" type="date" wire:model="rows.{{ $i }}.expiry_date">
                             </div>
                         @endif
-                        @if (in_array($mode?->value, ['serial', 'piece'], true))
+                        @if ($perUnit)
                             <div class="col-md-3">
                                 <label class="form-label small" for="row-unit-{{ $i }}">
-                                    {{ $mode->value === 'serial' ? __('Nomor serial') : __('Panjang potongan') }} <span class="wajib">*</span>
+                                    {{ $mode->value === 'serial' ? __('Nomor serial (baik)') : __('Panjang potongan (baik)') }}
                                 </label>
                                 <textarea class="form-control form-control-sm" id="row-unit-{{ $i }}" rows="2"
                                           wire:model="rows.{{ $i }}.units"></textarea>
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" id="row-ada-rusak-{{ $i }}" type="checkbox" wire:model.live="rows.{{ $i }}.ada_rusak">
+                                    <label class="form-check-label small" for="row-ada-rusak-{{ $i }}">{{ __('Ada yang rusak') }}</label>
+                                </div>
                             </div>
+                            @if ($r['ada_rusak'] ?? false)
+                                <div class="col-md-2">
+                                    <label class="form-label small" for="row-unit-rusak-{{ $i }}">
+                                        {{ $mode->value === 'serial' ? __('Nomor serial rusak') : __('Panjang potongan rusak') }}
+                                    </label>
+                                    <textarea class="form-control form-control-sm" id="row-unit-rusak-{{ $i }}" rows="2"
+                                              wire:model="rows.{{ $i }}.units_damaged"></textarea>
+                                </div>
+                            @endif
+                        @endif
+                        @if ((! $perUnit && is_numeric($r['damaged'] ?? null) && (float) $r['damaged'] > 0) || ($perUnit && ($r['ada_rusak'] ?? false)))
+                            <div class="col-md-2">
+                                <label class="form-label small" for="row-alasan-rusak-{{ $i }}">{{ __('Alasan rusak') }} <span class="wajib">*</span></label>
+                                <select class="form-select form-select-sm" id="row-alasan-rusak-{{ $i }}" wire:model="rows.{{ $i }}.damage_reason">
+                                    <option value="">{{ __('Pilih alasan…') }}</option>
+                                    @foreach ($alasanRusak as $kode => $label)
+                                        <option value="{{ $kode }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+                        @if (($form['receipt_type'] ?? '') === 'vendor')
+                            <div class="col-md-2">
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" id="row-bonus-{{ $i }}" type="checkbox" wire:model.live="rows.{{ $i }}.bonus">
+                                    <label class="form-check-label small" for="row-bonus-{{ $i }}">{{ __('Bonus vendor') }}</label>
+                                </div>
+                                @php($sisa = ($r['order_line_id'] ?? '') !== '' ? ($sisaPesanan[(int) $r['order_line_id']] ?? null) : null)
+                                @if ($sisa !== null && ($r['uom'] ?? '') === '' && is_numeric($r['qty'] ?? null) && (float) $r['qty'] + (float) ($r['damaged'] ?: 0) - $sisa > 0.00005)
+                                    <button class="btn btn-sm btn-outline-success" type="button" wire:click="pisahkanBonus({{ $i }})">{{ __('Pisahkan kelebihan jadi bonus') }}</button>
+                                    <div class="form-text">{{ __('Sisa pesanan') }} {{ rtrim(rtrim(number_format($sisa, 4, ',', '.'), '0'), ',') }}</div>
+                                @endif
+                            </div>
+                            @if ($r['bonus'] ?? false)
+                                <div class="col-md-3">
+                                    <label class="form-label small" for="row-notes-{{ $i }}">{{ __('Keterangan bonus') }} <span class="wajib">*</span></label>
+                                    <input class="form-control form-control-sm" id="row-notes-{{ $i }}" type="text" maxlength="255" wire:model="rows.{{ $i }}.notes" placeholder="{{ __('mis. promo beli 2 gratis 1') }}">
+                                </div>
+                            @endif
                         @endif
                         <div class="col-md-1">
                             <button class="btn btn-sm btn-outline-danger" type="button" wire:click="hapusBaris({{ $i }})"
                                     aria-label="{{ __('Hapus baris') }}"><i class="bi bi-x-lg"></i></button>
                         </div>
+                        @if (! $perUnit && ($r['uom'] ?? '') === 'lain')
+                            <div class="col-12">
+                                @include('livewire.master.partials.unit-picker-lain', ['prefix' => 'rows.'.$i, 'row' => $r, 'opsi' => $opsi, 'satuanLain' => $satuanLain, 'idAwal' => 'row-'.$i])
+                            </div>
+                        @endif
                     </div>
                 @endforeach
-                @foreach (['item_id', 'lot_no', 'serial_no', 'piece_length', 'expiry_date', 'qty_received'] as $f)
+                @foreach (['item_id', 'lot_no', 'serial_no', 'piece_length', 'expiry_date', 'qty_received', 'qty_damaged', 'qty_short', 'damage_reason_id', 'uom_id', 'notes', 'purchase_request_order_line_id'] as $f)
                     @error('form.'.$f) <div class="text-danger small">{{ $message }}</div> @enderror
                 @endforeach
             </div>

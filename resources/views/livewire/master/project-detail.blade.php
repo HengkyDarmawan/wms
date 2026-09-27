@@ -456,7 +456,7 @@
             <ul class="list-group list-group-flush small">
                 @php($data = $data['aktivitas'])
                 @forelse ($data as $r)
-                    <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ $r->description }}</li>
+                    <li class="list-group-item">{{ $r->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $r->causer?->name ?? __('Sistem') }} · {{ \App\Domain\Shared\Support\ActivityText::label($r->description) }}</li>
                 @empty
                     <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>
                 @endforelse
