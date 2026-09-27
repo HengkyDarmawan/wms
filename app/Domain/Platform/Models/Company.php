@@ -91,6 +91,16 @@ class Company extends BaseTenant implements TenantWithDatabase
         return $this->subdomain.'.'.config('tenancy.central_domains.0', 'wms.test');
     }
 
+    /** URL absolut di subdomain company; skema & port mengikuti APP_URL (lokal `:8000`). */
+    public function url(string $path = ''): string
+    {
+        $app = parse_url((string) config('app.url')) ?: [];
+        $port = $app['port'] ?? null;
+        $akar = ($app['scheme'] ?? 'https').'://'.$this->host().($port !== null && ! in_array((int) $port, [80, 443], true) ? ':'.$port : '');
+
+        return $akar.'/'.ltrim($path, '/');
+    }
+
     public function invoices(): HasManyThrough
     {
         return $this->hasManyThrough(SubscriptionInvoice::class, Subscription::class);

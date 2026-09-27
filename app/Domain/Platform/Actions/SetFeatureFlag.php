@@ -11,14 +11,14 @@ use App\Domain\Platform\Models\PlatformUser;
 use App\Domain\Platform\Support\PlatformAudit;
 
 /**
- * Lapis 1 P-08: Super Admin menyalakan fitur per company (A-183). Fitur yang
- * tercantum masih `[F2]`/`[F3]`, jadi di Fase 1 flag hanya disimpan.
+ * Lapis 1 P-08: Super Admin menyalakan fitur per company (A-183). WhatsApp
+ * dipakai sejak Fase 2a (31-whatsapp, BR-WA-02); fitur lain masih disimpan saja.
  */
 class SetFeatureFlag
 {
     /** @var array<string, string> kunci => label */
     public const KEYS = [
-        'whatsapp' => 'Approval & notifikasi WhatsApp [F2]',
+        'whatsapp' => 'Notifikasi & approval WhatsApp (Fase 2a)',
         'offline_sync' => 'PWA offline [F2]',
         'rfid' => 'RFID [F3]',
     ];

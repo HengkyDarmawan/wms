@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Conversion\Support;
 
+use App\Domain\Conversion\Enums\ConversionType;
 use App\Domain\Conversion\Exceptions\ConversionRuleException;
 use App\Domain\Master\Enums\OwnershipModel;
 use App\Domain\Master\Enums\TrackingMode;
@@ -104,10 +105,15 @@ class ConvertibleStock
             ->keyBy('key');
     }
 
-    /** Calon yang boleh dipilih di layar: bukan aset, dan item ditandai Bisa dipotong/dikonversi. */
-    public function selectable(Warehouse $gudang): Collection
+    /**
+     * Calon yang boleh dipilih di layar: bukan aset/serial; untuk Potong item
+     * juga harus ditandai Bisa dipotong (A-285).
+     */
+    public function selectable(Warehouse $gudang, ConversionType $jenis): Collection
     {
-        return $this->forWarehouse($gudang)->reject(fn (array $c) => $c['asset'] || ! $c['cuttable']);
+        return $this->forWarehouse($gudang)->reject(fn (array $c) => $c['asset']
+            || $c['tracking_mode'] === TrackingMode::Serial
+            || ($jenis === ConversionType::Cut && ! $c['cuttable']));
     }
 
     /**
@@ -116,7 +122,7 @@ class ConvertibleStock
      * @param  array<int, array<string, mixed>>  $lines
      * @return array<string, array<string, mixed>> kunci => baris
      */
-    public function normalize(Warehouse $gudang, array $lines): array
+    public function normalize(Warehouse $gudang, array $lines, ConversionType $jenis): array
     {
         $calon = $this->forWarehouse($gudang);
         $baris = [];
@@ -130,7 +136,7 @@ class ConvertibleStock
             }
 
             $c = $calon->get($kunci) ?? $this->tolakKunci($gudang, $kunci);
-            $this->periksaCalon($c);
+            $this->periksaCalon($c, $jenis);
 
             if ($jumlah <= 0) {
                 throw ConversionRuleException::field('BR-LED-02', 'inputs', 'Jumlah input '.$c['item_code'].' harus lebih besar dari nol.');
@@ -150,7 +156,7 @@ class ConvertibleStock
             throw ConversionRuleException::field('BR-CNV-02', 'inputs', 'Pilih minimal satu input dari stok Tersedia gudang ini.');
         }
 
-        $this->assertAvailable($gudang, array_values($baris), $calon);
+        $this->assertAvailable($gudang, $jenis, array_values($baris), $calon);
 
         return $baris;
     }
@@ -163,7 +169,7 @@ class ConvertibleStock
      * @param  array<int, array<string, mixed>>  $rows  item_id, bin_id, lot_id, piece_id, qty_base
      * @param  Collection<string, array<string, mixed>>|null  $calon
      */
-    public function assertAvailable(Warehouse $gudang, array $rows, ?Collection $calon = null): void
+    public function assertAvailable(Warehouse $gudang, ConversionType $jenis, array $rows, ?Collection $calon = null): void
     {
         $calon ??= $this->forWarehouse($gudang);
         $perKunci = [];
@@ -177,7 +183,7 @@ class ConvertibleStock
 
         foreach ($perKunci as $kunci => $jumlah) {
             $c = $calon->get($kunci) ?? $this->tolakKunci($gudang, $kunci);
-            $this->periksaCalon($c);
+            $this->periksaCalon($c, $jenis);
 
             if ($c['tracking_mode'] === TrackingMode::Piece && abs($jumlah - $c['balance']) > 0.00005) {
                 throw ConversionRuleException::field('BR-STK-09', 'inputs', 'Potongan '.$c['tracking'].' dipakai utuh ('.self::angka($c['balance']).' '.$c['uom'].'); sisanya dicatat sebagai offcut, waste, atau kerf.');
@@ -200,15 +206,20 @@ class ConvertibleStock
     }
 
     /** @param  array<string, mixed>  $c */
-    private function periksaCalon(array $c): void
+    private function periksaCalon(array $c, ConversionType $jenis): void
     {
         if ($c['asset']) {
             throw ConversionRuleException::field('BR-STK-08', 'inputs', 'Item '.$c['item_code'].' adalah aset; aset tidak dikonversi.');
         }
 
-        // Master item "Bisa dipotong/dikonversi" (Blueprint §6.4, A-154).
-        if (! $c['cuttable']) {
-            throw ConversionRuleException::field('BR-CNV-03', 'inputs', 'Item '.$c['item_code'].' tidak ditandai Bisa dipotong/dikonversi di master item.');
+        // ERD `conversion_inputs` tidak punya serial (BR-LED-03).
+        if ($c['tracking_mode'] === TrackingMode::Serial) {
+            throw ConversionRuleException::field('BR-LED-03', 'inputs', 'Item '.$c['item_code'].' bernomor seri; barang bernomor seri tidak dikonversi.');
+        }
+
+        // A-285: tanda "Bisa dipotong" hanya disyaratkan mode Potong (menggantikan sebagian A-154).
+        if ($jenis === ConversionType::Cut && ! $c['cuttable']) {
+            throw ConversionRuleException::field('BR-CNV-03', 'inputs', 'Item '.$c['item_code'].' tidak ditandai Bisa dipotong di master item.');
         }
 
         if ($c['frozen']) {

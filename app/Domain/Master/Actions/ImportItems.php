@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Master\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Enums\ItemKind;
 use App\Domain\Master\Exceptions\MasterRuleException;
 use App\Domain\Master\Models\ItemCategory;
 use App\Domain\Master\Models\Uom;
@@ -19,6 +20,10 @@ use Illuminate\Http\UploadedFile;
  * **Semua atau tidak sama sekali**: satu baris salah membatalkan seluruh
  * impor dan semua galat baris dilaporkan sekaligus. Item yang kodenya sudah
  * ada ditolak (impor hanya menambah, tidak mengubah).
+ *
+ * A-283: kolom `jenis_barang` (biasa/kedaluwarsa/alat) menggantikan kolom
+ * teknis. Berkas lama yang masih memuat kolom pelacakan/kedaluwarsa/
+ * kepemilikan/strategi tetap dibaca lewat jalur teknis {@see SaveItem}.
  */
 class ImportItems
 {
@@ -28,10 +33,7 @@ class ImportItems
         'nama' => 'Nama *',
         'kategori' => 'Kode kategori',
         'satuan' => 'Kode satuan dasar *',
-        'pelacakan' => 'Pelacakan: none/lot/serial/piece',
-        'kedaluwarsa' => 'Kedaluwarsa: ya/tidak',
-        'kepemilikan' => 'Kepemilikan: consumable/asset/both',
-        'strategi' => 'Strategi: fifo/fefo/manual/offcut_first',
+        'jenis_barang' => 'Jenis barang: biasa/kedaluwarsa/alat',
         'titik_pesan_ulang' => 'Titik pesan ulang',
         'stok_minimum' => 'Stok minimum',
         'wajib_qc' => 'Wajib QC: ya/tidak',
@@ -67,10 +69,7 @@ class ImportItems
                 'name' => trim((string) ($r['nama'] ?? '')),
                 'item_category_id' => $kodeKategori === '' ? null : $kategori[$kodeKategori],
                 'base_uom_id' => $satuan[$kodeSatuan],
-                'tracking_mode' => $this->teks($r['pelacakan'] ?? null) ?? 'none',
-                'has_expiry' => $this->ya($r['kedaluwarsa'] ?? null),
-                'ownership_model' => $this->teks($r['kepemilikan'] ?? null) ?? 'consumable',
-                'removal_strategy' => $this->teks($r['strategi'] ?? null),
+                ...$this->jenis($r),
                 'reorder_point' => $r['titik_pesan_ulang'] ?? null,
                 'min_stock' => $r['stok_minimum'] ?? null,
                 'requires_qc' => $this->ya($r['wajib_qc'] ?? null),
@@ -83,6 +82,33 @@ class ImportItems
             ->log('Impor item dari Excel: '.$dibuat.' item');
 
         return $dibuat;
+    }
+
+    /**
+     * @param  array<string, mixed>  $r
+     * @return array<string, mixed>
+     */
+    private function jenis(array $r): array
+    {
+        $jenis = $this->teks($r['jenis_barang'] ?? null);
+
+        // Berkas templat lama: kolom teknis tanpa kolom jenis barang.
+        if ($jenis === null && array_key_exists('pelacakan', $r)) {
+            return [
+                'tracking_mode' => $this->teks($r['pelacakan'] ?? null) ?? 'none',
+                'has_expiry' => $this->ya($r['kedaluwarsa'] ?? null),
+                'ownership_model' => $this->teks($r['kepemilikan'] ?? null) ?? 'consumable',
+                'removal_strategy' => $this->teks($r['strategi'] ?? null),
+            ];
+        }
+
+        $kind = $jenis === null ? ItemKind::Standard : ItemKind::fromImport($jenis);
+
+        if ($kind === null) {
+            throw MasterRuleException::rule('BR-GEN-11', 'jenis barang "'.$jenis.'" tidak dikenal; pakai biasa, kedaluwarsa, atau alat.');
+        }
+
+        return ['item_kind' => $kind->value];
     }
 
     private function teks(mixed $v): ?string

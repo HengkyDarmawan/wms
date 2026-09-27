@@ -5,24 +5,23 @@ declare(strict_types=1);
 namespace App\Domain\Master\Livewire;
 
 use App\Domain\Master\Actions\DeactivateItem;
+use App\Domain\Master\Enums\ItemKind;
 use App\Domain\Master\Enums\ItemStatus;
-use App\Domain\Master\Enums\OwnershipModel;
 use App\Domain\Master\Enums\ReasonContext;
-use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Livewire\Concerns\HandlesMasterRules;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\ItemCategory;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\View;
-use Livewire\Attributes\Url;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * Layar 11-master §6 — daftar item dengan filter kategori, mode pelacakan,
- * kepemilikan, dan status. Item Sementara (A-51, BR-REQ-03) ditandai agar
+ * Layar 11-master §6 — daftar item dengan filter kategori, jenis barang
+ * (A-283), dan status. Item Sementara (A-51, BR-REQ-03) ditandai agar
  * Admin tahu mana yang masih harus dilengkapi.
  */
 class ItemList extends Component
@@ -36,11 +35,9 @@ class ItemList extends Component
     #[Url(except: '')]
     public string $categoryFilter = '';
 
+    /** A-283: standard | expiring | serial_tool | khusus. */
     #[Url(except: '')]
-    public string $trackingFilter = '';
-
-    #[Url(except: '')]
-    public string $ownershipFilter = '';
+    public string $kindFilter = '';
 
     #[Url(except: '')]
     public string $statusFilter = '';
@@ -120,8 +117,7 @@ class ItemList extends Component
         return view('livewire.master.item-list', [
             'items' => $this->items(),
             'categories' => ItemCategory::query()->active()->orderBy('name')->get(['id', 'name']),
-            'trackingModes' => TrackingMode::options(),
-            'ownerships' => OwnershipModel::options(),
+            'kinds' => ItemKind::cases(),
             'statuses' => ItemStatus::options(),
             'alasan' => $this->pilihanAlasan(ReasonContext::Cancel),
         ]);
@@ -138,8 +134,8 @@ class ItemList extends Component
                     ->orWhere('barcode', 'like', $cari));
             })
             ->when($this->categoryFilter !== '', fn (Builder $q) => $q->where('item_category_id', (int) $this->categoryFilter))
-            ->when($this->trackingFilter !== '', fn (Builder $q) => $q->where('tracking_mode', $this->trackingFilter))
-            ->when($this->ownershipFilter !== '', fn (Builder $q) => $q->where('ownership_model', $this->ownershipFilter))
+            ->when($this->kindFilter === 'khusus', fn (Builder $q) => $q->ofKind(null))
+            ->when(ItemKind::tryFrom($this->kindFilter) !== null, fn (Builder $q) => $q->ofKind(ItemKind::from($this->kindFilter)))
             ->when($this->statusFilter !== '', fn (Builder $q) => $q->where('status', $this->statusFilter))
             ->orderBy('name')
             ->paginate(20);

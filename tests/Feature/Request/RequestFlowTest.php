@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Request;
 
+use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Enums\ApproverType;
@@ -95,7 +96,7 @@ class RequestFlowTest extends TenantTestCase
     }
 
     /** @param  array<int, array<string, mixed>>  $lines */
-    private function buatReq(array $lines = [], ?Project $proyek = null, ?\App\Domain\Access\Models\User $pemohon = null): MaterialRequest
+    private function buatReq(array $lines = [], ?Project $proyek = null, ?User $pemohon = null): MaterialRequest
     {
         $pemohon ??= $this->makeUser('internal_requester');
 
@@ -170,7 +171,7 @@ class RequestFlowTest extends TenantTestCase
     #[Test]
     public function tc_req_04_req_klien_masuk_ditinjau(): void
     {
-        $klien = $this->makeUser('client_user', \App\Domain\Access\Enums\ScopeType::Project, $this->proyek->id, [
+        $klien = $this->makeUser('client_user', ScopeType::Project, $this->proyek->id, [
             'client_id' => $this->proyek->client_id,
         ]);
 
@@ -257,16 +258,15 @@ class RequestFlowTest extends TenantTestCase
     #[Test]
     public function tc_req_09_pinjam_hanya_untuk_item_berserial(): void
     {
-        try {
-            $this->buatReq([[
-                'item_id' => $this->item->id,
-                'qty_base' => 2,
-                'line_ownership' => 'loan',
-            ]]);
-            $this->fail('Baris pinjam untuk item tanpa serial seharusnya ditolak.');
-        } catch (RequestRuleException $e) {
-            $this->assertSame('BR-REQ-06', $e->rule);
-        }
+        // A-286: Beli/Pinjam ditetapkan aksi dari jenis barang — kiriman "pinjam"
+        // untuk barang biasa tersimpan sebagai Beli, bukan dipercaya dari layar.
+        $req = $this->buatReq([[
+            'item_id' => $this->item->id,
+            'qty_base' => 2,
+            'line_ownership' => 'loan',
+        ]]);
+
+        $this->assertSame('buy', $req->lines()->sole()->line_ownership->value, 'BR-REQ-06');
     }
 
     #[Test]
@@ -436,7 +436,7 @@ class RequestFlowTest extends TenantTestCase
     }
 
     /** REQ internal lengkap yang sudah sampai `pending_approval`. */
-    private function reqMenungguApproval(?\App\Domain\Access\Models\User $pemohon = null): MaterialRequest
+    private function reqMenungguApproval(?User $pemohon = null): MaterialRequest
     {
         $pemohon ??= $this->makeUser('internal_requester');
 

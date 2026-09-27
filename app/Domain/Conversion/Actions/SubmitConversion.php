@@ -94,7 +94,7 @@ class SubmitConversion
             return;
         }
 
-        $this->stock->assertAvailable($cnv->warehouse, $inputs->map(fn (ConversionInput $i) => [
+        $this->stock->assertAvailable($cnv->warehouse, $cnv->conversion_type, $inputs->map(fn (ConversionInput $i) => [
             'item_id' => (int) $i->item_id,
             'bin_id' => (int) $i->bin_id,
             'lot_id' => $i->lot_id === null ? null : (int) $i->lot_id,

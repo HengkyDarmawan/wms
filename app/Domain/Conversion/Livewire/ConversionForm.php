@@ -22,6 +22,7 @@ use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Support\ScanCode;
+use App\Domain\Master\Support\StockFeatures;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -91,6 +92,11 @@ class ConversionForm extends Component
 
         if ($awal > 0) {
             $this->form['project_id'] = (string) $awal;
+        }
+
+        // A-284: tanpa saklar per potong, jenis bawaan Ganti kemasan.
+        if (! StockFeatures::piece()) {
+            $this->form['conversion_type'] = ConversionType::Repack->value;
         }
 
         $this->potong[] = $this->barisPotong();
@@ -323,7 +329,7 @@ class ConversionForm extends Component
         return view('livewire.conversion.conversion-form', [
             'projects' => $this->proyek(),
             'warehouses' => $this->gudang(),
-            'types' => ConversionType::cases(),
+            'types' => ConversionType::available(StockFeatures::piece(), $this->jenisDraf()),
             'jenis' => $jenis,
             'calon' => $this->saring($calon),
             'batangCalon' => $calon->filter(fn (array $c) => $c['piece_id'] !== null),
@@ -338,7 +344,16 @@ class ConversionForm extends Component
 
     private function jenis(): ConversionType
     {
-        return ConversionType::tryFrom($this->form['conversion_type']) ?? ConversionType::Cut;
+        return ConversionType::tryFrom($this->form['conversion_type'])
+            ?? (StockFeatures::piece() ? ConversionType::Cut : ConversionType::Repack);
+    }
+
+    /** Jenis draf yang sedang diubah; draf Potong lama tetap bisa dibuka walau saklar mati. */
+    private function jenisDraf(): ?ConversionType
+    {
+        return $this->conversionId === null
+            ? null
+            : Conversion::query()->find($this->conversionId)?->conversion_type;
     }
 
     /**
@@ -511,7 +526,7 @@ class ConversionForm extends Component
             return collect();
         }
 
-        return app(ConvertibleStock::class)->selectable($gudang)
+        return app(ConvertibleStock::class)->selectable($gudang, $this->jenis())
             ->mapWithKeys(fn (array $c) => [str_replace(':', '_', $c['key']) => $c]);
     }
 

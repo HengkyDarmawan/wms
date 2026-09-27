@@ -162,10 +162,9 @@ class ConversionTest extends TenantTestCase
 
         // Potongan dipakai utuh; jumlah melebihi stok; item tidak bisa dipotong.
         $this->gagalCnv(fn () => $this->cnv([['key' => $this->kunciBatang(), 'qty_base' => 3]], [['kind' => 'output', 'item_id' => $this->pipa->id, 'qty_base' => 3]]), 'BR-STK-09');
-        $this->baut->forceFill(['is_cuttable' => true])->save();
         $this->gagalCnv(fn () => $this->cnv([['key' => $this->kunciCnv($this->binA, $this->baut), 'qty_base' => 101]], [['kind' => 'output', 'item_id' => $this->baut->id, 'qty_base' => 101]], ['conversion_type' => 'repack']), 'BR-STK-06');
-        $this->baut->forceFill(['is_cuttable' => false])->save();
-        $this->gagalCnv(fn () => $this->cnv([['key' => $this->kunciCnv($this->binA, $this->baut), 'qty_base' => 5]], [['kind' => 'output', 'item_id' => $this->baut->id, 'qty_base' => 5]], ['conversion_type' => 'repack']), 'BR-CNV-03');
+        // A-285: tanda Bisa dipotong hanya disyaratkan mode Potong.
+        $this->gagalCnv(fn () => $this->cnv([['key' => $this->kunciCnv($this->binA, $this->baut), 'qty_base' => 5]], [['kind' => 'output', 'item_id' => $this->baut->id, 'qty_base' => 5]]), 'BR-CNV-03');
 
         // Aset tidak pernah dikonversi, baik sebagai input maupun output.
         $this->gagalCnv(fn () => $this->cnv([['key' => $this->kunciCnv($this->binA, $this->genset), 'qty_base' => 1]], $output), 'BR-STK-08');

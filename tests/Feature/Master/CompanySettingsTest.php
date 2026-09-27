@@ -43,7 +43,10 @@ class CompanySettingsTest extends TenantTestCase
         $layar = Livewire::actingAs($admin)->test(CompanySettingsForm::class)
             ->assertSet('nilai.receipt_confirm_days', 3)
             ->assertSet('nilai.asset_life_alert_pct', 20.0)
-            ->assertSet('fitur.qc', true)
+            // A-284: bawaan company baru — QC & per potong mati, lot menyala.
+            ->assertSet('fitur.qc', false)
+            ->assertSet('fitur.piece', false)
+            ->assertSet('fitur.lot', true)
             ->assertSee(__('dipakai :n item', ['n' => 1]));
 
         // Validasi rentang: 0 hari & 150 % ditolak tanpa menulis apa pun.
@@ -57,7 +60,7 @@ class CompanySettingsTest extends TenantTestCase
         $layar->set('nilai.receipt_confirm_days', 5)
             ->set('nilai.asset_life_alert_pct', 20)
             ->set('nilai.count_tolerance_pct', 2.5)
-            ->set('fitur.qc', false)
+            ->set('fitur.qc', true)
             ->set('timezone', 'Asia/Makassar')
             ->call('simpan')
             ->assertHasNoErrors()
@@ -68,7 +71,7 @@ class CompanySettingsTest extends TenantTestCase
         $this->assertSame(5, CompanySetting::get('receipt_confirm_days'));
         $this->assertSame(2.5, CompanySetting::get('count_tolerance_pct'));
         $this->assertNull(CompanySetting::query()->find('review_sla_days'), 'Kunci yang tidak berubah dari bawaan tidak ditulis.');
-        $this->assertFalse(FeatureSetting::enabled('qc'));
+        $this->assertTrue(FeatureSetting::enabled('qc'));
         $this->assertTrue(FeatureSetting::enabled('lot'));
         $this->assertSame('Asia/Makassar', tenant()->refresh()->timezone);
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Shared\Reports\Definitions;
 
+use App\Domain\Master\Support\StockFeatures;
 use App\Domain\Shared\Reports\Report;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Models\StockBalance;
@@ -39,10 +40,14 @@ class StockBalanceReport extends Report
 
     public function columns(): array
     {
-        return [
+        // A-284: kolom potongan hanya bila saklar per potong menyala.
+        $potong = StockFeatures::piece();
+
+        return array_filter([
             'gudang' => 'Gudang', 'bin' => 'Bin', 'kode_item' => 'Kode item', 'nama_item' => 'Nama item',
-            'pelacakan' => 'Lot / serial / potongan', 'kondisi' => 'Kondisi', 'jumlah' => 'Jumlah', 'satuan' => 'Satuan', 'potong' => 'Jumlah potong',
-        ];
+            'pelacakan' => $potong ? 'Lot / serial / potongan' : 'Lot / serial', 'kondisi' => 'Kondisi', 'jumlah' => 'Jumlah', 'satuan' => 'Satuan',
+            'potong' => $potong ? 'Jumlah potong' : null,
+        ]);
     }
 
     public function filters(): array

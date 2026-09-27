@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace Tests\Feature\Master;
 
 use App\Domain\Access\Enums\ScopeType;
+use App\Domain\Master\Enums\ItemKind;
+use App\Domain\Master\Livewire\ItemForm;
 use App\Domain\Master\Models\Client;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\Vendor;
 use Database\Seeders\Tenant\MasterDemoSeeder;
+use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TenantTestCase;
 
 /**
  * TC-MST-22 dan TC-MST-23 — izin layar (BR-GEN-09) dan seeder demo
- * (docs/00-akun-uji.md §2).
+ * (docs/00-akun-uji.md §2); TC-MST-29 — form item: bagian opsional dalam tab (A-282).
  */
 class MasterScreenTest extends TenantTestCase
 {
@@ -100,16 +103,20 @@ class MasterScreenTest extends TenantTestCase
 
         $this->assertSame('KL1', $karawang->client->code);
 
-        // Empat item mewakili empat mode pelacakan.
+        // A-283: empat item mewakili tiga jenis barang; tidak ada item per potong.
         $this->assertEqualsCanonicalizing(
-            ['none', 'lot', 'serial', 'piece'],
+            ['none', 'lot', 'serial'],
             Item::query()->pluck('tracking_mode')->map(fn ($m) => $m->value)->unique()->values()->all(),
+        );
+        $this->assertSame(
+            ['BAUT-M12' => 'standard', 'GENSET-5KVA' => 'serial_tool', 'PIPA-PVC-4' => 'standard', 'SEMEN-PCC-50' => 'expiring'],
+            Item::query()->orderBy('code')->get()->mapWithKeys(fn (Item $i) => [$i->code => ItemKind::fromItem($i)?->value])->all(),
         );
 
         $pipa = Item::query()->where('code', 'PIPA-PVC-4')->firstOrFail();
 
-        $this->assertTrue($pipa->is_cuttable);
-        $this->assertSame('M', $pipa->baseUom->code, 'Item per potong memakai satuan panjang (BR-STK-09).');
+        $this->assertFalse($pipa->is_cuttable, 'Memotong pipa termasuk pemakaian, bukan jenis barang.');
+        $this->assertSame('M', $pipa->baseUom->code, 'Pipa disimpan dalam meter.');
         $this->assertSame(2, $pipa->vendors()->count());
 
         // Konversi kemasan "1 batang = 6 m" tersimpan.
@@ -117,12 +124,37 @@ class MasterScreenTest extends TenantTestCase
 
         $this->assertNotNull($konversi);
         $this->assertSame(6.0, (float) $konversi->qty_base);
-        $this->assertTrue($konversi->is_nominal_piece);
+        $this->assertFalse($konversi->is_nominal_piece);
 
         // Seeder aman dijalankan dua kali.
         (new MasterDemoSeeder)->run();
 
         $this->assertSame(2, Client::query()->count());
         $this->assertSame(4, Item::query()->count());
+    }
+
+    #[Test]
+    public function tc_mst_29_form_item_bagian_opsional_dalam_tab(): void
+    {
+        $this->actingAs($this->makeUser('company_admin'));
+
+        // A-283: tab tinggal Stok minimum & Kemasan; Vendor tetap tidak lagi ada.
+        $c = Livewire::test(ItemForm::class)
+            ->assertSee(__('Pengaturan tambahan'))->assertSee(__('Stok minimum'))
+            ->assertSee(__('Titik pesan ulang'))->assertDontSee(__('Vendor tetap'))
+            ->set('tabTambahan', 'konversi')->assertSee(__('Belum ada kemasan.'))->assertDontSee(__('Titik pesan ulang'))
+            ->set('tabTambahan', 'vendor')->assertSet('tabTambahan', 'stok')
+            ->set('tabTambahan', 'ngawur')->assertSet('tabTambahan', 'stok');
+
+        // Galat di tab tertutup: tab itu dibuka otomatis dan pesannya Bahasa Indonesia.
+        $c->set('tabTambahan', 'konversi')->set('form.reorder_point', '-5')->call('simpan')
+            ->assertHasErrors(['form.reorder_point' => 'min'])
+            ->assertSee(__('Titik pesan ulang'))->assertSee('Minimal 0.')->assertSee('Wajib diisi.')
+            ->assertDontSee('validation.');
+
+        // Beli/Pinjam mengikuti jenis barang, tanpa pilihan sifat baris.
+        $c->set('form.item_kind', 'serial_tool')->assertSee(__('Pinjam — kembali ke gudang'))
+            ->set('form.item_kind', 'standard')->assertSee(__('Beli — tidak kembali'))
+            ->assertDontSee(__('Sifat baris bawaan'));
     }
 }

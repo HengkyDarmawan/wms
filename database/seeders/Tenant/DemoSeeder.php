@@ -11,6 +11,7 @@ use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\RoleAssignment;
 use App\Domain\Access\Models\User;
 use App\Domain\Master\Models\Client;
+use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\Project;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Database\Seeder;
@@ -33,6 +34,9 @@ class DemoSeeder extends Seeder
         $this->call(MasterReferenceSeeder::class);
         $this->call(WarehouseReferenceSeeder::class);
         $this->call(TemplateReferenceSeeder::class);
+
+        // A-284: DEMO memakai bawaan company baru — tanpa per potong & QC.
+        FeatureSetting::seed(['piece' => false, 'qc' => false], overwrite: true);
 
         // Master lebih dulu: users.client_id menunjuk clients, cakupan menunjuk projects.
         $this->call(MasterDemoSeeder::class);

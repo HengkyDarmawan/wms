@@ -7,6 +7,10 @@ namespace Tests\Feature\Access;
 use App\Domain\Access\Models\Permission;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Models\Item;
+use App\Domain\Master\Models\Project;
+use App\Domain\Warehouse\Models\Warehouse;
+use Database\Seeders\Tenant\BlankDemoSeeder;
 use Database\Seeders\Tenant\DemoSeeder;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TenantTestCase;
@@ -107,5 +111,23 @@ class DemoSeederTest extends TenantTestCase
             Permission::count(),
             Role::findByCode('company_admin')->permissions()->count(),
         );
+    }
+
+    /** TC-ACC-27c — company kosong untuk latihan: hanya data acuan + satu Admin Company yang bisa masuk. */
+    #[Test]
+    public function tc_acc_27c_seeder_kosong_hanya_admin_company(): void
+    {
+        (new BlankDemoSeeder)->run();
+
+        $this->assertSame(1, User::query()->count());
+        $admin = User::query()->where('email', BlankDemoSeeder::EMAIL)->firstOrFail();
+        $this->assertSame(['company_admin'], $admin->roleCodes());
+        $this->assertTrue($admin->canSignIn());
+
+        $this->assertSame(0, Warehouse::query()->withoutGlobalScopes()->count());
+        $this->assertSame(0, Item::query()->count());
+        $this->assertSame(0, Project::query()->withoutGlobalScopes()->count());
+        $this->assertNotNull(Role::findByCode('warehouse_head'), 'Role bawaan tetap tersedia untuk user baru.');
+        $this->assertGreaterThan(0, Permission::query()->count());
     }
 }

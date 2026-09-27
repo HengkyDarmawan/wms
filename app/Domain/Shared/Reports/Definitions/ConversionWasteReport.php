@@ -7,6 +7,7 @@ namespace App\Domain\Shared\Reports\Definitions;
 use App\Domain\Conversion\Enums\ConversionStatus;
 use App\Domain\Conversion\Models\Conversion;
 use App\Domain\Master\Models\Project;
+use App\Domain\Master\Support\StockFeatures;
 use App\Domain\Shared\Reports\Report;
 use Illuminate\Support\Collection;
 
@@ -39,10 +40,13 @@ class ConversionWasteReport extends Report
 
     public function columns(): array
     {
-        return [
+        // A-284: offcut & kerf hanya bermakna bila saklar per potong menyala.
+        $potong = StockFeatures::piece();
+
+        return array_filter([
             'proyek' => 'Proyek', 'kode_item' => 'Item input', 'jumlah_cnv' => 'Jumlah CNV', 'input' => 'Input',
-            'output' => 'Output', 'offcut' => 'Offcut', 'waste' => 'Waste', 'kerf' => 'Kerf', 'persen_waste' => '% waste',
-        ];
+            'output' => 'Output', 'offcut' => $potong ? 'Offcut' : null, 'waste' => 'Waste', 'kerf' => $potong ? 'Kerf' : null, 'persen_waste' => '% waste',
+        ]);
     }
 
     public function filters(): array

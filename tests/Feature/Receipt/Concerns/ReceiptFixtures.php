@@ -11,6 +11,7 @@ use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Enums\VendorStatus;
 use App\Domain\Master\Enums\VendorType;
+use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Uom;
@@ -54,6 +55,9 @@ trait ReceiptFixtures
 
     protected function siapkanPenerimaan(): void
     {
+        // A-284: company baru tanpa QC & per potong; uji penerimaan menyalakannya sendiri.
+        FeatureSetting::seed(['qc' => true, 'piece' => true], overwrite: true);
+
         $this->gudang = $this->buatGudang('CKG', 'Gudang Utama Cakung');
 
         $this->binA = Bin::create(['warehouse_id' => $this->gudang->id, 'code' => 'CKG-A-R01-L1-B01', 'bin_type' => BinType::Storage]);

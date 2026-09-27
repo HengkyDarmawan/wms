@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Shared\Reports\Definitions;
 
 use App\Domain\Master\Models\Project;
+use App\Domain\Master\Support\StockFeatures;
 use App\Domain\Return\Enums\GoodsReturnStatus;
 use App\Domain\Return\Enums\ReturnSorting;
 use App\Domain\Return\Models\GoodsReturn;
@@ -48,10 +49,12 @@ class ReturnByProjectReport extends Report
 
     public function columns(): array
     {
-        return [
+        // A-284: kolom offcut hanya bila saklar per potong menyala.
+        return array_filter([
             'proyek' => 'Proyek', 'ret' => 'RET', 'tanggal' => 'Tanggal', 'status' => 'Status', 'item' => 'Item',
-            'diajukan' => 'Diajukan', 'diterima' => 'Diterima', 'layak' => 'Layak', 'rusak' => 'Rusak', 'offcut' => 'Offcut', 'waste' => 'Waste',
-        ];
+            'diajukan' => 'Diajukan', 'diterima' => 'Diterima', 'layak' => 'Layak', 'rusak' => 'Rusak',
+            'offcut' => StockFeatures::piece() ? 'Offcut' : null, 'waste' => 'Waste',
+        ]);
     }
 
     public function filters(): array

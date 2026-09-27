@@ -43,19 +43,19 @@ class ItemImportTest extends TenantTestCase
             ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $this->actingAs($this->makeUser('driver'))->get($this->tenantUrl('imports'))->assertForbidden();
 
-        // Satu baris salah (satuan tak dikenal, serial + fefo tidak sah): tidak ada yang tersimpan.
+        // Satu baris salah (satuan tak dikenal, jenis barang tak dikenal): tidak ada yang tersimpan.
         $salah = $this->berkas([
-            ['IMP-1', 'Baut impor', '', 'PCS', 'none', 'tidak', 'consumable', 'fifo', 10, 20, 'tidak', ''],
-            ['IMP-2', 'Barang aneh', '', 'XYZ', 'none', 'tidak', 'consumable', 'fifo', '', '', 'tidak', ''],
-            ['IMP-3', 'Genset impor', '', 'PCS', 'serial', 'tidak', 'asset', 'fefo', '', '', 'ya', ''],
+            ['IMP-1', 'Baut impor', '', 'PCS', 'biasa', 10, 20, 'tidak', ''],
+            ['IMP-2', 'Barang aneh', '', 'XYZ', 'biasa', '', '', 'tidak', ''],
+            ['IMP-3', 'Genset impor', '', 'PCS', 'mesin', '', '', 'ya', ''],
         ]);
         $this->actingAs($admin)->post($this->tenantUrl('imports/items'), ['file' => $salah])
             ->assertSessionHasErrors('file')->assertSessionHas('rowErrors', fn ($t) => str_contains($t, 'Baris 3') && str_contains($t, 'Baris 4'));
         $this->assertSame(0, Item::query()->where('code', 'like', 'IMP-%')->count());
 
         $benar = $this->berkas([
-            ['IMP-1', 'Baut impor', '', 'PCS', 'none', 'tidak', 'consumable', 'fifo', 10, 20, 'tidak', '8990001'],
-            ['IMP-2', 'Genset impor', '', 'PCS', 'serial', 'tidak', 'asset', 'manual', '', '', 'ya', ''],
+            ['IMP-1', 'Baut impor', '', 'PCS', 'biasa', 10, 20, 'tidak', '8990001'],
+            ['IMP-2', 'Genset impor', '', 'PCS', 'alat', '', '', 'ya', ''],
         ]);
         $this->actingAs($admin)->post($this->tenantUrl('imports/items'), ['file' => $benar])->assertSessionHasNoErrors()->assertRedirect();
 

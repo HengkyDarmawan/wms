@@ -8,7 +8,6 @@ use App\Domain\Access\Models\User;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Lot;
-use App\Domain\Master\Models\Piece;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Serial;
 use App\Domain\Master\Models\Vehicle;
@@ -64,11 +63,8 @@ class StockDemoSeeder extends Seeder
             ['LOT-SMN-2610', 9, 'BKS-A-R01-L1-B02', 500],
         ]);
 
-        // Sepuluh batang utuh dan dua sisa potongan di CKG, empat batang di BKS.
-        $this->seedPieces('PIPA-PVC-4', [
-            'CKG-B-R01-L1-B01' => [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 2.5, 1.2],
-            'BKS-A-R01-L2-B01' => [6, 6, 6, 6],
-        ]);
+        // A-283: pipa Barang biasa dalam meter — 10 batang + sisa 2,5 m & 1,2 m di CKG, 4 batang di BKS.
+        $this->seedUntracked('PIPA-PVC-4', ['CKG-B-R01-L1-B01' => 63.7, 'BKS-A-R01-L2-B01' => 24]);
 
         $this->seedSerials('GENSET-5KVA', [
             'GNS-5K-0001' => 'CKG-B-R01-L2-B01',
@@ -121,26 +117,6 @@ class StockDemoSeeder extends Seeder
         }
     }
 
-    /** @param  array<string, array<int, float|int>>  $perBin  panjang tiap potongan dalam meter */
-    private function seedPieces(string $kodeItem, array $perBin): void
-    {
-        $item = $this->item($kodeItem);
-        $nomor = Piece::query()->count();
-
-        foreach ($perBin as $kodeBin => $panjangList) {
-            foreach ($panjangList as $panjang) {
-                $potongan = Piece::create([
-                    'item_id' => $item->id,
-                    'piece_no' => sprintf('P-%06d', ++$nomor),
-                    'length' => $panjang,
-                    'is_offcut' => $panjang < 6,
-                ]);
-
-                $this->post($item, (float) $panjang, $kodeBin, pieceId: $potongan->id);
-            }
-        }
-    }
-
     /** @param  array<string, string>  $serialKeBin */
     private function seedSerials(string $kodeItem, array $serialKeBin): void
     {
@@ -156,7 +132,7 @@ class StockDemoSeeder extends Seeder
         }
     }
 
-    private function post(Item $item, float $qty, string $kodeBin, ?int $lotId = null, ?int $serialId = null, ?int $pieceId = null): void
+    private function post(Item $item, float $qty, string $kodeBin, ?int $lotId = null, ?int $serialId = null): void
     {
         app(StockLedger::class)->post(new MovementRequest(
             item: $item,
@@ -164,7 +140,6 @@ class StockDemoSeeder extends Seeder
             toBinId: $this->binId($kodeBin),
             lotId: $lotId,
             serialId: $serialId,
-            pieceId: $pieceId,
             reasonCodeId: $this->reasonId(),
             eventType: StockEventType::StockAdjusted,
             notes: self::NOTES,

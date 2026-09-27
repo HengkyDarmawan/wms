@@ -17,6 +17,7 @@ use App\Domain\Conversion\Support\ConvertibleStock;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Master\Support\StockFeatures;
 use App\Domain\Stock\Support\DocumentNumber;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
@@ -52,7 +53,8 @@ class CreateConversion
     {
         [$proyek, $gudang] = $this->tujuan($header, $actor);
         $jenis = $this->jenis($header['conversion_type'] ?? null);
-        $masuk = $this->stock->normalize($gudang, $inputs);
+        $this->pastikanJenisAktif($jenis, null);
+        $masuk = $this->stock->normalize($gudang, $inputs, $jenis);
         $hasil = $this->lines->normalize($gudang, $jenis, $masuk, $outputs);
 
         return DB::transaction(function () use ($proyek, $gudang, $jenis, $masuk, $hasil, $header, $actor) {
@@ -96,7 +98,8 @@ class CreateConversion
 
         $cnv->loadMissing('warehouse');
         $jenis = $this->jenis($header['conversion_type'] ?? $cnv->conversion_type->value);
-        $masuk = $this->stock->normalize($cnv->warehouse, $inputs);
+        $this->pastikanJenisAktif($jenis, $cnv->conversion_type);
+        $masuk = $this->stock->normalize($cnv->warehouse, $inputs, $jenis);
         $hasil = $this->lines->normalize($cnv->warehouse, $jenis, $masuk, $outputs);
 
         return DB::transaction(function () use ($cnv, $jenis, $masuk, $hasil, $header, $actor) {
@@ -281,12 +284,20 @@ class CreateConversion
         return [$proyek, $gudang];
     }
 
+    /** BR-GEN-12 / A-284: Potong baru ditolak bila saklar per potong mati; draf Potong lama tetap bisa diubah. */
+    private function pastikanJenisAktif(ConversionType $jenis, ?ConversionType $lama): void
+    {
+        if ($jenis === ConversionType::Cut && $lama !== ConversionType::Cut && ! StockFeatures::piece()) {
+            throw ConversionRuleException::field('BR-GEN-12', 'conversion_type', 'Konversi Potong tidak aktif di company ini.');
+        }
+    }
+
     private function jenis(mixed $nilai): ConversionType
     {
         $nilai = is_scalar($nilai) ? trim((string) $nilai) : '';
 
         if ($nilai === '') {
-            return ConversionType::Cut;
+            return StockFeatures::piece() ? ConversionType::Cut : ConversionType::Repack;
         }
 
         return ConversionType::tryFrom($nilai)

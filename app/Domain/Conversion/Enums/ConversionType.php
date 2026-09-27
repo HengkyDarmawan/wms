@@ -41,6 +41,20 @@ enum ConversionType: string
         return $hasil;
     }
 
+    /**
+     * A-284: jenis yang bisa dipilih. Potong hanya bila saklar per potong
+     * menyala; draf lama berjenis Potong tetap menampilkannya.
+     *
+     * @return list<self>
+     */
+    public static function available(bool $pieceOn, ?self $current = null): array
+    {
+        return array_values(array_filter(
+            self::cases(),
+            fn (self $jenis) => $jenis !== self::Cut || $pieceOn || $current === self::Cut,
+        ));
+    }
+
     /** BR-CNV-02 berlaku penuh (A-156). */
     public function requiresSizeBalance(): bool
     {

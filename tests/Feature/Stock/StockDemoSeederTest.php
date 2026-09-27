@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Stock;
 
+use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\Item;
+use App\Domain\Master\Models\Piece;
 use App\Domain\Master\Models\Vehicle;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockEvent;
@@ -49,8 +51,12 @@ class StockDemoSeederTest extends TenantTestCase
         );
 
         // Setiap pergerakan menerbitkan kejadian di outbox (BR-LED-06).
+        // A-283: pipa Barang biasa — 2 baut + 3 semen + 2 pipa + 2 genset, tanpa potongan.
         $jumlah = StockMovement::query()->where('notes', StockDemoSeeder::NOTES)->count();
-        $this->assertSame(23, $jumlah);
+        $this->assertSame(9, $jumlah);
+        $this->assertSame(0, Piece::query()->count());
+        $this->assertFalse(FeatureSetting::enabled('piece'), 'A-284: DEMO tanpa per potong.');
+        $this->assertFalse(FeatureSetting::enabled('qc'), 'A-284: DEMO tanpa QC penerimaan.');
         $this->assertSame($jumlah, StockEvent::query()->count());
 
         $this->assertSame(2, Vehicle::query()->whereNotNull('default_driver_id')->count());

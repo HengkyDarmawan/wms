@@ -11,9 +11,11 @@ use App\Domain\Adjustment\Models\StockAdjustment;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Models\ApprovalSnapshot;
 use App\Domain\Approval\Models\ApprovalTask;
+use App\Domain\Count\Actions\AssignCounter;
 use App\Domain\Count\Actions\CreateStockCount;
 use App\Domain\Count\Actions\RecordCount;
 use App\Domain\Count\Actions\StartStockCount;
+use App\Domain\Count\Enums\StockCountStatus;
 use App\Domain\Count\Models\CountAssignment;
 use App\Domain\Count\Models\CountLine;
 use App\Domain\Count\Models\StockCount;
@@ -21,6 +23,7 @@ use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\OwnershipModel;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Enums\TrackingMode;
+use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Piece;
@@ -76,6 +79,9 @@ trait CountFixtures
 
     protected function siapkanOpname(): void
     {
+        // A-284: opname per potongan diuji dengan saklar per potong menyala.
+        FeatureSetting::seed(['piece' => true], overwrite: true);
+
         $this->gudang = app(SaveWarehouse::class)->handle(null, [
             'code' => 'CKG',
             'name' => 'Gudang Utama Cakung',
@@ -173,6 +179,32 @@ trait CountFixtures
         }
 
         return $count->refresh();
+    }
+
+    /**
+     * Putaran 1 dengan isian; bila selisih sedang/besar memicu hitung ulang
+     * (BR-OPN-05, A-259), penghitung kedua mendapat angka yang sama sehingga
+     * kelas selisihnya bertahan. Tim satu orang: Kepala Gudang menugaskan
+     * staf lain untuk hitung ulang (`count.assign`).
+     *
+     * @param  array<int, float>  $isian  count_line_id => jumlah
+     */
+    protected function hitungDenganUlang(StockCount $count, array $isian = []): StockCount
+    {
+        $count = $this->hitungPutaran($count, 1, $isian);
+
+        if ($count->status !== StockCountStatus::Recount) {
+            return $count;
+        }
+
+        $pertama = CountAssignment::query()->where('stock_count_id', $count->id)->where('round', 1)->pluck('counter_user_id', 'bin_id');
+
+        foreach (CountAssignment::query()->where('stock_count_id', $count->id)->where('round', 2)->whereNull('counter_user_id')->get() as $t) {
+            $lain = collect([$this->staf1, $this->staf2])->first(fn (User $u) => (int) $u->id !== (int) ($pertama[$t->bin_id] ?? 0));
+            app(AssignCounter::class)->handle($t, $lain->id, $this->kepala);
+        }
+
+        return $this->hitungPutaran($count, 2, $isian);
     }
 
     protected function baris(StockCount $count, Item $item, ?Bin $bin = null): CountLine

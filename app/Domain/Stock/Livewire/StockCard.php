@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Stock\Livewire;
 
 use App\Domain\Master\Models\Item;
+use App\Domain\Master\Support\StockFeatures;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockMovement;
 use App\Domain\Warehouse\Models\Bin;
@@ -65,7 +66,7 @@ class StockCard extends Component
 
     public function render(): View
     {
-        $item = Item::query()->with('baseUom:id,code')->findOrFail($this->itemId);
+        $item = Item::query()->with('baseUom:id,code', 'activeConversions.uom:id,code')->findOrFail($this->itemId);
 
         return view('livewire.stock.stock-card', [
             'item' => $item,
@@ -73,6 +74,8 @@ class StockCard extends Component
             'pergerakan' => $this->pergerakan(),
             'warehouses' => Warehouse::query()->orderBy('code')->get(['id', 'code', 'name']),
             'bins' => $this->pilihanBin(),
+            // A-284: kolom potongan hanya bila saklar per potong menyala.
+            'tampilPotongan' => StockFeatures::piece(),
         ]);
     }
 

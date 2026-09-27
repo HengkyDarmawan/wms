@@ -45,6 +45,24 @@ class FeatureSetting extends Model
         );
     }
 
+    /**
+     * Menulis saklar dari seeder tanpa log aktivitas. Tanpa `$overwrite`,
+     * saklar yang sudah ada tidak disentuh sehingga seed ulang tidak
+     * mengembalikan pilihan company ke bawaan (A-284).
+     *
+     * @param  array<string, bool>  $map
+     */
+    public static function seed(array $map, bool $overwrite = false): void
+    {
+        foreach ($map as $key => $enabled) {
+            $overwrite
+                ? static::query()->updateOrCreate(['key' => $key], ['enabled' => $enabled])
+                : static::query()->firstOrCreate(['key' => $key], ['enabled' => $enabled]);
+
+            Cache::forget('feature_setting:'.$key);
+        }
+    }
+
     public static function toggle(string $key, bool $enabled, ?array $config = null): void
     {
         $sebelum = static::query()->find($key)?->enabled;

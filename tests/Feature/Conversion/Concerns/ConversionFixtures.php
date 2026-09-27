@@ -11,6 +11,7 @@ use App\Domain\Conversion\Actions\CreateConversion;
 use App\Domain\Conversion\Exceptions\ConversionRuleException;
 use App\Domain\Conversion\Models\Conversion;
 use App\Domain\Conversion\Support\ConvertibleStock;
+use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Piece;
 use App\Domain\Stock\Exceptions\LedgerException;
@@ -36,6 +37,9 @@ trait ConversionFixtures
     protected function siapkanKonversi(): void
     {
         $this->siapkanTransfer();
+
+        // A-284: mode Potong hanya bila saklar per potong menyala.
+        FeatureSetting::seed(['piece' => true], overwrite: true);
 
         $this->pipa->forceFill(['is_cuttable' => true, 'min_offcut_length' => 0.5, 'kerf' => 0.005])->save();
         $this->batang = $this->potongan($this->binA, 6.0);
