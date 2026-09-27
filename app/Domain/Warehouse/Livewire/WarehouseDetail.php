@@ -6,7 +6,6 @@ namespace App\Domain\Warehouse\Livewire;
 
 use App\Domain\Master\Models\StorageCategory;
 use App\Domain\Warehouse\Actions\GenerateBins;
-use App\Domain\Warehouse\Actions\SaveBin;
 use App\Domain\Warehouse\Actions\SaveLocation;
 use App\Domain\Warehouse\Livewire\Concerns\HandlesWarehouseRules;
 use App\Domain\Warehouse\Models\Bin;
@@ -16,7 +15,9 @@ use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Models\Zone;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Spatie\Activitylog\Models\Activity;
 
 /**
@@ -29,10 +30,14 @@ use Spatie\Activitylog\Models\Activity;
 class WarehouseDetail extends Component
 {
     use HandlesWarehouseRules;
+    use WithPagination;
+
+    public const TABS = ['lokasi', 'bin', 'riwayat'];
 
     #[Locked]
     public Warehouse $warehouse;
 
+    #[Url(except: 'lokasi')]
     public string $tab = 'lokasi';
 
     /** @var array<string, string> */
@@ -65,11 +70,15 @@ class WarehouseDetail extends Component
         $this->authorize('view', $warehouse);
 
         $this->warehouse = $warehouse;
+
+        if (! in_array($this->tab, self::TABS, true)) {
+            $this->tab = 'lokasi';
+        }
     }
 
     public function pilihTab(string $tab): void
     {
-        $this->tab = in_array($tab, ['lokasi', 'bin', 'riwayat'], true) ? $tab : 'lokasi';
+        $this->tab = in_array($tab, self::TABS, true) ? $tab : 'lokasi';
     }
 
     public function tambahZona(SaveLocation $action): void

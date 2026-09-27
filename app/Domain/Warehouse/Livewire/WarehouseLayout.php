@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Warehouse\Livewire;
 
+use App\Domain\Warehouse\Actions\GenerateBins;
 use App\Domain\Warehouse\Actions\MarkBinsOccupied;
+use App\Domain\Warehouse\Actions\SaveLocation;
 use App\Domain\Warehouse\Actions\SaveWarehouseLayout;
 use App\Domain\Warehouse\Livewire\Concerns\HandlesWarehouseRules;
 use App\Domain\Warehouse\Models\Bin;
@@ -23,7 +25,9 @@ use Livewire\Component;
  * atau umur isi, klik rak → level → bin → isi (tanggal masuk, umur, tertua),
  * cari bin/item/lot/serial/potongan, dan — bagi pemegang `bin.manage` — atur
  * ukuran & posisi (geser di grid), rak area alat berat, serta bin ikut
- * terpakai. Tanpa library tambahan: SVG + Alpine (D-05, tanpa CDN).
+ * terpakai. Sejak A-271 juga menambah zona, rak (+ level + bin), level,
+ * dan bin langsung dari denah. Tanpa library tambahan: SVG + Alpine (D-05,
+ * tanpa CDN).
  */
 class WarehouseLayout extends Component
 {
@@ -46,8 +50,20 @@ class WarehouseLayout extends Component
     /** @var array<string, string> */
     public array $formRak = [];
 
-    /** @var array<int|string, array<string, string>> zone_id => length_m, width_m */
+    /** @var array<int|string, array<string, string>> zone_id => name, length_m, width_m */
     public array $formZona = [];
+
+    /** @var array<string, string> A-271: zona baru dari denah */
+    public array $formZonaBaru = ['code' => '', 'name' => ''];
+
+    /** @var array<string, string> A-271: rak baru (+ level L1…Ln + bin per level) */
+    public array $formRakBaru = ['zone_id' => '', 'code' => '', 'name' => '', 'levels' => '1', 'bins_per_level' => '0', 'prefix' => 'B', 'capacity_qty' => ''];
+
+    /** @var array<string, string> A-271: level baru di rak terpilih */
+    public array $formLevelBaru = ['code' => '', 'bins' => '0'];
+
+    /** @var array<int|string, string> A-271: level_id => jumlah bin baru */
+    public array $formBinBaru = [];
 
     /** @var array<string, string> zone_id, code, name, capacity_qty, seluruh_zona, length_m, width_m */
     public array $formArea = ['zone_id' => '', 'code' => '', 'name' => '', 'capacity_qty' => '1', 'seluruh_zona' => '0', 'length_m' => '', 'width_m' => ''];
@@ -61,7 +77,95 @@ class WarehouseLayout extends Component
         $this->warehouseId = (int) $warehouse->id;
 
         foreach (Zone::query()->where('warehouse_id', $warehouse->id)->get() as $z) {
-            $this->formZona[$z->id] = ['length_m' => $this->angka($z->length_m), 'width_m' => $this->angka($z->width_m)];
+            $this->isiFormZona($z);
+        }
+    }
+
+    /** A-271: zona baru langsung dari denah (kode terkunci setelah dibuat, BR-WH-01). */
+    public function tambahZona(SaveLocation $action): void
+    {
+        $this->resetErrorBag();
+        $gudang = $this->gudang();
+        $this->authorize('manageLayout', $gudang);
+        $zona = null;
+
+        if ($this->jalankan(function () use ($action, $gudang, &$zona) {
+            $zona = $action->saveZone($gudang, null, $this->formZonaBaru, auth()->user());
+        }, 'formZonaBaru')) {
+            $this->isiFormZona($zona);
+            $this->formZonaBaru = ['code' => '', 'name' => ''];
+            $this->formRakBaru['zone_id'] = (string) $zona->id;
+            $this->dispatch('pesan', teks: __('Zona :z ditambahkan.', ['z' => $zona->code]));
+        }
+    }
+
+    /** A-271: rak baru + level L1…Ln + bin opsional per level, ditata otomatis. */
+    public function tambahRak(SaveWarehouseLayout $action): void
+    {
+        $this->resetErrorBag();
+        $this->authorize('manageLayout', $this->gudang());
+        $zona = Zone::query()->where('warehouse_id', $this->warehouseId)->find((int) $this->formRakBaru['zone_id']);
+
+        if ($zona === null) {
+            $this->addError('formRakBaru.zone_id', __('Pilih zona.'));
+
+            return;
+        }
+
+        $rak = null;
+
+        if ($this->jalankan(function () use ($action, $zona, &$rak) {
+            $rak = $action->newRack($zona, $this->formRakBaru, auth()->user());
+        }, 'formRakBaru')) {
+            $this->formRakBaru = ['zone_id' => (string) $zona->id, 'code' => '', 'name' => '', 'levels' => '1', 'bins_per_level' => '0', 'prefix' => 'B', 'capacity_qty' => ''];
+            $this->pilihRak((int) $rak->id);
+            $this->dispatch('pesan', teks: __('Rak :r ditambahkan.', ['r' => $zona->code.'-'.$rak->code]));
+        }
+    }
+
+    /** A-271: level baru di rak terpilih; kode kosong = L berikutnya. */
+    public function tambahLevel(SaveWarehouseLayout $action): void
+    {
+        $this->resetErrorBag();
+        $this->authorize('manageLayout', $this->gudang());
+        $rak = $this->rak((int) $this->rakId);
+        $level = null;
+
+        if ($this->jalankan(function () use ($action, $rak, &$level) {
+            $level = $action->newLevel($rak, $this->formLevelBaru, auth()->user());
+        }, 'formLevelBaru')) {
+            $this->formLevelBaru = ['code' => '', 'bins' => '0'];
+            $this->dispatch('pesan', teks: __('Level :l ditambahkan.', ['l' => $level->code]));
+        }
+    }
+
+    /** A-271: tambah bin di satu level (nomor berikutnya, BR-WH-01). */
+    public function tambahBin(int $levelId, GenerateBins $action): void
+    {
+        $this->resetErrorBag();
+        $this->authorize('manageLayout', $this->gudang());
+        $level = RackLevel::query()->whereHas('rack.zone', fn ($q) => $q->where('warehouse_id', $this->warehouseId))->findOrFail($levelId);
+        $jumlah = trim((string) ($this->formBinBaru[$levelId] ?? '1'));
+
+        if (! ctype_digit($jumlah) || (int) $jumlah < 1 || (int) $jumlah > SaveWarehouseLayout::MAKS_BIN_PER_LEVEL) {
+            $this->addError('formBinBaru.'.$levelId, __('Jumlah bin 1–:n.', ['n' => SaveWarehouseLayout::MAKS_BIN_PER_LEVEL]));
+
+            return;
+        }
+
+        if ($level->rack?->is_area) {
+            $this->ruleError = __('Rak area hanya punya satu bin (A-255).');
+
+            return;
+        }
+
+        $dibuat = [];
+
+        if ($this->jalankan(function () use ($action, $level, $jumlah, &$dibuat) {
+            $dibuat = $action->handle($level, (int) $jumlah, ['prefix' => 'B'], auth()->user());
+        }, 'formBinBaru')) {
+            unset($this->formBinBaru[$levelId]);
+            $this->dispatch('pesan', teks: __(':n bin ditambahkan.', ['n' => count($dibuat)]));
         }
     }
 
@@ -126,11 +230,12 @@ class WarehouseLayout extends Component
 
     public function simpanZona(int $zoneId, SaveWarehouseLayout $action): void
     {
+        $this->resetErrorBag();
         $this->authorize('manageLayout', $this->gudang());
         $zona = Zone::query()->where('warehouse_id', $this->warehouseId)->findOrFail($zoneId);
 
-        if ($this->jalankan(fn () => $action->zone($zona, $this->formZona[$zoneId] ?? [], auth()->user()), 'formZona')) {
-            $this->dispatch('pesan', teks: __('Ukuran zona disimpan.'));
+        if ($this->jalankan(fn () => $action->zone($zona, $this->formZona[$zoneId] ?? [], auth()->user()), 'formZona.'.$zoneId)) {
+            $this->dispatch('pesan', teks: __('Zona disimpan.'));
         }
     }
 
@@ -205,8 +310,13 @@ class WarehouseLayout extends Component
             'denah' => $denah,
             'rak' => $rak,
             'bolehUbah' => auth()->user()?->can('manageLayout', $gudang) ?? false,
-            'skala' => 40,
+            'skala' => WarehouseLayoutData::SKALA,
         ]);
+    }
+
+    private function isiFormZona(Zone $z): void
+    {
+        $this->formZona[$z->id] = ['name' => (string) $z->name, 'length_m' => $this->angka($z->length_m), 'width_m' => $this->angka($z->width_m)];
     }
 
     private function gudang(): Warehouse

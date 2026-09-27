@@ -8,6 +8,13 @@
 return [
 
     /*
+     * D-05: paginasi komponen Livewire memakai markup Bootstrap seperti
+     * `Paginator::useBootstrapFive()`; bawaan Livewire Tailwind. View-nya
+     * ditimpa di resources/views/vendor/livewire (teks Indonesia).
+     */
+    'pagination_theme' => 'bootstrap',
+
+    /*
      * A-257: unggahan sementara boleh sampai 20 MB (foto kamera HP) karena
      * foto dikompres otomatis menjadi ≤ 5 MB saat disimpan (A-23,
      * StoreUpload + ImageCompressor). Bawaan Livewire 12 MB.
