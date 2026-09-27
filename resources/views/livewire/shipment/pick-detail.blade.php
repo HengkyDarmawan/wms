@@ -71,17 +71,20 @@
         </div>
     @endif
 
+    @include('livewire.label._isi-dialog')
+
     @if ($task->status->value === 'in_progress')
         <div class="card mb-3">
             <div class="card-body">
                 <label class="form-label" for="pck-pindai">{{ __('Pindai bin lalu item') }}</label>
                 <input class="form-control @error('kodePindai') is-invalid @enderror" id="pck-pindai" type="text" data-scan
                        autocomplete="off" wire:model="kodePindai" wire:keydown.enter.prevent="pindai"
-                       placeholder="{{ __('Kode bin, kode item, atau barcode item') }}">
+                       placeholder="{{ __('Kode bin, label kemasan, kode item, atau barcode item') }}">
                 @error('kodePindai') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 <div class="form-text">
                     {{ __('Bin aktif') }}: {{ $binPindai ? ($bins->firstWhere('id', $binPindai)?->code ?? '—') : '—' }} ·
                     {{ __('Item yang dipindai dicatat sejumlah isian barisnya; ubah jumlah lalu Catat bila kurang.') }}
+                    {{ __('Barang berlabel wajib dipindai label kemasannya.') }}
                 </div>
             </div>
         </div>
@@ -108,6 +111,20 @@
                             <td>
                                 {{ $l->item?->code }}
                                 <div class="small text-muted">{{ $l->item?->name }}</div>
+                                @if (isset($wajibLabel[$l->id]))
+                                    <div @class(['small', 'text-danger' => $wajibLabel[$l->id]['klaim'] + 0.00005 < $wajibLabel[$l->id]['wajib'], 'text-success' => $wajibLabel[$l->id]['klaim'] + 0.00005 >= $wajibLabel[$l->id]['wajib']])>
+                                        {{ __('Label wajib: :klaim dari :wajib', ['klaim' => \App\Domain\Label\Support\PackageLabelLedger::angka($wajibLabel[$l->id]['klaim']), 'wajib' => \App\Domain\Label\Support\PackageLabelLedger::angka($wajibLabel[$l->id]['wajib'])]) }}
+                                    </div>
+                                @endif
+                                @foreach ($l->labels ?? [] as $c)
+                                    <span class="badge text-bg-light border font-monospace me-1" wire:key="pck-lbl-{{ $l->id }}-{{ $c['id'] }}">
+                                        {{ $kodeLabel[$c['id']] ?? '#'.$c['id'] }} · {{ \App\Domain\Label\Support\PackageLabelLedger::angka((float) $c['qty']) }}
+                                        @if ($task->status->value === 'in_progress')
+                                            <button class="btn-close btn-close-sm ms-1" type="button" style="font-size: .55rem"
+                                                    wire:click="lepasLabel({{ $l->id }}, {{ $c['id'] }})" aria-label="{{ __('Lepas label') }}"></button>
+                                        @endif
+                                    </span>
+                                @endforeach
                             </td>
                             <td>
                                 @if ($task->status->value === 'in_progress')

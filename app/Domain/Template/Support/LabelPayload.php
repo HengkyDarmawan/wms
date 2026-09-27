@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Template\Support;
 
+use App\Domain\Label\Models\PackageLabel;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Piece;
+use App\Domain\Master\Models\Serial;
+use App\Domain\Master\Support\QtyFormat;
+use App\Domain\Receipt\Models\GoodsReceiptLine;
 use App\Domain\Warehouse\Models\Bin;
 
 /**
@@ -71,6 +75,62 @@ class LabelPayload
                 .($piece->created_at ? ' · '.__('Masuk').' '.$piece->created_at->format('d/m/Y') : '')), // A-256 FIFO
             'code128' => (string) $piece->piece_no,
             'qr' => (string) $piece->piece_no,
+        ];
+    }
+
+    /**
+     * A-296: label kemasan induk/isi — kode label (Code128 & QR), item, isi,
+     * tanggal terima, vendor, nomor GRN, serta lot/kedaluwarsa/batch vendor.
+     * Tanpa harga (D-07).
+     *
+     * @return array{title: string, subtitle: string, detail: string, code128: string, qr: string}
+     */
+    public static function package(PackageLabel $label): array
+    {
+        $item = $label->item;
+        $grn = $label->receipt;
+        $kemasan = $label->packageUom?->code;
+        $lot = $label->lot;
+
+        return [
+            'title' => (string) $label->code,
+            'subtitle' => trim(($item?->code ?? '').' '.($item?->name ?? '')),
+            'detail' => implode(' · ', array_filter([
+                __('Isi').' '.QtyFormat::withUnit($label->qty, $item?->baseUom?->code).($label->isParent() && $kemasan ? ' (1 '.$kemasan.')' : ''),
+                $grn?->received_at ? __('Masuk').' '.$grn->received_at->lokal()->format('d/m/Y') : null,
+                $grn?->vendor?->name,
+                $grn?->number,
+                $lot ? __('Lot').' '.$lot->lot_no : null,
+                $lot?->expiry_date ? __('Kedaluwarsa').' '.$lot->expiry_date->format('d/m/Y') : null,
+                ($lot?->attributes['vendor_batch'] ?? null) ? __('Batch').' '.$lot->attributes['vendor_batch'] : null,
+            ])),
+            'code128' => (string) $label->code,
+            'qr' => (string) $label->code,
+        ];
+    }
+
+    /**
+     * A-298: label serial alat — nomor seri, item, tanggal terima, vendor, dan
+     * nomor GRN dari penerimaan vendor terakhir serial itu.
+     *
+     * @return array{title: string, subtitle: string, detail: string, code128: string, qr: string}
+     */
+    public static function serial(Serial $serial): array
+    {
+        $asal = GoodsReceiptLine::query()->with('receipt.vendor:id,name')
+            ->where('serial_id', $serial->id)->latest('id')->first()?->receipt;
+
+        return [
+            'title' => (string) $serial->serial_no,
+            'subtitle' => trim(($serial->item?->code ?? '').' '.($serial->item?->name ?? '')),
+            'detail' => implode(' · ', array_filter([
+                $asal?->received_at ? __('Masuk').' '.$asal->received_at->lokal()->format('d/m/Y')
+                    : ($serial->acquired_at ? __('Masuk').' '.$serial->acquired_at->format('d/m/Y') : null),
+                $asal?->vendor?->name,
+                $asal?->number,
+            ])),
+            'code128' => (string) $serial->serial_no,
+            'qr' => (string) $serial->serial_no,
         ];
     }
 

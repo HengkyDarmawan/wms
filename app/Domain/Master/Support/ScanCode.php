@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Master\Support;
 
+use App\Domain\Label\Models\PackageLabel;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Piece;
@@ -13,7 +14,8 @@ use App\Domain\Master\Models\Serial;
  * Membaca hasil pindai label (A-121, A-206) menjadi item — dan lot/serial/
  * potongan bila yang dipindai label berlacak. Kebalikan dari
  * `Template\Support\LabelPayload`: kode/barcode/QR item, QR lot
- * `<kode item>|<lot>`, nomor lot, serial, dan potongan.
+ * `<kode item>|<lot>`, nomor lot, serial, potongan, dan kode label kemasan
+ * induk/isi (A-296) — label kemasan menunjuk item (dan lot) asalnya.
  *
  * Satu kode boleh punya beberapa arti (mis. nomor lot yang sama di dua item);
  * pemanggil yang memutuskan apakah itu ambigu.
@@ -23,6 +25,14 @@ class ScanCode
     public static function normalize(string $raw): string
     {
         return mb_strtoupper(trim($raw));
+    }
+
+    /** A-296: label kemasan induk/isi dengan kode persis ini, atau null. */
+    public static function label(string $raw): ?PackageLabel
+    {
+        $kode = self::normalize($raw);
+
+        return $kode === '' ? null : PackageLabel::query()->where('code', $kode)->first();
     }
 
     /**
@@ -63,6 +73,9 @@ class ScanCode
 
         Piece::query()->where('piece_no', $kode)->where('is_consumed', false)->get(['id', 'item_id'])
             ->each(fn (Piece $p) => $tambah((int) $p->item_id, null, null, (int) $p->id));
+
+        PackageLabel::query()->where('code', $kode)->get(['id', 'item_id', 'lot_id'])
+            ->each(fn (PackageLabel $l) => $tambah((int) $l->item_id, $l->lot_id === null ? null : (int) $l->lot_id));
 
         return array_values($hasil);
     }

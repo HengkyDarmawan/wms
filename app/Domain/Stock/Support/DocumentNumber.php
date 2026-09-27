@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Stock\Support;
 
 use App\Domain\Stock\Models\DocumentSequence;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -23,14 +24,33 @@ class DocumentNumber
     private const PANJANG_URUT = 4;
 
     /** Nomor final untuk satu dokumen. */
-    public function next(string $documentType, string $segment = 'ALL', ?\Carbon\CarbonInterface $date = null): string
+    public function next(string $documentType, string $segment = 'ALL', ?CarbonInterface $date = null): string
     {
         $tanggal = $date ?? now();
         $periode = $tanggal->format('Y-m');
         $jenis = mb_strtoupper($documentType);
         $segmen = mb_strtoupper($segment) ?: 'ALL';
 
-        $urut = DB::transaction(function () use ($jenis, $segmen, $periode): int {
+        $urut = $this->naikkan($jenis, $segmen, $periode, 1);
+
+        return $jenis.'/'.$segmen.'/'.$tanggal->format('ym').'/'
+            .str_pad((string) $urut, self::PANJANG_URUT, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * A-296: memesan `$count` nomor urut berturut-turut tanpa format dokumen,
+     * mis. urut label kemasan per item (segmen = id item, periode tetap `ALL`).
+     * Mengembalikan nomor pertama blok; dikunci sama seperti {@see next()}.
+     */
+    public function reserve(string $documentType, string $segment, int $count, string $period = 'ALL'): int
+    {
+        return $this->naikkan(mb_strtoupper($documentType), mb_strtoupper($segment) ?: 'ALL', $period, max(1, $count));
+    }
+
+    /** @return int nomor pertama dari `$count` nomor yang baru dipesan */
+    private function naikkan(string $jenis, string $segmen, string $periode, int $count): int
+    {
+        return DB::transaction(function () use ($jenis, $segmen, $periode, $count): int {
             $baris = DocumentSequence::query()
                 ->where('document_type', $jenis)
                 ->where('segment', $segmen)
@@ -58,15 +78,12 @@ class DocumentNumber
                     ->firstOrFail();
             }
 
-            $berikutnya = $baris->last_number + 1;
+            $pertama = $baris->last_number + 1;
 
-            $baris->forceFill(['last_number' => $berikutnya])->save();
+            $baris->forceFill(['last_number' => $baris->last_number + $count])->save();
 
-            return $berikutnya;
+            return $pertama;
         });
-
-        return $jenis.'/'.$segmen.'/'.$tanggal->format('ym').'/'
-            .str_pad((string) $urut, self::PANJANG_URUT, '0', STR_PAD_LEFT);
     }
 
     /**

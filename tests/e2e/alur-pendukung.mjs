@@ -246,29 +246,142 @@ await cek('P8', 'PRQ → PO (harga vendor) → approval nilai Manajemen → GRN 
 });
 
 // ---------------------------------------------------------------- P9
-// Konversi mode Potong (24-konversi-waste §6, A-229): pilih batang 6 m → 2 × 2,5 m;
-// kerf & offcut dihitung otomatis; Simpan & selesaikan menggerakkan stok.
-await cek('P9', 'Konversi Potong dari layar: batang 6 m → 2 × 2,5 m + offcut + kerf otomatis, selesai', async () => {
+// Konversi Ganti kemasan (24-konversi-waste §6, A-285): barang biasa tanpa tanda Bisa
+// dipotong boleh dikonversi; DEMO tanpa saklar per potong → tombol Potong tidak ada (A-284).
+await cek('P9', 'Konversi Ganti kemasan dari layar: BAUT 10 pcs tanpa mode Potong, selesai', async () => {
   const ckg = sql("SELECT id FROM warehouses WHERE code='CKG'");
   const prjInt = sql("SELECT id FROM projects WHERE code='PRJ-INT'");
-  const pipa = sql("SELECT id FROM items WHERE code='PIPA-PVC-4'");
-  const batang = sql(`SELECT p.id FROM pieces p JOIN stock_balances sb ON sb.piece_id=p.id JOIN bins b ON b.id=sb.bin_id WHERE p.item_id=${pipa} AND b.warehouse_id=${ckg} AND sb.qty_base=6 AND sb.stock_status='available' ORDER BY p.id LIMIT 1`);
-  const bin = sql(`SELECT sb.bin_id FROM stock_balances sb WHERE sb.piece_id=${batang || 0} LIMIT 1`);
-  const kunci = `${bin}_${pipa}_0_${batang}`;
+  const baut = sql("SELECT id FROM items WHERE code='BAUT-M12'");
+  const bin = sql(`SELECT sb.bin_id FROM stock_balances sb JOIN bins b ON b.id=sb.bin_id WHERE sb.item_id=${baut} AND b.warehouse_id=${ckg} AND sb.stock_status='available' AND sb.qty_base>=10 ORDER BY sb.bin_id LIMIT 1`);
+  const kunci = `${bin}_${baut}_0_0`;
 
   await staf.go('/conversions/create');
-  // Dua permintaan: hook updated gudang mengosongkan input, jadi batang & ukuran dikirim setelahnya.
-  await staf.wire({ 'form.project_id': String(prjInt), 'form.warehouse_id': String(ckg), 'form.conversion_type': 'cut' });
-  await staf.wire({ 'batang': kunci, 'potong.0.length': '2.5', 'potong.0.count': '2' });
-  const ringkas = await staf.text();
+  const awal = await staf.ev('document.querySelector("main")?.innerHTML || ""');
+  // Dua permintaan: hook updated gudang mengosongkan input, jadi jumlah & hasil dikirim setelahnya.
+  await staf.wire({ 'form.project_id': String(prjInt), 'form.warehouse_id': String(ckg), 'form.conversion_type': 'repack' });
+  await staf.wire({ [`qty.${kunci}`]: '10', 'hasil.0.item_id': String(baut), 'hasil.0.qty': '10' });
   await staf.shot('e2f-9-cnv.png');
   await staf.wire({}, 'simpanDanSelesaikan');
   const cnvId = sql('SELECT id FROM conversions ORDER BY id DESC LIMIT 1');
-  const [st, tIn, tOut, tOff, tKerf] = sql(`SELECT status, total_input, total_output, total_offcut, total_kerf FROM conversions WHERE id=${cnvId || 0}`).split('	');
-  const sisaBatang = Number(sql(`SELECT COALESCE(SUM(qty_base),0) FROM stock_balances WHERE piece_id=${batang || 0}`));
+  const [st, jenis, tIn, tOut] = sql(`SELECT status, conversion_type, total_input, total_output FROM conversions WHERE id=${cnvId || 0}`).split('	');
   return {
-    ok: /2 × 2,5 M \+ offcut 0,99 M \+ kerf 0,01 M/.test(ringkas) && st === 'completed' && Number(tIn) === 6 && Number(tOut) === 5 && Number(tOff) === 0.99 && Number(tKerf) === 0.01 && sisaBatang === 0,
-    bukti: `e2f-9-cnv.png; CNV ${st}; input ${tIn} → output ${tOut} + offcut ${tOff} + kerf ${tKerf}; batang asal sisa ${sisaBatang}`,
+    ok: !awal.includes('cnv-jenis-cut') && awal.includes('cnv-jenis-repack') && st === 'completed' && jenis === 'repack' && Number(tIn) === 10 && Number(tOut) === 10,
+    bukti: `e2f-9-cnv.png; tombol Potong ${awal.includes('cnv-jenis-cut') ? 'ADA' : 'tidak ada'}; CNV ${jenis} ${st}; input ${tIn} → output ${tOut}`,
+  };
+});
+
+// ---------------------------------------------------------------- P10
+// GRN vendor Baik/Rusak/Kurang (A-287) dalam kemasan (A-291): 2 DUS dikirim vendor,
+// 1 DUS rusak → Karantina berkondisi Rusak, kemasan DUS = 12 diingat untuk item,
+// lalu Retur ke vendor dari barang rusak tanpa QC (A-290); PRQ tetap sebagian.
+await cek('P10', 'GRN 2 DUS (1 rusak) → Karantina Rusak → RTV → PRQ masih sebagian', async () => {
+  const ckg = sql("SELECT id FROM warehouses WHERE code='CKG'");
+  const baut = sql("SELECT id FROM items WHERE code='BAUT-M12'");
+  const vendor = sql("SELECT id FROM vendors WHERE code='BESI-JAYA'");
+  const dus = sql("SELECT id FROM uoms WHERE code='DUS'");
+  const alasan = sql("SELECT code FROM reason_codes WHERE context='damage' AND code='VENDOR'") || 'TRANSPORT';
+
+  await staf.go('/purchase-requests/create');
+  await staf.wire({ 'form.warehouse_id': String(ckg), 'rows.0.item_id': String(baut), 'rows.0.qty_base': '24' }, 'simpan');
+  const prqId = sql('SELECT id FROM purchase_requests ORDER BY id DESC LIMIT 1');
+  await pr.go(`/purchase-requests/${prqId}`);
+  await pr.wire({}, 'mintaDialog', ['pesan']);
+  await pr.wire({ 'order.vendor_id': String(vendor), 'order.external_po_no': 'PO-E2E-10' }, 'catatPesanan');
+  const olId = sql(`SELECT ol.id FROM purchase_request_order_lines ol JOIN purchase_request_orders o ON o.id=ol.purchase_request_order_id WHERE o.purchase_request_id=${prqId} LIMIT 1`);
+
+  await staf.go('/receipts/create');
+  await staf.wire({ 'form.receipt_type': 'vendor', 'form.warehouse_id': String(ckg), 'form.vendor_id': String(vendor), 'form.vendor_doc_no': 'SJV-E2E-10' }, 'pakaiPesanan', [Number(olId)]);
+  await staf.wire({ 'rows.0.uom': 'lain', 'rows.0.uom_lain': String(dus), 'rows.0.uom_factor': '12', 'rows.0.ingat': true });
+  await staf.wire({ 'rows.0.vendor': '2', 'rows.0.damaged': '1', 'rows.0.damage_reason': alasan });
+  const hasil = await staf.text();
+  await staf.shot('e2f-10-grn.png');
+  await staf.wire({}, 'simpan');
+  const grnId = sql('SELECT id FROM goods_receipts ORDER BY id DESC LIMIT 1');
+  await staf.go(`/receipts/${grnId}`);
+  await staf.wire({}, 'terima');
+  const [baik, rusak, kurang, diketik] = sql(`SELECT qty_received, qty_damaged, qty_short, qty_input FROM goods_receipt_lines WHERE goods_receipt_id=${grnId || 0} LIMIT 1`).split('\t');
+  const rusakKarantina = Number(sql(`SELECT COALESCE(SUM(sb.qty_base),0) FROM stock_balances sb JOIN bins b ON b.id=sb.bin_id WHERE b.warehouse_id=${ckg} AND b.bin_type='quarantine' AND sb.item_id=${baut} AND sb.stock_status='damaged'`));
+  const kemasan = sql(`SELECT qty_base FROM item_uom_conversions WHERE item_id=${baut} AND uom_id=${dus} AND is_active=1`);
+
+  await staf.go(`/vendor-returns/create?receipt=${grnId}`);
+  await staf.wire({}, 'simpan');
+  const [rtvQty, rtvRusak] = sql(`SELECT vrl.qty_base, vrl.is_receipt_damage FROM vendor_return_lines vrl JOIN vendor_returns vr ON vr.id=vrl.vendor_return_id WHERE vr.goods_receipt_id=${grnId || 0} LIMIT 1`).split('\t');
+  await staf.shot('e2f-10-rtv.png');
+  const prqSt = sql(`SELECT status FROM purchase_requests WHERE id=${prqId}`);
+  return {
+    ok: hasil.includes('2 DUS = 24') && Number(baik) === 12 && Number(rusak) === 12 && Number(kurang) === 0 && Number(diketik) === 2
+      && rusakKarantina >= 12 && Number(kemasan) === 12 && Number(rtvQty) === 12 && Number(rtvRusak) === 1 && prqSt === 'partially_fulfilled',
+    bukti: `e2f-10-grn.png, e2f-10-rtv.png; baik ${baik} rusak ${rusak} kurang ${kurang} (diketik ${diketik} DUS); Karantina rusak ${rusakKarantina}; kemasan DUS=${kemasan}; RTV ${rtvQty} (rusak=${rtvRusak}); PRQ ${prqSt}`,
+  };
+});
+
+// ---------------------------------------------------------------- P11
+// Label kemasan (A-296–A-302): GRN vendor 24 baut diselesaikan dengan 2 dus × 12 →
+// label induk → cetak PDF → PCK REQ 12 baut ditolak tanpa pindai (BR-LBL-04), pindai
+// label induk → selesai → Telusuri label menampilkan GRN dan PCK.
+await cek('P11', 'GRN → label induk → cetak → PCK wajib pindai label → Telusuri label', async () => {
+  const ckg = sql("SELECT id FROM warehouses WHERE code='CKG'");
+  const baut = sql("SELECT id FROM items WHERE code='BAUT-M12'");
+  const vendor = sql("SELECT id FROM vendors WHERE code='BESI-JAYA'");
+  const prj = sql("SELECT id FROM projects WHERE code='PRJ-001'");
+
+  // 1. GRN vendor → terima → Selesaikan dengan rencana label.
+  await staf.go('/receipts/create');
+  await staf.wire({ 'form.receipt_type': 'vendor', 'form.warehouse_id': String(ckg), 'form.vendor_id': String(vendor), 'form.vendor_doc_no': 'SJV-E2E-11' });
+  await staf.wire({ 'rows.0.item_id': String(baut), 'rows.0.qty': '24' }, 'simpan');
+  const grnId = sql('SELECT id FROM goods_receipts ORDER BY id DESC LIMIT 1');
+  const grnNo = sql(`SELECT number FROM goods_receipts WHERE id=${grnId || 0}`);
+  const lineId = sql(`SELECT id FROM goods_receipt_lines WHERE goods_receipt_id=${grnId || 0} LIMIT 1`);
+  await staf.go(`/receipts/${grnId}`);
+  await staf.wire({}, 'terima');
+  await staf.wire({}, 'mintaSelesai');
+  await staf.wire({ [`labelRencana.${lineId}.packages`]: '2', [`labelRencana.${lineId}.per_package`]: '12' }, 'selesaikan');
+  await staf.go(`/receipts/${grnId}`); await staf.shot('e2f-11-label.png');
+  const labels = sql(`SELECT GROUP_CONCAT(id ORDER BY id), GROUP_CONCAT(code ORDER BY id) FROM package_labels WHERE goods_receipt_id=${grnId || 0} AND parent_id IS NULL`).split('\t');
+  const ids = labels[0] || ''; const kode = (labels[1] || '').split(',')[0];
+
+  // 2. Cetak label induk (PDF).
+  const [cetakSt, cetakCt] = await ambil(staf, `/labels/print?type=label_package&ids=${ids}`);
+
+  // 3. REQ 12 baut → tinjau/setujui → PCK: selesaikan tanpa pindai ditolak, lalu pindai label induk.
+  await pemohon.go('/requests/create');
+  const lines = await pemohon.ev(`Livewire.find(document.querySelector('main [wire\\\\:id]').getAttribute('wire:id')).get('lines')`);
+  await pemohon.wire({ 'form.project_id': prj, 'lines.0': { ...(lines[0] || {}), item_id: baut, qty_base: '12' } }, 'simpanDanAjukan');
+  const reqId11 = sql('SELECT id FROM material_requests ORDER BY id DESC LIMIT 1');
+  await kagudang.go(`/requests/${reqId11}`);
+  if (sql(`SELECT status FROM material_requests WHERE id=${reqId11}`) === 'under_review') {
+    const rl = sql(`SELECT id FROM material_request_lines WHERE material_request_id=${reqId11} LIMIT 1`);
+    await kagudang.wire({}, 'simpanSumber', [Number(rl), String(ckg), 'stock', null]);
+    await kagudang.wire({}, 'kirimKeApproval');
+  }
+  await kagudang.go(`/requests/${reqId11}`);
+  await kagudang.wire({}, 'setujui');
+  await kagudang.go('/picks');
+  await kagudang.wire({}, 'buatDariReq', [Number(reqId11)]);
+  const pckId = sql(`SELECT id FROM pick_tasks WHERE source_type='material_request' AND source_id=${reqId11 || 0} ORDER BY id DESC LIMIT 1`);
+  const pckNo = sql(`SELECT number FROM pick_tasks WHERE id=${pckId || 0}`);
+  await kagudang.go(`/picks/${pckId}`);
+  await kagudang.wire({}, 'mulai');
+  const pl = sql(`SELECT id FROM pick_task_lines WHERE pick_task_id=${pckId || 0}`).split('\n').filter(Boolean);
+  for (const l of pl) await kagudang.wire({}, 'catat', [Number(l)]);
+  await kagudang.wire({}, 'selesaikan');
+  const ditolak = await kagudang.ev(`Livewire.find(document.querySelector('main [wire\\\\:id]').getAttribute('wire:id')).get('ruleCode')`);
+  for (let i = 0; i < pl.length; i++) {
+    await kagudang.wire({ kodePindai: kode }, 'pindai');
+    await kagudang.wire({}, 'simpanIsiLabel');
+  }
+  await kagudang.wire({}, 'selesaikan');
+  await kagudang.shot('e2f-11-pck.png');
+  const pckSt = sql(`SELECT status FROM pick_tasks WHERE id=${pckId || 0}`);
+  const labelSt = sql(`SELECT status FROM package_labels WHERE code='${kode}'`);
+
+  // 4. Telusuri label.
+  await staf.go(`/labels/trace?code=${encodeURIComponent(kode)}`); await staf.shot('e2f-11-trace.png');
+  const jejak = await staf.text();
+  return {
+    ok: ids.split(',').length === 2 && cetakSt === 200 && /pdf/.test(cetakCt) && ditolak === 'BR-LBL-04' && pckSt === 'completed'
+      && labelSt === 'issued' && jejak.includes(grnNo) && jejak.includes(pckNo),
+    bukti: `e2f-11-label.png, e2f-11-pck.png, e2f-11-trace.png; ${grnNo} label ${labels[1]}; cetak ${cetakSt} ${cetakCt}; PCK ${pckNo} tanpa pindai=${ditolak}, akhir ${pckSt}; label ${kode} ${labelSt}`,
   };
 });
 

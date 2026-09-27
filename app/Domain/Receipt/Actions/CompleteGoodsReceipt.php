@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Receipt\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Label\Actions\CreatePackageLabels;
+use App\Domain\Label\Exceptions\LabelRuleException;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Enums\ReceiptType;
 use App\Domain\Receipt\Exceptions\ReceiptRuleException;
@@ -30,7 +32,11 @@ class CompleteGoodsReceipt
         private readonly TransferProgress $transfer,
     ) {}
 
-    public function handle(GoodsReceipt $receipt, ?User $actor = null): GoodsReceipt
+    /**
+     * @param  array<int|string, array<string, mixed>>|null  $labels  A-296: rencana label induk per baris
+     *                                                                (null = tanpa label; label bisa dibuat nanti)
+     */
+    public function handle(GoodsReceipt $receipt, ?User $actor = null, ?array $labels = null): GoodsReceipt
     {
         if ($receipt->status !== GoodsReceiptStatus::Received) {
             throw ReceiptRuleException::rule('BR-GEN-01', 'Hanya GRN berstatus Diterima yang bisa diselesaikan.');
@@ -53,13 +59,22 @@ class CompleteGoodsReceipt
             );
         }
 
-        return DB::transaction(function () use ($receipt, $lines, $actor) {
+        return DB::transaction(function () use ($receipt, $lines, $actor, $labels) {
             $receipt->forceFill([
                 'status' => GoodsReceiptStatus::Completed,
                 'completed_at' => now(),
             ])->save();
 
             $tugas = $this->perencana->planFor($receipt, $lines, $actor);
+
+            // A-296: label induk dibuat bersama penyelesaian GRN vendor.
+            if ($labels !== null && $receipt->receipt_type === ReceiptType::Vendor) {
+                try {
+                    app(CreatePackageLabels::class)->handle($receipt->refresh(), $labels, $actor);
+                } catch (LabelRuleException $e) {
+                    throw ReceiptRuleException::rule($e->rule, $e->getMessage(), $e->fieldErrors);
+                }
+            }
 
             // Katalog §2.7: TRF `completed` saat GRN tujuan selesai (A-107).
             if ($receipt->receipt_type === ReceiptType::Transfer) {

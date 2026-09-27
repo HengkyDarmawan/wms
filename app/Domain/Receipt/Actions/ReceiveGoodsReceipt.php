@@ -6,6 +6,7 @@ namespace App\Domain\Receipt\Actions;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Adjustment\Actions\CreateStockAdjustment;
+use App\Domain\Label\Support\PackageLabelLedger;
 use App\Domain\PurchaseRequest\Support\PurchaseReceipts;
 use App\Domain\Receipt\Enums\GoodsReceiptStatus;
 use App\Domain\Receipt\Enums\ReceiptType;
@@ -17,6 +18,7 @@ use App\Domain\Receipt\Support\ReceiptBins;
 use App\Domain\Receipt\Support\TrackingRecords;
 use App\Domain\Return\Support\ReturnProgress;
 use App\Domain\Shipment\Models\Shipment;
+use App\Domain\Shipment\Models\ShipmentLine;
 use App\Domain\Stock\Enums\StockEventType;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Exceptions\LedgerException;
@@ -117,20 +119,60 @@ class ReceiveGoodsReceipt
         });
     }
 
+    /**
+     * A-287: bagian **Baik** masuk bin Penerimaan (atau Karantina bila QC lama
+     * wajib, A-79); bagian **Rusak** masuk bin Karantina gudang berkondisi
+     * Rusak tanpa QC dan menunggu RTV. Keduanya kejadian `goods_received`
+     * dengan kondisi di payload; bagian Kurang tidak menyentuh stok.
+     */
     private function terimaVendor(GoodsReceipt $receipt, GoodsReceiptLine $line, ?User $actor): void
     {
-        $wajibQc = $this->qc->required($line->item, ReceiptType::Vendor);
-        $bin = $wajibQc ? $this->bins->quarantine($receipt->warehouse) : $this->bins->receiving($receipt->warehouse);
-        $kondisi = $wajibQc ? StockStatus::Quarantine : StockStatus::Available;
-
         $turunan = $this->pelacakan->materialize($receipt, $line);
+        $line->forceFill($turunan)->save();
 
-        $line->forceFill($turunan + ['receiving_bin_id' => $bin->id])->save();
+        $payload = [
+            'grn_number' => $receipt->number,
+            'receipt_type' => ReceiptType::Vendor->value,
+            'vendor_id' => $receipt->vendor_id,
+            'vendor_name' => $receipt->vendor?->name,
+            'vendor_doc_no' => $receipt->vendor_doc_no,
+            'po_ref' => $receipt->po_ref,
+        ] + ($line->is_bonus ? ['is_bonus' => true] : [])
+            + ((float) $line->qty_short > 0 ? ['qty_vendor' => (float) $line->qty_vendor, 'qty_short' => (float) $line->qty_short] : [])
+            + app(PurchaseReceipts::class)->eventPayload($line);
 
-        $this->posting($line, new MovementRequest(
+        if ((float) $line->qty_received > 0) {
+            $wajibQc = $this->qc->required($line->item, ReceiptType::Vendor);
+            $bin = $wajibQc ? $this->bins->quarantine($receipt->warehouse) : $this->bins->receiving($receipt->warehouse);
+            $kondisi = $wajibQc ? StockStatus::Quarantine : StockStatus::Available;
+
+            $line->forceFill(['receiving_bin_id' => $bin->id])->save();
+
+            $this->posting($line, $this->gerakanVendor($receipt, $line, $turunan, $actor, (float) $line->qty_received, (int) $bin->id, $kondisi, null,
+                $payload + ['qc_required' => $wajibQc, 'stock_status' => $kondisi->value]));
+        }
+
+        if ((float) $line->qty_damaged > 0) {
+            $karantina = $this->bins->quarantine($receipt->warehouse);
+
+            $line->forceFill(['damaged_bin_id' => $karantina->id])->save();
+
+            $this->posting($line, $this->gerakanVendor($receipt, $line, $turunan, $actor, (float) $line->qty_damaged, (int) $karantina->id, StockStatus::Damaged,
+                $line->damage_reason_id === null ? null : (int) $line->damage_reason_id,
+                $payload + ['qc_required' => false, 'stock_status' => StockStatus::Damaged->value, 'damage_reason' => $line->damageReason?->code]));
+        }
+    }
+
+    /**
+     * @param  array{lot_id: ?int, serial_id: ?int, piece_id: ?int}  $turunan
+     * @param  array<string, mixed>  $payload
+     */
+    private function gerakanVendor(GoodsReceipt $receipt, GoodsReceiptLine $line, array $turunan, ?User $actor, float $qty, int $binId, StockStatus $kondisi, ?int $alasan, array $payload): MovementRequest
+    {
+        return new MovementRequest(
             item: $line->item,
-            qtyBase: (float) $line->qty_received,
-            toBinId: (int) $bin->id,
+            qtyBase: $qty,
+            toBinId: $binId,
             stockStatus: $kondisi,
             lotId: $turunan['lot_id'],
             serialId: $turunan['serial_id'],
@@ -139,18 +181,11 @@ class ReceiveGoodsReceipt
             documentId: (int) $receipt->id,
             documentLineId: (int) $line->id,
             documentNumber: $receipt->number,
+            reasonCodeId: $alasan,
             performedBy: $actor,
             eventType: StockEventType::GoodsReceived,
-            eventPayload: [
-                'grn_number' => $receipt->number,
-                'receipt_type' => ReceiptType::Vendor->value,
-                'vendor_id' => $receipt->vendor_id,
-                'vendor_name' => $receipt->vendor?->name,
-                'vendor_doc_no' => $receipt->vendor_doc_no,
-                'po_ref' => $receipt->po_ref,
-                'qc_required' => $wajibQc,
-            ] + app(PurchaseReceipts::class)->eventPayload($line),
-        ));
+            eventPayload: $payload,
+        );
     }
 
     private function terimaTransfer(GoodsReceipt $receipt, Shipment $sj, GoodsReceiptLine $line, ?User $actor): void
@@ -196,6 +231,23 @@ class ReceiveGoodsReceipt
                 'to_project_id' => $receipt->warehouse?->project_id,
             ],
         ));
+
+        $this->bukaLabel($receipt, $line, (int) $bin->id, $line->shipmentLine?->pick_task_line_id, $actor);
+    }
+
+    /**
+     * A-300: label yang keluar utuh lewat baris PCK $pick kembali Di gudang
+     * penerima (bin penerimaan/retur) sejumlah yang diterima; label yang
+     * diambil sebagian tetap di gudang asal.
+     */
+    private function bukaLabel(GoodsReceipt $receipt, GoodsReceiptLine $line, int $binId, mixed $pick, ?User $actor): void
+    {
+        if ($pick === null) {
+            return;
+        }
+
+        app(PackageLabelLedger::class)->reopenFromPickLine((int) $pick, (int) $receipt->warehouse_id, $binId, (float) $line->qty_received,
+            ['type' => 'goods_receipt', 'id' => (int) $receipt->id, 'line_id' => (int) $line->id, 'number' => $receipt->number], $actor);
     }
 
     /**
@@ -248,6 +300,14 @@ class ReceiveGoodsReceipt
             performedBy: $actor,
             notes: 'Retur '.$rl->goodsReturn?->number.' · '.$rl->source()->label(),
         ));
+
+        // A-300: lewat SJ balik (PCK di Gudang Site) atau retur penjualan yang
+        // merujuk SJ asal — label yang dulu keluar utuh kembali Di gudang.
+        $this->bukaLabel($receipt, $line, (int) $bin->id, match (true) {
+            $sj !== null && ! $sj->isReturnPickup() => $line->shipmentLine?->pick_task_line_id,
+            $rl->origin_shipment_line_id !== null => ShipmentLine::query()->whereKey($rl->origin_shipment_line_id)->value('pick_task_line_id'),
+            default => null,
+        }, $actor);
     }
 
     private function posting(GoodsReceiptLine $line, MovementRequest $request): void

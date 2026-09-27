@@ -3,7 +3,7 @@
         <div>
             <h1 class="h3 mb-1">{{ __('Cetak label') }}</h1>
             <p class="text-muted mb-0">
-                {{ __('Label berisi kode, barcode Code128, dan QR untuk ditempel di bin atau barang.') }}
+                {{ __('Label berisi kode, barcode Code128 dan/atau QR sesuai desain, untuk ditempel di bin atau barang.') }}
             </p>
         </div>
     </div>
@@ -85,6 +85,15 @@
                                         <td>{{ $row->item?->code }} {{ $row->item?->name }}
                                             @if ($row->expiry_date) · {{ __('kedaluwarsa') }} {{ $row->expiry_date->format('d/m/Y') }} @endif</td>
                                         @break
+                                    @case('label_package')
+                                        <td><label for="lbl-{{ $row->id }}" class="font-monospace">{{ $row->code }}</label></td>
+                                        <td>{{ $row->item?->code }} {{ $row->item?->name }} · {{ __('isi') }} {{ \App\Domain\Master\Support\QtyFormat::withUnit($row->qty_remaining, $row->item?->baseUom?->code) }}
+                                            <span class="text-muted">· {{ $row->receipt?->number }} · {{ $row->warehouse?->code }}</span></td>
+                                        @break
+                                    @case('label_serial')
+                                        <td><label for="lbl-{{ $row->id }}" class="font-monospace">{{ $row->serial_no }}</label></td>
+                                        <td>{{ $row->item?->code }} {{ $row->item?->name }}</td>
+                                        @break
                                     @default
                                         <td><label for="lbl-{{ $row->id }}" class="font-monospace">{{ $row->piece_no }}</label></td>
                                         <td>{{ $row->item?->code }} {{ $row->item?->name }} · {{ \App\Domain\Template\Support\PrintFormat::qty($row->length) }}</td>
@@ -102,12 +111,15 @@
         <div class="card mt-3">
             <div class="card-body row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label" for="lbl-kertas">{{ __('Kertas') }} <span class="wajib">*</span></label>
-                    <select class="form-select" id="lbl-kertas" wire:model.live="paper">
-                        @foreach ($kertas as $k)
-                            <option value="{{ $k->value }}">{{ $k->label() }}</option>
+                    <label class="form-label" for="lbl-kertas">{{ __('Ukuran label') }} <span class="wajib">*</span></label>
+                    <select class="form-select" id="lbl-kertas" wire:model.live="formatId">
+                        @foreach ($formats as $f)
+                            <option value="{{ $f->id }}">{{ $f->name }} — {{ $f->summary() }}</option>
                         @endforeach
                     </select>
+                    @if ($bisaDesain)
+                        <div class="form-text"><a href="{{ route('label-designs.index', ['type' => $type, 'format' => $formatId]) }}">{{ __('Atur desain label ini') }}</a> · <a href="{{ route('label-formats.index') }}">{{ __('Kelola ukuran') }}</a></div>
+                    @endif
                 </div>
                 <div class="col-md-2">
                     <label class="form-label" for="lbl-salinan">{{ __('Salinan') }} <span class="wajib">*</span></label>

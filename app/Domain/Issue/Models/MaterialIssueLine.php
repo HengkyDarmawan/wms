@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Issue\Models;
 
+use App\Domain\Label\Casts\LabelClaims;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Piece;
@@ -28,7 +29,14 @@ class MaterialIssueLine extends Model
     {
         return [
             'qty_base' => 'decimal:4',
+            'labels' => LabelClaims::class,
         ];
+    }
+
+    /** A-299: jumlah yang tertutup label kemasan yang dipindai di baris ini. */
+    public function labelledQty(): float
+    {
+        return round(array_sum(array_map(fn ($c) => (float) ($c['qty'] ?? 0), $this->labels ?? [])), 4);
     }
 
     public function issue(): BelongsTo

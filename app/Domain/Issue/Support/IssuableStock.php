@@ -139,10 +139,15 @@ class IssuableStock
             }
 
             $catatan = trim((string) ($isian['work_note'] ?? ''));
+            // A-299: klaim label kemasan yang dipindai [{id, qty}] — diposting saat konfirmasi.
+            $klaim = collect(is_array($isian['labels'] ?? null) ? $isian['labels'] : [])
+                ->filter(fn ($k) => is_array($k) && is_numeric($k['id'] ?? null) && is_numeric($k['qty'] ?? null) && (float) $k['qty'] > 0)
+                ->map(fn ($k) => ['id' => (int) $k['id'], 'qty' => round((float) $k['qty'], 4)])->values()->all();
 
             if (isset($baris[$kunci])) {
                 $baris[$kunci]['qty_base'] = round($baris[$kunci]['qty_base'] + $jumlah, 4);
                 $baris[$kunci]['work_note'] ??= $catatan === '' ? null : mb_substr($catatan, 0, 255);
+                $baris[$kunci]['labels'] = array_merge($baris[$kunci]['labels'] ?? [], $klaim) ?: null;
             } else {
                 $baris[$kunci] = [
                     'item_id' => $c['item_id'],
@@ -152,7 +157,12 @@ class IssuableStock
                     'piece_id' => $c['piece_id'],
                     'qty_base' => $jumlah,
                     'work_note' => $catatan === '' ? null : mb_substr($catatan, 0, 255),
+                    'labels' => $klaim ?: null,
                 ];
+            }
+
+            if (array_sum(array_column($baris[$kunci]['labels'] ?? [], 'qty')) - $baris[$kunci]['qty_base'] > 0.00005) {
+                throw IssueRuleException::field('BR-LBL-04', 'qty_base', 'Jumlah pemakaian '.$c['item_code'].' kurang dari isi label yang dipindai; lepas labelnya dulu.');
             }
         }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Label\Support\PackageLabelLedger;
 use App\Domain\Request\Support\RequestFulfillment;
 use App\Domain\Return\Support\ReturnProgress;
 use App\Domain\Shipment\Enums\ShipmentStatus;
@@ -96,6 +97,9 @@ class ShipShipment
                 'shipped_at' => now(),
                 'notes' => $notes ?? $shipment->notes,
             ])->save();
+
+            // A-299: nomor SJ ditempel ke kejadian label yang keluar lewat PCK-nya.
+            app(PackageLabelLedger::class)->attachShipment($shipment);
 
             activity('shipment')
                 ->performedOn($shipment)

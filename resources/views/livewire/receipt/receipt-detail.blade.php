@@ -56,6 +56,52 @@
         </div>
     @endif
 
+    @if ($dialog === 'selesai')
+        <div class="card border-success mb-3">
+            <div class="card-header"><strong>{{ __('Selesaikan penerimaan & buat label kemasan') }}</strong></div>
+            <div class="card-body">
+                <p class="small text-muted">{{ __('Setiap kemasan (dus) yang masuk mendapat label induk yang bisa ditelusuri ke GRN, PO, dan vendor ini. Isi 0 dus bila baris tidak perlu dilabeli. Bagian rusak tidak dilabeli.') }}</p>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">{{ __('Item') }}</th>
+                                <th class="text-end" scope="col">{{ __('Baik') }}</th>
+                                <th scope="col" style="width: 9rem">{{ __('Jumlah dus') }}</th>
+                                <th scope="col" style="width: 11rem">{{ __('Isi per dus') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($lines->whereIn('id', array_keys($labelRencana)) as $l)
+                                <tr wire:key="grn-lbl-{{ $l->id }}">
+                                    <td>{{ $l->item?->code }} <div class="small text-muted">{{ $l->item?->name }}</div></td>
+                                    <td class="text-end">{{ \App\Domain\Master\Support\QtyFormat::withUnit((float) $l->qty_received, $l->item?->baseUom?->code) }}</td>
+                                    <td>
+                                        <input class="form-control form-control-sm @error('labelRencana.'.$l->id.'.packages') is-invalid @enderror" type="number" min="0" step="1"
+                                               wire:model="labelRencana.{{ $l->id }}.packages" aria-label="{{ __('Jumlah dus') }}">
+                                        @error('labelRencana.'.$l->id.'.packages') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <input class="form-control @error('labelRencana.'.$l->id.'.per_package') is-invalid @enderror" type="number" min="0" step="0.0001"
+                                                   wire:model="labelRencana.{{ $l->id }}.per_package" aria-label="{{ __('Isi per dus') }}">
+                                            <span class="input-group-text">{{ $l->item?->baseUom?->code }}</span>
+                                        </div>
+                                        @error('labelRencana.'.$l->id.'.per_package') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <button class="btn btn-success" type="button" wire:click="selesaikan">{{ __('Selesaikan & buat label') }}</button>
+                <button class="btn btn-outline-secondary" type="button" wire:click="tutupDialog">{{ __('Tutup') }}</button>
+            </div>
+        </div>
+    @endif
+
     @if ($dialog === 'qc')
         <div class="card border-primary mb-3">
             <div class="card-header"><strong>{{ __('Hasil QC') }}</strong></div>
@@ -99,8 +145,16 @@
                 <thead>
                     <tr>
                         <th scope="col">{{ __('Item') }}</th>
-                        <th scope="col">{{ __('Lot / serial / potongan') }}</th>
-                        <th class="text-end" scope="col">{{ __('Jumlah') }}</th>
+                        {{-- A-283/A-297: istilah pengguna; potongan hanya bila saklar menyala (A-284). --}}
+                        <th scope="col">{{ __('Batch / nomor seri') }}@if (\App\Domain\Master\Support\StockFeatures::piece()) {{ ' / '.__('potongan') }}@endif</th>
+                        @if ($kondisi)
+                            <th class="text-end" scope="col">{{ __('Dikirim vendor') }}</th>
+                            <th class="text-end" scope="col">{{ __('Baik') }}</th>
+                            <th class="text-end" scope="col">{{ __('Rusak') }}</th>
+                            <th class="text-end" scope="col">{{ __('Kurang') }}</th>
+                        @else
+                            <th class="text-end" scope="col">{{ __('Jumlah') }}</th>
+                        @endif
                         <th scope="col">{{ __('Bin terima') }}</th>
                         <th scope="col">{{ __('QC') }}</th>
                         <th scope="col"></th>
@@ -109,11 +163,37 @@
                 <tbody>
                     @foreach ($lines as $l)
                         <tr wire:key="grn-line-{{ $l->id }}">
-                            <td>{{ $l->item?->code }} <div class="small text-muted">{{ $l->item?->name }}</div></td>
+                            <td>
+                                {{ $l->item?->code }} @if ($l->is_bonus) <span class="badge text-bg-success">{{ __('Bonus') }}</span> @endif
+                                <div class="small text-muted">{{ $l->item?->name }}</div>
+                                @if ($l->is_bonus && $l->notes) <div class="small text-success-emphasis">{{ $l->notes }}</div> @endif
+                            </td>
                             <td class="small">
                                 {{ $l->trackingLabel() }}
                                 @if ($l->expiry_date) <div class="text-muted">{{ __('Kedaluwarsa') }} {{ $l->expiry_date->format('d/m/Y') }}</div> @endif
                             </td>
+                            @if ($kondisi)
+                                @php($satuan = $l->item?->baseUom?->code)
+                                <td class="text-end">
+                                    {{ $l->qty_vendor === null ? '—' : \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_vendor, $satuan) }}
+                                    @if ($l->typedQuantity()) <div class="small text-muted">{{ $l->typedQuantity() }}</div> @endif
+                                </td>
+                                <td class="text-end">
+                                    {{ \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_received, $satuan) }}
+                                    @if ($p = \App\Domain\Master\Support\QtyFormat::packaging($l->item, $l->qty_received)) <div class="small text-muted">{{ $p }}</div> @endif
+                                </td>
+                                <td class="text-end">
+                                    @if ((float) $l->qty_damaged > 0)
+                                        <span class="text-danger">{{ \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_damaged, $satuan) }}</span>
+                                        <div class="small text-muted">{{ $l->damageReason?->label }} · {{ $l->damagedBin?->code }}</div>
+                                        @php($sisaRetur = $l->damagedReturnable())
+                                        <div class="small {{ $sisaRetur > 0 ? 'text-danger-emphasis' : 'text-muted' }}">@if ($sisaRetur > 0){{ __('menunggu retur') }} {{ \App\Domain\Master\Support\QtyFormat::withUnit($sisaRetur, $satuan) }}@if ($kms = \App\Domain\Master\Support\QtyFormat::packaging($l->item, $sisaRetur)) ({{ $kms }})@endif @else{{ __('sudah dimuat RTV') }}@endif</div>
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td class="text-end">{{ (float) $l->qty_short > 0 ? \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_short, $satuan) : '—' }}</td>
+                            @else
                             <td class="text-end">
                                 {{ number_format((float) $l->qty_received, 2, ',', '.') }}
                                 @if ((float) $l->qty_excess > 0)
@@ -121,6 +201,7 @@
                                     <div class="small text-warning-emphasis">+{{ number_format((float) $l->qty_excess, 2, ',', '.') }} {{ __('kelebihan → ADJ') }}</div>
                                 @endif
                             </td>
+                            @endif
                             <td>{{ $l->receivingBin?->code ?? '—' }}</td>
                             <td>
                                 @if ($l->qc_result)
@@ -128,6 +209,8 @@
                                     @if ($l->qcReason) <div class="small text-muted">{{ $l->qcReason->label }}</div> @endif
                                 @elseif ($l->receivingBinIsQuarantine())
                                     <span class="badge text-bg-warning">{{ __('Menunggu QC') }}</span>
+                                @elseif ((float) $l->qty_received <= 0)
+                                    <span class="text-muted small">—</span>
                                 @else
                                     <span class="text-muted small">{{ __('Tanpa QC') }}</span>
                                 @endif
@@ -154,7 +237,7 @@
             @endcan
             @if ($grn->status->value === 'received')
                 @can('complete', $grn)
-                    <button class="btn btn-success" type="button" wire:click="selesaikan">{{ __('Selesaikan') }}</button>
+                    <button class="btn btn-success" type="button" wire:click="{{ $bisaLabel ? 'mintaSelesai' : 'selesaikan' }}">{{ __('Selesaikan') }}</button>
                 @endcan
             @endif
             @if ($bisaReplan)
@@ -162,7 +245,7 @@
                     <button class="btn btn-outline-success" type="button" wire:click="buatUlangPutaway">{{ __('Buat ulang put-away') }}</button>
                 @endcan
             @endif
-            @if (in_array($grn->status->value, ['received', 'completed'], true) && $grn->receipt_type->value === 'vendor')
+            @if ($bisaRetur)
                 @can('create', App\Domain\Receipt\Models\VendorReturn::class)
                     <a class="btn btn-outline-danger" href="{{ route('vendor-returns.create', ['receipt' => $grn->id]) }}">{{ __('Retur ke vendor') }}</a>
                 @endcan
@@ -172,6 +255,10 @@
             @endcan
         </div>
     </div>
+
+    @if ($adaLabel)
+        <livewire:label.receipt-labels :receipt-id="$grn->id" :key="'grn-label-'.$grn->id" />
+    @endif
 
     @if ($crossDock->isNotEmpty())
         <div class="card border-info mb-3">
@@ -228,7 +315,7 @@
         <ul class="list-group list-group-flush small">
             @forelse ($riwayat as $a)
                 <li class="list-group-item">
-                    {{ $a->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $a->causer?->name ?? __('Sistem') }} · {{ $a->description }}
+                    {{ $a->created_at?->lokal()->format('d/m/Y H:i') }} · {{ $a->causer?->name ?? __('Sistem') }} · {{ \App\Domain\Shared\Support\ActivityText::label($a->description) }}
                 </li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada riwayat.') }}</li>

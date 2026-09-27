@@ -53,10 +53,12 @@
                 <label class="form-label" for="isu-pindai">{{ __('Pindai barang') }}</label>
                 <input class="form-control @error('kodePindai') is-invalid @enderror" id="isu-pindai" type="text" data-scan
                        autocomplete="off" wire:model="kodePindai" wire:keydown.enter.prevent="pindai"
-                       placeholder="{{ __('Kode item, barcode, atau label lot/serial/potongan') }}">
+                       placeholder="{{ __('Kode item, barcode, label kemasan, atau label lot/serial/potongan') }}">
                 @error('kodePindai') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                <div class="form-text">{{ __('Tiap pindai menambah satu; serial terisi 1 dan potongan terisi utuh. Jumlah tetap bisa diubah manual.') }}</div>
+                <div class="form-text">{{ __('Tiap pindai menambah satu; serial terisi 1 dan potongan terisi utuh. Jumlah tetap bisa diubah manual.') }}
+                    {{ __('Barang berlabel kemasan wajib dipindai labelnya.') }}</div>
             </div>
+            <div class="px-3 pt-3">@include('livewire.label._isi-dialog')</div>
         @endif
         <div class="table-responsive">
             <table class="table align-middle mb-0">
@@ -80,6 +82,13 @@
                             <td class="text-end">{{ number_format((float) $c['max'], 2, ',', '.') }} <span class="small text-muted">{{ $c['uom'] }}</span></td>
                             <td style="max-width: 9rem">
                                 <input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model="qty.{{ $kunci }}" @disabled($c['frozen'])>
+                                @foreach ($labels[$kunci] ?? [] as $k)
+                                    <span class="badge text-bg-light border font-monospace me-1 mt-1" wire:key="isu-lbl-{{ $kunci }}-{{ $k['id'] }}">
+                                        {{ $kodeLabel[$k['id']] ?? '#'.$k['id'] }} · {{ \App\Domain\Label\Support\PackageLabelLedger::angka((float) $k['qty']) }}
+                                        <button class="btn-close ms-1" type="button" style="font-size: .55rem"
+                                                wire:click="lepasLabel('{{ $kunci }}', {{ $k['id'] }})" aria-label="{{ __('Lepas label') }}"></button>
+                                    </span>
+                                @endforeach
                             </td>
                             <td>
                                 <input class="form-control form-control-sm" type="text" maxlength="255" wire:model="note.{{ $kunci }}" placeholder="{{ __('mis. pengecoran pondasi STA 0+100') }}" @disabled($c['frozen'])>

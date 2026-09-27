@@ -8,6 +8,7 @@ use App\Domain\Access\Models\User;
 use App\Domain\Issue\Exceptions\IssueRuleException;
 use App\Domain\Issue\Models\MaterialIssue;
 use App\Domain\Issue\Models\MaterialIssueLine;
+use App\Domain\Label\Support\PackageLabelLedger;
 use App\Domain\Stock\Enums\StockEventType;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Models\StockEvent;
@@ -87,6 +88,10 @@ class IssuePoster
             );
 
             $line->forceFill(['movement_id' => $movement->id])->save();
+
+            // A-300: label yang keluar lewat baris asal kembali Di gudang.
+            app(PackageLabelLedger::class)->reopenForIssueLine((int) $asal->id,
+                ['type' => 'material_issue', 'id' => (int) $reversal->id, 'line_id' => (int) $line->id, 'number' => (string) $reversal->number], null);
         }
     }
 

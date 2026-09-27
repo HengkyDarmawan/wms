@@ -32,6 +32,10 @@ enum DocumentTemplateType: string
     case LabelItem = 'label_item';
     case LabelLot = 'label_lot';
     case LabelPiece = 'label_piece';
+    /** A-296: label kemasan induk/isi. */
+    case LabelPackage = 'label_package';
+    /** A-298: label serial alat bernomor seri. */
+    case LabelSerial = 'label_serial';
 
     public function label(): string
     {
@@ -56,6 +60,8 @@ enum DocumentTemplateType: string
             self::LabelItem => __('Label item'),
             self::LabelLot => __('Label lot'),
             self::LabelPiece => __('Label potongan'),
+            self::LabelPackage => __('Label kemasan'),
+            self::LabelSerial => __('Label serial'),
         };
     }
 
@@ -128,8 +134,14 @@ enum DocumentTemplateType: string
     }
 
     /** @return array<int, self> */
-    public static function labels(): array
+    public static function labels(bool $pieceOn = true): array
     {
-        return array_values(array_filter(self::cases(), fn (self $t) => $t->isLabel()));
+        return array_values(array_filter(self::cases(), fn (self $t) => $t->isLabelAvailable($pieceOn)));
+    }
+
+    /** A-284: label potongan hanya bila saklar per potong menyala. */
+    public function isLabelAvailable(bool $pieceOn): bool
+    {
+        return $this->isLabel() && ($this !== self::LabelPiece || $pieceOn);
     }
 }

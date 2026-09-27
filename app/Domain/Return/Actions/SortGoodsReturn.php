@@ -6,9 +6,11 @@ namespace App\Domain\Return\Actions;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Asset\Support\AssetCustody;
+use App\Domain\Label\Support\PackageLabelLedger;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Piece;
 use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Receipt\Models\GoodsReceiptLine;
 use App\Domain\Return\Enums\GoodsReturnStatus;
 use App\Domain\Return\Enums\ReturnSorting;
 use App\Domain\Return\Enums\ReturnSource;
@@ -295,6 +297,18 @@ class SortGoodsReturn
                 eventType: $event,
                 eventPayload: $this->payload($ret, $asal, $pilah, (float) $p['qty']),
             ));
+        }
+
+        // A-301: label kemasan yang ikut kembali lewat retur ini dan dipilah
+        // rusak/waste menjadi Batal beralasan (dasar laporan barang bermasalah).
+        if (in_array($pilah, [ReturnSorting::Damaged, ReturnSorting::Waste], true)) {
+            app(PackageLabelLedger::class)->writeOffReturn(
+                GoodsReceiptLine::query()->where('goods_return_line_id', $asal->id)->pluck('id')->map(fn ($id) => (int) $id)->all(),
+                (float) $p['qty'],
+                $p['reason_code_id'] === null ? null : (int) $p['reason_code_id'],
+                ['type' => 'goods_return', 'id' => (int) $ret->id, 'line_id' => (int) $target->id, 'number' => $ret->number],
+                $actor,
+            );
         }
 
         $target->forceFill([

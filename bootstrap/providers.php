@@ -8,6 +8,7 @@ use App\Providers\AssetServiceProvider;
 use App\Providers\ConversionServiceProvider;
 use App\Providers\CountServiceProvider;
 use App\Providers\IssueServiceProvider;
+use App\Providers\LabelServiceProvider;
 use App\Providers\MasterServiceProvider;
 use App\Providers\NotificationServiceProvider;
 use App\Providers\PlatformServiceProvider;
@@ -22,6 +23,7 @@ use App\Providers\TemplateServiceProvider;
 use App\Providers\TenancyServiceProvider;
 use App\Providers\TransferServiceProvider;
 use App\Providers\WarehouseServiceProvider;
+use App\Providers\WhatsAppServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -46,4 +48,6 @@ return [
     PurchaseRequestServiceProvider::class,
     PurchasingServiceProvider::class,
     TemplateServiceProvider::class,
+    LabelServiceProvider::class,
+    WhatsAppServiceProvider::class,
 ];

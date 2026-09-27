@@ -12,6 +12,8 @@ use App\Domain\Issue\Exceptions\IssueRuleException;
 use App\Domain\Issue\Models\MaterialIssue;
 use App\Domain\Issue\Support\IssuableStock;
 use App\Domain\Issue\Support\IssuePoster;
+use App\Domain\Label\Exceptions\LabelRuleException;
+use App\Domain\Label\Support\PackageLabelLedger;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -70,7 +72,32 @@ class ConfirmMaterialIssue
             'qty_base' => (float) $l->qty_base,
         ])->all());
 
-        $this->poster->consume($isu, $actor);
+        $baris = $isu->lines()->with('item:id,code')->orderBy('id')->get();
+        $label = app(PackageLabelLedger::class);
+
+        try {
+            // A-299: barang berlabel yang dipakai habis wajib dipindai labelnya.
+            $label->assertCoverage((int) $isu->warehouse_id, $baris->groupBy(fn ($l) => $l->item_id.':'.$l->lot_id)
+                ->map(fn ($g) => [
+                    'item_id' => (int) $g->first()->item_id,
+                    'lot_id' => $g->first()->lot_id === null ? null : (int) $g->first()->lot_id,
+                    'qty' => round((float) $g->sum('qty_base'), 4),
+                    'claimed' => round((float) $g->sum(fn ($l) => $l->labelledQty()), 4),
+                    'label' => 'Barang '.$g->first()->item?->code,
+                ])->values()->all());
+
+            $this->poster->consume($isu, $actor);
+
+            foreach ($baris->filter(fn ($l) => ($l->labels ?? []) !== []) as $l) {
+                $label->issue(
+                    $label->resolveClaims($l->labels, (int) $isu->warehouse_id, (int) $l->item_id, $l->lot_id === null ? null : (int) $l->lot_id, 'Baris '.$l->item?->code, true),
+                    ['type' => 'material_issue', 'id' => (int) $isu->id, 'line_id' => (int) $l->id, 'number' => $isu->number],
+                    $actor,
+                );
+            }
+        } catch (LabelRuleException $e) {
+            throw IssueRuleException::rule($e->rule, $e->getMessage());
+        }
 
         $isu->forceFill([
             'status' => MaterialIssueStatus::Confirmed,

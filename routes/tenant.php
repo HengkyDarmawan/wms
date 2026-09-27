@@ -50,7 +50,9 @@ use App\Http\Controllers\Shipment\DeliveryTokenController;
 use App\Http\Controllers\Shipment\ShipmentController;
 use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Template\DocumentLayoutController;
+use App\Http\Controllers\Template\LabelDesignController;
 use App\Http\Controllers\Template\PrintController;
+use App\Http\Controllers\Template\SignatureVerifyController;
 use App\Http\Controllers\Transfer\TransferController;
 use App\Http\Controllers\Warehouse\BinController;
 use App\Http\Controllers\Warehouse\WarehouseController;
@@ -114,8 +116,13 @@ Route::middleware('signed')->group(function (): void {
 Route::middleware('throttle:30,1')->group(function (): void {
     Route::get('/terima/{token}', [DeliveryTokenController::class, 'show'])->name('terima.show');
     Route::post('/terima/{token}/otp', [DeliveryTokenController::class, 'otp'])->name('terima.otp');
+    Route::post('/terima/{token}/kirim-ulang', [DeliveryTokenController::class, 'resend'])->middleware('throttle:5,1')->name('terima.resend');
     Route::post('/terima/{token}', [DeliveryTokenController::class, 'store'])->name('terima.store');
 });
+
+// Verifikasi segel tanda tangan dokumen cetak (A-264): publik, hanya membaca.
+Route::get('/verifikasi/{token}', [SignatureVerifyController::class, 'show'])
+    ->middleware('throttle:30,1')->name('signature.verify');
 
 Route::middleware('auth')->group(function (): void {
     // Notifikasi in-app untuk semua user, termasuk klien (Blueprint §10).
@@ -125,6 +132,11 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/notifications/preferences', [NotificationController::class, 'preferences'])->name('notifications.preferences');
     Route::post('/notifications/preferences', [NotificationController::class, 'savePreferences'])->name('notifications.preferences.save');
 
+    // "Masuk sebagai" (A-260): di luar grup internal supaya bisa dipakai dari
+    // portal saat sedang menjadi Klien. Izin diperiksa terhadap Admin asli.
+    Route::post('/impersonate/leave', [ImpersonationController::class, 'destroy'])->name('impersonate.leave');
+    Route::post('/impersonate/{user}', [ImpersonationController::class, 'store'])->whereNumber('user')->name('impersonate.store');
+
     // Back-office (user internal)
     Route::middleware('internal')->group(function (): void {
         Route::get('/', DashboardController::class)->name('dashboard');
@@ -132,11 +144,6 @@ Route::middleware('auth')->group(function (): void {
         // Wizard setup awal company (A-191).
         Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
         Route::post('/setup/terms', [SetupController::class, 'acceptTerms'])->name('setup.terms');
-    // "Masuk sebagai" (A-260): di luar grup internal supaya bisa dipakai dari
-    // portal saat sedang menjadi Klien. Izin diperiksa terhadap Admin asli.
-    Route::post('/impersonate/leave', [ImpersonationController::class, 'destroy'])->name('impersonate.leave');
-    Route::post('/impersonate/{user}', [ImpersonationController::class, 'store'])->whereNumber('user')->name('impersonate.store');
-
         Route::post('/setup/complete', [SetupController::class, 'complete'])->name('setup.complete');
         // Pengaturan company (11-master §6, A-230): ambang, saklar fitur, zona waktu.
         Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company');
@@ -177,16 +184,22 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/settings/support-access', [SupportAccessController::class, 'index'])
             ->name('support-access.index');
 
+        // "Masuk sebagai" (10-access §6.8, A-260): pemilih untuk Admin Company.
+        Route::get('/impersonate', [ImpersonationController::class, 'index'])->name('impersonate.index');
+
         // Template dokumen & label (18-template-dokumen-label §6). Cetak = GET, hanya membaca.
         Route::get('/print/{type}/{id}', [PrintController::class, 'document'])
             ->whereNumber('id')->name('print.document');
         Route::get('/labels', [PrintController::class, 'labelForm'])->name('labels.index');
         Route::get('/labels/print', [PrintController::class, 'labels'])->name('labels.print');
+        // Telusuri label kemasan (A-302): hanya membaca; izin `item.view` di komponen.
+        Route::view('/labels/trace', 'label.trace')->name('labels.trace');
+        // Ukuran & desain label (A-261, A-262). Simpan lewat aksi Livewire (POST).
+        Route::get('/settings/label-formats', [LabelDesignController::class, 'formats'])->name('label-formats.index');
+        Route::get('/settings/label-designs', [LabelDesignController::class, 'designs'])->name('label-designs.index');
+        Route::get('/settings/label-designs/preview', [LabelDesignController::class, 'preview'])->name('label-designs.preview');
         Route::get('/settings/document-layout', [DocumentLayoutController::class, 'edit'])->name('document-layout.edit');
         Route::get('/settings/document-layout/preview', [DocumentLayoutController::class, 'preview'])->name('document-layout.preview');
-        // "Masuk sebagai" (10-access §6.8, A-260): pemilih untuk Admin Company.
-        Route::get('/impersonate', [ImpersonationController::class, 'index'])->name('impersonate.index');
-
         Route::get('/settings/document-layout/logo', [DocumentLayoutController::class, 'logo'])->name('document-layout.logo');
         Route::post('/settings/document-layout/logo', [DocumentLayoutController::class, 'storeLogo'])->name('document-layout.logo.store');
         Route::delete('/settings/document-layout/logo', [DocumentLayoutController::class, 'destroyLogo'])->name('document-layout.logo.destroy');
@@ -202,8 +215,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/items', [ItemController::class, 'index'])->name('items.index');
         // Impor dari Excel (A-192, A-207, A-258 struktur gudang).
         Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
-        Route::get('/imports/{type}/template', [ImportController::class, 'template'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock', 'bins'])->name('imports.template');
-        Route::post('/imports/{type}', [ImportController::class, 'store'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock', 'bins'])->name('imports.store');
+        Route::get('/imports/{type}/template', [ImportController::class, 'template'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock', 'warehouses', 'bins'])->name('imports.template');
+        Route::post('/imports/{type}', [ImportController::class, 'store'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock', 'warehouses', 'bins'])->name('imports.store');
         Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
         Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
         Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
@@ -333,6 +346,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
         Route::get('/purchase-orders/{purchaseOrder}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
         Route::get('/vendor-prices', [PurchaseOrderController::class, 'vendorPrices'])->name('vendor-prices.index');
+        Route::get('/items/{item}/price-history', [PurchaseOrderController::class, 'priceHistory'])->name('items.price-history');
 
         // Tagihan langganan Admin Company (17-platform-login §6.2). Unggah bukti
         // bayar tetap boleh saat langganan ditangguhkan (BR-SUB-02).

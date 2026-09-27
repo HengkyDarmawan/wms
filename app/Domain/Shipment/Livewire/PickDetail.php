@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace App\Domain\Shipment\Livewire;
 
+use App\Domain\Label\Livewire\Concerns\CapturesPackageLabels;
+use App\Domain\Label\Models\PackageLabel;
+use App\Domain\Label\Support\PackageLabelLedger;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Master\Support\ScanCode;
 use App\Domain\Shipment\Actions\OverrideFrozenBinPick;
 use App\Domain\Shipment\Actions\ProcessPickTask;
+use App\Domain\Shipment\Enums\PickTaskStatus;
+use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Livewire\Concerns\HandlesShipmentRules;
 use App\Domain\Shipment\Models\PickTask;
 use App\Domain\Shipment\Models\PickTaskLine;
 use App\Domain\Warehouse\Models\Bin;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -25,6 +32,7 @@ use Livewire\Component;
  */
 class PickDetail extends Component
 {
+    use CapturesPackageLabels;
     use HandlesShipmentRules;
 
     #[Locked]
@@ -62,13 +70,17 @@ class PickDetail extends Component
     public function render(): View
     {
         $task = $this->task();
+        $lines = $task->lines()
+            ->with('item:id,code,name', 'bin:id,code', 'suggestedBin:id,code', 'shortReason:id,code,name')
+            ->orderBy('id')
+            ->get();
 
         return view('livewire.shipment.pick-detail', [
             'task' => $task,
-            'lines' => $task->lines()
-                ->with('item:id,code,name', 'bin:id,code', 'suggestedBin:id,code', 'shortReason:id,code,name')
-                ->orderBy('id')
-                ->get(),
+            'lines' => $lines,
+            'kodeLabel' => $this->kodeLabel($lines->flatMap(fn (PickTaskLine $l) => $l->labels ?? [])),
+            'wajibLabel' => $this->wajibLabel($task, $lines),
+            'labelDialog' => $this->labelDialog(),
             'bins' => Bin::query()
                 ->where('warehouse_id', $task->warehouse_id)
                 ->active()
@@ -144,6 +156,13 @@ class PickDetail extends Component
             return;
         }
 
+        // A-299: label kemasan induk/isi dikenali sebelum kode item.
+        if (($label = ScanCode::label($kode)) !== null) {
+            $this->pindaiLabel($task, $label);
+
+            return;
+        }
+
         $belum = $task->lines()->with('item:id,code,barcode', 'lot:id,lot_no', 'serial:id,serial_no', 'piece:id,piece_no')
             ->whereNull('scanned_at')->orderBy('id')->get();
         $cocokItem = fn (PickTaskLine $l) => mb_strtoupper((string) $l->item?->code) === $kode || mb_strtoupper((string) $l->item?->barcode) === $kode;
@@ -175,6 +194,99 @@ class PickDetail extends Component
 
         $this->sorot = (int) $baris->id;
         $this->catat((int) $baris->id, $action);
+    }
+
+    /** Melepas klaim label dari baris (salah pindai). */
+    public function lepasLabel(int $lineId, int $labelId, ProcessPickTask $action): void
+    {
+        $this->authorize('complete', $this->task());
+
+        $this->jalankan(fn () => $action->releaseLabel($this->line($lineId), $labelId));
+    }
+
+    /**
+     * A-299: label → baris item+lot yang sama yang belum penuh tertutup label
+     * (utamakan bin aktif). Induk membuka dialog jumlah isi; isi diklaim utuh.
+     */
+    private function pindaiLabel(PickTask $task, PackageLabel $label): void
+    {
+        $sama = $task->lines()->orderBy('id')->get()
+            ->filter(fn (PickTaskLine $l) => (int) $l->item_id === (int) $label->item_id);
+
+        $baris = $sama->filter(fn (PickTaskLine $l) => (int) $l->lot_id === (int) $label->lot_id)
+            ->sortByDesc(fn (PickTaskLine $l) => [
+                $l->labelledQty() + 0.00005 < (float) $l->qty_allocated,
+                (int) ($this->isian[$l->id]['bin_id'] ?? 0) === $this->binPindai,
+            ])
+            ->first();
+
+        if ($baris === null) {
+            $this->addError('kodePindai', $sama->isEmpty()
+                ? __('Label :kode untuk item yang tidak ada di tugas ini.', ['kode' => $label->code])
+                : __('Label :kode berlot lain dari lot yang dialokasikan.', ['kode' => $label->code]));
+
+            return;
+        }
+
+        $this->sorot = (int) $baris->id;
+        $this->pindaiLabelKemasan($label, (string) $baris->id, (float) $baris->qty_allocated - $baris->labelledQty(), 'kodePindai');
+    }
+
+    protected function klaimLabel(string $baris, PackageLabel $label, float $qty): bool
+    {
+        $line = $this->line((int) $baris);
+        $this->authorize('complete', $line->pickTask);
+
+        try {
+            $line = app(ProcessPickTask::class)->claimLabel($line, $label, $qty, auth()->user());
+        } catch (ShipmentRuleException $e) {
+            $this->addError($this->labelInduk === null ? 'kodePindai' : 'labelIsi', $e->fieldErrors === [] ? $e->getMessage() : implode(' ', $e->fieldErrors));
+
+            return false;
+        }
+
+        $isian = (float) ($this->isian[$line->id]['qty_picked'] ?? 0);
+        $this->isian[$line->id]['qty_picked'] = (string) max($isian, (float) $line->qty_picked);
+
+        if ($this->binPindai !== null) {
+            $this->isian[$line->id]['bin_id'] = (string) $this->binPindai;
+        }
+
+        return true;
+    }
+
+    /**
+     * "Label wajib: X dari Y" per baris, dihitung per item+lot di gudang tugas.
+     *
+     * @param  Collection<int, PickTaskLine>  $lines
+     * @return array<int, array{wajib: float, klaim: float}>
+     */
+    private function wajibLabel(PickTask $task, Collection $lines): array
+    {
+        if ($task->status !== PickTaskStatus::InProgress) {
+            return [];
+        }
+
+        $ledger = app(PackageLabelLedger::class);
+        $hasil = [];
+
+        foreach ($lines->groupBy(fn (PickTaskLine $l) => $l->item_id.':'.$l->lot_id) as $grup) {
+            $pertama = $grup->first();
+            $keluar = (float) $grup->sum(fn (PickTaskLine $l) => (float) ($this->isian[$l->id]['qty_picked'] ?? $l->qty_allocated));
+            $wajib = $ledger->required((int) $task->warehouse_id, (int) $pertama->item_id, $pertama->lot_id === null ? null : (int) $pertama->lot_id, $keluar);
+
+            if ($wajib <= 0) {
+                continue;
+            }
+
+            $klaim = (float) $grup->sum(fn (PickTaskLine $l) => $l->labelledQty());
+
+            foreach ($grup as $l) {
+                $hasil[$l->id] = ['wajib' => $wajib, 'klaim' => $klaim];
+            }
+        }
+
+        return $hasil;
     }
 
     public function selesaikan(ProcessPickTask $action): void

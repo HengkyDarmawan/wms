@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Shipment\Models;
 
+use App\Domain\Label\Casts\LabelClaims;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Piece;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Serial;
+use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Warehouse\Models\Bin;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -42,7 +44,14 @@ class PickTaskLine extends Model
             'qty_allocated' => 'decimal:4',
             'qty_picked' => 'decimal:4',
             'scanned_at' => 'datetime',
+            'labels' => LabelClaims::class,
         ];
+    }
+
+    /** A-299: jumlah yang tertutup label kemasan yang dipindai di baris ini. */
+    public function labelledQty(): float
+    {
+        return round(array_sum(array_map(fn ($c) => (float) ($c['qty'] ?? 0), $this->labels ?? [])), 4);
     }
 
     /** Lintas cakupan: baris hanya terjangkau dari dokumen yang sudah boleh dibaca. */
@@ -117,7 +126,7 @@ class PickTaskLine extends Model
     {
         $dimuat = (float) $this->shipmentLines()
             ->whereHas('shipment', fn (Builder $q) => $q->withoutGlobalScopes()
-                ->where('status', '!=', \App\Domain\Shipment\Enums\ShipmentStatus::Cancelled->value))
+                ->where('status', '!=', ShipmentStatus::Cancelled->value))
             ->sum('qty_shipped');
 
         return max(0, (float) $this->qty_picked - $dimuat);

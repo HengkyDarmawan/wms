@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Receipt\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Label\Support\PackageLabelLedger;
 use App\Domain\PurchaseRequest\Support\BackorderPurchases;
 use App\Domain\Receipt\Enums\PutawayTaskStatus;
 use App\Domain\Receipt\Exceptions\ReceiptRuleException;
@@ -105,6 +106,12 @@ class CompletePutaway
                     'override_reason' => $alasan,
                     'scanned_at' => now(),
                 ])->save();
+
+                // A-296: label kemasan baris GRN itu ikut pindah lokasi (stok sudah lewat kartu stok).
+                if ($l->goods_receipt_line_id !== null) {
+                    app(PackageLabelLedger::class)->putAway((int) $l->goods_receipt_line_id, (int) $l->from_bin_id, (int) $bin->id,
+                        ['type' => 'putaway_task', 'id' => (int) $task->id, 'line_id' => (int) $l->id, 'number' => $task->number], $actor);
+                }
             }
 
             $task->forceFill([

@@ -6,6 +6,9 @@ namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Count\Support\FrozenBinPickShift;
+use App\Domain\Label\Exceptions\LabelRuleException;
+use App\Domain\Label\Models\PackageLabel;
+use App\Domain\Label\Support\PackageLabelLedger;
 use App\Domain\Request\Models\MaterialRequestLine;
 use App\Domain\Shipment\Enums\PickTaskStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
@@ -105,6 +108,12 @@ class ProcessPickTask
             );
         }
 
+        // A-299: jumlah ambil tidak boleh kurang dari isi label yang sudah dipindai.
+        if ($qtyPicked + 0.00005 < $line->labelledQty()) {
+            throw ShipmentRuleException::field('BR-LBL-04', 'qty_picked', 'Jumlah diambil kurang dari isi label yang sudah dipindai ('
+                .PackageLabelLedger::angka($line->labelledQty()).'); lepas labelnya dulu.');
+        }
+
         $binBaru = $binId ?? (int) $line->bin_id;
 
         if ($binBaru !== (int) $line->bin_id) {
@@ -126,6 +135,58 @@ class ProcessPickTask
             'short_reason_id' => $qtyPicked < (float) $line->qty_allocated ? $shortReasonId : null,
             'scanned_at' => now(),
         ])->save();
+
+        return $line->refresh();
+    }
+
+    /**
+     * A-299: label kemasan yang dipindai di baris — induk dengan jumlah isi
+     * pilihan, label isi utuh. Klaim disimpan di baris dan baru diposting saat
+     * PCK selesai (stok bergerak), jadi PCK batal tidak menyentuh label.
+     */
+    public function claimLabel(PickTaskLine $line, PackageLabel $label, float $qty, ?User $actor = null): PickTaskLine
+    {
+        $task = $line->pickTask;
+
+        if ($task->status !== PickTaskStatus::InProgress) {
+            throw ShipmentRuleException::rule('BR-SJ-01', 'Tugas picking harus berstatus Dikerjakan.');
+        }
+
+        $klaim = collect($line->labels ?? [])->reject(fn ($c) => (int) $c['id'] === (int) $label->id)->values()->all();
+        $klaim[] = ['id' => (int) $label->id, 'qty' => round($qty, 4)];
+
+        try {
+            app(PackageLabelLedger::class)->resolveClaims($klaim, (int) $task->warehouse_id, (int) $line->item_id,
+                $line->lot_id === null ? null : (int) $line->lot_id, 'Baris '.$line->item?->code);
+        } catch (LabelRuleException $e) {
+            throw ShipmentRuleException::rule($e->rule, $e->getMessage());
+        }
+
+        $total = round(array_sum(array_column($klaim, 'qty')), 4);
+
+        if ($total - (float) $line->qty_allocated > 0.00005) {
+            throw ShipmentRuleException::field('BR-SJ-02', 'qty_picked', 'Isi label yang dipindai ('.PackageLabelLedger::angka($total)
+                .') melebihi alokasi baris ('.PackageLabelLedger::angka((float) $line->qty_allocated).').');
+        }
+
+        // Baris dianggap tercatat bila label sudah menutup seluruh alokasi;
+        // bila belum, petugas memindai label berikutnya atau menekan Catat.
+        $line->forceFill([
+            'labels' => $klaim,
+            'qty_picked' => max((float) $line->qty_picked, $total),
+            'scanned_at' => $total + 0.00005 >= (float) $line->qty_allocated ? now() : $line->scanned_at,
+        ])->save();
+
+        return $line->refresh();
+    }
+
+    public function releaseLabel(PickTaskLine $line, int $labelId): PickTaskLine
+    {
+        if ($line->pickTask->status !== PickTaskStatus::InProgress) {
+            throw ShipmentRuleException::rule('BR-SJ-01', 'Tugas picking harus berstatus Dikerjakan.');
+        }
+
+        $line->forceFill(['labels' => collect($line->labels ?? [])->reject(fn ($c) => (int) $c['id'] === $labelId)->values()->all() ?: null])->save();
 
         return $line->refresh();
     }
@@ -162,12 +223,40 @@ class ProcessPickTask
             }
         }
 
+        $label = app(PackageLabelLedger::class);
+
+        // A-299: barang berlabel yang keluar gudang wajib dipindai (per item + lot).
+        try {
+            $label->assertCoverage((int) $task->warehouse_id, $lines->groupBy(fn ($l) => $l->item_id.':'.$l->lot_id)
+                ->map(fn ($g) => [
+                    'item_id' => (int) $g->first()->item_id,
+                    'lot_id' => $g->first()->lot_id === null ? null : (int) $g->first()->lot_id,
+                    'qty' => round((float) $g->sum('qty_picked'), 4),
+                    'claimed' => round((float) $g->sum(fn ($l) => $l->labelledQty()), 4),
+                    'label' => 'Barang '.$g->first()->item?->code,
+                ])->values()->all());
+        } catch (LabelRuleException $e) {
+            throw ShipmentRuleException::rule($e->rule, $e->getMessage());
+        }
+
         $loading = $this->bins->loadingArea($task->warehouse);
 
-        return DB::transaction(function () use ($task, $lines, $loading, $actor) {
+        return DB::transaction(function () use ($task, $lines, $loading, $actor, $label) {
             foreach ($lines as $l) {
                 $this->pindahkan($task, $l, $loading, $actor);
                 $this->tanganiShortPick($task, $l, $actor);
+
+                if (($l->labels ?? []) !== []) {
+                    try {
+                        $label->issue(
+                            $label->resolveClaims($l->labels, (int) $task->warehouse_id, (int) $l->item_id, $l->lot_id === null ? null : (int) $l->lot_id, 'Baris '.$l->item?->code, true),
+                            ['type' => 'pick_task', 'id' => (int) $task->id, 'line_id' => (int) $l->id, 'number' => $task->number],
+                            $actor,
+                        );
+                    } catch (LabelRuleException $e) {
+                        throw ShipmentRuleException::rule($e->rule, $e->getMessage());
+                    }
+                }
             }
 
             // Alokasi keras berubah menjadi pergerakan; tidak lagi mengurangi

@@ -8,6 +8,10 @@ use App\Domain\Issue\Actions\CreateMaterialIssue;
 use App\Domain\Issue\Livewire\Concerns\HandlesIssueRules;
 use App\Domain\Issue\Models\MaterialIssue;
 use App\Domain\Issue\Support\IssuableStock;
+use App\Domain\Label\Exceptions\LabelRuleException;
+use App\Domain\Label\Livewire\Concerns\CapturesPackageLabels;
+use App\Domain\Label\Models\PackageLabel;
+use App\Domain\Label\Support\PackageLabelLedger;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Support\ScanCode;
 use App\Domain\Warehouse\Models\Warehouse;
@@ -23,6 +27,7 @@ use Livewire\Component;
  */
 class IssueForm extends Component
 {
+    use CapturesPackageLabels;
     use HandlesIssueRules;
 
     /** @var array<string, string> */
@@ -33,6 +38,9 @@ class IssueForm extends Component
 
     /** @var array<string, string> kunci calon => keperluan */
     public array $note = [];
+
+    /** @var array<string, list<array{id: int, qty: float}>> kunci calon => klaim label kemasan (A-299) */
+    public array $labels = [];
 
     #[Locked]
     public ?int $issueId = null;
@@ -58,6 +66,10 @@ class IssueForm extends Component
                 $kunci = str_replace(':', '_', IssuableStock::key((int) $l->bin_id, (int) $l->item_id, $l->lot_id, $l->serial_id, $l->piece_id));
                 $this->qty[$kunci] = rtrim(rtrim(number_format((float) $l->qty_base, 4, '.', ''), '0'), '.');
                 $this->note[$kunci] = (string) $l->work_note;
+
+                if (($l->labels ?? []) !== []) {
+                    $this->labels[$kunci] = $l->labels;
+                }
             }
 
             return;
@@ -80,6 +92,7 @@ class IssueForm extends Component
         $this->form['warehouse_id'] = '';
         $this->qty = [];
         $this->note = [];
+        $this->labels = [];
         $this->sorot = null;
         $this->pilihSiteTunggal();
     }
@@ -88,6 +101,7 @@ class IssueForm extends Component
     {
         $this->qty = [];
         $this->note = [];
+        $this->labels = [];
         $this->sorot = null;
     }
 
@@ -111,6 +125,13 @@ class IssueForm extends Component
 
         if ($calon->isEmpty()) {
             $this->addError('kodePindai', __('Pilih proyek dan Gudang Site yang punya stok dulu.'));
+
+            return;
+        }
+
+        // A-299: label kemasan induk/isi — klaim label pada baris item+lot-nya.
+        if (($label = ScanCode::label($kode)) !== null) {
+            $this->pindaiLabel($calon, $label);
 
             return;
         }
@@ -184,6 +205,7 @@ class IssueForm extends Component
                     'key' => str_replace('_', ':', (string) $kunci),
                     'qty_base' => $jumlah,
                     'work_note' => $this->note[$kunci] ?? null,
+                    'labels' => $this->labels[$kunci] ?? [],
                 ];
             }
         }
@@ -208,12 +230,86 @@ class IssueForm extends Component
         }
     }
 
+    public function lepasLabel(string $kunci, int $labelId): void
+    {
+        $sisa = collect($this->labels[$kunci] ?? [])->reject(fn ($c) => (int) $c['id'] === $labelId)->values()->all();
+
+        if ($sisa === []) {
+            unset($this->labels[$kunci]);
+        } else {
+            $this->labels[$kunci] = $sisa;
+        }
+    }
+
+    /** @param  Collection<string, array<string, mixed>>  $calon */
+    private function pindaiLabel(Collection $calon, PackageLabel $label): void
+    {
+        $cocok = $calon->filter(fn (array $c) => $c['item_id'] === (int) $label->item_id && $c['serial_id'] === null && $c['piece_id'] === null
+            && (int) $c['lot_id'] === (int) $label->lot_id);
+
+        if ($cocok->isEmpty()) {
+            $this->addError('kodePindai', __('Label :kode tidak cocok dengan stok yang bisa dipakai di Gudang Site ini.', ['kode' => $label->code]));
+
+            return;
+        }
+
+        $kunci = (string) $cocok->sortByDesc(fn (array $c) => $c['bin_id'] === (int) $label->bin_id)->keys()->first();
+        $this->sorot = $kunci;
+
+        $this->pindaiLabelKemasan($label, $kunci, (float) $cocok[$kunci]['max'] - $this->diklaim($kunci), 'kodePindai');
+    }
+
+    protected function klaimLabel(string $baris, PackageLabel $label, float $qty): bool
+    {
+        $c = $this->calon()->get($baris);
+        $medan = $this->labelInduk === null ? 'kodePindai' : 'labelIsi';
+
+        if ($c === null) {
+            $this->addError($medan, __('Baris stok tidak ditemukan lagi.'));
+
+            return false;
+        }
+
+        $klaim = collect($this->labels[$baris] ?? [])->reject(fn ($k) => (int) $k['id'] === (int) $label->id)->values()->all();
+        $klaim[] = ['id' => (int) $label->id, 'qty' => round($qty, 4)];
+
+        try {
+            app(PackageLabelLedger::class)->resolveClaims($klaim, (int) $this->form['warehouse_id'], (int) $c['item_id'], $c['lot_id'], 'Baris '.$c['item_code']);
+        } catch (LabelRuleException $e) {
+            $this->addError($medan, $e->getMessage());
+
+            return false;
+        }
+
+        $total = round(array_sum(array_column($klaim, 'qty')), 4);
+
+        if ($total - (float) $c['max'] > 0.00005) {
+            $this->addError($medan, __('Isi label (:qty) melebihi stok tersedia :item.', ['qty' => PackageLabelLedger::angka($total), 'item' => $c['item_code']]));
+
+            return false;
+        }
+
+        $this->labels[$baris] = $klaim;
+        $sekarang = is_numeric($this->qty[$baris] ?? null) ? (float) $this->qty[$baris] : 0.0;
+        $this->qty[$baris] = PackageLabelLedger::angka(max($sekarang, $total));
+        $this->sorot = $baris;
+
+        return true;
+    }
+
+    private function diklaim(string $kunci): float
+    {
+        return round(array_sum(array_map(fn ($c) => (float) $c['qty'], $this->labels[$kunci] ?? [])), 4);
+    }
+
     public function render(): View
     {
         return view('livewire.issue.issue-form', [
             'projects' => $this->proyek(),
             'sites' => $this->sites(),
             'calon' => $this->calon(),
+            'kodeLabel' => $this->kodeLabel(collect($this->labels)->flatten(1)),
+            'labelDialog' => $this->labelDialog(),
             'nomor' => $this->issueId !== null ? MaterialIssue::query()->whereKey($this->issueId)->value('number') : null,
         ]);
     }

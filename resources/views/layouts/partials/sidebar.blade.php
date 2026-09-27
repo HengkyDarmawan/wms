@@ -64,8 +64,9 @@
         ]],
         ['Laporan & cetak', 'laporan', [
             [null, 'reports.index', __('Laporan'), 'bi-file-earmark-bar-graph', 'reports.*'],
-            ['label.print', 'labels.index', __('Cetak label'), 'bi-upc-scan', 'labels.*'],
-            [['item.create', 'project.create', 'vendor.create', 'adjustment.create', 'bin.manage'], 'imports.index', __('Impor Excel'), 'bi-file-earmark-spreadsheet', 'imports.*'],
+            ['label.print', 'labels.index', __('Cetak label'), 'bi-upc-scan', 'labels.index'],
+            ['item.view', 'labels.trace', __('Telusuri label'), 'bi-search', 'labels.trace'],
+            [['item.create', 'project.create', 'vendor.create', 'adjustment.create', 'warehouse.create', 'bin.manage'], 'imports.index', __('Impor Excel'), 'bi-file-earmark-spreadsheet', 'imports.*'],
         ]],
         ['Pengaturan', 'pengaturan', [
             ['user.view', 'users.index', __('Pengguna'), 'bi-people', 'users.*'],
@@ -79,6 +80,8 @@
             ['approval.simulate', 'approval.simulation', __('Simulasi approval'), 'bi-signpost-2', 'approval.simulation'],
             ['company_setting.manage', 'settings.company', __('Pengaturan company'), 'bi-sliders', 'settings.company'],
             ['document_layout.manage', 'document-layout.edit', __('Layout dokumen'), 'bi-file-earmark-richtext', 'document-layout.*'],
+            ['document_layout.manage', 'label-designs.index', __('Desain label'), 'bi-vector-pen', 'label-designs.*'],
+            ['document_layout.manage', 'label-formats.index', __('Ukuran label'), 'bi-aspect-ratio', 'label-formats.*'],
             ['support_access.grant', 'support-access.index', __('Akses dukungan'), 'bi-life-preserver', 'support-access.*'],
             ['company_setting.manage', 'setup.index', __('Setup awal'), 'bi-rocket-takeoff', 'setup.*'],
             ['billing.view', 'billing.index', __('Tagihan langganan'), 'bi-receipt', 'billing.*'],
