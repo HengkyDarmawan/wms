@@ -108,6 +108,11 @@ docs/
 
 ## Catatan perubahan
 
+### v0.57 — 26 September 2026 (sesi rumah: "Masuk sebagai" untuk presentasi)
+- **"Masuk sebagai" (impersonasi) dimajukan dari F2** agar Admin Company bisa mempresentasikan alur lintas peran ke calon klien: asumsi baru [A-260](wms/04b-asumsi-lanjutan.md#a-260) (Perlu validasi — termasuk apakah approval saat impersonasi boleh di company produksi; bawaan sakelar mati di `production`). 04b v0.5 (§2.25).
+- Spesifikasi [10-access](wms/10-access.md) v0.9: §1 (lingkup), §2 (`user.impersonate` tanpa `[F2]`), §4 (sesi *Masuk sebagai*), **§6.8** layar baru, §10 **TC-ACC-31–38**, §11 (impersonasi dihapus dari luar lingkup), §13.3. Glosarium v0.10 §11 (*Masuk sebagai*).
+- **Kode:** `ImpersonateUser`, `Support\Impersonation`, `Support\DemoFlows` (panduan alur: Permintaan Material, Pembelian, Stock Opname, Portal Klien), Livewire `access.impersonation-picker`, `ImpersonationController` (`/impersonate`, POST `/impersonate/{user}`, `/impersonate/leave`), spanduk `layouts/partials/impersonation-banner`, menu header/sidebar, aksi di daftar & detail pengguna, `audit_logs.properties.impersonated_by` (listener di `AccessServiceProvider`), `config/access.php` `impersonation.enabled` (`WMS_IMPERSONATION`), CSS `nexadash/impersonation.css`.
+
 ### v0.54 — 26 September 2026 (sinkronisasi dokumen dengan kode)
 - Spesifikasi [16-shared](wms/16-shared-laporan-berkas.md) v0.14: §2 tabel permission 7 → 41 laporan (21 permission); §3.2 baris `kinerja-pengiriman`/`penerimaan-vendor` yang terpotong diperbaiki, + 5 laporan inti (A-190); §1, §3.1, §6.2, §6.3, §13.3 ekspor PDF `/reports/{report}/pdf`; §10 TC-RPT-01 (8 → 41, Driver 12), TC-RPT-01b (+404), rujukan TC-RPT-02–10; §11 dan §13.4 pernyataan basi dihapus; §12 enam butir dicentang, dua tetap terbuka; §13.1 no. 1 (PDF, A-190, TC-RPT-05) dan no. 3 (404, TC-RPT-01b) ditandai *Sudah diperbaiki*.
 - README *Status*: 579 → 663 uji, fitur 26 Sep (A-246–A-258), sisa asumsi 106 lewat tinjauan asumsi (daftar tautan A-72–A-205 diringkas); laporan progres v1.24: §1 ditandai potret 24 Sep, baris *Asumsi menunggu validasi* dan kalimat penutup diperbarui.

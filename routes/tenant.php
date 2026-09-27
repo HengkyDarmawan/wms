@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Access\DeviceController;
+use App\Http\Controllers\Access\ImpersonationController;
 use App\Http\Controllers\Access\InvitationController;
 use App\Http\Controllers\Access\LoginController;
 use App\Http\Controllers\Access\OrgController;
@@ -131,6 +132,11 @@ Route::middleware('auth')->group(function (): void {
         // Wizard setup awal company (A-191).
         Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
         Route::post('/setup/terms', [SetupController::class, 'acceptTerms'])->name('setup.terms');
+    // "Masuk sebagai" (A-260): di luar grup internal supaya bisa dipakai dari
+    // portal saat sedang menjadi Klien. Izin diperiksa terhadap Admin asli.
+    Route::post('/impersonate/leave', [ImpersonationController::class, 'destroy'])->name('impersonate.leave');
+    Route::post('/impersonate/{user}', [ImpersonationController::class, 'store'])->whereNumber('user')->name('impersonate.store');
+
         Route::post('/setup/complete', [SetupController::class, 'complete'])->name('setup.complete');
         // Pengaturan company (11-master §6, A-230): ambang, saklar fitur, zona waktu.
         Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company');
@@ -178,6 +184,9 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/labels/print', [PrintController::class, 'labels'])->name('labels.print');
         Route::get('/settings/document-layout', [DocumentLayoutController::class, 'edit'])->name('document-layout.edit');
         Route::get('/settings/document-layout/preview', [DocumentLayoutController::class, 'preview'])->name('document-layout.preview');
+        // "Masuk sebagai" (10-access §6.8, A-260): pemilih untuk Admin Company.
+        Route::get('/impersonate', [ImpersonationController::class, 'index'])->name('impersonate.index');
+
         Route::get('/settings/document-layout/logo', [DocumentLayoutController::class, 'logo'])->name('document-layout.logo');
         Route::post('/settings/document-layout/logo', [DocumentLayoutController::class, 'storeLogo'])->name('document-layout.logo.store');
         Route::delete('/settings/document-layout/logo', [DocumentLayoutController::class, 'destroyLogo'])->name('document-layout.logo.destroy');

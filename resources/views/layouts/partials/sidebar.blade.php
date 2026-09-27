@@ -69,6 +69,9 @@
         ]],
         ['Pengaturan', 'pengaturan', [
             ['user.view', 'users.index', __('Pengguna'), 'bi-people', 'users.*'],
+            ...(\App\Domain\Access\Support\Impersonation::enabled()
+                ? [['user.impersonate', 'impersonate.index', __('Masuk sebagai'), 'bi-person-video3', 'impersonate.*']]
+                : []),
             ['role.view', 'roles.index', __('Role'), 'bi-shield-lock', 'roles.*'],
             ['org.view', 'org.index', __('Struktur organisasi'), 'bi-diagram-3', 'org.*'],
             [['approval_rule.view', 'approval_rule.manage'], 'approval.rules.index', __('Aturan approval'), 'bi-diagram-3-fill', 'approval.rules.*'],

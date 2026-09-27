@@ -9,6 +9,15 @@
             </p>
         </div>
         <div class="d-flex gap-2">
+            @if (\App\Domain\Access\Support\Impersonation::enabled() && auth()->user()->can('user.impersonate')
+                && app(\App\Domain\Access\Actions\ImpersonateUser::class)->ineligibleReason(auth()->user(), $user) === null)
+                <form method="POST" action="{{ route('impersonate.store', $user) }}">
+                    @csrf
+                    <button class="btn btn-outline-primary" type="submit">
+                        <i class="bi bi-box-arrow-in-right"></i> {{ __('Masuk sebagai') }}
+                    </button>
+                </form>
+            @endif
             @can('update', $user)
                 <a class="btn btn-primary" href="{{ route('users.edit', $user) }}">
                     <i class="bi bi-pencil"></i> {{ __('Ubah') }}

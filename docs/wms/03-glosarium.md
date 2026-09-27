@@ -275,3 +275,4 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Rencana Kebutuhan Material *(baru)* | `project_material_plan` | BoQ kuantitas per proyek (item × jumlah rencana) [F2] | BR-PRJ-09 |
 
 *Singkatan rujukan:* BP = Blueprint, BR = Aturan Bisnis, KS = Katalog Status & Enum, NFR = kebutuhan non-fungsional.
+| Masuk sebagai *(baru)* | `impersonation` (permission `user.impersonate`) | Admin Company bekerja atas nama user lain, mis. untuk presentasi alur; spanduk *Kembali ke Admin*; jejak audit `impersonated_by` | A-260 |

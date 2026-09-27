@@ -92,6 +92,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php($bisaMasukSebagai = \App\Domain\Access\Support\Impersonation::enabled() && auth()->user()->can('user.impersonate'))
                     @forelse ($users as $user)
                         @php($status = $user->status())
                         <tr wire:key="user-{{ $user->id }}">
@@ -131,6 +132,15 @@
                                                 <i class="bi bi-pencil"></i> {{ __('Ubah') }}
                                             </a>
                                         @endcan
+                                        @if ($bisaMasukSebagai && ! $user->is(auth()->user()) && $user->is_active
+                                            && ! $user->roleAssignments->contains(fn ($a) => $a->isValid() && $a->role?->code === 'company_admin'))
+                                            <form method="POST" action="{{ route('impersonate.store', $user) }}">
+                                                @csrf
+                                                <button class="dropdown-item" type="submit">
+                                                    <i class="bi bi-box-arrow-in-right"></i> {{ __('Masuk sebagai') }}
+                                                </button>
+                                            </form>
+                                        @endif
                                         @can('invite', \App\Domain\Access\Models\User::class)
                                             @if ($status === \App\Domain\Access\Enums\UserStatus::Invited)
                                                 <button class="dropdown-item" type="button"

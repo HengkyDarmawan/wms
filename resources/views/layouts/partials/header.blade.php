@@ -56,6 +56,19 @@
                         <i class="bi bi-person"></i> {{ __('Profil') }}
                     </a>
                 @endif
+                {{-- A-260: "Masuk sebagai" untuk Admin Company; saat dipakai, jalan pulang ke Admin. --}}
+                @if (\App\Domain\Access\Support\Impersonation::active())
+                    <form method="POST" action="{{ route('impersonate.leave') }}">
+                        @csrf
+                        <button class="dropdown-item" type="submit">
+                            <i class="bi bi-box-arrow-left"></i> {{ __('Kembali ke :nama', ['nama' => \App\Domain\Access\Support\Impersonation::impersonatorName()]) }}
+                        </button>
+                    </form>
+                @elseif (auth()->check() && \App\Domain\Access\Support\Impersonation::enabled() && auth()->user()->can('user.impersonate'))
+                    <a class="dropdown-item" href="{{ route('impersonate.index') }}">
+                        <i class="bi bi-people"></i> {{ __('Masuk sebagai…') }}
+                    </a>
+                @endif
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button class="dropdown-item text-danger" type="submit">

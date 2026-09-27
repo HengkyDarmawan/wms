@@ -1,0 +1,203 @@
+/* ============================================================
+   "Masuk sebagai" (10-access §6.8, A-260): layar pemilih, panduan
+   alur demo, dan spanduk impersonasi. Token warna dari variables.css.
+   ============================================================ */
+
+/* ---------------------------------------------- nada warna per role */
+.nx-imp-tone-indigo { --imp: #6366f1; --imp-bg: #eef2ff; }
+.nx-imp-tone-violet { --imp: #8b5cf6; --imp-bg: #f5f3ff; }
+.nx-imp-tone-blue   { --imp: #3b82f6; --imp-bg: #eff6ff; }
+.nx-imp-tone-teal   { --imp: #0d9488; --imp-bg: #f0fdfa; }
+.nx-imp-tone-orange { --imp: #ea580c; --imp-bg: #fff7ed; }
+.nx-imp-tone-green  { --imp: #16a34a; --imp-bg: #f0fdf4; }
+.nx-imp-tone-pink   { --imp: #db2777; --imp-bg: #fdf2f8; }
+.nx-imp-tone-slate  { --imp: #64748b; --imp-bg: #f1f5f9; }
+.nx-imp-tone-amber  { --imp: #d97706; --imp-bg: #fffbeb; }
+
+[data-bs-theme="dark"] :is(.nx-imp-tone-indigo, .nx-imp-tone-violet, .nx-imp-tone-blue, .nx-imp-tone-teal,
+  .nx-imp-tone-orange, .nx-imp-tone-green, .nx-imp-tone-pink, .nx-imp-tone-slate, .nx-imp-tone-amber) {
+  --imp-bg: color-mix(in srgb, var(--imp) 18%, transparent);
+}
+
+/* ---------------------------------------------- avatar & pil role */
+.nx-imp-avatar {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--imp, var(--nx-primary));
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: .02em;
+  box-shadow: 0 0 0 3px var(--imp-bg, var(--nx-primary-subtle));
+}
+.nx-imp-avatar-xs { width: 24px; height: 24px; font-size: 10px; box-shadow: none; }
+
+.nx-imp-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--nx-radius-pill);
+  background: var(--imp-bg);
+  color: var(--imp);
+  font-size: 12px;
+  font-weight: 600;
+}
+.nx-imp-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--imp); margin-right: 6px; }
+.min-w-0 { min-width: 0; }
+
+/* ---------------------------------------------- pembuka */
+.nx-imp-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: var(--nx-radius-lg);
+  background: var(--nx-surface-accent);
+  border: 1px solid var(--nx-border);
+}
+.nx-imp-hero-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 52px; height: 52px;
+  border-radius: var(--nx-radius);
+  background: var(--nx-primary);
+  color: #fff;
+  font-size: 24px;
+  box-shadow: var(--nx-shadow-lift);
+}
+.nx-imp-hero > .flex-grow-1 { min-width: min(100%, 320px); flex: 1 1 320px; }
+.nx-imp-hero-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.nx-imp-badge-audit { background: var(--nx-success-subtle); color: var(--nx-success); }
+.nx-imp-badge-current { background: var(--nx-success-subtle); color: var(--nx-success); border: 0; font-weight: 600; }
+
+/* ---------------------------------------------- panduan alur */
+.nx-imp-flow { transition: var(--nx-transition); }
+.nx-imp-flow:hover { box-shadow: var(--nx-shadow-lift); }
+.nx-imp-flow-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  width: 40px; height: 40px;
+  border-radius: var(--nx-radius-sm);
+  background: var(--nx-primary-subtle);
+  color: var(--nx-primary);
+  font-size: 18px;
+}
+
+.nx-imp-steps { list-style: none; margin: 0; padding: 0; position: relative; }
+.nx-imp-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+/* Garis penghubung antarlangkah. */
+.nx-imp-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 40px;
+  bottom: -8px;
+  width: 2px;
+  background: var(--nx-border);
+}
+.nx-imp-step-no {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--imp-bg);
+  color: var(--imp);
+  border: 2px solid var(--imp);
+  font-weight: 700;
+  font-size: 13px;
+}
+.nx-imp-step-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.nx-imp-step-role { font-size: 12px; color: var(--nx-text-muted); font-weight: 600; }
+.nx-imp-step-action { color: var(--nx-text); font-size: 14px; line-height: 1.35; }
+.nx-imp-step-go { flex: 0 0 auto; }
+.nx-imp-go-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: var(--nx-radius-pill);
+  padding: 3px 6px 3px 4px;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------- saring & kartu pengguna */
+.nx-imp-search { position: relative; width: min(100%, 280px); }
+.nx-imp-search > i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--nx-text-muted); }
+.nx-imp-search > .form-control { padding-left: 34px; border-radius: var(--nx-radius-pill); }
+
+.nx-imp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.nx-imp-chip {
+  display: inline-flex; align-items: center;
+  padding: 5px 12px;
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-pill);
+  background: var(--nx-card-bg);
+  color: var(--nx-text-body);
+  font-size: 13px;
+  transition: var(--nx-transition);
+}
+.nx-imp-chip:hover { background: var(--nx-hover-bg); }
+.nx-imp-chip.active { background: var(--nx-primary); border-color: var(--nx-primary); color: #fff; }
+.nx-imp-chip.active .nx-imp-dot { background: #fff; }
+
+.nx-imp-user { transition: var(--nx-transition); }
+.nx-imp-user:not(.is-disabled):hover { transform: translateY(-2px); box-shadow: var(--nx-shadow-lift); }
+.nx-imp-user.is-disabled { opacity: .6; }
+.nx-imp-user.is-disabled .nx-imp-avatar { filter: grayscale(1); }
+.nx-imp-user.is-current { border-color: var(--nx-success); box-shadow: 0 0 0 3px var(--nx-success-subtle); }
+
+/* ---------------------------------------------- spanduk impersonasi */
+.nx-imp-banner {
+  position: sticky;
+  top: var(--nx-header-h);
+  z-index: 1025;
+  background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+  color: #1f1300;
+  box-shadow: 0 4px 16px rgb(249 115 22 / .25);
+}
+.nx-imp-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 24px;
+  max-width: 1600px;
+  margin-inline: auto;
+}
+.nx-imp-banner .nx-imp-avatar { width: 38px; height: 38px; font-size: 13px; box-shadow: 0 0 0 3px rgb(255 255 255 / .6); }
+.nx-imp-banner-text { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+.nx-imp-banner-kicker { font-size: 12px; font-weight: 600; opacity: .8; }
+.nx-imp-banner-who { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
+.nx-imp-banner-who strong { font-size: 15px; }
+.nx-imp-banner-roles { font-size: 13px; opacity: .85; overflow: hidden; text-overflow: ellipsis; }
+.nx-imp-banner-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.nx-imp-banner-btn {
+  background: rgb(255 255 255 / .25);
+  border: 1px solid rgb(255 255 255 / .5);
+  color: #1f1300;
+  font-weight: 600;
+}
+.nx-imp-banner-btn:hover, .nx-imp-banner-btn:focus-visible { background: rgb(255 255 255 / .45); color: #1f1300; }
+.nx-imp-banner-back { font-weight: 700; color: #9a3412; box-shadow: 0 2px 6px rgb(0 0 0 / .12); }
+.nx-imp-switch-menu { min-width: 260px; max-height: 70vh; overflow-y: auto; }
+.nx-imp-switch-menu .dropdown-item.active { background: var(--nx-primary-subtle); color: var(--nx-text); }
+
+@media (max-width: 767.98px) {
+  .nx-imp-banner-inner { padding: 8px 16px; flex-wrap: wrap; }
+  .nx-imp-banner-roles { display: none; }
+  .nx-imp-banner-actions { width: 100%; justify-content: flex-end; }
+  .nx-imp-hero { padding: 16px; }
+  .nx-imp-step { flex-wrap: wrap; }
+  .nx-imp-step-go { margin-left: 44px; }
+  .nx-imp-step:not(:last-child)::after { display: none; }
+  .nx-imp-search { width: 100%; }
+}

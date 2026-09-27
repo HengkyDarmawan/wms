@@ -14,9 +14,9 @@
 
 Modul ini membuat WMS bisa dimasuki dengan aman per company dan menentukan **siapa boleh melakukan apa di gudang/proyek mana**. Pemakainya: Admin Company (mengelola user, role, organisasi), seluruh user internal (login, profil), user klien (login portal), dan Super Admin (akses dukungan berperiode).
 
-Termasuk `[F1]`: login lokal per subdomain ([D-26](04-keputusan-dan-asumsi.md#d-26)); undangan user & atur password pertama; lupa/atur ulang password; 2FA TOTP opsional; kunci akun; profil (nama, WA, tanda tangan gambar, 2FA, perangkat); user CRUD dengan **nonaktif bukan hapus** (P-03); role & permission (template bawaan + role buatan); **penugasan role × cakupan** ([BR-GEN-09](05-aturan-bisnis.md#br-gen), [A-46](04-keputusan-dan-asumsi.md#a-46)); struktur organisasi (unit, jabatan, atasan langsung) untuk approval ([D-16](04-keputusan-dan-asumsi.md#d-16)); perangkat terdaftar (minimal: daftar & cabut); login portal klien ([BR-PRJ-07](05-aturan-bisnis.md#br-prj)); pemberian **akses dukungan** oleh Admin Company ([BR-SUB-04](05-aturan-bisnis.md#br-sub)).
+Termasuk `[F1]`: login lokal per subdomain ([D-26](04-keputusan-dan-asumsi.md#d-26)); undangan user & atur password pertama; lupa/atur ulang password; 2FA TOTP opsional; kunci akun; profil (nama, WA, tanda tangan gambar, 2FA, perangkat); user CRUD dengan **nonaktif bukan hapus** (P-03); role & permission (template bawaan + role buatan); **penugasan role × cakupan** ([BR-GEN-09](05-aturan-bisnis.md#br-gen), [A-46](04-keputusan-dan-asumsi.md#a-46)); struktur organisasi (unit, jabatan, atasan langsung) untuk approval ([D-16](04-keputusan-dan-asumsi.md#d-16)); perangkat terdaftar (minimal: daftar & cabut); login portal klien ([BR-PRJ-07](05-aturan-bisnis.md#br-prj)); pemberian **akses dukungan** oleh Admin Company ([BR-SUB-04](05-aturan-bisnis.md#br-sub)); **"Masuk sebagai"** (impersonasi) oleh Admin Company untuk presentasi alur lintas peran ([A-260](04b-asumsi-lanjutan.md#a-260), dimajukan dari F2).
 
-Tidak termasuk: SSO NXTG `[F3]` (kolom `users.sso_sub` dan tabel `sso_identities` dibuat sebagai stub, [BR-GEN-10](05-aturan-bisnis.md#br-gen)); auditor eksternal `[F2]` (kolom `valid_until` sudah ada); manajemen company, paket, langganan (modul `platform`); notifikasi WhatsApp `[F2]`; impersonasi `[F2]`.
+Tidak termasuk: SSO NXTG `[F3]` (kolom `users.sso_sub` dan tabel `sso_identities` dibuat sebagai stub, [BR-GEN-10](05-aturan-bisnis.md#br-gen)); auditor eksternal `[F2]` (kolom `valid_until` sudah ada); manajemen company, paket, langganan (modul `platform`); notifikasi WhatsApp `[F2]`.
 
 ## 2. Aktor & permission
 
@@ -30,7 +30,7 @@ Permission ditulis `<modul>.<aksi>` dan disimpan di `permissions` dengan `module
 | Staf Gudang, Driver, Pemohon Internal, Penindak Lanjut PR, Auditor Internal | `profile.update`, `auth.*`, `device.manage` (perangkat sendiri) | sesuai penugasan |
 | Klien | `profile.update`, `auth.*` (hanya lewat `/portal`) | klien & proyeknya |
 
-Daftar permission modul ini: `auth.login`, `auth.logout`, `auth.two_factor`, `profile.update`, `user.view`, `user.create`, `user.update`, `user.deactivate`, `user.invite`, `user.reset_password`, `user.impersonate` `[F2]`, `role.view`, `role.create`, `role.update`, `role.deactivate`, `role.assign`, `org.view`, `org.manage`, `device.view`, `device.manage`, `support_access.grant`, `support_access.revoke`. Permission modul lain didaftarkan oleh modul masing-masing ke tabel yang sama.
+Daftar permission modul ini: `auth.login`, `auth.logout`, `auth.two_factor`, `profile.update`, `user.view`, `user.create`, `user.update`, `user.deactivate`, `user.invite`, `user.reset_password`, `user.impersonate` ([A-260](04b-asumsi-lanjutan.md#a-260)), `role.view`, `role.create`, `role.update`, `role.deactivate`, `role.assign`, `org.view`, `org.manage`, `device.view`, `device.manage`, `support_access.grant`, `support_access.revoke`. Permission modul lain didaftarkan oleh modul masing-masing ke tabel yang sama.
 
 ## 3. Entitas & data
 
@@ -114,6 +114,7 @@ Modul ini tidak punya dokumen berstatus di Katalog. Aturan implementasi yang ber
 | Password | diganti (profil / reset) | `ChangePassword` | simpan riwayat; sesi lain dihapus ([BR-ACC-06](05-aturan-bisnis.md#br-acc)); event `PasswordChanged` |
 | Penugasan role | dibuat / diubah / dihapus | `AssignRole`, `RevokeRole` | event `RoleAssignmentChanged` → cache cakupan user dibersihkan; audit log |
 | Akses dukungan | diberikan → berjalan → berakhir / dicabut | `GrantSupportAccess` (metode `grant()` dan `revoke()`, [A-73](04-keputusan-dan-asumsi.md#a-73)) | tulis ke `support_accesses` (pusat) + `audit_logs` tenant ([BR-SUB-04](05-aturan-bisnis.md#br-sub)) |
+| Sesi "Masuk sebagai" | Admin → user lain → (ganti ke user lain) → kembali ke Admin / keluar | `ImpersonateUser` (metode `handle()` dan `stop()`, pola A-73), [A-260](04b-asumsi-lanjutan.md#a-260) | sesi menyimpan Admin asli (`impersonator_id`); `audit_logs` diberi `impersonated_by`; Admin nonaktif/bukan Admin lagi saat kembali → keluar penuh |
 
 Siklus request ([08 §3](08-arsitektur.md#3-tenancy--siklus-request)): middleware `InitializeTenancyBySubdomain` → `EnsureSubscriptionState` (`suspended` → hanya GET; `terminated` → hanya login Admin Company & ekspor, [BR-SUB-02–03](05-aturan-bisnis.md#br-sub)) → `auth` → `EnsureClientPortal` untuk `/portal` → `ScopedToUser`.
 
@@ -197,6 +198,18 @@ Daftar perangkat semua user (Admin) / perangkat sendiri: nama, platform, terakhi
 
 Admin Company memberi izin ke Super Admin: alasan `*`, mulai `*`, selesai `*` (maks 7 hari), tombol cabut. Riwayat pemberian tampil dan tercatat di audit log ([BR-SUB-04](05-aturan-bisnis.md#br-sub)).
 
+### 6.8 Masuk sebagai — `/impersonate` — `Access\ImpersonationPicker`
+
+Untuk pemegang `user.impersonate` bila sakelar `access.impersonation.enabled` menyala ([A-260](04b-asumsi-lanjutan.md#a-260)); menu *Pengaturan › Masuk sebagai*, menu header, aksi baris di Pengguna, dan tombol di detail pengguna.
+
+| Bagian | Isi | Aksi |
+|---|---|---|
+| Panduan alur demo | Kartu per alur (Permintaan Material ke proyek, Pembelian ke vendor, Stock Opname, Portal Klien) dengan langkah bernomor: role, aksi singkat, user wakil role (user aktif yang memenuhi syarat; per role menurut urutan role bawaan dipilih id terkecil yang belum mewakili role lain) | tombol *Masuk sebagai <nama>* per langkah |
+| Semua pengguna | Kartu: avatar inisial berwarna per role, nama, email, role × cakupan (kode gudang/proyek); cari nama/email, saring per role; yang tidak memenuhi syarat tampil pudar dengan alasannya | *Masuk sebagai* |
+| Spanduk (semua halaman, termasuk portal) | "Mode presentasi — Anda sedang masuk sebagai <nama> · <role · cakupan>" lengket di bawah header | *Ganti peran* (satu user wakil per role), *Kembali ke <Admin>* |
+
+Perpindahan hanya lewat POST (`/impersonate/{user}`, `/impersonate/leave`); `impersonate.leave` selalu boleh walau langganan dibatasi.
+
 ## 7. Kejadian stok & integrasi
 
 Tidak ada kejadian stok. Audit log (`spatie/laravel-activitylog`, [AD-07](08-arsitektur.md#2-keputusan-arsitektur)) untuk users, roles, role_assignments, org_units, positions, support access. Event Laravel: `UserInvited`, `InvitationAccepted`, `UserLocked`, `PasswordChanged`, `RoleAssignmentChanged`, `SupportAccessGranted/Revoked`.
@@ -249,10 +262,18 @@ Tidak ada kejadian stok. Audit log (`spatie/laravel-activitylog`, [AD-07](08-ars
 | TC-ACC-25 | Admin mengubah permission role bawaan lalu menyalin ke role baru | simpan | role baru punya permission yang sama; role bawaan tidak bisa dihapus | — |
 | TC-ACC-26 | penugasan role dengan `valid_until` kemarin | user buka data cakupan itu | tidak tampil; login tetap bisa bila ada penugasan lain | BR-ACC-01, BR-ACC-05 |
 | TC-ACC-27 | seeder demo dijalankan | login setiap akun di [00-akun-uji](../00-akun-uji.md) | semua berhasil dengan role & cakupan sesuai tabel | — |
+| TC-ACC-31 | Admin Company login | masuk sebagai Staf Gudang, lalu *Kembali* | bekerja sebagai staf dengan spanduk; kembali → sesi Admin, spanduk hilang | A-260 |
+| TC-ACC-32 | Admin Company login | masuk sebagai user Klien | diarahkan ke `/portal` dengan spanduk; *Kembali* berhasil dari portal | A-260, BR-PRJ-07 |
+| TC-ACC-33 | Kepala Gudang login | buka `/impersonate` / POST masuk sebagai staf | 403; sesi tidak berubah | A-260 |
+| TC-ACC-34 | Admin Company | masuk sebagai diri sendiri, Admin Company lain, user nonaktif, user tanpa role | semua ditolak dengan pesan; tetap sebagai Admin | A-260, BR-ACC-01 |
+| TC-ACC-35 | Admin sedang masuk sebagai staf | buka `/impersonate`, masuk sebagai driver | boleh (izin Admin asli); kini driver, Admin asli tetap tersimpan | A-260 |
+| TC-ACC-36 | Admin sedang masuk sebagai staf | staf mengubah profilnya | entri audit log memuat `impersonated_by` = Admin; log mulai ber-`causer` Admin | A-260, BR-GEN-05 |
+| TC-ACC-37 | sakelar `access.impersonation.enabled` mati | buka `/impersonate` / POST masuk sebagai | 404 | A-260 |
+| TC-ACC-38 | Admin masuk sebagai staf, lalu Admin dinonaktifkan | *Kembali* | keluar penuh ke `/login`. Juga: GET ke route transisi → 405; layar pemilih menampilkan alur & saringan role; langkah Staf memakai user yang hanya staf | A-260 |
 
 ## 11. Di luar lingkup modul ini
 
-SSO NXTG dan pemilih company (F3, modul `platform`/`sso`); manajemen company, paket, tagihan, verifikasi bayar (modul `platform`); auditor eksternal berbatas waktu (F2); WhatsApp (F2a); impersonasi user oleh Admin (F2); pengaturan company (zona waktu, format nomor) ada di modul `platform`/`shared`.
+SSO NXTG dan pemilih company (F3, modul `platform`/`sso`); manajemen company, paket, tagihan, verifikasi bayar (modul `platform`); auditor eksternal berbatas waktu (F2); WhatsApp (F2a); pengaturan company (zona waktu, format nomor) ada di modul `platform`/`shared`.
 
 ## 12. Definisi selesai
 
@@ -325,6 +346,7 @@ Aksi domain yang ada di kode tetapi tidak disebut §4: `InviteUser` (kirim ulang
 | Perangkat | `/devices` | `access.device-list` | Perangkat PWA; pemegang `device.view` melihat seluruh company, user lain hanya miliknya; cari & filter status; cabut dan aktifkan kembali tanpa menghapus data |
 | Beranda portal klien | `/portal` | `PortalDashboardController` | Kartu proyek aktif, permintaan berjalan, bukti terima yang perlu konfirmasi, retur berjalan; daftar proyek klien; **Stok On-site per proyek aktif** (*Di Gudang Site*, *Terkirim ke Klien*; BR-PRJ-05) dari `ReturnableStock` yang sama dengan form retur dan hub proyek. Uji TC-MST-26 (`tests/Feature/Master/PortalDashboardTest`) |
 | Akses dukungan | `/settings/support-access` | `access.support-access` | Admin Company memberi izin berperiode ke Super Admin (*Alasan* `*`, mulai, selesai, maksimum 7 hari), daftar izin yang berlaku, tombol cabut, dan riwayat pemberian |
+| Masuk sebagai (26 Sep 2026) | `/impersonate` | `access.impersonation-picker` | §6.8: panduan alur demo, kartu pengguna, spanduk *Ganti peran* / *Kembali*; `ImpersonationController`, `ImpersonateUser`, `Support\Impersonation`, `Support\DemoFlows`, `layouts/partials/impersonation-banner`. Uji TC-ACC-31–38 (`tests/Feature/Access/ImpersonationTest`) |
 
 Aksi domain yang menopangnya: `CreateUser`, `UpdateUser`, `ReactivateUser`, `SendPasswordReset`,
 `SaveRole`, `DeactivateRole`, `SaveOrgUnit`, `DeactivateOrgUnit`, `SavePosition`, `RevokeDevice`,

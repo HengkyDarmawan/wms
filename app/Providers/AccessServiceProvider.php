@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domain\Access\Livewire\DeviceList;
+use App\Domain\Access\Livewire\ImpersonationPicker;
 use App\Domain\Access\Livewire\OrgTree;
 use App\Domain\Access\Livewire\RoleForm;
 use App\Domain\Access\Livewire\RoleList;
@@ -20,12 +21,14 @@ use App\Domain\Access\Policies\DevicePolicy;
 use App\Domain\Access\Policies\OrgUnitPolicy;
 use App\Domain\Access\Policies\RolePolicy;
 use App\Domain\Access\Policies\UserPolicy;
+use App\Domain\Access\Support\Impersonation;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Spatie\Activitylog\Models\Activity;
 
 /**
  * Modul Access: sumber migrasi pusat, integrasi permission ke Gate (AD-06),
@@ -43,6 +46,25 @@ class AccessServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->registerRateLimiters();
         $this->registerLivewireComponents();
+        $this->tagImpersonatedActivity();
+    }
+
+    /**
+     * A-260: selama Admin Company "masuk sebagai" user lain, setiap audit log
+     * mencatat Admin asli supaya jejaknya tidak tertukar dengan user itu.
+     */
+    protected function tagImpersonatedActivity(): void
+    {
+        Activity::saving(function (Activity $activity): void {
+            if (! Impersonation::active()) {
+                return;
+            }
+
+            $activity->properties = collect($activity->properties)->put('impersonated_by', [
+                'id' => Impersonation::impersonatorId(),
+                'name' => Impersonation::impersonatorName(),
+            ]);
+        });
     }
 
     /**
@@ -59,6 +81,7 @@ class AccessServiceProvider extends ServiceProvider
         Livewire::component('access.org-tree', OrgTree::class);
         Livewire::component('access.device-list', DeviceList::class);
         Livewire::component('access.support-access', SupportAccessManager::class);
+        Livewire::component('access.impersonation-picker', ImpersonationPicker::class);
     }
 
     /**

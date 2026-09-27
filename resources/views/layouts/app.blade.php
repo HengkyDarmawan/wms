@@ -29,12 +29,16 @@
 
 <div class="nx-main">
     @include('layouts.partials.header')
+    @include('layouts.partials.impersonation-banner')
 
     <main class="nx-content">
         @include('layouts.partials.subscription-banner')
 
         @if (session('status'))
             <div class="alert alert-success py-2" role="status">{{ session('status') }}</div>
+        @endif
+        @if (session('impersonate_error'))
+            <div class="alert alert-danger py-2" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ session('impersonate_error') }}</div>
         @endif
 
         {{-- Pesan singkat dari komponen Livewire (event `pesan`). --}}

@@ -32,6 +32,11 @@ return [
         'max_days' => (int) env('ACCESS_SUPPORT_MAX_DAYS', 7),
     ],
 
+    // "Masuk sebagai" oleh Admin Company (A-260): bawaan menyala di luar production.
+    'impersonation' => [
+        'enabled' => (bool) env('WMS_IMPERSONATION', env('APP_ENV', 'production') !== 'production'),
+    ],
+
     'two_factor' => [
         'max_attempts' => (int) env('ACCESS_2FA_MAX_ATTEMPTS', 5),
         'recovery_codes' => 8,

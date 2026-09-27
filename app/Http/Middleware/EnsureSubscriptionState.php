@@ -40,6 +40,8 @@ class EnsureSubscriptionState
         'password.request', 'password.email', 'password.reset', 'password.update',
         'invitation.show', 'invitation.store',
         'support.enter', 'support.enter.store',
+        // A-260: kembali dari "Masuk sebagai" selalu boleh.
+        'impersonate.leave',
     ];
 
     /** Route yang tetap boleh menulis saat langganan ditangguhkan. */
