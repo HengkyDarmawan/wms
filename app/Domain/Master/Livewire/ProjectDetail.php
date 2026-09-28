@@ -211,7 +211,7 @@ class ProjectDetail extends Component
         return match ($this->tab) {
             'permintaan' => MaterialRequest::query()->where('project_id', $id)->with('requester:id,name')->withCount('lines')
                 ->orderByDesc('id')->paginate(20, pageName: 'req'),
-            'pengiriman' => Shipment::query()->where('destination_project_id', $id)->with('warehouse:id,code', 'destinationWarehouse:id,code', 'driver:id,name')
+            'pengiriman' => Shipment::query()->where('destination_project_id', $id)->with('warehouse:id,code', 'destinationWarehouse:id,code', 'driver:id,name', 'vehicle:id,plate_no')
                 ->orderByDesc('id')->paginate(20, pageName: 'sj'),
             'stok' => $stok->forProject($project)->groupBy(fn (array $c) => $c['source']->value),
             'pemakaian' => MaterialIssue::query()->where('project_id', $id)->with('warehouse:id,code', 'issuer:id,name')->withCount('lines')

@@ -11,6 +11,7 @@ use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Vehicle;
 use App\Domain\Master\Models\Vendor;
+use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Shipment\Enums\DestinationType;
 use App\Domain\Shipment\Enums\ShipmentMethod;
 use App\Domain\Shipment\Enums\ShipmentStatus;
@@ -65,6 +66,39 @@ class Shipment extends Model
     public static function scopeWarehouseColumn(): ?string
     {
         return 'warehouse_id';
+    }
+
+    /**
+     * A-312: penerima di gudang/proyek tujuan membuka SJ di luar cakupan gudang
+     * asalnya, jadi pengikatan rute tidak memakai cakupan global;
+     * `ShipmentPolicy::view` yang memutus.
+     */
+    public function resolveRouteBinding($value, $field = null): ?Model
+    {
+        return static::query()->withoutGlobalScopes()->where($field ?? $this->getRouteKeyName(), $value)->first();
+    }
+
+    /**
+     * Daftar SJ bagi user: cakupan gudang asal (BR-ACC-05) ditambah SJ yang
+     * tujuannya gudang/proyek dalam cakupannya — tempat ia menjadi penerima (A-312).
+     */
+    public static function visibleTo(User $user): Builder
+    {
+        $query = static::query()->withoutGlobalScopes();
+        $gudang = $user->accessibleWarehouseIds();
+
+        if ($gudang === null) {
+            return $query;
+        }
+
+        $proyek = $user->accessibleProjectIds();
+        $proyekSite = Warehouse::query()->withoutGlobalScopes()->whereIn('id', $gudang)
+            ->whereNotNull('project_id')->pluck('project_id')->all();
+
+        return $query->where(fn (Builder $w) => $w
+            ->whereIn('warehouse_id', $gudang)
+            ->orWhereIn('destination_warehouse_id', $gudang)
+            ->orWhereIn('destination_project_id', array_merge($proyekSite, $proyek ?? [])));
     }
 
     public function warehouse(): BelongsTo
@@ -177,22 +211,66 @@ class Shipment extends Model
         };
     }
 
+    /**
+     * A-311: nama driver tertulis di SJ. Data sebelum A-311 diisi balik dari
+     * user driver; `driver_id`/`carried_by_name` hanya cadangan pembacaan.
+     */
+    public function driverName(): ?string
+    {
+        $nama = $this->driver_name ?: ($this->driver_id !== null ? $this->driver?->name : null);
+
+        return $nama ?: ($this->isWithoutPicking() ? ($this->carried_by_name ?: null) : null);
+    }
+
+    /** Nama + HP driver untuk layar dan cetak, mis. "Gani · 6281200000008". */
+    public function driverLabel(): string
+    {
+        return implode(' · ', array_filter([$this->driverName(), $this->driver_phone]));
+    }
+
     /** Siapa yang membawa, apa pun caranya. */
     public function carrierLabel(): string
     {
         return match ($this->shipment_method) {
-            // A-247: plat & sopir boleh teks bebas bila bukan master.
-            ShipmentMethod::OwnFleet => trim(($this->vehicle?->plate_no ?? $this->vehicle_plate ?? '').' · '.($this->driver?->name ?? $this->carried_by_name ?? ''), ' ·'),
-            ShipmentMethod::Carrier => trim(implode(' · ', array_filter([$this->carrier?->name, $this->vehicle_plate, $this->carried_by_name, $this->tracking_no]))),
+            // A-247: plat boleh teks bebas bila bukan master; A-311: driver = teks.
+            ShipmentMethod::OwnFleet => implode(' · ', array_filter([$this->vehicle?->plate_no ?? $this->vehicle_plate, $this->driverLabel()])),
+            ShipmentMethod::Carrier => trim(implode(' · ', array_filter([$this->carrier?->name, $this->vehicle_plate, $this->driverLabel() ?: $this->carried_by_name, $this->tracking_no]))),
             ShipmentMethod::SelfDelivered => (string) ($this->carried_by_name ?? '—'),
         };
+    }
+
+    /**
+     * REQ yang dimuat SJ ini (lewat PCK). SJ tanpa PCK (A-247) tidak memuat REQ.
+     *
+     * @return array<int, int>
+     */
+    public function materialRequestIds(): array
+    {
+        $pck = PickTaskLine::query()->withoutGlobalScopes()
+            ->whereIn('id', $this->lines()->whereNotNull('pick_task_line_id')->pluck('pick_task_line_id'))
+            ->pluck('pick_task_id');
+
+        return PickTask::query()->withoutGlobalScopes()->whereIn('id', $pck)
+            ->where('source_type', 'material_request')->pluck('source_id')
+            ->map(fn ($id) => (int) $id)->unique()->values()->all();
+    }
+
+    /**
+     * A-313: No. PO klien dari REQ yang dimuat — referensi teks, tercetak di SJ.
+     *
+     * @return array<int, string>
+     */
+    public function clientPoNumbers(): array
+    {
+        return MaterialRequest::query()->withoutGlobalScopes()->whereIn('id', $this->materialRequestIds())
+            ->whereNotNull('client_po_number')->orderBy('id')->pluck('client_po_number')->unique()->values()->all();
     }
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->useLogName('shipment')
-            ->logOnly(['number', 'status', 'shipment_method', 'destination_type', 'shipped_at', 'delivered_at'])
+            ->logOnly(['number', 'status', 'shipment_method', 'destination_type', 'driver_name', 'driver_phone', 'shipped_at', 'delivered_at'])
             ->logOnlyDirty();
     }
 }

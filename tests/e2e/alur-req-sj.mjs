@@ -62,13 +62,28 @@ async function page() {
     await sleep(1500);
   };
   const text = () => ev('document.querySelector("main")?.innerText || document.body.innerText');
+  // Unggah berkas ke <input type=file> (CDP DOM.setFileInputFiles memicu change → unggah Livewire).
+  const files = async (selector, paths) => {
+    const { result: { root } } = await send('DOM.getDocument', { depth: -1 });
+    const { result: { nodeId } } = await send('DOM.querySelector', { nodeId: root.nodeId, selector });
+    if (!nodeId) throw new Error('input berkas tidak ditemukan: ' + selector);
+    await send('DOM.setFileInputFiles', { nodeId, files: paths });
+  };
+  // Penantian berbasis kondisi (mesin kantor lambat): ekspresi JS di halaman atau fungsi Node.
+  const tunggu = async (cond, maks = 80) => {
+    for (let i = 0; i < maks; i++) {
+      try { if (typeof cond === 'function' ? await cond() : await ev(cond)) return true; } catch { /* halaman berganti */ }
+      await sleep(250);
+    }
+    return false;
+  };
   const login = async (email, portal = false) => {
     await go(portal ? '/portal/login' : '/login');
     await ev(`document.getElementById('email').value=${JSON.stringify(email)}; document.getElementById('password').value=${JSON.stringify(PASS)}; document.querySelector('form').submit();`);
     await sleep(2500);
     return ev('location.pathname');
   };
-  return { ev, go, shot, wire, text, login };
+  return { ev, go, shot, wire, text, login, files, tunggu };
 }
 
 const hasil = [];
@@ -82,7 +97,8 @@ const angka = (s) => Number(String(s).replace(/\./g, '').replace(',', '.'));
 
 // Saldo awal dibaca dari data demo (StockDemoSeeder sudah memuat satu alur contoh REQ → SJ).
 const saldoBin = (kode) => Number(sql(`SELECT COALESCE(SUM(sb.qty_base),0) FROM stock_balances sb JOIN bins b ON b.id=sb.bin_id JOIN items i ON i.id=sb.item_id WHERE i.code='BAUT-M12' AND b.code ${kode}`));
-const rupa = (n) => n.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Layar Saldo stok menampilkan jumlah + satuan dasar tanpa nol di belakang koma (A-287), mis. "1.000 PCS".
+const rupa = (n) => n.toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' PCS';
 // Layar Saldo stok menampilkan per gudang (termasuk Dalam Perjalanan milik CKG, BR-STK-13).
 const bautCkgAwal = saldoBin("LIKE 'CKG-%'");
 const cadangan = () => Number(sql("SELECT COALESCE(SUM(r.qty_base),0) FROM stock_reservations r JOIN items i ON i.id=r.item_id JOIN warehouses w ON w.id=r.warehouse_id WHERE i.code='BAUT-M12' AND w.code='CKG' AND r.status='active'"));
@@ -108,7 +124,8 @@ await cek(2, 'pemohon buat REQ PRJ-001, 50 BAUT-M12, ajukan', async () => {
   const item = sql("SELECT id FROM items WHERE code='BAUT-M12'");
   const lines = await pemohon.ev(`Livewire.find(document.querySelector('main [wire\\\\:id]').getAttribute('wire:id')).get('lines')`);
   const baris = { ...(lines[0] || {}), item_id: item, qty_base: '50' };
-  await pemohon.wire({ 'form.project_id': prj, 'lines.0': baris }, 'simpanDanAjukan');
+  // A-313: No. PO klien opsional — nanti tercetak di SJ dan dicari di laporan.
+  await pemohon.wire({ 'form.project_id': prj, 'form.client_po_number': 'PO-KL1-E2E', 'lines.0': baris }, 'simpanDanAjukan');
   await sleep(1000);
   await pemohon.shot('e2e-2-req.png');
   reqId = sql('SELECT id FROM material_requests ORDER BY id DESC LIMIT 1');
@@ -169,12 +186,11 @@ await cek(4, 'kepala gudang buat & kerjakan PCK', async () => {
 
 // ---------------------------------------------------------------- 5
 let sjId;
-await cek(5, 'kepala gudang susun & berangkatkan SJ (kendaraan B 9001 XX)', async () => {
+await cek(5, 'kepala gudang susun & berangkatkan SJ (kendaraan B 9001 XX, driver Gani tanpa akun)', async () => {
   await kagudang.go('/shipments/create');
   const ckg = sql("SELECT id FROM warehouses WHERE code='CKG'");
   await kagudang.wire({ 'form.warehouse_id': String(ckg) }, null);
   const veh = sql("SELECT id FROM vehicles WHERE plate_no='B 9001 XX'");
-  const drv = sql("SELECT id FROM users WHERE email='driver1@demo.wms.test'");
   const prj = sql("SELECT id FROM projects WHERE code='PRJ-001'");
   const metode = await kagudang.ev(`[...document.querySelectorAll('select[wire\\\\:model\\\\.live="form.shipment_method"] option')].map(o=>o.value).filter(Boolean)`);
   const tujuan = await kagudang.ev(`[...document.querySelectorAll('select[wire\\\\:model\\\\.live="form.destination_type"] option')].map(o=>o.value).filter(Boolean)`);
@@ -183,8 +199,11 @@ await cek(5, 'kepala gudang susun & berangkatkan SJ (kendaraan B 9001 XX)', asyn
     'form.destination_type': tujuan.includes('project') ? 'project' : tujuan[0],
     'form.destination_project_id': String(prj),
     'form.shipment_method': metode.find((m) => /own|vehicle|internal/.test(m)) || metode[0],
-    'form.vehicle_id': String(veh), 'form.driver_id': String(drv),
-  }, 'simpan');
+  }, null);
+  // A-311/A-315: memilih kendaraan mengisi nama & HP driver bawaan (teks, tanpa akun).
+  await kagudang.wire({ 'form.vehicle_id': String(veh) }, null);
+  const isiDriver = await kagudang.tunggu(`Livewire.find(document.querySelector('main [wire\\\\:id]').getAttribute('wire:id')).get('form.driver_name') === 'Gani'`);
+  await kagudang.wire({}, 'simpan');
   sjId = sql('SELECT id FROM shipments ORDER BY id DESC LIMIT 1');
   if (!sjId) { await kagudang.shot('e2e-5-sj-gagal.png'); return { ok: false, bukti: `e2e-5-sj-gagal.png; ${(await kagudang.text()).split('\n').filter((x) => /wajib|tidak|harus|BR-/.test(x)).slice(0, 3).join(' / ')}` }; }
   await kagudang.go(`/shipments/${sjId}`);
@@ -192,13 +211,14 @@ await cek(5, 'kepala gudang susun & berangkatkan SJ (kendaraan B 9001 XX)', asyn
   await kagudang.shot('e2e-5-sj.png');
   const [no, s] = sql(`SELECT number, status FROM shipments WHERE id=${sjId}`).split('\t');
   const trn = sql(`SELECT COALESCE(SUM(sb.qty_base),0) FROM stock_balances sb JOIN bins b ON b.id=sb.bin_id WHERE b.code='CKG-TRANSIT'`);
-  return { ok: s === 'shipped' && Number(trn) === transitAwal + 50, bukti: `e2e-5-sj.png; ${no} status=${s}; metode=${metode.join('/')}; saldo CKG-TRANSIT=${trn}` };
+  const drvSj = sql(`SELECT CONCAT(IFNULL(driver_name,'-'),' ',IFNULL(driver_phone,'-'),' ',IFNULL(driver_id,'null')) FROM shipments WHERE id=${sjId}`);
+  return { ok: s === 'shipped' && Number(trn) === transitAwal + 50 && isiDriver && drvSj === 'Gani 6281200000008 null', bukti: `e2e-5-sj.png; ${no} status=${s}; metode=${metode.join('/')}; saldo CKG-TRANSIT=${trn}; driver=${drvSj}` };
 });
 
 // ---------------------------------------------------------------- 5b
 // Halaman penerima bertoken (A-231): kepala gudang menerbitkan tautan + OTP (tampil sekali),
 // halaman dibuka tanpa login, OTP salah ditolak, OTP benar membuka formulir. Formulir tidak
-// dikirim supaya langkah 6 (driver) tetap berjalan; token yang tak terpakai tidak mengganggu.
+// dikirim supaya langkah 6 (admin site klien di portal) tetap berjalan; token yang tak terpakai tidak mengganggu.
 await cek('5b', 'tautan penerima bertoken: OTP salah ditolak, OTP benar membuka formulir', async () => {
   await kagudang.go(`/shipments/${sjId}`);
   await kagudang.wire({}, 'mintaDialog', ['tautan']);
@@ -210,7 +230,7 @@ await cek('5b', 'tautan penerima bertoken: OTP salah ditolak, OTP benar membuka 
   if (!otp || !tautan) return { ok: false, bukti: `e2e-5b-tautan.png; otp=${otp}; tautan=${tautan}` };
   const path = new URL(tautan).pathname;
   const penerima = await page();
-  const tunggu = async (expr) => { for (let i = 0; i < 60; i++) { try { if (await penerima.ev(expr)) return true; } catch {} await sleep(250); } return false; };
+  const tunggu = (expr) => penerima.tunggu(expr, 60);
   await penerima.go(path);
   const adaOtp = await tunggu('!!document.getElementById("otp")');
   await penerima.ev(`document.getElementById('otp').value='000000'; document.querySelector('form').submit();`);
@@ -223,19 +243,31 @@ await cek('5b', 'tautan penerima bertoken: OTP salah ditolak, OTP benar membuka 
 });
 
 // ---------------------------------------------------------------- 6
-const driver = await page();
-await cek(6, 'driver isi bukti terima: baik 48, kurang 2', async () => {
-  await driver.login('driver1@demo.wms.test');
-  await driver.go(`/shipments/${sjId}`);
-  await driver.wire({}, 'mintaDialog', ['terima']);
+// A-312: bukti terima diisi admin site klien (klien1) lewat portal — driver tidak punya akun.
+const fotoSj = join(mkdtempSync(join(tmpdir(), 'wmse2e-foto-')), 'sj-ttd-cap.png');
+writeFileSync(fotoSj, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==', 'base64'));
+const klien = await page();
+await cek(6, 'klien1 (admin site) isi bukti terima di portal: baik 48, kurang 2, foto SJ bertanda tangan', async () => {
+  await klien.login('klien1@klien-satu.test', true);
+  await klien.go(`/portal/requests/${reqId}`);
+  const href = await klien.ev(`document.querySelector('main a[href*="/portal/shipments/${sjId}/proof"]')?.getAttribute('href') || ''`);
+  if (!href) { await klien.shot('e2e-6-portal-req.png'); return { ok: false, bukti: 'e2e-6-portal-req.png; tombol Isi bukti terima tidak ada' }; }
+  await klien.go(new URL(href, BASE).pathname);
   const l = sql(`SELECT id FROM shipment_lines WHERE shipment_id=${sjId} LIMIT 1`);
-  await driver.wire({ 'form.received_by_name': 'Indra (site)', [`terima.${l}.qty_good`]: '48', [`terima.${l}.qty_damaged`]: '0', [`terima.${l}.qty_missing`]: '2' }, 'simpanBuktiTerima');
-  await driver.shot('e2e-6-terima.png');
-  const s = sql(`SELECT status FROM shipments WHERE id=${sjId}`);
+  await klien.wire({ [`terima.${l}.qty_good`]: '48', [`terima.${l}.qty_damaged`]: '0', [`terima.${l}.qty_missing`]: '2', 'form.client_gr_number': 'GR-KL1-E2E' }, null);
+  await klien.files('#terima-foto-sj', [fotoSj]);
+  const terunggah = await klien.tunggu(`String(Livewire.find(document.querySelector('main [wire\\\\:id]').getAttribute('wire:id')).get('fotoSj') || '').startsWith('livewire-file:')`);
+  await klien.wire({}, 'simpanBuktiTerima');
+  const selesai = await klien.tunggu(() => sql(`SELECT status FROM shipments WHERE id=${sjId}`) === 'partially_delivered');
+  await klien.shot('e2e-6-terima.png');
+  const [s, kanal, konf, gr, foto] = sql(`SELECT s.status, p.channel, IFNULL(p.confirmation,'-'), IFNULL(p.client_gr_number,'-'), IF(p.signed_document_path IS NULL,'tanpa foto','foto SJ') FROM shipments s JOIN proofs_of_delivery p ON p.shipment_id=s.id WHERE s.id=${sjId}`).split('\t');
   const dsc = sql(`SELECT CONCAT(number,' ',status) FROM delivery_discrepancies WHERE shipment_id=${sjId}`);
   await kagudang.go('/discrepancies'); await kagudang.shot('e2e-6-dsc.png');
   const t = await kagudang.text();
-  return { ok: s === 'partially_delivered' && !!dsc && t.includes(dsc.split(' ')[0]), bukti: `e2e-6-terima.png, e2e-6-dsc.png; SJ status=${s}; DSC=${dsc || '-'}${(await driver.text()).match(/BR-[A-Z]+-\d+[^\n]*/)?.[0] ? ' | ' + (await driver.text()).match(/BR-[A-Z]+-\d+[^\n]*/)[0] : ''}` };
+  return {
+    ok: terunggah && selesai && s === 'partially_delivered' && kanal === 'client_portal' && konf === 'confirmed' && gr === 'GR-KL1-E2E' && foto === 'foto SJ' && !!dsc && t.includes(dsc.split(' ')[0]),
+    bukti: `e2e-6-terima.png, e2e-6-dsc.png; unggah=${terunggah}; SJ status=${s}; kanal=${kanal}; konfirmasi=${konf}; GR=${gr}; ${foto}; DSC=${dsc || '-'}`,
+  };
 });
 
 // ---------------------------------------------------------------- 7 & 8

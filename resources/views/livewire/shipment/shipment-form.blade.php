@@ -134,7 +134,7 @@
                 <div class="col-md-4">
                     <label class="form-label" for="sj-kendaraan">{{ __('Kendaraan') }} <span class="wajib">*</span></label>
                     <select class="form-select @error('form.vehicle_id') is-invalid @enderror" id="sj-kendaraan"
-                            wire:model="form.vehicle_id">
+                            wire:model.live="form.vehicle_id">
                         <option value="">{{ __('Pilih kendaraan…') }}</option>
                         @foreach ($vehicles as $k)
                             <option value="{{ $k->id }}">{{ $k->plate_no }}</option>
@@ -142,16 +142,18 @@
                     </select>
                     @error('form.vehicle_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
+                {{-- A-311: driver tanpa akun — nama & HP (terisi dari driver bawaan kendaraan). --}}
                 <div class="col-md-4">
-                    <label class="form-label" for="sj-driver">{{ __('Driver') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.driver_id') is-invalid @enderror" id="sj-driver"
-                            wire:model="form.driver_id">
-                        <option value="">{{ __('Pilih driver…') }}</option>
-                        @foreach ($drivers as $d)
-                            <option value="{{ $d->id }}">{{ $d->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.driver_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <label class="form-label" for="sj-driver">{{ __('Nama driver') }} <span class="wajib">*</span></label>
+                    <input class="form-control @error('form.driver_name') is-invalid @enderror" id="sj-driver"
+                           type="text" maxlength="100" wire:model="form.driver_name">
+                    @error('form.driver_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="sj-driver-hp">{{ __('No. HP driver') }} <span class="wajib">*</span></label>
+                    <input class="form-control @error('form.driver_phone') is-invalid @enderror" id="sj-driver-hp"
+                           type="text" inputmode="tel" maxlength="20" wire:model="form.driver_phone" placeholder="08…">
+                    @error('form.driver_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
             @elseif ($form['shipment_method'] === 'carrier')
                 <div class="col-md-4">

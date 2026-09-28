@@ -40,7 +40,7 @@ trait ScopedToUser
                 /** @var User|null $user */
                 $user = Auth::user();
 
-                if (! $user instanceof User) {
+                if (! $user instanceof User || ScopeBypass::active()) {
                     return;
                 }
 

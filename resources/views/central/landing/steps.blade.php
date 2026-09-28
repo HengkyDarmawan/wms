@@ -5,7 +5,7 @@
         [null, __('Approval'), __('Permintaan mengalir ke penyetuju sesuai struktur organisasi dan aturan yang Anda atur sendiri, berlapis bila perlu.')],
         ['PCK', __('Tugas Picking'), __('Stok dialokasikan dari bin yang tepat. Staf gudang mengambil barang sambil memindai bin dan item.')],
         ['SJ', __('Surat Jalan'), __('Barang dikirim dengan kendaraan sendiri, ekspedisi, atau diantar. Satu surat jalan boleh memuat beberapa permintaan ke tujuan yang sama.')],
-        [null, __('Bukti Terima'), __('Driver atau penerima mencatat jumlah baik, rusak, atau kurang per baris dengan foto dan tanda tangan. Selisih langsung ditindaklanjuti.')],
+        [null, __('Bukti Terima'), __('Penerima — admin site klien lewat portal atau staf di gudang tujuan — mencatat jumlah baik, rusak, atau kurang per baris dengan foto SJ bertanda tangan. Selisih langsung ditindaklanjuti.')],
         ['ISU', __('Pemakaian Material'), __('Barang di Gudang Site dicatat terpakai oleh proyek. Sisa bisa diretur, ditransfer, atau dipotong ulang.')],
     ];
 @endphp

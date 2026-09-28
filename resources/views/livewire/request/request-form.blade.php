@@ -43,6 +43,13 @@
                        type="date" wire:model="form.required_date">
                 @error('form.required_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
+            {{-- A-313: nomor PO di sistem klien — referensi, tercetak di SJ. --}}
+            <div class="col-md-3">
+                <label class="form-label" for="req-po-klien">{{ __('No. PO klien') }}</label>
+                <input class="form-control @error('form.client_po_number') is-invalid @enderror" id="req-po-klien" type="text"
+                       maxlength="60" wire:model="form.client_po_number" placeholder="{{ __('Opsional') }}">
+                @error('form.client_po_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </div>
             <div class="col-md-4">
                 <label class="form-label" for="req-catatan">{{ __('Catatan') }}</label>
                 <input class="form-control" id="req-catatan" type="text" wire:model="form.notes"

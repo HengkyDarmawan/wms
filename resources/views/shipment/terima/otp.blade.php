@@ -3,7 +3,7 @@
 @section('title', __('Bukti terima'))
 
 @section('content')
-    {{-- A-231: langkah 1 halaman penerima bertoken — OTP dikirim ke HP penerima (A-273) atau disampaikan driver. --}}
+    {{-- A-231: langkah 1 halaman penerima bertoken — OTP dikirim ke HP penerima (A-273) atau disampaikan petugas gudang/pengantar (A-311). --}}
     <h1 class="h4 mb-1">{{ __('Bukti terima') }} {{ $sj?->number }}</h1>
     <p class="text-muted mb-3">
         {{ __('Dari') }} {{ $sj?->warehouse?->name }}
@@ -11,7 +11,7 @@
     </p>
 
     @if ($terkunci)
-        <div class="alert alert-danger">{{ __('Tautan ini terkunci karena terlalu banyak percobaan. Minta driver menerbitkan tautan baru.') }}</div>
+        <div class="alert alert-danger">{{ __('Tautan ini terkunci karena terlalu banyak percobaan. Minta petugas gudang pengirim menerbitkan tautan baru.') }}</div>
     @else
         @if (session('status'))
             <div class="alert alert-success small">{{ session('status') }}</div>
@@ -19,7 +19,7 @@
         <p class="small text-muted">
             {{ $terkirimKe
                 ? __('Masukkan 6 digit kode OTP yang dikirim ke WhatsApp/SMS :hp untuk membuka formulir.', ['hp' => $terkirimKe])
-                : __('Masukkan 6 digit kode OTP yang disampaikan driver untuk membuka formulir.') }}
+                : __('Masukkan 6 digit kode OTP yang disampaikan petugas gudang atau pengantar untuk membuka formulir.') }}
         </p>
         <form method="post" action="{{ route('terima.otp', $token) }}">
             @csrf

@@ -58,7 +58,7 @@ class CompanySettingCatalog
             'expiry' => ['label' => 'Tanggal kedaluwarsa', 'hint' => 'Kolom kedaluwarsa pada lot/serial; bersama Batch / lot membuka jenis Barang berkedaluwarsa.', 'tetap' => false],
             'fefo' => ['label' => 'Strategi FEFO', 'hint' => 'Ambil yang paling dekat kedaluwarsa lebih dulu.', 'tetap' => false],
             'qc' => ['label' => 'QC penerimaan', 'hint' => 'GRN vendor untuk item yang butuh QC masuk bin Karantina dulu.', 'tetap' => false],
-            'otp_auto' => ['label' => 'OTP bukti terima otomatis', 'hint' => 'Kode OTP tautan penerima dikirim ke WhatsApp/SMS penerima dan tidak tampil ke driver; bila gagal terkirim, kode tampil untuk disampaikan driver.', 'tetap' => false],
+            'otp_auto' => ['label' => 'OTP bukti terima otomatis', 'hint' => 'Kode OTP tautan penerima dikirim ke WhatsApp/SMS penerima dan tidak tampil ke staf; bila gagal terkirim, kode tampil untuk disampaikan staf/pengantar. Jalur cadangan bila penerima belum punya akun portal (A-312).', 'tetap' => false],
             'rfid' => ['label' => 'RFID', 'hint' => 'Tersedia di Fase 2; saklar hanya disimpan.', 'tetap' => true],
         ];
     }

@@ -15,6 +15,7 @@
                             <strong>{{ $sj->number }}</strong> <span class="badge {{ $sj->status->badge() }}">{{ $sj->status->label() }}</span>
                             @if ($pod)
                                 <span class="small text-muted">· {{ __('diterima') }} {{ $pod->received_by_name }} {{ $pod->confirmed_at?->lokal()->format('d/m/Y H:i') }}</span>
+                                @if ($pod->client_gr_number) <span class="small text-muted">· {{ __('GR klien') }} {{ $pod->client_gr_number }}</span> @endif
                                 @if ($pod->confirmation)
                                     <span class="badge text-bg-secondary">{{ $pod->confirmation->label() }}</span>
                                 @elseif ($pod->confirm_deadline_at)
@@ -22,6 +23,14 @@
                                 @endif
                             @endif
                         </div>
+                        {{-- A-312: penerima (admin site klien / user tujuan) mengisi bukti terima saat SJ tiba. --}}
+                        @if (! $pod && $sj->status === \App\Domain\Shipment\Enums\ShipmentStatus::Shipped)
+                            @can('confirmDelivery', $sj)
+                                <a class="btn btn-sm btn-success" href="{{ $portal ? route('portal.shipments.proof', $sj->id) : route('shipments.show', $sj->id) }}">
+                                    <i class="bi bi-clipboard-check" aria-hidden="true"></i> {{ __('Isi bukti terima') }}
+                                </a>
+                            @endcan
+                        @endif
                     </div>
 
                     @if ($pod)

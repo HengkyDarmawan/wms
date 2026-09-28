@@ -13,9 +13,10 @@ use RuntimeException;
 
 /**
  * Berkas bukti terima (BR-SJ-05, A-231): foto serah terima, tanda tangan
- * penerima (gambar dari kanvas atau unggahan), dan foto kerusakan per baris.
+ * penerima (gambar dari kanvas atau unggahan), foto kerusakan per baris, dan
+ * foto SJ bertanda tangan & cap (A-316).
  *
- * Dipakai layar driver (Livewire) dan halaman penerima bertoken supaya nama
+ * Dipakai form bukti terima (internal & portal klien) dan halaman penerima bertoken supaya nama
  * dan folder berkasnya sama: `pod/sj-<id>/…` di disk company (NFR-14).
  * Berkas disimpan **sebelum** `ConfirmDelivery`; bila aksi itu gagal, pemanggil
  * membuangnya lewat `hapus()` supaya tidak ada berkas yatim.
@@ -26,14 +27,18 @@ class ProofFiles
 
     /**
      * @param  array<int|string, UploadedFile|null>  $fotoRusak  shipment_line_id => foto
-     * @return array{photo_path: ?string, signature_path: ?string, lines: array<int, string>}
+     * @return array{photo_path: ?string, signature_path: ?string, signed_document_path: ?string, lines: array<int, string>}
      */
-    public function simpan(Shipment $shipment, ?UploadedFile $foto, ?string $tandaTangan, array $fotoRusak): array
+    public function simpan(Shipment $shipment, ?UploadedFile $foto, ?string $tandaTangan, array $fotoRusak, ?UploadedFile $fotoSj = null): array
     {
         $folder = 'pod/sj-'.$shipment->id;
-        $hasil = ['photo_path' => null, 'signature_path' => null, 'lines' => []];
+        $hasil = ['photo_path' => null, 'signature_path' => null, 'signed_document_path' => null, 'lines' => []];
 
         try {
+            if ($fotoSj instanceof UploadedFile) {
+                $hasil['signed_document_path'] = $this->upload->handle($fotoSj, $folder, 'sj-ttd-'.$this->acak());
+            }
+
             if ($foto instanceof UploadedFile) {
                 $hasil['photo_path'] = $this->upload->handle($foto, $folder, 'foto-'.$this->acak());
             }
@@ -56,9 +61,10 @@ class ProofFiles
         return $hasil;
     }
 
-    /** @param  array{photo_path: ?string, signature_path: ?string, lines: array<int, string>}  $berkas */
+    /** @param  array{photo_path: ?string, signature_path: ?string, signed_document_path?: ?string, lines: array<int, string>}  $berkas */
     public function hapus(array $berkas): void
     {
+        $this->upload->delete($berkas['signed_document_path'] ?? null);
         $this->upload->delete($berkas['photo_path']);
         $this->upload->delete($berkas['signature_path']);
 

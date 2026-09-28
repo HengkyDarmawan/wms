@@ -13,6 +13,7 @@
                     · {{ __('Tambahan dari') }} <a href="{{ route('requests.show', $req->parent) }}">{{ $req->parent->number }}</a>
                 @endif
             </p>
+            @include('request.partials.client-po')
         </div>
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary" href="{{ route('requests.index') }}">{{ __('Kembali') }}</a>

@@ -23,7 +23,6 @@ use App\Domain\Shipment\Actions\ProcessPickTask;
 use App\Domain\Shipment\Actions\ResolveDiscrepancy;
 use App\Domain\Shipment\Actions\ShipShipment;
 use App\Domain\Shipment\Enums\DiscrepancyStatus;
-use App\Domain\Shipment\Enums\DiscrepancyType;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Models\DeliveryDiscrepancy;
 use App\Domain\Shipment\Support\WarehouseBins;
@@ -131,10 +130,10 @@ class DiscrepancyTest extends TenantTestCase
             'destination_project_id' => $this->proyek->id,
             'shipment_method' => 'own_fleet',
             'vehicle_id' => Vehicle::create(['plate_no' => 'B1234XYZ'])->id,
-            'driver_id' => $this->makeUser('driver')->id,
+            'driver_name' => 'Gani', 'driver_phone' => '081200000008',
         ], $staf);
 
-        $sj = app(ShipShipment::class)->handle($sj, null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($sj, null, $this->makeUser('warehouse_staff'));
 
         app(ConfirmDelivery::class)->handle(
             $sj,
@@ -146,7 +145,7 @@ class DiscrepancyTest extends TenantTestCase
                 'qty_missing' => 2,
                 'damage_photo_path' => 'bukti/rusak.jpg',
             ]],
-            $this->makeUser('driver'),
+            $this->makeUser('warehouse_staff'),
         );
 
         return $sj->refresh()->discrepancies()->with('lines')->first();
@@ -361,10 +360,10 @@ class DiscrepancyTest extends TenantTestCase
             'destination_project_id' => $this->proyek->id,
             'shipment_method' => 'own_fleet',
             'vehicle_id' => Vehicle::create(['plate_no' => 'B9999ZZZ'])->id,
-            'driver_id' => $this->makeUser('driver')->id,
+            'driver_name' => 'Gani', 'driver_phone' => '081200000008',
         ], $staf);
 
-        $sj = app(ShipShipment::class)->handle($sj, null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($sj, null, $this->makeUser('warehouse_staff'));
 
         $hasil = app(IssueDeliveryToken::class)->handle($sj, '08123456789', $staf);
 

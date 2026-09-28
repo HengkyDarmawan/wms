@@ -23,7 +23,7 @@ class DevicePolicy
     /**
      * Perangkat sendiri selalu boleh dicabut. Mencabut perangkat user lain butuh
      * `device.manage` **dan** `device.view` — 10-access §2: `device.manage` saja
-     * berarti "perangkat sendiri" (Staf Gudang, Driver).
+     * berarti "perangkat sendiri" (Staf Gudang, Pemohon Internal).
      */
     public function revoke(User $actor, Device $device): bool
     {

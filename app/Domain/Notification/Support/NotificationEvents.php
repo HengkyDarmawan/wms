@@ -18,6 +18,7 @@ final class NotificationEvents
         'approval.task_assigned' => ['label' => 'Tugas approval baru untuk saya', 'email' => true],
         'approval.decided' => ['label' => 'Dokumen yang saya ajukan diputus', 'email' => false],
         'request.under_review' => ['label' => 'Permintaan klien menunggu tinjauan', 'email' => false],
+        'shipment.shipped' => ['label' => 'SJ ke site/gudang saya berangkat — isi bukti terima saat tiba', 'email' => false, 'permission' => 'shipment.confirm_delivery'],
         'delivery.received' => ['label' => 'Barang permintaan saya diterima — konfirmasi atau keberatan', 'email' => false],
         'discrepancy.opened' => ['label' => 'Selisih pengiriman baru', 'email' => false],
         'purchase_request.approved' => ['label' => 'PRQ disetujui dan menunggu pemesanan', 'email' => false],

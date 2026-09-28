@@ -7,6 +7,12 @@
             </p>
         </div>
 
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            {{-- A-323: pengalih Tabel | Denah (tersimpan di URL). --}}
+            <div class="btn-group" role="group" aria-label="{{ __('Tampilan') }}">
+                <button class="btn {{ $tampilan === 'tabel' ? 'btn-secondary' : 'btn-outline-secondary' }}" type="button" wire:click="$set('tampilan', 'tabel')" data-tampilan="tabel"><i class="bi bi-table"></i> {{ __('Tabel') }}</button>
+                <button class="btn {{ $tampilan === 'denah' ? 'btn-secondary' : 'btn-outline-secondary' }}" type="button" wire:click="$set('tampilan', 'denah')" data-tampilan="denah"><i class="bi bi-map"></i> {{ __('Denah') }}</button>
+            </div>
         @can('create', \App\Domain\Warehouse\Models\Warehouse::class)
             <div class="d-flex flex-wrap gap-2">
                 {{-- A-272: impor banyak gudang sekaligus. --}}
@@ -18,6 +24,7 @@
                 </button>
             </div>
         @endcan
+        </div>
     </div>
 
     @if ($ruleError !== '')
@@ -169,6 +176,29 @@
         </div>
     </div>
 
+    @if ($tampilan === 'denah')
+        {{-- A-323: denah gudang terpilih langsung di halaman ini (hanya-lihat). --}}
+        <div class="card mb-3" data-mode-denah>
+            <div class="card-body d-flex flex-wrap align-items-end gap-2">
+                <div>
+                    <label class="form-label small mb-1" for="denah-gudang">{{ __('Gudang') }}</label>
+                    <select class="form-select form-select-sm" id="denah-gudang" style="min-width: 18rem" wire:model.live="gudangDenah">
+                        @foreach ($semua->where('is_active', true) as $g)
+                            <option value="{{ $g->id }}" @selected($denahGudang?->id === $g->id)>{{ $g->code }} — {{ $g->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @if ($denahGudang)
+                    <a class="btn btn-sm btn-primary ms-auto" href="{{ route('warehouses.layout', $denahGudang) }}"><i class="bi bi-arrows-fullscreen"></i> {{ __('Buka denah penuh / Atur denah') }}</a>
+                @endif
+            </div>
+        </div>
+        @if ($denahGudang)
+            @livewire('warehouse.warehouse-layout', ['warehouse' => $denahGudang, 'ringkas' => true], key('denah-'.$denahGudang->id))
+        @else
+            <div class="alert alert-info">{{ __('Belum ada gudang aktif.') }}</div>
+        @endif
+    @else
     <div class="card">
         <div class="table-responsive">
             <table class="table align-middle mb-0">
@@ -208,7 +238,9 @@
                                     {{ $gudang->is_active ? __('Aktif') : __('Nonaktif') }}
                                 </span>
                             </td>
-                            <td class="text-end">
+                            <td class="text-end text-nowrap">
+                                {{-- A-323: tombol Denah per baris. --}}
+                                <a class="btn btn-sm btn-outline-primary" href="{{ route('warehouses.layout', $gudang) }}" data-denah="{{ $gudang->code }}"><i class="bi bi-map"></i> {{ __('Denah') }}</a>
                                 @can('update', $gudang)
                                     <button class="btn btn-sm btn-outline-secondary" type="button"
                                             wire:click="ubah({{ $gudang->id }})">{{ __('Ubah') }}</button>
@@ -238,4 +270,5 @@
             </table>
         </div>
     </div>
+    @endif
 </div>

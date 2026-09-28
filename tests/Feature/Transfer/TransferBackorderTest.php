@@ -124,7 +124,7 @@ class TransferBackorderTest extends TenantTestCase
             'destination_project_id' => $this->proyek->id,
             'shipment_method' => 'own_fleet',
             'vehicle_id' => Vehicle::create(['plate_no' => 'B7777TR'])->id,
-            'driver_id' => $this->makeUser('driver')->id,
+            'driver_name' => 'Gani', 'driver_phone' => '081200000008',
         ], $this->makeUser('warehouse_staff'));
         $sjReq = app(ShipShipment::class)->handle($sjReq, null, $this->makeUser('driver'));
         $this->terimaSj($sjReq);

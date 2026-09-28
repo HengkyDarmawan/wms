@@ -9,6 +9,7 @@ use App\Domain\Warehouse\Actions\EnsureSystemBins;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Bin;
+use App\Domain\Warehouse\Models\FloorPlanObject;
 use App\Domain\Warehouse\Models\Rack;
 use App\Domain\Warehouse\Models\RackLevel;
 use App\Domain\Warehouse\Models\Warehouse;
@@ -76,11 +77,45 @@ class WarehouseDemoSeeder extends Seeder
 
         $this->seedLocations($dibuat);
         $this->seedOnSiteBins($dibuat, $systemBins);
+        $this->seedFloorPlan($dibuat['CKG'] ?? null);
 
         $this->command?->info(
             'Gudang demo siap: '.Warehouse::withoutGlobalScopes()->count().' gudang, '
             .Bin::withoutGlobalScopes()->count().' bin.',
         );
+    }
+
+    /**
+     * A-320: denah gedung CKG 30 × 18 m (00-akun-uji §2) — zona A & B
+     * berposisi, rak R01 di dalamnya, dan objek denah contoh. Gudang lain
+     * tetap tanpa ukuran gedung (ditata otomatis).
+     */
+    private function seedFloorPlan(?Warehouse $ckg): void
+    {
+        if ($ckg === null) {
+            return;
+        }
+
+        $ckg->forceFill(['length_m' => 30, 'width_m' => 18])->save();
+
+        foreach (['A' => [1, 1], 'B' => [15, 1]] as $kode => [$x, $y]) {
+            $zona = Zone::query()->where('warehouse_id', $ckg->id)->where('code', $kode)->first();
+            $zona?->forceFill(['pos_x' => $x, 'pos_y' => $y, 'length_m' => 12, 'width_m' => 7])->save();
+            Rack::query()->where('zone_id', $zona?->id)->where('code', 'R01')->update(['pos_x' => 1, 'pos_y' => 1.5]);
+        }
+
+        foreach ([
+            ['door', 'Pintu utama', 12, 17.5, 4, 0.5],
+            ['dock', 'Dock 1', 24, 13.5, 4, 4],
+            ['forklift_lane', 'Jalur forklift', 1, 9.5, 28, 2],
+            ['pillar', 'Pilar P1', 14, 4, 0.5, 0.5],
+            ['office', 'Kantor gudang', 1, 12.5, 6, 5],
+        ] as [$jenis, $nama, $x, $y, $p, $l]) {
+            FloorPlanObject::query()->updateOrCreate(
+                ['warehouse_id' => $ckg->id, 'name' => $nama],
+                ['object_type' => $jenis, 'pos_x' => $x, 'pos_y' => $y, 'length_m' => $p, 'width_m' => $l, 'rotation' => 0, 'is_active' => true],
+            );
+        }
     }
 
     /** @param  array<string, Warehouse>  $gudang */

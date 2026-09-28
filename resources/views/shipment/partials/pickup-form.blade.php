@@ -1,6 +1,6 @@
 {{--
     Form SJ tanpa PCK (A-247): cara jemput, kendaraan master atau plat bebas,
-    sopir pengguna atau nama bebas. Dipakai detail RET (SJ jemput, A-248) dan
+    nama & HP sopir teks (A-311). Dipakai detail RET (SJ jemput, A-248) dan
     detail TRF aset (SJ antar site, A-249). Properti Livewire: $jemput.
     Variabel: $judul, $keterangan, $aksi (metode Livewire), $pilihanJemput.
 --}}
@@ -36,16 +36,16 @@
             @endif
             @error('jemput.vehicle_plate') <div class="text-danger small">{{ $message }}</div> @enderror
         </div>
+        {{-- A-311: sopir tidak punya akun — nama & HP diketik (terisi dari driver bawaan kendaraan). --}}
         <div class="col-md-3">
-            <label class="form-label small" for="jemput-sopir">{{ __('Sopir') }}</label>
-            <select class="form-select form-select-sm" id="jemput-sopir" wire:model.live="jemput.driver_id">
-                <option value="">{{ __('Bukan pengguna WMS') }}</option>
-                @foreach ($pilihanJemput['drivers'] as $d) <option value="{{ $d->id }}">{{ $d->name }}</option> @endforeach
-            </select>
-            @if ($jemput['driver_id'] === '')
-                <input class="form-control form-control-sm mt-1" type="text" maxlength="100" wire:model="jemput.carried_by_name" placeholder="{{ __('Nama sopir') }}" aria-label="{{ __('Nama sopir') }}">
-            @endif
-            @error('jemput.carried_by_name') <div class="text-danger small">{{ $message }}</div> @enderror
+            <label class="form-label small" for="jemput-sopir">{{ __('Nama sopir') }} <span class="wajib">*</span></label>
+            <input class="form-control form-control-sm @error('jemput.driver_name') is-invalid @enderror" id="jemput-sopir" type="text" maxlength="100" wire:model="jemput.driver_name">
+            @error('jemput.driver_name') <div class="text-danger small">{{ $message }}</div> @enderror
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small" for="jemput-hp">{{ __('No. HP sopir') }} @if ($jemput['shipment_method'] === 'own_fleet') <span class="wajib">*</span> @endif</label>
+            <input class="form-control form-control-sm @error('jemput.driver_phone') is-invalid @enderror" id="jemput-hp" type="text" inputmode="tel" maxlength="20" wire:model="jemput.driver_phone" placeholder="08…">
+            @error('jemput.driver_phone') <div class="text-danger small">{{ $message }}</div> @enderror
         </div>
         <div class="col-md-6">
             <label class="form-label small" for="jemput-catatan">{{ __('Catatan') }}</label>

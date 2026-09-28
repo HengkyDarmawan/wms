@@ -20,7 +20,7 @@ use App\Domain\WhatsApp\Transport\WhatsAppNotSent;
  * Aktif bila company menyalakan saklar `otp_auto` **dan** platform punya kanal
  * ({@see MessageGateway::available()}). Gagal kirim tidak menggagalkan
  * penerbitan tautan: pemanggil kembali ke jalur manual (OTP tampil sekali
- * untuk disampaikan driver), sama seperti sebelum A-273.
+ * untuk disampaikan staf/pengantar), sama seperti sebelum A-273.
  *
  * Bila WhatsApp company aktif (Fase 2a, A-279) OTP dikirim lewat template
  * autentikasi `wms_kode` — Meta tidak mengizinkan tautan di template itu, jadi
@@ -96,7 +96,7 @@ class DeliveryOtpSender
     {
         $shipment->loadMissing('warehouse:id,name');
 
-        return __("Konfirmasi penerimaan barang :sj dari :gudang.\nBuka: :url\nKode OTP: :otp (jangan berikan ke siapa pun, termasuk driver). Berlaku sampai :sampai.", [
+        return __("Konfirmasi penerimaan barang :sj dari :gudang.\nBuka: :url\nKode OTP: :otp (jangan berikan ke siapa pun, termasuk pengantar). Berlaku sampai :sampai.", [
             'sj' => $shipment->number,
             'gudang' => $shipment->warehouse?->name ?? '-',
             'url' => route('terima.show', $token->token),

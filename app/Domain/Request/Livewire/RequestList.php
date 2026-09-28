@@ -85,6 +85,8 @@ class RequestList extends Component
             ->when($this->search !== '', fn (Builder $q) => $q
                 ->where(fn (Builder $w) => $w
                     ->where('number', 'like', '%'.$this->search.'%')
+                    // A-313: No. PO klien ikut dicari.
+                    ->orWhere('client_po_number', 'like', '%'.$this->search.'%')
                     ->orWhereHas('project', fn (Builder $p) => $p
                         ->where('code', 'like', '%'.$this->search.'%')
                         ->orWhere('name', 'like', '%'.$this->search.'%'))))

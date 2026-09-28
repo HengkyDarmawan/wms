@@ -21,6 +21,13 @@
             <td class="k">{{ __('Diisi lewat') }}</td>
             <td>{{ $proof->channel?->label() }}</td>
         </tr>
+        <tr>
+            <td class="k">{{ __('Driver') }}</td>
+            <td>{{ $sj->driverLabel() ?: '—' }}</td>
+            {{-- A-313: nomor GR di sistem klien (referensi, opsional). --}}
+            <td class="k">{{ __('No. GR klien') }}</td>
+            <td>{{ $proof->client_gr_number ?: '—' }}</td>
+        </tr>
     </table>
 
     <table class="baris">

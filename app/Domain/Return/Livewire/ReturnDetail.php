@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Return\Livewire;
 
-use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalHistory;
 use App\Domain\Master\Enums\ReasonContext;
@@ -58,7 +57,7 @@ class ReturnDetail extends Component
     public array $pilah = [];
 
     /** @var array<string, string> isian SJ jemput (A-248) */
-    public array $jemput = ['shipment_method' => 'own_fleet', 'vehicle_id' => '', 'vehicle_plate' => '', 'driver_id' => '', 'carried_by_name' => '', 'carrier_id' => '', 'tracking_no' => '', 'notes' => ''];
+    public array $jemput = ['shipment_method' => 'own_fleet', 'vehicle_id' => '', 'vehicle_plate' => '', 'driver_name' => '', 'driver_phone' => '', 'carrier_id' => '', 'tracking_no' => '', 'notes' => ''];
 
     public function mount(GoodsReturn $goodsReturn): void
     {
@@ -67,6 +66,12 @@ class ReturnDetail extends Component
         $this->returnId = (int) $goodsReturn->id;
         $this->portal = request()->routeIs('portal.*');
         $this->siapkanPilah();
+    }
+
+    /** A-315: driver bawaan kendaraan mengisi nama & HP sopir (tetap bisa diubah). */
+    public function updatedJemputVehicleId(string $id): void
+    {
+        $this->jemput = Vehicle::fillDriver($this->jemput, $id);
     }
 
     public function render(): View
@@ -100,7 +105,6 @@ class ReturnDetail extends Component
             'pilihanJemput' => ! $this->portal && auth()->user()?->can('createPickup', $ret) ? [
                 'vehicles' => Vehicle::query()->where('is_active', true)->orderBy('plate_no')->get(['id', 'plate_no']),
                 'carriers' => Carrier::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
-                'drivers' => User::query()->whereNull('client_id')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
             ] : null,
         ]);
     }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Transfer\Livewire;
 
-use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalHistory;
 use App\Domain\Master\Enums\ReasonContext;
@@ -47,13 +46,19 @@ class TransferDetail extends Component
     public array $form = ['reason' => '', 'notes' => ''];
 
     /** @var array<string, string> isian SJ antar site TRF aset (A-249) */
-    public array $jemput = ['shipment_method' => 'own_fleet', 'vehicle_id' => '', 'vehicle_plate' => '', 'driver_id' => '', 'carried_by_name' => '', 'carrier_id' => '', 'tracking_no' => '', 'notes' => ''];
+    public array $jemput = ['shipment_method' => 'own_fleet', 'vehicle_id' => '', 'vehicle_plate' => '', 'driver_name' => '', 'driver_phone' => '', 'carrier_id' => '', 'tracking_no' => '', 'notes' => ''];
 
     public function mount(Transfer $transfer): void
     {
         $this->authorize('view', $transfer);
 
         $this->transferId = (int) $transfer->id;
+    }
+
+    /** A-315: driver bawaan kendaraan mengisi nama & HP sopir (tetap bisa diubah). */
+    public function updatedJemputVehicleId(string $id): void
+    {
+        $this->jemput = Vehicle::fillDriver($this->jemput, $id);
     }
 
     public function render(): View
@@ -88,7 +93,6 @@ class TransferDetail extends Component
             'pilihanJemput' => auth()->user()?->can('createSiteShipment', $trf) ? [
                 'vehicles' => Vehicle::query()->where('is_active', true)->orderBy('plate_no')->get(['id', 'plate_no']),
                 'carriers' => Carrier::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
-                'drivers' => User::query()->whereNull('client_id')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
             ] : null,
         ]);
     }

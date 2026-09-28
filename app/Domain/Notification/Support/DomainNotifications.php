@@ -13,6 +13,8 @@ use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Request\Models\MaterialRequestLine;
 use App\Domain\Shipment\Models\DeliveryDiscrepancy;
 use App\Domain\Shipment\Models\ProofOfDelivery;
+use App\Domain\Shipment\Models\Shipment;
+use App\Domain\Shipment\Support\DeliveryRecipients;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
@@ -57,6 +59,20 @@ class DomainNotifications
                     'Barang '.$req->number.' diterima ('.$sj->number.')',
                     'Konfirmasi terima atau ajukan keberatan sebelum '.$pod->confirm_deadline_at?->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d/m/Y H:i').'.',
                     route($pemohon->isClient() ? 'portal.requests.show' : 'requests.show', $req->id, false),
+                    'shipment', (int) $sj->id, [], $actor);
+            }
+        });
+    }
+
+    /** A-319: SJ berangkat — penerima (admin site klien / user tujuan) diminta mengisi bukti terima saat barang tiba. */
+    public function shipmentShipped(Shipment $sj, ?User $actor = null): void
+    {
+        $this->aman(function () use ($sj, $actor) {
+            foreach (app(DeliveryRecipients::class)->recipientsFor($sj) as $penerima) {
+                $this->notifier->send($penerima, 'shipment.shipped',
+                    'SJ '.$sj->number.' berangkat ke '.$sj->destinationLabel(),
+                    'Pengantar: '.($sj->carrierLabel() ?: '—').'. Isi bukti terima saat barang tiba.',
+                    route($penerima->isClient() ? 'portal.shipments.proof' : 'shipments.show', $sj->id, false),
                     'shipment', (int) $sj->id, [], $actor);
             }
         });

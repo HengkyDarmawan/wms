@@ -14,6 +14,7 @@ use App\Domain\Master\Models\StorageCategory;
 use App\Domain\Master\Models\Vehicle;
 use App\Domain\Master\Support\EnumInput;
 use App\Domain\Master\Support\MasterCode;
+use App\Domain\Shared\Messaging\PhoneNumber;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -112,10 +113,19 @@ class SaveReference
             throw MasterRuleException::rule('BR-MST-01', 'Nomor polisi "'.$plat.'" sudah terdaftar.');
         }
 
+        // A-311: driver bawaan = nama + HP teks (driver tidak punya akun).
+        $hp = $this->kosongJadiNull($attributes['default_driver_phone'] ?? null);
+        $hpBaku = $hp === null ? null : PhoneNumber::normalize($hp);
+
+        if ($hp !== null && $hpBaku === null) {
+            throw MasterRuleException::fields(['default_driver_phone' => 'No. HP driver tidak sah (contoh 0812…).'], 'BR-GEN-11');
+        }
+
         $data = [
             'plate_no' => $plat,
             'type' => $this->kosongJadiNull($attributes['type'] ?? null),
-            'default_driver_id' => $this->idAtauNull($attributes['default_driver_id'] ?? null),
+            'default_driver_name' => $this->kosongJadiNull($attributes['default_driver_name'] ?? null),
+            'default_driver_phone' => $hpBaku,
         ];
 
         $vehicle = $baru

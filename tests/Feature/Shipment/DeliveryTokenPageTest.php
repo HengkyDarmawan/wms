@@ -40,7 +40,7 @@ use Tests\TenantTestCase;
  * ditolak dan dihitung, OTP benar membuka formulir, bukti terima dari halaman
  * publik mengubah SJ (kanal `token_link`), berkas tersimpan, token habis pakai;
  * tautan kedaluwarsa/asing → 410.
- * TC-SJ-05e — driver mengunggah foto serah terima, tanda tangan kanvas, dan
+ * TC-SJ-05e — cadangan Kepala Gudang asal (A-316) mengunggah foto SJ bertanda tangan, foto serah terima, tanda tangan kanvas, dan
  * foto kerusakan lewat layar; berkasnya dilayani controller berotorisasi.
  */
 class DeliveryTokenPageTest extends TenantTestCase
@@ -93,10 +93,10 @@ class DeliveryTokenPageTest extends TenantTestCase
         $sj = app(CreateShipment::class)->handle([$pck->id], [
             'destination_type' => 'project_client', 'destination_project_id' => $this->proyek->id,
             'shipment_method' => 'own_fleet', 'vehicle_id' => Vehicle::create(['plate_no' => 'B'.random_int(1000, 9999).'TK'])->id,
-            'driver_id' => $this->makeUser('driver')->id,
+            'driver_name' => 'Gani', 'driver_phone' => '081200000008',
         ], $staf);
 
-        return app(ShipShipment::class)->handle($sj, null, $this->makeUser('driver'));
+        return app(ShipShipment::class)->handle($sj, null, $this->makeUser('warehouse_staff'));
     }
 
     private function ttd(): string
@@ -185,15 +185,17 @@ class DeliveryTokenPageTest extends TenantTestCase
     }
 
     #[Test]
-    public function tc_sj_05e_driver_mengunggah_foto_dan_tanda_tangan_dari_layar(): void
+    public function tc_sj_05e_kepala_gudang_asal_mengunggah_foto_sj_dan_tanda_tangan_dari_layar(): void
     {
         $sj = $this->sjDikirim();
-        $driver = $this->makeUser('driver');
-        $driver->forgetPermissionCache();
+        // A-316: cadangan — Kepala Gudang asal menyalin SJ bertanda tangan (driver tanpa akun, A-311).
+        $kepala = $this->makeUser('warehouse_head');
+        $kepala->forgetPermissionCache();
         $baris = $sj->lines()->first();
 
-        Livewire::actingAs($driver)->test(ShipmentDetail::class, ['shipment' => $sj])
+        $layar = Livewire::actingAs($kepala)->test(ShipmentDetail::class, ['shipment' => $sj])
             ->call('mintaDialog', 'terima')
+            ->assertSet('form.received_by_name', '')
             ->set('form.received_by_name', 'Pak Budi')
             ->set('terima.'.$baris->id.'.qty_good', '19')
             ->set('terima.'.$baris->id.'.qty_damaged', '1')
@@ -201,12 +203,24 @@ class DeliveryTokenPageTest extends TenantTestCase
             ->set('foto', UploadedFile::fake()->image('serah.jpg', 200, 200))
             ->set('tandaTangan', $this->ttd())
             ->call('simpanBuktiTerima')
+            ->assertHasErrors(['fotoSj']);
+
+        $this->assertSame('shipped', $sj->refresh()->status->value);
+
+        $layar->set('fotoSj', UploadedFile::fake()->image('sj-ttd.jpg', 200, 200))
+            ->set('form.client_gr_number', 'GR-KL1-0099')
+            ->call('simpanBuktiTerima')
             ->assertSet('ruleError', '')
             ->assertHasNoErrors();
 
         $bukti = $sj->refresh()->proof()->with('lines')->first();
         $upload = app(StoreUpload::class);
-        $this->assertSame(ProofChannel::DriverPwa, $bukti->channel);
+        $this->assertSame(ProofChannel::SignedDocument, $bukti->channel);
+        $this->assertSame('GR-KL1-0099', $bukti->client_gr_number);
+        $this->assertTrue($upload->exists($bukti->signed_document_path));
+        // Bukan pemohon: tenggat konfirmasi/keberatan tetap berjalan (A-317).
+        $this->assertNull($bukti->confirmation);
+        $this->assertNotNull($bukti->confirm_deadline_at);
         $this->assertTrue($upload->exists($bukti->photo_path));
         $this->assertTrue($upload->exists($bukti->signature_path));
         $this->assertTrue($upload->exists($bukti->lines->first()->damage_photo_path));
@@ -214,9 +228,10 @@ class DeliveryTokenPageTest extends TenantTestCase
 
         // Tanda tangan yang bukan gambar ditolak sebelum aksi berjalan.
         $sj2 = $this->sjDikirim();
-        Livewire::actingAs($driver)->test(ShipmentDetail::class, ['shipment' => $sj2])
+        Livewire::actingAs($kepala)->test(ShipmentDetail::class, ['shipment' => $sj2])
             ->call('mintaDialog', 'terima')
             ->set('form.received_by_name', 'Pak Budi')
+            ->set('fotoSj', UploadedFile::fake()->image('sj-ttd.jpg', 200, 200))
             ->set('tandaTangan', 'data:image/png;base64,bukan-gambar')
             ->call('simpanBuktiTerima')
             ->assertSet('ruleCode', 'NFR-14');

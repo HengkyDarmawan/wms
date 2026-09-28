@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `template` (Template Dokumen & Label)
 
-**Versi:** 0.13
+**Versi:** 0.14
 **Tanggal:** 28 September 2026
-**Status:** selesai Fase 1, dibangun paralel dengan modul Retur/Transfer di branch `feat/template-label`. Keputusan yang tidak tertulis di dokumen lain dicatat sebagai [A-120](04-keputusan-dan-asumsi.md#a-120)–[A-126](04-keputusan-dan-asumsi.md#a-126) (*Perlu validasi*). v0.2: dokumen ISU (Bukti Pemakaian Material) dari modul Issue ([23-pemakaian](23-pemakaian.md), [A-152](04-keputusan-dan-asumsi.md#a-152)). v0.3: Bukti Konversi Material (jenis `conversion` baru) dan BA Waste aktif dari modul Konversi & Waste ([24-konversi-waste](24-konversi-waste.md), [A-160](04-keputusan-dan-asumsi.md#a-160)). v0.4: BA Serah Terima Aset aktif dari modul Aset ([25-aset](25-aset.md)); tidak ada lagi jenis stub. v0.9: **ukuran label = master per company** dan **desain label** yang bisa ditata (geser/ubah ukuran, barcode/QR/keduanya) — [A-261](04b-asumsi-lanjutan.md#a-261), [A-262](04b-asumsi-lanjutan.md#a-262); §2, §3.2–§3.4, §5.3, §6, §10 (TC-TPL-17–21), §12, §13; menjawab [O-09](04-keputusan-dan-asumsi.md#o-09). v0.10: **riwayat cetak** & cap CETAK ULANG ([A-263](04b-asumsi-lanjutan.md#a-263)), **segel tanda tangan ber-QR** + halaman verifikasi publik ([A-264](04b-asumsi-lanjutan.md#a-264)) — §3.5–§3.6, §5.2, §6, §10 (TC-TPL-22–25), §13.1 no. 8.; v0.11: label potongan hanya bila saklar per potong menyala ([A-284](04b-asumsi-lanjutan.md#a-284), §5.3, §10 TC-TPL-26); v0.12: kolom satuan setiap cetakan disertai uraian kemasan; Bukti Penerimaan Barang GRN vendor berkolom Dikirim vendor/Baik/Rusak/Kurang ([A-293](04b-asumsi-lanjutan.md#a-293), [A-295](04b-asumsi-lanjutan.md#a-295), §10 TC-TPL-27)
+**Status:** selesai Fase 1, dibangun paralel dengan modul Retur/Transfer di branch `feat/template-label`. Keputusan yang tidak tertulis di dokumen lain dicatat sebagai [A-120](04-keputusan-dan-asumsi.md#a-120)–[A-126](04-keputusan-dan-asumsi.md#a-126) (*Perlu validasi*). v0.2: dokumen ISU (Bukti Pemakaian Material) dari modul Issue ([23-pemakaian](23-pemakaian.md), [A-152](04-keputusan-dan-asumsi.md#a-152)). v0.3: Bukti Konversi Material (jenis `conversion` baru) dan BA Waste aktif dari modul Konversi & Waste ([24-konversi-waste](24-konversi-waste.md), [A-160](04-keputusan-dan-asumsi.md#a-160)). v0.4: BA Serah Terima Aset aktif dari modul Aset ([25-aset](25-aset.md)); tidak ada lagi jenis stub. v0.9: **ukuran label = master per company** dan **desain label** yang bisa ditata (geser/ubah ukuran, barcode/QR/keduanya) — [A-261](04b-asumsi-lanjutan.md#a-261), [A-262](04b-asumsi-lanjutan.md#a-262); §2, §3.2–§3.4, §5.3, §6, §10 (TC-TPL-17–21), §12, §13; menjawab [O-09](04-keputusan-dan-asumsi.md#o-09). v0.10: **riwayat cetak** & cap CETAK ULANG ([A-263](04b-asumsi-lanjutan.md#a-263)), **segel tanda tangan ber-QR** + halaman verifikasi publik ([A-264](04b-asumsi-lanjutan.md#a-264)) — §3.5–§3.6, §5.2, §6, §10 (TC-TPL-22–25), §13.1 no. 8.; v0.11: label potongan hanya bila saklar per potong menyala ([A-284](04b-asumsi-lanjutan.md#a-284), §5.3, §10 TC-TPL-26); v0.12: kolom satuan setiap cetakan disertai uraian kemasan; Bukti Penerimaan Barang GRN vendor berkolom Dikirim vendor/Baik/Rusak/Kurang ([A-293](04b-asumsi-lanjutan.md#a-293), [A-295](04b-asumsi-lanjutan.md#a-295), §10 TC-TPL-27); v0.14: SJ memuat nama & HP driver (tanpa akun), No. PO klien, kotak *Penerima (tanda tangan & cap)*; Bukti Terima memuat No. GR klien ([A-311](04b-asumsi-lanjutan.md#a-311), [A-313](04b-asumsi-lanjutan.md#a-313), [A-316](04b-asumsi-lanjutan.md#a-316))
 **Modul:** `template`
 **Fase:** F1: template bawaan dan layout induk per company, cetak PDF dokumen, label barcode/QR untuk bin, item, lot, dan potongan dengan ukuran label dari master per company dan desain yang bisa ditata (A-261, A-262). Editor template dokumen penuh `[F2]`.
 **Dokumen terkait:** [Blueprint §6.10, §12, §18](01-blueprint.md#12-template-dokumen) · [D-07](04-keputusan-dan-asumsi.md#d-07), [D-14](04-keputusan-dan-asumsi.md#d-14), [D-25](04-keputusan-dan-asumsi.md#d-25) · [AD-08](08-arsitektur.md) · [Model data 08c](08c-model-data-pendukung.md) (`document_layouts`, `document_templates`, `label_formats`, `label_designs`) · [BR-WH-01](05-aturan-bisnis.md#br-wh) · [O-09](04-keputusan-dan-asumsi.md#o-09), [O-13](04-keputusan-dan-asumsi.md#o-13)
@@ -12,7 +12,7 @@
 
 ## 1. Tujuan & lingkup
 
-Dokumen fisik tetap dibutuhkan di gudang dan di lapangan. Surat jalan ikut dibawa driver, picklist dipegang picker, berita acara ditandatangani, dan setiap bin serta barang butuh label yang bisa dipindai. Modul ini mencetak dokumen-dokumen itu sebagai PDF (Blade → HTML → dompdf, AD-08) dengan **layout induk per company**: logo, kop, warna aksen, footer, blok tanda tangan, dan QR dokumen. Modul ini juga mencetak **label** untuk bin, item, lot, dan potongan: ukurannya dipilih dari **master ukuran label** company (gulungan thermal atau lembar berisi beberapa label, [A-261](04b-asumsi-lanjutan.md#a-261)) dan isinya mengikuti **desain label** per jenis × ukuran — posisi teks, barcode Code128, QR, dan logo bisa digeser dan diubah ukurannya, serta dipilih barcode saja, QR saja, atau keduanya ([A-262](04b-asumsi-lanjutan.md#a-262)).
+Dokumen fisik tetap dibutuhkan di gudang dan di lapangan. Surat jalan ikut dibawa driver (tanpa akun, nama & HP tercetak) lalu ditandatangani & dicap penerima, picklist dipegang picker, berita acara ditandatangani, dan setiap bin serta barang butuh label yang bisa dipindai. Modul ini mencetak dokumen-dokumen itu sebagai PDF (Blade → HTML → dompdf, AD-08) dengan **layout induk per company**: logo, kop, warna aksen, footer, blok tanda tangan, dan QR dokumen. Modul ini juga mencetak **label** untuk bin, item, lot, dan potongan: ukurannya dipilih dari **master ukuran label** company (gulungan thermal atau lembar berisi beberapa label, [A-261](04b-asumsi-lanjutan.md#a-261)) dan isinya mengikuti **desain label** per jenis × ukuran — posisi teks, barcode Code128, QR, dan logo bisa digeser dan diubah ukurannya, serta dipilih barcode saja, QR saja, atau keduanya ([A-262](04b-asumsi-lanjutan.md#a-262)).
 
 Semua cetakan **tanpa harga atau nilai uang** (D-07).
 
@@ -142,8 +142,8 @@ Tidak ada. Layout dan template tidak berstatus; label dan PDF tidak disimpan. Me
 
 | `document_type` | Dokumen | Isi baris | Kertas bawaan |
 |---|---|---|---|
-| `shipment` | Surat Jalan (SJ) | item, jumlah, satuan, lot/serial/potongan, asal PCK/REQ | A4 |
-| `proof_of_delivery` | Bukti Terima | per baris baik/rusak/kurang, penerima, waktu, kanal | A4 |
+| `shipment` | Surat Jalan (SJ) | item, jumlah, satuan, lot/serial/potongan, asal PCK/REQ; kepala: nama & HP driver, No. PO klien | A4 |
+| `proof_of_delivery` | Bukti Terima | per baris baik/rusak/kurang, penerima, waktu, kanal, driver, No. GR klien | A4 |
 | `pick_task` | Picklist (PCK) | urut bin, item, jumlah dialokasikan, kolom centang | A4 |
 | `delivery_discrepancy` | BA Selisih Pengiriman (DSC) | baris kurang/rusak, disposisi | A4 |
 | `vendor_return` | Surat Retur ke Vendor (RTV) | item, jumlah, alasan QC ([A-80](04-keputusan-dan-asumsi.md#a-80)) | A4 |
@@ -160,7 +160,7 @@ Label (§5.3): `label_bin`, `label_item`, `label_lot`, `label_piece`.
 
 - **Kop:** logo, nama company, teks kop, nomor dokumen dan status, lalu QR dokumen di pojok kanan. QR berisi tautan halaman detail internal, jadi harus login untuk membukanya ([A-121](04-keputusan-dan-asumsi.md#a-121)).
 - **Blok tanda tangan bawaan:**
-  - SJ: Dibuat oleh · Pengemudi · Penerima
+  - SJ: Dibuat oleh · Pengemudi · Penerima (tanda tangan & cap) — foto SJ bertanda tangan menjadi bagian bukti terima ([A-316](04b-asumsi-lanjutan.md#a-316))
   - Bukti terima: Pengemudi · Penerima
   - PCK: Picker · Diperiksa
   - DSC: Kepala Gudang · Pengemudi
@@ -238,7 +238,7 @@ Uji di `tests/Feature/Template`: `DocumentPrintTest`, `LabelPrintTest`, `Documen
 | TC-TPL-07b | Admin Company | unggah logo PDF / PNG 6 MB / PNG sah; hapus | ditolak / ditolak / tersimpan dan bisa dipratinjau / berkas dihapus | NFR-14 |
 | TC-TPL-08 | Kepala Gudang / Staf / Manajemen | buka layar, contoh cetak, unggah logo | 403; Admin 200 dan contoh cetak PDF | §2 |
 | TC-TPL-09 | Bin CKG-A-R01-L1-B01, item berbarcode, lot, potongan | cetak label tiap jenis, kertas 50×30 dan A4 3×8, salinan 2 | PDF; jumlah halaman thermal = label × salinan; teks memuat kode | §5.3, A-120 |
-| TC-TPL-10 | Driver / Penindak Lanjut PR (tanpa `label.print`); bin gudang lain; ids × salinan > 200, salinan 11, kertas A4, tanpa id | cetak label | 403 / 404 / 422 | §2, BR-ACC-05 |
+| TC-TPL-10 | Driver (lama) / Penindak Lanjut PR (tanpa `label.print`); bin gudang lain; ids × salinan > 200, salinan 11, kertas A4, tanpa id | cetak label | 403 / 404 / 422 | §2, BR-ACC-05 |
 | TC-TPL-11 | Tanpa baris `document_templates` | cetak SJ | baris bawaan dibuat otomatis; kertas A4 | §3.2 |
 | TC-TPL-12 | Payload | `LabelPayload` untuk item tanpa barcode, lot | Code128 = kode item; QR lot = `KODE\|LOT` | A-121 |
 | TC-TPL-13 | Role berbeda; layar cetak label | buka beranda; pilih 2 bin × 3 salinan; ganti jenis | menu *Layout dokumen* hanya Admin, *Cetak label* Admin/Kepala/Staf; "Cetak 6 label"; pilihan dikosongkan, kertas bawaan jenis baru | §6 |

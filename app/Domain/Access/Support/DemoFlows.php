@@ -31,9 +31,8 @@ class DemoFlows
             'steps' => [
                 ['role' => 'internal_requester', 'action' => 'Membuat & mengirim Permintaan Material (REQ)'],
                 ['role' => 'warehouse_head', 'action' => 'Meninjau & menyetujui REQ'],
-                ['role' => 'warehouse_staff', 'action' => 'Mengerjakan Tugas Picking (PCK) & Surat Jalan (SJ)'],
-                ['role' => 'driver', 'action' => 'Mengantar barang & mengisi Bukti Terima'],
-                ['role' => 'internal_requester', 'action' => 'Mengonfirmasi barang diterima'],
+                ['role' => 'warehouse_staff', 'action' => 'Mengerjakan Tugas Picking (PCK), menyusun & memberangkatkan Surat Jalan (SJ) — nama & HP driver ditulis di SJ'],
+                ['role' => 'internal_requester', 'action' => 'Mengisi Bukti Terima saat barang tiba di site (otomatis terkonfirmasi)'],
             ],
         ],
         [
@@ -68,7 +67,7 @@ class DemoFlows
             'steps' => [
                 ['role' => 'client_user', 'action' => 'Mengajukan Permintaan Material dari portal'],
                 ['role' => 'warehouse_head', 'action' => 'Meninjau & menyetujui REQ klien'],
-                ['role' => 'client_user', 'action' => 'Mengonfirmasi Bukti Terima & memantau stok on-site'],
+                ['role' => 'client_user', 'action' => 'Mengisi Bukti Terima SJ (foto SJ bertanda tangan & cap, No. GR) & memantau stok on-site'],
             ],
         ],
     ];

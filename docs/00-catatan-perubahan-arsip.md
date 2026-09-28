@@ -1,9 +1,24 @@
-# Catatan Perubahan — Arsip (v0.2–v0.22)
+# Catatan Perubahan — Arsip (v0.2–v0.25)
 
-**Versi:** 1.13
+**Versi:** 1.15
 **Tanggal:** 28 September 2026
-**Status:** arsip — v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
+**Status:** arsip — v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
 **Dokumen terkait:** [README](README.md)
+
+### v0.25 — 24 September 2026 (modul Approval selesai Fase 1)
+- **Berkas baru `wms/20-approval.md` v0.2 (selesai Fase 1):** mesin approval bersama di `app/Domain/Approval` dengan kontrak `ApprovalHandler` + `ApprovalRegistry` (D-28); aturan per jenis dokumen tanpa nilai uang (BR-APR-07), lapis dan cara putus, snapshot saat diajukan (BR-APR-01), SoD (BR-APR-03), orang sama di lapis berurutan (BR-APR-04), delegasi (BR-APR-05), eskalasi terjadwal `approval:escalate` + manual (BR-APR-06, BR-APR-08), keputusan pertama menang (BR-APR-09), simulasi (BR-APR-11), tanpa aturan = disetujui otomatis (A-08); WhatsApp dan token stub Fase 2a (BR-APR-10). Lima layar (Tugas approval saya, Aturan approval, form + simulasi draf, Delegasi, Simulasi), panel *Riwayat approval* di REQ/RTV, menu *Approval* + palet. Migrasi `2026_01_01_000090_create_approval_tables`. Uji TC-APR-01–22 (29 uji); **392 uji hijau**.
+- **REQ dan RTV lewat mesin:** `14-request` → v0.5 (§2, §3.1, §13, §13.2 no. 4, §13.4 no. 1), `19-receipt-putaway` → v0.4 (§2, §4, §5, §13). TC-REQ-05, -11–16, -17, -26d, -26e dan TC-RTV-01, -03–07, -09 memasang aturan satu lapis; ID tidak berubah.
+- **Asumsi baru [A-86](wms/04-keputusan-dan-asumsi.md#a-86)–[A-94](wms/04-keputusan-dan-asumsi.md#a-94)** (*Perlu validasi*, `04` → v0.15): permission approve per dokumen (A-86), pencocokan & "kategori Aset" = kepemilikan aset (A-87), resolusi approver saat diajukan (A-88), delegasi (A-89), eskalasi (A-90), notifikasi stub (A-91), lokasi domain vs `packages/approval` (A-92), RTV tanpa aturan otomatis — bagian approval [A-80](wms/04-keputusan-dan-asumsi.md#a-80) diganti (A-93), kolom di luar ERD (A-94).
+- **Permission baru** modul `approval` (5): `approval_rule.view`, `approval_rule.manage`, `approval.simulate`, `approval.delegate`, `approval.escalate`; `request.approve` ke Kepala Gudang & Manajemen, `vendor_return.approve` ke Manajemen (A-86).
+- **Katalog** `06` → v0.9: enum `approval_document_type`, `approver_type`, `decision_mode`, `approval_snapshot_status`, `approval_task_status`, `condition_match` (tanpa status dokumen baru). **Glosarium** `03` → v0.7: Tugas Approval, Cara Putus, Jenis Approver, Approver Cadangan, Simulasi Aturan.
+- **Model data** 08a–08c → v0.9 (digenerate ulang): `approval_snapshots.document_number/rule_name/context`, waktu `datetime(6)`; `approval_delegations.notes`; `vendor_returns.approval_snapshot_id`; `material_requests.approval_snapshot_id` ber-FK. `08-arsitektur` → v0.8 (§4 keadaan kode mesin approval, §12).
+- **Data demo** `00-akun-uji` → v1.3: §5 aturan REQ dan RTV **sudah diseed** (`ApprovalDemoSeeder`); ADJ/PRQ/OPN menunggu modulnya. Laporan progres → v1.3 (Approval engine ✅). `00-setup-lokal` → v1.4: skenario §5 langkah 3 disetujui Kepala Gudang CKG lewat *Tugas approval saya* (+ langkah 3b simulasi).
+
+### v0.24 — 24 September 2026 (stok tersedia)
+- **Asumsi baru [A-85](wms/04-keputusan-dan-asumsi.md#a-85)** (*Perlu validasi*, `04` → v0.14): Stok Tersedia hanya dari bin `storage`, sama dengan sumber picking (A-84); menutup celah `19-receipt-putaway` §13.3 no. 5. `13-stock` → v0.4, `19-receipt-putaway` → v0.3; TC-GRN-11b disesuaikan (ditolak di approval, BR-REQ-05). 363 uji hijau.
+
+### v0.23 — 24 September 2026 (halaman baca alur proses)
+- **Berkas baru `00-audit/alur-proses.html`:** menampilkan alur 1–10 sebagai diagram alir Mermaid sederhana. Warna kotak menandai pelaku, dan setiap alur punya tabel langkah berisi status/aturan. Isinya dibuat oleh generator baru `diagram/_generate_alur_html.py` dari `FLOWS` di `_generate.py` (data tidak diketik ulang). **Tidak ada ID yang berubah**, dan `bpmn-*.drawio` serta `07*` tidak disentuh. `00-audit/README.md` → v0.2.
 
 ### v0.22 — 24 September 2026 (modul Receipt/Putaway selesai Fase 1)
 - **Berkas baru `wms/19-receipt-putaway.md` v0.2 (selesai Fase 1):** GRN vendor manual dan GRN transfer masuk, QC per baris, PUT dengan saran bin, RTV; dua belas aksi (satu per permission), delapan layar, menu *Penerimaan*; 39 uji TC-GRN-01–21, TC-PUT-01–08, TC-RTV-01–09.

@@ -66,6 +66,8 @@ class SaveRequest
 
             $req->required_date = $tanggal;
             $req->notes = $this->teks($data['notes'] ?? null);
+            // A-313: referensi teks, tidak divalidasi ke sistem klien.
+            $req->client_po_number = mb_substr((string) $this->teks($data['client_po_number'] ?? null), 0, 60) ?: null;
             $req->save();
 
             $this->simpanBaris($req, $lines);

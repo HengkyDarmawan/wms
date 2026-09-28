@@ -1,7 +1,7 @@
 # Proses Bisnis To-Be — Alur 1–3 (permintaan–pengiriman, penerimaan, pemakaian)
 
-**Versi:** 0.4 (Part 2, pasca-validasi & diskusi lanjutan 23 Sep 2026)
-**Tanggal:** 23 September 2026
+**Versi:** 0.5 (Part 2, pasca-validasi & diskusi lanjutan 23 Sep 2026; driver tanpa akun & bukti terima oleh penerima 28 Sep 2026 — A-311–A-319)
+**Tanggal:** 28 September 2026
 **Status:** asumsi A-25–A-49 dan A-51–A-66 disetujui 23 Sep 2026 (A-40 diubah); alur 1, 2, 7, 8 diperluas (purchasing, permintaan klien, pengiriman, audit); alur 5 memuat varian dari [A-50](04-keputusan-dan-asumsi.md#a-50) yang menunggu validasi; setiap alur mencantumkan asumsi yang dipakainya. Bila asumsi berubah, ubah data di [`diagram/_generate.py`](../diagram/_generate.py) dan jalankan ulang — file ini dan `.drawio` dibuat otomatis, **jangan diedit manual**.
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · [Alur 4–7](07a-proses-bisnis-lanjutan.md) · [Alur 8–10](07b-proses-bisnis-pendukung.md)
 
@@ -24,11 +24,11 @@ Konvensi: ● awal · ⏱ awal berbasis waktu · ◇ gateway XOR · ◉ akhir ·
 
 ## Alur 1 — Permintaan material sampai bukti terima
 
-**Diagram:** [`diagram/bpmn-01-permintaan-sampai-terima.drawio`](../diagram/bpmn-01-permintaan-sampai-terima.drawio) · **Asumsi yang dipakai:** [A-07](04-keputusan-dan-asumsi.md#a-07), [A-30](04-keputusan-dan-asumsi.md#a-30), [A-31](04-keputusan-dan-asumsi.md#a-31), [A-33](04-keputusan-dan-asumsi.md#a-33), [A-35](04-keputusan-dan-asumsi.md#a-35), [A-39](04-keputusan-dan-asumsi.md#a-39), [A-41](04-keputusan-dan-asumsi.md#a-41), [A-54](04-keputusan-dan-asumsi.md#a-54), [A-55](04-keputusan-dan-asumsi.md#a-55), [A-56](04-keputusan-dan-asumsi.md#a-56), [A-57](04-keputusan-dan-asumsi.md#a-57), [A-60](04-keputusan-dan-asumsi.md#a-60), [A-61](04-keputusan-dan-asumsi.md#a-61), [A-63](04-keputusan-dan-asumsi.md#a-63), [A-64](04-keputusan-dan-asumsi.md#a-64), [A-65](04-keputusan-dan-asumsi.md#a-65) · **Aturan:** [BR-REQ-01–15](05-aturan-bisnis.md#br-req), [BR-STK-03–05](05-aturan-bisnis.md#br-stk), [BR-SJ-01–10](05-aturan-bisnis.md#br-sj), [BR-GEN-06](05-aturan-bisnis.md#br-gen) · **Status:** `REQ`, `PCK`, `SJ`, `DSC`
+**Diagram:** [`diagram/bpmn-01-permintaan-sampai-terima.drawio`](../diagram/bpmn-01-permintaan-sampai-terima.drawio) · **Asumsi yang dipakai:** [A-07](04-keputusan-dan-asumsi.md#a-07), [A-30](04-keputusan-dan-asumsi.md#a-30), [A-31](04-keputusan-dan-asumsi.md#a-31), [A-33](04-keputusan-dan-asumsi.md#a-33), [A-35](04-keputusan-dan-asumsi.md#a-35), [A-39](04-keputusan-dan-asumsi.md#a-39), [A-41](04-keputusan-dan-asumsi.md#a-41), [A-54](04-keputusan-dan-asumsi.md#a-54), [A-55](04-keputusan-dan-asumsi.md#a-55), [A-56](04-keputusan-dan-asumsi.md#a-56), [A-57](04-keputusan-dan-asumsi.md#a-57), [A-60](04-keputusan-dan-asumsi.md#a-60), [A-61](04-keputusan-dan-asumsi.md#a-61), [A-63](04-keputusan-dan-asumsi.md#a-63), [A-64](04-keputusan-dan-asumsi.md#a-64), [A-65](04-keputusan-dan-asumsi.md#a-65), [A-311](04b-asumsi-lanjutan.md#a-311), [A-312](04b-asumsi-lanjutan.md#a-312), [A-313](04b-asumsi-lanjutan.md#a-313) · **Aturan:** [BR-REQ-01–15](05-aturan-bisnis.md#br-req), [BR-STK-03–05](05-aturan-bisnis.md#br-stk), [BR-SJ-01–10](05-aturan-bisnis.md#br-sj), [BR-GEN-06](05-aturan-bisnis.md#br-gen) · **Status:** `REQ`, `PCK`, `SJ`, `DSC`
 
 Alur inti outbound: dari kebutuhan material di proyek sampai barang diterima di tujuan dan REQ selesai. Mencakup tinjauan staf untuk permintaan klien, reservasi dua tahap, picking dengan short pick, pengiriman, bukti terima, dan selisih pengiriman.
 
-**Lane (aktor):** Pemohon (Internal / Klien) · Staf Gudang · Kepala Gudang · Approver · Driver / Penerima · Sistem
+**Lane (aktor):** Pemohon (Internal / Klien) · Staf Gudang · Kepala Gudang · Approver · Admin Site Klien / Penerima · Sistem
 
 ### Langkah
 
@@ -46,14 +46,14 @@ Alur inti outbound: dari kebutuhan material di proyek sampai barang diterima di 
 | 10 | Sistem | Reservasi lunak per gudang; kekurangan → TRF (alur 5) / PRQ (alur 2) | REQ approved; [BR-REQ-05](05-aturan-bisnis.md#br-req); [BR-STK-04](05-aturan-bisnis.md#br-stk); [A-30](04-keputusan-dan-asumsi.md#a-30) |
 | 11 | Sistem | Buat PCK per gudang sumber; alokasi keras bin/lot/serial/potongan | PCK pending; REQ in_progress; [BR-STK-04](05-aturan-bisnis.md#br-stk) |
 | 12 | Staf Gudang | Picking: scan bin & item → Loading Area; short pick + alasan | PCK in_progress → completed; [BR-SJ-01](05-aturan-bisnis.md#br-sj), [BR-SJ-02](05-aturan-bisnis.md#br-sj) |
-| 13 | Staf Gudang | Buat SJ: gabungkan PCK ke tujuan sama (boleh beberapa REQ); cara kirim kendaraan sendiri / ekspedisi / diantar sendiri | SJ prepared; [BR-SJ-07](05-aturan-bisnis.md#br-sj); [BR-SJ-09](05-aturan-bisnis.md#br-sj); [A-57](04-keputusan-dan-asumsi.md#a-57) |
-| 14 | Driver / Penerima | Konfirmasi muat & berangkat | SJ shipped; ledger → in_transit; goods_shipped |
-| 15 | Driver / Penerima | Bukti terima per baris: baik / rusak (foto wajib) / kurang; per unit untuk serial & potongan; tanda tangan (driver atau tautan bertoken + OTP) | [BR-SJ-05](05-aturan-bisnis.md#br-sj); [A-41](04-keputusan-dan-asumsi.md#a-41); [A-64](04-keputusan-dan-asumsi.md#a-64) |
+| 13 | Staf Gudang | Buat SJ: gabungkan PCK ke tujuan sama (boleh beberapa REQ); cara kirim kendaraan sendiri (nama & HP driver, tanpa akun) / ekspedisi / diantar sendiri | SJ prepared; [BR-SJ-07](05-aturan-bisnis.md#br-sj); [BR-SJ-09](05-aturan-bisnis.md#br-sj); [A-57](04-keputusan-dan-asumsi.md#a-57); [A-311](04b-asumsi-lanjutan.md#a-311) |
+| 14 | Staf Gudang | Berangkatkan SJ (staf / Kepala Gudang asal); notifikasi ke penerima | SJ shipped; ledger → in_transit; goods_shipped; [A-311](04b-asumsi-lanjutan.md#a-311); [A-319](04b-asumsi-lanjutan.md#a-319) |
+| 15 | Admin Site Klien / Penerima | Bukti terima per baris: baik / rusak (foto wajib) / kurang; per unit untuk serial & potongan; foto SJ bertanda tangan & cap; No. GR klien (opsional) — portal Klien / akun penerima tujuan; cadangan tautan bertoken + OTP atau Kepala Gudang asal dari SJ bertanda tangan | [BR-SJ-05](05-aturan-bisnis.md#br-sj); [A-41](04-keputusan-dan-asumsi.md#a-41); [A-64](04-keputusan-dan-asumsi.md#a-64); [A-312](04b-asumsi-lanjutan.md#a-312); [A-313](04b-asumsi-lanjutan.md#a-313) |
 | 16 | Sistem | ◇ Semua baik & lengkap? |  |
-| 17 | Sistem | Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik driver | SJ partially_delivered; DSC open; [BR-SJ-06](05-aturan-bisnis.md#br-sj); [A-64](04-keputusan-dan-asumsi.md#a-64); [A-65](04-keputusan-dan-asumsi.md#a-65) |
+| 17 | Sistem | Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik kendaraan pengantar | SJ partially_delivered; DSC open; [BR-SJ-06](05-aturan-bisnis.md#br-sj); [A-64](04-keputusan-dan-asumsi.md#a-64); [A-65](04-keputusan-dan-asumsi.md#a-65) |
 | 18 | Kepala Gudang | Selesaikan DSC: kembali ke gudang / disesuaikan / klaim / kirim pengganti; klien masih perlu sisanya? | DSC resolved; [BR-SJ-10](05-aturan-bisnis.md#br-sj); delivery_discrepancy |
 | 19 | Sistem | Efek stok per tujuan: jual putus keluar (goods_delivered), aset → on_site (asset_checked_out), gudang → GRN tujuan | SJ delivered; [BR-SJ-04](05-aturan-bisnis.md#br-sj); [A-25](04-keputusan-dan-asumsi.md#a-25) |
-| 20 | Pemohon (Internal / Klien) | Konfirmasi terima atau ajukan keberatan kurang/rusak (otomatis terima setelah 3 hari; otomatis bila pemohon mengisi bukti terima sendiri) | [BR-REQ-10](05-aturan-bisnis.md#br-req); [A-63](04-keputusan-dan-asumsi.md#a-63) |
+| 20 | Pemohon (Internal / Klien) | Konfirmasi terima atau ajukan keberatan kurang/rusak (otomatis terima setelah 3 hari; otomatis bila pemohon / admin site klien mengisi bukti terima sendiri) | [BR-REQ-10](05-aturan-bisnis.md#br-req); [A-63](04-keputusan-dan-asumsi.md#a-63); [A-317](04b-asumsi-lanjutan.md#a-317) |
 | 21 | Sistem | ◇ Keberatan? | [A-63](04-keputusan-dan-asumsi.md#a-63) |
 | 22 | Sistem | ◇ Semua baris terpenuhi? |  |
 | 23 | Sistem | Tunggu backorder (TRF / PRQ tiba → reservasi otomatis, cross-dock) | REQ partially_fulfilled; [BR-REQ-08](05-aturan-bisnis.md#br-req) |
@@ -66,8 +66,8 @@ Alur inti outbound: dari kebutuhan material di proyek sampai barang diterima di 
 | Pemohon klien? | *ya* → Tinjau: petakan non-katalog (klien boleh menolak pengganti 1 hari), tetapkan gudang sumber / pecah baris antar gudang, isi tanggal janji · *tidak* → Snapshot aturan approval; lewati lapis pengaju (SoD) |
 | Ada lapis approval? | *ya* → Setujui / tolak (alasan) — lihat alur 9 · *tidak → otomatis disetujui* → Reservasi lunak per gudang; kekurangan → TRF (alur 5) / PRQ (alur 2) |
 | Disetujui? | *tidak* → REQ ditolak · *ya* → Reservasi lunak per gudang; kekurangan → TRF (alur 5) / PRQ (alur 2) |
-| Semua baik & lengkap? | *tidak* → Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik driver · *ya* → Efek stok per tujuan: jual putus keluar (goods_delivered), aset → on_site (asset_checked_out), gudang → GRN tujuan |
-| Keberatan? | *ya* → Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik driver · *tidak* → Semua baris terpenuhi? |
+| Semua baik & lengkap? | *tidak* → Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik kendaraan pengantar · *ya* → Efek stok per tujuan: jual putus keluar (goods_delivered), aset → on_site (asset_checked_out), gudang → GRN tujuan |
+| Keberatan? | *ya* → Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik kendaraan pengantar · *tidak* → Semua baris terpenuhi? |
 | Semua baris terpenuhi? | *ya* → REQ selesai · *tidak* → Tunggu backorder (TRF / PRQ tiba → reservasi otomatis, cross-dock) |
 
 ### Diagram (Mermaid)
@@ -78,12 +78,13 @@ flowchart LR
     f1_s(("Kebutuhan material di proyek"))
     f1_t1["Buat & ajukan REQ (baris katalog / non-katalog, tanggal dibutuhkan)"]
     f1_e_rej((("REQ ditolak")))
-    f1_t14["Konfirmasi terima atau ajukan keberatan kurang/rusak (otomatis terima setelah 3 hari; otomatis bila pemohon mengisi bukti terima sendiri)"]
+    f1_t14["Konfirmasi terima atau ajukan keberatan kurang/rusak (otomatis terima setelah 3 hari; otomatis bila pemohon / admin site klien mengisi bukti terima sendiri)"]
   end
   subgraph L1["Staf Gudang"]
     f1_t2["Tinjau: petakan non-katalog (klien boleh menolak pengganti 1 hari), tetapkan gudang sumber / pecah baris antar gudang, isi tanggal janji"]
     f1_t7["Picking: scan bin & item → Loading Area; short pick + alasan"]
-    f1_t8["Buat SJ: gabungkan PCK ke tujuan sama (boleh beberapa REQ); cara kirim kendaraan sendiri / ekspedisi / diantar sendiri"]
+    f1_t8["Buat SJ: gabungkan PCK ke tujuan sama (boleh beberapa REQ); cara kirim kendaraan sendiri (nama & HP driver, tanpa akun) / ekspedisi / diantar sendiri"]
+    f1_t9["Berangkatkan SJ (staf / Kepala Gudang asal); notifikasi ke penerima"]
   end
   subgraph L2["Kepala Gudang"]
     f1_t12["Selesaikan DSC: kembali ke gudang / disesuaikan / klaim / kirim pengganti; klien masih perlu sisanya?"]
@@ -91,9 +92,8 @@ flowchart LR
   subgraph L3["Approver"]
     f1_t4["Setujui / tolak (alasan) — lihat alur 9"]
   end
-  subgraph L4["Driver / Penerima"]
-    f1_t9["Konfirmasi muat & berangkat"]
-    f1_t10["Bukti terima per baris: baik / rusak (foto wajib) / kurang; per unit untuk serial & potongan; tanda tangan (driver atau tautan bertoken + OTP)"]
+  subgraph L4["Admin Site Klien / Penerima"]
+    f1_t10["Bukti terima per baris: baik / rusak (foto wajib) / kurang; per unit untuk serial & potongan; foto SJ bertanda tangan & cap; No. GR klien (opsional) — portal Klien / akun penerima tujuan; cadangan tautan bertoken + OTP atau Kepala Gudang asal dari SJ bertanda tangan"]
   end
   subgraph L5["Sistem"]
     f1_g1{"Pemohon klien?"}
@@ -103,7 +103,7 @@ flowchart LR
     f1_t5["Reservasi lunak per gudang; kekurangan → TRF (alur 5) / PRQ (alur 2)"]
     f1_t6["Buat PCK per gudang sumber; alokasi keras bin/lot/serial/potongan"]
     f1_g4{"Semua baik & lengkap?"}
-    f1_t11["Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik driver"]
+    f1_t11["Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik kendaraan pengantar"]
     f1_t13["Efek stok per tujuan: jual putus keluar (goods_delivered), aset → on_site (asset_checked_out), gudang → GRN tujuan"]
     f1_g6{"Keberatan?"}
     f1_g5{"Semua baris terpenuhi?"}

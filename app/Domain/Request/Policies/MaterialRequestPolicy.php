@@ -131,6 +131,17 @@ class MaterialRequestPolicy
     }
 
     /**
+     * A-313/A-318: No. PO klien — referensi teks yang boleh diisi/diubah
+     * pemohon (termasuk klien di portal) atau staf peninjau selama REQ belum final.
+     */
+    public function setClientPo(User $actor, MaterialRequest $request): bool
+    {
+        return ($actor->hasPermission('request.create') || $actor->hasPermission('request.review'))
+            && ! $request->status->isFinal()
+            && $this->dalamJangkauan($actor, $request);
+    }
+
+    /**
      * Klien hanya menjangkau REQ proyek kliennya. Cakupan gudang/proyek
      * pengguna internal sudah ditegakkan global scope; ini lapis keduanya.
      */

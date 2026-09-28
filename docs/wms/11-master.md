@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `master` (Klien, Proyek, Vendor, Item, Satuan, Referensi)
 
-**Versi:** 0.15
+**Versi:** 0.16
 **Tanggal:** 28 September 2026
-**Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192)); v0.6: layar Pengaturan company ([A-230](04-keputusan-dan-asumsi.md#a-230), §6, §13.5 no. 8); v0.8: hub proyek — *Pindahkan ke proyek lain* dan *Riwayat pindahan antar proyek* ([A-250](04b-asumsi-lanjutan.md#a-250), §13.4); v0.9: hari kerja per minggu & kalender libur company ([A-270](04b-asumsi-lanjutan.md#a-270), §3.6, §6, §13.5 no. 9); v0.10: saklar OTP bukti terima otomatis ([A-273](04b-asumsi-lanjutan.md#a-273)); v0.12: **Jenis barang** menggantikan isian teknis form item, saklar fitur benar-benar menyaring, bawaan company baru tanpa per potong & QC ([A-283](04b-asumsi-lanjutan.md#a-283), [A-284](04b-asumsi-lanjutan.md#a-284), §6, §10 TC-MST-30–35, §13.7); v0.13: tab *Kemasan* (dulu Konversi satuan), kemasan nonaktif tidak dimuat lagi, kemasan diingat dari form dokumen, uraian "9 DUS 8 BOX", satuan DUS & PACK ([A-291](04b-asumsi-lanjutan.md#a-291)–[A-294](04b-asumsi-lanjutan.md#a-294); §6, §10 TC-MST-36–37, §13.8)
+**Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192)); v0.6: layar Pengaturan company ([A-230](04-keputusan-dan-asumsi.md#a-230), §6, §13.5 no. 8); v0.8: hub proyek — *Pindahkan ke proyek lain* dan *Riwayat pindahan antar proyek* ([A-250](04b-asumsi-lanjutan.md#a-250), §13.4); v0.9: hari kerja per minggu & kalender libur company ([A-270](04b-asumsi-lanjutan.md#a-270), §3.6, §6, §13.5 no. 9); v0.10: saklar OTP bukti terima otomatis ([A-273](04b-asumsi-lanjutan.md#a-273)); v0.12: **Jenis barang** menggantikan isian teknis form item, saklar fitur benar-benar menyaring, bawaan company baru tanpa per potong & QC ([A-283](04b-asumsi-lanjutan.md#a-283), [A-284](04b-asumsi-lanjutan.md#a-284), §6, §10 TC-MST-30–35, §13.7); v0.13: tab *Kemasan* (dulu Konversi satuan), kemasan nonaktif tidak dimuat lagi, kemasan diingat dari form dokumen, uraian "9 DUS 8 BOX", satuan DUS & PACK ([A-291](04b-asumsi-lanjutan.md#a-291)–[A-294](04b-asumsi-lanjutan.md#a-294); §6, §10 TC-MST-36–37, §13.8); v0.16: driver bawaan kendaraan = nama + No. HP teks ([A-311](04b-asumsi-lanjutan.md#a-311), [A-315](04b-asumsi-lanjutan.md#a-315))
 **Modul:** `master`
 **Fase:** F1 (rencana kebutuhan material `[F2]` hanya stub)
 **Dokumen terkait:** [Blueprint §6.3a](01-blueprint.md#63a-master-data-lain), [§6.4](01-blueprint.md#64-item-barang), [§6.5](01-blueprint.md#65-satuan-dinamis-uom), [§6.9](01-blueprint.md#69-proyek) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data master](08a-model-data-inti.md#area-master-data-tenant) · [Akun uji](../00-akun-uji.md)
@@ -30,7 +30,7 @@ Permission modul ini memakai awalan per entitas dan disimpan dengan `module = ma
 | Manajemen | semua `*.view` |
 | Kepala Gudang | `client.view`, `project.view`, `vendor.view`, `item.view`, `item.update`, `uom.view`, `reference.view`, `reference.manage` |
 | Staf Gudang | `item.view`, `uom.view`, `project.view`, `reference.view` |
-| Pemohon Internal, Driver, Penindak Lanjut PR, Auditor | `item.view`, `project.view` (+ `vendor.view`, `vendor.create` untuk Penindak Lanjut PR — vendor sementara, [A-53](04-keputusan-dan-asumsi.md#a-53)) |
+| Pemohon Internal, Driver (lama), Penindak Lanjut PR, Auditor | `item.view`, `project.view` (+ `vendor.view`, `vendor.create` untuk Penindak Lanjut PR — vendor sementara, [A-53](04-keputusan-dan-asumsi.md#a-53)) |
 | Klien | tidak ada (portal memakai data proyeknya sendiri) |
 
 Daftar: `client.view|create|update|deactivate`, `project.view|create|update|close`, `vendor.view|create|update|deactivate`, `item.view|create|update|deactivate`, `item_category.view|manage`, `uom.view|manage`, `reference.view|manage` (alasan, kategori penyimpanan, kendaraan, ekspedisi), `company_setting.view|manage`.
@@ -76,7 +76,7 @@ Semua tabel di database **tenant**. Kolom umum (`id`, `created_at`, `updated_at`
 ### 3.6 Referensi & pengaturan
 
 `reason_codes`: `context` enum (`reject`, `cancel`, `adjustment`, `waste`, `damage`, `short_pick`, `discrepancy`, `lost`), `code`, `label`, `is_active`. `UK(context, code)`. Wajib ada isinya sebelum dokumen bisa ditolak/dibatalkan ([BR-GEN-02](05-aturan-bisnis.md#br-gen)).
-`vehicles`: `plate_no` UK, `type`, `default_driver_id` FK `users`, `is_active`.
+`vehicles`: `plate_no` UK, `type`, `default_driver_name` varchar(100), `default_driver_phone` varchar(20) (`62…`) — driver tanpa akun ([A-311](04b-asumsi-lanjutan.md#a-311)); `default_driver_id` FK `users` hanya data lama; `is_active`.
 `carriers`: `name`, `phone`, `is_active`.
 `company_settings`: `key` PK, `value` json. `feature_settings`: `key` PK, `enabled`, `config` json (lapis 1 dari P-08). `holidays`: `date` unik, `name`, `kind` (Katalog §3 `holiday_kind`), `is_active`, `created_by` — kalender libur company; libur nasional & cuti bersama diisi otomatis dari `Support\NationalHolidays`, tidak dihapus ([A-270](04b-asumsi-lanjutan.md#a-270)).
 `project_material_plans` `[F2]`: stub ([BR-PRJ-09](05-aturan-bisnis.md#br-prj)).
@@ -97,7 +97,7 @@ erDiagram
   items ||--o{ serials : serialized
   items ||--o{ pieces : cut_into
   pieces ||--o{ pieces : genealogy
-  users ||--o{ vehicles : default_driver
+  users ||--o{ vehicles : default_driver_lama
 ```
 
 ## 4. Mesin status
@@ -203,7 +203,7 @@ Tidak ada kejadian stok. Master vendor dan item dibaca modul Purchasing ([purcha
 | TC-MST-18 | Vendor aktif | simpan item dengan isian vendor; simpan ulang item yang punya vendor tetap lama | isian diabaikan; data lama tetap ada | [A-305](04b-asumsi-lanjutan.md#a-305) |
 | TC-MST-19 | Kategori barang punya item aktif | nonaktifkan kategori | ditolak | BR-MST-05 |
 | TC-MST-20 | Master alasan konteks `cancel` | simpan | tersedia untuk dialog pembatalan | BR-GEN-02 |
-| TC-MST-21 | Kendaraan dengan driver bawaan | simpan | relasi ke user driver tersimpan | Blueprint §6.3a |
+| TC-MST-21 | Kendaraan dengan driver bawaan Gani / 0812-0000-0008; HP `123` | simpan | nama & HP `6281200000008` tersimpan tanpa user; HP tidak sah ditolak per kolom | Blueprint §6.3a, [A-315](04b-asumsi-lanjutan.md#a-315) |
 | TC-MST-22 | User tanpa `item.create` | buka form item | 403 | BR-GEN-09 |
 | TC-MST-23 | Seeder demo dijalankan | periksa master | klien, proyek, vendor sesuai [00-akun-uji](../00-akun-uji.md) | — |
 | TC-MST-28 | Company baru, tahun 2026 | pakai kalender; atur 5 hari kerja; nonaktifkan cuti bersama 24 Des; tambah libur company 31 Des (dua kali); tahun 2030; user tanpa `manage` | 17 libur nasional + 8 cuti bersama terisi sekali; Sabtu kerja (6 hari) / tidak (5 hari); mundur 1 hari kerja dari 25 Mar 2026 = 17 Mar; 24 Des jadi hari kerja dan tidak terisi ulang; 31 Des libur, ganda ditolak; 2030 tanpa data → pesan; ubah 403 | [A-270](04b-asumsi-lanjutan.md#a-270) |

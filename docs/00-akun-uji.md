@@ -1,8 +1,8 @@
 # Akun Uji & Data Demo (dev / demo / staging)
 
-**Versi:** 1.15
+**Versi:** 1.17
 **Tanggal:** 28 September 2026
-**Status:** aktif — **hanya untuk dev, demo, dan staging**. Produksi tidak memakai berkas ini: Super Admin produksi dibuat dari `.env` saat instalasi, semua user lain lewat undangan dan mengatur password sendiri ([Blueprint §13](wms/01-blueprint.md#13-autentikasi--sso), [NFR-02](wms/01-blueprint.md#16-kebutuhan-non-fungsional)).; v1.12: lapis Manajemen demo dibatasi divisi pemohon (Direksi = induk semua divisi), lapis Auditor opname lintas divisi ([A-269](wms/04b-asumsi-lanjutan.md#a-269)); v1.13: §6 company DEMO kosong untuk latihan (`BlankDemoSeeder`); v1.14: saklar fitur DEMO (per potong & QC mati) dan `PIPA-PVC-4` menjadi Barang biasa ([A-283](wms/04b-asumsi-lanjutan.md#a-283), [A-284](wms/04b-asumsi-lanjutan.md#a-284))
+**Status:** aktif — **hanya untuk dev, demo, dan staging**. Produksi tidak memakai berkas ini: Super Admin produksi dibuat dari `.env` saat instalasi, semua user lain lewat undangan dan mengatur password sendiri ([Blueprint §13](wms/01-blueprint.md#13-autentikasi--sso), [NFR-02](wms/01-blueprint.md#16-kebutuhan-non-fungsional)).; v1.12: lapis Manajemen demo dibatasi divisi pemohon (Direksi = induk semua divisi), lapis Auditor opname lintas divisi ([A-269](wms/04b-asumsi-lanjutan.md#a-269)); v1.13: §6 company DEMO kosong untuk latihan (`BlankDemoSeeder`); v1.14: saklar fitur DEMO (per potong & QC mati) dan `PIPA-PVC-4` menjadi Barang biasa ([A-283](wms/04b-asumsi-lanjutan.md#a-283), [A-284](wms/04b-asumsi-lanjutan.md#a-284)); v1.16: akun `driver1`/`driver2` dihapus — driver tanpa akun, kendaraan menyimpan nama + HP driver bawaan, `klien1` mengisi bukti terima SJ PRJ-001 lewat portal ([A-311](wms/04b-asumsi-lanjutan.md#a-311), [A-312](wms/04b-asumsi-lanjutan.md#a-312)); v1.17: denah demo CKG 30 × 18 m dengan zona berposisi & objek denah ([A-320](wms/04b-asumsi-lanjutan.md#a-320))
 **Dokumen terkait:** [Blueprint §4](wms/01-blueprint.md#4-pengguna--peran) · [BR-GEN-09](wms/05-aturan-bisnis.md#br-gen) · [Model data pusat & akses](wms/08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) · [Spesifikasi modul Access](wms/10-access.md)
 
 Berkas ini adalah **satu-satunya sumber** daftar akun seed. Seeder `DemoSeeder` (modul Access) harus sama persis dengan tabel di bawah; bila akun berubah, ubah berkas ini dulu lalu seeder-nya. Password di sini tidak boleh dipakai di produksi.
@@ -23,7 +23,7 @@ Berkas ini adalah **satu-satunya sumber** daftar akun seed. Seeder `DemoSeeder` 
 | Subdomain | `demo.wms.test` (Laragon auto virtual host; di XAMPP `demo.wms.test:8000` lewat berkas hosts, lihat [00-setup-lokal](00-setup-lokal.md)); portal klien `demo.wms.test/portal` |
 | Zona waktu · paket · langganan | Asia/Jakarta · `standard` · trial 14 hari ([A-11](wms/04-keputusan-dan-asumsi.md#a-11)) |
 | Gudang | `CKG` Gudang Utama Cakung · `BKS` Gudang Cabang Bekasi (induk: CKG) · `KRW1` Gudang Site "Pipa Karawang STA 0+000" · `KRW2` Gudang Site "Pipa Karawang STA 2+500" (keduanya milik proyek `PRJ-001`, [A-40](wms/04-keputusan-dan-asumsi.md#a-40)) |
-| Zona & bin demo | Tiap gudang mendapat enam bin bawaan otomatis ([BR-WH-02](wms/05-aturan-bisnis.md#br-wh)); CKG punya zona A & B, gudang lain satu zona, masing-masing satu rak dua level dengan dua bin per level (45 bin termasuk bin bawaan). Satu bin On-site untuk `PRJ-001` ([BR-WH-03](wms/05-aturan-bisnis.md#br-wh)) |
+| Zona & bin demo | Tiap gudang mendapat enam bin bawaan otomatis ([BR-WH-02](wms/05-aturan-bisnis.md#br-wh)); CKG punya zona A & B, gudang lain satu zona, masing-masing satu rak dua level dengan dua bin per level (45 bin termasuk bin bawaan). **Denah CKG** ([A-320](wms/04b-asumsi-lanjutan.md#a-320)): gedung 30 × 18 m; zona A di (1, 1) dan B di (15, 1), masing-masing 12 × 7 m dengan rak R01 di (1; 1,5); objek *Pintu utama*, *Dock 1*, *Jalur forklift*, *Pilar P1*, *Kantor gudang*. Gudang lain tanpa ukuran gedung (ditata otomatis). Satu bin On-site untuk `PRJ-001` ([BR-WH-03](wms/05-aturan-bisnis.md#br-wh)) |
 | Proyek | `PRJ-001` Pipa Karawang (klien PT Klien Satu, aktif) · `PRJ-INT` Proyek Internal ([A-06](wms/04-keputusan-dan-asumsi.md#a-06)) · `PRJ-002` Gudang Cikarang milik CV Klien Dua (sengaja masih kosong) |
 | Klien | PT Klien Satu (`KL1`) · CV Klien Dua (`KL2`) |
 | Vendor | PT Baja Prima (`company`, vendor tetap pipa) · Toko Besi Jaya (`shop`) · Tokopedia Toko Alat (`online_marketplace`) |
@@ -32,7 +32,7 @@ Berkas ini adalah **satu-satunya sumber** daftar akun seed. Seeder `DemoSeeder` 
 | Item contoh | `PIPA-PVC-4` Pipa PVC 4 inci (Barang biasa, satuan meter; dibeli per batang 6 m) · `BAUT-M12` Baut M12 (Barang biasa) · `SEMEN-PCC-50` Semen PCC (Barang berkedaluwarsa: lot, FEFO) · `GENSET-5KVA` Genset 5 kVA (Alat bernomor seri) — tiga jenis barang ([A-283](wms/04b-asumsi-lanjutan.md#a-283)) |
 | Saklar fitur | Bawaan company baru ([A-284](wms/04b-asumsi-lanjutan.md#a-284)): Batch/lot, Serial number, Tanggal kedaluwarsa, FEFO **menyala**; Per potong dan QC penerimaan **mati** — seeder DEMO & DEMO kosong menyetelnya ulang |
 | Ekspedisi | JNE Trucking · Indah Cargo |
-| Kendaraan | `B 9001 XX` (driver bawaan Gani) · `B 9002 XX` (driver bawaan Hadi), jenis Pikap ([A-57](wms/04-keputusan-dan-asumsi.md#a-57)) |
+| Kendaraan | `B 9001 XX` (driver bawaan **Gani**, HP `6281200000008`) · `B 9002 XX` (driver bawaan **Hadi**, HP `6281200000009`), jenis Pikap ([A-57](wms/04-keputusan-dan-asumsi.md#a-57)). Driver **tidak punya akun** ([A-311](wms/04b-asumsi-lanjutan.md#a-311)): nama & HP teks, terisi otomatis di form SJ |
 | Stok awal | Lewat `StockDemoSeeder` ([A-72](wms/04-keputusan-dan-asumsi.md#a-72)), tercatat di kartu stok dengan catatan *Stok awal demo (seeder dev)*: `BAUT-M12` 1.000 di `CKG-A-R01-L1-B01` dan 300 di `BKS-A-R01-L1-B01` · `SEMEN-PCC-50` lot `LOT-SMN-2609` 2.000 kg (kedaluwarsa +6 bulan) dan `LOT-SMN-2610` 1.500 kg di `CKG-A-R01-L1-B02`, 500 kg di `BKS-A-R01-L1-B02` · `PIPA-PVC-4` 63,7 m di `CKG-B-R01-L1-B01` dan 24 m di `BKS-A-R01-L2-B01` (total 87,7 m, tanpa potongan) · `GENSET-5KVA` serial `GNS-5K-0001`, `GNS-5K-0002` di `CKG-B-R01-L2-B01`. Gudang Site tanpa stok |
 
 ## 3. Akun tenant (`demo.wms.test`)
@@ -48,15 +48,13 @@ Password dev semua akun: **`Demo#2026!`**. Nomor WA dummy dipakai untuk uji noti
 | `staf1.ckg@demo.wms.test` | Dedi Staf | Staf Gudang | gudang CKG | Penghitung pertama (opname) |
 | `staf2.ckg@demo.wms.test` | Eko Staf | Staf Gudang | gudang CKG | Penghitung ulang, orang berbeda ([BR-OPN-05](wms/05-aturan-bisnis.md#br-opn)) |
 | `staf.krw@demo.wms.test` | Fajar Site | Staf Gudang | gudang KRW1, KRW2 | PIC titik site; menerima transfer dalam proyek ([A-50](wms/04-keputusan-dan-asumsi.md#a-50)) |
-| `driver1@demo.wms.test` | Gani Driver | Driver | semua | Kendaraan B 9001 XX |
-| `driver2@demo.wms.test` | Hadi Driver | Driver | semua | Kendaraan B 9002 XX |
-| `pemohon.prj001@demo.wms.test` | Indra Engineer | Pemohon Internal | proyek PRJ-001 | Juga PIC proyek PRJ-001; atasan = Budi Direktur |
+| `pemohon.prj001@demo.wms.test` | Indra Engineer | Pemohon Internal | proyek PRJ-001 | Juga PIC proyek PRJ-001; atasan = Budi Direktur; mengisi bukti terima SJ REQ-nya sendiri (otomatis terkonfirmasi, [A-317](wms/04b-asumsi-lanjutan.md#a-317)) |
 | `pr@demo.wms.test` | Joko Purchasing | Penindak Lanjut PR | semua | Catatan pemesanan, vendor sementara ([A-51](wms/04-keputusan-dan-asumsi.md#a-51), [A-53](wms/04-keputusan-dan-asumsi.md#a-53)); membuat PO & harga beli vendor (Fase 1b, [A-216](wms/04-keputusan-dan-asumsi.md#a-216)) |
 | `auditor@demo.wms.test` | Kartika Auditor | Auditor Internal | semua | Read-only mutasi; boleh sesi opname & pemeriksaan mendadak ([BR-OPN-08](wms/05-aturan-bisnis.md#br-opn), [BR-OPN-10](wms/05-aturan-bisnis.md#br-opn)) |
-| `klien1@klien-satu.test` | Lina (PT Klien Satu) | Klien | klien KL1, proyek PRJ-001 | Login di `/portal`; role Klien tidak digabung role internal ([BR-ACC-03](wms/05-aturan-bisnis.md#br-acc)) |
+| `klien1@klien-satu.test` | Lina (PT Klien Satu) | Klien | klien KL1, proyek PRJ-001 | Login di `/portal`; role Klien tidak digabung role internal ([BR-ACC-03](wms/05-aturan-bisnis.md#br-acc)). **Admin site klien**: mengisi bukti terima SJ ke PRJ-001 di portal (foto SJ bertanda tangan & cap wajib, No. GR klien opsional) dan No. PO klien di REQ ([A-312](wms/04b-asumsi-lanjutan.md#a-312), [A-313](wms/04b-asumsi-lanjutan.md#a-313)) |
 | `klien2@klien-dua.test` | Maman (CV Klien Dua) | Klien | klien KL2, proyek PRJ-002 | Proyeknya masih kosong: portal menampilkan daftar kosong, tidak melihat proyek klien lain ([A-21](wms/04-keputusan-dan-asumsi.md#a-21)) |
 
-Nomor WA dummy: `+6281200000001` … `+6281200000014` berurutan sesuai tabel.
+Nomor WA dummy: `+6281200000001` … `+6281200000014` berurutan sesuai urutan akun sejak v1.0; `…08` dan `…09` (dulu akun driver) kini menjadi HP driver bawaan kendaraan di §2.
 
 > **Cakupan klien pada dua akun portal ditulis sebagai "klien KL1/KL2", tetapi `scope_type` hanya mengenal `all`, `warehouse`, dan `project`.** Keterkaitan klien diwakili kolom `users.client_id`, bukan cakupan role; seeder mengikuti kode, bukan kalimat di tabel.
 
@@ -67,7 +65,6 @@ Nomor WA dummy: `+6281200000001` … `+6281200000014` berurutan sesuai tabel.
 | Direksi | Direktur (1) | Budi Direktur, Rina Admin | — |
 | Operasional | Kepala Gudang (2) | Andi Kepala, Sari Kepala | Budi Direktur |
 | Operasional | Staf Gudang (3) | Dedi, Eko, Fajar | Kepala gudang masing-masing (Fajar → Andi) |
-| Operasional | Driver (3) | Gani, Hadi | Andi Kepala |
 | Proyek | Engineer / PIC (2) | Indra Engineer | Budi Direktur |
 | Keuangan | Purchasing (2) | Joko Purchasing | Budi Direktur |
 | Audit | Auditor Internal (2) | Kartika Auditor | Budi Direktur |

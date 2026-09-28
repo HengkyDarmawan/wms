@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `picking` & `shipment` (Picking, Surat Jalan, Bukti Terima, Selisih)
 
-**Versi:** 0.16
-**Tanggal:** 27 September 2026
-**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188)); v0.9: halaman penerima bertoken `/terima/{token}` dan unggah foto/tanda tangan bukti terima ([A-231](04-keputusan-dan-asumsi.md#a-231), §6, §13.3); v0.14: **SJ tanpa PCK** — SJ jemput retur dari proyek, identitas barang di baris SJ, sopir & plat bebas, kolom asal per baris ([A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248)); v0.15: OTP bukti terima dikirim otomatis ke HP penerima lewat kanal pesan platform ([A-273](04b-asumsi-lanjutan.md#a-273))
+**Versi:** 0.17
+**Tanggal:** 28 September 2026
+**Status:** terimplementasi (Fase 1) — modul keenam setelah [Request](14-request.md); v0.5: PCK/SJ melayani TRF dan RET ([22-retur-transfer](22-retur-transfer.md)); v0.6: SJ aset diterima proyek melahirkan AST dan memperkaya `asset_checked_out` ([25-aset](25-aset.md), [A-163](04-keputusan-dan-asumsi.md#a-163)); v0.7: alokasi PCK mengikuti strategi pengambilan & mengurangi alokasi keras PCK lain per baris saldo; DSC `client_dispute` dari keberatan pemohon diselesaikan tanpa pergerakan stok ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185), [A-188](04-keputusan-dan-asumsi.md#a-188)); v0.9: halaman penerima bertoken `/terima/{token}` dan unggah foto/tanda tangan bukti terima ([A-231](04-keputusan-dan-asumsi.md#a-231), §6, §13.3); v0.14: **SJ tanpa PCK** — SJ jemput retur dari proyek, identitas barang di baris SJ, sopir & plat bebas, kolom asal per baris ([A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248)); v0.15: OTP bukti terima dikirim otomatis ke HP penerima lewat kanal pesan platform ([A-273](04b-asumsi-lanjutan.md#a-273)); v0.17: driver tanpa akun (nama & HP di SJ), bukti terima oleh penerima — portal Klien / akun tujuan / cadangan tautan & Kepala Gudang asal, foto SJ bertanda tangan, No. PO/GR klien, notifikasi SJ berangkat ([A-311](04b-asumsi-lanjutan.md#a-311)–[A-319](04b-asumsi-lanjutan.md#a-319))
 **Modul:** `picking`, `shipment`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-SJ](05-aturan-bisnis.md#br-sj) · [Katalog Status §2.2–§2.4](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
@@ -31,13 +31,14 @@ Permission disimpan dengan `module = picking` dan `module = shipment`.
 |---|---|
 | Admin Company | semua permission kedua modul |
 | Manajemen | `pick.view`, `shipment.view`, `discrepancy.view` |
-| Kepala Gudang | semua kecuali `shipment.confirm_delivery` |
-| Staf Gudang | `pick.view`, `pick.start`, `pick.complete`, `shipment.view`, `shipment.create`, `shipment.ship` |
-| Driver | `pick.view`, `shipment.view`, `shipment.ship`, `shipment.confirm_delivery` |
-| Klien | `shipment.view` (hanya SJ proyeknya) |
+| Kepala Gudang | semua; `shipment.confirm_delivery` hanya berlaku sebagai penerima (cakupan menyebut gudang/proyek tujuan), `shipment.confirm_delivery_signed` = cadangan dari SJ bertanda tangan untuk SJ gudang asalnya ([A-316](04b-asumsi-lanjutan.md#a-316)) |
+| Staf Gudang | `pick.view`, `pick.start`, `pick.complete`, `shipment.view`, `shipment.create`, `shipment.ship` (berangkatkan SJ gudang asal, [A-311](04b-asumsi-lanjutan.md#a-311)), `shipment.confirm_delivery` (sebagai penerima di gudang tujuan) |
+| Driver (lama) | `pick.view`, `shipment.view` — role lama, tidak ditawarkan untuk user baru; driver tanpa akun ([A-311](04b-asumsi-lanjutan.md#a-311), [A-314](04b-asumsi-lanjutan.md#a-314)) |
+| Pemohon Internal | `shipment.confirm_delivery` untuk SJ REQ-nya (membuka detail SJ itu walau tanpa `shipment.view`) |
+| Klien | `shipment.view`, `shipment.confirm_delivery` (hanya SJ ke proyek kliennya — admin site klien, [A-312](04b-asumsi-lanjutan.md#a-312)) |
 | Auditor Internal & Eksternal | `pick.view`, `shipment.view`, `discrepancy.view` |
 
-Daftar: `pick.view`, `pick.create`, `pick.start`, `pick.complete`, `pick.cancel`, `shipment.view`, `shipment.create`, `shipment.ship`, `shipment.confirm_delivery`, `shipment.cancel`, `discrepancy.view`, `discrepancy.resolve`.
+Daftar: `pick.view`, `pick.create`, `pick.start`, `pick.complete`, `pick.cancel`, `shipment.view`, `shipment.create`, `shipment.ship`, `shipment.confirm_delivery`, `shipment.confirm_delivery_signed`, `shipment.cancel`, `discrepancy.view`, `discrepancy.resolve`.
 
 ## 3. Entitas & data
 
@@ -78,7 +79,9 @@ Daftar: `pick.view`, `pick.create`, `pick.start`, `pick.complete`, `pick.cancel`
 | `destination_type` | enum | `project_client` \| `site_warehouse` \| `warehouse` \| `vendor` |
 | `destination_project_id`, `destination_warehouse_id` | FK | sesuai jenis tujuan |
 | `shipment_method` | enum | `own_fleet` \| `carrier` \| `self_delivered` ([BR-SJ-07](05-aturan-bisnis.md#br-sj)) |
-| `vehicle_id`, `driver_id` | FK | wajib bila `own_fleet` |
+| `vehicle_id` | FK | wajib bila `own_fleet` |
+| `driver_name`, `driver_phone` | varchar(100), varchar(20) | wajib bila `own_fleet`; HP dibakukan `62…`; terisi dari driver bawaan kendaraan ([A-311](04b-asumsi-lanjutan.md#a-311), [A-315](04b-asumsi-lanjutan.md#a-315)) |
+| `driver_id` | FK users | data lama sebelum A-311 (tidak diisi lagi; migrasi `000430` mengisi balik nama/HP) |
 | `carrier_id`, `tracking_no` | FK, varchar(60) | wajib bila `carrier` |
 | `carried_by_name` | varchar(100) | wajib bila `self_delivered` |
 | `status` | enum | Katalog §2.3 |
@@ -89,9 +92,9 @@ Daftar: `pick.view`, `pick.create`, `pick.start`, `pick.complete`, `pick.cancel`
 
 | Tabel | Isi |
 |---|---|
-| `shipments` (+) | `source_type`/`source_id` (`goods_return`, kelak `transfer`) = SJ tanpa PCK; `origin_project_id` = proyek tempat barang dijemput; `vehicle_plate` = plat bebas bila bukan master (sopir bebas = `carried_by_name`) — migrasi 000260, [A-247](04b-asumsi-lanjutan.md#a-247) |
+| `shipments` (+) | `source_type`/`source_id` (`goods_return`, kelak `transfer`) = SJ tanpa PCK; `origin_project_id` = proyek tempat barang dijemput; `vehicle_plate` = plat bebas bila bukan master (sopir = `driver_name`/`driver_phone` sejak A-311; data lama `carried_by_name`) — migrasi 000260, [A-247](04b-asumsi-lanjutan.md#a-247) |
 | `shipment_lines` | `pick_task_line_id` (kosong untuk SJ tanpa PCK), `source_line_id` (baris RET/TRF), `item_id`, `lot_id`, `serial_id`, `piece_id` (identitas barang, diisi balik dari PCK untuk SJ lama), `qty_shipped`, `qty_delivered`, `ownership_effect` (`sold`/`transfer`/`loan`, [BR-SJ-04](05-aturan-bisnis.md#br-sj)) |
-| `proofs_of_delivery` | satu per SJ: penerima, tanda tangan, foto, GPS, `channel` (`driver_pwa`/`token_link`), `confirmation`, `confirm_deadline_at` |
+| `proofs_of_delivery` | satu per SJ: penerima, tanda tangan, foto, GPS, `channel` (`proof_channel`: `client_portal`/`recipient_account`/`signed_document`/`token_link`; `driver_pwa` = data lama), `signed_document_path` (foto SJ bertanda tangan & cap), `client_gr_number` (No. GR klien, [A-313](04b-asumsi-lanjutan.md#a-313)), `confirmation`, `confirm_deadline_at` |
 | `proof_of_delivery_lines` | per baris SJ: `qty_good` + `qty_damaged` + `qty_missing` = `qty_shipped`; foto wajib bila rusak |
 | `proof_of_delivery_units` | per unit untuk item berserial dan per potong: `condition` = `good`/`damaged`/`missing` |
 | `delivery_tokens` | tautan bertoken sekali pakai + OTP, berlaku 24 jam ([A-41](04-keputusan-dan-asumsi.md#a-41)) |
@@ -139,10 +142,11 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 |---|---|---|
 | `/picks` | `shipment.pick-list` | Daftar PCK dengan penyaring gudang, status, petugas |
 | `/picks/{pck}` | `shipment.pick-detail` | Baris alokasi, pencatatan jumlah diambil, short pick dengan Alasan `*` |
-| `/shipments` | `shipment.shipment-list` | Daftar SJ dengan penyaring status, tujuan, cara kirim |
-| `/shipments/create` | `shipment.shipment-form` | Memilih PCK `completed` di Loading Area dengan tujuan sama; kelengkapan cara kirim |
+| `/shipments` | `shipment.shipment-list` | Daftar SJ dengan penyaring status, tujuan, cara kirim; cari nomor/resi/driver/No. PO klien/No. GR klien; penerima melihat SJ ke gudang/proyek cakupannya (`Shipment::visibleTo`) |
+| `/shipments/create` | `shipment.shipment-form` | Memilih PCK `completed` di Loading Area dengan tujuan sama; kelengkapan cara kirim (kendaraan → nama & HP driver bawaan terisi) |
 | `/shipments/{sj}` | `shipment.shipment-detail` | Muat, kirim, bukti terima (foto serah terima, tanda tangan kanvas, foto rusak per baris), tautan penerima + OTP tampil sekali — atau, bila **OTP otomatis** aktif, tautan & OTP dikirim ke HP penerima dan OTP tidak tampil ([A-273](04b-asumsi-lanjutan.md#a-273)) — dan DSC yang lahir darinya |
 | `/terima/{token}` | `DeliveryTokenController` (tanpa login) | Penerima tanpa akun: OTP (menyebut nomor tujuan bila dikirim otomatis; *Kirim ulang* `POST /terima/{token}/kirim-ulang`, jeda 60 detik, maks 4 kiriman, [A-273](04b-asumsi-lanjutan.md#a-273)) → formulir bukti terima per baris (foto wajib bila rusak, tanda tangan) → ringkasan; tautan kedaluwarsa/terpakai → 410 ([A-231](04-keputusan-dan-asumsi.md#a-231)) |
+| `/portal/shipments/{sj}/proof` | `shipment.portal-delivery-proof` | Admin site klien: bukti terima per baris, foto SJ bertanda tangan & cap `*`, No. GR klien; tombol *Isi bukti terima* di detail REQ portal & kartu *SJ menunggu bukti terima* di Beranda portal ([A-312](04b-asumsi-lanjutan.md#a-312)) |
 | `/discrepancies` | `shipment.discrepancy-list` | DSC terbuka dengan umur dan disposisi per baris |
 
 ## 7. Kejadian stok & integrasi
@@ -163,7 +167,7 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 |---|---|---|
 | PCK ditugaskan | Staf Gudang yang ditunjuk | in-app |
 | Short pick tercatat | Kepala Gudang | in-app |
-| SJ `shipped` | Pemohon, klien | in-app + portal |
+| SJ `shipped` (`shipment.shipped`) | Penerima utama: admin site klien, user bercakupan gudang/proyek tujuan, pemohon REQ ([A-319](04b-asumsi-lanjutan.md#a-319)) | in-app + WhatsApp bila company mengizinkan |
 | Bukti terima terisi | Pemohon, Kepala Gudang | in-app |
 | DSC `open` | Kepala Gudang, pemohon | in-app |
 | DSC terbuka lebih dari ambang | Kepala Gudang | in-app, diulang harian |
@@ -172,7 +176,7 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 
 | Laporan | Filter | Kolom |
 |---|---|---|
-| Daftar pengiriman | status, tujuan, cara kirim, rentang tanggal | nomor, tujuan, cara kirim, status, tanggal kirim |
+| Daftar pengiriman | cari nomor SJ/PO/GR klien, status, tujuan, cara kirim, rentang tanggal | nomor, tujuan, cara kirim, driver, status, tanggal kirim, penerima, No. PO klien, No. GR klien ([A-313](04b-asumsi-lanjutan.md#a-313)) |
 | Short pick | gudang, rentang tanggal | PCK, item, dialokasikan, diambil, selisih, alasan |
 | Posisi barang rusak & selisih | gudang, umur | SJ, item, jenis, jumlah, disposisi, umur DSC |
 | Kinerja pengiriman | gudang, rentang tanggal | dikirim, diterima utuh, bersisa, rata-rata hari |
@@ -216,13 +220,21 @@ Transisi hanya lewat POST. SJ `shipped` tidak bisa dibatalkan; koreksinya lewat 
 | TC-SJ-13 | User tanpa `shipment.view` | buka daftar SJ | 403 | BR-GEN-09 |
 | TC-SJ-14 | Klien proyek lain | buka SJ | 404 | BR-ACC-05 |
 | TC-SJ-19 | Aset On-site + barang terkirim (REQ lain) satu proyek | RET dijemput → SJ jemput berangkat; asal baris; cetak; tiba (serial baik, baut 3 baik 1 kurang); GRN retur | aset tetap On-site sampai GRN; asal "Aset, AST/…" dan REQ + SJ asal; cetak memuat "Dijemput dari", RET, plat; `partially_delivered`; GRN 1 + 3 | A-247, A-248 |
-| TC-SJ-18 | SJ aset berserial (1 unit) terkirim | bukti terima dibagi 0,5 baik + 0,5 rusak; lalu seluruhnya baik | pembagian ditolak BR-SJ-05; layar driver menawarkan satu pilihan kondisi berserial; baris `proof_of_delivery_units` (serial, `good`) | BR-SJ-05, A-64, [A-244](04-keputusan-dan-asumsi.md#a-244) |
+| TC-SJ-18 | SJ aset berserial (1 unit) terkirim | bukti terima dibagi 0,5 baik + 0,5 rusak; lalu seluruhnya baik | pembagian ditolak BR-SJ-05; layar bukti terima menawarkan satu pilihan kondisi berserial; baris `proof_of_delivery_units` (serial, `good`) | BR-SJ-05, A-64, [A-244](04-keputusan-dan-asumsi.md#a-244) |
 | TC-SJ-20 | OTP otomatis aktif, kanal ada | terbitkan tautan dengan 0812-3456-7890 | pesan ke `6281234567890` memuat nomor SJ, tautan, OTP; OTP tidak tampil ke staf; `otp_sent_at`; halaman penerima menyebut `62812****7890`; kode dari pesan membuka formulir | A-273 |
 | TC-SJ-20b | Kanal menolak / nomor `12345` | terbitkan tautan | OTP tampil (jalur manual) + galat; riwayat *gagal dikirim*; nomor tidak sah tidak dikirim | A-273 |
 | TC-SJ-20c | Saklar mati; atau saklar menyala tanpa kanal | terbitkan tautan; buka Pengaturan company | perilaku lama; peringatan kanal belum diatur | A-273 |
 | TC-SJ-20d | Tautan ber-OTP otomatis | kirim ulang terlalu cepat; setelah 2 menit; sampai 4 kiriman; tautan manual | ditolak; kode baru (lama mati); kiriman ke-5 ditolak & tombol hilang; manual ditolak | A-273, NFR-04 |
 | TC-SJ-20e | — | bakukan nomor; gateway HTTP form/json, ditolak, galat 500, tanpa URL | `62…` / null; header token + field terkonfigurasi + field tetap; `MessageNotSent`; tidak tersedia | A-273 |
 | TC-SJ-21 | PCK dengan 2 label dipindai | SJ berangkat | kejadian label keluar membawa `shipment_id` SJ | [A-299](04b-asumsi-lanjutan.md#a-299) |
+| TC-SJ-22 | Kendaraan sendiri bawaan Hadi | susun SJ tanpa nama; tanpa HP; HP `12ab`; lalu lengkap; pilih kendaraan di form | ditolak BR-SJ-07 per kolom; tersimpan `driver_name`, HP `62…`, `driver_id` kosong; form terisi nama & HP bawaan | [A-311](04b-asumsi-lanjutan.md#a-311), [A-315](04b-asumsi-lanjutan.md#a-315) |
+| TC-SJ-23 | SJ ke proyek klien berangkat (REQ ber-No. PO) | `klien1` buka `/portal/shipments/{sj}/proof`, isi 18 baik 2 kurang tanpa foto SJ, lalu dengan foto + No. GR | ditolak `fotoSj`; lalu `partially_delivered`, kanal `client_portal`, GR tersimpan, bukti **terkonfirmasi** tanpa tenggat, DSC terbuka | [A-312](04b-asumsi-lanjutan.md#a-312), [A-317](04b-asumsi-lanjutan.md#a-317) |
+| TC-SJ-24 | SJ ke proyek klien | klien proyek lain; staf asal; Kepala Gudang gudang lain; SJ sudah diterima | 403 / tidak boleh | [A-316](04b-asumsi-lanjutan.md#a-316) |
+| TC-SJ-25 | SJ ke Gudang Site | staf bercakupan site vs staf asal | site: melihat di daftar, mengisi (kanal `recipient_account`, foto SJ opsional); asal: tidak boleh; penerima tidak memberangkatkan | [A-316](04b-asumsi-lanjutan.md#a-316) |
+| TC-SJ-26 | Kepala Gudang asal (cadangan) | isi tanpa foto SJ (aksi langsung), lalu lewat layar dengan foto | ditolak BR-SJ-05 `signed_document_path`; lalu kanal `signed_document`, belum dikonfirmasi pemohon | [A-316](04b-asumsi-lanjutan.md#a-316) |
+| TC-SJ-27 | Klien, pemohon, Admin Company | SJ berangkat | notifikasi `shipment.shipped` ke klien (tautan portal) & pemohon; Admin (cakupan semua) tidak | [A-319](04b-asumsi-lanjutan.md#a-319) |
+| TC-SJ-28 | SJ ber-No. PO klien, bukti terima ber-GR | cetak SJ & Bukti Terima | SJ memuat nama & HP driver, No. PO klien, kotak *Penerima (tanda tangan & cap)*; Bukti Terima memuat No. GR & kanal | [A-313](04b-asumsi-lanjutan.md#a-313), [A-316](04b-asumsi-lanjutan.md#a-316) |
+| TC-SJ-29 | SJ lama hanya `driver_id` | tampil & cetak; user driver lama | nama dari user lama; label kanal *Aplikasi driver (lama)*; user lama bisa masuk tanpa hak berangkat/bukti terima | [A-314](04b-asumsi-lanjutan.md#a-314) |
 
 ## 11. Di luar lingkup modul ini
 
@@ -323,13 +335,13 @@ Uji yang menopangnya ada di `tests/Feature/Shipment`: `PickTaskTest` (TC-PCK-01�
 ### 13.4 Sisa pekerjaan modul ini
 
 1. ~~Halaman penerima bertoken~~ — **selesai 25 Sep 2026** ([A-231](04-keputusan-dan-asumsi.md#a-231)); ~~pengiriman OTP otomatis~~ — **selesai 27 Sep 2026** (§13.6, [A-273](04b-asumsi-lanjutan.md#a-273)); tinggal memilih penyedia ([O-15](04-keputusan-dan-asumsi.md#o-15)) dan mengisi `.env`.
-2. ~~Bukti terima per unit~~ untuk item berserial dan per potong — selesai 25 Sep 2026: satu baris SJ = satu unit, dinilai utuh baik/rusak/kurang (pilihan kondisi di layar driver & halaman penerima), dicatat di `proof_of_delivery_units` ([A-244](04-keputusan-dan-asumsi.md#a-244), TC-SJ-18); pemindaian PWA tetap `[F2]`.
+2. ~~Bukti terima per unit~~ untuk item berserial dan per potong — selesai 25 Sep 2026: satu baris SJ = satu unit, dinilai utuh baik/rusak/kurang (pilihan kondisi di form bukti terima & halaman penerima), dicatat di `proof_of_delivery_units` ([A-244](04-keputusan-dan-asumsi.md#a-244), TC-SJ-18); pemindaian PWA tetap `[F2]`.
 3. ~~Konfirmasi dan keberatan pemohon~~ — **selesai** ([BR-REQ-10](05-aturan-bisnis.md#br-req), [A-188](04-keputusan-dan-asumsi.md#a-188)): kartu bukti terima di REQ back-office & portal klien, keberatan berfoto membuka DSC, konfirmasi otomatis lewat batas ([27-pendukung-f1](27-pendukung-f1.md)).
 4. **Cross-dock dari GRN** ([BR-SJ-03](05-aturan-bisnis.md#br-sj), [A-83](04-keputusan-dan-asumsi.md#a-83)) — A-83 *Setuju* 26 Sep 2026: tetap **saran** di Fase 1 (detail GRN menampilkan REQ penunggu), tidak dibangun. GRN retur
    untuk barang rusak yang dibawa balik tidak dibuat ([A-114](04-keputusan-dan-asumsi.md#a-114)); modul Retur sudah ada ([22](22-retur-transfer.md)).
 5. *(catatan implementasi, bukan sisa)* **Aset dipinjamkan** (v0.6): `ConfirmDelivery` memanggil `Asset\Support\AssetCustody::checkOut` untuk baris `loan` berserial sebelum memindahkannya ke bin On-site; state aset (`reserved` → `in_transit` → `on_loan`) diperbarui observer kartu stok modul Aset ([25-aset §13](25-aset.md)).
-6. ~~Unggah tanda tangan dan foto lewat layar~~ — **selesai 25 Sep 2026**: layar driver dan halaman penerima mengunggah foto serah terima, tanda tangan kanvas (data URL → PNG), foto kerusakan per baris (`StoreUpload::handleDataUrl`, NFR-14).
-7. **Mode offline driver** ([BR-SJ-08](05-aturan-bisnis.md#br-sj)) `[F2]`.
+6. ~~Unggah tanda tangan dan foto lewat layar~~ — **selesai 25 Sep 2026**: layar SJ, halaman portal klien, dan halaman penerima mengunggah foto serah terima, tanda tangan kanvas (data URL → PNG), foto kerusakan per baris (`StoreUpload::handleDataUrl`, NFR-14).
+7. **Mode offline pengisi bukti terima** ([BR-SJ-08](05-aturan-bisnis.md#br-sj)) `[F2]` — driver tidak lagi punya akun (A-311); draf lokal dipakai portal klien & layar SJ.
 8. **Notifikasi §8** belum lengkap; ~~laporan §9~~ — **selesai 25 Sep 2026**: *Daftar pengiriman*, *Short pick*, *Posisi barang rusak & selisih*, *Kinerja pengiriman* di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-232](04-keputusan-dan-asumsi.md#a-232)).
 
 ### 13.6 OTP otomatis (27 September 2026)
@@ -339,3 +351,11 @@ Uji yang menopangnya ada di `tests/Feature/Shipment`: `PickTaskTest` (TC-PCK-01�
 ### 13.7 Pemindaian label kemasan wajib (28 September 2026)
 
 `PickDetail::pindai` mengenali urutan bin → label kemasan (`ScanCode::label`) → item. Label induk membuka dialog jumlah isi (bawaan = sisa alokasi baris dibatasi isi label), label isi diklaim utuh (`CapturesPackageLabels`); chip klaim per baris dengan tombol lepas, dan petunjuk "Label wajib: X dari Y" per item+lot. `ProcessPickTask::claimLabel/releaseLabel` menyimpan klaim di `pick_task_lines.labels`; baris tercatat bila label menutup alokasi. `complete` memeriksa cakupan (`PackageLabelLedger::assertCoverage`, BR-LBL-04) sebelum transaksi lalu memposting label Keluar setelah gerakan stok; `ShipShipment` menempel nomor SJ ke kejadian label ([A-299](04b-asumsi-lanjutan.md#a-299)).
+
+### 13.8 Driver tanpa akun & bukti terima oleh penerima (28 September 2026)
+
+- **Data** (migrasi `000430`): `shipments.driver_name/driver_phone`, `vehicles.default_driver_name/default_driver_phone`, `proofs_of_delivery.signed_document_path/client_gr_number`, `channel` varchar(20) bawaan `recipient_account`, `material_requests.client_po_number`; isi balik nama/HP dari user driver lama; hak role disesuaikan tertarget ([A-314](04b-asumsi-lanjutan.md#a-314)).
+- **Penerima** — `Shipment\Support\DeliveryRecipients::channelFor()` memutus kanal (portal klien / akun penerima / cadangan SJ bertanda tangan) dan dipakai `ShipmentPolicy::confirmDelivery`; `recipientsFor()` untuk notifikasi. `Shipment::resolveRouteBinding` tanpa cakupan global + `visibleTo()` agar penerima di gudang/proyek tujuan membuka SJ di luar cakupan gudang asalnya; `ShipmentPolicy::view` yang memutus.
+- **Form bersama** — trait `FillsDeliveryProof` + partial `shipment/partials/proof-form` dipakai `ShipmentDetail` dan `PortalDeliveryProof`; `ConfirmDelivery` menolak kanal portal/cadangan tanpa foto SJ (BR-SJ-05) dan mencatat konfirmasi otomatis ([A-317](04b-asumsi-lanjutan.md#a-317)).
+- **Unggah berkas** — rute unggah & pratinjau berkas sementara Livewire kini didahului `InitializeTenancyBySubdomain` (sebelumnya grup `web` saja → 419 di browser); `ConfirmDelivery` berjalan dalam `Access\Support\ScopeBypass` setelah policy memutus.
+- **Cetak** — SJ: baris Driver/No. HP driver, No. PO klien, catatan penerima; blok tanda tangan bawaan *Penerima (tanda tangan & cap)*. Bukti Terima: Driver & No. GR klien.

@@ -23,7 +23,7 @@ use Illuminate\Http\Response;
 /**
  * Halaman penerima bertoken (A-41, A-231, BR-SJ-05): penerima tanpa akun
  * membuka tautan, memasukkan OTP — dikirim otomatis ke HP-nya (A-273) atau
- * disampaikan driver — lalu mengisi bukti terima per baris (baik/rusak/kurang,
+ * disampaikan staf/pengantar — lalu mengisi bukti terima per baris (baik/rusak/kurang,
  * foto wajib bila rusak, tanda tangan).
  *
  * Tanpa `auth`: identitasnya adalah token + OTP. Sesi OTP berlaku 30 menit dan

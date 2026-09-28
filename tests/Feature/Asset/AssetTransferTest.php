@@ -74,7 +74,7 @@ class AssetTransferTest extends TenantTestCase
     private function sjAntarSite(Transfer $trf): Shipment
     {
         return app(CreatePickupShipment::class)->forAssetTransfer($trf->refresh(), [
-            'shipment_method' => 'own_fleet', 'vehicle_plate' => 'L 777 AB', 'carried_by_name' => 'Pak Joko',
+            'shipment_method' => 'own_fleet', 'vehicle_plate' => 'L 777 AB', 'driver_name' => 'Pak Joko', 'driver_phone' => '081311112222',
         ], $this->makeUser('warehouse_staff'));
     }
 
@@ -113,7 +113,7 @@ class AssetTransferTest extends TenantTestCase
         $sj = app(ShipShipment::class)->handle($sj, null, $this->makeUser('driver'));
         $this->assertSame($gerak, StockMovement::query()->count(), 'Berangkat tanpa pergerakan (A-247).');
         $this->assertSame(1.0, (float) $trf->lines()->sole()->qty_shipped);
-        $this->assertTrue($this->makeUser('driver')->can('issueToken', $sj), 'Penerima proyek tujuan boleh lewat tautan bertoken.');
+        $this->assertTrue($this->makeUser('warehouse_staff')->can('issueToken', $sj), 'Penerima proyek tujuan boleh lewat tautan bertoken (diterbitkan staf gudang asal).');
 
         app(ConfirmDelivery::class)->handle($sj, ['received_by_name' => 'PIC Surabaya', 'channel' => 'token_link'], [
             ['shipment_line_id' => $sj->lines()->sole()->id, 'qty_good' => 1],
@@ -193,7 +193,7 @@ class AssetTransferTest extends TenantTestCase
         $this->gagal(fn () => $this->trfAset([$this->gns]), 'BR-RET-02');
 
         // SJ antar site: sopir & plat wajib; satu per TRF; batal SJ → TRF kembali approved.
-        $this->gagal(fn () => app(CreatePickupShipment::class)->forAssetTransfer($trf, ['shipment_method' => 'own_fleet', 'carried_by_name' => 'X'], $this->makeUser('warehouse_staff')), 'BR-SJ-07');
+        $this->gagal(fn () => app(CreatePickupShipment::class)->forAssetTransfer($trf, ['shipment_method' => 'own_fleet', 'driver_name' => 'X', 'driver_phone' => '081311112222'], $this->makeUser('warehouse_staff')), 'BR-SJ-07');
         $sj = $this->sjAntarSite($trf);
         $this->gagal(fn () => $this->sjAntarSite($trf), 'BR-RET-02');
         app(ShipShipment::class)->cancel($sj, $this->alasan(ReasonContext::Cancel), $this->makeUser('warehouse_head'));
@@ -269,7 +269,7 @@ class AssetTransferTest extends TenantTestCase
             ->assertSee(__('Aset antar proyek (On-site)'))->assertSee('GNS-01')->assertSee(__('Buat SJ antar site'));
 
         Livewire::test(TransferDetail::class, ['transfer' => $trf])
-            ->set('jemput.vehicle_plate', 'L 1 SBY')->set('jemput.carried_by_name', 'Sopir')
+            ->set('jemput.vehicle_plate', 'L 1 SBY')->set('jemput.driver_name', 'Sopir')->set('jemput.driver_phone', '081311112222')
             ->call('buatSjAntarSite')->assertRedirect();
 
         $sj = Shipment::query()->where('source_type', 'transfer')->sole();

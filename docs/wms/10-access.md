@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `access` (Akses, Autentikasi, Role & Cakupan, Organisasi)
 
-**Versi:** 0.12
-**Tanggal:** 26 September 2026
-**Status:** **selesai untuk Fase 1** — kerangka aplikasi, autentikasi, seluruh layar §6.1–§6.7, domain, seeder, dan 100 pengujian sudah jalan. Sisa pekerjaan kecil & penyimpangan: §13; v0.10: §6.2 kanvas tanda tangan profil jalan, §13 butir 1 (A-264)
+**Versi:** 0.13
+**Tanggal:** 28 September 2026
+**Status:** **selesai untuk Fase 1** — kerangka aplikasi, autentikasi, seluruh layar §6.1–§6.7, domain, seeder, dan 100 pengujian sudah jalan. Sisa pekerjaan kecil & penyimpangan: §13; v0.10: §6.2 kanvas tanda tangan profil jalan, §13 butir 1 (A-264); v0.13: role Driver menjadi *Driver (lama)* — tidak ditawarkan untuk user baru, tanpa hak berangkat/bukti terima; seeder demo tanpa akun driver ([A-311](04b-asumsi-lanjutan.md#a-311), [A-314](04b-asumsi-lanjutan.md#a-314))
 **Modul:** `access`
 **Fase:** F1 (SSO F3 dan auditor eksternal F2 hanya stub)
 **Dokumen terkait:** [Blueprint §4](01-blueprint.md#4-pengguna--peran), [§6.2](01-blueprint.md#62-struktur-organisasi--gudang), [§13](01-blueprint.md#13-autentikasi--sso) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium §11](03-glosarium.md#11-role--akses) · [Model data akses](08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant), [pusat](08a-model-data-inti.md#area-database-pusat-platform) · [Arsitektur §3–§4](08-arsitektur.md#3-tenancy--siklus-request) · [Akun uji](../00-akun-uji.md)
@@ -27,7 +27,7 @@ Permission ditulis `<modul>.<aksi>` dan disimpan di `permissions` dengan `module
 | Admin Company | semua `user.*`, `role.*`, `org.*`, `device.*`, `support_access.*`, `profile.update`, `auth.*` | semua |
 | Manajemen | `user.view`, `role.view`, `org.view`, `profile.update`, `auth.*` | semua |
 | Kepala Gudang | `user.view` (user di cakupannya), `device.view`, `profile.update`, `auth.*` | gudang yang ditugaskan |
-| Staf Gudang, Driver, Pemohon Internal, Penindak Lanjut PR, Auditor Internal | `profile.update`, `auth.*`, `device.manage` (perangkat sendiri) | sesuai penugasan |
+| Staf Gudang, Driver (lama), Pemohon Internal, Penindak Lanjut PR, Auditor Internal | `profile.update`, `auth.*`, `device.manage` (perangkat sendiri) | sesuai penugasan |
 | Klien | `profile.update`, `auth.*` (hanya lewat `/portal`) | klien & proyeknya |
 
 Daftar permission modul ini: `auth.login`, `auth.logout`, `auth.two_factor`, `profile.update`, `user.view`, `user.create`, `user.update`, `user.deactivate`, `user.invite`, `user.reset_password`, `user.impersonate` ([A-260](04b-asumsi-lanjutan.md#a-260)), `role.view`, `role.create`, `role.update`, `role.deactivate`, `role.assign`, `org.view`, `org.manage`, `device.view`, `device.manage`, `support_access.grant`, `support_access.revoke`. Permission modul lain didaftarkan oleh modul masing-masing ke tabel yang sama.
@@ -60,7 +60,7 @@ Indeks: `UK(email)`, `IDX(client_id)`, `IDX(manager_id)`, `IDX(is_active)`.
 
 ### 3.2 `roles`, `permissions`, `role_permissions`
 
-`roles`: `code` varchar(40) UK (`company_admin`, `management`, `warehouse_head`, `warehouse_staff`, `driver`, `internal_requester`, `pr_follow_up`, `internal_auditor`, `external_auditor` F2, `client_user`), `name`, `is_builtin` bool (role bawaan tidak bisa dihapus, boleh disalin), `is_client_role` bool, `is_active` bool *(impl.)*. `permissions`: `key` varchar(80) UK, `module` varchar(30), `label` varchar(100) *(impl.)*. `role_permissions`: PK(`role_id`, `permission_id`). Implementasi memakai `spatie/laravel-permission` dengan nama tabel ini ([AD-06](08-arsitektur.md#2-keputusan-arsitektur)); guard tunggal `web`.
+`roles`: `code` varchar(40) UK (`company_admin`, `management`, `warehouse_head`, `warehouse_staff`, `driver` (role lama — `Role::NOT_OFFERED`, form user hanya menampilkannya bagi user yang sudah memegangnya, [A-314](04b-asumsi-lanjutan.md#a-314)), `internal_requester`, `pr_follow_up`, `internal_auditor`, `external_auditor` F2, `client_user`), `name`, `is_builtin` bool (role bawaan tidak bisa dihapus, boleh disalin), `is_client_role` bool, `is_active` bool *(impl.)*. `permissions`: `key` varchar(80) UK, `module` varchar(30), `label` varchar(100) *(impl.)*. `role_permissions`: PK(`role_id`, `permission_id`). Implementasi memakai `spatie/laravel-permission` dengan nama tabel ini ([AD-06](08-arsitektur.md#2-keputusan-arsitektur)); guard tunggal `web`.
 
 ### 3.3 `role_assignments`
 
@@ -267,10 +267,11 @@ Tidak ada kejadian stok. Audit log (`spatie/laravel-activitylog`, [AD-07](08-ars
 | TC-ACC-32 | Admin Company login | masuk sebagai user Klien | diarahkan ke `/portal` dengan spanduk; *Kembali* berhasil dari portal | A-260, BR-PRJ-07 |
 | TC-ACC-33 | Kepala Gudang login | buka `/impersonate` / POST masuk sebagai staf | 403; sesi tidak berubah | A-260 |
 | TC-ACC-34 | Admin Company | masuk sebagai diri sendiri, Admin Company lain, user nonaktif, user tanpa role | semua ditolak dengan pesan; tetap sebagai Admin | A-260, BR-ACC-01 |
-| TC-ACC-35 | Admin sedang masuk sebagai staf | buka `/impersonate`, masuk sebagai driver | boleh (izin Admin asli); kini driver, Admin asli tetap tersimpan | A-260 |
+| TC-ACC-35 | Admin sedang masuk sebagai staf | buka `/impersonate`, masuk sebagai user lain (mis. user Driver lama) | boleh (izin Admin asli); kini user itu, Admin asli tetap tersimpan | A-260 |
 | TC-ACC-36 | Admin sedang masuk sebagai staf | staf mengubah profilnya | entri audit log memuat `impersonated_by` = Admin; log mulai ber-`causer` Admin | A-260, BR-GEN-05 |
 | TC-ACC-37 | sakelar `access.impersonation.enabled` mati | buka `/impersonate` / POST masuk sebagai | 404 | A-260 |
 | TC-ACC-38 | Admin masuk sebagai staf, lalu Admin dinonaktifkan | *Kembali* | keluar penuh ke `/login`. Juga: GET ke route transisi → 405; layar pemilih menampilkan alur & saringan role; langkah Staf memakai user yang hanya staf | A-260 |
+| TC-ACC-39 | Admin Company; user lama ber-role Driver | buka form user baru; buka form user lama; user lama masuk | role *Driver (lama)* tidak ada di pilihan user baru, tetap tampil untuk user lama; user lama bisa masuk & melihat SJ tanpa `shipment.ship`/`shipment.confirm_delivery`; alur contoh *Masuk sebagai* tanpa langkah driver | [A-311](04b-asumsi-lanjutan.md#a-311), [A-314](04b-asumsi-lanjutan.md#a-314) |
 
 ## 11. Di luar lingkup modul ini
 
@@ -330,7 +331,7 @@ Aksi domain yang ada di kode tetapi tidak disebut §4: `InviteUser` (kirim ulang
    sudah disiapkan dan mulai dipakai saat modul Warehouse/Master membawa tabel bergudang.
 9. **TC-ACC-23** menguji terpasangnya middleware CSRF pada route tenant, karena Laravel melewati
    pemeriksaan CSRF di lingkungan pengujian; perilaku 419 diperiksa manual.
-10. **`device.manage` saja berarti "perangkat sendiri"** (§2: Staf Gudang, Driver). Mencabut perangkat
+10. **`device.manage` saja berarti "perangkat sendiri"** (§2: Staf Gudang, Pemohon Internal; Driver lama). Mencabut perangkat
    milik user lain menuntut `device.manage` **dan** `device.view`, sehingga hanya Admin Company yang bisa.
 11. **Waktu akses dukungan** diisi pada layar memakai zona waktu company lalu disimpan UTC (BR-GEN-07).
 

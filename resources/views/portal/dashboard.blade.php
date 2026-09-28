@@ -12,10 +12,11 @@
         @foreach ([
             ['label' => __('Proyek aktif'), 'nilai' => $proyek->where('status', \App\Domain\Master\Enums\ProjectStatus::Active)->count(), 'ikon' => 'bi-building', 'href' => '#proyek', 'hint' => __('dari :n proyek Anda', ['n' => $proyek->count()])],
             ['label' => __('Permintaan berjalan'), 'nilai' => $angka['req'], 'ikon' => 'bi-clipboard-check', 'href' => route('portal.requests.index'), 'hint' => __('belum selesai/ditutup')],
+            ['label' => __('SJ menunggu bukti terima'), 'nilai' => $angka['buktiTerima'], 'ikon' => 'bi-truck', 'href' => route('portal.requests.index'), 'hint' => __('barang dalam perjalanan ke site Anda')],
             ['label' => __('Perlu konfirmasi terima'), 'nilai' => $angka['konfirmasi'], 'ikon' => 'bi-box-seam', 'href' => route('portal.requests.index'), 'hint' => __('bukti terima menunggu tanggapan Anda')],
             ['label' => __('Retur berjalan'), 'nilai' => $angka['retur'], 'ikon' => 'bi-arrow-return-left', 'href' => route('portal.returns.index'), 'hint' => __('belum dipilah')],
         ] as $k)
-            <div class="col-6 col-xl-3">
+            <div class="col-6 col-xl">
                 <a class="card h-100 text-decoration-none border-0 shadow-sm" href="{{ $k['href'] }}">
                     <div class="card-body d-flex align-items-start gap-3">
                         <i class="bi {{ $k['ikon'] }} fs-3 text-primary" aria-hidden="true"></i>

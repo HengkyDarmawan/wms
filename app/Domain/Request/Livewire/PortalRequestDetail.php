@@ -11,6 +11,7 @@ use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Request\Actions\AddRequestLines;
 use App\Domain\Request\Actions\CancelRequestLine;
 use App\Domain\Request\Actions\RespondSubstitution;
+use App\Domain\Request\Livewire\Concerns\EditsClientPo;
 use App\Domain\Request\Livewire\Concerns\HandlesRequestRules;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Request\Models\MaterialRequestLine;
@@ -28,6 +29,7 @@ use Livewire\Component;
  */
 class PortalRequestDetail extends Component
 {
+    use EditsClientPo;
     use HandlesRequestRules;
 
     #[Locked]

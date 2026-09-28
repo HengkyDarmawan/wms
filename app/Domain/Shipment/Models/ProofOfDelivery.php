@@ -16,7 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Bukti terima — satu per SJ (BR-SJ-05).
  *
- * Diisi driver lewat aplikasi, atau penerima tanpa akun lewat tautan bertoken.
+ * Diisi pihak penerima (portal klien / akun tujuan, A-312), cadangan Kepala
+ * Gudang asal dari SJ bertanda tangan, atau penerima tanpa akun lewat tautan bertoken.
  * Setelah itu pemohon masih punya tenggat untuk mengajukan keberatan
  * (BR-REQ-10); diam sampai tenggat dianggap menerima.
  *
@@ -32,7 +33,7 @@ class ProofOfDelivery extends Model
     protected $guarded = [];
 
     protected $attributes = [
-        'channel' => 'driver_pwa',
+        'channel' => 'recipient_account',
     ];
 
     protected function casts(): array

@@ -103,7 +103,7 @@ class IssueChainTest extends TenantTestCase
         // TRF KRW1 → KRW2 (dalam proyek, A-50) tidak menambah Terkirim.
         $trf = $this->trf($this->krw1, $this->krw2, [['item_id' => $this->baut->id, 'qty_base' => 4]]);
         $pck = $this->jalankanPck($this->pckTrf($trf));
-        $sj = $this->sjDari($pck, $this->krw2, ['shipment_method' => 'self_delivered', 'carried_by_name' => 'PIC titik', 'vehicle_id' => null, 'driver_id' => null]);
+        $sj = $this->sjDari($pck, $this->krw2, ['shipment_method' => 'self_delivered', 'carried_by_name' => 'PIC titik', 'vehicle_id' => null, 'driver_name' => null]);
         $grn = $this->grnTransferSelesai($this->terimaSj($sj), $this->krw2);
         $this->putSelesai($grn, $this->binKrw2);
 

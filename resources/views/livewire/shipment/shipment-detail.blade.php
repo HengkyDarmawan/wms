@@ -39,7 +39,7 @@
     @if ($tautanSekali !== null)
         <div class="alert {{ $otpTerkirimKe ? 'alert-success' : 'alert-info' }}" role="alert">
             @if ($otpTerkirimKe)
-                {{-- A-273: OTP hanya sampai di HP penerima; driver tidak melihatnya. --}}
+                {{-- A-273: OTP hanya sampai di HP penerima; staf & pengantar tidak melihatnya. --}}
                 <i class="bi bi-whatsapp" aria-hidden="true"></i>
                 {{ $otpVia === 'whatsapp'
                     ? __('Kode OTP sudah dikirim lewat WhatsApp ke :hp. Bagikan tautan di bawah kepada penerima; kodenya tidak ditampilkan di sini.', ['hp' => $otpTerkirimKe])
@@ -59,9 +59,9 @@
                 </a>
             @endif
             @unless ($otpTerkirimKe)
-                {{-- A-251: berbagi lewat aplikasi WhatsApp (tanpa API); OTP tetap disampaikan driver. --}}
+                {{-- A-251: berbagi lewat aplikasi WhatsApp (tanpa API); OTP disampaikan staf/pengantar (A-311). --}}
                 <a class="btn btn-sm btn-success mt-2" target="_blank" rel="noopener"
-                   href="https://wa.me/?text={{ rawurlencode(__('Konfirmasi penerimaan barang :sj: :url (kode OTP dari driver).', ['sj' => $sj->number, 'url' => $tautanSekali])) }}">
+                   href="https://wa.me/?text={{ rawurlencode(__('Konfirmasi penerimaan barang :sj: :url (kode OTP dari petugas pengantar).', ['sj' => $sj->number, 'url' => $tautanSekali])) }}">
                     <i class="bi bi-whatsapp" aria-hidden="true"></i> {{ __('Kirim tautan via WA') }}
                 </a>
                 <div class="small">
@@ -97,14 +97,14 @@
             <div class="card-header"><strong>{{ __('Terbitkan tautan bukti terima') }}</strong></div>
             <div class="card-body">
                 <p class="text-muted small">
-                    {{ __('Untuk penerima yang tidak punya akun. Tautan berlaku 24 jam, sekali pakai, dan dilindungi OTP.') }}
+                    {{ __('Cadangan untuk penerima yang tidak punya akun portal/WMS. Tautan berlaku 24 jam, sekali pakai, dan dilindungi OTP.') }}
                 </p>
                 <label class="form-label" for="sj-telepon">{{ __('Nomor telepon penerima') }} @if ($otpOtomatis) <span class="wajib">*</span> @endif</label>
                 <input class="form-control" id="sj-telepon" type="text" inputmode="tel" wire:model="form.phone"
                        placeholder="08…">
                 <div class="form-text">
                     {{ $otpOtomatis
-                        ? __('Tautan dan kode OTP dikirim otomatis ke WhatsApp/SMS nomor ini; driver tidak melihat kodenya.')
+                        ? __('Tautan dan kode OTP dikirim otomatis ke WhatsApp/SMS nomor ini; staf dan pengantar tidak melihat kodenya.')
                         : __('Kode OTP tampil sekali setelah diterbitkan untuk disampaikan kepada penerima.') }}
                 </div>
             </div>
@@ -116,109 +116,7 @@
     @endif
 
     @if ($dialog === 'terima')
-        <div class="card border-success mb-3" data-draft="pod-{{ $sj->id }}">
-            <div class="card-header"><strong>{{ __('Bukti terima') }}</strong></div>
-            <div class="alert alert-warning py-2 small m-2 d-none" role="status" data-draft-status></div>
-            <div class="card-body">
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label" for="terima-nama">
-                            {{ __('Nama penerima') }} <span class="wajib">*</span>
-                        </label>
-                        <input class="form-control @error('form.received_by_name') is-invalid @enderror"
-                               id="terima-nama" type="text" wire:model="form.received_by_name">
-                        @error('form.received_by_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="terima-catatan">{{ __('Catatan') }}</label>
-                        <input class="form-control" id="terima-catatan" type="text" wire:model="form.notes"
-                               placeholder="{{ __('Opsional') }}">
-                    </div>
-                </div>
-
-                <p class="text-muted small">
-                    {{ __('Jumlah baik + rusak + kurang harus sama dengan yang dikirim. Foto wajib bila ada yang rusak.') }}
-                </p>
-
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col">{{ __('Item') }}</th>
-                                <th class="text-end" scope="col">{{ __('Dikirim') }}</th>
-                                <th scope="col">{{ __('Baik') }}</th>
-                                <th scope="col">{{ __('Rusak') }}</th>
-                                <th scope="col">{{ __('Kurang') }}</th>
-                                <th scope="col">{{ __('Foto kerusakan') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($lines as $l)
-                                <tr wire:key="terima-{{ $l->id }}">
-                                    <td>
-                                        {{ $l->item?->code }}
-                                        @if ($l->serial) <div class="small text-muted">{{ __('Serial') }} {{ $l->serial->serial_no }}</div> @endif
-                                        @if ($l->piece) <div class="small text-muted">{{ __('Potongan') }} {{ $l->piece->piece_no }}</div> @endif
-                                    </td>
-                                    <td class="text-end">{{ number_format((float) $l->qty_shipped, 2, ',', '.') }}</td>
-                                    @if (($terima[$l->id]['kondisi'] ?? null) !== null)
-                                        {{-- A-244: satu unit — baik, rusak, atau kurang seluruhnya. --}}
-                                        <td colspan="3">
-                                            <select class="form-select form-select-sm" wire:model="terima.{{ $l->id }}.kondisi" aria-label="{{ __('Kondisi unit') }}">
-                                                @foreach (\App\Domain\Shipment\Enums\PodUnitCondition::cases() as $k)
-                                                    <option value="{{ $k->value }}">{{ $k->label() }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                    @else
-                                        <td>
-                                            <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
-                                                   wire:model="terima.{{ $l->id }}.qty_good">
-                                        </td>
-                                        <td>
-                                            <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
-                                                   wire:model="terima.{{ $l->id }}.qty_damaged">
-                                        </td>
-                                        <td>
-                                            <input class="form-control form-control-sm" type="number" step="0.0001" min="0"
-                                                   wire:model="terima.{{ $l->id }}.qty_missing">
-                                        </td>
-                                    @endif
-                                    <td>
-                                        <input class="form-control form-control-sm @error('fotoRusak.'.$l->id) is-invalid @enderror" type="file"
-                                               accept="image/jpeg,image/png,image/webp" capture="environment"
-                                               wire:model="fotoRusak.{{ $l->id }}" aria-label="{{ __('Foto kerusakan') }}">
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                @error('form.qty_good') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
-                @error('form.damage_photo_path') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
-
-                {{-- A-231: foto serah terima & tanda tangan penerima (kanvas → data URL). --}}
-                <div class="row g-3 mt-1">
-                    <div class="col-md-6">
-                        <label class="form-label" for="terima-foto">{{ __('Foto serah terima') }} <span class="text-muted small">({{ __('opsional') }})</span></label>
-                        <input class="form-control @error('foto') is-invalid @enderror" id="terima-foto" type="file"
-                               accept="image/jpeg,image/png,image/webp" capture="environment" wire:model="foto">
-                        @error('foto') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-6" data-signature wire:ignore>
-                        <label class="form-label">{{ __('Tanda tangan penerima') }} <span class="text-muted small">({{ __('gambar dengan jari') }})</span></label>
-                        <canvas class="border rounded w-100 bg-white" height="140" aria-label="{{ __('Kanvas tanda tangan') }}"></canvas>
-                        <input type="hidden" wire:model="tandaTangan" data-signature-target>
-                        <button class="btn btn-sm btn-outline-secondary mt-1" type="button" data-signature-clear>{{ __('Hapus tanda tangan') }}</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-footer d-flex gap-2">
-                <button class="btn btn-success" type="button" wire:click="simpanBuktiTerima">{{ __('Simpan') }}</button>
-                <button class="btn btn-outline-secondary" type="button" wire:click="tutupDialog">{{ __('Tutup') }}</button>
-            </div>
-        </div>
+        @include('shipment.partials.proof-form', ['batal' => 'tutupDialog'])
     @endif
 
     <div class="card mb-3">
@@ -297,8 +195,12 @@
                     · {{ $bukti->confirmed_at?->lokal()->format('d/m/Y H:i') }}
                     · {{ $bukti->channel->label() }}
                 </p>
-                @if ($bukti->photo_path || $bukti->signature_path)
+                @if ($bukti->client_gr_number)
+                    <p class="mb-1 small">{{ __('No. GR klien') }}: <strong>{{ $bukti->client_gr_number }}</strong></p>
+                @endif
+                @if ($bukti->photo_path || $bukti->signature_path || $bukti->signed_document_path)
                     <p class="mb-1 small">
+                        @if ($bukti->signed_document_path) <a class="me-2" href="{{ route('shipments.proof.file', [$sj, 'sj']) }}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-image"></i> {{ __('Foto SJ bertanda tangan') }}</a> @endif
                         @if ($bukti->photo_path) <a href="{{ route('shipments.proof.file', [$sj, 'foto']) }}" target="_blank" rel="noopener"><i class="bi bi-image"></i> {{ __('Foto serah terima') }}</a> @endif
                         @if ($bukti->signature_path) <a class="ms-2" href="{{ route('shipments.proof.file', [$sj, 'ttd']) }}" target="_blank" rel="noopener"><i class="bi bi-pen"></i> {{ __('Tanda tangan') }}</a> @endif
                     </p>

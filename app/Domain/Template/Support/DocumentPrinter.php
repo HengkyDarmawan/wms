@@ -239,10 +239,13 @@ class DocumentPrinter
                 'dokumen' => app(ShipmentLineOrigins::class)->sourceDocument($sj),
                 'pck' => PickTask::query()->whereIn('id', $pickIds)->orderBy('id')->pluck('number')->all(),
                 'req' => MaterialRequest::query()->withoutGlobalScopes()->whereIn('id', $reqIds)->orderBy('id')->pluck('number')->all(),
+                // A-313: No. PO klien dari REQ — referensi bagi admin site saat membuat GR di sistemnya.
+                'po_klien' => $sj->clientPoNumbers(),
             ],
             'pelaku' => [
                 null,
-                $this->at($sj->driver ?? ($sj->carried_by_name ?: $sj->carrier?->name), $sj->shipped_at),
+                // A-311: driver tanpa akun — nama teks (+ HP di kepala SJ).
+                $this->at($sj->driverName() ?? ($sj->carried_by_name ?: $sj->carrier?->name), $sj->shipped_at),
                 $proof ? ['name' => $proof->received_by_name, 'signature' => $proof->signature_path, 'at' => $proof->confirmed_at] : null,
             ],
         ];
@@ -259,7 +262,7 @@ class DocumentPrinter
             'proof' => $proof,
             'lines' => $proof->lines->sortBy('id')->values(),
             'pelaku' => [
-                $this->at($sj->driver ?? ($sj->carried_by_name ?: $sj->carrier?->name), $sj->shipped_at),
+                $this->at($sj->driverName() ?? ($sj->carried_by_name ?: $sj->carrier?->name), $sj->shipped_at),
                 ['name' => $proof->received_by_name ?: $proof->receivedByUser?->name, 'signature' => $proof->signature_path, 'at' => $proof->confirmed_at, 'user' => $proof->receivedByUser],
             ],
         ];
@@ -289,7 +292,7 @@ class DocumentPrinter
         $lines = $dsc->lines()->with('reasonCode', 'shipmentLine.item.baseUom', 'shipmentLine.item.activeConversions.uom', 'shipmentLine.lot', 'shipmentLine.serial', 'shipmentLine.piece')
             ->orderBy('id')->get();
 
-        return ['dsc' => $dsc, 'sj' => $sj, 'lines' => $lines, 'pelaku' => [$this->at($dsc->resolver, $dsc->resolved_at), $this->at($sj->driver, $sj->shipped_at)]];
+        return ['dsc' => $dsc, 'sj' => $sj, 'lines' => $lines, 'pelaku' => [$this->at($dsc->resolver, $dsc->resolved_at), $this->at($sj->driverName(), $sj->shipped_at)]];
     }
 
     /** @return array<string, mixed> */
@@ -344,7 +347,7 @@ class DocumentPrinter
         $ast->loadMissing('serial', 'item.baseUom', 'item.activeConversions.uom', 'project.pic', 'warehouse', 'shipment.driver', 'goodsReturn', 'updater');
         $periksa = $ast->inspections()->with('inspector')->latest('id')->first();
 
-        return ['ast' => $ast, 'periksa' => $periksa, 'pelaku' => [$this->at($ast->updater ?? $ast->shipment?->driver, $ast->checked_out_at), $ast->project?->pic, $this->at($periksa?->inspector, $periksa?->created_at)]];
+        return ['ast' => $ast, 'periksa' => $periksa, 'pelaku' => [$this->at($ast->updater ?? $ast->shipment?->driverName(), $ast->checked_out_at), $ast->project?->pic, $this->at($periksa?->inspector, $periksa?->created_at)]];
     }
 
     /**

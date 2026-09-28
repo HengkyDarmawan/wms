@@ -30,11 +30,11 @@ WMS = os.path.join(ROOT, "docs", "wms")
 FLOWS = [
 dict(
     n=1, slug="permintaan-sampai-terima", title="Permintaan material sampai bukti terima",
-    lanes=["Pemohon (Internal / Klien)", "Staf Gudang", "Kepala Gudang", "Approver", "Driver / Penerima", "Sistem"],
+    lanes=["Pemohon (Internal / Klien)", "Staf Gudang", "Kepala Gudang", "Approver", "Admin Site Klien / Penerima", "Sistem"],
     intro="Alur inti outbound: dari kebutuhan material di proyek sampai barang diterima di tujuan dan REQ selesai. "
           "Mencakup tinjauan staf untuk permintaan klien, reservasi dua tahap, picking dengan short pick, pengiriman, "
           "bukti terima, dan selisih pengiriman.",
-    assumptions=["A-07", "A-30", "A-31", "A-33", "A-35", "A-39", "A-41", "A-54", "A-55", "A-56", "A-57", "A-60", "A-61", "A-63", "A-64", "A-65"],
+    assumptions=["A-07", "A-30", "A-31", "A-33", "A-35", "A-39", "A-41", "A-54", "A-55", "A-56", "A-57", "A-60", "A-61", "A-63", "A-64", "A-65", "A-311", "A-312", "A-313"],
     br=["BR-REQ-01..15", "BR-STK-03..05", "BR-SJ-01..10", "BR-GEN-06"],
     status=["REQ", "PCK", "SJ", "DSC"],
     nodes=[
@@ -50,14 +50,14 @@ dict(
         ("t5", "Sistem", "task", "Reservasi lunak per gudang; kekurangan → TRF (alur 5) / PRQ (alur 2)", "REQ approved; BR-REQ-05; BR-STK-04; A-30"),
         ("t6", "Sistem", "task", "Buat PCK per gudang sumber; alokasi keras bin/lot/serial/potongan", "PCK pending; REQ in_progress; BR-STK-04"),
         ("t7", "Staf Gudang", "task", "Picking: scan bin & item → Loading Area; short pick + alasan", "PCK in_progress → completed; BR-SJ-01, BR-SJ-02"),
-        ("t8", "Staf Gudang", "task", "Buat SJ: gabungkan PCK ke tujuan sama (boleh beberapa REQ); cara kirim kendaraan sendiri / ekspedisi / diantar sendiri", "SJ prepared; BR-SJ-07; BR-SJ-09; A-57"),
-        ("t9", "Driver / Penerima", "task", "Konfirmasi muat & berangkat", "SJ shipped; ledger → in_transit; goods_shipped"),
-        ("t10", "Driver / Penerima", "task", "Bukti terima per baris: baik / rusak (foto wajib) / kurang; per unit untuk serial & potongan; tanda tangan (driver atau tautan bertoken + OTP)", "BR-SJ-05; A-41; A-64"),
+        ("t8", "Staf Gudang", "task", "Buat SJ: gabungkan PCK ke tujuan sama (boleh beberapa REQ); cara kirim kendaraan sendiri (nama & HP driver, tanpa akun) / ekspedisi / diantar sendiri", "SJ prepared; BR-SJ-07; BR-SJ-09; A-57; A-311"),
+        ("t9", "Staf Gudang", "task", "Berangkatkan SJ (staf / Kepala Gudang asal); notifikasi ke penerima", "SJ shipped; ledger → in_transit; goods_shipped; A-311; A-319"),
+        ("t10", "Admin Site Klien / Penerima", "task", "Bukti terima per baris: baik / rusak (foto wajib) / kurang; per unit untuk serial & potongan; foto SJ bertanda tangan & cap; No. GR klien (opsional) — portal Klien / akun penerima tujuan; cadangan tautan bertoken + OTP atau Kepala Gudang asal dari SJ bertanda tangan", "BR-SJ-05; A-41; A-64; A-312; A-313"),
         ("g4", "Sistem", "gw", "Semua baik & lengkap?", ""),
-        ("t11", "Sistem", "task", "Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik driver", "SJ partially_delivered; DSC open; BR-SJ-06; A-64; A-65"),
+        ("t11", "Sistem", "task", "Buat DSC: baris kurang / rusak; kurang & rusak tetap in_transit (rusak berkondisi Rusak); rusak dibawa balik kendaraan pengantar", "SJ partially_delivered; DSC open; BR-SJ-06; A-64; A-65"),
         ("t12", "Kepala Gudang", "task", "Selesaikan DSC: kembali ke gudang / disesuaikan / klaim / kirim pengganti; klien masih perlu sisanya?", "DSC resolved; BR-SJ-10; delivery_discrepancy"),
         ("t13", "Sistem", "task", "Efek stok per tujuan: jual putus keluar (goods_delivered), aset → on_site (asset_checked_out), gudang → GRN tujuan", "SJ delivered; BR-SJ-04; A-25"),
-        ("t14", "Pemohon (Internal / Klien)", "task", "Konfirmasi terima atau ajukan keberatan kurang/rusak (otomatis terima setelah 3 hari; otomatis bila pemohon mengisi bukti terima sendiri)", "BR-REQ-10; A-63"),
+        ("t14", "Pemohon (Internal / Klien)", "task", "Konfirmasi terima atau ajukan keberatan kurang/rusak (otomatis terima setelah 3 hari; otomatis bila pemohon / admin site klien mengisi bukti terima sendiri)", "BR-REQ-10; A-63; A-317"),
         ("g6", "Sistem", "gw", "Keberatan?", "A-63"),
         ("g5", "Sistem", "gw", "Semua baris terpenuhi?", ""),
         ("t15", "Sistem", "task", "Tunggu backorder (TRF / PRQ tiba → reservasi otomatis, cross-dock)", "REQ partially_fulfilled; BR-REQ-08"),
@@ -144,7 +144,7 @@ dict(
 ),
 dict(
     n=4, slug="retur-dan-pemilahan", title="Retur dari proyek dan pemilahan",
-    lanes=["Pemohon / Klien", "Approver", "Driver", "Staf Gudang", "Sistem"],
+    lanes=["Pemohon / Klien", "Approver", "Staf Gudang", "Sistem"],
     intro="Barang kembali dari proyek atau klien: sisa material, barang jual-putus yang tidak terpakai (A-26), atau aset yang selesai dipinjam. "
           "RET adalah dokumen niat; pergerakan fisik lewat SJ balik (opsional) dan GRN jenis retur, lalu dipilah.",
     assumptions=["A-26", "A-33", "A-36"],
@@ -156,7 +156,7 @@ dict(
         ("g1", "Sistem", "gw", "Ada lapis approval?", ""),
         ("t2", "Approver", "task", "Setujui / tolak (alur 9)", "RET approved / rejected"),
         ("g2", "Sistem", "gw", "Diantar sendiri ke gudang?", ""),
-        ("t3", "Driver", "task", "Ambil di site: SJ balik, muat, kirim", "SJ prepared → shipped; RET in_progress"),
+        ("t3", "Staf Gudang", "task", "SJ balik / SJ jemput: kendaraan + nama & HP sopir (tanpa akun), berangkatkan; sopir mengambil di site; bukti terima oleh staf gudang tujuan", "SJ prepared → shipped → delivered; RET in_progress; A-248; A-311"),
         ("t4", "Staf Gudang", "task", "GRN jenis retur: hitung, Diterima", "GRN received; RET received; ledger → bin Retur"),
         ("t5", "Staf Gudang", "task", "Pilah per baris: layak / rusak / offcut / waste; aset: pemeriksaan grade + foto", "return_sorting; BR-RET-04; BR-AST-03"),
         ("t6", "Sistem", "task", "Ledger bin Retur → bin tujuan; offcut → ID potongan + silsilah; goods_returned (ownership sold / company); aset: asset_returned, usage_days", "RET sorted; AST inspected; BR §14"),
@@ -174,7 +174,7 @@ dict(
 ),
 dict(
     n=5, slug="transfer-antar-gudang-proyek", title="Transfer antar gudang dan antar proyek",
-    lanes=["Pengaju (Staf / Kepala Gudang)", "Approver", "Staf Gudang Asal", "Driver", "Staf Gudang Tujuan", "Sistem"],
+    lanes=["Pengaju (Staf / Kepala Gudang)", "Approver", "Staf Gudang Asal", "Staf Gudang Tujuan", "Sistem"],
     intro="TRF dibuat manual atau otomatis dari backorder REQ. Sebagai dokumen niat, TRF memakai jalur fisik yang sama dengan pengiriman: "
           "PCK di gudang asal, SJ, GRN di gudang tujuan, PUT. Transfer antar proyek = transfer antar Gudang Site (atau bin on_site untuk aset). "
           "Pemindahan antar titik dalam satu proyek (mis. antar galian pipa) memakai TRF yang sama antar Gudang Site proyek itu dengan jalur ringan: "
@@ -190,9 +190,10 @@ dict(
         ("t3", "Sistem", "task", "Reservasi lunak di gudang asal; buat PCK", "TRF approved → in_progress; PCK pending; BR-STK-04"),
         ("t4", "Staf Gudang Asal", "task", "Picking → Loading Area; buat SJ tujuan gudang", "PCK completed; SJ prepared"),
         ("g0", "Sistem", "gw", "Dalam proyek & diantar sendiri?", "A-50"),
-        ("t5", "Driver", "task", "Muat & kirim", "SJ shipped; ledger → in_transit (milik gudang asal); goods_shipped; BR-STK-13"),
+        ("t5", "Staf Gudang Asal", "task", "Berangkatkan SJ (nama & HP driver, tanpa akun)", "SJ shipped; ledger → in_transit (milik gudang asal); goods_shipped; BR-STK-13; A-311"),
         ("t5b", "Staf Gudang Asal", "task", "Antar sendiri ke titik tujuan (SJ self_delivered, nama pembawa)", "SJ shipped (shipment_method = self_delivered); ledger → in_transit; goods_shipped; BR-SJ-07; A-50; A-57"),
-        ("t6", "Staf Gudang Tujuan", "task", "GRN dari SJ: hitung, Diterima", "GRN received; SJ delivered; stock_transferred"),
+        ("t5c", "Staf Gudang Tujuan", "task", "Bukti terima SJ oleh user bercakupan gudang tujuan (cadangan: Kepala Gudang asal dari SJ bertanda tangan)", "SJ delivered / partially_delivered; BR-SJ-05; A-82; A-312"),
+        ("t6", "Staf Gudang Tujuan", "task", "GRN dari SJ: hitung, Diterima (≤ jumlah baik bukti terima)", "GRN received; stock_transferred; A-82"),
         ("g2", "Sistem", "gw", "Jumlah = dikirim?", ""),
         ("t7", "Sistem", "task", "DSC untuk selisih (alur 1)", "DSC open"),
         ("t8", "Staf Gudang Tujuan", "task", "Put-away", "PUT completed"),
@@ -201,7 +202,7 @@ dict(
     ],
     edges=[
         ("s", "t1", "", False), ("t1", "g1", "", False), ("g1", "t2", "ya", False), ("g1", "t3", "tidak", False), ("t2", "t3", "disetujui", False),
-        ("t3", "t4", "", False), ("t4", "g0", "", False), ("g0", "t5", "tidak", False), ("g0", "t5b", "ya", False), ("t5", "t6", "", False), ("t5b", "t6", "", False), ("t6", "g2", "", False), ("g2", "t7", "tidak", False), ("t7", "t8", "", False),
+        ("t3", "t4", "", False), ("t4", "g0", "", False), ("g0", "t5", "tidak", False), ("g0", "t5b", "ya", False), ("t5", "t5c", "", False), ("t5b", "t5c", "", False), ("t5c", "t6", "", False), ("t6", "g2", "", False), ("g2", "t7", "tidak", False), ("t7", "t8", "", False),
         ("g2", "t8", "ya", False), ("t8", "t9", "", False), ("t9", "e", "", False),
     ],
     gateways_note="TRF bisa dibatalkan sampai sebelum SJ `shipped`; setelah itu koreksi lewat DSC atau TRF balik. Selama `in_transit`, stok masih dihitung milik gudang asal di laporan saldo. Transfer dalam proyek (A-50): GRN tujuan cukup konfirmasi PIC titik tanpa QC; riwayat lokasi barang terlihat di kartu stok dan sub-tampilan Di Gudang Site per titik.",
@@ -239,7 +240,7 @@ dict(
 ),
 dict(
     n=7, slug="aset-dipinjamkan", title="Aset dipinjamkan: keluar, jatuh tempo, kembali, hilang",
-    lanes=["Pemohon / PIC Proyek", "Staf Gudang", "Driver", "Approver", "Sistem"],
+    lanes=["Pemohon / PIC Proyek", "Staf Gudang", "Admin Site Klien / Penerima", "Approver", "Sistem"],
     intro="Siklus aset ber-serial: keluar bersama pengiriman (alur 1), berada di bin virtual On-site Proyek, diingatkan saat lewat jatuh tempo, "
           "kembali lewat retur (alur 4) dengan pemeriksaan, atau ditandai hilang dan dihapuskan lewat ADJ.",
     assumptions=["A-29", "A-38", "A-66"],
@@ -248,7 +249,7 @@ dict(
     nodes=[
         ("s", "Pemohon / PIC Proyek", "start", "Baris REQ 'Pinjam' disetujui (alur 1)", "line_ownership = loan; A-38"),
         ("t1", "Staf Gudang", "task", "Picking serial aset; catat kondisi, foto keluar, pembacaan meter (jam/km); tanggal kembali", "AST; due_return_date; meter_out; BR-STK-08; BR-AST-08"),
-        ("t2", "Driver", "task", "Kirim & bukti terima (alur 1)", "SJ delivered"),
+        ("t2", "Admin Site Klien / Penerima", "task", "Terima & isi bukti terima (alur 1): portal Klien / akun penerima site; SJ antar site ke proyek tujuan", "SJ delivered; A-249; A-312"),
         ("t3", "Sistem", "task", "Aset → bin On-site Proyek; state on_loan; asset_checked_out", "AST checked_out; BR-AST-01"),
         ("g1", "Sistem", "timer", "Cek harian: lewat jatuh tempo?", "BR-AST-06"),
         ("t4", "Sistem", "task", "Notifikasi PIC proyek & Kepala Gudang; laporan aset terlambat", ""),
@@ -471,8 +472,12 @@ def mermaid(flow):
     lines.append("```")
     return "\n".join(lines)
 
+def a_file(a):
+    """A-01–A-245 di 04, A-246 dst. di 04b (asumsi lanjutan)."""
+    return "04b-asumsi-lanjutan.md" if int(a.split("-")[1]) >= 246 else "04-keputusan-dan-asumsi.md"
+
 def link_ids(text):
-    text = re.sub(r"\b(A-\d{2})\b", lambda m: f"[{m.group(1)}](04-keputusan-dan-asumsi.md#{m.group(1).lower()})", text)
+    text = re.sub(r"(?<!\[)\b(A-\d{2,3})\b(?!\])", lambda m: f"[{m.group(1)}]({a_file(m.group(1))}#{m.group(1).lower()})", text)
     text = re.sub(r"\b(BR-([A-Z]+))-(\d{2})\.\.(\d{2})\b", lambda m: f"[{m.group(1)}-{m.group(3)}–{m.group(4)}](05-aturan-bisnis.md#br-{m.group(2).lower()})", text)
     text = re.sub(r"(?<!\[)\b(BR-([A-Z]+)-\d{2})\b(?![\d–])", lambda m: f"[{m.group(1)}](05-aturan-bisnis.md#br-{m.group(2).lower()})", text)
     return text
@@ -489,7 +494,7 @@ def flow_md(flow):
     order = sorted(flow["nodes"], key=lambda n: (rank[n[0]], flow["lanes"].index(n[1])))
     o = [f'## Alur {flow["n"]} — {flow["title"]}', "",
          f'**Diagram:** [`diagram/bpmn-{flow["n"]:02d}-{flow["slug"]}.drawio`](../diagram/bpmn-{flow["n"]:02d}-{flow["slug"]}.drawio) · '
-         f'**Asumsi yang dipakai:** ' + ", ".join(f"[{a}](04-keputusan-dan-asumsi.md#{a.lower()})" for a in flow["assumptions"]) + " · "
+         f'**Asumsi yang dipakai:** ' + ", ".join(f"[{a}]({a_file(a)}#{a.lower()})" for a in flow["assumptions"]) + " · "
          f'**Aturan:** ' + link_ids(", ".join(flow["br"])) + " · **Status:** " + ", ".join(f"`{s}`" for s in flow["status"]), "",
          flow["intro"], "",
          "**Lane (aktor):** " + " · ".join(flow["lanes"]), "",
@@ -509,8 +514,8 @@ def flow_md(flow):
 
 HEADER = """# Proses Bisnis To-Be — {part}
 
-**Versi:** 0.4 (Part 2, pasca-validasi & diskusi lanjutan 23 Sep 2026)
-**Tanggal:** 23 September 2026
+**Versi:** 0.5 (Part 2, pasca-validasi & diskusi lanjutan 23 Sep 2026; driver tanpa akun & bukti terima oleh penerima 28 Sep 2026 — A-311–A-319)
+**Tanggal:** 28 September 2026
 **Status:** asumsi A-25–A-49 dan A-51–A-66 disetujui 23 Sep 2026 (A-40 diubah); alur 1, 2, 7, 8 diperluas (purchasing, permintaan klien, pengiriman, audit); alur 5 memuat varian dari [A-50](04-keputusan-dan-asumsi.md#a-50) yang menunggu validasi; setiap alur mencantumkan asumsi yang dipakainya. Bila asumsi berubah, ubah data di [`diagram/_generate.py`](../diagram/_generate.py) dan jalankan ulang — file ini dan `.drawio` dibuat otomatis, **jangan diedit manual**.
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · {other}
 

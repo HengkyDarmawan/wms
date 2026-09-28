@@ -6,6 +6,7 @@ namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Label\Support\PackageLabelLedger;
+use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\Request\Support\RequestFulfillment;
 use App\Domain\Return\Support\ReturnProgress;
 use App\Domain\Shipment\Enums\ShipmentStatus;
@@ -41,6 +42,16 @@ class ShipShipment
     ) {}
 
     public function handle(Shipment $shipment, ?string $notes = null, ?User $actor = null): Shipment
+    {
+        $hasil = $this->berangkatkan($shipment, $notes, $actor);
+
+        // A-319: calon penerima diberi tahu supaya siap mengisi bukti terima saat barang tiba.
+        app(DomainNotifications::class)->shipmentShipped($hasil, $actor);
+
+        return $hasil;
+    }
+
+    private function berangkatkan(Shipment $shipment, ?string $notes, ?User $actor): Shipment
     {
         if ($shipment->status !== ShipmentStatus::Prepared) {
             throw ShipmentRuleException::rule(

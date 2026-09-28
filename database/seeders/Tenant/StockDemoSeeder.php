@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Database\Seeders\Tenant;
 
-use App\Domain\Access\Models\User;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Lot;
@@ -74,18 +73,19 @@ class StockDemoSeeder extends Seeder
         $this->command?->info('Stok demo siap: '.StockMovement::query()->where('notes', self::NOTES)->count().' baris kartu stok.');
     }
 
-    /** Kendaraan kurir internal milik sendiri (A-57), sesuai kolom Catatan driver. */
+    /** Kendaraan kurir internal milik sendiri (A-57); driver bawaan = nama + HP teks (A-311, 00-akun-uji §2). */
     private function seedVehicles(): void
     {
         foreach ([
-            'B 9001 XX' => 'driver1@demo.wms.test',
-            'B 9002 XX' => 'driver2@demo.wms.test',
-        ] as $plat => $email) {
+            'B 9001 XX' => ['Gani', '6281200000008'],
+            'B 9002 XX' => ['Hadi', '6281200000009'],
+        ] as $plat => [$nama, $hp]) {
             Vehicle::updateOrCreate(
                 ['plate_no' => $plat],
                 [
                     'type' => 'Pikap',
-                    'default_driver_id' => User::query()->where('email', $email)->value('id'),
+                    'default_driver_name' => $nama,
+                    'default_driver_phone' => $hp,
                     'is_active' => true,
                 ],
             );

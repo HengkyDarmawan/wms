@@ -47,7 +47,13 @@ const viewport = (w, h) => send('Emulation.setDeviceMetricsOverride', { width: w
 
 await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable');
 const hasil = [];
-const cek = (nama, ok, info = '') => hasil.push(`${ok ? 'OK  ' : 'GAGAL'} ${nama}${info ? ' — ' + info : ''}`);
+const cek = (nama, ok, info = '') => { const baris = `${ok ? 'OK  ' : 'GAGAL'} ${nama}${info ? ' — ' + info : ''}`; hasil.push(baris); console.log(baris); };
+// Penantian berbasis kondisi (mesin kantor lambat) dan mouse sungguhan lewat CDP (kanvas denah memakai pointer event).
+const tunggu = async (expr, maks = 60) => { for (let i = 0; i < maks; i++) { try { if (await ev(expr)) return true; } catch { /* halaman berganti */ } await sleep(250); } return false; };
+const tengah = (sel) => ev(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); if (!el) return null; el.scrollIntoView({ block: 'center' }); const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()`);
+const mouse = (type, x, y) => send('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1 });
+const klik = async (sel) => { const p = await tengah(sel); if (!p) return false; await mouse('mousePressed', p.x, p.y); await mouse('mouseReleased', p.x, p.y); return true; };
+const seret = async (sel, dx, dy) => { const p = await tengah(sel); if (!p) return false; await mouse('mousePressed', p.x, p.y); for (let i = 1; i <= 5; i++) await mouse('mouseMoved', p.x + dx * i / 5, p.y + dy * i / 5); await mouse('mouseReleased', p.x + dx, p.y + dy); return true; };
 
 // 1. Login: tombol mata
 await viewport(1366, 600);
@@ -147,9 +153,8 @@ for (const url of links) {
   cek('denah gudang: svg zona', await ev('document.querySelectorAll("main svg rect").length > 0'));
   // A-281: petak bin di dalam kotak rak, label level (L1…) di luar kotak.
   cek('denah gudang: petak bin & label level', await ev('document.querySelectorAll("main svg g[data-rak] rect").length > 2 && [...document.querySelectorAll("main svg g[data-rak] text")].some(t => /^L\\d+$/.test(t.textContent.trim()))'));
-  await ev('document.querySelector("main svg g")?.dispatchEvent(new MouseEvent("click", { bubbles: true }))');
-  await sleep(900);
-  cek('denah gudang: panel rak', await ev('!!document.querySelector("main .border-primary")'));
+  await klik('main svg g[data-rak] rect[data-badan]');
+  cek('denah gudang: panel rak', await tunggu('!!document.querySelector("main .border-primary[data-panel-rak]")'));
   await go(`${BASE}/projects/1/move`);
   cek('pindahan proyek: layar', /Pindahkan/.test(await ev('document.querySelector("main h1")?.textContent || ""')));
   await go(`${BASE}/shipments`);
@@ -178,21 +183,52 @@ for (const url of links) {
   const sebelum = errors.length;
   const kode = 'Z' + (Date.now() % 1000);
   await go(`${BASE}/warehouses/1/layout`);
+  await tunggu('[...document.querySelectorAll("main button")].some(b => /Atur denah/.test(b.textContent))');
   await ev('[...document.querySelectorAll("main button")].find(b => /Atur denah/.test(b.textContent)).click()');
-  await sleep(1200);
-  cek('denah: kartu tambah zona & rak', await ev('!!document.getElementById("tambah-struktur")'));
+  cek('denah: kartu tambah zona & rak', await tunggu('!!document.getElementById("tambah-struktur")'));
   const isi = (id, v) => ev(`(() => { const i = document.getElementById('${id}'); i.value = '${v}'; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); })()`);
   await isi('zb-kode', kode); await isi('zb-nama', 'Zona uji denah');
   await sleep(500);
   await ev('[...document.querySelectorAll("main button")].find(b => b.textContent.trim() === "Tambah zona").click()');
-  await sleep(1500);
-  cek('denah: zona baru tampil', await ev(`[...document.querySelectorAll("main .card-header strong")].some(h => h.textContent.includes('${kode}'))`));
+  cek('denah: zona baru tampil', await tunggu(`!!document.querySelector('main svg g[data-zona="${kode}"]')`));
   await isi('rb-kode', 'R01'); await isi('rb-level', '2'); await isi('rb-bin', '2');
   await sleep(500);
   await ev('[...document.querySelectorAll("main button")].find(b => b.textContent.trim() === "Tambah rak").click()');
-  await sleep(1800);
-  cek('denah: rak baru + bin', await ev(`document.querySelector("main").textContent.includes('-${kode}-R01-L2-B02')`));
+  cek('denah: rak baru + bin', await tunggu(`document.querySelector("main").textContent.includes('-${kode}-R01-L2-B02')`));
   cek('denah: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
+}
+
+// 6c4. Denah gedung sesuai kenyataan (A-320–A-323): Daftar Gudang (tombol Denah, mode Denah),
+// garis gedung & objek denah, panel rak (tampak depan, isi per bin, tab Atur), zoom, seret objek.
+{
+  const sebelum = errors.length;
+  await go(`${BASE}/warehouses`);
+  cek('daftar gudang: tombol Denah per baris', await ev('document.querySelectorAll("main a[data-denah]").length > 0'));
+  await ev('document.querySelector("main [data-tampilan=denah]").click()');
+  cek('daftar gudang: mode Denah menampilkan denah', await tunggu('!!document.querySelector("main [data-mode-denah]") && !!document.querySelector("main svg[data-denah-gedung]")'));
+
+  await go(`${BASE}/warehouses/1/layout`);
+  cek('denah: garis gedung & objek denah', await tunggu('!!document.querySelector("main rect[data-gedung]") && document.querySelectorAll("main g[data-objek]").length >= 5'));
+  const zoomAwal = await ev('document.querySelector("main svg[data-denah-gedung]").getBoundingClientRect().width');
+  await ev('[...document.querySelectorAll("main button")].find(b => b.getAttribute("aria-label") === "Perbesar").click()');
+  cek('denah: zoom +', await tunggu(`document.querySelector("main svg[data-denah-gedung]").getBoundingClientRect().width > ${zoomAwal} + 5`));
+  await ev('document.querySelector("main [data-pas-layar]").click()');
+
+  await klik('main svg g[data-rak] rect[data-badan]');
+  cek('panel rak: tampak depan', await tunggu('document.querySelectorAll("main [data-panel-rak] [data-tampak-depan] button[data-bin]").length >= 2'));
+  const kodeBin = await ev('[...document.querySelectorAll("main [data-tampak-depan] button[data-bin]")].at(-1).dataset.bin');
+  await ev('[...document.querySelectorAll("main [data-tampak-depan] button[data-bin]")].at(-1).click()');
+  cek('panel rak: isi bin yang diklik', await tunggu(`(document.querySelector("main [data-isi-bin]")?.textContent || "").includes("${kodeBin}")`), kodeBin);
+  cek('panel rak: tab Atur terkunci di luar mode Atur', await ev('[...document.querySelectorAll("main [data-panel-rak] .nav-link")].some(b => /Atur/.test(b.textContent) && b.disabled)'));
+
+  await ev('[...document.querySelectorAll("main button")].find(b => /Atur denah/.test(b.textContent)).click()');
+  await tunggu('!!document.querySelector("main [data-objek-baru]")');
+  await klik('main svg g[data-objek="pillar"] rect[data-badan]');
+  cek('denah: panel objek', await tunggu('!!document.querySelector("main [data-panel-objek]")'));
+  const xAwal = Number(await ev('document.querySelector("main svg g[data-objek=pillar]").dataset.x'));
+  await seret('main svg g[data-objek="pillar"] rect[data-badan]', 80, 0);
+  cek('denah: seret objek tersimpan', await tunggu(`Number(document.querySelector("main svg g[data-objek=pillar]").dataset.x) > ${xAwal}`), `x ${xAwal} → ${await ev('document.querySelector("main svg g[data-objek=pillar]").dataset.x')}`);
+  cek('denah gedung: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
 }
 
 // 6d. Ukuran & desain label (A-261, A-262): tambah ukuran, geser elemen di kanvas, simpan, contoh PDF.
@@ -200,14 +236,14 @@ for (const url of links) {
   const sebelum = errors.length;
   const kode = 'UJI-' + (Date.now() % 100000);
   await go(`${BASE}/settings/label-formats`);
+  await tunggu('[...document.querySelectorAll("main button")].some(b => /Tambah ukuran/.test(b.textContent))');
   await ev('[...document.querySelectorAll("main button")].find(b => /Tambah ukuran/.test(b.textContent)).click()');
-  await sleep(900);
+  await tunggu('!!document.getElementById("fmt-kode")');
   await ev(`(() => { const isi = (id, v) => { const i = document.getElementById(id); i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); };
     isi('fmt-kode', '${kode}'); isi('fmt-nama', 'Thermal uji 60x40'); isi('fmt-w', '60'); isi('fmt-h', '40'); })()`);
   await sleep(900);
   await ev('[...document.querySelectorAll("main button")].find(b => /Simpan ukuran/.test(b.textContent)).click()');
-  await sleep(1200);
-  cek('ukuran label: tambah', await ev(`[...document.querySelectorAll("main td.font-monospace")].some(t => t.textContent.trim() === '${kode}')`));
+  cek('ukuran label: tambah', await tunggu(`[...document.querySelectorAll("main td.font-monospace")].some(t => t.textContent.trim() === '${kode}')`));
 
   await go(`${BASE}/settings/label-designs?type=label_item`);
   cek('desain label: kanvas', await ev('document.querySelectorAll(".ld-kanvas .ld-el").length === 6'));
@@ -303,7 +339,7 @@ for (const path of ['/admin', '/admin/payments', '/admin/plans', '/admin/securit
   cek(`Super Admin ${path}`, errors.length === sebelum && !/404|403|500|Server Error/.test(judul), errors.slice(sebelum).join(' | ') || judul);
 }
 
-console.log(hasil.join('\n'));
+console.log(`\nringkasan: ${hasil.filter((h) => h.startsWith('OK')).length} OK, ${hasil.filter((h) => h.startsWith('GAGAL')).length} GAGAL`);
 console.log(`\nError console total: ${errors.length}`);
 errors.slice(0, 10).forEach((e) => console.log('  ' + e));
 ws.close(); chrome.kill();

@@ -49,7 +49,7 @@ class DemoSeeder extends Seeder
         $this->seedUsers($units, $positions);
         $this->assignProjectPics();
 
-        // Stok awal dan kendaraan menyusul user: kendaraan menunjuk driver (A-72).
+        // Stok awal dan kendaraan menyusul user (kendaraan membawa nama & HP driver bawaan, A-311).
         $this->call(StockDemoSeeder::class);
 
         // Aturan approval demo §5 (REQ, RTV); butuh role Manajemen.
@@ -93,7 +93,6 @@ class DemoSeeder extends Seeder
             'DIREKTUR' => ['DIR', 'Direktur', 1],
             'KA_GUDANG' => ['OPS', 'Kepala Gudang', 2],
             'STAF_GUDANG' => ['OPS', 'Staf Gudang', 3],
-            'DRIVER' => ['OPS', 'Driver', 3],
             'ENGINEER' => ['PRJ', 'Engineer / PIC Proyek', 2],
             'PURCHASING' => ['FIN', 'Purchasing', 2],
             'AUDITOR' => ['AUD', 'Auditor Internal', 2],
@@ -150,11 +149,7 @@ class DemoSeeder extends Seeder
                     ['warehouse_staff', ScopeType::Warehouse, $warehouseId['KRW2']],
                 ], '+6281200000007'],
 
-            ['driver1@demo.wms.test', 'Gani Driver', 'OPS', 'DRIVER', 'kagudang.ckg@demo.wms.test', null,
-                [['driver', ScopeType::All, null]], '+6281200000008'],
-
-            ['driver2@demo.wms.test', 'Hadi Driver', 'OPS', 'DRIVER', 'kagudang.ckg@demo.wms.test', null,
-                [['driver', ScopeType::All, null]], '+6281200000009'],
+            // A-311: driver tidak punya akun — nama & HP driver tercatat di kendaraan (StockDemoSeeder).
 
             ['pemohon.prj001@demo.wms.test', 'Indra Engineer', 'PRJ', 'ENGINEER', 'manajemen@demo.wms.test', null,
                 [['internal_requester', ScopeType::Project, $projectId['PRJ-001']]], '+6281200000010'],

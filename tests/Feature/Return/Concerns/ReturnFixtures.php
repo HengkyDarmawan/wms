@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Return\Concerns;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Models\Carrier;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Vehicle;
 use App\Domain\Receipt\Actions\ReceiveGoodsReceipt;
@@ -22,6 +23,7 @@ use App\Domain\Shipment\Actions\CreateShipment;
 use App\Domain\Shipment\Actions\ShipShipment;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Warehouse\Models\Bin;
+use Illuminate\Support\Collection;
 use Tests\Feature\Transfer\Concerns\TransferFixtures;
 
 /**
@@ -52,8 +54,8 @@ trait ReturnFixtures
         ], $lines, $actor ?? $this->makeUser('internal_requester'));
     }
 
-    /** @return \Illuminate\Support\Collection<string, array<string, mixed>> */
-    protected function calon(): \Illuminate\Support\Collection
+    /** @return Collection<string, array<string, mixed>> */
+    protected function calon(): Collection
     {
         return app(ReturnableStock::class)->forProject($this->proyek);
     }
@@ -109,8 +111,8 @@ trait ReturnFixtures
             'destination_project_id' => $this->proyek->id,
             'shipment_method' => $metode,
         ] + ($metode === 'carrier'
-            ? ['carrier_id' => \App\Domain\Master\Models\Carrier::create(['name' => 'JNE Uji', 'is_active' => true])->id, 'tracking_no' => 'RESI-1']
-            : ['vehicle_id' => Vehicle::create(['plate_no' => 'B'.random_int(1000, 9999).'RT'])->id, 'driver_id' => $this->makeUser('driver')->id]);
+            ? ['carrier_id' => Carrier::create(['name' => 'JNE Uji', 'is_active' => true])->id, 'tracking_no' => 'RESI-1']
+            : ['vehicle_id' => Vehicle::create(['plate_no' => 'B'.random_int(1000, 9999).'RT'])->id, 'driver_name' => 'Gani', 'driver_phone' => '081200000008']);
 
         $sj = app(CreateShipment::class)->handle([$pck->id], $data, $this->makeUser('warehouse_staff'));
 

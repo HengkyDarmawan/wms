@@ -115,6 +115,8 @@ class AddRequestLines
                 'requester_type' => $request->requester_type,
                 'status' => MaterialRequestStatus::UnderReview,
                 'required_date' => $request->required_date,
+                // A-318: REQ Tambahan mewarisi No. PO klien induknya.
+                'client_po_number' => $request->client_po_number,
                 'origin' => RequestOrigin::Supplement,
                 'parent_request_id' => $request->id,
             ]);

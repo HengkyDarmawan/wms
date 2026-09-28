@@ -219,7 +219,7 @@
                                 <td><a href="{{ route('shipments.show', $s) }}">{{ $s->number }}</a></td>
                                 <td>{{ $s->warehouse?->code }}</td>
                                 <td>{{ $s->destinationWarehouse?->code ?? $s->destination_type?->label() }}</td>
-                                <td>{{ $s->driver?->name ?? $s->carried_by_name ?? '—' }}</td>
+                                <td>{{ $s->driverLabel() ?: ($s->carried_by_name ?? '—') }}</td>
                                 <td>{{ $s->shipped_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
                                 <td><span class="badge {{ $s->status->badge() }}">{{ $s->status->label() }}</span></td>
                             </tr>

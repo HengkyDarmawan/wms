@@ -18,10 +18,13 @@ use App\Domain\Request\Actions\CloseRequestShort;
 use App\Domain\Request\Actions\ReviewRequest;
 use App\Domain\Request\Actions\SplitRequestLine;
 use App\Domain\Request\Enums\FulfillmentSource;
+use App\Domain\Request\Livewire\Concerns\EditsClientPo;
 use App\Domain\Request\Livewire\Concerns\HandlesRequestRules;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Request\Models\MaterialRequestLine;
+use App\Domain\Transfer\Models\Transfer;
 use App\Domain\Warehouse\Models\Warehouse;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -37,6 +40,7 @@ use Spatie\Activitylog\Models\Activity;
  */
 class RequestDetail extends Component
 {
+    use EditsClientPo;
     use HandlesRequestRules;
 
     #[Locked]
@@ -91,7 +95,7 @@ class RequestDetail extends Component
             'riwayat' => $this->riwayat($request),
             'riwayatApproval' => app(ApprovalHistory::class)->for(ApprovalDocumentType::MaterialRequest, (int) $request->id),
             // BR-REQ-05: TRF backorder untuk baris bersumber transfer (A-106).
-            'transferBackorder' => \App\Domain\Transfer\Models\Transfer::withoutGlobalScopes()
+            'transferBackorder' => Transfer::withoutGlobalScopes()
                 ->with('fromWarehouse:id,code', 'toWarehouse:id,code')
                 ->where('source_type', 'material_request')->where('source_id', $request->id)
                 ->orderBy('id')->get(),
@@ -379,8 +383,8 @@ class RequestDetail extends Component
             ->findOrFail($id);
     }
 
-    /** @return \Illuminate\Support\Collection<int, Activity> */
-    private function riwayat(MaterialRequest $request): \Illuminate\Support\Collection
+    /** @return Collection<int, Activity> */
+    private function riwayat(MaterialRequest $request): Collection
     {
         return Activity::query()
             ->with('causer:id,name')

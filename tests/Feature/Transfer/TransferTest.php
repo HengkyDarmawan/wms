@@ -272,7 +272,7 @@ class TransferTest extends TenantTestCase
         $this->assertSame(TransferStatus::InProgress, $trf->status, 'Tanpa aturan → tanpa approval (BR-RET-02).');
 
         $pck = $this->jalankanPck($this->pckTrf($trf));
-        $sj = $this->sjDari($pck, $this->krw2, ['shipment_method' => 'self_delivered', 'carried_by_name' => 'Fajar', 'vehicle_id' => null, 'driver_id' => null]);
+        $sj = $this->sjDari($pck, $this->krw2, ['shipment_method' => 'self_delivered', 'carried_by_name' => 'Fajar', 'vehicle_id' => null, 'driver_name' => null]);
         $this->assertSame('self_delivered', $sj->shipment_method->value);
 
         $grn = $this->grnTransferSelesai($this->terimaSj($sj), $this->krw2);

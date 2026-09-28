@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `request` (Permintaan Material)
 
-**Versi:** 0.15
+**Versi:** 0.16
 **Tanggal:** 28 September 2026
-**Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md)); v0.6: baris bersumber transfer melahirkan TRF backorder ([22-retur-transfer](22-retur-transfer.md)); v0.7: baris bersumber pembelian melahirkan PRQ backorder ([26-purchase-request](26-purchase-request.md), [A-171](04-keputusan-dan-asumsi.md#a-171)); v0.8: konfirmasi & keberatan terima pemohon (BR-REQ-10) di layar REQ & portal, konfirmasi otomatis harian; notifikasi REQ perlu ditinjau ([27-pendukung-f1](27-pendukung-f1.md), [A-188](04-keputusan-dan-asumsi.md#a-188), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.13: Beli/Pinjam baris mengikuti jenis barang dan ditetapkan aksi simpan; pilihan hanya untuk item Keduanya ([A-286](04b-asumsi-lanjutan.md#a-286), §6, §10 TC-REQ-36, §13.2 no. 9); v0.14: jumlah baris boleh diketik dalam kemasan item (mis. 2 DUS), disimpan `uom_id`/`qty_input` ([A-291](04b-asumsi-lanjutan.md#a-291), §3.2, §6, §10 TC-REQ-37)
+**Status:** terimplementasi (Fase 1) — modul kelima setelah [Stock](13-stock.md); v0.5: approval REQ lewat mesin approval ([20-approval](20-approval.md)); v0.6: baris bersumber transfer melahirkan TRF backorder ([22-retur-transfer](22-retur-transfer.md)); v0.7: baris bersumber pembelian melahirkan PRQ backorder ([26-purchase-request](26-purchase-request.md), [A-171](04-keputusan-dan-asumsi.md#a-171)); v0.8: konfirmasi & keberatan terima pemohon (BR-REQ-10) di layar REQ & portal, konfirmasi otomatis harian; notifikasi REQ perlu ditinjau ([27-pendukung-f1](27-pendukung-f1.md), [A-188](04-keputusan-dan-asumsi.md#a-188), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.13: Beli/Pinjam baris mengikuti jenis barang dan ditetapkan aksi simpan; pilihan hanya untuk item Keduanya ([A-286](04b-asumsi-lanjutan.md#a-286), §6, §10 TC-REQ-36, §13.2 no. 9); v0.14: jumlah baris boleh diketik dalam kemasan item (mis. 2 DUS), disimpan `uom_id`/`qty_input` ([A-291](04b-asumsi-lanjutan.md#a-291), §3.2, §6, §10 TC-REQ-37); v0.16: No. PO klien di REQ (form internal, ubah di detail internal & portal, diwarisi REQ Tambahan), konfirmasi otomatis bila pemohon/admin site klien mengisi bukti terima ([A-313](04b-asumsi-lanjutan.md#a-313), [A-317](04b-asumsi-lanjutan.md#a-317), [A-318](04b-asumsi-lanjutan.md#a-318))
 **Modul:** `request`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status §2.1](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data dokumen](08b-model-data-stok-dokumen.md) · [Proses bisnis alur 1](07-proses-bisnis.md)
@@ -49,6 +49,7 @@ Daftar: `request.view`, `request.create`, `request.submit`, `request.review`, `r
 | `requester_type` | enum | `internal` \| `client` |
 | `status` | enum | Katalog §2.1 |
 | `required_date` | date | default tanggal dibutuhkan per baris |
+| `client_po_number` | varchar(60) | **No. PO klien** — referensi teks opsional, tercetak di SJ, dapat dicari; WMS tidak menunggu GR klien ([A-313](04b-asumsi-lanjutan.md#a-313), [A-318](04b-asumsi-lanjutan.md#a-318)) |
 | `reviewed_by`, `reviewed_at` | FK users, datetime | |
 | `approval_snapshot_id` | FK approval_snapshots | snapshot pengajuan terakhir ([20-approval §3](20-approval.md#3-entitas--data)) |
 | `closed_reason_id` | FK reason_codes | diisi saat `closed_short` |
@@ -134,10 +135,10 @@ Transisi hanya lewat POST, tidak pernah lewat GET. Aksi tingkat baris tidak meng
 | Route | Komponen | Isi |
 |---|---|---|
 | `/requests` | `request.request-list` | Daftar REQ dengan penyaring status, proyek, pemohon, tanggal; penanda SLA tinjau terlampaui |
-| `/requests/create` | `request.request-form` | Pembuatan REQ: proyek, tanggal dibutuhkan, baris katalog dan non-katalog; kolom Beli/Pinjam berupa **teks** dari jenis barang (Alat bernomor seri = Pinjam, lainnya = Beli), pilihan hanya untuk item lama *Keduanya* ([A-286](04b-asumsi-lanjutan.md#a-286)) Kolom jumlah punya pemilih satuan (satuan dasar, kemasan item, atau *Kemasan lain…* "1 DUS = … BOX" + *Ingat untuk item ini*) dan hasil "2 DUS = 24 BOX"; pindai menambah 1 dalam satuan terpilih ([A-291](04b-asumsi-lanjutan.md#a-291), [A-292](04b-asumsi-lanjutan.md#a-292)). |
-| `/requests/{req}` | `request.request-detail` | Header, baris, timeline, dan seluruh aksi status sesuai izin |
-| `/portal/requests` | `request.portal-request-list` | Daftar REQ milik klien; tanggal janji dan penanda menunggu tanggapan |
-| `/portal/requests/{req}` | `request.portal-request-detail` | Klien menambah baris, menanggapi penggantian, meminta pembatalan, mengonfirmasi terima |
+| `/requests/create` | `request.request-form` | Pembuatan REQ: proyek, tanggal dibutuhkan, No. PO klien (opsional), baris katalog dan non-katalog; kolom Beli/Pinjam berupa **teks** dari jenis barang (Alat bernomor seri = Pinjam, lainnya = Beli), pilihan hanya untuk item lama *Keduanya* ([A-286](04b-asumsi-lanjutan.md#a-286)) Kolom jumlah punya pemilih satuan (satuan dasar, kemasan item, atau *Kemasan lain…* "1 DUS = … BOX" + *Ingat untuk item ini*) dan hasil "2 DUS = 24 BOX"; pindai menambah 1 dalam satuan terpilih ([A-291](04b-asumsi-lanjutan.md#a-291), [A-292](04b-asumsi-lanjutan.md#a-292)). |
+| `/requests/{req}` | `request.request-detail` | Header (No. PO klien: *Isi/Ubah* selama belum final), baris, timeline, dan seluruh aksi status sesuai izin |
+| `/portal/requests` | `request.portal-request-list` | Daftar REQ milik klien; cari nomor REQ / No. PO klien; tanggal janji dan penanda menunggu tanggapan |
+| `/portal/requests/{req}` | `request.portal-request-detail` | Klien mengisi/mengubah No. PO klien, menambah baris, menanggapi penggantian, meminta pembatalan, **mengisi bukti terima** SJ yang berangkat (`/portal/shipments/{sj}/proof`, [A-312](04b-asumsi-lanjutan.md#a-312)), mengonfirmasi terima |
 
 ## 7. Kejadian stok & integrasi
 
@@ -202,6 +203,8 @@ Kejadian outbox: tidak ada yang lahir dari modul ini. `purchase_requested` lahir
 | TC-REQ-36 | Genset (Alat bernomor seri), baut (Barang biasa), bor lama *Keduanya* bawaan Pinjam | pilih item di form; simpan dengan Beli/Pinjam kiriman yang salah; ubah REQ yang barisnya sudah tersimpan | genset & baut berupa teks, bor berupa pilihan; tersimpan Pinjam/Beli/Beli (bor memakai kiriman); baris lama dengan item sama tidak berubah | [A-286](04b-asumsi-lanjutan.md#a-286), BR-REQ-06 |
 | TC-REQ-37 | Baut dengan kemasan DUS = 12 | baris 2 DUS, simpan, buka lagi | `qty_base` 24, `uom_id` DUS, `qty_input` 2, detail "2 DUS"; draf dibuka lagi dalam DUS | [A-291](04b-asumsi-lanjutan.md#a-291) |
 | TC-REQ-38 | Baut, kemasan DUS | form Permintaan: pilih baut, DUS, lalu *Kemasan lain…* | kotak jumlah berakhiran PCS lalu DUS; isian kemasan lain di baris tabel sendiri; kolom **Beli/Pinjam**, placeholder "Pindai atau ketik kode barang" | [A-291](04b-asumsi-lanjutan.md#a-291), [A-283](04b-asumsi-lanjutan.md#a-283) |
+| TC-REQ-39 | REQ internal & REQ klien | isi No. PO di form internal; klien *Isi* No. PO 61 karakter lalu `PO-KL1-001` di portal; klien lain; REQ disetujui ditambah baris | tersimpan (dipangkas); 61 karakter ditolak; tersimpan + riwayat *No. PO klien diubah*; klien lain tidak boleh; REQ Tambahan mewarisi No. PO | [A-313](04b-asumsi-lanjutan.md#a-313), [A-318](04b-asumsi-lanjutan.md#a-318) |
+| TC-REQ-40 | REQ `PO-KL1-555` terkirim, bukti terima GR `GR-KL1-9001` | cari di daftar REQ internal & portal, daftar SJ, laporan *Daftar pengiriman* | REQ & SJ ditemukan lewat No. PO / No. GR; laporan memuat kolom driver, No. PO & No. GR | [A-313](04b-asumsi-lanjutan.md#a-313) |
 
 ## 11. Di luar lingkup modul ini
 
@@ -303,3 +306,7 @@ Uji yang menopangnya ada di `tests/Feature/Request`: `RequestFlowTest` (TC-REQ-0
    ([A-239](04-keputusan-dan-asumsi.md#a-239), TC-REQ-20) dan SLA tinjau lewat `notifications:daily` ([A-235](04-keputusan-dan-asumsi.md#a-235)).
 6. ~~Notifikasi §8~~ — selesai 25 Sep 2026: SLA tinjau, pengganti item, tanggal janji, keputusan REQ, pembatalan baris ([A-234](04-keputusan-dan-asumsi.md#a-234)).
 7. ~~Laporan §9 beserta ekspor Excel~~ — **selesai 25 Sep 2026**: *Daftar REQ*, *REQ menunggu tinjau*, *Baris tanpa sumber*, *Penggantian item menunggu tanggapan* di [16-shared-laporan-berkas §3.2](16-shared-laporan-berkas.md#32-definisi-laporan-terdaftar-reportsdefinitions) ([A-232](04-keputusan-dan-asumsi.md#a-232)).
+
+### 13.5 No. PO klien (28 September 2026)
+
+`material_requests.client_po_number` (migrasi `000430`). Form internal menyimpannya lewat `SaveRequest`; detail REQ internal & portal memakai trait `EditsClientPo` + partial `request/partials/client-po` → aksi `SetClientPoNumber` (izin `MaterialRequestPolicy::setClientPo`: `request.create` atau `request.review`, REQ belum final, klien hanya proyek kliennya); `AddRequestLines` menyalin nilai ke REQ Tambahan. Nilai ikut tercetak di SJ (`Shipment::clientPoNumbers`) dan dicari lewat `ShipmentSearch::byClientPo` ([A-318](04b-asumsi-lanjutan.md#a-318)).

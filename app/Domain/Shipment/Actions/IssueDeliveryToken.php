@@ -24,7 +24,7 @@ use Illuminate\Support\Str;
  * OTP tidak pernah disimpan sebagai teks. Bila company menyalakan OTP
  * otomatis dan platform punya kanal WhatsApp/SMS (A-273, O-15), OTP dikirim
  * ke HP penerima dan **tidak** dikembalikan ke layar; kalau tidak, atau gagal
- * terkirim, OTP dikembalikan sekali untuk disampaikan staf/driver.
+ * terkirim, OTP dikembalikan sekali untuk disampaikan staf/pengantar.
  */
 class IssueDeliveryToken
 {
@@ -95,11 +95,11 @@ class IssueDeliveryToken
         }
 
         if (! $this->sender->enabled() || $baris->otp_sent_at === null) {
-            throw ShipmentRuleException::rule('BR-SJ-05', 'Kode OTP tautan ini disampaikan driver; minta kodenya kepada driver.');
+            throw ShipmentRuleException::rule('BR-SJ-05', 'Kode OTP tautan ini disampaikan petugas gudang/pengantar; mintalah kepada mereka.');
         }
 
         if ($baris->otp_send_count >= DeliveryOtpSender::MAKS_KIRIM) {
-            throw ShipmentRuleException::rule('NFR-04', 'Kode sudah dikirim ulang terlalu sering. Minta driver menerbitkan tautan baru.');
+            throw ShipmentRuleException::rule('NFR-04', 'Kode sudah dikirim ulang terlalu sering. Minta petugas gudang pengirim menerbitkan tautan baru.');
         }
 
         if ($baris->otp_sent_at->diffInSeconds(now()) < DeliveryOtpSender::JEDA_DETIK) {
@@ -112,7 +112,7 @@ class IssueDeliveryToken
         $hasil = $this->sender->send($baris, $otp, $baris->shipment);
 
         if (! $hasil['sent']) {
-            throw ShipmentRuleException::rule('BR-SJ-05', 'Kode baru gagal dikirim. Minta kode kepada driver.');
+            throw ShipmentRuleException::rule('BR-SJ-05', 'Kode baru gagal dikirim. Minta kode kepada petugas gudang pengirim.');
         }
 
         return $baris->refresh();

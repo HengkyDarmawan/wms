@@ -41,6 +41,6 @@ class PwaTest extends TenantTestCase
         $entri = (string) file_get_contents(resource_path('views/livewire/count/count-entry.blade.php'));
         $this->assertStringContainsString('data-draft="count-task-', $entri);
         $this->assertStringContainsString('data-scan', $entri);
-        $this->assertStringContainsString('data-draft="pod-', (string) file_get_contents(resource_path('views/livewire/shipment/shipment-detail.blade.php')));
+        $this->assertStringContainsString('data-draft="pod-', (string) file_get_contents(resource_path('views/shipment/partials/proof-form.blade.php')));
     }
 }

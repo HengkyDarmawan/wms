@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Master\Livewire;
 
-use App\Domain\Access\Models\User;
 use App\Domain\Master\Actions\SaveReference;
 use App\Domain\Master\Enums\CapacityMode;
 use App\Domain\Master\Enums\ReasonContext;
@@ -14,10 +13,11 @@ use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\StorageCategory;
 use App\Domain\Master\Models\Vehicle;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
-use Livewire\Attributes\Url;
+use Illuminate\View\View;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
@@ -51,7 +51,8 @@ class ReferenceList extends Component
         'capacity_mode' => 'warn',
         'plate_no' => '',
         'type' => '',
-        'default_driver_id' => '',
+        'default_driver_name' => '',
+        'default_driver_phone' => '',
         'phone' => '',
     ];
 
@@ -84,7 +85,8 @@ class ReferenceList extends Component
             'capacity_mode' => CapacityMode::Warn->value,
             'plate_no' => '',
             'type' => '',
-            'default_driver_id' => '',
+            'default_driver_name' => '',
+            'default_driver_phone' => '',
             'phone' => '',
         ];
         $this->showForm = true;
@@ -103,7 +105,7 @@ class ReferenceList extends Component
         $this->form = match ($this->tab) {
             'alasan' => [...$this->form, 'context' => $model->context->value, 'code' => (string) $model->code, 'label' => (string) $model->label],
             'penyimpanan' => [...$this->form, 'code' => (string) $model->code, 'name' => (string) $model->name, 'capacity_mode' => $model->capacity_mode->value],
-            'kendaraan' => [...$this->form, 'plate_no' => (string) $model->plate_no, 'type' => (string) $model->type, 'default_driver_id' => (string) $model->default_driver_id],
+            'kendaraan' => [...$this->form, 'plate_no' => (string) $model->plate_no, 'type' => (string) $model->type, 'default_driver_name' => (string) $model->default_driver_name, 'default_driver_phone' => (string) $model->default_driver_phone],
             default => [...$this->form, 'name' => (string) $model->name, 'phone' => (string) $model->phone],
         };
 
@@ -185,21 +187,18 @@ class ReferenceList extends Component
             'baris' => $this->baris(),
             'konteks' => ReasonContext::options(),
             'capacityModes' => CapacityMode::options(),
-            'drivers' => $this->tab === 'kendaraan'
-                ? User::query()->internal()->active()->orderBy('name')->get(['id', 'name'])
-                : collect(),
         ]);
     }
 
-    /** @return \Illuminate\Support\Collection<int, Model> */
-    private function baris(): \Illuminate\Support\Collection
+    /** @return Collection<int, Model> */
+    private function baris(): Collection
     {
         return match ($this->tab) {
             'alasan' => ReasonCode::query()
                 ->when($this->contextFilter !== '', fn ($q) => $q->where('context', $this->contextFilter))
                 ->orderBy('context')->orderBy('code')->get(),
             'penyimpanan' => StorageCategory::query()->orderBy('name')->get(),
-            'kendaraan' => Vehicle::query()->with('defaultDriver:id,name')->orderBy('plate_no')->get(),
+            'kendaraan' => Vehicle::query()->orderBy('plate_no')->get(),
             default => Carrier::query()->orderBy('name')->get(),
         };
     }

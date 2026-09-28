@@ -61,6 +61,7 @@ class ShipmentController extends Controller
         $path = match (true) {
             $berkas === 'foto' => $bukti->photo_path,
             $berkas === 'ttd' => $bukti->signature_path,
+            $berkas === 'sj' => $bukti->signed_document_path,
             default => $bukti->lines()->whereKey((int) substr($berkas, 6))->value('damage_photo_path'),
         };
 

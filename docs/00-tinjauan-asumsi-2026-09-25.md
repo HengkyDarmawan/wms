@@ -1,6 +1,6 @@
 # Tinjauan asumsi *Perlu validasi* — 25 September 2026
 
-**Versi:** 1.30
+**Versi:** 1.31
 **Tanggal:** 28 September 2026
 **Status:** daftar kerja untuk pemilik produk — dibuat otomatis dari [04-keputusan-dan-asumsi](wms/04-keputusan-dan-asumsi.md) v0.26; v1.2: ditambah A-206–A-225 dari sesi kantor 25 Sep 2026 (v0.27) (butir Penutup, [prompt serah terima](prompts/00-lanjutkan-di-rumah.md) §2 butir 6); v1.8: ditambah A-233–A-237 (notifikasi §8, 04 v0.34); v1.9: A-238 (lampiran generik, 04 v0.35); v1.10: A-239–A-240 (04 v0.36); v1.11: A-241–A-242 (04 v0.37); v1.12: A-243–A-245 (04 v0.38); v1.13: keputusan pemilik produk 26 Sep 2026 untuk 31 asumsi ⚠ + A-111, A-116 (04 v0.39) ; v1.14: putaran 1 tinjauan tanpa ⚠ — A-84–A-95 kecuali A-87 (A-92 diubah, 04 v0.41), ditambah A-257–A-258 dari [04b](wms/04b-asumsi-lanjutan.md) ; v1.15: putaran 2 — A-87, A-96–A-107 (A-99 diubah → A-259, 04 v0.42) ; v1.16: putaran 3 — A-108–A-115, A-120–A-124 (A-120, A-121 diubah → A-261, A-262, 04 v0.43) ; v1.17: putaran 4 — A-117–A-119, A-125–A-126, A-150–A-156 (A-125, A-126 diubah → A-264, A-263, 04 v0.44) ; v1.18: putaran 5 — A-157–A-168 Setuju (04 v0.45) ; v1.19: putaran 6 — A-169–A-189 (12) Setuju (04 v0.46); v1.20: putaran 7 — A-190–A-211 (12): 11 Setuju (A-193 diperluas A-266), A-211 diubah → A-265 (04 v0.47); v1.21: putaran 8 — A-214 (dilengkapi A-267), A-215, A-217, A-218, A-221, A-223–A-227 Setuju; A-220 dan A-222 menunggu penjelasan (04 v0.48); v1.22: putaran 9 — sisa 13 diputus: A-220, A-234, A-237–A-244, A-257, A-258 Setuju; A-222 diubah (A-268); A-233, A-235 dilengkapi (A-269, A-270) (04 v0.49) — **daftar kerja selesai**; yang masih *Perlu validasi* hanya A-260 (sesi paralel, di luar daftar ini); v1.23: A-271–A-273 (sisa kecil Fase 1, 27 Sep 2026) — **3 asumsi baru menunggu keputusan**; v1.24: A-274–A-280 (WhatsApp Fase 2a) — **10 asumsi baru menunggu keputusan**; v1.25: A-281 (tampilan denah) — **11 menunggu**; v1.26: A-282 (form item ringkas) — **12 menunggu**; v1.27: A-283–A-286 (tiga jenis barang & saklar fitur) — **16 menunggu**; v1.28: A-287–A-295 (penerimaan Baik/Rusak/Kurang & kemasan) — **25 menunggu**; v1.29: A-296–A-303 (label kemasan & pemindaian wajib) — **33 menunggu**; v1.30: A-304–A-310 (saran vendor dari riwayat, riwayat harga beli, nonaktif vendor) — **40 menunggu**
 **Dokumen terkait:** [README](README.md) · [Laporan progres](00-laporan-progres-2026-09-24.md)
@@ -255,9 +255,9 @@ Jumlah: **192 asumsi** dalam 24 kelompok (sejak v1.14 termasuk A-257–A-258, se
 
 | ID | Asumsi (ringkas) | Keputusan |
 |---|---|---|
-| [A-271](wms/04b-asumsi-lanjutan.md#a-271) | Zona, rak (+ level L1…Ln + bin per level), level, dan bin ditambah langsung dari denah; nama zona bisa diubah; kode tetap terkunci | |
-| [A-272](wms/04b-asumsi-lanjutan.md#a-272) | Impor gudang dari Excel: kode wajib, tipe dari kode/nama, induk boleh dari baris sebelumnya, kepala via email; bin bawaan ikut; izin `warehouse.create` | |
-| [A-273](wms/04b-asumsi-lanjutan.md#a-273) ⚠ | OTP bukti terima otomatis: kanal WhatsApp/SMS platform (driver none/log/http generik), saklar company; OTP tidak tampil ke driver bila terkirim; kirim ulang maks 4, jeda 60 detik; merek penyedia tetap keputusan pemilik | |
+| [A-271](wms/04b-asumsi-lanjutan.md#a-271) | Zona, rak (+ level L1…Ln + bin per level), level, dan bin ditambah langsung dari denah; nama zona bisa diubah; kode tetap terkunci || Setuju |
+| [A-272](wms/04b-asumsi-lanjutan.md#a-272) | Impor gudang dari Excel: kode wajib, tipe dari kode/nama, induk boleh dari baris sebelumnya, kepala via email; bin bawaan ikut; izin `warehouse.create` || Setuju |
+| [A-273](wms/04b-asumsi-lanjutan.md#a-273) ⚠ | OTP bukti terima otomatis: kanal WhatsApp/SMS platform (driver none/log/http generik), saklar company; OTP tidak tampil ke driver bila terkirim; kirim ulang maks 4, jeda 60 detik; merek penyedia tetap keputusan pemilik || Setuju — tetap mati bawaan, jadi cadangan; bukti terima oleh admin site klien lewat portal ([A-311](wms/04b-asumsi-lanjutan.md#a-311)–[A-313](wms/04b-asumsi-lanjutan.md#a-313)) |
 
 ## 2.32 WhatsApp Fase 2a — 27 Sep 2026
 
@@ -275,13 +275,13 @@ Jumlah: **192 asumsi** dalam 24 kelompok (sejak v1.14 termasuk A-257–A-258, se
 
 | ID | Asumsi (ringkas) | Keputusan |
 |---|---|---|
-| [A-281](wms/04b-asumsi-lanjutan.md#a-281) | Rak di denah = kotak besar berisi petak bin per level (L1 paling bawah), label level di luar, warna per bin; gambar diperbesar bila petak tidak muat, ukuran fisik tetap | |
+| [A-281](wms/04b-asumsi-lanjutan.md#a-281) | Rak di denah = kotak besar berisi petak bin per level (L1 paling bawah), label level di luar, warna per bin; gambar diperbesar bila petak tidak muat, ukuran fisik tetap || Setuju |
 
 ## 2.34 Form item lebih ringkas — 28 Sep 2026
 
 | ID | Asumsi (ringkas) | Keputusan |
 |---|---|---|
-| [A-282](wms/04b-asumsi-lanjutan.md#a-282) | Bagian opsional form item jadi tiga tab berdampingan; teks bantuan Mode pelacakan; Sifat baris hanya untuk item Keduanya; pesan validasi Bahasa Indonesia; Beli/Pinjam di REQ ikut item | |
+| [A-282](wms/04b-asumsi-lanjutan.md#a-282) | Bagian opsional form item jadi tiga tab berdampingan; teks bantuan Mode pelacakan; Sifat baris hanya untuk item Keduanya; pesan validasi Bahasa Indonesia; Beli/Pinjam di REQ ikut item || Setuju |
 
 ## 2.35 Tiga jenis barang & saklar fitur — 28 Sep 2026
 

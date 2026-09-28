@@ -18,6 +18,8 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Features\SupportFileUploads\FilePreviewController;
+use Livewire\Features\SupportFileUploads\FileUploadController;
 use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
@@ -85,5 +87,11 @@ class AppServiceProvider extends ServiceProvider
             EnsureInternalArea::class,
             EnsureClientPortal::class,
         ]);
+
+        // Unggah & pratinjau berkas sementara (foto bukti terima, A-312) juga harus
+        // membaca sesi & CSRF dari database company; tanpa ini unggahan di browser
+        // mendapat 419. Hanya layar tenant yang memakai unggahan Livewire.
+        FileUploadController::$defaultMiddleware = [InitializeTenancyBySubdomain::class, 'web'];
+        FilePreviewController::$middleware = [InitializeTenancyBySubdomain::class, 'web'];
     }
 }

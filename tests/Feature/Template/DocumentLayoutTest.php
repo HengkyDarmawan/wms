@@ -29,7 +29,7 @@ class DocumentLayoutTest extends TenantTestCase
 
         Livewire::actingAs($admin)->test(DocumentLayoutForm::class)
             ->assertSet('accent', DocumentLayout::WARNA_BAWAAN)
-            ->assertSet('blocks.shipment', "Dibuat oleh\nPengemudi\nPenerima")
+            ->assertSet('blocks.shipment', "Dibuat oleh\nPengemudi\nPenerima (tanda tangan & cap)")
             ->set('accent', 'merah')
             ->set('blocks.shipment', "A\nB\nC\nD\nE")
             ->set('papers.label_bin', 'a4')

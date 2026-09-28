@@ -21,6 +21,12 @@ use Spatie\Permission\Models\Role as SpatieRole;
  */
 class Role extends SpatieRole
 {
+    /**
+     * A-311/A-314: role lama yang tidak ditawarkan lagi untuk penugasan baru.
+     * User yang sudah memilikinya tetap bisa masuk (P-03).
+     */
+    public const NOT_OFFERED = ['driver'];
+
     protected $table = 'roles';
 
     protected function casts(): array

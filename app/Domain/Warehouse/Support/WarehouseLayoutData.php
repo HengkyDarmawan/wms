@@ -9,6 +9,7 @@ use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockMovement;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Models\Bin;
+use App\Domain\Warehouse\Models\FloorPlanObject;
 use App\Domain\Warehouse\Models\Rack;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Models\Zone;
@@ -32,6 +33,11 @@ use Illuminate\Support\Str;
  *   (level teratas di atas, label level di luar kotak). Ukuran gambar =
  *   ukuran fisik, diperbesar bila petak bin tidak muat (`w`/`h`, meter
  *   gambar); `len`/`wid` tetap ukuran fisik untuk geser & batas zona.
+ * - Denah gedung (A-320): satu kanvas bergaris luar gedung (bila ukurannya
+ *   diisi); zona diletakkan di koordinat gedung (`x`/`y`, kosong = ditumpuk
+ *   otomatis di bawah zona berposisi), rak relatif zonanya, objek denah
+ *   relatif gedung. Tumpukan (rak↔rak, rak↔objek padat, zona↔zona, benda di
+ *   luar gedung) hanya diperingatkan (A-321).
  */
 class WarehouseLayoutData
 {
@@ -56,7 +62,7 @@ class WarehouseLayoutData
 
     public const BINGKAI = 0.1;
 
-    /** @return array{zones: array<int, array<string, mixed>>, hasil: array<int, array<string, mixed>>} */
+    /** @return array{zones: array<int, array<string, mixed>>, hasil: array<int, array<string, mixed>>, gedung: ?array{p: float, l: float}, objects: array<int, array<string, mixed>>, tumpukan: array<int, string>, tumpukanId: array<int, string>, kanvas: array{w: float, h: float}} */
     public function build(Warehouse $gudang, string $cari = ''): array
     {
         $zona = Zone::query()->where('warehouse_id', $gudang->id)->where('is_active', true)->orderBy('code')
@@ -154,7 +160,8 @@ class WarehouseLayoutData
 
             // Tata otomatis per baris memakai ukuran gambar agar rak tidak bertumpuk.
             $kursorX = self::JARAK;
-            $kursorY = self::JARAK;
+            // Satu meter pertama untuk judul zona (A-320).
+            $kursorY = self::JARAK * 2;
             $tinggiBaris = 0.0;
             $n = 0;
 
@@ -194,13 +201,158 @@ class WarehouseLayoutData
                 'name' => (string) $z->name,
                 'length_m' => $z->length_m !== null ? (float) $z->length_m : null,
                 'width_m' => $z->width_m !== null ? (float) $z->width_m : null,
+                'pos_x' => $z->pos_x !== null ? (float) $z->pos_x : null,
+                'pos_y' => $z->pos_y !== null ? (float) $z->pos_y : null,
                 'w' => $lebarZona,
                 'h' => $tinggiZona,
                 'racks' => $racks->all(),
             ];
         })->all();
 
-        return ['zones' => $zones, 'hasil' => $hasil];
+        $zones = $this->tataZona($zones);
+        $objects = FloorPlanObject::query()->active()->where('warehouse_id', $gudang->id)->orderBy('id')->get()
+            ->map(function (FloorPlanObject $o) {
+                [$p, $l] = $o->footprint();
+                [$isi, $garis] = $o->object_type->colors();
+
+                return [
+                    'id' => (int) $o->id,
+                    'type' => $o->object_type->value,
+                    'label' => $o->object_type->label(),
+                    'name' => (string) $o->name,
+                    'x' => (float) $o->pos_x, 'y' => (float) $o->pos_y,
+                    'p' => $p, 'l' => $l,
+                    'length_m' => (float) $o->length_m, 'width_m' => (float) $o->width_m,
+                    'rotation' => (int) $o->rotation,
+                    'solid' => $o->object_type->solid(),
+                    'fill' => $isi, 'stroke' => $garis,
+                ];
+            })->all();
+
+        $gedung = $gudang->length_m !== null && $gudang->width_m !== null
+            ? ['p' => (float) $gudang->length_m, 'l' => (float) $gudang->width_m] : null;
+        [$tumpukan, $tumpukanId] = $this->tumpukan($zones, $objects, $gedung);
+
+        $kanan = max([$gedung['p'] ?? 0, ...array_map(fn ($z) => $z['x'] + $z['w'], $zones), ...array_map(fn ($o) => $o['x'] + $o['p'], $objects)]);
+        $bawah = max([$gedung['l'] ?? 0, ...array_map(fn ($z) => $z['y'] + $z['h'], $zones), ...array_map(fn ($o) => $o['y'] + $o['l'], $objects)]);
+
+        return [
+            'zones' => $zones,
+            'hasil' => $hasil,
+            'gedung' => $gedung,
+            'objects' => $objects,
+            'tumpukan' => $tumpukan,
+            'tumpukanId' => $tumpukanId,
+            'kanvas' => ['w' => max(6.0, $kanan + self::JARAK), 'h' => max(3.0, $bawah + self::JARAK)],
+        ];
+    }
+
+    /**
+     * Zona berposisi memakai `pos_x/pos_y`; sisanya ditumpuk di bawahnya
+     * (x = 0,5 m, jarak 1 m) seperti kartu per zona sebelumnya.
+     *
+     * @param  array<int, array<string, mixed>>  $zones
+     * @return array<int, array<string, mixed>>
+     */
+    private function tataZona(array $zones): array
+    {
+        $berposisi = array_filter($zones, fn ($z) => $z['pos_x'] !== null && $z['pos_y'] !== null);
+        $kursor = $berposisi === [] ? self::JARAK : max(array_map(fn ($z) => $z['pos_y'] + $z['h'], $berposisi)) + 1.0;
+
+        foreach ($zones as $i => $z) {
+            $otomatis = $z['pos_x'] === null || $z['pos_y'] === null;
+            $zones[$i]['otomatis'] = $otomatis;
+
+            if ($otomatis) {
+                $zones[$i]['x'] = self::JARAK;
+                $zones[$i]['y'] = $kursor + 0.5;
+                $kursor += $z['h'] + 1.5;
+            } else {
+                $zones[$i]['x'] = $z['pos_x'];
+                $zones[$i]['y'] = $z['pos_y'];
+            }
+        }
+
+        return $zones;
+    }
+
+    /**
+     * A-321: pasangan benda yang bertumpuk — hanya peringatan. Rak memakai
+     * ukuran fisik (bukan ukuran gambar yang diperbesar agar petak terbaca).
+     *
+     * @param  array<int, array<string, mixed>>  $zones
+     * @param  array<int, array<string, mixed>>  $objects
+     * @param  ?array{p: float, l: float}  $gedung
+     * @return array{0: array<int, string>, 1: array<int, string>}
+     */
+    private function tumpukan(array $zones, array $objects, ?array $gedung): array
+    {
+        $kotak = [];
+
+        foreach ($zones as $z) {
+            foreach ($z['racks'] as $r) {
+                $kotak[] = ['id' => 'rak:'.$r['id'], 'jenis' => 'rak', 'nama' => 'Rak '.$z['code'].'-'.$r['code'],
+                    'x' => $z['x'] + $r['x'], 'y' => $z['y'] + $r['y'], 'p' => $r['len'], 'l' => $r['wid']];
+            }
+        }
+
+        $padat = array_values(array_filter($objects, fn ($o) => $o['solid']));
+        $pesan = [];
+        $ids = [];
+        $catat = function (array $a, array $b) use (&$pesan, &$ids) {
+            $pesan[] = $a['nama'].' ↔ '.$b['nama'];
+            $ids[] = $a['id'];
+            $ids[] = $b['id'];
+        };
+
+        foreach ($kotak as $i => $a) {
+            foreach (array_slice($kotak, $i + 1) as $b) {
+                if (self::bertumpuk($a, $b)) {
+                    $catat($a, $b);
+                }
+            }
+
+            foreach ($padat as $o) {
+                $ob = ['id' => 'obj:'.$o['id'], 'nama' => $o['name'], 'x' => $o['x'], 'y' => $o['y'], 'p' => $o['p'], 'l' => $o['l']];
+
+                if (self::bertumpuk($a, $ob)) {
+                    $catat($a, $ob);
+                }
+            }
+        }
+
+        $zona = array_map(fn ($z) => ['id' => 'zona:'.$z['id'], 'nama' => 'Zona '.$z['code'], 'x' => $z['x'], 'y' => $z['y'],
+            'p' => $z['length_m'] ?? $z['w'], 'l' => $z['width_m'] ?? $z['h']], $zones);
+
+        foreach ($zona as $i => $a) {
+            foreach (array_slice($zona, $i + 1) as $b) {
+                if (self::bertumpuk($a, $b)) {
+                    $catat($a, $b);
+                }
+            }
+        }
+
+        if ($gedung !== null) {
+            $luar = array_merge($zona, array_map(fn ($o) => ['id' => 'obj:'.$o['id'], 'nama' => $o['name'], 'x' => $o['x'], 'y' => $o['y'], 'p' => $o['p'], 'l' => $o['l']], $objects));
+
+            foreach ($luar as $a) {
+                if ($a['x'] + $a['p'] > $gedung['p'] + 0.001 || $a['y'] + $a['l'] > $gedung['l'] + 0.001) {
+                    $pesan[] = $a['nama'].' keluar dari garis gedung';
+                    $ids[] = $a['id'];
+                }
+            }
+        }
+
+        return [$pesan, array_values(array_unique($ids))];
+    }
+
+    /** @param  array{x: float, y: float, p: float, l: float}  $a */
+    public static function bertumpuk(array $a, array $b): bool
+    {
+        $e = 0.001;
+
+        return $a['x'] + $e < $b['x'] + $b['p'] && $b['x'] + $e < $a['x'] + $a['p']
+            && $a['y'] + $e < $b['y'] + $b['l'] && $b['y'] + $e < $a['y'] + $a['l'];
     }
 
     /** @param  Collection<int, array<string, mixed>>  $bins */

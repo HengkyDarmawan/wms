@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Domain\Shipment\Livewire\DiscrepancyList;
 use App\Domain\Shipment\Livewire\PickDetail;
 use App\Domain\Shipment\Livewire\PickList;
+use App\Domain\Shipment\Livewire\PortalDeliveryProof;
 use App\Domain\Shipment\Livewire\ShipmentDetail;
 use App\Domain\Shipment\Livewire\ShipmentForm;
 use App\Domain\Shipment\Livewire\ShipmentList;
@@ -34,6 +35,7 @@ class ShipmentServiceProvider extends ServiceProvider
         Livewire::component('shipment.shipment-list', ShipmentList::class);
         Livewire::component('shipment.shipment-form', ShipmentForm::class);
         Livewire::component('shipment.shipment-detail', ShipmentDetail::class);
+        Livewire::component('shipment.portal-delivery-proof', PortalDeliveryProof::class);
         Livewire::component('shipment.discrepancy-list', DiscrepancyList::class);
     }
 }

@@ -71,7 +71,9 @@ class PortalRequestList extends Component
             ])
             // Portal hanya menampilkan REQ proyek klien yang sedang masuk.
             ->whereHas('project', fn (Builder $p) => $p->where('client_id', $klienId))
-            ->when($this->search !== '', fn (Builder $q) => $q->where('number', 'like', '%'.$this->search.'%'))
+            ->when($this->search !== '', fn (Builder $q) => $q->where(fn (Builder $w) => $w
+                ->where('number', 'like', '%'.$this->search.'%')
+                ->orWhere('client_po_number', 'like', '%'.$this->search.'%')))
             ->when($this->statusFilter !== '', fn (Builder $q) => $q->where('status', $this->statusFilter))
             ->when($this->hanyaPerluTanggapan, fn (Builder $q) => $q
                 ->whereHas('lines', fn (Builder $l) => $l

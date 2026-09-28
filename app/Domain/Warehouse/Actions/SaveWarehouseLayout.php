@@ -18,13 +18,18 @@ use Illuminate\Support\Facades\DB;
  * Permission: `bin.manage` — perencanaan denah gudang (A-254, A-255).
  *
  * Semua ukuran & posisi **opsional** dan dalam meter: kosong = denah menata
- * otomatis. Posisi rak dibulatkan ke kelipatan 0,5 m (geser di grid) dan
- * dijaga tetap di dalam zona bila ukuran zona diisi. Kode zona/rak/level/bin
- * tidak berubah (BR-WH-01) — yang diatur hanya ukuran, posisi, dan nama.
+ * otomatis. Posisi dibulatkan ke kelipatan 0,5 m (geser di grid; geser halus
+ * tombol panah + Shift 0,1 m, A-320). Rak dijaga di dalam zonanya dan zona di
+ * dalam gedung bila ukurannya diisi (memperhitungkan arah rak & ukuran
+ * bawaan 2 × 1 m). Kode zona/rak/level/bin tidak berubah (BR-WH-01) — yang
+ * diatur hanya ukuran, posisi, arah, dan nama; rak tidak pindah zona.
  */
 class SaveWarehouseLayout
 {
     public const GRID = 0.5;
+
+    /** A-320: geser halus (tombol panah + Shift). */
+    public const GRID_HALUS = 0.1;
 
     /** Batas susun dari denah: level per rak dan bin per level (A-271). */
     public const MAKS_LEVEL = 20;
@@ -37,13 +42,41 @@ class SaveWarehouseLayout
         private readonly GenerateBins $binMassal,
     ) {}
 
-    /** @param  array<string, mixed>  $data  length_m, width_m, name (opsional) */
+    /**
+     * A-320: ukuran gedung (garis luar denah). Kosong = denah digambar dari
+     * zona & objek seperti sebelumnya.
+     *
+     * @param  array<string, mixed>  $data  length_m, width_m
+     */
+    public function building(Warehouse $gudang, array $data, ?User $actor = null): Warehouse
+    {
+        $p = $this->ukuran($data['length_m'] ?? null, 'length_m');
+        $l = $this->ukuran($data['width_m'] ?? null, 'width_m');
+
+        if (($p === null) !== ($l === null)) {
+            throw WarehouseRuleException::fields([$p === null ? 'length_m' : 'width_m' => 'Isi panjang dan lebar gedung, atau kosongkan keduanya.'], 'BR-GEN-11');
+        }
+
+        $gudang->forceFill(['length_m' => $p, 'width_m' => $l])->save();
+
+        activity('warehouse')->performedOn($gudang)->causedBy($actor)
+            ->withProperties(['panjang' => $p, 'lebar' => $l])->log('Ukuran gedung diubah');
+
+        return $gudang->refresh();
+    }
+
+    /** @param  array<string, mixed>  $data  length_m, width_m, name, pos_x, pos_y (opsional) */
     public function zone(Zone $zone, array $data, ?User $actor = null): Zone
     {
         $zone->fill([
             'length_m' => $this->ukuran($data['length_m'] ?? null, 'length_m'),
             'width_m' => $this->ukuran($data['width_m'] ?? null, 'width_m'),
         ]);
+
+        if (array_key_exists('pos_x', $data) || array_key_exists('pos_y', $data)) {
+            [$x, $y] = $this->posisiZona($zone, $data['pos_x'] ?? null, $data['pos_y'] ?? null, self::GRID);
+            $zone->fill(['pos_x' => $x, 'pos_y' => $y]);
+        }
 
         // A-271: nama zona boleh diubah dari denah; kodenya tetap (BR-WH-01).
         if (array_key_exists('name', $data)) {
@@ -89,10 +122,74 @@ class SaveWarehouseLayout
         return $rack->refresh();
     }
 
-    /** Geser rak di grid denah (snap 0,5 m). */
-    public function moveRack(Rack $rack, mixed $x, mixed $y, ?User $actor = null): Rack
+    /** A-320: geser zona di dalam gedung (snap 0,5 m; halus 0,1 m). */
+    public function moveZone(Zone $zone, mixed $x, mixed $y, ?User $actor = null, float $grid = self::GRID): Zone
     {
-        [$px, $py] = $this->posisi($rack, $x, $y);
+        [$px, $py] = $this->posisiZona($zone, $x, $y, $grid);
+        $zone->forceFill(['pos_x' => $px, 'pos_y' => $py])->save();
+
+        activity('warehouse')->performedOn($zone)->causedBy($actor)
+            ->withProperties(['x' => $px, 'y' => $py])->log('Zona digeser di denah');
+
+        return $zone->refresh();
+    }
+
+    /** A-320: ubah ukuran zona dengan menarik sudutnya (snap 0,5 m, minimal 0,5 m). */
+    public function resizeZone(Zone $zone, mixed $panjang, mixed $lebar, ?User $actor = null): Zone
+    {
+        $zone->forceFill([
+            'length_m' => max(self::GRID, $this->snap($this->ukuran($panjang, 'length_m') ?? self::GRID, self::GRID)),
+            'width_m' => max(self::GRID, $this->snap($this->ukuran($lebar, 'width_m') ?? self::GRID, self::GRID)),
+        ])->save();
+
+        activity('warehouse')->performedOn($zone)->causedBy($actor)
+            ->withProperties(['panjang' => $zone->length_m, 'lebar' => $zone->width_m])->log('Ukuran zona diubah');
+
+        return $zone->refresh();
+    }
+
+    /**
+     * A-320: ubah ukuran rak dari denah. Ukuran yang ditarik adalah ukuran
+     * tampak atas; untuk rak "memanjang ke bawah" panjang & lebar ditukar balik.
+     */
+    public function resizeRack(Rack $rack, mixed $tampakP, mixed $tampakL, ?User $actor = null): Rack
+    {
+        $p = max(self::GRID, $this->snap($this->ukuran($tampakP, 'length_m') ?? self::GRID, self::GRID));
+        $l = max(self::GRID, $this->snap($this->ukuran($tampakL, 'width_m') ?? self::GRID, self::GRID));
+
+        if ($rack->orientation === 'v') {
+            [$p, $l] = [$l, $p];
+        }
+
+        $rack->forceFill(['length_m' => $p, 'width_m' => $l])->save();
+
+        activity('warehouse')->performedOn($rack)->causedBy($actor)
+            ->withProperties(['panjang' => $p, 'lebar' => $l])->log('Ukuran rak diubah di denah');
+
+        return $rack->refresh();
+    }
+
+    /** A-322: putar rak 90° = tukar arah memanjang ke samping ↔ ke bawah. */
+    public function rotateRack(Rack $rack, ?User $actor = null): Rack
+    {
+        $rack->forceFill(['orientation' => $rack->orientation === 'v' ? 'h' : 'v'])->save();
+
+        if ($rack->pos_x !== null && $rack->pos_y !== null) {
+            // Jepit ulang tanpa membuang geser halus 0,1 m.
+            [$x, $y] = $this->posisi($rack->refresh(), $rack->pos_x, $rack->pos_y, self::GRID_HALUS);
+            $rack->forceFill(['pos_x' => $x, 'pos_y' => $y])->save();
+        }
+
+        activity('warehouse')->performedOn($rack)->causedBy($actor)
+            ->withProperties(['arah' => $rack->orientation])->log('Rak diputar di denah');
+
+        return $rack->refresh();
+    }
+
+    /** Geser rak di grid denah (snap 0,5 m; halus 0,1 m, A-320). */
+    public function moveRack(Rack $rack, mixed $x, mixed $y, ?User $actor = null, float $grid = self::GRID): Rack
+    {
+        [$px, $py] = $this->posisi($rack, $x, $y, $grid);
         $rack->forceFill(['pos_x' => $px, 'pos_y' => $py])->save();
 
         activity('warehouse')->performedOn($rack)->causedBy($actor)
@@ -260,8 +357,13 @@ class SaveWarehouseLayout
         return (int) $teks;
     }
 
-    /** @return array{0: ?float, 1: ?float} */
-    private function posisi(Rack $rack, mixed $x, mixed $y): array
+    /**
+     * Posisi rak di dalam zonanya (meter, sudut kiri-atas). Penjepitan memakai
+     * ukuran tampak atas: arah rak dan ukuran bawaan 2 × 1 m ikut dihitung.
+     *
+     * @return array{0: ?float, 1: ?float}
+     */
+    private function posisi(Rack $rack, mixed $x, mixed $y, float $grid = self::GRID): array
     {
         $px = $this->ukuran($x, 'pos_x', true);
         $py = $this->ukuran($y, 'pos_y', true);
@@ -270,21 +372,58 @@ class SaveWarehouseLayout
             return [null, null];
         }
 
-        $px = round($px / self::GRID) * self::GRID;
-        $py = round($py / self::GRID) * self::GRID;
+        [$p, $l] = self::tampakRak($rack);
 
-        $zona = $rack->zone;
+        return $this->jepit($this->snap($px, $grid), $this->snap($py, $grid), $p, $l, $rack->zone?->length_m, $rack->zone?->width_m);
+    }
 
-        // Tetap di dalam zona bila ukurannya diketahui.
-        if ($zona?->length_m !== null) {
-            $px = min($px, max(0, (float) $zona->length_m - (float) ($rack->length_m ?? 0)));
+    /** @return array{0: ?float, 1: ?float} posisi zona di dalam gedung */
+    private function posisiZona(Zone $zone, mixed $x, mixed $y, float $grid): array
+    {
+        $px = $this->ukuran($x, 'pos_x', true);
+        $py = $this->ukuran($y, 'pos_y', true);
+
+        if ($px === null || $py === null) {
+            return [null, null];
         }
 
-        if ($zona?->width_m !== null) {
-            $py = min($py, max(0, (float) $zona->width_m - (float) ($rack->width_m ?? 0)));
+        $gudang = Warehouse::query()->withoutGlobalScopes()->find($zone->warehouse_id);
+
+        return $this->jepit($this->snap($px, $grid), $this->snap($py, $grid),
+            (float) ($zone->length_m ?? 0), (float) ($zone->width_m ?? 0), $gudang?->length_m, $gudang?->width_m);
+    }
+
+    /**
+     * Ukuran tampak atas rak (panjang ke kanan, lebar ke bawah) dengan ukuran
+     * bawaan bila kosong — sama dengan gambar denah.
+     *
+     * @return array{0: float, 1: float}
+     */
+    public static function tampakRak(Rack $rack): array
+    {
+        $p = (float) ($rack->length_m ?? 2.0);
+        $l = (float) ($rack->width_m ?? 1.0);
+
+        return $rack->orientation === 'v' ? [$l, $p] : [$p, $l];
+    }
+
+    /** @return array{0: float, 1: float} */
+    private function jepit(float $x, float $y, float $p, float $l, mixed $batasP, mixed $batasL): array
+    {
+        if ($batasP !== null) {
+            $x = min($x, max(0, (float) $batasP - $p));
         }
 
-        return [round($px, 2), round($py, 2)];
+        if ($batasL !== null) {
+            $y = min($y, max(0, (float) $batasL - $l));
+        }
+
+        return [round(max(0, $x), 2), round(max(0, $y), 2)];
+    }
+
+    private function snap(float $nilai, float $grid): float
+    {
+        return round(round($nilai / $grid) * $grid, 2);
     }
 
     private function ukuran(mixed $nilai, string $kolom, bool $bolehNol = false): ?float

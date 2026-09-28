@@ -35,10 +35,10 @@
           <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="vehicles" value="vehicles" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="348" width="260" height="114" as="geometry"/>
+          <mxGeometry x="360" y="348" width="260" height="146" as="geometry"/>
         </mxCell>
-        <mxCell id="vehicles_cols" value="🔑 id : bigint&lt;br&gt;◆ plate_no : varchar(15)&lt;br&gt;type : varchar(40)&lt;br&gt;↗ default_driver_id : bigint&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="vehicles">
-          <mxGeometry y="26" width="260" height="88" as="geometry"/>
+        <mxCell id="vehicles_cols" value="🔑 id : bigint&lt;br&gt;◆ plate_no : varchar(15)&lt;br&gt;type : varchar(40)&lt;br&gt;↗ default_driver_id : bigint&lt;br&gt;default_driver_name : varchar(100)&lt;br&gt;default_driver_phone : varchar(20)&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="vehicles">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="carriers" value="carriers" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="680" y="348" width="260" height="98" as="geometry"/>
@@ -178,7 +178,7 @@
         <mxCell id="r15" value="on_loan" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="projects" target="serials">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r16" value="driver" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="vehicles">
+        <mxCell id="r16" value="driver lama" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="vehicles">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="r17" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="items" target="item_vendors">

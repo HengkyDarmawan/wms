@@ -33,8 +33,6 @@ class DemoSeederTest extends TenantTestCase
             'staf1.ckg@demo.wms.test' => ['warehouse_staff'],
             'staf2.ckg@demo.wms.test' => ['warehouse_staff'],
             'staf.krw@demo.wms.test' => ['warehouse_staff'],
-            'driver1@demo.wms.test' => ['driver'],
-            'driver2@demo.wms.test' => ['driver'],
             'pemohon.prj001@demo.wms.test' => ['internal_requester'],
             'pr@demo.wms.test' => ['pr_follow_up'],
             'auditor@demo.wms.test' => ['internal_auditor'],
@@ -50,6 +48,9 @@ class DemoSeederTest extends TenantTestCase
             $this->assertEqualsCanonicalizing($roles, $user->roleCodes(), 'Role '.$email.' tidak sesuai.');
             $this->assertTrue($user->canSignIn(), 'Akun '.$email.' harus bisa masuk.');
         }
+
+        // A-311: driver tidak punya akun — seeder demo tanpa driver1/driver2.
+        $this->assertFalse(User::query()->where('email', 'like', 'driver%@demo.wms.test')->exists());
 
         // Klien memakai client_id, user internal tidak.
         $this->assertNotNull(User::query()->where('email', 'klien1@klien-satu.test')->first()->client_id);
@@ -73,7 +74,8 @@ class DemoSeederTest extends TenantTestCase
         $this->assertSame(5, (int) ($perModul['stock'] ?? 0), 'Jumlah permission modul Stock.');
         $this->assertSame(14, (int) ($perModul['request'] ?? 0), 'Jumlah permission modul Request.');
         $this->assertSame(5, (int) ($perModul['picking'] ?? 0), 'Jumlah permission modul Picking.');
-        $this->assertSame(7, (int) ($perModul['shipment'] ?? 0), 'Jumlah permission modul Shipment.');
+        // + shipment.confirm_delivery_signed (A-316).
+        $this->assertSame(8, (int) ($perModul['shipment'] ?? 0), 'Jumlah permission modul Shipment.');
         $this->assertSame(6, (int) ($perModul['receipt'] ?? 0), 'Jumlah permission modul Receipt.');
         $this->assertSame(3, (int) ($perModul['putaway'] ?? 0), 'Jumlah permission modul Put-away.');
         $this->assertSame(6, (int) ($perModul['vendor_return'] ?? 0), 'Jumlah permission modul Retur ke vendor.');

@@ -47,7 +47,7 @@ class ReturnPickupTest extends TenantTestCase
 
     private function pembawa(array $x = []): array
     {
-        return $x + ['shipment_method' => 'own_fleet', 'vehicle_plate' => 'b 9123 zz', 'carried_by_name' => 'Pak Udin (sewa)'];
+        return $x + ['shipment_method' => 'own_fleet', 'vehicle_plate' => 'b 9123 zz', 'driver_name' => 'Pak Udin (sewa)', 'driver_phone' => '081311112222'];
     }
 
     private function sjJemput(GoodsReturn $ret, array $data = []): Shipment
@@ -80,7 +80,7 @@ class ReturnPickupTest extends TenantTestCase
 
         // Sopir & plat wajib tertulis (A-247).
         $this->gagal(fn () => $this->sjJemput($ret, ['vehicle_plate' => '']), 'BR-SJ-07');
-        $this->gagal(fn () => $this->sjJemput($ret, ['carried_by_name' => '']), 'BR-SJ-07');
+        $this->gagal(fn () => $this->sjJemput($ret, ['driver_name' => '']), 'BR-SJ-07');
         $this->gagal(fn () => $this->sjJemput($ret, ['shipment_method' => 'self_delivered']), 'BR-SJ-07');
 
         $sj = $this->sjJemput($ret);
@@ -202,7 +202,7 @@ class ReturnPickupTest extends TenantTestCase
         $this->actingAs($staf);
         Livewire::test(ReturnDetail::class, ['goodsReturn' => $ret])
             ->set('jemput.vehicle_plate', '')
-            ->set('jemput.carried_by_name', 'Sopir Sewa')
+            ->set('jemput.driver_name', 'Sopir Sewa')->set('jemput.driver_phone', '081311112222')
             ->call('buatSjJemput')
             ->assertHasErrors('jemput.vehicle_plate')
             ->set('jemput.vehicle_plate', 'B 1 ABC')

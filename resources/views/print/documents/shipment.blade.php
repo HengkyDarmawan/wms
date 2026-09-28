@@ -21,6 +21,21 @@
             <td class="k">{{ __('Cara kirim') }}</td>
             <td>{{ $sj->shipment_method->label() }}: {{ $sj->carrierLabel() ?: '—' }}</td>
         </tr>
+        @if ($sj->driverName())
+            {{-- A-311: driver tanpa akun — nama & HP tertulis agar penerima bisa menghubunginya. --}}
+            <tr>
+                <td class="k">{{ __('Driver') }}</td>
+                <td>{{ $sj->driverName() }}</td>
+                <td class="k">{{ __('No. HP driver') }}</td>
+                <td>{{ $sj->driver_phone ?: '—' }}</td>
+            </tr>
+        @endif
+        @if ($rujukan['po_klien'] !== [])
+            <tr>
+                <td class="k">{{ __('No. PO klien') }}</td>
+                <td colspan="3"><strong>{{ implode(', ', $rujukan['po_klien']) }}</strong></td>
+            </tr>
+        @endif
         <tr>
             <td class="k">{{ __('Rujukan') }}</td>
             <td colspan="3">
@@ -63,4 +78,7 @@
     @if ($sj->notes)
         <p class="catatan"><strong>{{ __('Catatan') }}:</strong> {{ $sj->notes }}</p>
     @endif
+
+    {{-- A-312/A-316: penerima menandatangani & mengecap SJ ini; fotonya diunggah saat mengisi bukti terima. --}}
+    <p class="catatan muted">{{ __('Penerima: periksa barang, isi kolom Diterima, lalu tanda tangan dan cap di kotak Penerima. Foto SJ ini diunggah saat mengisi bukti terima.') }}</p>
 @endsection

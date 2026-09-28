@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Domain\Shipment\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Access\Support\ScopeBypass;
 use App\Domain\Asset\Support\AssetCustody;
 use App\Domain\Master\Models\CompanySetting;
 use App\Domain\Notification\Support\DomainNotifications;
+use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Request\Support\RequestFulfillment;
 use App\Domain\Shipment\Enums\DiscrepancyOrigin;
 use App\Domain\Shipment\Enums\DiscrepancyStatus;
@@ -15,6 +17,7 @@ use App\Domain\Shipment\Enums\DiscrepancyType;
 use App\Domain\Shipment\Enums\OwnershipEffect;
 use App\Domain\Shipment\Enums\PodUnitCondition;
 use App\Domain\Shipment\Enums\ProofChannel;
+use App\Domain\Shipment\Enums\ReceiptConfirmation;
 use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Shipment\Models\DeliveryDiscrepancy;
@@ -62,6 +65,17 @@ class ConfirmDelivery
      */
     public function handle(Shipment $shipment, array $proof, array $lines, ?User $actor = null): ProofOfDelivery
     {
+        // A-312: penerima di gudang/proyek tujuan sudah diotorisasi policy, tetapi aksinya
+        // membaca gudang, bin, dan PCK gudang asal di luar cakupannya (BR-ACC-05).
+        return ScopeBypass::run(fn () => $this->terima($shipment->withoutRelations(), $proof, $lines, $actor));
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $lines
+     * @param  array<string, mixed>  $proof
+     */
+    private function terima(Shipment $shipment, array $proof, array $lines, ?User $actor): ProofOfDelivery
+    {
         if ($shipment->status !== ShipmentStatus::Shipped) {
             throw ShipmentRuleException::rule(
                 'BR-SJ-05',
@@ -79,6 +93,12 @@ class ConfirmDelivery
             throw ShipmentRuleException::field('BR-SJ-05', 'received_by_name', 'Nama penerima wajib diisi.');
         }
 
+        // A-316: penerima tanpa akun internal (portal klien, cadangan gudang asal)
+        // menyertakan foto SJ bertanda tangan & cap sebagai pengganti tanda tangan akun.
+        if ($this->kanal($proof)->requiresSignedDocument() && $this->teks($proof, 'signed_document_path') === null) {
+            throw ShipmentRuleException::field('BR-SJ-05', 'signed_document_path', 'Foto SJ bertanda tangan & cap penerima wajib diunggah.');
+        }
+
         $barisSj = $shipment->lines()->with('pickTaskLine.item', 'item')->get()->keyBy('id');
         $isian = $this->periksaIsian($barisSj, $lines);
 
@@ -90,7 +110,11 @@ class ConfirmDelivery
             return $this->terimaAntarSite($shipment, $proof, $isian, $barisSj, $penerima, $actor);
         }
 
-        $hasil = DB::transaction(function () use ($shipment, $proof, $isian, $barisSj, $penerima, $actor) {
+        // A-63/A-317: pemohon sendiri (atau admin site klien lewat portal) yang mengisi
+        // bukti terima tidak perlu mengonfirmasi lagi; selisihnya tetap menjadi DSC.
+        $otomatis = $this->konfirmasiOtomatis($shipment, $proof, $actor);
+
+        $hasil = DB::transaction(function () use ($shipment, $proof, $isian, $barisSj, $penerima, $actor, $otomatis) {
             $bukti = ProofOfDelivery::create([
                 'shipment_id' => $shipment->id,
                 'received_by_name' => $penerima,
@@ -100,8 +124,12 @@ class ConfirmDelivery
                 'lat' => $proof['lat'] ?? null,
                 'lng' => $proof['lng'] ?? null,
                 'confirmed_at' => now(),
-                'channel' => ProofChannel::tryFrom((string) ($proof['channel'] ?? '')) ?? ProofChannel::DriverPwa,
-                'confirm_deadline_at' => now()->addDays($this->ambangKonfirmasi()),
+                'channel' => $this->kanal($proof),
+                'signed_document_path' => $this->teks($proof, 'signed_document_path'),
+                'client_gr_number' => $this->grKlien($proof),
+                'confirm_deadline_at' => $otomatis ? null : now()->addDays($this->ambangKonfirmasi()),
+                'confirmation' => $otomatis ? ReceiptConfirmation::Confirmed : null,
+                'requester_confirmed_at' => $otomatis ? now() : null,
                 'notes' => $this->teks($proof, 'notes'),
             ]);
 
@@ -156,7 +184,9 @@ class ConfirmDelivery
 
         // Blueprint §10: pemohon diminta konfirmasi (BR-REQ-10); DSC baru ke penyelesai.
         $notif = app(DomainNotifications::class);
-        $notif->deliveryReceived($hasil, $actor);
+        if (! $otomatis) {
+            $notif->deliveryReceived($hasil, $actor);
+        }
         $shipment->discrepancies()->where('status', 'open')->get()->each(fn ($dsc) => $notif->discrepancyOpened($dsc, $actor));
 
         return $hasil;
@@ -181,7 +211,9 @@ class ConfirmDelivery
                 'signature_path' => $this->teks($proof, 'signature_path'),
                 'photo_path' => $this->teks($proof, 'photo_path'),
                 'confirmed_at' => now(),
-                'channel' => ProofChannel::tryFrom((string) ($proof['channel'] ?? '')) ?? ProofChannel::DriverPwa,
+                'channel' => $this->kanal($proof),
+                'signed_document_path' => $this->teks($proof, 'signed_document_path'),
+                'client_gr_number' => $this->grKlien($proof),
                 'notes' => $this->teks($proof, 'notes'),
             ]);
 
@@ -251,7 +283,9 @@ class ConfirmDelivery
                 'lat' => $proof['lat'] ?? null,
                 'lng' => $proof['lng'] ?? null,
                 'confirmed_at' => now(),
-                'channel' => ProofChannel::tryFrom((string) ($proof['channel'] ?? '')) ?? ProofChannel::DriverPwa,
+                'channel' => $this->kanal($proof),
+                'signed_document_path' => $this->teks($proof, 'signed_document_path'),
+                'client_gr_number' => $this->grKlien($proof),
                 'notes' => $this->teks($proof, 'notes'),
             ]);
 
@@ -629,6 +663,40 @@ class ConfirmDelivery
         $nilai = $data[$key] ?? null;
 
         return $nilai === null || $nilai === '' ? null : (int) $nilai;
+    }
+
+    /** @param  array<string, mixed>  $data */
+    /** @param  array<string, mixed>  $proof */
+    private function kanal(array $proof): ProofChannel
+    {
+        return ProofChannel::tryFrom((string) ($proof['channel'] ?? '')) ?? ProofChannel::RecipientAccount;
+    }
+
+    /** A-313: No. GR klien — teks bebas, tidak divalidasi ke sistem klien. */
+    private function grKlien(array $proof): ?string
+    {
+        $gr = $this->teks($proof, 'client_gr_number');
+
+        return $gr === null ? null : mb_substr($gr, 0, 60);
+    }
+
+    /**
+     * @param  array<string, mixed>  $proof
+     */
+    private function konfirmasiOtomatis(Shipment $shipment, array $proof, ?User $actor): bool
+    {
+        if ($actor === null) {
+            return false;
+        }
+
+        if ($this->kanal($proof) === ProofChannel::ClientPortal) {
+            return true;
+        }
+
+        return MaterialRequest::query()->withoutGlobalScopes()
+            ->whereIn('id', $shipment->materialRequestIds())
+            ->where('requester_id', $actor->id)
+            ->exists();
     }
 
     /** @param  array<string, mixed>  $data */

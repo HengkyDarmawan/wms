@@ -94,7 +94,8 @@ enum DocumentTemplateType: string
     public function defaultSignatureBlocks(): array
     {
         return match ($this) {
-            self::Shipment => ['Dibuat oleh', 'Pengemudi', 'Penerima'],
+            // A-316: penerima menandatangani & mengecap SJ; fotonya menjadi bukti terima.
+            self::Shipment => ['Dibuat oleh', 'Pengemudi', 'Penerima (tanda tangan & cap)'],
             self::ProofOfDelivery => ['Pengemudi', 'Penerima'],
             self::PickTask => ['Picker', 'Diperiksa'],
             self::DeliveryDiscrepancy => ['Kepala Gudang', 'Pengemudi'],

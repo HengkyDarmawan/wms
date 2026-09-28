@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Shipment;
 
 use App\Domain\Access\Enums\ScopeType;
+use App\Domain\Access\Models\User;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
@@ -51,6 +52,9 @@ class ShipmentScreenTest extends TenantTestCase
 
     private Item $item;
 
+    /** Pemohon REQ terakhir — penerima SJ-nya (A-312). */
+    private ?User $pemohon = null;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -86,7 +90,7 @@ class ShipmentScreenTest extends TenantTestCase
 
     private function reqDisetujui(float $qty = 20)
     {
-        $pemohon = $this->makeUser('internal_requester');
+        $pemohon = $this->pemohon = $this->makeUser('internal_requester');
 
         $req = app(SaveRequest::class)->handle(
             null,
@@ -124,7 +128,7 @@ class ShipmentScreenTest extends TenantTestCase
             'destination_project_id' => $this->proyek->id,
             'shipment_method' => 'own_fleet',
             'vehicle_id' => Vehicle::create(['plate_no' => 'B'.random_int(1000, 9999).'AA'])->id,
-            'driver_id' => $this->makeUser('driver')->id,
+            'driver_name' => 'Gani', 'driver_phone' => '081200000008',
         ], $this->makeUser('warehouse_staff'));
     }
 
@@ -151,10 +155,9 @@ class ShipmentScreenTest extends TenantTestCase
         $kepala->forgetPermissionCache();
 
         $this->assertTrue($kepala->hasPermission('discrepancy.resolve'));
-        $this->assertFalse(
-            $kepala->hasPermission('shipment.confirm_delivery'),
-            'Bukti terima diisi driver atau penerima, bukan Kepala Gudang.',
-        );
+        // A-316: Kepala Gudang asal hanya cadangan (dari SJ bertanda tangan), bukan penerima.
+        $this->assertTrue($kepala->hasPermission('shipment.confirm_delivery_signed'));
+        $this->assertFalse($staf->hasPermission('shipment.confirm_delivery_signed'));
 
         $this->actingAs($kepala)->get($this->tenantUrl('discrepancies'))->assertOk();
     }
@@ -333,12 +336,14 @@ class ShipmentScreenTest extends TenantTestCase
     {
         $sj = $this->sjSiap();
 
-        $driver = $this->makeUser('driver');
-        $driver->forgetPermissionCache();
+        // A-311: staf gudang asal yang memberangkatkan — driver tidak punya akun.
+        $staf = $this->makeUser('warehouse_staff');
+        $staf->forgetPermissionCache();
 
-        Livewire::actingAs($driver)
+        Livewire::actingAs($staf)
             ->test(ShipmentDetail::class, ['shipment' => $sj])
             ->assertOk()
+            ->assertDontSee(__('Isi bukti terima'))
             ->call('berangkatkan')
             ->assertSet('ruleError', '');
 
@@ -346,28 +351,34 @@ class ShipmentScreenTest extends TenantTestCase
 
         $baris = $sj->lines()->first();
 
-        Livewire::actingAs($driver)
+        // A-312: pemohon REQ menerima di site dan mengisi bukti terima sendiri.
+        $this->pemohon->forgetPermissionCache();
+
+        Livewire::actingAs($this->pemohon)
             ->test(ShipmentDetail::class, ['shipment' => $sj])
             ->call('mintaDialog', 'terima')
             ->assertSet('terima.'.$baris->id.'.qty_good', '20')
-            ->set('form.received_by_name', 'Pak Budi')
+            ->assertSet('form.received_by_name', $this->pemohon->name)
             ->call('simpanBuktiTerima')
             ->assertSet('ruleError', '');
 
         $this->assertSame('delivered', $sj->refresh()->status->value);
+        // A-63/A-317: pemohon sendiri yang mengisi — langsung terkonfirmasi.
+        $this->assertSame('confirmed', $sj->proof->confirmation->value);
+        $this->assertSame('recipient_account', $sj->proof->channel->value);
     }
 
     #[Test]
     public function tc_sj_16b_bukti_terima_tidak_genap_ditolak_layar(): void
     {
-        $sj = app(ShipShipment::class)->handle($this->sjSiap(), null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($this->sjSiap(), null, $this->makeUser('warehouse_staff'));
 
-        $driver = $this->makeUser('driver');
-        $driver->forgetPermissionCache();
+        $penerima = $this->pemohon;
+        $penerima->forgetPermissionCache();
 
         $baris = $sj->lines()->first();
 
-        Livewire::actingAs($driver)
+        Livewire::actingAs($penerima)
             ->test(ShipmentDetail::class, ['shipment' => $sj])
             ->call('mintaDialog', 'terima')
             ->set('form.received_by_name', 'Pak Budi')
@@ -381,7 +392,7 @@ class ShipmentScreenTest extends TenantTestCase
     #[Test]
     public function tc_dsc_06_layar_selisih_menuntut_disposisi_lengkap(): void
     {
-        $sj = app(ShipShipment::class)->handle($this->sjSiap(), null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($this->sjSiap(), null, $this->makeUser('warehouse_staff'));
         $baris = $sj->lines()->first();
 
         app(ConfirmDelivery::class)->handle(
@@ -392,7 +403,7 @@ class ShipmentScreenTest extends TenantTestCase
                 'qty_good' => 17,
                 'qty_missing' => 3,
             ]],
-            $this->makeUser('driver'),
+            $this->pemohon,
         );
 
         $dsc = $sj->refresh()->discrepancies()->with('lines')->first();
@@ -419,13 +430,13 @@ class ShipmentScreenTest extends TenantTestCase
     #[Test]
     public function tc_sj_17_daftar_sj_menandai_yang_masih_berselisih(): void
     {
-        $sj = app(ShipShipment::class)->handle($this->sjSiap(), null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($this->sjSiap(), null, $this->makeUser('warehouse_staff'));
 
         app(ConfirmDelivery::class)->handle(
             $sj,
             ['received_by_name' => 'Pak Budi'],
             [['shipment_line_id' => $sj->lines()->first()->id, 'qty_good' => 18, 'qty_missing' => 2]],
-            $this->makeUser('driver'),
+            $this->pemohon,
         );
 
         $admin = $this->makeUser('company_admin');

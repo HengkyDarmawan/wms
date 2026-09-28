@@ -134,7 +134,7 @@ class ShipmentTest extends TenantTestCase
             'destination_project_id' => $this->proyek->id,
             'shipment_method' => 'own_fleet',
             'vehicle_id' => $kendaraan->id,
-            'driver_id' => $this->makeUser('driver')->id,
+            'driver_name' => 'Gani', 'driver_phone' => '081200000008',
         ], $extra), $this->makeUser('warehouse_staff'));
     }
 
@@ -228,7 +228,7 @@ class ShipmentTest extends TenantTestCase
     {
         $sj = $this->buatSj([$this->pckSelesai()->id]);
 
-        $sj = app(ShipShipment::class)->handle($sj, 'Muat pukul 08.00', $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($sj, 'Muat pukul 08.00', $this->makeUser('warehouse_staff'));
 
         $this->assertSame(ShipmentStatus::Shipped, $sj->status);
         $this->assertNotNull($sj->shipped_at);
@@ -248,7 +248,7 @@ class ShipmentTest extends TenantTestCase
     #[Test]
     public function tc_sj_06_sj_terkirim_tidak_bisa_dibatalkan(): void
     {
-        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('warehouse_staff'));
 
         try {
             app(ShipShipment::class)->cancel($sj, $this->alasanId(), $this->makeUser('warehouse_head'));
@@ -276,13 +276,13 @@ class ShipmentTest extends TenantTestCase
     #[Test]
     public function tc_sj_07_semua_baik_ke_klien_keluar_dari_ledger(): void
     {
-        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('warehouse_staff'));
 
         $bukti = app(ConfirmDelivery::class)->handle(
             $sj,
             ['received_by_name' => 'Pak Budi', 'channel' => 'driver_pwa'],
             [['shipment_line_id' => $sj->lines()->first()->id, 'qty_good' => 20]],
-            $this->makeUser('driver'),
+            $this->makeUser('warehouse_staff'),
         );
 
         $this->assertSame(ShipmentStatus::Delivered, $sj->refresh()->status);
@@ -312,13 +312,13 @@ class ShipmentTest extends TenantTestCase
             'destination_warehouse_id' => $tujuan->id,
         ]);
 
-        $sj = app(ShipShipment::class)->handle($sj, null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($sj, null, $this->makeUser('warehouse_staff'));
 
         app(ConfirmDelivery::class)->handle(
             $sj,
             ['received_by_name' => 'Kepala Gudang BKS'],
             [['shipment_line_id' => $sj->lines()->first()->id, 'qty_good' => 20]],
-            $this->makeUser('driver'),
+            $this->makeUser('warehouse_staff'),
         );
 
         $this->assertSame(ShipmentStatus::Delivered, $sj->refresh()->status);
@@ -333,14 +333,14 @@ class ShipmentTest extends TenantTestCase
     #[Test]
     public function tc_sj_09_jumlah_bukti_terima_harus_sama_dengan_dikirim(): void
     {
-        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('warehouse_staff'));
 
         try {
             app(ConfirmDelivery::class)->handle(
                 $sj,
                 ['received_by_name' => 'Pak Budi'],
                 [['shipment_line_id' => $sj->lines()->first()->id, 'qty_good' => 18]],
-                $this->makeUser('driver'),
+                $this->makeUser('warehouse_staff'),
             );
             $this->fail('Jumlah yang tidak genap seharusnya ditolak.');
         } catch (ShipmentRuleException $e) {
@@ -352,14 +352,14 @@ class ShipmentTest extends TenantTestCase
     #[Test]
     public function tc_sj_10_kerusakan_tanpa_foto_ditolak(): void
     {
-        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('warehouse_staff'));
 
         try {
             app(ConfirmDelivery::class)->handle(
                 $sj,
                 ['received_by_name' => 'Pak Budi'],
                 [['shipment_line_id' => $sj->lines()->first()->id, 'qty_good' => 18, 'qty_damaged' => 2]],
-                $this->makeUser('driver'),
+                $this->makeUser('warehouse_staff'),
             );
             $this->fail('Kerusakan tanpa foto seharusnya ditolak.');
         } catch (ShipmentRuleException $e) {
@@ -371,7 +371,7 @@ class ShipmentTest extends TenantTestCase
     #[Test]
     public function tc_sj_11_selisih_membuka_dsc_dan_menurunkan_status(): void
     {
-        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('warehouse_staff'));
 
         app(ConfirmDelivery::class)->handle(
             $sj,
@@ -383,7 +383,7 @@ class ShipmentTest extends TenantTestCase
                 'qty_missing' => 2,
                 'damage_photo_path' => 'bukti/rusak.jpg',
             ]],
-            $this->makeUser('driver'),
+            $this->makeUser('warehouse_staff'),
         );
 
         $sj->refresh();
@@ -401,7 +401,7 @@ class ShipmentTest extends TenantTestCase
     #[Test]
     public function tc_sj_12_rusak_dan_kurang_tetap_di_dalam_perjalanan(): void
     {
-        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('driver'));
+        $sj = app(ShipShipment::class)->handle($this->buatSj([$this->pckSelesai()->id]), null, $this->makeUser('warehouse_staff'));
 
         app(ConfirmDelivery::class)->handle(
             $sj,
@@ -413,7 +413,7 @@ class ShipmentTest extends TenantTestCase
                 'qty_missing' => 2,
                 'damage_photo_path' => 'bukti/rusak.jpg',
             ]],
-            $this->makeUser('driver'),
+            $this->makeUser('warehouse_staff'),
         );
 
         $transit = app(WarehouseBins::class)->inTransit($this->gudang);

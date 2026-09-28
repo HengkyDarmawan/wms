@@ -156,16 +156,26 @@ class ReferenceTest extends TenantTestCase
     #[Test]
     public function tc_mst_21_kendaraan_menyimpan_driver_bawaan(): void
     {
-        $driver = $this->makeUser('driver');
-
+        // A-311: driver bawaan = nama + HP teks (driver tidak punya akun).
         $kendaraan = app(SaveReference::class)->saveVehicle(null, [
             'plate_no' => 'b 9001 xx',
             'type' => 'Pick-up',
-            'default_driver_id' => $driver->id,
+            'default_driver_name' => 'Gani',
+            'default_driver_phone' => '0812-0000-0008',
         ]);
 
         $this->assertSame('B-9001-XX', $kendaraan->plate_no);
-        $this->assertSame($driver->id, $kendaraan->defaultDriver->id);
+        $this->assertSame('Gani', $kendaraan->default_driver_name);
+        $this->assertSame('6281200000008', $kendaraan->default_driver_phone);
+        $this->assertNull($kendaraan->default_driver_id);
+
+        // HP yang bukan nomor HP ditolak.
+        try {
+            app(SaveReference::class)->saveVehicle(null, ['plate_no' => 'B 1 ZZ', 'default_driver_phone' => '123']);
+            $this->fail('HP driver tidak sah seharusnya ditolak.');
+        } catch (MasterRuleException $e) {
+            $this->assertArrayHasKey('default_driver_phone', $e->fieldErrors);
+        }
 
         // Nomor polisi kembar ditolak.
         try {

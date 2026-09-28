@@ -1,6 +1,6 @@
 # Glosarium
 
-**Versi:** 0.21
+**Versi:** 0.23
 **Tanggal:** 28 September 2026
 **Status:** istilah dari A-29–A-49 berlaku (validasi 23 Sep 2026); istilah yang bergantung pada [A-50](04-keputusan-dan-asumsi.md#a-50) mengikuti status validasinya; v0.7: istilah mesin approval (Tugas Approval, Cara Putus, Jenis Approver, Approver Cadangan, Simulasi Aturan) dari modul [20-approval](20-approval.md); v0.8: istilah cetak (Layout Induk, Template Dokumen, Label, Blok Tanda Tangan — [18](18-template-dokumen-label.md)); v0.9: istilah Purchasing inti Fase 1b (Purchase Order, Baris PO, Harga Beli Vendor, Harga Satuan, Nilai PO — [purchasing/02](../purchasing/02-purchasing-inti.md)); satu-satunya istilah bernilai uang di aplikasi ([A-208](04-keputusan-dan-asumsi.md#a-208)); v0.10: istilah *Masuk sebagai* (impersonasi, [A-260](04b-asumsi-lanjutan.md#a-260)); v0.11: Ukuran Label, Desain Label (A-261, A-262); v0.12: Riwayat Cetak, Segel Tanda Tangan (A-263, A-264); v0.13: Harga sudah termasuk PPN (A-265); v0.14: Bonus Vendor (A-267); v0.15: Kalender Libur, Hari Kerja, Hanya dari Divisi Pemohon (A-269, A-270); v0.16: *OTP bukti terima otomatis*, *Kanal pesan* (A-273); v0.18: *Jenis Barang*, *Barang Biasa*, *Barang Berkedaluwarsa*, *Alat Bernomor Seri*, *Jenis Khusus* — istilah yang dilihat pengguna menggantikan mode pelacakan & kepemilikan di form item (A-283); v0.19: *Kemasan*, *Dikirim Vendor*, *Baik / Rusak / Kurang* (A-287, A-291); *Satuan Dasar* = satuan terkecil yang dikeluarkan; v0.20: *Label Kemasan*, *Label Induk*, *Label Isi*, *Label Serial*, *Telusuri Label*, *Batch Vendor* (A-296–A-303); v0.21: *Saran Vendor*, *Riwayat Harga Beli*; *Vendor Tetap* tidak dipakai lagi (A-304–A-310)
 **Dokumen terkait:** [Blueprint](01-blueprint.md) · [Katalog Status & Enum](06-katalog-status-dan-enum.md) (nilai status **tidak** diulang di sini) · [Aturan Bisnis](05-aturan-bisnis.md)
@@ -44,6 +44,12 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Gudang Sumber / Tujuan *(baru)* | `source_warehouse_id`, `dest_warehouse_id` | Gudang pemenuh permintaan / gudang tujuan transfer | BR-REQ-04 |
 | Zona | `zone` | Area di dalam gudang | BP 6.3 |
 | Rak | `rack` | Rak di dalam zona | BP 6.3 |
+| Denah Gedung *(baru)* | `warehouse-layout` (`/warehouses/{id}/layout`) | Tampak atas satu gedung: garis gedung, zona, rak, dan objek denah; mode *Atur denah* untuk memindah & mengubah ukuran | [A-320](04b-asumsi-lanjutan.md#a-320) |
+| Ukuran Gedung *(baru)* | `warehouses.length_m`, `width_m` | Panjang × lebar garis luar gedung di denah (opsional) | [A-320](04b-asumsi-lanjutan.md#a-320) |
+| Objek Denah *(baru)* | `floor_plan_object` (`floor_plan_object_type`) | Benda nyata tanpa stok di denah: Pintu, Dock / loading, Jalur forklift, Pilar, Kantor, Area bebas | [A-320](04b-asumsi-lanjutan.md#a-320) |
+| Tumpukan (denah) *(baru)* | `tumpukan` (peringatan) | Rak/objek/zona yang saling menimpa atau keluar gedung — hanya diperingatkan | [A-321](04b-asumsi-lanjutan.md#a-321) |
+| Tampak Depan Rak *(baru)* | panel rak | Gambar rak dari depan: baris = level (L1 paling bawah), petak = bin | [A-320](04b-asumsi-lanjutan.md#a-320) |
+| Mode Denah (Daftar Gudang) *(baru)* | `tampilan=denah` | Pengalih *Tabel \| Denah* di Daftar Gudang; denah gudang terpilih tampil hanya-lihat | [A-323](04b-asumsi-lanjutan.md#a-323) |
 | Level | `rack_level` | Tingkat rak | BP 6.3 |
 | Bin | `bin` | Lokasi terkecil tempat stok disimpan; jenis = `bin_type` | BP 6.3 |
 | Bin Penerimaan *(baru)* | `bin` (type = receiving) | Dock masuk, tempat GRN diposting | BR-GRN-01 |
@@ -91,6 +97,7 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Saran Vendor *(baru)* | `VendorSuggestions` | Vendor terakhir dan vendor termurah 6 bulan untuk item, dari riwayat catatan pemesanan & PO; hanya saran — Purchasing bebas memilih vendor lain | [A-304](04b-asumsi-lanjutan.md#a-304) |
 | Klien | `client` | Pemilik proyek, pelanggan dari company | BP 6.3a |
 | Kendaraan *(baru)* | `vehicle` | Kendaraan pengiriman milik company | BP 6.3a |
+| Driver Bawaan *(baru)* | `vehicles.default_driver_name`, `default_driver_phone` | Nama + No. HP driver yang biasa membawa kendaraan; mengisi form SJ otomatis | [A-311](04b-asumsi-lanjutan.md#a-311), [A-315](04b-asumsi-lanjutan.md#a-315) |
 | Ekspedisi Pihak Ketiga *(baru)* | `carrier` | Jasa pengiriman luar; SJ mencatat nama & resi | BR-SJ-07 |
 | Nomor Resi *(baru)* | `tracking_no` | Nomor lacak kurir/ekspedisi pada SJ atau catatan pemesanan | BR-SJ-07, A-51 |
 | Alasan *(baru)* | `reason_code` | Master alasan untuk tolak/batal/penyesuaian/waste/short pick/selisih; wajib `*` saat tolak/batal | BR-GEN-02, BR-GEN-11 |
@@ -138,21 +145,28 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Baris Dokumen *(baru)* | `<dokumen>_line` | Baris item pada dokumen (mis. `material_request_line`) | BR §1 |
 | Tugas Picking | `pick_task` (`PCK`) | Tugas mengambil barang dari bin ke Loading Area | KS 2.2 |
 | Pengiriman / Surat Jalan | `shipment` (`SJ`) | Dokumen pengiriman barang | KS 2.3 |
+| Nama Driver / No. HP Driver *(baru)* | `shipments.driver_name`, `driver_phone` | Pengantar kendaraan sendiri — teks, driver tidak punya akun; tercetak di SJ | [A-311](04b-asumsi-lanjutan.md#a-311), [A-315](04b-asumsi-lanjutan.md#a-315) |
+| SJ Jemput *(baru)* | `shipment` tanpa PCK (`source_type = goods_return`) | SJ untuk menjemput barang RET di proyek ke gudang tujuan RET; SJ antar site = varian untuk TRF aset antar proyek (`source_type = transfer`) | [A-247](04b-asumsi-lanjutan.md#a-247), [A-248](04b-asumsi-lanjutan.md#a-248), [A-249](04b-asumsi-lanjutan.md#a-249) |
 | Konfirmasi Muat *(baru)* | `load_confirmation` | Catatan timeline saat SJ dikirim (foto opsional) | KS 2.3 |
 | Cara Kirim *(baru)* | `shipment_method` | Kendaraan sendiri / ekspedisi / diantar sendiri; field wajib mengikuti pilihan | BR-SJ-07, A-57 |
 | Diantar Sendiri *(baru)* | `shipment_method = self_delivered` (SJ), `self_delivered` (RET) | Tanpa driver & kendaraan company; cukup nama pembawa | BR-SJ-07, KS 2.8, A-50 |
 | Gabung Pengiriman *(baru)* | `shipment` (n PCK) | Satu SJ memuat beberapa PCK/REQ ke tujuan yang sama | BR-SJ-09 |
-| Bukti Terima | `proof_of_delivery` | Satu per SJ: foto, tanda tangan, GPS; per baris jumlah baik/rusak/kurang; per unit untuk serial & potongan | BR-SJ-05, A-64 |
+| Bukti Terima | `proof_of_delivery` | Satu per SJ: foto, tanda tangan, GPS; per baris jumlah baik/rusak/kurang; per unit untuk serial & potongan. Diisi pihak penerima (portal klien / akun tujuan), cadangan tautan + OTP atau Kepala Gudang asal | BR-SJ-05, A-64, [A-312](04b-asumsi-lanjutan.md#a-312) |
+| Kanal Bukti Terima *(baru)* | `proof_channel` | Portal klien / Akun penerima / SJ bertanda tangan (diisi gudang asal) / Tautan bertoken; *Aplikasi driver (lama)* hanya data lama | [A-312](04b-asumsi-lanjutan.md#a-312), [A-316](04b-asumsi-lanjutan.md#a-316) |
+| Foto SJ Bertanda Tangan *(baru)* | `proofs_of_delivery.signed_document_path` | Foto SJ yang sudah ditandatangani & dicap penerima; wajib untuk portal klien dan cadangan gudang | [A-316](04b-asumsi-lanjutan.md#a-316) |
+| Admin Site Klien *(baru)* | `client_user` (role Klien) | Perwakilan klien di site yang memeriksa barang dan mengisi bukti terima lewat portal | [A-312](04b-asumsi-lanjutan.md#a-312) |
 | Keberatan Terima *(baru)* | `receipt_dispute` (`receipt_confirmation`) | Pemohon menolak sebagian bukti terima (kurang/rusak) dalam batas konfirmasi; membuka DSC | BR-REQ-10, A-63 |
 | Batas Konfirmasi Terima *(baru)* | `receipt_confirm_days` | Lama pemohon boleh konfirmasi/keberatan (default 3 hari) | BR-REQ-10 |
-| Tautan Bukti Terima *(baru)* | `delivery_token` | Token sekali pakai + OTP untuk penerima tanpa akun | BR-SJ-05 |
-| OTP bukti terima otomatis *(baru)* | `otp_auto` (`feature_settings`), `delivery_tokens.otp_sent_at` | Saklar company: OTP tautan penerima dikirim ke WhatsApp/SMS penerima, tidak tampil ke driver; *Kirim ulang* dari halaman penerima | A-273 |
+| Tautan Bukti Terima *(baru)* | `delivery_token` | Token sekali pakai + OTP untuk penerima tanpa akun (jalur cadangan) | BR-SJ-05, [A-312](04b-asumsi-lanjutan.md#a-312) |
+| OTP bukti terima otomatis *(baru)* | `otp_auto` (`feature_settings`), `delivery_tokens.otp_sent_at` | Saklar company: OTP tautan penerima dikirim ke WhatsApp/SMS penerima, tidak tampil ke staf/pengantar; *Kirim ulang* dari halaman penerima | A-273 |
 | Kanal pesan *(baru)* | `MessageGateway` (driver `none`/`log`/`http`) | Jalur kirim WhatsApp/SMS milik platform; penyedianya diatur di `.env` | A-273, O-15 |
 | Nomor WhatsApp terverifikasi *(baru)* | `users.phone`, `phone_verified_at` | Nomor yang lolos kode verifikasi; satu-satunya penerima pesan WA & pengirim tombol approval yang sah | BR-WA-01 |
 | Ringkasan harian (WhatsApp) *(baru)* | `wa_event_mode = digest`, `wms_ringkasan` | Notifikasi beberapa kejadian digabung satu pesan per hari | A-280 |
 | Tombol approval WhatsApp *(baru)* | `approval_steps.channel = both`, `approval_tokens` | Setujui/Tolak/Lihat detail di pesan WA; Tolak membuka web untuk alasan | BR-APR-10, A-277 |
 | Pemakaian WhatsApp *(baru)* | `wa_message_logs` (pusat) | Jumlah pesan per company per kategori per bulan; dasar kuota paket | BR-WA-03 |
-| Konfirmasi Terima Pemohon *(baru)* | `receipt_confirmation` | Konfirmasi pemohon setelah bukti terima driver | BR-REQ-10 |
+| Konfirmasi Terima Pemohon *(baru)* | `receipt_confirmation` | Konfirmasi pemohon setelah bukti terima; otomatis bila pemohon/admin site klien mengisi bukti terimanya sendiri | BR-REQ-10, [A-317](04b-asumsi-lanjutan.md#a-317) |
+| No. PO Klien *(baru)* | `material_requests.client_po_number` | Nomor PO di sistem klien — referensi teks opsional di REQ, tercetak di SJ | [A-313](04b-asumsi-lanjutan.md#a-313), [A-318](04b-asumsi-lanjutan.md#a-318) |
+| No. GR Klien *(baru)* | `proofs_of_delivery.client_gr_number` | Nomor GR di sistem klien — referensi teks opsional di bukti terima; WMS tidak menunggunya | [A-313](04b-asumsi-lanjutan.md#a-313) |
 | Selisih Pengiriman *(baru)* | `delivery_discrepancy` (`DSC`) | Dokumen penyelesaian barang kurang atau rusak saat tiba | KS 2.4, BR-SJ-10 |
 | Jenis Selisih *(baru)* | `discrepancy_type` | Kurang / Rusak per baris DSC | BR-SJ-10 |
 | Kirim Pengganti *(baru)* | `reship` | Disposisi DSC: jumlah kembali ke backorder REQ dan dikirim ulang dari stok | BR-SJ-10 |
@@ -287,7 +301,7 @@ Perubahan v0.3: `return` diganti `goods_return` (kata kunci PHP); `stock_ledger`
 | Manajemen | `management` | Role pimpinan | BP 4.2 |
 | Kepala Gudang | `warehouse_head` | Penanggung jawab gudang & approver | BP 4.2 |
 | Staf Gudang | `warehouse_staff` | Pelaksana penerimaan, picking, konversi, hitung | BP 4.2 |
-| Driver | `driver` | Pengantar barang, mengisi bukti terima | BP 4.2 |
+| Driver (lama) | `driver` | Role lama, tidak ditawarkan untuk user baru: driver kini pengantar **tanpa akun** (nama & HP di SJ) | BP 4.2, [A-311](04b-asumsi-lanjutan.md#a-311), [A-314](04b-asumsi-lanjutan.md#a-314) |
 | Pemohon Internal | `internal_requester` | Engineer/PIC proyek dari company | BP 4.2 |
 | Penindak Lanjut PR *(baru, menggantikan "Purchasing")* | `pr_follow_up` | Mencatat tindak lanjut PRQ secara manual di Fase 1 | BP 4.2 |
 | Klien (role) | `client_user` | User dari pemilik proyek di portal | BP 4.2 |

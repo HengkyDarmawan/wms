@@ -254,7 +254,11 @@ class UserForm extends Component
         return view('livewire.access.user-form', [
             'user' => $user,
             'emailTerkunci' => $user?->email_verified_at !== null,
-            'roles' => Role::query()->where('is_active', true)->orderBy('name')->get(),
+            // A-314: role lama (Driver) hanya tampil bagi user yang sudah memilikinya.
+            'roles' => Role::query()->where('is_active', true)
+                ->where(fn ($q) => $q->whereNotIn('code', Role::NOT_OFFERED)
+                    ->orWhereIn('id', array_filter(array_map(fn ($a) => (int) ($a['role_id'] ?? 0), $this->assignments))))
+                ->orderBy('name')->get(),
             'units' => OrgUnit::query()->where('is_active', true)->orderBy('name')->get(),
             'positions' => Position::query()
                 ->when($this->orgUnitId !== null, fn ($q) => $q->where('org_unit_id', $this->orgUnitId))

@@ -120,8 +120,8 @@ class AssetHandoverTest extends TenantTestCase
             $this->assertSame('BR-SJ-05', $e->rule);
         }
 
-        // Layar driver menawarkan satu pilihan kondisi untuk baris serial.
-        $driver = $this->makeUser('driver');
+        // Form bukti terima menawarkan satu pilihan kondisi untuk baris serial (di sini lewat cadangan Kepala Gudang, A-316).
+        $driver = $this->makeUser('warehouse_head');
         Livewire::actingAs($driver)->test(ShipmentDetail::class, ['shipment' => $sj])
             ->call('mintaDialog', 'terima')
             ->assertSet('terima.'.$baris->id.'.kondisi', 'good')

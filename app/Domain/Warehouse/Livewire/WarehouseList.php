@@ -37,6 +37,14 @@ class WarehouseList extends Component
     #[Url(except: '')]
     public string $statusFilter = '';
 
+    /** A-323: `tabel` | `denah` — mode Denah menampilkan denah gudang terpilih di halaman ini. */
+    #[Url(as: 'tampilan', except: 'tabel')]
+    public string $tampilan = 'tabel';
+
+    /** Gudang yang denahnya ditampilkan di mode Denah (kosong = gudang pertama). */
+    #[Url(as: 'gudang', except: '')]
+    public string $gudangDenah = '';
+
     public bool $showForm = false;
 
     #[Locked]
@@ -197,8 +205,18 @@ class WarehouseList extends Component
             ->orderBy('code')
             ->get();
 
+        // A-323: mode Denah — gudang fisik dalam cakupan; bawaan gudang pertama.
+        $denahGudang = null;
+        $pohon = $this->pohon($semua, null);
+
+        if ($this->tampilan === 'denah') {
+            $pilihan = collect($pohon)->pluck('gudang')->where('is_active', true)->values();
+            $denahGudang = $pilihan->firstWhere('id', (int) $this->gudangDenah) ?? $pilihan->first();
+        }
+
         return view('livewire.warehouse.warehouse-list', [
-            'pohon' => $this->pohon($semua, null),
+            'denahGudang' => $denahGudang,
+            'pohon' => $pohon,
             'semua' => $semua,
             'types' => WarehouseType::query()->active()->orderBy('name')->get(['id', 'code', 'name']),
             'projects' => Project::query()->active()->orderBy('name')->get(['id', 'code', 'name']),
@@ -245,5 +263,4 @@ class WarehouseList extends Component
 
         return $hasil;
     }
-
 }

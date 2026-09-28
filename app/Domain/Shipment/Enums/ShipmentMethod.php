@@ -40,12 +40,13 @@ enum ShipmentMethod: string
     /**
      * Kolom yang wajib diisi untuk cara kirim ini.
      *
-     * @return array<string, string>  nama kolom => label untuk pesan kesalahan
+     * @return array<string, string> nama kolom => label untuk pesan kesalahan
      */
     public function requiredFields(): array
     {
         return match ($this) {
-            self::OwnFleet => ['vehicle_id' => 'Kendaraan', 'driver_id' => 'Driver'],
+            // A-311/A-315: driver tanpa akun — nama & HP diketik.
+            self::OwnFleet => ['vehicle_id' => 'Kendaraan', 'driver_name' => 'Nama driver', 'driver_phone' => 'No. HP driver'],
             self::Carrier => ['carrier_id' => 'Ekspedisi', 'tracking_no' => 'Nomor resi'],
             self::SelfDelivered => ['carried_by_name' => 'Nama pembawa'],
         };

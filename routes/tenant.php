@@ -47,6 +47,7 @@ use App\Http\Controllers\Shared\AttachmentController;
 use App\Http\Controllers\Shared\FileController;
 use App\Http\Controllers\Shared\ReportController;
 use App\Http\Controllers\Shipment\DeliveryTokenController;
+use App\Http\Controllers\Shipment\PortalDeliveryProofController;
 use App\Http\Controllers\Shipment\ShipmentController;
 use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Template\DocumentLayoutController;
@@ -193,7 +194,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/labels', [PrintController::class, 'labelForm'])->name('labels.index');
         Route::get('/labels/print', [PrintController::class, 'labels'])->name('labels.print');
         // Telusuri label kemasan (A-302): hanya membaca; izin `item.view` di komponen.
-        Route::view('/labels/trace', 'label.trace')->name('labels.trace');
+        Route::get('/labels/trace', [PrintController::class, 'trace'])->name('labels.trace');
         // Ukuran & desain label (A-261, A-262). Simpan lewat aksi Livewire (POST).
         Route::get('/settings/label-formats', [LabelDesignController::class, 'formats'])->name('label-formats.index');
         Route::get('/settings/label-designs', [LabelDesignController::class, 'designs'])->name('label-designs.index');
@@ -256,7 +257,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/shipments/create', [ShipmentController::class, 'create'])->name('shipments.create');
         Route::get('/shipments/{shipment}', [ShipmentController::class, 'show'])->name('shipments.show');
         // Berkas bukti terima lewat controller berotorisasi, bukan URL publik (NFR-14).
-        Route::get('/shipments/{shipment}/proof/{berkas}', [ShipmentController::class, 'proofFile'])->where('berkas', 'foto|ttd|baris-[0-9]+')->name('shipments.proof.file');
+        Route::get('/shipments/{shipment}/proof/{berkas}', [ShipmentController::class, 'proofFile'])->where('berkas', 'foto|ttd|sj|baris-[0-9]+')->name('shipments.proof.file');
         Route::get('/discrepancies', [ShipmentController::class, 'discrepancies'])->name('discrepancies.index');
 
         // Penerimaan, put-away, retur ke vendor (19-receipt-putaway §6). Halaman
@@ -368,6 +369,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/requests/{materialRequest}', [PortalRequestController::class, 'show'])->name('requests.show');
         Route::post('/requests/{materialRequest}/receipts/{proof}/confirm', [DeliveryReceiptController::class, 'confirm'])->whereNumber('proof')->name('requests.receipt.confirm');
         Route::post('/requests/{materialRequest}/receipts/{proof}/dispute', [DeliveryReceiptController::class, 'dispute'])->whereNumber('proof')->name('requests.receipt.dispute');
+        // A-312: admin site klien mengisi bukti terima SJ proyeknya.
+        Route::get('/shipments/{shipment}/proof', PortalDeliveryProofController::class)->name('shipments.proof');
         // Retur klien (BR-RET-05): komponen yang sama dengan back-office.
         Route::get('/returns', [ReturnController::class, 'index'])->name('returns.index');
         Route::get('/returns/create', [ReturnController::class, 'create'])->name('returns.create');

@@ -88,24 +88,26 @@ const sjId = sql(`SELECT s.id FROM shipments s WHERE EXISTS (SELECT 1 FROM shipm
 const podId = sql(`SELECT id FROM proofs_of_delivery WHERE shipment_id=${sjId || 0}`);
 
 // ---------------------------------------------------------------- P1
+// A-312/A-317: bukti terima diisi admin site klien (klien1) di portal pada alur-req-sj langkah 6,
+// jadi konfirmasi pemohon sudah tercatat otomatis — tombol Terima/Keberatan tidak ditawarkan lagi.
 const pemohon = await page();
-await cek('P1', 'pemohon melihat pengiriman & mengonfirmasi terima (BR-REQ-10)', async () => {
+await cek('P1', 'pemohon melihat pengiriman yang sudah dikonfirmasi otomatis (BR-REQ-10, A-317)', async () => {
   await pemohon.login('pemohon.prj001@demo.wms.test');
   await pemohon.go(`/requests/${reqId}`);
   const t = await pemohon.text();
   const adaKartu = t.includes('Pengiriman & konfirmasi terima');
-  await pemohon.ev(`document.querySelector('form[action$="/receipts/${podId}/confirm"]').submit()`);
-  await sleep(2500);
+  const tanpaTombol = !(await pemohon.ev(`!!document.querySelector('form[action$="/receipts/${podId}/confirm"]')`));
   await pemohon.shot('e2f-1-konfirmasi.png');
-  const c = sql(`SELECT COALESCE(confirmation,'-') FROM proofs_of_delivery WHERE id=${podId}`);
-  return { ok: adaKartu && c === 'confirmed', bukti: `e2f-1-konfirmasi.png; kartu=${adaKartu}; confirmation=${c}` };
+  const c = sql(`SELECT CONCAT(COALESCE(confirmation,'-'),' ',channel) FROM proofs_of_delivery WHERE id=${podId || 0}`);
+  return { ok: adaKartu && tanpaTombol && c === 'confirmed client_portal' && t.includes('Dikonfirmasi'), bukti: `e2f-1-konfirmasi.png; kartu=${adaKartu}; tombol konfirmasi tidak ada=${tanpaTombol}; bukti=${c}` };
 });
 
-await cek('P2', 'pemohon punya notifikasi barang diterima & lonceng', async () => {
+await cek('P2', 'pemohon punya notifikasi SJ berangkat & lonceng (A-319)', async () => {
   await pemohon.go('/notifications'); await pemohon.shot('e2f-2-notif.png');
   const t = await pemohon.text();
-  const n = sql(`SELECT COUNT(*) FROM notifications n JOIN users u ON u.id=n.user_id WHERE u.email='pemohon.prj001@demo.wms.test' AND n.type='delivery.received'`);
-  return { ok: Number(n) >= 1 && t.includes('diterima'), bukti: `e2f-2-notif.png; delivery.received=${n}` };
+  const n = sql(`SELECT COUNT(*) FROM notifications n JOIN users u ON u.id=n.user_id WHERE u.email='pemohon.prj001@demo.wms.test' AND n.type='shipment.shipped'`);
+  const k = sql(`SELECT COUNT(*) FROM notifications n JOIN users u ON u.id=n.user_id WHERE u.email='klien1@klien-satu.test' AND n.type='shipment.shipped'`);
+  return { ok: Number(n) >= 1 && Number(k) >= 1 && t.includes('berangkat'), bukti: `e2f-2-notif.png; shipment.shipped pemohon=${n}, klien1=${k}` };
 });
 
 // ---------------------------------------------------------------- P3
@@ -252,7 +254,8 @@ await cek('P9', 'Konversi Ganti kemasan dari layar: BAUT 10 pcs tanpa mode Poton
   const ckg = sql("SELECT id FROM warehouses WHERE code='CKG'");
   const prjInt = sql("SELECT id FROM projects WHERE code='PRJ-INT'");
   const baut = sql("SELECT id FROM items WHERE code='BAUT-M12'");
-  const bin = sql(`SELECT sb.bin_id FROM stock_balances sb JOIN bins b ON b.id=sb.bin_id WHERE sb.item_id=${baut} AND b.warehouse_id=${ckg} AND sb.stock_status='available' AND sb.qty_base>=10 ORDER BY sb.bin_id LIMIT 1`);
+  // Hanya bin penyimpanan (form konversi tidak menawarkan bin Penerimaan yang sudah berisi dari P8).
+  const bin = sql(`SELECT sb.bin_id FROM stock_balances sb JOIN bins b ON b.id=sb.bin_id WHERE sb.item_id=${baut} AND b.warehouse_id=${ckg} AND b.bin_type='storage' AND sb.stock_status='available' AND sb.qty_base>=10 ORDER BY sb.bin_id LIMIT 1`);
   const kunci = `${bin}_${baut}_0_0`;
 
   await staf.go('/conversions/create');

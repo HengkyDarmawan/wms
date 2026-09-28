@@ -8,6 +8,7 @@ use App\Domain\Shipment\Enums\DestinationType;
 use App\Domain\Shipment\Enums\ShipmentMethod;
 use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Models\Shipment;
+use App\Domain\Shipment\Support\ShipmentSearch;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -66,23 +67,26 @@ class ShipmentList extends Component
 
     private function daftar(): LengthAwarePaginator
     {
-        return Shipment::query()
+        return Shipment::visibleTo(auth()->user())
             ->with(
                 'warehouse:id,code,name',
                 'destinationProject:id,code,name,client_id',
                 'destinationWarehouse:id,code,name',
                 'destinationVendor:id,code,name',
                 'vehicle:id,plate_no',
-                'driver:id,name',
                 'carrier:id,name',
             )
             ->withCount([
                 'lines',
                 'discrepancies as open_discrepancies_count' => fn (Builder $q) => $q->open(),
             ])
-            ->when($this->search !== '', fn (Builder $q) => $q
+            // A-313: No. PO klien (REQ) dan No. GR klien (bukti terima) ikut dicari.
+            ->when($this->search !== '', fn (Builder $q) => $q->where(fn (Builder $w) => $w
                 ->where('number', 'like', '%'.$this->search.'%')
-                ->orWhere('tracking_no', 'like', '%'.$this->search.'%'))
+                ->orWhere('tracking_no', 'like', '%'.$this->search.'%')
+                ->orWhere('driver_name', 'like', '%'.$this->search.'%')
+                ->orWhereHas('proof', fn (Builder $p) => $p->where('client_gr_number', 'like', '%'.$this->search.'%'))
+                ->orWhereIn('id', ShipmentSearch::byClientPo($this->search))))
             ->when($this->statusFilter !== '', fn (Builder $q) => $q->where('status', $this->statusFilter))
             ->when($this->warehouseFilter !== '', fn (Builder $q) => $q
                 ->where('warehouse_id', (int) $this->warehouseFilter))

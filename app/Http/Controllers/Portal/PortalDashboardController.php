@@ -12,7 +12,9 @@ use App\Domain\Return\Enums\GoodsReturnStatus;
 use App\Domain\Return\Enums\ReturnSource;
 use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Return\Support\ReturnableStock;
+use App\Domain\Shipment\Enums\DestinationType;
 use App\Domain\Shipment\Models\ProofOfDelivery;
+use App\Domain\Shipment\Models\Shipment;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -50,6 +52,10 @@ class PortalDashboardController extends Controller
             'proyek' => $proyek,
             'angka' => [
                 'req' => MaterialRequest::query()->whereHas('project', $milikKlien)->whereNotIn('status', $reqFinal)->count(),
+                // A-312: SJ ke proyek klien yang sudah berangkat dan menunggu bukti terima dari admin site.
+                'buktiTerima' => Shipment::query()->withoutGlobalScopes()->shipped()
+                    ->where('destination_type', DestinationType::ProjectClient->value)
+                    ->whereHas('destinationProject', $milikKlien)->count(),
                 'konfirmasi' => ProofOfDelivery::query()->awaitingConfirmation()
                     ->whereHas('shipment.destinationProject', $milikKlien)->count(),
                 'retur' => GoodsReturn::query()->whereHas('project', $milikKlien)->whereNotIn('status', $retFinal)->count(),

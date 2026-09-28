@@ -58,7 +58,7 @@ class AssetLifecycleTest extends TenantTestCase
 
         $sj = app(CreateShipment::class)->handle([$pck->id], [
             'destination_type' => 'project_client', 'destination_project_id' => $this->proyek->id, 'shipment_method' => 'own_fleet',
-            'vehicle_id' => Vehicle::create(['plate_no' => 'B1234AS'])->id, 'driver_id' => $this->makeUser('driver')->id,
+            'vehicle_id' => Vehicle::create(['plate_no' => 'B1234AS'])->id, 'driver_name' => 'Gani', 'driver_phone' => '081200000008',
         ], $this->makeUser('warehouse_staff'));
         $sj = app(ShipShipment::class)->handle($sj, null, $this->makeUser('driver'));
         $this->assertSame(AssetState::InTransit, $this->gns->refresh()->asset_state);

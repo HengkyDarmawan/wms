@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * membuatkan akun untuk orang yang mungkin hanya ditemui sekali.
  *
  * OTP disimpan sebagai hash, tidak pernah sebagai teks. Sejak A-273 OTP bisa
- * dikirim otomatis ke HP penerima (`otp_sent_at` terisi) sehingga driver tidak
+ * dikirim otomatis ke HP penerima (`otp_sent_at` terisi) sehingga staf/pengantar tidak
  * pernah melihatnya.
  */
 class DeliveryToken extends Model

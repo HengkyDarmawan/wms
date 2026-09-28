@@ -33,14 +33,14 @@ use Illuminate\Support\Facades\DB;
  * bergerak di SJ ini — barangnya belum/tidak di bin gudang — dan baru masuk
  * kartu stok saat GRN retur (A-112).
  *
- * Siapa yang menjemput wajib tertulis: sopir (user driver atau nama bebas) dan
+ * Siapa yang menjemput wajib tertulis: sopir (nama + HP teks, A-311) dan
  * plat (kendaraan master atau plat bebas).
  */
 class CreatePickupShipment
 {
     public function __construct(private readonly DocumentNumber $nomor) {}
 
-    /** @param  array<string, mixed>  $data  shipment_method, vehicle_id|vehicle_plate, driver_id|carried_by_name, carrier_id, tracking_no, notes */
+    /** @param  array<string, mixed>  $data  shipment_method, vehicle_id|vehicle_plate, driver_name, driver_phone, carrier_id, tracking_no, notes */
     public function forGoodsReturn(GoodsReturn $ret, array $data, ?User $actor = null): Shipment
     {
         if ($ret->status !== GoodsReturnStatus::Approved || ! $ret->isPickup()) {
@@ -167,8 +167,8 @@ class CreatePickupShipment
     }
 
     /**
-     * A-247: sopir dan plat wajib tertulis — dari master atau diketik bebas
-     * (truk sewa, sopir ekspedisi).
+     * A-247: sopir dan plat wajib tertulis — plat dari master atau diketik
+     * bebas (truk sewa); sopir selalu teks (A-311).
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -183,8 +183,8 @@ class CreatePickupShipment
 
         $kendaraan = $this->id($data, 'vehicle_id');
         $plat = $this->teks($data, 'vehicle_plate');
-        $driver = $this->id($data, 'driver_id');
-        $sopir = $this->teks($data, 'carried_by_name');
+        // A-311: sopir tanpa akun — nama wajib; HP wajib untuk kendaraan sendiri (A-315).
+        $sopir = $this->teks($data, 'driver_name');
         $ekspedisi = $this->id($data, 'carrier_id');
 
         if ($cara === ShipmentMethod::Carrier && $ekspedisi === null) {
@@ -195,16 +195,18 @@ class CreatePickupShipment
             throw ShipmentRuleException::field('BR-SJ-07', 'vehicle_plate', 'Plat kendaraan penjemput wajib diisi.');
         }
 
-        if ($driver === null && $sopir === null) {
-            throw ShipmentRuleException::field('BR-SJ-07', 'carried_by_name', 'Nama sopir penjemput wajib diisi.');
+        if ($sopir === null) {
+            throw ShipmentRuleException::field('BR-SJ-07', 'driver_name', 'Nama sopir penjemput wajib diisi.');
         }
+
+        $hp = CreateShipment::hpDriver($data, $cara === ShipmentMethod::OwnFleet);
 
         return [
             'shipment_method' => $cara,
             'vehicle_id' => $kendaraan,
             'vehicle_plate' => $kendaraan === null && $plat !== null ? mb_strtoupper(mb_substr($plat, 0, 20)) : null,
-            'driver_id' => $driver,
-            'carried_by_name' => $driver === null && $sopir !== null ? mb_substr($sopir, 0, 100) : null,
+            'driver_name' => mb_substr($sopir, 0, 100),
+            'driver_phone' => $hp,
             'carrier_id' => $cara === ShipmentMethod::Carrier ? $ekspedisi : null,
             'tracking_no' => $this->teks($data, 'tracking_no'),
         ];

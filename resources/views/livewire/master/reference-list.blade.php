@@ -92,14 +92,15 @@
                         <input class="form-control" id="ref-jenis-kendaraan" type="text" wire:model="form.type"
                                placeholder="{{ __('mis. Pick-up, Truk engkel') }}">
                     </div>
-                    <div class="col-md-5">
-                        <label class="form-label" for="ref-driver">{{ __('Driver bawaan') }}</label>
-                        <select class="form-select" id="ref-driver" wire:model="form.default_driver_id">
-                            <option value="">{{ __('Belum ditentukan') }}</option>
-                            @foreach ($drivers as $driver)
-                                <option value="{{ $driver->id }}">{{ $driver->name }}</option>
-                            @endforeach
-                        </select>
+                    {{-- A-311: driver tanpa akun — nama & HP teks, mengisi form SJ otomatis. --}}
+                    <div class="col-md-3">
+                        <label class="form-label" for="ref-driver">{{ __('Nama driver bawaan') }}</label>
+                        <input class="form-control" id="ref-driver" type="text" maxlength="100" wire:model="form.default_driver_name">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label" for="ref-driver-hp">{{ __('No. HP driver') }}</label>
+                        <input class="form-control @error('form.default_driver_phone') is-invalid @enderror" id="ref-driver-hp" type="text" inputmode="tel" maxlength="20" wire:model="form.default_driver_phone" placeholder="08…">
+                        @error('form.default_driver_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 @else
                     <div class="col-md-6">
@@ -175,7 +176,7 @@
                             @elseif ($tab === 'kendaraan')
                                 <td class="fw-semibold">{{ $item->plate_no }}</td>
                                 <td>{{ $item->type ?: '—' }}</td>
-                                <td>{{ $item->defaultDriver?->name ?? '—' }}</td>
+                                <td>{{ $item->default_driver_name ?? '—' }} @if ($item->default_driver_phone) <div class="small text-muted">{{ $item->default_driver_phone }}</div> @endif</td>
                             @else
                                 <td class="fw-semibold">{{ $item->name }}</td>
                                 <td>{{ $item->phone ?: '—' }}</td>

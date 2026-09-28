@@ -22,7 +22,7 @@ GROUPS = [
     ("sg",    "Staf Gudang",     "#d6e6fb", "#3b73c4"),
     ("apr",   "Approver",        "#fbe7c2", "#b7801b"),
     ("pem",   "Pemohon",         "#e6dcfb", "#7654c4"),
-    ("drv",   "Driver",          "#fcdcc8", "#c4632a"),
+    ("pen",   "Penerima / Admin Site Klien", "#fcdcc8", "#c4632a"),
     ("pr",    "Penindak PR",     "#dcf1c8", "#5c9a2a"),
     ("adm",   "Admin",           "#f9d3dc", "#b8445f"),
 ]
@@ -32,11 +32,11 @@ GMAP = {k: (fill, stroke) for k, _, fill, stroke in GROUPS}
 def group_of(lane):
     l = lane.lower()
     if l == "sistem": return "sys"
+    if "penerima" in l: return "pen"
     if "kepala gudang" in l and not l.startswith("pengaju"): return "kg"
     if "staf" in l or "penghitung" in l: return "sg"
     if "approver" in l or "delegat" in l: return "apr"
     if "pemohon" in l or "pengaju" in l: return "pem"
-    if "driver" in l: return "drv"
     if "penindak" in l: return "pr"
     if "admin" in l: return "adm"
     return "sys"

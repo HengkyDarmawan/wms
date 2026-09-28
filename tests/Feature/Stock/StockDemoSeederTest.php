@@ -59,7 +59,10 @@ class StockDemoSeederTest extends TenantTestCase
         $this->assertFalse(FeatureSetting::enabled('qc'), 'A-284: DEMO tanpa QC penerimaan.');
         $this->assertSame($jumlah, StockEvent::query()->count());
 
-        $this->assertSame(2, Vehicle::query()->whereNotNull('default_driver_id')->count());
+        // A-311: driver bawaan = nama + HP teks, bukan akun (00-akun-uji §2).
+        $this->assertSame(0, Vehicle::query()->whereNotNull('default_driver_id')->count());
+        $this->assertSame(['B 9001 XX' => 'Gani', 'B 9002 XX' => 'Hadi'], Vehicle::query()->orderBy('plate_no')->pluck('default_driver_name', 'plate_no')->all());
+        $this->assertSame('6281200000008', Vehicle::query()->where('plate_no', 'B 9001 XX')->value('default_driver_phone'));
 
         // Menjalankan ulang tidak menggandakan stok.
         (new StockDemoSeeder)->run();

@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace App\Domain\Shipment\Livewire;
 
-use App\Domain\Access\Models\User;
 use App\Domain\Master\Models\Carrier;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\Vehicle;
 use App\Domain\Master\Models\Vendor;
+use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Shipment\Actions\CreateShipment;
 use App\Domain\Shipment\Enums\DestinationType;
 use App\Domain\Shipment\Enums\ShipmentMethod;
 use App\Domain\Shipment\Livewire\Concerns\HandlesShipmentRules;
 use App\Domain\Shipment\Models\PickTask;
 use App\Domain\Shipment\Models\Shipment;
+use App\Domain\Transfer\Models\Transfer;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\View;
@@ -41,7 +42,8 @@ class ShipmentForm extends Component
         'destination_vendor_id' => '',
         'shipment_method' => '',
         'vehicle_id' => '',
-        'driver_id' => '',
+        'driver_name' => '',
+        'driver_phone' => '',
         'carrier_id' => '',
         'tracking_no' => '',
         'carried_by_name' => '',
@@ -80,8 +82,8 @@ class ShipmentForm extends Component
         $this->pickTaskIds = [(int) $pck->id];
 
         $dokumen = match ($pck->source_type) {
-            'transfer' => \App\Domain\Transfer\Models\Transfer::withoutGlobalScopes()->find($pck->source_id),
-            'goods_return' => \App\Domain\Return\Models\GoodsReturn::withoutGlobalScopes()->find($pck->source_id),
+            'transfer' => Transfer::withoutGlobalScopes()->find($pck->source_id),
+            'goods_return' => GoodsReturn::withoutGlobalScopes()->find($pck->source_id),
             default => null,
         };
 
@@ -94,6 +96,12 @@ class ShipmentForm extends Component
         $this->form['destination_type'] = $tujuan?->isSite() ? 'site_warehouse' : 'warehouse';
         $this->form['destination_warehouse_id'] = (string) $dokumen->to_warehouse_id;
         $this->form['destination_project_id'] = (string) ($tujuan?->project_id ?? '');
+    }
+
+    /** A-315: driver bawaan kendaraan mengisi nama & HP driver. */
+    public function updatedFormVehicleId(string $id): void
+    {
+        $this->form = Vehicle::fillDriver($this->form, $id);
     }
 
     public function updatedFormWarehouseId(): void
@@ -136,7 +144,6 @@ class ShipmentForm extends Component
             'vendors' => Vendor::query()->orderBy('name')->get(['id', 'name']),
             'vehicles' => Vehicle::query()->where('is_active', true)->orderBy('plate_no')->get(['id', 'plate_no']),
             'carriers' => Carrier::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
-            'drivers' => $this->pilihanDriver(),
         ]);
     }
 
@@ -156,15 +163,5 @@ class ShipmentForm extends Component
             // PCK yang seluruh barisnya sudah termuat SJ lain tidak ditawarkan.
             ->filter(fn (PickTask $t) => $t->lines->sum(fn ($l) => $l->unshippedQty()) > 0)
             ->values();
-    }
-
-    /** @return Collection<int, User> */
-    private function pilihanDriver(): Collection
-    {
-        return User::query()
-            ->whereNull('client_id')
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name']);
     }
 }

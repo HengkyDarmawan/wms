@@ -34,7 +34,7 @@ class Warehouse extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return ['is_active' => 'boolean', 'length_m' => 'decimal:2', 'width_m' => 'decimal:2'];
     }
 
     /** BR-ACC-05: cakupan gudang dicocokkan dengan kunci utama tabel ini. */
@@ -66,6 +66,12 @@ class Warehouse extends Model
     public function head(): BelongsTo
     {
         return $this->belongsTo(User::class, 'head_user_id');
+    }
+
+    /** A-320: objek denah gedung (tanpa stok). */
+    public function floorPlanObjects(): HasMany
+    {
+        return $this->hasMany(FloorPlanObject::class);
     }
 
     public function zones(): HasMany

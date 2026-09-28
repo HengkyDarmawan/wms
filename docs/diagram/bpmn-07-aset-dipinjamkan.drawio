@@ -13,7 +13,7 @@
         <mxCell id="lane1" value="Staf Gudang" style="swimlane;html=1;startSize=30;horizontal=0;collapsible=0;fontStyle=1;" vertex="1" parent="pool">
           <mxGeometry x="0" y="180" width="2520" height="150" as="geometry"/>
         </mxCell>
-        <mxCell id="lane2" value="Driver" style="swimlane;html=1;startSize=30;horizontal=0;collapsible=0;fontStyle=1;" vertex="1" parent="pool">
+        <mxCell id="lane2" value="Admin Site Klien / Penerima" style="swimlane;html=1;startSize=30;horizontal=0;collapsible=0;fontStyle=1;" vertex="1" parent="pool">
           <mxGeometry x="0" y="330" width="2520" height="150" as="geometry"/>
         </mxCell>
         <mxCell id="lane3" value="Approver" style="swimlane;html=1;startSize=30;horizontal=0;collapsible=0;fontStyle=1;" vertex="1" parent="pool">
@@ -28,7 +28,7 @@
         <mxCell id="t1" value="Picking serial aset; catat kondisi, foto keluar, pembacaan meter (jam/km); tanggal kembali" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane1">
           <mxGeometry x="285" y="42" width="150" height="66" as="geometry"/>
         </mxCell>
-        <mxCell id="t2" value="Kirim &amp; bukti terima (alur 1)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane2">
+        <mxCell id="t2" value="Terima &amp; isi bukti terima (alur 1): portal Klien / akun penerima site; SJ antar site ke proyek tujuan" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane2">
           <mxGeometry x="485" y="42" width="150" height="66" as="geometry"/>
         </mxCell>
         <mxCell id="t3" value="Aset → bin On-site Proyek; state on_loan; asset_checked_out" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;strokeColor=#1F5C99;fillColor=#DAE8FC;" vertex="1" parent="lane4">

@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `warehouse` (Gudang, Zona, Rak, Level, Bin)
 
-**Versi:** 0.13
+**Versi:** 0.14
 **Tanggal:** 28 September 2026
-**Status:** **selesai untuk Fase 1** — empat layar, delapan aksi domain, dan 28 uji hijau; penyimpangan implementasi dicatat §13; v0.6: label bin Code128 + QR dicetak lewat modul Template ([18](18-template-dokumen-label.md)), ukuran sementara [A-120](04-keputusan-dan-asumsi.md#a-120); v0.9: **denah gudang 2D** dengan ukuran/posisi opsional, rak area & bin ikut terpakai untuk barang besar, tanggal masuk & FIFO, kolom zona/rak/level dan ubah bin di `/bins` ([A-254](04b-asumsi-lanjutan.md#a-254), [A-255](04b-asumsi-lanjutan.md#a-255), [A-256](04b-asumsi-lanjutan.md#a-256)); v0.10: impor struktur gudang (zona, rak, level, bin) dari Excel ([A-258](04b-asumsi-lanjutan.md#a-258), §13.4c); v0.11: zona/rak/level/bin ditambah langsung dari denah ([A-271](04b-asumsi-lanjutan.md#a-271)) dan impor gudang dari Excel ([A-272](04b-asumsi-lanjutan.md#a-272)); v0.12: rak di denah berisi petak bin per level, label level di luar ([A-281](04b-asumsi-lanjutan.md#a-281)); v0.13: panel isi bin denah menampilkan uraian kemasan ([A-293](04b-asumsi-lanjutan.md#a-293), TC-WH-30)
+**Status:** **selesai untuk Fase 1** — empat layar, delapan aksi domain, dan 28 uji hijau (awal); penyimpangan implementasi dicatat §13; v0.6: label bin Code128 + QR dicetak lewat modul Template ([18](18-template-dokumen-label.md)), ukuran sementara [A-120](04-keputusan-dan-asumsi.md#a-120); v0.9: **denah gudang 2D** dengan ukuran/posisi opsional, rak area & bin ikut terpakai untuk barang besar, tanggal masuk & FIFO, kolom zona/rak/level dan ubah bin di `/bins` ([A-254](04b-asumsi-lanjutan.md#a-254), [A-255](04b-asumsi-lanjutan.md#a-255), [A-256](04b-asumsi-lanjutan.md#a-256)); v0.10: impor struktur gudang (zona, rak, level, bin) dari Excel ([A-258](04b-asumsi-lanjutan.md#a-258), §13.4c); v0.11: zona/rak/level/bin ditambah langsung dari denah ([A-271](04b-asumsi-lanjutan.md#a-271)) dan impor gudang dari Excel ([A-272](04b-asumsi-lanjutan.md#a-272)); v0.12: rak di denah berisi petak bin per level, label level di luar ([A-281](04b-asumsi-lanjutan.md#a-281)); v0.13: panel isi bin denah menampilkan uraian kemasan ([A-293](04b-asumsi-lanjutan.md#a-293), TC-WH-30); v0.14: **denah gedung** — ukuran gedung, zona digeser & diubah ukuran di dalam gedung, objek denah tanpa stok (pintu, dock, jalur forklift, pilar, kantor, area bebas), zoom, geser halus, putar, peringatan tumpukan, panel rak berdesain ulang (tampak depan, isi per bin, tab Isi | Atur), nonaktif rak/zona, mode Denah di Daftar Gudang ([A-320](04b-asumsi-lanjutan.md#a-320)–[A-325](04b-asumsi-lanjutan.md#a-325), TC-WH-31–TC-WH-37)
 **Modul:** `warehouse`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.2](01-blueprint.md#62-struktur-organisasi--gudang), [§6.3](01-blueprint.md#63-lokasi-rak--bin--wajib) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data gudang](08a-model-data-inti.md#area-gudang--lokasi-tenant) · [Akun uji](../00-akun-uji.md)
@@ -50,11 +50,15 @@ Semua tabel di database **tenant**. Kolom umum (`id`, `created_at`, `updated_at`
 
 ### 3.3 `zones`, `racks`, `rack_levels`
 
-`zones`: `warehouse_id` FK, `code` varchar(10), `name` varchar(60). `UK(warehouse_id, code)`.
+`zones`: `warehouse_id` FK, `code` varchar(10), `name` varchar(60), `length_m`/`width_m` (A-254) dan `pos_x`/`pos_y` decimal(8,2) opsional — posisi di gedung, meter ([A-320](04b-asumsi-lanjutan.md#a-320)). `UK(warehouse_id, code)`.
 `racks`: `zone_id` FK, `code` varchar(10). `UK(zone_id, code)`.
 `rack_levels`: `rack_id` FK, `code` varchar(10). `UK(rack_id, code)`.
 
 Gudang site sederhana boleh memakai satu zona dan satu bin bawaan ([A-02](04-keputusan-dan-asumsi.md#a-02)).
+
+`warehouses.length_m`/`width_m` decimal(8,2) opsional = garis luar gedung di denah ([A-320](04b-asumsi-lanjutan.md#a-320)).
+
+`floor_plan_objects` ([A-320](04b-asumsi-lanjutan.md#a-320)): `warehouse_id` FK, `object_type` (`floor_plan_object_type`: `door`, `dock`, `forklift_lane`, `pillar`, `office`, `open_area`), `name` varchar(60), `pos_x`/`pos_y`/`length_m`/`width_m` decimal(8,2), `rotation` 0/90/180/270, `is_active`. Tanpa stok (P-01), tidak dihapus (P-03).
 
 ### 3.4 `bins`
 
@@ -114,15 +118,16 @@ Aturan baru modul ini (`BR-WH`, ditambahkan ke [05-aturan-bisnis](05-aturan-bisn
 - **BR-WH-04** Gudang bertipe `site` wajib punya `project_id`; tipe lain wajib tidak punya.
 - **BR-WH-05** Hierarki gudang tidak boleh melingkar; gudang tidak boleh menjadi induknya sendiri, langsung maupun berantai.
 - **BR-WH-06** Kapasitas bin ditegakkan menurut `capacity_mode` kategori penyimpanannya: `warn` memberi peringatan, `block` menolak penempatan.
-- **BR-WH-07** Gudang dan bin dinonaktifkan, tidak dihapus, dan ditolak bila masih dipakai.
+- **BR-WH-07** Gudang dan bin dinonaktifkan, tidak dihapus, dan ditolak bila masih dipakai. Sejak A-324 juga rak (semua bin kosong & tidak dibekukan) dan zona (raknya sudah nonaktif) dari denah.
+- Denah ([A-320](04b-asumsi-lanjutan.md#a-320)–[A-325](04b-asumsi-lanjutan.md#a-325)): kode zona/rak/level/bin tetap terkunci (BR-WH-01); rak tidak pindah zona; objek denah tidak menyentuh stok; tumpukan hanya diperingatkan; mengubah = `bin.manage` + cakupan gudang, melihat = `warehouse.view`.
 
 ## 6. Layar
 
 | Route | Komponen | Isi |
 |---|---|---|
-| `/warehouses` | `warehouse.warehouse-list` | Pohon gudang dengan tipe, induk, proyek, kepala gudang, jumlah bin; form sebaris; nonaktifkan dengan Alasan `*` |
+| `/warehouses` | `warehouse.warehouse-list` | Pohon gudang dengan tipe, induk, proyek, kepala gudang, jumlah bin; tombol **Denah** per baris; pengalih **Tabel \| Denah** (`?tampilan=denah&gudang=`): mode Denah menampilkan denah gudang terpilih hanya-lihat ([A-323](04b-asumsi-lanjutan.md#a-323)); form sebaris; nonaktifkan dengan Alasan `*` |
 | `/warehouses/{id}` | `warehouse.warehouse-detail` | Tab Zona & rak (dengan pembuat bin massal), Bin, dan Riwayat; tombol **Denah gudang** |
-| `/warehouses/{id}/layout` | `warehouse.warehouse-layout` | **Denah 2D** ([A-254](04b-asumsi-lanjutan.md#a-254)): zona → rak = kotak berisi **petak bin per level** (label `L1`… di luar kotak, `L1` paling bawah), tiap petak berwarna status atau umur stok ([A-281](04b-asumsi-lanjutan.md#a-281)); klik rak → level → bin → isi (item, jumlah, lot/serial/potongan, tanggal masuk, umur, *tertua — ambil dulu*); cari bin/item/lot/serial/potongan; mode **Atur denah** (`bin.manage`): nama & ukuran zona, ukuran/posisi/arah rak (geser di grid 0,5 m), rak area, tandai bin ikut terpakai ([A-255](04b-asumsi-lanjutan.md#a-255)); **tambah zona, rak (+ level + bin), level, dan bin** langsung dari denah ([A-271](04b-asumsi-lanjutan.md#a-271)) Isi bin menampilkan jumlah + uraian kemasan, mis. "116 BOX (9 DUS 8 BOX)" ([A-293](04b-asumsi-lanjutan.md#a-293)). |
+| `/warehouses/{id}/layout` | `warehouse.warehouse-layout` | **Denah 2D** ([A-254](04b-asumsi-lanjutan.md#a-254)): zona → rak = kotak berisi **petak bin per level** (label `L1`… di luar kotak, `L1` paling bawah), tiap petak berwarna status atau umur stok ([A-281](04b-asumsi-lanjutan.md#a-281)); klik rak → level → bin → isi (item, jumlah, lot/serial/potongan, tanggal masuk, umur, *tertua — ambil dulu*); cari bin/item/lot/serial/potongan; mode **Atur denah** (`bin.manage`): nama & ukuran zona, ukuran/posisi/arah rak (geser di grid 0,5 m), rak area, tandai bin ikut terpakai ([A-255](04b-asumsi-lanjutan.md#a-255)); **tambah zona, rak (+ level + bin), level, dan bin** langsung dari denah ([A-271](04b-asumsi-lanjutan.md#a-271)) Isi bin menampilkan jumlah + uraian kemasan, mis. "116 BOX (9 DUS 8 BOX)" ([A-293](04b-asumsi-lanjutan.md#a-293)). **Sejak v0.14 satu kanvas gedung** ([A-320](04b-asumsi-lanjutan.md#a-320)): garis gedung, zona di koordinat gedung (seret & tarik sudut), objek denah (tambah/geser/ubah ukuran/putar/nama/nonaktif), zoom +/−/pas layar, tombol panah 0,5 m (Shift 0,1 m), R putar, peringatan tumpukan ([A-321](04b-asumsi-lanjutan.md#a-321)); **panel rak**: *Rak R01 · Zona A — nama*, ringkasan, tampak depan (L1 paling bawah), klik petak → isi bin itu (label *L1-B01* + kode penuh + salin), tab **Isi \| Atur** (Atur hanya di mode Atur denah: ukuran & posisi, arah, putar, tambah level/bin, bin ikut terpakai, nonaktifkan rak [A-324](04b-asumsi-lanjutan.md#a-324)); panel zona & objek di mode Atur. |
 | `/bins` | `warehouse.bin-list` | Seluruh bin lintas gudang; filter gudang, jenis, status, **zona, rak**; kolom zona · rak · level & kapasitas lengkap; **Ubah** (kategori, kapasitas, mode kapasitas per bin); bekukan dan cairkan; cetak label |
 | `/imports` kartu *Gudang* | `ImportController` + `ImportWarehouses` | Impor gudang baru (tipe, induk, proyek Gudang Site, kepala gudang, alamat) beserta bin bawaannya; templat `/imports/warehouses/template`; izin `warehouse.create`; tombol *Impor Excel* di `/warehouses` ([A-272](04b-asumsi-lanjutan.md#a-272)) |
 | `/imports` kartu *Struktur gudang* | `ImportController` + `ImportWarehouseStructure` | Impor zona, rak, level, dan bin untuk gudang yang sudah ada; templat `/imports/bins/template`; semua-atau-tidak, galat per baris; tombol *Impor Excel* di `/bins` ([A-258](04b-asumsi-lanjutan.md#a-258)) |
@@ -186,6 +191,13 @@ Tidak ada kejadian stok. Modul `stock` membaca `bins` untuk saldo dan `warehouse
 | TC-WH-28c | Kepala Gudang tanpa `warehouse.create` | buka `/imports`, templat, unggah | kartu Gudang tidak tampil; 403; tidak ada gudang | BR-GEN-09 |
 | TC-WH-29 | Zona D: R01 (1 level × 3 bin, B01 berisi), R02 4 level × 6 bin, R03 2 × 2 | data denah; layar denah | R02 `kolom` 6, gambar 5,0 × 2,2 m, fisik tetap 2 m; level urut L4…L1; petak B01…B06; status petak B01 terisi, B02 kosong; rak sebaris tidak bertumpuk; SVG memuat `data-rak="R02"`, B06, L4 | A-281 |
 | TC-WH-30 | Baut 100 di bin, DUS = 12 | panel isi bin | uraian "8 DUS 4 …" | [A-293](04b-asumsi-lanjutan.md#a-293) |
+| TC-WH-31 | Kepala Gudang, mode Atur | ukuran gedung 30 × (kosong), lalu 30 × 18,5; ubah ukuran zona 10,2 × 6,1; seret ke 4,26/2,74 lalu 99/99; simpan posisi di form zona | ditolak bila sebelah; tersimpan; 10 × 6 di (4,5; 2,5); dijepit (20; 12,5); denah memakai koordinat gedung | [A-320](04b-asumsi-lanjutan.md#a-320) |
+| TC-WH-32 | Gedung 20 × 10 m | tambah dock; seret 17,3/3,2; ukuran 6 × 2; putar; nama kosong lalu *Dock utara* + jenis pintu; nonaktifkan; jenis tak dikenal | ukuran bawaan 4 × 4; (16; 3) 6 × 2; rotasi 90, tampak 2 × 6; nama wajib; tersimpan; tidak digambar & tidak dihapus; kartu stok tidak bertambah; BR-GEN-11 | [A-320](04b-asumsi-lanjutan.md#a-320), [A-322](04b-asumsi-lanjutan.md#a-322) |
+| TC-WH-33 | Rak di bawah pilar, zona D & E beririsan, kantor di luar gedung, jalur forklift memotong rak | bangun denah; geser halus 0,1 lalu 0,5; putar rak; geser jauh | peringatan *Rak D-R01 ↔ Pilar P2*, *Zona D ↔ Zona E*, *keluar dari garis gedung*, jalur forklift tidak; simpan tetap jalan; (1,1; 1,5) arah `v`; dijepit dengan ukuran tampak atas | [A-321](04b-asumsi-lanjutan.md#a-321), [A-322](04b-asumsi-lanjutan.md#a-322) |
+| TC-WH-34 | Rak berstok | ubah kode rak; form rak dengan `zone_id` lain; nonaktifkan rak/zona; tanpa alasan; kosongkan lalu nonaktifkan dari layar | BR-WH-01; zona & kode tetap; BR-GEN-04 / BR-WH-07 / BR-GEN-11; rak, level, bin nonaktif, tidak dihapus, tidak digambar; zona bisa dinonaktifkan | [A-324](04b-asumsi-lanjutan.md#a-324), [A-325](04b-asumsi-lanjutan.md#a-325) |
+| TC-WH-35 | Staf Gudang (`warehouse.view`); Kepala Gudang di sematan Daftar Gudang; Kepala Gudang gudang lain | buka denah; geser/ukuran/tambah objek/ukuran gedung/Atur denah | boleh melihat, aksi 403; sematan hanya-lihat 403; gudang lain 404 | BR-GEN-09, [A-323](04b-asumsi-lanjutan.md#a-323) |
+| TC-WH-36 | Rak R01 dengan B02 berisi | pilih rak; klik B01; tab Atur di luar/di dalam mode Atur | B02 dibuka lebih dulu (isi BAUT-M12, *L1-B02*); B01 *Bin kosong*; tab Atur hanya di mode Atur, kembali ke Isi saat selesai | [A-320](04b-asumsi-lanjutan.md#a-320) |
+| TC-WH-37 | Kepala Gudang | buka `/warehouses`; mode Denah | tombol Denah per baris; denah gudang pertama tampil hanya-lihat + *Buka denah penuh* | [A-323](04b-asumsi-lanjutan.md#a-323) |
 | TC-WH-20 | Seeder demo dijalankan | periksa gudang | CKG, BKS, KRW1, KRW2 sesuai [00-akun-uji](../00-akun-uji.md) §2 | — |
 
 ## 11. Di luar lingkup modul ini
@@ -275,6 +287,10 @@ Migrasi tenant `000280_add_layout_columns_to_warehouse_tables` (semua kolom opsi
 ### 13.4e Impor gudang (27 September 2026)
 
 `Actions\ImportWarehouses` (`warehouse.create`) memakai pola impor yang sama (`ExcelRows`, `ImportBatch` semua-atau-tidak) dan `SaveWarehouse` per baris, sehingga kode huruf besar, BR-WH-02/04/05, dan log *Gudang dibuat* sama dengan form; `WarehouseRuleException` dibungkus menjadi galat baris. Tipe dicari dari kode atau nama tipe aktif; induk tanpa global scope + `canAccessWarehouse`; proyek + `canAccessProject`; kepala gudang dari email user aktif. Kartu `#impor-warehouses`, tombol di `/warehouses`, menu *Impor Excel* & palet untuk `warehouse.create`. Uji TC-WH-28–28c ([A-272](04b-asumsi-lanjutan.md#a-272)).
+
+### 13.9 Denah gedung sesuai kenyataan (28 September 2026)
+
+Migrasi `000440` (`warehouses.length_m/width_m`, `zones.pos_x/pos_y`, `floor_plan_objects`). `WarehouseLayoutData` menghasilkan `gedung`, `kanvas`, zona ber-`x/y` gedung, `objects`, dan `tumpukan`; tampilan memakai satu SVG + komponen Alpine `denahGedung` (`resources/js/wms/floor-plan.js`: seret, tarik sudut, zoom, panah, R) tanpa pustaka baru. Aksi: `SaveWarehouseLayout::building/moveZone/resizeZone/resizeRack/rotateRack` (penjepitan memakai ukuran tampak atas rak — arah & bawaan 2 × 1 m), `SaveFloorPlanObject`, `DeactivateLocation`. Komponen `WarehouseLayout` punya `ringkas` untuk sematan hanya-lihat di Daftar Gudang. Rak otomatis kini mulai 1 m dari atas zona (ruang judul). Denah demo CKG 30 × 18 m ([00-akun-uji](../00-akun-uji.md) §2). Belum ada alur *Pindah bin* ([A-325](04b-asumsi-lanjutan.md#a-325)).
 
 ### 13.5 Sisa pekerjaan modul ini
 

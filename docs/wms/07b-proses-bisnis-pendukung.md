@@ -1,7 +1,7 @@
 # Proses Bisnis To-Be — Alur 8–10 (opname, approval, langganan)
 
-**Versi:** 0.4 (Part 2, pasca-validasi & diskusi lanjutan 23 Sep 2026)
-**Tanggal:** 23 September 2026
+**Versi:** 0.5 (Part 2, pasca-validasi & diskusi lanjutan 23 Sep 2026; driver tanpa akun & bukti terima oleh penerima 28 Sep 2026 — A-311–A-319)
+**Tanggal:** 28 September 2026
 **Status:** asumsi A-25–A-49 dan A-51–A-66 disetujui 23 Sep 2026 (A-40 diubah); alur 1, 2, 7, 8 diperluas (purchasing, permintaan klien, pengiriman, audit); alur 5 memuat varian dari [A-50](04-keputusan-dan-asumsi.md#a-50) yang menunggu validasi; setiap alur mencantumkan asumsi yang dipakainya. Bila asumsi berubah, ubah data di [`diagram/_generate.py`](../diagram/_generate.py) dan jalankan ulang — file ini dan `.drawio` dibuat otomatis, **jangan diedit manual**.
 **Dokumen terkait:** [Blueprint §7](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · [Alur 1–3](07-proses-bisnis.md) · [Alur 4–7](07a-proses-bisnis-lanjutan.md)
 
@@ -34,7 +34,7 @@ Sesi opname bulanan/tahunan/ad-hoc dengan pembekuan bin opsional, hitung buta, k
 | 9 | Sistem | Klasifikasi selisih per baris: kecil / sedang / besar (ambang relatif & absolut) | variance_class; [BR-OPN-04](05-aturan-bisnis.md#br-opn) |
 | 10 | Sistem | ◇ Kelas selisih? |  |
 | 11 | Kepala Gudang / Auditor | Isi kategori akar masalah untuk selisih yang tetap besar setelah hitung ulang | root_cause_category; [BR-OPN-07](05-aturan-bisnis.md#br-opn) |
-| 12 | Penghitung (Staf) | Hitung ulang oleh penghitung berbeda (baris sedang dan besar, satu putaran) | OPN recount; [BR-OPN-05](05-aturan-bisnis.md#br-opn); A-259 |
+| 12 | Penghitung (Staf) | Hitung ulang oleh penghitung berbeda (baris sedang dan besar, satu putaran) | OPN recount; [BR-OPN-05](05-aturan-bisnis.md#br-opn); [A-259](04b-asumsi-lanjutan.md#a-259) |
 | 13 | Kepala Gudang / Auditor | Rekonsiliasi: tinjau semua baris; draf ADJ per gudang | OPN reconciling; ADJ submitted |
 | 14 | Approver | Setujui sesi (tingkat sesi; approver bukan penghitung; sesi tahunan/audit oleh Auditor Internal / Manajemen) | OPN approved; [A-09](04-keputusan-dan-asumsi.md#a-09); [BR-OPN-06](05-aturan-bisnis.md#br-opn); [BR-OPN-09](05-aturan-bisnis.md#br-opn) |
 | 15 | Sistem | ADJ posted; stock_adjusted; buka bin; laporan PDF; dashboard akurasi | OPN closed |

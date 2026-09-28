@@ -36,7 +36,6 @@ COLORS = {
     "apr":   ("#fbe7c2", "#b7801b"),
     "pemoh": ("#e6dcfb", "#7654c4"),
     "klien": ("#d8f0f8", "#2f7f96"),
-    "drv":   ("#fcdcc8", "#c4632a"),
     "pr":    ("#dcf1c8", "#5c9a2a"),
     "admin": ("#f9d3dc", "#b8445f"),
     "manaj": ("#d9dcf7", "#4a52a8"),
@@ -55,17 +54,15 @@ ROLES = [
     dict(key="staf", name="Staf Gudang", code="warehouse_staff", color="staf",
          kanal="PWA (utama) · Web",
          tugas="Penerimaan, QC, put-away, picking, konversi, pemakaian material di site, hitung stok."),
-    dict(key="drv", name="Driver", code="driver", color="drv",
-         kanal="PWA",
-         tugas="Menerima tugas kirim, surat jalan digital, bukti terima (foto + tanda tangan)."),
     dict(key="pemoh", name="Pemohon Internal", code="internal_requester", color="pemoh",
          kanal="Web · PWA",
          tugas="Engineer / PIC proyek: mengajukan permintaan, konfirmasi terima, mengajukan retur."),
     dict(key="klien", name="Klien", code="client_user", color="klien",
          kanal="Portal klien (web)",
-         tugas="User dari pemilik proyek: mengajukan permintaan termasuk non-katalog, menanggapi "
-               "pengganti, mengajukan pembatalan, mengonfirmasi atau mengajukan keberatan terima, "
-               "mengajukan retur, melacak status."),
+         tugas="User dari pemilik proyek: mengajukan permintaan termasuk non-katalog (No. PO klien), "
+               "menanggapi pengganti, mengajukan pembatalan; sebagai admin site klien mengisi bukti "
+               "terima SJ (foto SJ bertanda tangan & cap, No. GR klien) — driver tidak punya akun "
+               "(A-311, A-312); mengajukan retur, melacak status."),
     dict(key="pr", name="Penindak Lanjut PR", code="pr_follow_up", color="pr",
          kanal="Web",
          tugas="Mencatat catatan pemesanan per vendor / toko online (nomor PO, resi, perkiraan "
@@ -114,8 +111,8 @@ LANE_ROLES = {
     # keempat halaman. Kolom "Lane asal" di tabel langkah menandai bahwa ini bersyarat aturan.
     "Approver": ["kagud_apr", "kagud", "manaj", "admin"],
     "Delegat / Cadangan / Atasan": ["kagud_apr", "kagud", "manaj", "admin"],
-    "Driver / Penerima": ["drv", "pemoh", "klien"],
-    "Driver": ["drv"],
+    # A-311/A-312: driver tanpa akun; bukti terima oleh admin site klien (portal) atau penerima internal.
+    "Admin Site Klien / Penerima": ["klien", "pemoh", "staf"],
     "Penindak Lanjut PR": ["pr"],
     "Super Admin": ["super"],
     "Admin Company": ["admin"],
@@ -128,9 +125,9 @@ ROLE_SCREENS = {
               "/waste-disposals", "/assets", "/reports"],
     "staf": ["/receipts", "/putaways", "/picks", "/shipments", "/issues", "/conversions",
              "/count-tasks", "/waste-disposals", "/transfers", "/stock"],
-    "drv": ["/shipments"],
     "pemoh": ["/requests", "/requests/create", "/returns", "/notifications", "/reports"],
-    "klien": ["/portal/login", "/portal (permintaan, pengiriman, stok on-site, retur)"],
+    "klien": ["/portal/login", "/portal (permintaan, pengiriman, stok on-site, retur)",
+              "/portal/shipments/{sj}/proof (bukti terima)"],
     "pr": ["/purchase-requests", "/vendors", "/receipts"],
     "audit": ["/counts", "/counts/create", "/count-tasks", "/adjustments", "/reports", "/stock"],
     "kagud_apr": ["/approvals", "/approval-delegations", "/approval-simulation"],
@@ -288,15 +285,16 @@ STORY = [
      "Tugas picking: sistem menyarankan bin & lot (FIFO/FEFO/sisa potongan), staf memindai dan mencatat; "
      "kurang ambil wajib beralasan (<span class='mono'>/picks</span>)",
      "Barang pindah ke Loading Area, alokasi menjadi keras (terkunci ke dokumen)", "PCK"),
-    (6, "Mengirim", "drv",
+    (6, "Mengirim", "staf",
      "Tugas picking yang selesai",
      "Susun surat jalan (boleh gabung beberapa permintaan ke tujuan sama), pilih kendaraan/ekspedisi, "
-     "berangkatkan (<span class='mono'>/shipments</span>)",
+     "tulis nama & HP driver (driver tanpa akun), berangkatkan (<span class='mono'>/shipments</span>)",
      "Stok pindah ke lokasi <i>Dalam Perjalanan</i> milik gudang asal — masih milik perusahaan", "SJ"),
-    (7, "Menerima di tujuan", "drv",
+    (7, "Menerima di tujuan", "klien",
      "Barang tiba di titik pekerjaan atau di tempat klien",
-     "Driver atau penerima mengisi bukti terima per baris: baik / kurang / rusak, foto bila rusak, "
-     "tanda tangan di perangkat",
+     "Admin site klien (portal) atau penerima internal di tujuan mengisi bukti terima per baris: "
+     "baik / kurang / rusak, foto bila rusak, foto SJ bertanda tangan &amp; cap, No. GR klien; "
+     "cadangan: tautan + OTP atau Kepala Gudang asal dari SJ bertanda tangan",
      "Barang baik keluar/masuk sesuai tujuan; yang kurang & rusak <b>tidak hilang</b> — tetap tercatat "
      "dan membuka dokumen selisih", "SJ → DSC"),
     (8, "Menyelesaikan selisih", "kagud",
@@ -305,7 +303,7 @@ STORY = [
      "kirim pengganti (<span class='mono'>/discrepancies</span>)",
      "Selisih tertutup dengan alasan yang bisa dilaporkan; tidak ada stok yang menggantung", "DSC"),
     (9, "Konfirmasi penerima", "pemoh",
-     "Bukti terima dari driver",
+     "Bukti terima yang diisi pihak lain (tautan / cadangan gudang)",
      "Pemohon atau Klien mengonfirmasi, atau mengajukan keberatan bila kurang/rusak (batas 3 hari, "
      "lewat itu dianggap diterima)",
      "REQ selesai, atau membuka selisih baru bila ada keberatan", "REQ"),
@@ -487,11 +485,11 @@ def msg(text, limit=160):
 
 # Cast tetap untuk sequence end-to-end: (id, label, peran untuk warna)
 CAST = [("PMH", "Pemohon / Klien"), ("KG", "Kepala Gudang"), ("APR", "Approver"),
-        ("SG", "Staf Gudang"), ("DRV", "Driver"), ("VND", "Vendor"), ("SYS", "Sistem")]
+        ("SG", "Staf Gudang"), ("PNR", "Admin Site Klien / Penerima"), ("VND", "Vendor"), ("SYS", "Sistem")]
 # Tahap STORY -> (pengirim, penerima) pesan utamanya
 STORY_ACTORS = {
     0: ("KG", "SYS"), 1: ("SG", "SYS"), 2: ("PMH", "SYS"), 3: ("KG", "SYS"), 4: ("APR", "SYS"),
-    5: ("SG", "SYS"), 6: ("DRV", "SYS"), 7: ("DRV", "SYS"), 8: ("KG", "SYS"), 9: ("PMH", "SYS"),
+    5: ("SG", "SYS"), 6: ("SG", "SYS"), 7: ("PNR", "SYS"), 8: ("KG", "SYS"), 9: ("PMH", "SYS"),
     10: ("SG", "SYS"), 11: ("SG", "SYS"), 12: ("KG", "SYS"), 13: ("PMH", "SYS"),
     14: ("SG", "SYS"), 15: ("KG", "SYS"),
 }

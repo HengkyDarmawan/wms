@@ -36,6 +36,18 @@ class PrintController extends Controller
         return view('template.labels');
     }
 
+    /**
+     * Telusuri label kemasan (A-302): hanya membaca; izin `item.view` diperiksa
+     * komponen. Sebelumnya `Route::view`, yang di server dev memulangkan user
+     * ke login walau sesinya sah (ditemukan E2E 28 Sep 2026).
+     */
+    public function trace(): View
+    {
+        $this->authorize('item.view');
+
+        return view('label.trace');
+    }
+
     public function labels(Request $request, PrintLabels $action): Response
     {
         $jenis = DocumentTemplateType::tryFrom((string) $request->query('type'));

@@ -37,6 +37,7 @@ class RequestForm extends Component
     public array $form = [
         'project_id' => '',
         'required_date' => '',
+        'client_po_number' => '',
         'notes' => '',
     ];
 
@@ -57,6 +58,7 @@ class RequestForm extends Component
             $this->form = [
                 'project_id' => (string) $request->project_id,
                 'required_date' => $request->required_date?->toDateString() ?? '',
+                'client_po_number' => (string) ($request->client_po_number ?? ''),
                 'notes' => (string) ($request->notes ?? ''),
             ];
 

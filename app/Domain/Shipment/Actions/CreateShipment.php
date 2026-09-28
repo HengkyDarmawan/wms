@@ -8,6 +8,7 @@ use App\Domain\Access\Models\User;
 use App\Domain\Request\Models\MaterialRequestLine;
 use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Return\Support\ReturnProgress;
+use App\Domain\Shared\Messaging\PhoneNumber;
 use App\Domain\Shipment\Enums\DestinationType;
 use App\Domain\Shipment\Enums\OwnershipEffect;
 use App\Domain\Shipment\Enums\PickTaskStatus;
@@ -50,9 +51,10 @@ class CreateShipment
 
         $this->pastikanLengkap($tujuan->requiredFields(), $data, 'BR-SJ-04');
         $this->pastikanLengkap($cara->requiredFields(), $data, 'BR-SJ-07');
+        $hpDriver = self::hpDriver($data, $cara === ShipmentMethod::OwnFleet);
         $this->pastikanTujuanDokumen($tugas, $tujuan, $data);
 
-        return DB::transaction(function () use ($tugas, $gudang, $tujuan, $cara, $data, $actor) {
+        return DB::transaction(function () use ($tugas, $gudang, $tujuan, $cara, $data, $hpDriver, $actor) {
             $sj = Shipment::create([
                 'number' => $this->nomor->next('SJ', (string) $gudang->code),
                 'warehouse_id' => $gudang->id,
@@ -62,7 +64,9 @@ class CreateShipment
                 'destination_vendor_id' => $this->id($data, 'destination_vendor_id'),
                 'shipment_method' => $cara,
                 'vehicle_id' => $this->id($data, 'vehicle_id'),
-                'driver_id' => $this->id($data, 'driver_id'),
+                // A-311: driver tanpa akun — nama & HP teks.
+                'driver_name' => $cara === ShipmentMethod::OwnFleet ? mb_substr((string) $this->teks($data, 'driver_name'), 0, 100) : null,
+                'driver_phone' => $cara === ShipmentMethod::OwnFleet ? $hpDriver : null,
                 'carrier_id' => $this->id($data, 'carrier_id'),
                 'tracking_no' => $this->teks($data, 'tracking_no'),
                 'carried_by_name' => $this->teks($data, 'carried_by_name'),
@@ -265,6 +269,28 @@ class CreateShipment
                 throw ShipmentRuleException::field($rule, $kolom, $label.' wajib diisi untuk pilihan ini.');
             }
         }
+    }
+
+    /**
+     * A-315: HP driver dibakukan `62…` (sama dengan OTP, A-273) supaya bisa
+     * dihubungi dan dipakai tautan WA.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public static function hpDriver(array $data, bool $wajib): ?string
+    {
+        $isian = trim((string) ($data['driver_phone'] ?? ''));
+
+        if ($isian === '') {
+            if ($wajib) {
+                throw ShipmentRuleException::field('BR-SJ-07', 'driver_phone', 'No. HP driver wajib diisi.');
+            }
+
+            return null;
+        }
+
+        return PhoneNumber::normalize($isian)
+            ?? throw ShipmentRuleException::field('BR-SJ-07', 'driver_phone', 'No. HP driver tidak sah (contoh 0812…).');
     }
 
     /** @param  array<string, mixed>  $data */

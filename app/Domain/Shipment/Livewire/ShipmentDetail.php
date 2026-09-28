@@ -6,13 +6,14 @@ namespace App\Domain\Shipment\Livewire;
 
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\ReasonCode;
-use App\Domain\Shared\Files\StoreUpload;
 use App\Domain\Shipment\Actions\ConfirmDelivery;
 use App\Domain\Shipment\Actions\IssueDeliveryToken;
 use App\Domain\Shipment\Actions\ShipShipment;
+use App\Domain\Shipment\Livewire\Concerns\FillsDeliveryProof;
 use App\Domain\Shipment\Livewire\Concerns\HandlesShipmentRules;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Shipment\Support\DeliveryOtpSender;
+use App\Domain\Shipment\Support\DeliveryRecipients;
 use App\Domain\Shipment\Support\ProofFiles;
 use App\Domain\Shipment\Support\ShipmentLineOrigins;
 use Illuminate\Support\Collection;
@@ -25,12 +26,14 @@ use Spatie\Activitylog\Models\Activity;
 /**
  * Layar 15-picking-shipment §6 — detail surat jalan.
  *
- * Tiga keputusan ada di sini: memberangkatkan, membatalkan selama belum
- * berangkat, dan mengisi bukti terima. Yang terakhir adalah yang paling banyak
+ * Tiga keputusan ada di sini: memberangkatkan (staf gudang asal, A-311),
+ * membatalkan selama belum berangkat, dan mengisi bukti terima (penerima
+ * atau cadangan Kepala Gudang asal, A-312). Yang terakhir adalah yang paling banyak
  * aturannya, karena di situlah selisih lahir.
  */
 class ShipmentDetail extends Component
 {
+    use FillsDeliveryProof;
     use HandlesShipmentRules;
     use WithFileUploads;
 
@@ -47,22 +50,8 @@ class ShipmentDetail extends Component
         'received_by_name' => '',
         'notes' => '',
         'phone' => '',
+        'client_gr_number' => '',
     ];
-
-    /**
-     * Isian bukti terima per baris SJ: baik, rusak, kurang, dan fotonya.
-     *
-     * @var array<int, array<string, mixed>>
-     */
-    public array $terima = [];
-
-    /** Berkas bukti terima (A-231): foto serah terima, tanda tangan (data URL kanvas), foto rusak per baris. */
-    public $foto = null;
-
-    public string $tandaTangan = '';
-
-    /** @var array<int, mixed> shipment_line_id => berkas sementara */
-    public array $fotoRusak = [];
 
     /** Tautan penerima bertoken; hanya ditampilkan sekali bersama OTP-nya. */
     public ?string $tautanSekali = null;
@@ -101,6 +90,8 @@ class ShipmentDetail extends Component
             'alasan' => $this->pilihanAlasan(ReasonContext::Cancel),
             'riwayat' => $this->riwayat($sj),
             'otpOtomatis' => app(DeliveryOtpSender::class)->enabled(),
+            // A-312/A-316: jalur pengisian bukti terima bagi user ini (null = tidak boleh).
+            'kanal' => $sj->status->value === 'shipped' ? app(DeliveryRecipients::class)->channelFor(auth()->user(), $sj) : null,
         ]);
     }
 
@@ -139,21 +130,7 @@ class ShipmentDetail extends Component
         $this->resetValidation();
 
         if ($dialog === 'terima') {
-            $this->foto = null;
-            $this->tandaTangan = '';
-            $this->fotoRusak = [];
-            $this->terima = $sj->lines()->orderBy('id')->get()
-                ->mapWithKeys(fn ($l) => [$l->id => [
-                    // Bawaannya seluruhnya baik: yang paling sering terjadi.
-                    'qty_good' => (string) (float) $l->qty_shipped,
-                    'qty_damaged' => '0',
-                    'qty_missing' => '0',
-                    'damage_photo_path' => '',
-                    'notes' => '',
-                    // A-244: serial/potongan dinilai per unit — satu pilihan kondisi.
-                    'kondisi' => $l->isUnit() ? 'good' : null,
-                    'qty' => (float) $l->qty_shipped,
-                ]])->all();
+            $this->siapkanBuktiTerima($sj);
         }
     }
 
@@ -191,64 +168,12 @@ class ShipmentDetail extends Component
 
         $this->authorize('confirmDelivery', $sj);
 
-        $this->validate(
-            [
-                'form.received_by_name' => ['required', 'string', 'max:100'],
-                'foto' => ['nullable', ...StoreUpload::ATURAN_FOTO],
-                'fotoRusak.*' => ['nullable', ...StoreUpload::ATURAN_FOTO],
-                'tandaTangan' => ['nullable', 'string', 'max:2000000'],
-            ],
-            attributes: ['form.received_by_name' => __('Nama penerima'), 'foto' => __('Foto serah terima'), 'fotoRusak.*' => __('Foto kerusakan')],
-        );
-
-        $disimpan = null;
-
-        if (! $this->jalankan(function () use ($berkas, $sj, &$disimpan) {
-            $disimpan = $berkas->simpan($sj, $this->foto, $this->tandaTangan, $this->fotoRusak);
-        }) || $disimpan === null) {
-            return;
-        }
-
-        $baris = [];
-
-        foreach ($this->terima as $id => $isi) {
-            // Unit serial/potongan: kondisi yang dipilih memegang seluruh jumlahnya.
-            if (in_array($isi['kondisi'] ?? null, ['good', 'damaged', 'missing'], true)) {
-                foreach (['good', 'damaged', 'missing'] as $k) {
-                    $isi['qty_'.$k] = $isi['kondisi'] === $k ? (float) $isi['qty'] : 0;
-                }
-            }
-
-            $baris[] = [
-                'shipment_line_id' => $id,
-                'qty_good' => (float) ($isi['qty_good'] ?? 0),
-                'qty_damaged' => (float) ($isi['qty_damaged'] ?? 0),
-                'qty_missing' => (float) ($isi['qty_missing'] ?? 0),
-                // Path lama tetap diterima (uji & draf luring); unggahan baru menggantikannya.
-                'damage_photo_path' => $disimpan['lines'][(int) $id] ?? ($isi['damage_photo_path'] ?: null),
-                'notes' => $isi['notes'] ?? null,
-            ];
-        }
-
-        $berhasil = $this->jalankan(fn () => $action->handle($sj, [
-            'received_by_name' => $this->form['received_by_name'],
-            'notes' => $this->form['notes'] ?: null,
-            'channel' => 'driver_pwa',
-            'received_by_user_id' => auth()->id(),
-            'photo_path' => $disimpan['photo_path'],
-            'signature_path' => $disimpan['signature_path'],
-        ], $baris, auth()->user()));
-
-        if (! $berhasil) {
-            $berkas->hapus($disimpan);
-
+        if (! $this->simpanBukti($sj, $action, $berkas)) {
             return;
         }
 
         $this->tutupDialog();
         $this->dispatch('pesan', teks: __('Bukti terima tersimpan.'));
-        // A-193: draf bukti terima di perangkat sudah terkirim.
-        $this->dispatch('draft-clear', key: 'pod-'.$this->shipmentId);
     }
 
     /**
@@ -297,14 +222,13 @@ class ShipmentDetail extends Component
 
     private function shipment(): Shipment
     {
-        return Shipment::query()
+        return Shipment::query()->withoutGlobalScopes()
             ->with(
                 'warehouse:id,code,name',
                 'destinationProject:id,code,name,client_id',
                 'destinationWarehouse:id,code,name',
                 'destinationVendor:id,name',
                 'vehicle:id,plate_no',
-                'driver:id,name',
                 'carrier:id,name',
             )
             ->findOrFail($this->shipmentId);

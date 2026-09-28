@@ -7,7 +7,7 @@ namespace App\Domain\Shipment\Enums;
 /**
  * A-63 — dari mana selisih ini datang.
  *
- * Dua pintu, satu dokumen: driver mencatatnya saat bukti terima, atau klien
+ * Dua pintu, satu dokumen: penerima mencatatnya saat bukti terima, atau klien
  * mengajukannya belakangan dalam batas konfirmasi.
  */
 enum DiscrepancyOrigin: string

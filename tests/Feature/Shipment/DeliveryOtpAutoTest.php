@@ -91,10 +91,10 @@ class DeliveryOtpAutoTest extends TenantTestCase
         $sj = app(CreateShipment::class)->handle([$pck->id], [
             'destination_type' => 'project_client', 'destination_project_id' => $this->proyek->id,
             'shipment_method' => 'own_fleet', 'vehicle_id' => Vehicle::create(['plate_no' => 'B'.random_int(1000, 9999).'TK'])->id,
-            'driver_id' => $this->makeUser('driver')->id,
+            'driver_name' => 'Gani', 'driver_phone' => '081200000008',
         ], $staf);
 
-        return app(ShipShipment::class)->handle($sj, null, $this->makeUser('driver'));
+        return app(ShipShipment::class)->handle($sj, null, $this->makeUser('warehouse_staff'));
     }
 
     private function nyalakan(bool $gagal = false): void
@@ -120,7 +120,7 @@ class DeliveryOtpAutoTest extends TenantTestCase
 
         $this->actingAs($this->makeUser('warehouse_head'));
         $c = Livewire::test(ShipmentDetail::class, ['shipment' => $sj])
-            ->call('mintaDialog', 'tautan')->assertSee(__('Tautan dan kode OTP dikirim otomatis ke WhatsApp/SMS nomor ini; driver tidak melihat kodenya.'))
+            ->call('mintaDialog', 'tautan')->assertSee(__('Tautan dan kode OTP dikirim otomatis ke WhatsApp/SMS nomor ini; staf dan pengantar tidak melihat kodenya.'))
             ->set('form.phone', '0812-3456-7890')->call('terbitkanTautan')->assertHasNoErrors()
             ->assertSet('otpSekali', null)->assertSet('otpTerkirimKe', '62812****7890')
             ->assertSee('Kode tidak ditampilkan di sini');
@@ -181,7 +181,7 @@ class DeliveryOtpAutoTest extends TenantTestCase
         $this->assertFalse($hasil['sent']);
 
         $this->actingAs($this->makeUser('company_admin'))->get($this->tenantUrl('settings/company'))->assertOk()
-            ->assertSee(__('OTP bukti terima otomatis'))->assertSee(__('Kanal WhatsApp/SMS belum diatur oleh platform; sampai itu, OTP tetap disampaikan driver.'));
+            ->assertSee(__('OTP bukti terima otomatis'))->assertSee(__('Kanal WhatsApp/SMS belum diatur oleh platform; sampai itu, OTP tetap disampaikan staf/pengantar.'));
     }
 
     #[Test]

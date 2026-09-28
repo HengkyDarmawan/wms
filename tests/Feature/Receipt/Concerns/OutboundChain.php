@@ -64,7 +64,7 @@ trait OutboundChain
         $sj = app(CreateShipment::class)->handle([$pck->id], $tujuan + [
             'shipment_method' => 'own_fleet',
             'vehicle_id' => Vehicle::create(['plate_no' => 'B'.random_int(1000, 9999).'RC'])->id,
-            'driver_id' => $this->makeUser('driver')->id,
+            'driver_name' => 'Gani', 'driver_phone' => '081200000008',
         ], $this->makeUser('warehouse_staff'));
 
         return app(ShipShipment::class)->handle($sj, null, $this->makeUser('driver'));

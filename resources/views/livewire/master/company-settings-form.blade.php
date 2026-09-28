@@ -101,7 +101,7 @@
                             <div class="small text-muted">{{ __($def['hint']) }}</div>
                             @if ($kunci === 'otp_auto' && ! $kanalPesan)
                                 {{-- A-273: tanpa kanal platform, saklar menyala tetap memakai jalur manual. --}}
-                                <div class="small text-warning">{{ __('Kanal WhatsApp/SMS belum diatur oleh platform; sampai itu, OTP tetap disampaikan driver.') }}</div>
+                                <div class="small text-warning">{{ __('Kanal WhatsApp/SMS belum diatur oleh platform; sampai itu, OTP tetap disampaikan staf/pengantar.') }}</div>
                             @endif
                         </div>
                     @endforeach

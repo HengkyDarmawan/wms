@@ -1,7 +1,7 @@
 # Setup Lokal — menjalankan dan mengetes aplikasi
 
-**Versi:** 1.9
-**Tanggal:** 27 September 2026
+**Versi:** 1.10
+**Tanggal:** 28 September 2026
 **Status:** aktif — dua profil mesin dev: **rumah** (XAMPP3 + MariaDB 10.4) dan **kantor** (XAMPP + MariaDB 10.4), keduanya [A-76](wms/04-keputusan-dan-asumsi.md#a-76) / [A-162](wms/04-keputusan-dan-asumsi.md#a-162); v1.5: mesin rumah pindah dari Laragon ke `C:\xampp3`; v1.6: batas unggah PHP untuk foto 20 MB (§4); v1.7: tombol kamera butuh HTTPS atau `localhost` (§7, A-266)
 **Dokumen terkait:** [Akun uji](00-akun-uji.md) · [Arsitektur §10](wms/08-arsitektur.md#10-lingkungan) · [README](README.md) · [`../CLAUDE.md`](../CLAUDE.md)
 
@@ -102,7 +102,7 @@ OTP tautan penerima bisa dikirim otomatis ke HP penerima ([A-273](wms/04b-asumsi
 
 | `.env` | Nilai lokal | Keterangan |
 |---|---|---|
-| `WMS_MESSAGING_DRIVER` | `log` | `none` = OTP disampaikan driver (bawaan); `log` = pesan ditulis ke `storage/logs/laravel.log` (untuk mencoba); `http` = gateway sungguhan |
+| `WMS_MESSAGING_DRIVER` | `log` | `none` = OTP disampaikan staf/pengantar (bawaan); `log` = pesan ditulis ke `storage/logs/laravel.log` (untuk mencoba); `http` = gateway sungguhan |
 | `WMS_MESSAGING_URL`, `WMS_MESSAGING_TOKEN` | — | Hanya untuk `http`: alamat POST dan token (dikirim di header `Authorization`, bisa diganti `WMS_MESSAGING_TOKEN_HEADER`) |
 | `WMS_MESSAGING_PHONE_FIELD`, `WMS_MESSAGING_MESSAGE_FIELD` | `target`, `message` | Nama field nomor & pesan sesuai gateway; `WMS_MESSAGING_FORMAT=json` bila gateway meminta JSON; `WMS_MESSAGING_EXTRA` field tetap berformat JSON |
 
@@ -130,8 +130,8 @@ Produksi: `WMS_WA_DRIVER=cloud` + `WMS_WA_TOKEN`, `WMS_WA_PHONE_NUMBER_ID`, `WMS
 | 3 | `kagudang.ckg@demo.wms.test` | **Tugas approval saya** (atau detail REQ) → **Setujui** — aturan demo *REQ lainnya* menunjuk Kepala Gudang CKG ([00-akun-uji §5](00-akun-uji.md#5-aturan-approval-bawaan-demo)) | Reservasi lunak terbentuk; tersedia BAUT-M12 di CKG 950; panel *Riwayat approval* terisi |
 | 3b | `admin@demo.wms.test` | **Simulasi approval**: nomor REQ langkah 2 | Aturan *REQ lainnya*, approver Andi Kepala ([BR-APR-11](wms/05-aturan-bisnis.md#br-apr)) |
 | 4 | `kagudang.ckg@demo.wms.test` | **Tugas picking**: buat dari REQ, Mulai, catat 50, Selesaikan | PCK *Selesai*; 50 di bin `CKG-STG` |
-| 5 | `kagudang.ckg@demo.wms.test` | **Surat jalan → Susun**: gudang CKG, pilih PCK, tujuan proyek PRJ-001, kendaraan sendiri B 9001 XX, driver Gani; lalu **Berangkatkan** | SJ *Dikirim*; 50 di `CKG-TRANSIT`
-| 6 | `driver1@demo.wms.test` | Isi bukti terima (baik 48, kurang 2) | SJ *Diterima Sebagian*; DSC terbuka |
+| 5 | `kagudang.ckg@demo.wms.test` | **Surat jalan → Susun**: gudang CKG, pilih PCK, tujuan proyek PRJ-001, kendaraan sendiri B 9001 XX (nama & HP driver Gani terisi otomatis, [A-311](wms/04b-asumsi-lanjutan.md#a-311)); lalu **Berangkatkan** | SJ *Dikirim*; 50 di `CKG-TRANSIT`; `klien1` mendapat notifikasi *SJ berangkat*
+| 6 | `klien1@klien-satu.test` | Portal → REQ → **Isi bukti terima** SJ: baik 48, kurang 2, unggah foto SJ bertanda tangan & cap, No. GR klien opsional ([A-312](wms/04b-asumsi-lanjutan.md#a-312)) | SJ *Diterima Sebagian*; DSC terbuka; bukti terima *Dikonfirmasi* (A-317) |
 | 7 | `klien1@klien-satu.test` | Buka portal | Hanya proyek PRJ-001 yang tampil |
 | 8 | `klien2@klien-dua.test` | Buka portal | Daftar kosong ([A-21](wms/04-keputusan-dan-asumsi.md#a-21)) |
 
