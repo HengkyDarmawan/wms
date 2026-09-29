@@ -6,7 +6,9 @@ namespace App\Domain\Asset\Livewire;
 
 use App\Domain\Asset\Enums\AssetHandoverStatus;
 use App\Domain\Asset\Models\AssetHandover;
-use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\View;
@@ -17,6 +19,7 @@ use Livewire\WithPagination;
 /** Layar 25-aset §6 — daftar serah terima aset (AST), dalam cakupan pengguna. */
 class HandoverList extends Component
 {
+    use CariPilihan;
     use WithPagination;
 
     #[Url(as: 'q', except: '')]
@@ -45,15 +48,22 @@ class HandoverList extends Component
 
     public function render(): View
     {
-        $proyek = auth()->user()?->accessibleProjectIds();
-
         return view('livewire.asset.handover-list', [
             'handovers' => $this->daftar(),
             'statuses' => AssetHandoverStatus::options(),
-            'projects' => Project::query()
-                ->when($proyek !== null, fn (Builder $q) => $q->whereIn('id', $proyek))
-                ->orderBy('code')->get(['id', 'code', 'name']),
+            'opsiProyek' => $this->pilihanProyek()->awalDengan($this->projectFilter),
         ]);
+    }
+
+    /** Saringan proyek: daftar lama, dicari ke server (A-395). */
+    private function pilihanProyek(): Pilihan
+    {
+        return SumberPilihan::proyekIdCakupan();
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        return $model === 'projectFilter' && auth()->user()?->can('viewAny', AssetHandover::class) ? $this->pilihanProyek() : null;
     }
 
     private function daftar(): LengthAwarePaginator

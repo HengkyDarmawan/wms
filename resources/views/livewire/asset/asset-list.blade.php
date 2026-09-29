@@ -28,13 +28,8 @@
                 </select>
             </div>
             <div class="col-lg-3">
-                <label class="form-label" for="filter-proyek-aset">{{ __('Proyek peminjam') }}</label>
-                <select class="form-select" id="filter-proyek-aset" wire:model.live="projectFilter">
-                    <option value="">{{ __('Semua') }}</option>
-                    @foreach ($projects as $p)
-                        <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="projectFilter" id="filter-proyek-aset" server live :label="__('Proyek peminjam')"
+                         :kosong="__('Semua')" :options="$opsiProyek" />
             </div>
             <div class="col-lg-2">
                 <div class="form-check">

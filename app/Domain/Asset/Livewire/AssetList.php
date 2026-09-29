@@ -6,8 +6,10 @@ namespace App\Domain\Asset\Livewire;
 
 use App\Domain\Asset\Support\AssetQuery;
 use App\Domain\Master\Enums\AssetState;
-use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\Serial;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Stock\Models\StockBalance;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,6 +24,7 @@ use Livewire\WithPagination;
  */
 class AssetList extends Component
 {
+    use CariPilihan;
     use WithPagination;
 
     #[Url(as: 'q', except: '')]
@@ -59,9 +62,20 @@ class AssetList extends Component
             'assets' => $aset,
             'lokasi' => $lokasi,
             'states' => AssetState::options(),
-            'projects' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
+            'opsiProyek' => $this->pilihanProyek()->awalDengan($this->projectFilter),
             'ambang' => Serial::lifeAlertPercent(),
         ]);
+    }
+
+    /** Saringan proyek: daftar lama, dicari ke server (A-395). */
+    private function pilihanProyek(): Pilihan
+    {
+        return SumberPilihan::proyekSemuaStatus();
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        return $model === 'projectFilter' && auth()->user()?->can('viewAny', Serial::class) ? $this->pilihanProyek() : null;
     }
 
     private function daftar(): LengthAwarePaginator

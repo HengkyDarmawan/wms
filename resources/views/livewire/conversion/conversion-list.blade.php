@@ -21,13 +21,8 @@
                 <input class="form-control" id="cari-cnv" type="search" wire:model.live.debounce.400ms="search" placeholder="{{ __('Nomor CNV') }}">
             </div>
             <div class="col-lg-4">
-                <label class="form-label" for="filter-proyek-cnv">{{ __('Proyek') }}</label>
-                <select class="form-select" id="filter-proyek-cnv" wire:model.live="projectFilter">
-                    <option value="">{{ __('Semua') }}</option>
-                    @foreach ($projects as $p)
-                        <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="projectFilter" id="filter-proyek-cnv" server live :label="__('Proyek')"
+                         :kosong="__('Semua')" :options="$opsiProyek" />
             </div>
             <div class="col-lg-3">
                 <label class="form-label" for="filter-status-cnv">{{ __('Status') }}</label>

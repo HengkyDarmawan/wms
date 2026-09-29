@@ -6,7 +6,9 @@ namespace App\Domain\Issue\Livewire;
 
 use App\Domain\Issue\Enums\MaterialIssueStatus;
 use App\Domain\Issue\Models\MaterialIssue;
-use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\View;
@@ -17,6 +19,7 @@ use Livewire\WithPagination;
 /** Layar 23-pemakaian §6 — daftar pemakaian material (ISU biasa & pembalik), dalam cakupan pengguna. */
 class IssueList extends Component
 {
+    use CariPilihan;
     use WithPagination;
 
     #[Url(as: 'q', except: '')]
@@ -42,15 +45,22 @@ class IssueList extends Component
 
     public function render(): View
     {
-        $proyek = auth()->user()?->accessibleProjectIds();
-
         return view('livewire.issue.issue-list', [
             'issues' => $this->daftar(),
             'statuses' => MaterialIssueStatus::options(),
-            'projects' => Project::query()
-                ->when($proyek !== null, fn (Builder $q) => $q->whereIn('id', $proyek))
-                ->orderBy('code')->get(['id', 'code', 'name']),
+            'opsiProyek' => $this->pilihanProyek()->awalDengan($this->projectFilter),
         ]);
+    }
+
+    /** Saringan proyek: daftar lama, dicari ke server (A-395). */
+    private function pilihanProyek(): Pilihan
+    {
+        return SumberPilihan::proyekIdCakupan();
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        return $model === 'projectFilter' && auth()->user()?->can('viewAny', MaterialIssue::class) ? $this->pilihanProyek() : null;
     }
 
     private function daftar(): LengthAwarePaginator

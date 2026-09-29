@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `asset` (Aset Dipinjamkan)
 
-**Versi:** 0.8
-**Tanggal:** 28 September 2026
-**Status:** selesai Fase 1 — modul ketiga belas setelah [Konversi & Waste](24-konversi-waste.md); melengkapi stub pemeriksaan aset di retur ([A-116](04-keputusan-dan-asumsi.md#a-116)); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-163](04-keputusan-dan-asumsi.md#a-163)–[A-169](04-keputusan-dan-asumsi.md#a-169) (*Perlu validasi*); v0.3: pengingat harian aset lewat jatuh tempo lewat notifikasi ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.7: **transfer aset On-site antar proyek** (TRF aset + SJ antar site, AST `transferred`, kejadian `asset_transferred`), pindahan sisa proyek dari hub, jejak lokasi aset ([A-249](04b-asumsi-lanjutan.md#a-249), [A-250](04b-asumsi-lanjutan.md#a-250), [A-251](04b-asumsi-lanjutan.md#a-251)); v0.8: aset dipinjamkan = jenis barang **Alat bernomor seri** di form item ([A-283](04b-asumsi-lanjutan.md#a-283), §13.4)
+**Versi:** 0.9
+**Tanggal:** 1 Oktober 2026
+**Status:** selesai Fase 1 — v0.9: pilihan yang bisa dicari; saringan proyek daftar Aset & Serah terima dicari ke server ([A-395](04b-asumsi-lanjutan.md#a-395), §13.5, TC-AST-17); modul ketiga belas setelah [Konversi & Waste](24-konversi-waste.md); melengkapi stub pemeriksaan aset di retur ([A-116](04-keputusan-dan-asumsi.md#a-116)); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-163](04-keputusan-dan-asumsi.md#a-163)–[A-169](04-keputusan-dan-asumsi.md#a-169) (*Perlu validasi*); v0.3: pengingat harian aset lewat jatuh tempo lewat notifikasi ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.7: **transfer aset On-site antar proyek** (TRF aset + SJ antar site, AST `transferred`, kejadian `asset_transferred`), pindahan sisa proyek dari hub, jejak lokasi aset ([A-249](04b-asumsi-lanjutan.md#a-249), [A-250](04b-asumsi-lanjutan.md#a-250), [A-251](04b-asumsi-lanjutan.md#a-251)); v0.8: aset dipinjamkan = jenis barang **Alat bernomor seri** di form item ([A-283](04b-asumsi-lanjutan.md#a-283), §13.4)
 **Modul:** `asset` (AST)
 **Fase:** F1 (serah terima otomatis dari SJ, kembali lewat RET/GRN, pemeriksaan grade + skor + foto + meter, state aset mengikuti lokasi, aset hilang → ADJ, laporan aset dipinjamkan, cetak BA Serah Terima Aset); jadwal maintenance & pemicu meter `[F2]` stub ([BR-AST-07](05-aturan-bisnis.md#br-ast)); notifikasi jatuh tempo menunggu modul notifikasi
 **Dokumen terkait:** [Blueprint §6.8](01-blueprint.md#68-aset-dipinjamkan) · [Aturan Bisnis §BR-AST](05-aturan-bisnis.md#br-ast), [§14 matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status §2.11, §3](06-katalog-status-dan-enum.md) · [Model data 08c](08c-model-data-pendukung.md) · [A-29](04-keputusan-dan-asumsi.md#a-29), [A-66](04-keputusan-dan-asumsi.md#a-66), [A-116](04-keputusan-dan-asumsi.md#a-116) · [22-retur-transfer](22-retur-transfer.md), [15-picking-shipment](15-picking-shipment.md), [21-opname-penyesuaian](21-opname-penyesuaian.md)
@@ -162,6 +162,7 @@ Uji di `tests/Feature/Asset` (12 uji): `AssetLifecycleTest`, `AssetLossTest`, `A
 | TC-AST-14 | aset dipinjam P1 4 hari, P2 ber-On-site | TRF aset → SJ antar site → berangkat → terima lewat tautan | TRF `approved` tanpa PCK; berangkat tanpa pergerakan; satu pergerakan On-site P1 → P2; state `on_loan` P2, jatuh tempo P2; AST lama `transferred` 5 hari ↔ AST baru; `asset_transferred`; TRF `completed`; retur dari P2 memakai AST baru | A-249 |
 | TC-AST-15 | TRF aset berangkat | terima: aset kurang | SJ `partially_delivered`; aset tetap di P1, AST tetap `checked_out`; TRF `completed`, diterima 0 | A-249 |
 | TC-AST-16 | layar | pindahan dari hub → detail TRF → SJ antar site → terima; halaman aset & AST | wizard 200 (driver 403), TRF aset dibuat; tombol & SJ; jejak lokasi Proyek P1 → Proyek P2; tautan "Dipindah dari"; SJ "Dijemput dari", asal AST | A-250, A-251 |
+| TC-AST-17 | Kepala Gudang bercakupan proyek P1; P2 | cari "PR" di saringan Proyek daftar Aset & Serah terima | hanya P1 di keduanya | [A-395](04b-asumsi-lanjutan.md#a-395) |
 | TC-AST-13 | AST `checked_out` | unggah foto serah terima keluar dua kali | `photo_out_id` menunjuk foto terbaru, dua lampiran tersimpan; staf tanpa `asset.manage` 403; setelah kembali 403 | A-238, P-03 |
 
 Uji modul lain yang berubah: TC-RET-13 (aset diperiksa dulu, `asset_returned` membawa pemeriksaan), TC-TPL-04 (`asset-handover` tak lagi 501), TC-ACC-27b (4 permission `asset`), TC-RPT-01 (9 laporan).
@@ -203,6 +204,10 @@ Domain `app/Domain/Asset`: 4 aksi (`UpdateAssetHandover`, `UpdateAssetProfile`, 
 ### 13.4 Alat bernomor seri (28 September 2026)
 
 Di form item, aset dipinjamkan dibuat dengan memilih jenis barang **Alat bernomor seri** (`serial` + `asset`, strategi manual) — pilihan itu hanya tampil bila saklar `serial` menyala; baris REQ untuk alat otomatis *Pinjam* dan tidak bisa diubah ([A-283](04b-asumsi-lanjutan.md#a-283), [A-286](04b-asumsi-lanjutan.md#a-286)). Item lama berkepemilikan *Keduanya* tampil sebagai *Jenis khusus* dan tetap memakai pilihan Beli/Pinjam per baris. Alur aset (BR-AST-*) tidak berubah.
+
+### 13.5 Pilihan yang bisa dicari (1 Oktober 2026)
+
+`AssetList` (saringan *Proyek peminjam*, `SumberPilihan::proyekSemuaStatus` = `dalamCakupan` seperti dulu) dan `HandoverList` (saringan Proyek, `proyekIdCakupan()`) memakai `<x-pilih server live>`; cari hanya bagi `viewAny`. Grade, satuan meter, alasan, status tetap `<select>`. Uji `tests/Feature/Conversion/PilihanDiProyekTest` (TC-AST-17) ([A-395](04b-asumsi-lanjutan.md#a-395)).
 
 ### 13.3 Sisa pekerjaan
 

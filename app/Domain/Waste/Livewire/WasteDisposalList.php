@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Waste\Livewire;
 
-use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Waste\Enums\WasteDisposalStatus;
 use App\Domain\Waste\Enums\WasteDisposition;
 use App\Domain\Waste\Models\WasteDisposal;
@@ -18,6 +20,7 @@ use Livewire\WithPagination;
 /** Layar 24-konversi-waste §6 — daftar Berita Acara Waste, dalam cakupan pengguna. */
 class WasteDisposalList extends Component
 {
+    use CariPilihan;
     use WithPagination;
 
     #[Url(as: 'q', except: '')]
@@ -43,16 +46,23 @@ class WasteDisposalList extends Component
 
     public function render(): View
     {
-        $proyek = auth()->user()?->accessibleProjectIds();
-
         return view('livewire.waste.waste-disposal-list', [
             'disposals' => $this->daftar(),
             'statuses' => WasteDisposalStatus::options(),
             'dispositions' => WasteDisposition::options(),
-            'projects' => Project::query()
-                ->when($proyek !== null, fn (Builder $q) => $q->whereIn('id', $proyek))
-                ->orderBy('code')->get(['id', 'code', 'name']),
+            'opsiProyek' => $this->pilihanProyek()->awalDengan($this->projectFilter),
         ]);
+    }
+
+    /** Saringan proyek: daftar lama, dicari ke server (A-395). */
+    private function pilihanProyek(): Pilihan
+    {
+        return SumberPilihan::proyekIdCakupan();
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        return $model === 'projectFilter' && auth()->user()?->can('viewAny', WasteDisposal::class) ? $this->pilihanProyek() : null;
     }
 
     private function daftar(): LengthAwarePaginator

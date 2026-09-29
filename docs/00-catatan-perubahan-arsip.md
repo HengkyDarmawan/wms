@@ -1,9 +1,23 @@
 # Catatan Perubahan — Arsip (v0.2–v0.31)
 
-**Versi:** 1.21
+**Versi:** 1.22
 **Tanggal:** 1 Oktober 2026
-**Status:** arsip — v1.21: blok v0.32 dipindah dari README v0.94; v1.20: blok v0.31 dipindah dari README v0.90; v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
+**Status:** arsip — v1.22: blok v0.33 dipindah dari README v0.95; v1.21: blok v0.32 dipindah dari README v0.94; v1.20: blok v0.31 dipindah dari README v0.90; v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
 **Dokumen terkait:** [README](README.md)
+
+### v0.33 — 25 September 2026 (modul Purchase Request selesai Fase 1)
+- **Berkas baru `wms/26-purchase-request.md` v0.1 (selesai Fase 1).** Domain `app/Domain/PurchaseRequest`, migrasi tenant `000150` (`purchase_requests`, `purchase_request_lines`, `purchase_request_orders`, `purchase_request_order_lines`; indeks `goods_receipt_lines.purchase_request_order_line_id`).
+  - PRQ dari tiga asal (KS §2.15): **backorder** baris REQ bersumber pembelian saat REQ disetujui (BR-REQ-05), **titik pesan ulang** (job harian 06:00 `purchase-requests:reorder`, draf, BR-REQ-11), **manual** (`pr.create`). Kejadian `purchase_requested` / `purchase_request_cancelled`.
+  - Approval opsional lewat mesin approval (tanpa aturan = disetujui); kondisi jenis vendor & asal (BR-APR-07). Semua jenis `approval_document_type` kini tersambung.
+  - **Catatan pemesanan** per vendor oleh Penindak Lanjut PR (`pr.order`, A-51): PO eksternal, nomor pesanan toko online, resi, ETA; baris boleh dipecah ke beberapa vendor; vendor tetap item disarankan; vendor baru sementara (A-53).
+  - **GRN vendor** merujuk baris catatan (BR-GRN-01/05); PRQ `partially_fulfilled`/`fulfilled`; `goods_received` membawa nomor PRQ & PO; barang backorder yang ditaruh direservasi ke REQ penunggu (BR-REQ-08). REQ batal/tutup → PRQ yang belum diteruskan ikut batal (BR-REQ-09/15).
+  - Layar daftar/form/detail PRQ, kartu *Pesanan PRQ ke vendor ini* di form GRN, menu **Pembelian**, palet.
+- **Asumsi baru [A-170](wms/04-keputusan-dan-asumsi.md#a-170)–[A-175](wms/04-keputusan-dan-asumsi.md#a-175)** (*Perlu validasi*, `04` → v0.22, §2.11): permission & cakupan, PRQ backorder, kolom di luar ERD, jenis vendor untuk aturan, sambungan GRN, job titik pesan ulang.
+- **Permission baru** modul `purchase_request` (6): `pr.view`, `pr.create`, `pr.submit`, `pr.approve`, `pr.order`, `pr.cancel`. Aturan demo **PRQ toko online** (00-akun-uji §5).
+- **Katalog** `06` → v0.16: catatan §2.15 — **tanpa status baru**.
+- **Model data** 08a–08c → v0.15 (digenerate ulang): kolom implementasi PRQ (A-172).
+- **Modul lain:** `14-request` → v0.7, `19-receipt-putaway` → v0.7, `20-approval` → v0.7, `08-arsitektur` → v0.14 (§7 job, §12), `00-akun-uji` → v1.9, laporan progres → v1.10 (PRQ ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.5.
+- **Uji:** 12 uji TC-PRQ-01–12 (termasuk rantai REQ pembelian → PRQ → catatan pemesanan → GRN → put-away → reservasi → PCK → SJ). TC-ACC-27b (6 permission), TC-APR-17 (jenis di luar katalog), TC-APR-21 (7 aturan demo) disesuaikan. **537 uji hijau** (MariaDB 10.4.32, XAMPP3).
 
 ### v0.32 — 24 September 2026 (modul Aset dipinjamkan selesai Fase 1)
 - **Berkas baru `wms/25-aset.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Asset`, migrasi tenant `000140` (`asset_handovers`, `asset_inspections`, `maintenance_schedules` stub F2).

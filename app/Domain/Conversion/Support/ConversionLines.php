@@ -13,10 +13,12 @@ use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Uom;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -216,11 +218,23 @@ class ConversionLines
     /** @return Collection<int, Bin> bin penyimpanan aktif gudang, tujuan output & offcut */
     public function storageBins(Warehouse $gudang): Collection
     {
+        return $this->storageBinQuery($gudang)->get(['id', 'code', 'warehouse_id', 'bin_type', 'bin_status']);
+    }
+
+    /** Query {@see storageBins} — juga sumber pilihan bin yang dicari ke server (A-395). */
+    public function storageBinQuery(Warehouse $gudang): Builder
+    {
         return Bin::query()->withoutGlobalScopes()
             ->where('warehouse_id', $gudang->id)
             ->where('bin_type', BinType::Storage->value)
             ->where('bin_status', BinStatus::Active->value)
-            ->orderBy('code')->get(['id', 'code', 'warehouse_id', 'bin_type', 'bin_status']);
+            ->orderBy('code');
+    }
+
+    /** Pilihan bin penyimpanan aktif gudang (kode), untuk `<x-pilih server>` (A-395). */
+    public function pilihanStorageBin(Warehouse $gudang): Pilihan
+    {
+        return Pilihan::dari($this->storageBinQuery($gudang), ['code'], fn (Bin $b) => ['value' => (int) $b->id, 'text' => $b->code]);
     }
 
     private function periksaItem(Item $item, string $label): void

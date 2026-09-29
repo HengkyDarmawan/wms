@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.94
+**Versi:** 0.95
 **Tanggal:** 1 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -107,6 +107,12 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.95 — 1 Oktober 2026 (pilihan yang bisa dicari: menu Di proyek)
+- **Asumsi baru** [A-395](wms/04b-asumsi-lanjutan.md#a-395) (04b v0.38 §2.54, *Perlu validasi*): proyek ISU/CNV/WST, item hasil & bin tujuan CNV, bin tujuan WST, saringan proyek daftar ISU/CNV/WST/Aset/Serah terima dicari ke server; ganti gudang WST mengosongkan proyek di luar daftar.
+- **Spesifikasi** [23-pemakaian](wms/23-pemakaian.md) v0.7 (§13.5, TC-ISU-22); [24-konversi-waste](wms/24-konversi-waste.md) v0.7 (§13.6, TC-CNV-19, TC-WST-07); [25-aset](wms/25-aset.md) v0.9 (§13.5, TC-AST-17). Glosarium, katalog 06, model data, dan route tidak berubah.
+- **Kode:** `IssueForm`, `IssueList`, `ConversionForm`, `ConversionList`, `ConversionLines::storageBinQuery/pilihanStorageBin`, `WasteDisposalForm`, `WasteDisposalList`, `AssetList`, `HandoverList`, `SumberPilihan::proyekIdCakupan`; view form & daftar terkait; uji `PilihanDiProyekTest`.
+- **Arsip:** blok v0.33 dipindah ke [arsip](00-catatan-perubahan-arsip.md) v1.22.
 
 ### v0.94 — 1 Oktober 2026 (pilihan yang bisa dicari: menu Opname & penyesuaian)
 - **Asumsi baru** [A-394](wms/04b-asumsi-lanjutan.md#a-394) (04b v0.37 §2.54, *Perlu validasi*): bin & item baris ADJ manual dan item temuan hitung dicari ke server; ganti gudang ADJ mengosongkan bin baris; penghitung sesi dimuat sekaligus.
@@ -418,17 +424,3 @@ docs/
 - **Model data** 08a–08c → v0.16 (digenerate ulang): kolom & tabel pusat A-184.
 - **Modul lain:** `08-arsitektur` → v0.15 (§3 langkah 5, §7, §12), `00-akun-uji` → v1.10, laporan progres → v1.11, `prompts/00-lanjutkan-di-rumah.md` → v1.6, `cek.md`.
 - **Uji:** 9 uji baru TC-PLT-03–11 (termasuk pembuatan database company sungguhan). TC-ACC-27b (2 permission `billing`) disesuaikan. **546 uji hijau** (MariaDB 10.4.32, XAMPP3).
-
-### v0.33 — 25 September 2026 (modul Purchase Request selesai Fase 1)
-- **Berkas baru `wms/26-purchase-request.md` v0.1 (selesai Fase 1).** Domain `app/Domain/PurchaseRequest`, migrasi tenant `000150` (`purchase_requests`, `purchase_request_lines`, `purchase_request_orders`, `purchase_request_order_lines`; indeks `goods_receipt_lines.purchase_request_order_line_id`).
-  - PRQ dari tiga asal (KS §2.15): **backorder** baris REQ bersumber pembelian saat REQ disetujui (BR-REQ-05), **titik pesan ulang** (job harian 06:00 `purchase-requests:reorder`, draf, BR-REQ-11), **manual** (`pr.create`). Kejadian `purchase_requested` / `purchase_request_cancelled`.
-  - Approval opsional lewat mesin approval (tanpa aturan = disetujui); kondisi jenis vendor & asal (BR-APR-07). Semua jenis `approval_document_type` kini tersambung.
-  - **Catatan pemesanan** per vendor oleh Penindak Lanjut PR (`pr.order`, A-51): PO eksternal, nomor pesanan toko online, resi, ETA; baris boleh dipecah ke beberapa vendor; vendor tetap item disarankan; vendor baru sementara (A-53).
-  - **GRN vendor** merujuk baris catatan (BR-GRN-01/05); PRQ `partially_fulfilled`/`fulfilled`; `goods_received` membawa nomor PRQ & PO; barang backorder yang ditaruh direservasi ke REQ penunggu (BR-REQ-08). REQ batal/tutup → PRQ yang belum diteruskan ikut batal (BR-REQ-09/15).
-  - Layar daftar/form/detail PRQ, kartu *Pesanan PRQ ke vendor ini* di form GRN, menu **Pembelian**, palet.
-- **Asumsi baru [A-170](wms/04-keputusan-dan-asumsi.md#a-170)–[A-175](wms/04-keputusan-dan-asumsi.md#a-175)** (*Perlu validasi*, `04` → v0.22, §2.11): permission & cakupan, PRQ backorder, kolom di luar ERD, jenis vendor untuk aturan, sambungan GRN, job titik pesan ulang.
-- **Permission baru** modul `purchase_request` (6): `pr.view`, `pr.create`, `pr.submit`, `pr.approve`, `pr.order`, `pr.cancel`. Aturan demo **PRQ toko online** (00-akun-uji §5).
-- **Katalog** `06` → v0.16: catatan §2.15 — **tanpa status baru**.
-- **Model data** 08a–08c → v0.15 (digenerate ulang): kolom implementasi PRQ (A-172).
-- **Modul lain:** `14-request` → v0.7, `19-receipt-putaway` → v0.7, `20-approval` → v0.7, `08-arsitektur` → v0.14 (§7 job, §12), `00-akun-uji` → v1.9, laporan progres → v1.10 (PRQ ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.5.
-- **Uji:** 12 uji TC-PRQ-01–12 (termasuk rantai REQ pembelian → PRQ → catatan pemesanan → GRN → put-away → reservasi → PCK → SJ). TC-ACC-27b (6 permission), TC-APR-17 (jenis di luar katalog), TC-APR-21 (7 aturan demo) disesuaikan. **537 uji hijau** (MariaDB 10.4.32, XAMPP3).

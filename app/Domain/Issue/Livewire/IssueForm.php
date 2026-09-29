@@ -14,6 +14,9 @@ use App\Domain\Label\Models\PackageLabel;
 use App\Domain\Label\Support\PackageLabelLedger;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Support\ScanCode;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -28,6 +31,7 @@ use Livewire\Component;
 class IssueForm extends Component
 {
     use CapturesPackageLabels;
+    use CariPilihan;
     use HandlesIssueRules;
 
     /** @var array<string, string> */
@@ -192,8 +196,9 @@ class IssueForm extends Component
 
     public function simpan(CreateMaterialIssue $action): void
     {
+        // A-395: proyek dari daftar (ISU baru; proyek draf terkunci); id lain dari browser ditolak di isiannya.
         $this->validate([
-            'form.project_id' => ['required'],
+            'form.project_id' => ['required', ...($this->issueId === null ? [$this->pilihanProyek()->aturan()] : [])],
             'form.warehouse_id' => ['required'],
         ], attributes: ['form.project_id' => __('Proyek'), 'form.warehouse_id' => __('Gudang Site')]);
 
@@ -305,13 +310,28 @@ class IssueForm extends Component
     public function render(): View
     {
         return view('livewire.issue.issue-form', [
-            'projects' => $this->proyek(),
+            'opsiProyek' => $this->pilihanProyek()->awalDengan($this->form['project_id']),
             'sites' => $this->sites(),
             'calon' => $this->calon(),
             'kodeLabel' => $this->kodeLabel(collect($this->labels)->flatten(1)),
             'labelDialog' => $this->labelDialog(),
             'nomor' => $this->issueId !== null ? MaterialIssue::query()->whereKey($this->issueId)->value('number') : null,
         ]);
+    }
+
+    /** Proyek aktif dalam id cakupan (daftar lama `proyek()`), dicari ke server (A-395). */
+    private function pilihanProyek(): Pilihan
+    {
+        return SumberPilihan::proyekIdCakupan(aktif: true);
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        if ($model !== 'form.project_id' || $this->issueId !== null) {
+            return null;
+        }
+
+        return auth()->user()?->can('create', MaterialIssue::class) ? $this->pilihanProyek() : null;
     }
 
     /** @return Collection<int, Project> proyek aktif dalam cakupan pengguna */

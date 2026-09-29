@@ -18,25 +18,14 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-md-4">
-                <label class="form-label" for="cnv-proyek">{{ __('Proyek') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.project_id') is-invalid @enderror" id="cnv-proyek" wire:model.live="form.project_id" @disabled($nomor)>
-                    <option value="">{{ __('Pilih proyek…') }}</option>
-                    @foreach ($projects as $p)
-                        <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.project_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                {{-- A-395: proyek aktif dalam cakupan, dicari ke server. --}}
+                <x-pilih model="form.project_id" id="cnv-proyek" server live wajib :label="__('Proyek')" :disabled="(bool) $nomor"
+                         :kosong="__('Pilih proyek…')" :options="$opsiProyek" />
                 <div class="form-text">{{ __('Persiapan stok memakai Proyek Internal.') }}</div>
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="cnv-gudang">{{ __('Gudang') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.warehouse_id') is-invalid @enderror" id="cnv-gudang" wire:model.live="form.warehouse_id" @disabled($nomor)>
-                    <option value="">{{ __('Pilih gudang…') }}</option>
-                    @foreach ($warehouses as $g)
-                        <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="form.warehouse_id" id="cnv-gudang" live wajib :label="__('Gudang')" :disabled="(bool) $nomor"
+                         :kosong="__('Pilih gudang…')" :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="cnv-ket">{{ __('Keterangan') }}</label>
@@ -124,12 +113,9 @@
                             @php($galat = $errors->first('rencana.potong.'.$p['id']))
                             <tr wire:key="potong-{{ $p['id'] }}" @class(['table-danger' => $galat !== ''])>
                                 <td>
-                                    <select class="form-select form-select-sm" wire:model.live="potong.{{ $i }}.item_id" aria-label="{{ __('Item hasil') }}">
-                                        <option value="">{{ $batangTerpilih ? __('Sama dengan batang').' ('.$batangTerpilih['item_code'].')' : __('Sama dengan batang') }}</option>
-                                        @foreach ($items as $it)
-                                            <option value="{{ $it->id }}">{{ $it->code }} — {{ $it->name }}</option>
-                                        @endforeach
-                                    </select>
+                                    <x-pilih model="potong.{{ $i }}.item_id" id="cnv-potong-item-{{ $i }}" server live kecil :aria="__('Item hasil')"
+                                             :kunci="$kunciItem.'|'.count($potong)" :options="$opsiItemPotong[$i] ?? []"
+                                             :kosong="$batangTerpilih ? __('Sama dengan batang').' ('.$batangTerpilih['item_code'].')' : __('Sama dengan batang')" />
                                 </td>
                                 <td><input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model.live.debounce.500ms="potong.{{ $i }}.length" aria-label="{{ __('Panjang') }}"></td>
                                 <td><input class="form-control form-control-sm" type="number" step="1" min="1" max="100" wire:model.live.debounce.500ms="potong.{{ $i }}.count" aria-label="{{ __('Jumlah potongan') }}"></td>
@@ -174,10 +160,9 @@
                                 @php($galat = $errors->first('rencana.potong.'.$p['id']))
                                 <tr wire:key="batang-{{ $b['id'] }}-{{ $p['id'] }}" @class(['table-danger' => $galat !== ''])>
                                     <td style="width: 40%">
-                                        <select class="form-select form-select-sm" wire:model.live="tambahan.{{ $bi }}.potong.{{ $pi }}.item_id" aria-label="{{ __('Item hasil') }}">
-                                            <option value="">{{ __('Sama dengan batang') }}</option>
-                                            @foreach ($items as $it) <option value="{{ $it->id }}">{{ $it->code }} — {{ $it->name }}</option> @endforeach
-                                        </select>
+                                        <x-pilih model="tambahan.{{ $bi }}.potong.{{ $pi }}.item_id" id="cnv-tambahan-{{ $bi }}-item-{{ $pi }}" server live kecil
+                                                 :aria="__('Item hasil')" :kunci="$kunciItem.'|'.count($tambahan).'|'.count($b['potong'])"
+                                                 :kosong="__('Sama dengan batang')" :options="$opsiItemTambahan[$bi][$pi] ?? []" />
                                     </td>
                                     <td style="width: 22%"><input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model.live.debounce.500ms="tambahan.{{ $bi }}.potong.{{ $pi }}.length" aria-label="{{ __('Panjang') }}"></td>
                                     <td style="width: 18%"><input class="form-control form-control-sm" type="number" step="1" min="1" max="100" wire:model.live.debounce.500ms="tambahan.{{ $bi }}.potong.{{ $pi }}.count" aria-label="{{ __('Jumlah potongan') }}"></td>
@@ -292,23 +277,15 @@
                                     @if ($h['kind'] === 'waste')
                                         <span class="small text-muted">{{ __('item input pertama, ke bin Waste') }}</span>
                                     @else
-                                        <select class="form-select form-select-sm" wire:model.live="hasil.{{ $i }}.item_id" aria-label="{{ __('Item hasil') }}">
-                                            <option value="">{{ __('Pilih item…') }}</option>
-                                            @foreach ($items as $it)
-                                                <option value="{{ $it->id }}">{{ $it->code }} — {{ $it->name }} ({{ $it->baseUom?->code }})</option>
-                                            @endforeach
-                                        </select>
+                                        <x-pilih model="hasil.{{ $i }}.item_id" id="cnv-hasil-item-{{ $i }}" server live kecil :aria="__('Item hasil')"
+                                                 :kunci="$kunciItem.'|'.count($hasil)" :kosong="__('Pilih item…')" :options="$opsiItemHasil[$i] ?? []" />
                                     @endif
                                 </td>
                                 <td><input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model.live.debounce.500ms="hasil.{{ $i }}.qty" aria-label="{{ __('Jumlah') }}"></td>
                                 <td>
                                     @if ($h['kind'] !== 'waste')
-                                        <select class="form-select form-select-sm" wire:model="hasil.{{ $i }}.bin_id" aria-label="{{ __('Bin tujuan') }}">
-                                            <option value="">{{ __('Bin input pertama') }}</option>
-                                            @foreach ($bins as $b)
-                                                <option value="{{ $b->id }}">{{ $b->code }}</option>
-                                            @endforeach
-                                        </select>
+                                        <x-pilih model="hasil.{{ $i }}.bin_id" id="cnv-hasil-bin-{{ $i }}" server kecil :aria="__('Bin tujuan')"
+                                                 :kunci="$form['warehouse_id'].'|'.count($hasil)" :kosong="__('Bin input pertama')" :options="$opsiBinHasil[$i] ?? []" />
                                     @endif
                                 </td>
                                 <td>
@@ -337,12 +314,8 @@
             @if ($jenis === \App\Domain\Conversion\Enums\ConversionType::Cut || $jenis === \App\Domain\Conversion\Enums\ConversionType::Repack)
                 <div class="d-flex align-items-center gap-2 small">
                     <label class="mb-0" for="cnv-bin-hasil">{{ __('Bin hasil') }}</label>
-                    <select class="form-select form-select-sm" id="cnv-bin-hasil" wire:model.live="form.bin_id" style="max-width: 14rem">
-                        <option value="">{{ __('Sama dengan bin input') }}</option>
-                        @foreach ($bins as $b)
-                            <option value="{{ $b->id }}">{{ $b->code }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="form.bin_id" id="cnv-bin-hasil" server live kecil :aria="__('Bin hasil')" style="min-width: 14rem"
+                             :kunci="$form['warehouse_id']" :kosong="__('Sama dengan bin input')" :options="$opsiBin" />
                 </div>
             @endif
         </div>

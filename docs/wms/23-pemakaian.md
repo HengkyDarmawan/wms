@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `issue` (Pemakaian Material di Site)
 
-**Versi:** 0.6
-**Tanggal:** 24 September 2026
-**Status:** selesai Fase 1 — modul kesebelas setelah [Transfer/Retur](22-retur-transfer.md) dan [Template dokumen & label](18-template-dokumen-label.md); ISU pembalik diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-117](04-keputusan-dan-asumsi.md#a-117)–[A-119](04-keputusan-dan-asumsi.md#a-119) dan [A-150](04-keputusan-dan-asumsi.md#a-150)–[A-152](04-keputusan-dan-asumsi.md#a-152) (*Perlu validasi*)
+**Versi:** 0.7
+**Tanggal:** 1 Oktober 2026
+**Status:** selesai Fase 1 — v0.7: pilihan yang bisa dicari; proyek ISU & saringan proyek dicari ke server ([A-395](04b-asumsi-lanjutan.md#a-395), §13.5, TC-ISU-22); modul kesebelas setelah [Transfer/Retur](22-retur-transfer.md) dan [Template dokumen & label](18-template-dokumen-label.md); ISU pembalik diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-117](04-keputusan-dan-asumsi.md#a-117)–[A-119](04-keputusan-dan-asumsi.md#a-119) dan [A-150](04-keputusan-dan-asumsi.md#a-150)–[A-152](04-keputusan-dan-asumsi.md#a-152) (*Perlu validasi*)
 **Modul:** `issue` (ISU)
 **Fase:** F1 (ISU dari bin penyimpanan Gudang Site, ISU pembalik dengan approval, laporan Material per Proyek, cetak Bukti Pemakaian Material, foto pemakaian sebagai lampiran [A-238](04-keputusan-dan-asumsi.md#a-238))
 **Dokumen terkait:** [Blueprint §6.9, §7, §9](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-PRJ](05-aturan-bisnis.md#br-prj), [§BR-GEN](05-aturan-bisnis.md#br-gen), [§14 matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status §2.9, §3](06-katalog-status-dan-enum.md) · [Glosarium §5](03-glosarium.md#5-dokumen-transaksi) · [Model data 08b](08b-model-data-stok-dokumen.md) · [Alur 3](07-proses-bisnis.md#alur-3--pemakaian-material-di-gudang-site) · [A-32](04-keputusan-dan-asumsi.md#a-32), [A-40](04-keputusan-dan-asumsi.md#a-40), [A-50](04-keputusan-dan-asumsi.md#a-50), [A-85](04-keputusan-dan-asumsi.md#a-85)
@@ -188,6 +188,7 @@ Uji di `tests/Feature/Issue` (17 uji): `IssueTest`, `IssueReversalTest`, `IssueC
 | TC-ISU-18 | ISU dikonfirmasi | unggah foto pemakaian (POST) | lampiran `photo` tersimpan & terbuka lewat `/attachments/{id}`; staf gudang lain 404; PDF ditolak; tanpa `issue.create` 403; kartu *Foto pemakaian* di detail | A-238, NFR-14 |
 | TC-ISU-20 | kabel 24 berlabel dikirim ke KRW1 (PCK memindai label) | ISU 12 tanpa pindai; layar ISU pindai induk (dialog 12) lalu simpan & konfirmasi | label Di gudang KRW1 di bin penyimpanan site; tanpa pindai BR-LBL-04; klaim tersimpan di baris; label Keluar "Keluar (dipakai)" | BR-LBL-04, [A-299](04b-asumsi-lanjutan.md#a-299) |
 | TC-ISU-21 | ISU 12 dengan label dikonfirmasi | ISU pembalik disetujui | label kembali Di gudang isi 12, "Kembali (pembalik pemakaian)" | [A-300](04b-asumsi-lanjutan.md#a-300) |
+| TC-ISU-22 | Pemohon bercakupan proyek P1; P2 | cari "PR" di Proyek form ISU & saringan daftar ISU; kirim P2; driver mencari | hanya P1; simpan ditolak di isian Proyek; driver kosong | [A-395](04b-asumsi-lanjutan.md#a-395) |
 
 Uji modul lain yang berubah: TC-ACC-27b (5 permission modul `issue`), TC-RPT-01 (8 laporan).
 
@@ -227,6 +228,10 @@ Domain `app/Domain/Issue` ([Arsitektur §4](08-arsitektur.md#4-struktur-kode) `I
 ### 13.4 Label kemasan (28 September 2026)
 
 `IssueForm::pindai` mengenali label kemasan (klaim per kunci calon, dialog jumlah isi untuk induk); `IssuableStock::normalize` membawa `labels` ke `material_issue_lines.labels`; `ConfirmMaterialIssue` memeriksa cakupan lalu memposting label Keluar; `IssuePoster::reverse` membuka lagi label baris asal ([A-299](04b-asumsi-lanjutan.md#a-299), [A-300](04b-asumsi-lanjutan.md#a-300)).
+
+### 13.5 Pilihan yang bisa dicari (1 Oktober 2026)
+
+`IssueForm`: Proyek (`SumberPilihan::proyekIdCakupan(aktif: true)` = daftar lama `proyek()`) memakai `<x-pilih server live>`, cari hanya bagi `create` pada ISU baru (proyek draf terkunci); id di luar daftar ditolak di isian Proyek. Gudang Site proyek terpilih dimuat sekaligus. `IssueList`: saringan Proyek `proyekIdCakupan()` (semua status). Uji `tests/Feature/Conversion/PilihanDiProyekTest` (TC-ISU-22) ([A-395](04b-asumsi-lanjutan.md#a-395)).
 
 ### 13.3 Sisa pekerjaan
 

@@ -17,24 +17,13 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-md-3">
-                <label class="form-label" for="wst-gudang">{{ __('Gudang') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.warehouse_id') is-invalid @enderror" id="wst-gudang" wire:model.live="form.warehouse_id">
-                    <option value="">{{ __('Pilih gudang…') }}</option>
-                    @foreach ($warehouses as $g)
-                        <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="form.warehouse_id" id="wst-gudang" live wajib :label="__('Gudang')" :kosong="__('Pilih gudang…')"
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
             </div>
             <div class="col-md-3">
-                <label class="form-label" for="wst-proyek">{{ __('Proyek') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.project_id') is-invalid @enderror" id="wst-proyek" wire:model="form.project_id">
-                    <option value="">{{ __('Pilih proyek…') }}</option>
-                    @foreach ($projects as $p)
-                        <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.project_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                {{-- A-395: proyek aktif dalam cakupan (Gudang Site: proyek pemiliknya), dicari ke server. --}}
+                <x-pilih model="form.project_id" id="wst-proyek" server wajib :label="__('Proyek')" :kunci="$form['warehouse_id']"
+                         :kosong="__('Pilih proyek…')" :options="$opsiProyek" />
                 <div class="form-text">{{ __('Waste gudang umum memakai Proyek Internal.') }}</div>
             </div>
             <div class="col-md-3">
@@ -49,14 +38,8 @@
             </div>
             <div class="col-md-3">
                 @if ($form['disposition'] === 'reused')
-                    <label class="form-label" for="wst-bin">{{ __('Bin tujuan') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.target_bin_id') is-invalid @enderror" id="wst-bin" wire:model="form.target_bin_id">
-                        <option value="">{{ __('Pilih bin penyimpanan…') }}</option>
-                        @foreach ($bins as $b)
-                            <option value="{{ $b->id }}">{{ $b->code }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.target_bin_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.target_bin_id" id="wst-bin" server wajib :label="__('Bin tujuan')" :kunci="$form['warehouse_id']"
+                             :kosong="__('Pilih bin penyimpanan…')" :options="$opsiBin" />
                 @else
                     <label class="form-label" for="wst-ket">{{ __('Keterangan') }}</label>
                     <input class="form-control" id="wst-ket" type="text" wire:model="form.notes" placeholder="{{ __('Opsional') }}">

@@ -6,7 +6,9 @@ namespace App\Domain\Waste\Livewire;
 
 use App\Domain\Conversion\Support\ConversionLines;
 use App\Domain\Master\Enums\ReasonContext;
-use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Waste\Actions\CreateWasteDisposal;
 use App\Domain\Waste\Enums\WasteDisposition;
@@ -24,6 +26,7 @@ use Livewire\Component;
  */
 class WasteDisposalForm extends Component
 {
+    use CariPilihan;
     use HandlesWasteRules;
 
     /** @var array<string, string> */
@@ -61,17 +64,24 @@ class WasteDisposalForm extends Component
         $this->qty = [];
         $this->reason = [];
         $this->form['target_bin_id'] = '';
+
+        // Daftar proyek ikut gudang (Gudang Site = proyek pemiliknya): nilai di luar daftar baru dikosongkan.
+        if (! $this->pilihanProyek()->berisi($this->form['project_id'])) {
+            $this->form['project_id'] = '';
+        }
     }
 
     public function simpan(CreateWasteDisposal $action): void
     {
         $this->authorize('create', WasteDisposal::class);
 
+        // A-395: proyek & bin tujuan dari daftar; id lain dari browser ditolak di isiannya.
         $this->validate([
             'form.warehouse_id' => ['required'],
-            'form.project_id' => ['required'],
+            'form.project_id' => ['required', $this->pilihanProyek()->aturan()],
             'form.disposition' => ['required'],
-        ], attributes: ['form.warehouse_id' => __('Gudang'), 'form.project_id' => __('Proyek'), 'form.disposition' => __('Disposisi')]);
+            'form.target_bin_id' => [$this->pilihanBin()?->aturan() ?? 'nullable'],
+        ], attributes: ['form.warehouse_id' => __('Gudang'), 'form.project_id' => __('Proyek'), 'form.disposition' => __('Disposisi'), 'form.target_bin_id' => __('Bin tujuan')]);
 
         $calon = $this->calon();
         $baris = [];
@@ -113,9 +123,10 @@ class WasteDisposalForm extends Component
 
         return view('livewire.waste.waste-disposal-form', [
             'warehouses' => $this->gudang(),
-            'projects' => $this->proyek($gudang),
+            // A-395: proyek & bin tujuan dicari ke server (daftar lama).
+            'opsiProyek' => $this->pilihanProyek()->awalDengan($this->form['project_id']),
             'dispositions' => WasteDisposition::options(),
-            'bins' => $gudang !== null ? app(ConversionLines::class)->storageBins($gudang) : collect(),
+            'opsiBin' => $gudang !== null ? app(ConversionLines::class)->pilihanStorageBin($gudang)->awalDengan($this->form['target_bin_id']) : [],
             'calon' => $this->calon(),
             'alasanWaste' => $this->pilihanAlasan(ReasonContext::Waste),
         ]);
@@ -128,15 +139,33 @@ class WasteDisposalForm extends Component
             ->get(['id', 'code', 'name', 'warehouse_type_id', 'project_id']);
     }
 
-    /** @return Collection<int, Project> proyek aktif dalam cakupan; Gudang Site hanya proyek pemiliknya */
-    private function proyek(?Warehouse $gudang): Collection
+    /** Proyek aktif dalam id cakupan; Gudang Site hanya proyek pemiliknya (daftar lama), dicari ke server (A-395). */
+    private function pilihanProyek(): Pilihan
     {
-        $ids = auth()->user()?->accessibleProjectIds();
+        $gudang = $this->gudang()->firstWhere('id', (int) $this->form['warehouse_id']);
 
-        return Project::query()->active()
-            ->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))
-            ->when($gudang?->isSite(), fn ($q) => $q->whereKey($gudang->project_id))
-            ->orderBy('code')->get(['id', 'code', 'name']);
+        return SumberPilihan::proyekIdCakupan(aktif: true)
+            ->saring(fn ($q) => $q->when($gudang?->isSite(), fn ($q) => $q->whereKey($gudang->project_id)));
+    }
+
+    private function pilihanBin(): ?Pilihan
+    {
+        $gudang = $this->gudang()->firstWhere('id', (int) $this->form['warehouse_id']);
+
+        return $gudang === null ? null : app(ConversionLines::class)->pilihanStorageBin($gudang);
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        if (! auth()->user()?->can('create', WasteDisposal::class)) {
+            return null;
+        }
+
+        return match ($model) {
+            'form.project_id' => $this->pilihanProyek(),
+            'form.target_bin_id' => $this->form['disposition'] === 'reused' ? $this->pilihanBin() : null,
+            default => null,
+        };
     }
 
     /** @return Collection<string, array<string, mixed>> */

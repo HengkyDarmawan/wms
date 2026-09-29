@@ -21,13 +21,8 @@
                 <input class="form-control" id="cari-wst" type="search" wire:model.live.debounce.400ms="search" placeholder="{{ __('Nomor WST') }}">
             </div>
             <div class="col-lg-4">
-                <label class="form-label" for="filter-proyek-wst">{{ __('Proyek') }}</label>
-                <select class="form-select" id="filter-proyek-wst" wire:model.live="projectFilter">
-                    <option value="">{{ __('Semua') }}</option>
-                    @foreach ($projects as $p)
-                        <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="projectFilter" id="filter-proyek-wst" server live :label="__('Proyek')"
+                         :kosong="__('Semua')" :options="$opsiProyek" />
             </div>
             <div class="col-lg-3">
                 <label class="form-label" for="filter-status-wst">{{ __('Status') }}</label>

@@ -23,6 +23,9 @@ use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Support\ScanCode;
 use App\Domain\Master\Support\StockFeatures;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -40,6 +43,7 @@ use Livewire\Component;
  */
 class ConversionForm extends Component
 {
+    use CariPilihan;
     use HandlesConversionRules;
 
     /** @var array<string, string> */
@@ -325,9 +329,18 @@ class ConversionForm extends Component
         $batang = $jenis === ConversionType::Cut ? $calon->get($this->batang) : null;
         $uomInput = $batang['base_uom_id'] ?? $this->inputTerpilih($calon)->first()['base_uom_id'] ?? null;
         $rencana = $this->rencana($calon, $items);
+        $pilihanItem = $this->pilihanItem($calon);
+        $pilihanBin = $gudang !== null ? app(ConversionLines::class)->pilihanStorageBin($gudang) : null;
 
         return view('livewire.conversion.conversion-form', [
-            'projects' => $this->proyek(),
+            // A-395: proyek, item hasil, bin tujuan dicari ke server (daftar lama).
+            'opsiProyek' => $this->pilihanProyek()->awalDengan($this->form['project_id']),
+            'opsiItemPotong' => $pilihanItem->awalPerBaris(array_column($this->potong, 'item_id')),
+            'opsiItemTambahan' => array_map(fn (array $b) => $pilihanItem->awalPerBaris(array_column($b['potong'], 'item_id')), $this->tambahan),
+            'opsiItemHasil' => $pilihanItem->awalPerBaris(array_column($this->hasil, 'item_id')),
+            'opsiBinHasil' => $pilihanBin?->awalPerBaris(array_column($this->hasil, 'bin_id')) ?? [],
+            'opsiBin' => $pilihanBin?->awalDengan($this->form['bin_id']) ?? [],
+            'kunciItem' => $jenis->requiresSizeBalance() ? (string) $uomInput : '',
             'warehouses' => $this->gudang(),
             'types' => ConversionType::available(StockFeatures::piece(), $this->jenisDraf()),
             'jenis' => $jenis,
@@ -335,7 +348,6 @@ class ConversionForm extends Component
             'batangCalon' => $calon->filter(fn (array $c) => $c['piece_id'] !== null),
             'batangTerpilih' => $batang,
             'items' => $jenis->requiresSizeBalance() && $uomInput !== null ? $items->where('base_uom_id', $uomInput)->values() : $items->values(),
-            'bins' => $gudang !== null ? app(ConversionLines::class)->storageBins($gudang) : collect(),
             'rencana' => $rencana,
             'butuhApproval' => $this->butuhApproval(),
             'nomor' => $this->conversionId !== null ? Conversion::query()->whereKey($this->conversionId)->value('number') : null,
@@ -379,11 +391,13 @@ class ConversionForm extends Component
 
     private function simpanDraf(CreateConversion $action): ?Conversion
     {
+        // A-395: proyek, item hasil, bin tujuan dari daftar; id lain dari browser ditolak di isiannya.
         $this->validate([
             'form.project_id' => ['required'],
             'form.warehouse_id' => ['required'],
             'form.conversion_type' => ['required'],
-        ], attributes: ['form.project_id' => __('Proyek'), 'form.warehouse_id' => __('Gudang'), 'form.conversion_type' => __('Jenis konversi')]);
+        ] + $this->aturanPilihan(), attributes: ['form.project_id' => __('Proyek'), 'form.warehouse_id' => __('Gudang'), 'form.conversion_type' => __('Jenis konversi')]
+            + $this->namaPilihan());
 
         $calon = $this->calon();
         $rencana = $this->rencana($calon, $this->itemHasil());
@@ -616,6 +630,120 @@ class ConversionForm extends Component
 
             return $c + ['qty' => $jumlah];
         })->filter(fn (array $c) => $c['qty'] > 0);
+    }
+
+    /** Proyek aktif dalam id cakupan (daftar lama `proyek()`), dicari ke server (A-395). */
+    private function pilihanProyek(): Pilihan
+    {
+        return SumberPilihan::proyekIdCakupan(aktif: true);
+    }
+
+    /**
+     * Item hasil (daftar lama `itemHasil`), dipersempit ke satuan dasar input
+     * bila jenisnya menuntut neraca ukuran — sama dengan daftar di layar.
+     *
+     * @param  Collection<string, array<string, mixed>>|null  $calon
+     */
+    private function pilihanItem(?Collection $calon = null): Pilihan
+    {
+        $jenis = $this->jenis();
+        $uom = null;
+
+        if ($jenis->requiresSizeBalance()) {
+            $calon ??= $this->calon();
+            $batang = $jenis === ConversionType::Cut ? $calon->get($this->batang) : null;
+            $uom = $batang['base_uom_id'] ?? $this->inputTerpilih($calon)->first()['base_uom_id'] ?? null;
+        }
+
+        $query = Item::query()->with('baseUom:id,code')
+            ->where('status', ItemStatus::Active->value)
+            ->where('ownership_model', OwnershipModel::Consumable->value)
+            ->where('tracking_mode', '!=', TrackingMode::Serial->value)
+            ->when($uom !== null, fn ($q) => $q->where('base_uom_id', $uom))
+            ->orderBy('code');
+
+        return Pilihan::dari($query, ['code', 'name', 'barcode'], fn (Item $i) => [
+            'value' => (int) $i->id,
+            'text' => $i->code.' — '.$i->name,
+            'badge' => $i->baseUom?->code,
+        ]);
+    }
+
+    private function pilihanBin(): ?Pilihan
+    {
+        $gudang = $this->gudang()->firstWhere('id', (int) $this->form['warehouse_id']);
+
+        return $gudang === null ? null : app(ConversionLines::class)->pilihanStorageBin($gudang);
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $boleh = $this->conversionId === null
+            ? auth()->user()?->can('create', Conversion::class)
+            : auth()->user()?->can('update', Conversion::query()->findOrFail($this->conversionId));
+
+        return match (true) {
+            ! $boleh => null,
+            $model === 'form.project_id' => $this->conversionId === null ? $this->pilihanProyek() : null,
+            (bool) preg_match('/^(potong\.\d+|tambahan\.\d+\.potong\.\d+|hasil\.\d+)\.item_id$/', $model) => $this->pilihanItem(),
+            $model === 'form.bin_id', (bool) preg_match('/^hasil\.\d+\.bin_id$/', $model) => $this->pilihanBin(),
+            default => null,
+        };
+    }
+
+    /** @return array<string, array<int, mixed>> */
+    private function aturanPilihan(): array
+    {
+        $aturan = $this->conversionId === null ? ['form.project_id' => [$this->pilihanProyek()->aturan()]] : [];
+        $item = $this->pilihanItem()->aturan();
+
+        foreach ($this->itemBaris() as $model) {
+            $aturan[$model] = [$item];
+        }
+
+        if (($bin = $this->pilihanBin()) !== null) {
+            $aturan['form.bin_id'] = [$bin->aturan()];
+
+            foreach (array_keys($this->hasil) as $i) {
+                $aturan["hasil.$i.bin_id"] = [$bin->aturan()];
+            }
+        }
+
+        return $aturan;
+    }
+
+    /** @return list<string> model isian item hasil semua baris */
+    private function itemBaris(): array
+    {
+        $model = array_map(fn ($i) => "potong.$i.item_id", array_keys($this->potong));
+
+        foreach ($this->tambahan as $bi => $b) {
+            foreach (array_keys($b['potong']) as $pi) {
+                $model[] = "tambahan.$bi.potong.$pi.item_id";
+            }
+        }
+
+        foreach (array_keys($this->hasil) as $i) {
+            $model[] = "hasil.$i.item_id";
+        }
+
+        return $model;
+    }
+
+    /** @return array<string, string> */
+    private function namaPilihan(): array
+    {
+        $nama = ['form.bin_id' => __('Bin hasil')];
+
+        foreach ($this->itemBaris() as $model) {
+            $nama[$model] = __('Item hasil');
+        }
+
+        foreach (array_keys($this->hasil) as $i) {
+            $nama["hasil.$i.bin_id"] = __('Bin tujuan');
+        }
+
+        return $nama;
     }
 
     /** @return Collection<int, Item> item yang boleh menjadi hasil: aktif, habis pakai, bukan serial */

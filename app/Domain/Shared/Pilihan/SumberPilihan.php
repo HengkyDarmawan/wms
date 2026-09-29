@@ -80,6 +80,26 @@ final class SumberPilihan
     }
 
     /**
+     * Proyek menurut id cakupan pembaca (`accessibleProjectIds`) — daftar lama
+     * layar internal Pemakaian, Konversi, Waste, Serah terima aset (A-395).
+     * Berbeda dari {@see proyek()}: tanpa saringan klien (layar itu tidak
+     * terbuka bagi akun Klien); `aktif` = hanya proyek aktif.
+     */
+    public static function proyekIdCakupan(bool $aktif = false, ?User $pembaca = null): Pilihan
+    {
+        $ids = ($pembaca ?? self::pembaca())?->accessibleProjectIds();
+        $query = Project::query()
+            ->when($aktif, fn (Builder $q) => $q->active())
+            ->when($ids !== null, fn (Builder $q) => $q->whereIn('id', $ids))
+            ->orderBy('code');
+
+        return Pilihan::dari($query, ['code', 'name'], fn (Project $p) => [
+            'value' => (int) $p->id,
+            'text' => $p->code.' — '.$p->name,
+        ]);
+    }
+
+    /**
      * Item berstatus tertentu (bawaan: aktif).
      *
      * @param  array<int, ItemStatus>  $status

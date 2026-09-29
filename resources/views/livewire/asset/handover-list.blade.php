@@ -14,13 +14,8 @@
                 <input class="form-control" id="cari-ast" type="search" wire:model.live.debounce.400ms="search" placeholder="{{ __('Nomor AST atau serial') }}">
             </div>
             <div class="col-lg-3">
-                <label class="form-label" for="filter-proyek-ast">{{ __('Proyek') }}</label>
-                <select class="form-select" id="filter-proyek-ast" wire:model.live="projectFilter">
-                    <option value="">{{ __('Semua') }}</option>
-                    @foreach ($projects as $p)
-                        <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="projectFilter" id="filter-proyek-ast" server live :label="__('Proyek')"
+                         :kosong="__('Semua')" :options="$opsiProyek" />
             </div>
             <div class="col-lg-3">
                 <label class="form-label" for="filter-status-ast">{{ __('Status') }}</label>

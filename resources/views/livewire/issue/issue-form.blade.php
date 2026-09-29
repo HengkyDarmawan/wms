@@ -17,24 +17,13 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-md-4">
-                <label class="form-label" for="isu-proyek">{{ __('Proyek') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.project_id') is-invalid @enderror" id="isu-proyek" wire:model.live="form.project_id" @disabled($nomor)>
-                    <option value="">{{ __('Pilih proyek…') }}</option>
-                    @foreach ($projects as $p)
-                        <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.project_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                {{-- A-395: proyek aktif dalam cakupan, dicari ke server; Gudang Site proyek itu dimuat sekaligus. --}}
+                <x-pilih model="form.project_id" id="isu-proyek" server live wajib :label="__('Proyek')" :disabled="(bool) $nomor"
+                         :kosong="__('Pilih proyek…')" :options="$opsiProyek" />
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="isu-site">{{ __('Gudang Site') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.warehouse_id') is-invalid @enderror" id="isu-site" wire:model.live="form.warehouse_id" @disabled($nomor)>
-                    <option value="">{{ __('Pilih Gudang Site…') }}</option>
-                    @foreach ($sites as $g)
-                        <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="form.warehouse_id" id="isu-site" live wajib :label="__('Gudang Site')" :disabled="(bool) $nomor"
+                         :kosong="__('Pilih Gudang Site…')" :options="$sites->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
                 @if ($form['project_id'] !== '' && $sites->isEmpty())
                     <div class="form-text text-danger">{{ __('Proyek ini belum punya Gudang Site aktif dalam cakupan Anda.') }}</div>
                 @endif
