@@ -56,14 +56,8 @@
             @elseif ($pertanyaan === $guide::KLIEN)
                 <div class="row g-3">
                     <div class="col-md-5">
-                        <label class="form-label" for="clientId">{{ __('Klien') }} <span class="wajib">*</span></label>
-                        <select class="form-select @error('clientId') is-invalid @enderror" id="clientId" wire:model.live="clientId">
-                            <option value="">{{ __('— pilih klien —') }}</option>
-                            @foreach ($clients as $klien)
-                                <option value="{{ $klien->id }}">{{ $klien->code }} — {{ $klien->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('clientId')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <x-pilih model="clientId" id="clientId" live wajib :label="__('Klien')" :kosong="__('— pilih klien —')"
+                                 :options="$clients->map(fn ($k) => ['value' => $k->id, 'text' => $k->code.' — '.$k->name])->all()" />
                     </div>
 
                     <div class="col-md-7">

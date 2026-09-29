@@ -122,3 +122,38 @@ label .wajib {
 .nx-pilih .ts-wrapper.single.has-items .ts-control > input { flex: 1 1 0; min-width: 2rem; }
 .nx-pilih .ts-dropdown .option .badge,
 .nx-pilih .ts-control .item .badge { vertical-align: 1px; }
+
+/* A-383: <x-pilih> lengkap — dropdown bisa ditempel ke <body> (di dalam dialog/modal), jadi
+   gayanya memakai kelas dropdown sendiri, bukan hanya turunan .nx-pilih. */
+.nx-pilih-dropdown {
+    background: var(--nx-card-bg);
+    border-color: var(--nx-border);
+    color: var(--nx-text-body);
+    border-radius: var(--nx-radius-sm);
+    box-shadow: var(--nx-shadow-lift);
+    max-width: calc(100vw - 16px);
+}
+body > .nx-pilih-dropdown { z-index: 1090; } /* di atas .modal (1055) & offcanvas */
+.nx-pilih-dropdown .option { color: var(--nx-text-body); }
+.nx-pilih-dropdown .active { background: var(--nx-hover-bg); color: var(--nx-text); }
+.nx-pilih-dropdown .no-results { color: var(--nx-text-muted); padding: .375rem .75rem; }
+.nx-pilih-dropdown .optgroup-header {
+    background: var(--nx-surface-1);
+    color: var(--nx-text-muted);
+    font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .02em;
+    padding: .375rem .75rem;
+}
+.nx-pilih-dropdown .optgroup .option { padding-left: 1rem; }
+.nx-pilih-dropdown .ts-dropdown-content { max-height: min(50vh, 20rem); }
+.nx-pilih-dropdown .option .badge { vertical-align: 1px; }
+.nx-pilih.is-invalid .ts-wrapper.focus .ts-control { border-color: var(--nx-danger); }
+.nx-pilih .ts-wrapper.disabled .ts-control { opacity: .65; }
+/* Ukuran kecil (form-select-sm) untuk baris tabel / form padat. */
+.nx-pilih-sm .ts-control { min-height: calc(1.5em + .5rem + 2px); padding-top: .25rem; padding-bottom: .25rem; font-size: .875rem; }
+.nx-pilih-sm + .nx-pilih-dropdown, .nx-pilih-sm .ts-dropdown { font-size: .875rem; }
+/* HP / layar sentuh: target sentuh >= 40px, dropdown tidak keluar layar. */
+@media (pointer: coarse), (max-width: 767.98px) {
+    .nx-pilih .ts-control, .nx-pilih-sm .ts-control { min-height: 40px; }
+    .nx-pilih-dropdown .option { min-height: 40px; display: flex; align-items: center; flex-wrap: wrap; gap: .25rem; }
+    .nx-pilih .ts-dropdown, .nx-pilih-dropdown { max-width: calc(100vw - 16px); }
+}

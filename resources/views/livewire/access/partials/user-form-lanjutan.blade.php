@@ -13,30 +13,25 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label" for="orgUnitId">{{ __('Unit organisasi') }}</label>
-                    <select class="form-select" id="orgUnitId" wire:model.live="orgUnitId">
-                        <option value="">{{ __('— Tidak diisi —') }}</option>
-                        @foreach ($units as $unit)
-                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="orgUnitId" id="orgUnitId" live :label="__('Unit organisasi')"
+                             :kosong="__('— Tidak diisi —')" :options="$units" />
                     <div class="form-text">{{ __('Disarankan otomatis dari peran yang dipilih.') }}</div>
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label" for="positionId">{{ __('Jabatan') }}</label>
-                    <select class="form-select" id="positionId" wire:model.live="positionId">
-                        <option value="">{{ __('— Tidak diisi —') }}</option>
-                        @foreach ($positions as $position)
-                            <option value="{{ $position->id }}">{{ $position->name }}</option>
-                        @endforeach
-                    </select>
+                    {{-- A-385: hanya jabatan aktif di unit terpilih; tanpa unit = berkelompok per unit. --}}
+                    <x-pilih model="positionId" id="positionId" live :label="__('Jabatan')"
+                             :kosong="__('— Tidak diisi —')" :options="$positions" />
+                    <div class="form-text">
+                        {{ $orgUnitId === null ? __('Memilih jabatan ikut mengisi unitnya.') : __('Hanya jabatan di unit ini.') }}
+                    </div>
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label" for="managerId">{{ __('Atasan langsung (bila beda dari jabatan)') }}</label>
-                    {{-- A-358: nama + badge jabatan + unit; dicari berdasarkan ketiganya. --}}
-                    <x-pilih model="managerId" id="managerId" :kosong="__('— Ikuti jabatan —')" :options="$managers"
+                    {{-- A-358, A-386: nama + badge jabatan + unit; Unit ini → Unit induk → Unit lain; cari ke server. --}}
+                    <x-pilih model="managerId" id="managerId" server :kunci="(string) $orgUnitId" :kelompok="$kelompokAtasan"
+                             :label="__('Atasan langsung (bila beda dari jabatan)')"
+                             :kosong="__('— Ikuti jabatan —')" :options="$managers"
                              :placeholder="__('Cari nama, jabatan, atau unit…')" />
                     {{-- A-345: kosong = pemegang jabatan atasan (peta jabatan); isi hanya bila berbeda. --}}
                     <div class="form-text">
@@ -63,19 +58,9 @@
                     <div class="border rounded p-2 mb-2" wire:key="assignment-{{ $index }}">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-4">
-                                <label class="form-label small" for="role-{{ $index }}">
-                                    {{ __('Peran') }} <span class="wajib">*</span>
-                                </label>
-                                <select class="form-select form-select-sm @error('assignments.'.$index.'.role_id') is-invalid @enderror"
-                                        id="role-{{ $index }}" wire:model="assignments.{{ $index }}.role_id">
-                                    <option value="">{{ __('— pilih peran —') }}</option>
-                                    @foreach ($roles as $role)
-                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('assignments.'.$index.'.role_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <x-pilih model="assignments.{{ $index }}.role_id" id="role-{{ $index }}" kecil wajib
+                                         :label="__('Peran')" :kosong="__('— pilih peran —')"
+                                         :options="$roles->map(fn ($r) => ['value' => $r->id, 'text' => $r->name])->all()" />
                             </div>
 
                             <div class="col-md-3">
@@ -92,32 +77,22 @@
 
                             <div class="col-md-4">
                                 @if (($assignment['scope_type'] ?? '') === 'project')
-                                    <label class="form-label small" for="scopeid-{{ $index }}">{{ __('Proyek') }}</label>
-                                    <select class="form-select form-select-sm @error('assignments.'.$index.'.scope_id') is-invalid @enderror"
-                                            id="scopeid-{{ $index }}" wire:model="assignments.{{ $index }}.scope_id">
-                                        <option value="">{{ __('— pilih proyek —') }}</option>
-                                        @foreach ($projects as $project)
-                                            <option value="{{ $project->id }}">{{ $project->name }}</option>
-                                        @endforeach
-                                    </select>
+                                    {{-- A-384: proyek dicari ke server; kunci = jenis cakupan supaya kotak dibuat ulang saat diganti. --}}
+                                    <x-pilih model="assignments.{{ $index }}.scope_id" id="scopeid-{{ $index }}" kecil server kunci="project"
+                                             :label="__('Proyek')" :kosong="__('— pilih proyek —')" :options="$proyekBaris[$index] ?? []" />
                                 @elseif (($assignment['scope_type'] ?? '') === 'warehouse')
-                                    <label class="form-label small" for="scopeid-{{ $index }}">{{ __('Gudang') }}</label>
-                                    <select class="form-select form-select-sm @error('assignments.'.$index.'.scope_id') is-invalid @enderror"
-                                            id="scopeid-{{ $index }}" wire:model="assignments.{{ $index }}.scope_id">
-                                        <option value="">{{ __('— pilih gudang —') }}</option>
-                                        @foreach ($warehouses as $warehouse)
-                                            <option value="{{ $warehouse->id }}">{{ $warehouse->code }} — {{ $warehouse->name }}</option>
-                                        @endforeach
-                                    </select>
+                                    <x-pilih model="assignments.{{ $index }}.scope_id" id="scopeid-{{ $index }}" kecil
+                                             :label="__('Gudang')" :kosong="__('— pilih gudang —')"
+                                             :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' — '.$w->name])->all()" />
                                 @else
                                     {{-- Cakupan `all` tidak memakai id sama sekali. --}}
                                     <label class="form-label small" for="scopeid-{{ $index }}">{{ __('Cakupan') }}</label>
                                     <input class="form-control form-control-sm" id="scopeid-{{ $index }}" type="text"
                                            value="{{ __('Seluruh company') }}" disabled>
+                                    @error('assignments.'.$index.'.scope_id')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 @endif
-                                @error('assignments.'.$index.'.scope_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
                             </div>
 
                             <div class="col-md-1 text-end">

@@ -8,6 +8,7 @@ use App\Domain\Access\Exceptions\AccessRuleException;
 use App\Domain\Access\Models\OrgUnit;
 use App\Domain\Access\Models\Position;
 use App\Domain\Access\Models\User;
+use App\Domain\Access\Support\Atasan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -36,6 +37,14 @@ class SavePosition
 
         $atasan = $this->atasan($position, $attributes['reports_to_position_id'] ?? null);
         $level = $atasan === null ? 1 : $atasan->level + 1;
+
+        // A-387: peta jabatan tidak berputar, tetapi atasan manual pemegangnya bisa
+        // membuat lingkaran orang (mis. atasan manual Kepala = Staf yang melapor ke Kepala).
+        if ($position !== null && $atasan !== null && (int) $atasan->id !== (int) $position->reports_to_position_id
+            && ($jalur = Atasan::jabatanMembentukLingkaran($position, (int) $atasan->id)) !== null) {
+            throw AccessRuleException::rule('A-387', 'Atasan jabatan ini membuat lingkaran atasan pada pemegangnya: '
+                .implode(' → ', $jalur).'. Ubah dulu atasan manual orang tersebut, atau pilih atasan jabatan lain.');
+        }
 
         return DB::transaction(function () use ($position, $unit, $attributes, $actor, $nama, $atasan, $level): Position {
             if ($position === null) {

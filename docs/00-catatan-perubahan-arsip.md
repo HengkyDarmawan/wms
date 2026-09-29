@@ -1,9 +1,17 @@
-# Catatan Perubahan — Arsip (v0.2–v0.29)
+# Catatan Perubahan — Arsip (v0.2–v0.30)
 
-**Versi:** 1.18
+**Versi:** 1.19
 **Tanggal:** 1 Oktober 2026
-**Status:** arsip — v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
+**Status:** arsip — v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
 **Dokumen terkait:** [README](README.md)
+
+### v0.30 — 24 September 2026 (serah terima kantor → rumah)
+- **Berkas baru [prompts/00-lanjutkan-di-rumah.md](prompts/00-lanjutkan-di-rumah.md):** keadaan saat serah terima, langkah setup Laragon + MySQL 8.4 setelah pull, cara kerja per modul, jatah nomor (asumsi berikutnya A-153; A-120–A-149 milik modul Template), dan urutan sisa: Konversi/Waste (branch `wip/konversi-waste`, setengah jadi), Aset, Purchase Request, Platform penuh, pendukung F1, penutup.
+- **Uji browser masuk repo:** `tests/e2e/ui-check.mjs` dan `tests/e2e/alur-req-sj.mjs` (langkah approval kini oleh Kepala Gudang CKG sesuai aturan demo 20-approval), dapat diatur lewat `WMS_BASE`, `CHROME_PATH`, `MYSQL_BIN`.
+- **`.gitignore`:** `/storage/tenant*/` (disk per company, termasuk artefak uji yang sempat ter-commit) dan keluaran E2E.
+- **Pengujian:** 493 uji hijau (MariaDB 10.4); alur E2E 9/9 lulus.
+- **prompts/00-lanjutkan-di-rumah.md v1.1:** versi database rumah dikoreksi MySQL 8.3 → 8.4 LTS (selaras CLAUDE.md, 00-setup-lokal, 08-arsitektur); PHP 8.3.33 tetap.
+- **Profil mesin rumah pindah ke XAMPP3** (`C:\xampp3`, PHP 8.3.33 = `php`, MariaDB 10.4.32, `php artisan serve` :8000; Laragon tidak dipakai lagi, A-76 berlaku di kedua mesin — dicatat sebagai [A-162](wms/04-keputusan-dan-asumsi.md#a-162) di v0.31): prompts/00-lanjutkan-di-rumah.md v1.2, 00-setup-lokal v1.5 §1–§4, `CLAUDE.md` *Lingkungan lokal*, `tests/e2e/README.md`.
 
 ### v0.29 — 24 September 2026 (modul Issue — pemakaian material di site — selesai Fase 1)
 - **Berkas baru `wms/23-pemakaian.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Issue`, migrasi tenant `000120`.

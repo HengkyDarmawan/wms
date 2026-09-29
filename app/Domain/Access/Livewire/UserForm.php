@@ -14,10 +14,13 @@ use App\Domain\Access\Models\OrgUnit;
 use App\Domain\Access\Models\Position;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\User;
+use App\Domain\Access\Support\PilihanPengguna;
 use App\Domain\Access\Support\RoleGuide;
 use App\Domain\Access\Support\SiteTeam;
 use App\Domain\Master\Models\Client;
 use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Models\WarehouseType;
 use Illuminate\Validation\Rule;
@@ -37,6 +40,7 @@ use Livewire\Component;
  */
 class UserForm extends Component
 {
+    use CariPilihan;
     use ComposesRoleAssignments;
 
     /**
@@ -130,6 +134,24 @@ class UserForm extends Component
 
         if ($this->orgUnitId === null && $saran !== null) {
             $this->orgUnitId = OrgUnit::query()->where('is_active', true)->where('name', $saran)->value('id');
+            $this->updatedOrgUnitId();
+        }
+    }
+
+    /** A-385: jabatan mengikuti unit — ganti unit, jabatan yang tak ada di unit itu dikosongkan. */
+    public function updatedOrgUnitId(): void
+    {
+        if ($this->positionId !== null && $this->orgUnitId !== null
+            && ! Position::query()->whereKey($this->positionId)->where('org_unit_id', $this->orgUnitId)->exists()) {
+            $this->positionId = null;
+        }
+    }
+
+    /** A-385: memilih jabatan saat unit masih kosong mengisi unitnya. */
+    public function updatedPositionId(): void
+    {
+        if ($this->positionId !== null && $this->orgUnitId === null) {
+            $this->orgUnitId = Position::query()->whereKey($this->positionId)->value('org_unit_id');
         }
     }
 
@@ -218,6 +240,14 @@ class UserForm extends Component
                 $siteTeam->catatPenempatanAwal($user, $peran, $this->proyekTerpilih(), auth()->user());
             }
         } catch (AccessRuleException $e) {
+            // A-387: lingkaran atasan ditunjukkan di isian Atasan langsung.
+            if ($e->rule === 'A-387') {
+                $this->lanjutanTerbuka = true;
+                $this->addError('managerId', $e->getMessage());
+
+                return null;
+            }
+
             // Ditempel di dua tempat supaya terlihat baik saat perannya dipilih
             // lewat kartu maupun lewat baris Pengaturan lanjutan.
             $this->addError('peranUtama', $e->getMessage());
@@ -232,38 +262,24 @@ class UserForm extends Component
     }
 
     /**
-     * A-358: pilihan Atasan langsung — nama + badge jabatan + unit, bisa dicari
-     * ketiganya. Tidak menawarkan diri sendiri, pengguna nonaktif, atau akun
-     * Klien. Atasan yang sudah tersimpan tetapi kini tidak memenuhi syarat
-     * tetap ditampilkan (bertanda) supaya nilainya tidak tampak hilang.
-     *
-     * @return array<int, array{value: int, text: string, badge: ?string, sub: ?string}>
+     * A-384: daftar yang boleh dicari dari browser. Izin layar diulang di sini
+     * (seperti `save`), karena method cari bisa dipanggil tanpa lewat mount.
      */
-    private function opsiAtasan(): array
+    protected function pilihanServer(string $model): ?Pilihan
     {
-        $opsi = fn (User $u, string $tanda = '') => [
-            'value' => (int) $u->id,
-            'text' => $u->name.$tanda,
-            'badge' => $u->position?->name,
-            'sub' => $u->orgUnit?->name,
-        ];
+        $target = $this->userId === null ? null : User::findOrFail($this->userId);
+        $this->authorize($target === null ? 'create' : 'update', $target ?? User::class);
 
-        $daftar = User::query()
-            ->active()->internal()
-            ->when($this->userId !== null, fn ($q) => $q->whereKeyNot($this->userId))
-            ->with(['position:id,name', 'orgUnit:id,name'])
-            ->orderBy('name')->get(['id', 'name', 'position_id', 'org_unit_id'])
-            ->map(fn (User $u) => $opsi($u))->all();
-
-        if ($this->managerId !== null && ! collect($daftar)->contains('value', (int) $this->managerId)) {
-            $tersimpan = User::query()->with(['position:id,name', 'orgUnit:id,name'])->find($this->managerId, ['id', 'name', 'position_id', 'org_unit_id', 'is_active']);
-
-            if ($tersimpan !== null) {
-                array_unshift($daftar, $opsi($tersimpan, ' ('.($tersimpan->is_active ? __('tidak berlaku') : __('nonaktif')).')'));
-            }
+        if ($model === 'managerId') {
+            return PilihanPengguna::atasan($this->userId, $this->orgUnitId);
         }
 
-        return $daftar;
+        if (preg_match('/^assignments\.(\d+)\.scope_id$/', $model, $m) === 1
+            && ($this->assignments[(int) $m[1]]['scope_type'] ?? null) === ScopeType::Project->value) {
+            return PilihanPengguna::proyek();
+        }
+
+        return null;
     }
 
     /** @return array<int, string> nama pemegang jabatan atasan dari jabatan terpilih */
@@ -304,8 +320,8 @@ class UserForm extends Component
             ],
             'phone' => ['nullable', 'string', 'max:20'],
             'orgUnitId' => ['nullable', 'integer', 'exists:org_units,id'],
-            'positionId' => ['nullable', 'integer', 'exists:positions,id'],
-            'managerId' => ['nullable', 'integer', 'different:userId', 'exists:users,id'],
+            'positionId' => ['nullable', 'integer', 'exists:positions,id', PilihanPengguna::aturanJabatan($this->userId, $this->orgUnitId)],
+            'managerId' => ['nullable', 'integer', 'different:userId', 'exists:users,id', PilihanPengguna::aturanAtasan($this->userId)],
             'assignments' => ['array'],
             'assignments.*.role_id' => ['required', 'integer', 'exists:roles,id'],
             'assignments.*.scope_type' => ['required', Rule::enum(ScopeType::class)],
@@ -402,13 +418,15 @@ class UserForm extends Component
                 ->where(fn ($q) => $q->whereNotIn('code', Role::NOT_OFFERED)->orWhereIn('id', array_filter($dipakai)))
                 ->orderBy('name')->get(),
             'pertanyaan' => $this->pertanyaanPeran(),
-            'units' => OrgUnit::query()->where('is_active', true)->orderBy('name')->get(),
-            'positions' => Position::query()
-                ->when($this->orgUnitId !== null, fn ($q) => $q->where('org_unit_id', $this->orgUnitId))
-                ->orderBy('level')->orderBy('name')->get(),
+            'units' => PilihanPengguna::unit()->semua(),
+            'positions' => PilihanPengguna::opsiJabatan($this->orgUnitId, $this->positionId),
             // A-345: siapa atasan bila isian manual dikosongkan.
             'atasanDariJabatan' => $this->atasanDariJabatan(),
-            'managers' => $this->opsiAtasan(),
+            'managers' => PilihanPengguna::opsiAtasan($this->userId, $this->orgUnitId, $this->managerId),
+            'kelompokAtasan' => $this->orgUnitId === null ? [] : PilihanPengguna::kelompokAtasan(),
+            // Baris Peran lain bercakupan proyek: isian awal + nilai terpilih (cari ke server, A-384).
+            'proyekBaris' => collect($this->assignments)->map(fn (array $a) => ($a['scope_type'] ?? '') === ScopeType::Project->value
+                ? PilihanPengguna::proyek()->awalDengan($a['scope_id'] ?? null) : [])->all(),
             'scopeTypes' => ScopeType::cases(),
             // Cakupan dipilih lewat nama, bukan id angka (11-master §12, 12-warehouse §12).
             'projects' => Project::query()->active()->orderBy('name')->get(['id', 'code', 'name']),

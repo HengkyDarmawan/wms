@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.88
+**Versi:** 0.89
 **Tanggal:** 1 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -107,6 +107,11 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.89 — 1 Oktober 2026 (pilihan yang bisa dicari: inti, cari ke server, form pengguna P2, modul Pengaturan & pengguna)
+- **Asumsi baru** [A-383](wms/04b-asumsi-lanjutan.md#a-383)–[A-388](wms/04b-asumsi-lanjutan.md#a-388) (04b v0.32 §2.53, *Perlu validasi*): `<x-pilih>` lengkap (A-383), cari ke server dengan query & cakupan yang sama (A-384), jabatan mengikuti unit (A-385), atasan berkelompok (A-386), lingkaran atasan ditolak (A-387), modul Pengaturan & pengguna memakai `<x-pilih>` (A-388).
+- **Spesifikasi** [16-shared](wms/16-shared-laporan-berkas.md) v0.22 (§6.5 pola komponen pilihan & aturan keamanan, TC-PIL-01–08); [10-access](wms/10-access.md) v0.18 (§6.3, §6.5, TC-ACC-48–51c). Glosarium, katalog 06, model data, dan route tidak berubah.
+- **Kode:** `Shared\Pilihan\Pilihan`, `SumberPilihan`, trait `Shared\Livewire\Concerns\CariPilihan` (`#[Json]`), `components/pilih` + `wms/pilih.js` + CSS `.nx-pilih*`; `Access\Support\PilihanPengguna`, `Atasan::membentukLingkaran/jabatanMembentukLingkaran`, `CreateUser`/`UpdateUser`/`SavePosition`, `UserForm`, `SiteTeam::candidates` (kini `Pilihan`), `ProjectTeam`, `RuleForm`, `ApprovalMap`, `ApprovalSimulation`, `DelegationManager`; uji `PilihKomponenTest`, `CariPilihanTest`, `UserFormP2Test`, `PilihanModulPengaturanTest`. Blok v0.30 dipindah ke [arsip](00-catatan-perubahan-arsip.md) v1.19.
 
 ### v0.88 — 1 Oktober 2026 (tata letak gudang Bagian 5: setup awal & kolom Lokasi)
 - **Asumsi baru** [A-380](wms/04b-asumsi-lanjutan.md#a-380)–[A-382](wms/04b-asumsi-lanjutan.md#a-382) (04b v0.31 §2.52): urutan setup awal dengan langkah *Atur tata letak barang* (A-380), impor saldo awal tanpa kode bin dari tempat simpan (A-381), kolom Lokasi di Saldo stok (A-382).
@@ -431,11 +436,3 @@ docs/
 - **Model data** 08a–08c → v0.13 (digenerate ulang): kolom implementasi `conversions`, `conversion_inputs`, `conversion_outputs`, `waste_disposals`, `waste_disposal_lines` (A-155).
 - **Modul lain:** `Piece::nextPieceNo()` dipakai GRN, ADJ, pilah RET, dan CNV; `20-approval` → v0.6, `18-template-dokumen-label` → v0.3, `22-retur-transfer` → v0.3, `23-pemakaian` → v0.3, `16-shared-laporan-berkas` → v0.4, `08-arsitektur` → v0.12 (§10 profil rumah XAMPP3, §12), `00-akun-uji` → v1.7 (CNV/WST tanpa aturan demo), laporan progres → v1.8 (Konversi ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.3.
 - **Uji:** 20 uji TC-CNV-01–14 dan TC-WST-01–06 (termasuk rantai RET waste → CNV lewat kotak tugas approval → CNV pembalik → WST → laporan). TC-ACC-27b menghitung 6 + 5 permission baru; TC-APR-17 memakai `purchase_request` sebagai jenis belum tersambung; TC-TPL-04 tidak lagi mengharap 501 untuk BA Waste. **513 uji hijau** (MariaDB 10.4.32, XAMPP3); E2E langkah 0 di mesin rumah: `ui-check` 0 error console, `alur-req-sj` 9/9.
-
-### v0.30 — 24 September 2026 (serah terima kantor → rumah)
-- **Berkas baru [prompts/00-lanjutkan-di-rumah.md](prompts/00-lanjutkan-di-rumah.md):** keadaan saat serah terima, langkah setup Laragon + MySQL 8.4 setelah pull, cara kerja per modul, jatah nomor (asumsi berikutnya A-153; A-120–A-149 milik modul Template), dan urutan sisa: Konversi/Waste (branch `wip/konversi-waste`, setengah jadi), Aset, Purchase Request, Platform penuh, pendukung F1, penutup.
-- **Uji browser masuk repo:** `tests/e2e/ui-check.mjs` dan `tests/e2e/alur-req-sj.mjs` (langkah approval kini oleh Kepala Gudang CKG sesuai aturan demo 20-approval), dapat diatur lewat `WMS_BASE`, `CHROME_PATH`, `MYSQL_BIN`.
-- **`.gitignore`:** `/storage/tenant*/` (disk per company, termasuk artefak uji yang sempat ter-commit) dan keluaran E2E.
-- **Pengujian:** 493 uji hijau (MariaDB 10.4); alur E2E 9/9 lulus.
-- **prompts/00-lanjutkan-di-rumah.md v1.1:** versi database rumah dikoreksi MySQL 8.3 → 8.4 LTS (selaras CLAUDE.md, 00-setup-lokal, 08-arsitektur); PHP 8.3.33 tetap.
-- **Profil mesin rumah pindah ke XAMPP3** (`C:\xampp3`, PHP 8.3.33 = `php`, MariaDB 10.4.32, `php artisan serve` :8000; Laragon tidak dipakai lagi, A-76 berlaku di kedua mesin — dicatat sebagai [A-162](wms/04-keputusan-dan-asumsi.md#a-162) di v0.31): prompts/00-lanjutkan-di-rumah.md v1.2, 00-setup-lokal v1.5 §1–§4, `CLAUDE.md` *Lingkungan lokal*, `tests/e2e/README.md`.

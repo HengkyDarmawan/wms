@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `shared` (Kerangka Laporan & Penyimpanan Berkas)
 
-**Versi:** 0.21
-**Tanggal:** 29 September 2026
-**Status:** selesai Fase 1 — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment selesai 25 Sep 2026 ([A-232](04-keputusan-dan-asumsi.md#a-232), §3.2); laporan modul 19–22 selesai 25 Sep 2026 (16 laporan, [A-241](04-keputusan-dan-asumsi.md#a-241)); total 44 laporan terdaftar; v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9); v0.4: laporan itu menambah kolom konversi & waste ([24-konversi-waste](24-konversi-waste.md) §9, [A-161](04-keputusan-dan-asumsi.md#a-161)); unggah bukti BA waste memakai `StoreUpload`; v0.5: laporan kesembilan *Aset dipinjamkan* ([25-aset](25-aset.md) §9); v0.6: Beranda antrean pekerjaan, lima laporan inti Blueprint §6.9a (total 14), ekspor PDF semua laporan ([27-pendukung-f1](27-pendukung-f1.md), [A-186](04-keputusan-dan-asumsi.md#a-186), [A-190](04-keputusan-dan-asumsi.md#a-190)); v0.13: kompresi foto otomatis di server ([A-23](04-keputusan-dan-asumsi.md#a-23), [A-257](04b-asumsi-lanjutan.md#a-257), §6.4); v0.14: diselaraskan dengan kode — §2 memuat 41 laporan per permission, §3.2 diperbaiki (+5 laporan inti), ekspor PDF di §6, §10 TC-RPT-01, §12 dan §13.1 no. 1 & 3 ditandai selesai; v0.15: *Daftar item* memakai kolom & saring Jenis barang; kolom potong/offcut/kerf mengikuti saklar per potong ([A-283](04b-asumsi-lanjutan.md#a-283), [A-284](04b-asumsi-lanjutan.md#a-284), §10 TC-RPT-01d, TC-RPT-11); v0.16: *Barang karantina menurut umur* ikut barang Rusak di bin Karantina (kolom Kondisi); *Penerimaan per vendor* berkolom Rusak & Kurang ([A-295](04b-asumsi-lanjutan.md#a-295)); v0.20: laporan ke-44 **Rekap pengiriman per klien** dan kunci `required` pada penyaring ([A-329](04b-asumsi-lanjutan.md#a-329), [A-330](04b-asumsi-lanjutan.md#a-330); §2, §3.2, §6.2, §10 TC-RPT-13); v0.21: *Rekap pengiriman per klien* hanya memuat SJ yang sudah berangkat (menurut tanggal berangkat) dan memotong proyek sesuai cakupan pembaca ([A-351](04b-asumsi-lanjutan.md#a-351), TC-RPT-13d)
+**Versi:** 0.22
+**Tanggal:** 1 Oktober 2026
+**Status:** selesai Fase 1 — v0.22: pola UI **komponen pilihan** `<x-pilih>` & cari ke server (§6.5, [A-383](04b-asumsi-lanjutan.md#a-383), [A-384](04b-asumsi-lanjutan.md#a-384), TC-PIL-01–08); dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment selesai 25 Sep 2026 ([A-232](04-keputusan-dan-asumsi.md#a-232), §3.2); laporan modul 19–22 selesai 25 Sep 2026 (16 laporan, [A-241](04-keputusan-dan-asumsi.md#a-241)); total 44 laporan terdaftar; v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9); v0.4: laporan itu menambah kolom konversi & waste ([24-konversi-waste](24-konversi-waste.md) §9, [A-161](04-keputusan-dan-asumsi.md#a-161)); unggah bukti BA waste memakai `StoreUpload`; v0.5: laporan kesembilan *Aset dipinjamkan* ([25-aset](25-aset.md) §9); v0.6: Beranda antrean pekerjaan, lima laporan inti Blueprint §6.9a (total 14), ekspor PDF semua laporan ([27-pendukung-f1](27-pendukung-f1.md), [A-186](04-keputusan-dan-asumsi.md#a-186), [A-190](04-keputusan-dan-asumsi.md#a-190)); v0.13: kompresi foto otomatis di server ([A-23](04-keputusan-dan-asumsi.md#a-23), [A-257](04b-asumsi-lanjutan.md#a-257), §6.4); v0.14: diselaraskan dengan kode — §2 memuat 41 laporan per permission, §3.2 diperbaiki (+5 laporan inti), ekspor PDF di §6, §10 TC-RPT-01, §12 dan §13.1 no. 1 & 3 ditandai selesai; v0.15: *Daftar item* memakai kolom & saring Jenis barang; kolom potong/offcut/kerf mengikuti saklar per potong ([A-283](04b-asumsi-lanjutan.md#a-283), [A-284](04b-asumsi-lanjutan.md#a-284), §10 TC-RPT-01d, TC-RPT-11); v0.16: *Barang karantina menurut umur* ikut barang Rusak di bin Karantina (kolom Kondisi); *Penerimaan per vendor* berkolom Rusak & Kurang ([A-295](04b-asumsi-lanjutan.md#a-295)); v0.20: laporan ke-44 **Rekap pengiriman per klien** dan kunci `required` pada penyaring ([A-329](04b-asumsi-lanjutan.md#a-329), [A-330](04b-asumsi-lanjutan.md#a-330); §2, §3.2, §6.2, §10 TC-RPT-13); v0.21: *Rekap pengiriman per klien* hanya memuat SJ yang sudah berangkat (menurut tanggal berangkat) dan memotong proyek sesuai cakupan pembaca ([A-351](04b-asumsi-lanjutan.md#a-351), TC-RPT-13d)
 **Modul:** `shared` (`app/Domain/Shared`)
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.9a](01-blueprint.md#69a-laporan-inti-fase-1) · [Arsitektur §2 (AD-09, AD-10)](08-arsitektur.md#2-keputusan-arsitektur) · [Blueprint §16 (NFR-14)](01-blueprint.md#16-kebutuhan-non-fungsional) · [A-68](04-keputusan-dan-asumsi.md#a-68) · [Aturan Bisnis §BR-ACC](05-aturan-bisnis.md#br-acc) · [Glosarium](03-glosarium.md)
@@ -176,6 +176,26 @@ Semua route di grup `auth` + `internal` di `routes/tenant.php`.
 
 Tanda tangan kanvas (`handleDataUrl`) selalu PNG dan tidak dikompres. PDF tidak disentuh. `AttachmentStore` mencatat `size_bytes` dan `mime` dari berkas tersimpan. Validasi form memakai `StoreUpload::ATURAN_FOTO` (`image|mimes:jpg,jpeg,png,webp|max:20480`); `config/livewire.php` menaikkan batas unggah sementara Livewire ke 20 MB. php.ini perlu dinaikkan ([setup lokal](../00-setup-lokal.md#batas-unggah-php)).
 
+### 6.5 Komponen pilihan — `<x-pilih>` ([A-383](04b-asumsi-lanjutan.md#a-383), [A-384](04b-asumsi-lanjutan.md#a-384))
+
+Satu pola untuk semua kotak pilihan tunggal (pilihan ganda: `<x-pilih-tag>`, [A-350](04b-asumsi-lanjutan.md#a-350)). Hanya **cara memilih** yang berubah; nilai yang dikirim ke aksi sama dengan `<select>` biasa.
+
+| Jenis daftar | Contoh | Pakai |
+|---|---|---|
+| (i) pendek / tetap | enum status, jenis, alasan, zona waktu, ≤ ±8 pilihan | `<select class="form-select">` biasa |
+| (ii) master kecil–sedang | gudang, unit, jabatan, role, klien, kategori, satuan | `<x-pilih :options="...">` dimuat sekaligus (`group` untuk kelompok) |
+| (iii) daftar besar | item, bin, vendor, pengguna, proyek | `<x-pilih server :options="$pilihan->awalDengan($nilai)">` + trait `CariPilihan` |
+
+**Isian komponen:** `model` (juga baris `rows.3.item_id`), `options` (`value`, `text`, `badge`?, `sub`?, `group`?), `kosong`, `placeholder`, `label` + `wajib` (label terhubung ke kotak cari) atau `aria`, `live`, `disabled`, `kecil`, `dialog` (dropdown di `<body>`, di atas modal), `server` + `kunci` (daftar induk, mis. id gudang), `kelompok` (urutan kelompok tetap). Galat `@error(model)` tampil di bawah kotak dan diteruskan ke `aria-invalid`. HP: tinggi sentuh ≥ 40 px, dropdown tidak keluar layar.
+
+**Aturan keamanan cari ke server (wajib):**
+
+1. **Satu query**: daftar ditulis sekali sebagai `Shared\Pilihan\Pilihan` (atau sumber baku `SumberPilihan::pengguna/proyek/proyekSemuaStatus/pemohon/item/vendor/bin`) dan dipakai render, `cariPilihan`, serta validasi simpan (`->aturan()`). Layar boleh mempersempit (`->saring()`), tidak memperluas.
+2. `pilihanServer($model)` hanya mengembalikan daftar untuk model yang dinyatakan (lainnya `null` → hasil kosong) dan **mengulang otorisasi layar** seperti aksi simpan.
+3. Cakupan BR-GEN-09/BR-ACC-05 ikut query (global scope `ScopedToUser`, `Project::dalamCakupan`); akun Klien tidak mendapat pengguna internal, vendor, atau bin; proyek hanya milik kliennya ([A-354](04b-asumsi-lanjutan.md#a-354)).
+4. Nilai terpilih di luar cakupan tidak diberi label dan ditolak saat simpan; id bukan angka ("5abc") ditolak.
+5. Minimal 2 huruf, ±30 hasil, 60 pencarian/menit per pengguna; tanpa route baru (method Livewire `#[Json]`, tanpa render).
+
 ## 7. Kejadian stok & integrasi
 
 Tidak ada. Modul ini tidak menulis stok.
@@ -207,6 +227,14 @@ Uji ada di `tests/Feature/Shared`. ID memakai akhiran huruf untuk varian dalam s
 | TC-RIW-01 | Item diubah (riwayat spatie `updated`) | buka tab Riwayat detail item | tampil "diubah", bukan "updated"; deskripsi buatan aplikasi tidak berubah | CLAUDE.md (UI Bahasa Indonesia) |
 | TC-RPT-06 | Fixture transfer (stok awal, TRF → SJ diterima utuh), reservasi lunak 10 hari & baru, `reorder_point` 250 | buka & ekspor 11 laporan baru; `rows()` kartu stok, titik pesan ulang, reservasi menggantung, kinerja & daftar pengiriman; driver | semua 200; kartu memuat mutasi awal; selisih 150; hanya reservasi 10 hari; 1 dikirim & 1 utuh; driver boleh `kartu-stok`, 403 `short-pick` | A-232 |
 | TC-RPT-02–05, 07–10 | — | — | dicatat di tempat lain: 02–05 laporan inti & PDF semua laporan ([27-pendukung-f1 §10](27-pendukung-f1.md), `CoreReportTest`); 07 Receipt/Putaway, 08 Approval, 10 Retur/Transfer (`ModuleReportTest`); 09 Count/Adjustment (`CountReportTest`) | A-190, A-241 |
+| TC-PIL-01 | — | render `<x-pilih>` dengan kelompok, sub, badge, galat, mode server/kecil/dialog/disabled | label `for` kotak cari; `is-invalid` + pesan ber-id; kelompok urut Unit ini → Unit induk → Unit lain walau kosong; teks di-escape; kunci kotak ikut daftar (biasa) atau `kunci` (server) | [A-383](04b-asumsi-lanjutan.md#a-383) |
+| TC-PIL-02 | Pengguna aktif, nonaktif, akun Klien | `cariPilihan` sumber pengguna oleh Admin; oleh Klien | hanya internal aktif; Klien mendapat kosong | [A-384](04b-asumsi-lanjutan.md#a-384) |
+| TC-PIL-03 | Proyek A & B; pemohon bercakupan A; Klien A | cari "beta"/"CARI" | pemohon & Klien hanya A walau B cocok; Admin keduanya | A-384, A-354 |
+| TC-PIL-04 | Item aktif & nonaktif | cari; 1 huruf; `%` | hanya aktif; kosong; kosong | A-384 |
+| TC-PIL-05 | Vendor aktif & nonaktif | cari oleh staf; oleh Klien | hanya aktif; kosong | A-384, A-310 |
+| TC-PIL-06 | Bin di gudang A & B; staf bercakupan A | cari bin A; bin B lewat id gudang dari browser; Klien | A saja; kosong; kosong | A-384, BR-ACC-05 |
+| TC-PIL-07 | Pemohon bercakupan A | label & `awalDengan` proyek B; simpan B; simpan A | tanpa label; ditolak; tersimpan | A-384 |
+| TC-PIL-08 | Admin | cari model tak dinyatakan; 61 pencarian dalam semenit | kosong; ke-61 kosong | A-384 |
 | TC-FIL-01 | Staf gudang | unggah lalu hapus tanda tangan | path tersimpan, bisa dibuka lewat `/files/signature/{id}`, lalu null | A-68 |
 | TC-FIL-01b | Tanda tangan milik staf | Driver lalu Admin membukanya | Driver 403, Admin 200 | A-68 |
 | TC-FIL-01c | — | unggah PDF sebagai tanda tangan | galat validasi, tidak tersimpan | NFR-14 |

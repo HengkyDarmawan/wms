@@ -9,6 +9,7 @@ use App\Domain\Access\Exceptions\AccessRuleException;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\RoleAssignment;
 use App\Domain\Access\Models\User;
+use App\Domain\Access\Support\Atasan;
 use App\Domain\Access\Support\CompanyAdminGuard;
 use Illuminate\Support\Facades\DB;
 
@@ -59,6 +60,20 @@ class UpdateUser
 
             if (($data['manager_id'] ?? null) === $user->id) {
                 throw new AccessRuleException('Atasan langsung tidak boleh dirinya sendiri.');
+            }
+
+            // A-387: hanya diperiksa bila atasan/jabatan berubah — data lama tetap bisa disimpan.
+            $manager = $data['manager_id'] === null ? null : (int) $data['manager_id'];
+            $jabatan = $data['position_id'] === null ? null : (int) $data['position_id'];
+
+            if ($manager !== ($user->manager_id === null ? null : (int) $user->manager_id)
+                || $jabatan !== ($user->position_id === null ? null : (int) $user->position_id)) {
+                $internal = (array_key_exists('client_id', $data) ? $data['client_id'] : $user->client_id) === null;
+                $jalur = Atasan::membentukLingkaran((int) $user->id, $manager, $jabatan, (string) $data['name'], $user->is_active && $internal);
+
+                if ($jalur !== null) {
+                    throw AccessRuleException::rule('A-387', CreateUser::pesanLingkaran($jalur));
+                }
             }
 
             $user->fill($data)->save();

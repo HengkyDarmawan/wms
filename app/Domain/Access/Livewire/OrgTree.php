@@ -209,7 +209,7 @@ class OrgTree extends Component
                 'reports_to_position_id' => $this->positionReportsTo,
             ], auth()->user());
         } catch (AccessRuleException $e) {
-            $this->addError($e->rule === 'A-344' ? 'positionReportsTo' : 'positionName', $e->getMessage());
+            $this->addError(in_array($e->rule, ['A-344', 'A-387'], true) ? 'positionReportsTo' : 'positionName', $e->getMessage());
 
             return;
         }

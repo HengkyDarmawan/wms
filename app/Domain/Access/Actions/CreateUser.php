@@ -8,6 +8,7 @@ use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Access\Exceptions\AccessRuleException;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\User;
+use App\Domain\Access\Support\Atasan;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -36,6 +37,19 @@ class CreateUser
                 'BR-ACC-01',
                 'User wajib punya minimal satu penugasan role.',
             );
+        }
+
+        // A-387: atasan manual / jabatan yang membuat lingkaran atasan ditolak.
+        $jalur = Atasan::membentukLingkaran(
+            null,
+            isset($attributes['manager_id']) ? (int) $attributes['manager_id'] : null,
+            isset($attributes['position_id']) ? (int) $attributes['position_id'] : null,
+            (string) $attributes['name'],
+            ($attributes['client_id'] ?? null) === null,
+        );
+
+        if ($jalur !== null) {
+            throw AccessRuleException::rule('A-387', self::pesanLingkaran($jalur));
         }
 
         $user = DB::transaction(function () use ($attributes, $assignments, $actor): User {
@@ -70,6 +84,12 @@ class CreateUser
         return $user->refresh();
     }
 
+    /** @param  list<string>  $jalur */
+    public static function pesanLingkaran(array $jalur): string
+    {
+        return 'Pilihan ini membuat lingkaran atasan: '.implode(' → ', $jalur).'. Pilih atasan lain atau ubah jabatannya.';
+    }
+
     /** @param  array<string, mixed>  $assignment */
     private function applyAssignment(User $user, array $assignment, ?User $actor): void
     {
@@ -85,6 +105,7 @@ class CreateUser
             $actor,
         );
     }
+
     /** AD-14: nilai cakupan di luar katalog ditolak sebagai pelanggaran aturan, bukan galat. */
     private function scopeType(mixed $value): ScopeType
     {
@@ -96,5 +117,4 @@ class CreateUser
 
         return $scope;
     }
-
 }
