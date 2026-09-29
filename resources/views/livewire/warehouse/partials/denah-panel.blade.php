@@ -90,6 +90,8 @@
                 </div>
             </template>
             <div class="text-muted" x-show="rak && !binTerpilih()">{{ __('Rak ini belum punya bin, atau belum disimpan.') }}</div>
+            <hr class="my-2">
+            @include('livewire.warehouse.partials.denah-barang')
         </div>
     </div>
 

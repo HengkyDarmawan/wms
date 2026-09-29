@@ -9,6 +9,7 @@ use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Exceptions\WarehouseRuleException;
 use App\Domain\Warehouse\Models\Bin;
+use App\Domain\Warehouse\Models\ItemStorageLocation;
 use App\Domain\Warehouse\Support\BinUsage;
 
 /**
@@ -33,6 +34,14 @@ class DeleteBin
 
         $level = $bin->rackLevel;
         $kode = (string) $bin->code;
+
+        // A-368: tempat simpan barang di bin ini hanya pengaturan — ikut dilepas.
+        foreach (ItemStorageLocation::query()->withoutGlobalScopes()->with('item')->where('bin_id', $bin->id)->get() as $t) {
+            $t->delete();
+            activity('master')->performedOn($t->item)->causedBy($actor)
+                ->withProperties(['bin' => $kode])
+                ->log('Tempat simpan '.$kode.' dilepas karena bin dihapus');
+        }
 
         $bin->disableLogging()->delete();
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Warehouse\Support;
 
+use App\Domain\Warehouse\Actions\DeleteBin;
 use App\Domain\Warehouse\Models\Bin;
 use Illuminate\Support\Facades\DB;
 
@@ -16,9 +17,13 @@ use Illuminate\Support\Facades\DB;
  * Bin yang tidak dirujuk sama sekali boleh dihapus; sisanya hanya bisa
  * dinonaktifkan (P-03, BR-WH-07).
  *
- * Daftar {@see REFERENSI} dijaga oleh uji yang membaca skema
- * (`information_schema`): foreign key baru ke `bins` yang tidak ikut
+ * Daftar {@see REFERENSI} + {@see KONFIGURASI} dijaga oleh uji yang membaca
+ * skema (`information_schema`): foreign key baru ke `bins` yang tidak ikut
  * didaftarkan di sini membuat uji itu gagal.
+ *
+ * {@see KONFIGURASI} (A-368): baris pengaturan yang **bukan** pemakaian —
+ * Tempat Simpan barang. Bin yang hanya dirujuk di sini tetap boleh dihapus;
+ * baris tempat simpannya ikut dilepas oleh {@see DeleteBin}.
  */
 class BinUsage
 {
@@ -47,9 +52,15 @@ class BinUsage
         ['stock_movements', 'from_bin_id', 'kartu stok'],
         ['stock_movements', 'to_bin_id', 'kartu stok'],
         ['stock_reservations', 'bin_id', 'reservasi'],
+        ['storage_dedication_overrides', 'bin_id', 'buka tempat khusus'],
         ['vendor_return_lines', 'bin_id', 'retur vendor'],
         ['waste_disposal_lines', 'bin_id', 'waste'],
         ['waste_disposals', 'target_bin_id', 'waste'],
+    ];
+
+    /** @var array<int, array{0: string, 1: string, 2: string}> pengaturan yang ikut dilepas saat bin dihapus */
+    public const KONFIGURASI = [
+        ['item_storage_locations', 'bin_id', 'tempat simpan'],
     ];
 
     /** Sebutan pemakaian pertama yang ditemukan, atau null bila belum pernah dipakai. */

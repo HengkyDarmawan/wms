@@ -56,6 +56,9 @@ class ReturnDetail extends Component
     /** @var array<int|string, array<int, array<string, string>>> line_id => bagian */
     public array $pilah = [];
 
+    /** BR-WH-10 (A-367): alasan Kepala Gudang membuka bin Khusus Barang Ini. */
+    public string $bukaKhusus = '';
+
     /** @var array<string, string> isian SJ jemput (A-248) */
     public array $jemput = ['shipment_method' => 'own_fleet', 'vehicle_id' => '', 'vehicle_plate' => '', 'driver_name' => '', 'driver_phone' => '', 'carrier_id' => '', 'tracking_no' => '', 'notes' => ''];
 
@@ -185,7 +188,9 @@ class ReturnDetail extends Component
         $ret = $this->ret();
         $this->authorize('sort', $ret);
 
-        if ($this->jalankan(fn () => $action->handle($ret, $this->pilah, null, auth()->user()), 'pilah')) {
+        $pilah = array_map(fn (array $bagian) => array_map(fn (array $p) => $p + ['buka_khusus' => $this->bukaKhusus], $bagian), $this->pilah);
+
+        if ($this->jalankan(fn () => $action->handle($ret, $pilah, null, auth()->user()), 'pilah')) {
             $this->dispatch('pesan', teks: __('Retur dipilah; stok masuk ke bin hasil pilah.'));
         }
     }

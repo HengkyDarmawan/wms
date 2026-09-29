@@ -13,6 +13,10 @@
      sementara/permanen), Pisah, Hapus bin (hanya bila belum pernah dipakai) atau
      Nonaktifkan, Lebar bin; area lantai berkapasitas bebas. Petak gabungan
      digambar sebagai satu blok berlabel kode pendek bin utama.
+   - Bagian 3 (A-365, A-369): mode **Tata letak** — panel "Barang belum punya
+     tempat" (cari ke server, maks. 50), centang barang → "Taruh di…" lalu klik
+     rak/bin/area; di panel rak "Barang di sini" + "Tambah barang…". Semua
+     menjadi op `tempat_barang`/`lepas_barang` di Simpan perubahan yang sama.
    - Tanpa pembaruan otomatis berkala (tanpa polling/websocket).
    Satuan: meter; SVG = meter × skala. Tanpa pustaka tambahan (D-05).
 */
@@ -73,6 +77,14 @@ function denahGedung(opts = {}) {
     },
     pilihPetak: [],
     hapusBoleh: {},
+    // Bagian 3: mode Tata letak.
+    tata: false,
+    menaruh: false,
+    khususTaruh: false,
+    barangPilih: [],
+    namaBarang: {},
+    belum: { cari: '', barang: [], lebih: false, memuat: false },
+    tambahBrg: { cari: '', barang: [], lebih: false, memuat: false, ke: 'bin', khusus: false },
 
     init() {
       this.isiFormGedung();
@@ -98,11 +110,11 @@ function denahGedung(opts = {}) {
       return this.d.zones.flatMap((z) => z.racks.map((r) => ({ z, r })));
     },
 
-    cocokBin(b) { return this.q !== '' && (b.code.toLowerCase() + ' ' + (b.cari || '')).includes(this.q); },
+    cocokBin(b) { return this.q !== '' && (b.code.toLowerCase() + ' ' + (b.cari || '') + ' ' + (b.barang || []).map((x) => x.code.toLowerCase()).join(' ')).includes(this.q); },
 
     cocokRak(r) {
       if (this.q === '') return false;
-      return (r.code + ' ' + (r.name || '')).toLowerCase().includes(this.q) || r.levels.some((l) => l.bins.some((b) => this.cocokBin(b)));
+      return (r.code + ' ' + (r.name || '') + ' ' + (r.barang || []).map((x) => x.code).join(' ')).toLowerCase().includes(this.q) || r.levels.some((l) => l.bins.some((b) => this.cocokBin(b)));
     },
 
     hasilCari() {
@@ -291,7 +303,8 @@ function denahGedung(opts = {}) {
           const garis = merah ? '#e03131' : cocok ? '#f76707' : sel ? '#1c7ed6' : '#495057';
           const tebal = cocok || sel || merah ? 3 : 1.5;
           o.push(`<g data-jenis="rak" data-id="${r.id}" data-rak="${esc(r.code)}" transform="translate(${r.x * S},${r.y * S})" style="cursor:${this.edit ? 'move' : 'pointer'}">`);
-          o.push(`<text x="0" y="${-7 * F}" font-size="${13 * F}" font-weight="600" fill="currentColor">${esc(r.code)}${r.is_area ? ' ▦' : ''}${r.name ? ` <tspan font-weight="400" fill-opacity="0.65">· ${esc(potong(r.name, 18))}</tspan>` : ''}</text>`);
+          const tandaRak = this.tata && (r.barang || []).length ? ` <tspan fill="${(r.barang || []).some((x) => x.k) ? '#e8590c' : '#1c7ed6'}">▣ ${esc(potong((r.barang || []).map((x) => x.code).join(', '), 24))}</tspan>` : '';
+          o.push(`<text x="0" y="${-7 * F}" font-size="${13 * F}" font-weight="600" fill="currentColor">${esc(r.code)}${r.is_area ? ' ▦' : ''}${r.name ? ` <tspan font-weight="400" fill-opacity="0.65">· ${esc(potong(r.name, 18))}</tspan>` : ''}${tandaRak}</text>`);
           if (r.is_area) {
             o.push(`<rect data-badan x="0" y="0" width="${W}" height="${H}" rx="6" fill="${this.warnaRak(r)}" stroke="${garis}" stroke-width="${tebal}" stroke-dasharray="6 3"/>`);
             o.push(`<text x="${W / 2}" y="${H / 2 + 4}" font-size="12" text-anchor="middle" fill="#495057" pointer-events="none">${esc(this.meta.teks?.area || 'Area lantai')}${esc(this.teksKapasitasArea(r))}</text>`);
@@ -314,6 +327,8 @@ function denahGedung(opts = {}) {
               const gab = k.anggota.length > 0;
               o.push(`<rect data-bin="${esc(b.id)}" x="${x + 2}" y="${y + 2}" width="${Math.max(1, w - 4)}" height="${Math.max(1, h - 4)}" rx="3" fill="${this.warnaBin(b)}" stroke="${c ? '#f76707' : bs ? '#1c7ed6' : gab ? '#7048e8' : '#ced4da'}" stroke-width="${c || bs || gab ? 2.5 : 1}"><title>${esc(this.labelGabung(b, r))} · ${esc(b.code)}${b.total > 0 ? ' · ' + angka(b.total) : ''}</title></rect>`);
               if (w >= 28 && tb >= 16) o.push(`<text x="${x + w / 2}" y="${y + h / 2 + 4}" font-size="${w >= 44 ? 12 : 10}" text-anchor="middle" fill="#212529" pointer-events="none">${esc(b.short)}${gab ? ' ⧉' : ''}</text>`);
+              // A-365: di mode Tata letak, petak bertempat simpan diberi titik (oranye = Khusus).
+              if (this.tata && (b.barang || []).length) o.push(`<circle cx="${x + 8}" cy="${y + 8}" r="5" fill="${b.barang.some((z) => z.k) ? '#e8590c' : '#1c7ed6'}" pointer-events="none"><title>${esc(b.barang.map((z) => z.code).join(', '))}</title></circle>`);
             }
             if (!r.levels.length) o.push(`<text x="${W / 2}" y="${H / 2 + 4}" font-size="10" font-style="italic" text-anchor="middle" fill="#868e96">belum ada tingkat</text>`);
           }
@@ -378,6 +393,8 @@ function denahGedung(opts = {}) {
         const semua = this.rak.levels.flatMap((l) => l.bins);
         // K-C: server menandai bin yang belum pernah dipakai (boleh dihapus).
         this.hapusBoleh = Object.fromEntries(semua.map((b) => [String(b.id), !!b.boleh_hapus]));
+        // A-365: nama barang dari isi rak untuk panel "Barang di sini".
+        [...(this.rak.barang || []), ...semua.flatMap((b) => b.barang || [])].forEach((x) => { this.namaBarang[x.id] = x.name; });
         this.binId = binId ?? (semua.find((b) => b.total > 0) || semua[0])?.id ?? null;
       } finally {
         this.memuat = false;
@@ -411,6 +428,7 @@ function denahGedung(opts = {}) {
       if (!this.edit) {
         if (jenis === 'rak') {
           const bin = e.target.closest('[data-bin]');
+          if (this.tata && this.menaruh) { this.taruhDi(id, bin ? Number(bin.dataset.bin) : null); return; }
           this.bukaRak(id, bin ? Number(bin.dataset.bin) : null);
         }
         return;
@@ -507,6 +525,7 @@ function denahGedung(opts = {}) {
       this.pilihPetak = [];
       if (this.pilih && !this.benda(this.pilih.jenis, this.pilih.id)) this.tutup();
       this.isiFormEdit();
+      if (this.tata) this.cariBelum();
       this.gambar();
     },
 
@@ -915,6 +934,7 @@ function denahGedung(opts = {}) {
           this.tutup();
           this.isiFormGedung();
           this.pesan(hasil.pesan);
+          if (this.tata) this.cariBelum();
         } else {
           this.galat = hasil.galat || [];
           this.pesan(hasil.pesan || 'Perubahan belum tersimpan — perbaiki yang ditandai merah.', 'danger');
@@ -928,12 +948,156 @@ function denahGedung(opts = {}) {
     aturEdit(nyala) {
       if (!nyala && this.ops.length && !window.confirm('Ada ' + this.ops.length + ' perubahan belum disimpan. Buang?')) return;
       if (!nyala) this.batalSemua();
+      this.tata = false;
       this.edit = nyala;
       this.tab = nyala ? 'atur' : 'isi';
       this.pilih = null;
       this.rak = null;
       this.galat = [];
       this.gambar();
+    },
+
+    // ------------------------------------------------------------ tata letak barang (Bagian 3)
+
+    /** Mode Tata letak: barang ↔ rak/bin/area; tidak menggeser benda. */
+    aturTata(nyala) {
+      if (!nyala && this.ops.length && !window.confirm('Ada ' + this.ops.length + ' perubahan belum disimpan. Buang?')) return;
+      if (!nyala) { this.tata = false; this.batalSemua(); }
+      this.edit = false;
+      this.tata = nyala;
+      this.menaruh = false;
+      this.barangPilih = [];
+      this.pilih = null;
+      this.rak = null;
+      this.galat = [];
+      if (nyala) this.cariBelum();
+      this.gambar();
+    },
+
+    /** Barang yang sudah ditaruh di sesi ini (belum disimpan) tidak ditawarkan lagi. */
+    ditaruhLokal() {
+      return new Set(this.ops.filter((o) => o.op === 'tempat_barang').map((o) => String(o.item)));
+    },
+
+    async cariBelum() {
+      this.belum.memuat = true;
+      try {
+        const h = await this.$wire.daftarBarang(this.belum.cari, true);
+        const sudah = this.ditaruhLokal();
+        h.barang.forEach((b) => { this.namaBarang[b.id] = b.name; });
+        this.belum.barang = h.barang.filter((b) => !sudah.has(String(b.id)));
+        this.belum.lebih = h.lebih;
+      } finally {
+        this.belum.memuat = false;
+      }
+    },
+
+    async cariTambah() {
+      this.tambahBrg.memuat = true;
+      try {
+        const h = await this.$wire.daftarBarang(this.tambahBrg.cari, false);
+        h.barang.forEach((b) => { this.namaBarang[b.id] = b.name; });
+        this.tambahBrg.barang = h.barang;
+        this.tambahBrg.lebih = h.lebih;
+      } finally {
+        this.tambahBrg.memuat = false;
+      }
+    },
+
+    dicentang(b) { return this.barangPilih.some((x) => x.id === b.id); },
+
+    centang(b) {
+      this.barangPilih = this.dicentang(b) ? this.barangPilih.filter((x) => x.id !== b.id) : [...this.barangPilih, b];
+      if (!this.barangPilih.length) this.menaruh = false;
+    },
+
+    mulaiTaruh() {
+      if (!this.barangPilih.length) { this.pesan('Centang barang dulu.', 'danger'); return; }
+      this.menaruh = true;
+      this.pesan('Klik rak, bin, atau area tujuan untuk ' + this.barangPilih.length + ' barang.');
+    },
+
+    /** Kunci tempat: bin (utama bila tergabung) atau seluruh rak / area lantai. */
+    tempatDari(rakId, binId) {
+      const a = this.rakLokal(rakId);
+      if (!a) return null;
+      if (!this.idNyata(rakId) || (binId !== null && !this.idNyata(binId))) { this.pesan('Simpan dulu rak/bin baru sebelum menaruh barang.', 'danger'); return null; }
+      if (a.r.is_area || binId === null) return { kunci: 'rak:' + rakId, a, bin: null };
+      const b = this.binLokal(binId);
+      const utama = b?.utama ? this.binLokal(b.utama) : b;
+      return utama ? { kunci: 'bin:' + utama.id, a, bin: utama } : null;
+    },
+
+    /** Terapkan di data lokal (gambar & panel) — server baru saat Simpan perubahan. */
+    pasangLokal(t, brg, khusus) {
+      const daftar = t.bin ? (t.bin.barang = t.bin.barang || []) : (t.a.r.barang = t.a.r.barang || []);
+      const ada = daftar.find((x) => String(x.id) === String(brg.id));
+      if (ada) ada.k = khusus; else daftar.push({ id: brg.id, code: brg.code, k: khusus });
+      this.namaBarang[brg.id] = brg.name ?? this.namaBarang[brg.id];
+    },
+
+    taruhDi(rakId, binId) {
+      const t = this.tempatDari(rakId, binId);
+      if (!t) return;
+      const k = !!this.khususTaruh;
+      for (const brg of this.barangPilih) {
+        this.catat({ op: 'tempat_barang', item: brg.id, tempat: t.kunci, khusus: k });
+        this.pasangLokal(t, brg, k);
+      }
+      const n = this.barangPilih.length;
+      const ids = new Set(this.barangPilih.map((x) => x.id));
+      this.belum.barang = this.belum.barang.filter((x) => !ids.has(x.id));
+      this.barangPilih = [];
+      this.menaruh = false;
+      this.khususTaruh = false;
+      this.pesan(n + ' barang ditaruh di ' + this.labelTempat(t) + ' — belum tersimpan.');
+      this.gambar();
+    },
+
+    labelTempat(t) {
+      if (t.bin) return t.bin.pendek;
+      return (t.a.r.is_area ? 'area ' : 'rak ') + t.a.r.code;
+    },
+
+    /** "Tambah barang…" dari panel rak: ke bin terpilih atau seluruh rak/area. */
+    tambahKeRak(brg) {
+      if (!this.rak) return;
+      const keBin = this.tambahBrg.ke === 'bin' && this.binId !== null && !this.rak.is_area;
+      const t = this.tempatDari(this.rak.id, keBin ? this.binId : null);
+      if (!t) return;
+      const k = !!this.tambahBrg.khusus;
+      this.catat({ op: 'tempat_barang', item: brg.id, tempat: t.kunci, khusus: k });
+      this.pasangLokal(t, brg, k);
+      this.belum.barang = this.belum.barang.filter((x) => x.id !== brg.id);
+      this.pesan(brg.code + ' ditaruh di ' + this.labelTempat(t) + ' — belum tersimpan.');
+      this.gambar();
+    },
+
+    /** Barang di rak/area (seluruh rak) dan di bin terpilih, dari data lokal. */
+    barangDiSini() {
+      if (!this.rak) return [];
+      const a = this.rakLokal(this.rak.id);
+      const out = (a?.r.barang || []).map((x) => ({ ...x, tempat: 'rak:' + this.rak.id, dimana: this.rak.is_area ? 'area' : 'seluruh rak' }));
+      const b = this.binId !== null ? this.binLokal(this.binId) : null;
+      if (b) out.push(...(b.barang || []).map((x) => ({ ...x, tempat: 'bin:' + b.id, dimana: b.pendek })));
+      return out;
+    },
+
+    lepasBarang(x) {
+      const [jenis, id] = x.tempat.split(':');
+      const daftar = jenis === 'bin' ? this.binLokal(id)?.barang : this.rakLokal(id)?.r.barang;
+      if (!daftar) return;
+      this.catat({ op: 'lepas_barang', item: x.id, tempat: x.tempat });
+      const i = daftar.findIndex((z) => String(z.id) === String(x.id));
+      if (i >= 0) daftar.splice(i, 1);
+      this.pesan(x.code + ' dilepas dari ' + x.dimana + ' — belum tersimpan.');
+      this.gambar();
+    },
+
+    /** Versi daftar (HP): ketuk petak/rak saat menaruh = taruh di sana. */
+    ketukDaftar(rakId, binId = null) {
+      if (this.tata && this.menaruh) { this.taruhDi(rakId, binId); return; }
+      this.bukaRak(rakId, binId);
     },
 
     pesan(teks, jenis = 'success') {

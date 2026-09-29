@@ -16,7 +16,9 @@ use App\Domain\Stock\Support\MovementRequest;
 use App\Domain\Stock\Support\StockLedger;
 use App\Domain\Transfer\Support\BackorderTransfers;
 use App\Domain\Warehouse\Enums\BinType;
+use App\Domain\Warehouse\Exceptions\WarehouseRuleException;
 use App\Domain\Warehouse\Models\Bin;
+use App\Domain\Warehouse\Support\StoragePolicy;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -28,6 +30,9 @@ use Illuminate\Support\Facades\DB;
  * (BR-WH-06): mode blokir menolak, mode peringatan dikembalikan sebagai pesan.
  *
  * Tidak ada kejadian stok: perpindahan di dalam gudang (matriks §14).
+ *
+ * BR-WH-10 (A-366): bin yang **Khusus** untuk barang lain ditolak, kecuali
+ * Kepala Gudang membukanya dengan alasan (`buka_khusus`, dicatat).
  */
 class CompletePutaway
 {
@@ -37,10 +42,11 @@ class CompletePutaway
     public function __construct(
         private readonly StockLedger $ledger,
         private readonly BackorderTransfers $backorder,
+        private readonly StoragePolicy $khusus,
     ) {}
 
     /**
-     * @param  array<int|string, array{bin_id?: int|string|null, override_reason?: ?string}>  $isian  line_id => isian
+     * @param  array<int|string, array{bin_id?: int|string|null, override_reason?: ?string, buka_khusus?: ?string}>  $isian  line_id => isian
      */
     public function handle(PutawayTask $task, array $isian = [], ?User $actor = null): PutawayTask
     {
@@ -72,13 +78,23 @@ class CompletePutaway
                 throw ReceiptRuleException::field('BR-GRN-03', 'override_reason', 'Baris '.$l->item->code.': menaruh di bin selain saran menuntut alasan.');
             }
 
-            $rencana[$l->id] = [$l, $bin, $alasan === '' ? null : $alasan];
+            try {
+                $buka = $this->khusus->periksa($bin, $l->item, $isi['buka_khusus'] ?? null, $actor);
+            } catch (WarehouseRuleException $e) {
+                throw ReceiptRuleException::field((string) $e->rule, 'bin_id', 'Baris '.$l->item->code.': '.$e->getMessage());
+            }
+
+            $rencana[$l->id] = [$l, $bin, $alasan === '' ? null : $alasan, $buka ? trim((string) $isi['buka_khusus']) : null];
         }
 
         $this->peringatan = [];
 
         return DB::transaction(function () use ($task, $rencana, $actor) {
-            foreach ($rencana as [$l, $bin, $alasan]) {
+            foreach ($rencana as [$l, $bin, $alasan, $buka]) {
+                if ($buka !== null) {
+                    $this->khusus->catatBuka($bin, $l->item, $buka, $actor, ['type' => 'putaway_task', 'id' => (int) $task->id, 'number' => $task->number]);
+                }
+
                 try {
                     $this->ledger->post(new MovementRequest(
                         item: $l->item,

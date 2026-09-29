@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.85
+**Versi:** 0.86
 **Tanggal:** 1 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -107,6 +107,11 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.86 — 1 Oktober 2026 (tata letak gudang Bagian 3: tempat simpan barang)
+- **Asumsi baru** [A-365](wms/04b-asumsi-lanjutan.md#a-365)–[A-372](wms/04b-asumsi-lanjutan.md#a-372) (04b v0.29 §2.50): Tempat Simpan (A-365), Khusus Barang Ini (A-366), Buka Tempat Khusus (A-367), tempat simpan bukan pemakaian bin (A-368, menyempurnakan A-362), mode Tata letak barang di Denah (A-369), Cetak denah (A-370), impor Excel tempat simpan (A-371), saran bin dari tempat simpan (A-372).
+- **Aturan** [05-aturan-bisnis](wms/05-aturan-bisnis.md) v0.21: **BR-WH-10** baru. **Glosarium** v0.29: *Tempat Simpan*, *Khusus Barang Ini*, *Buka Tempat Khusus*, *Tata Letak Barang*, *Barang Belum Punya Tempat*, *Cetak Denah*. **ERD** [08b](wms/08b-model-data-stok-dokumen.md) v0.38: `item_storage_locations`, `storage_dedication_overrides`. Katalog 06 tidak berubah.
+- **Spesifikasi** baru [12a-tata-letak-barang](wms/12a-tata-letak-barang.md) v0.1 (TC-WH-46c, TC-WH-50–60, TC-WH-54b); [12-warehouse](wms/12-warehouse.md) v0.18 §13.12. **Kode:** migrasi tenant `000510`, `SaveItemStorageLocations`, `ImportItemStorageLocations`, `Support\StoragePolicy`, `Support\StorageLocationPlanner`, `Support\FloorPlanPrintData`, Livewire `ItemStorageLocations`, op denah `tempat_barang`/`lepas_barang`, `BinUsage::KONFIGURASI`; penegakan di `CompletePutaway`, `SortGoodsReturn`, `AdjustmentLines`; uji `TempatSimpanTest`, `TempatSimpanReturTest`, `TempatSimpanLayarTest`. Blok v0.29 dipindah ke [arsip](00-catatan-perubahan-arsip.md) v1.18.
 
 ### v0.85 — 1 Oktober 2026 (tata letak gudang Bagian 2: struktur rak nyata)
 - **Asumsi baru** [A-359](wms/04b-asumsi-lanjutan.md#a-359)–[A-364](wms/04b-asumsi-lanjutan.md#a-364) (04b v0.28 §2.49): Gabung Bin/Pisah (K-B) menggantikan "ikut terpakai" A-255; data lama → gabung sementara samping (A-360); kapasitas per seluruh isi bin & gabungan (A-361, keputusan #10); hapus bin yang belum pernah dipakai (A-362, K-C); lebar bin & blok gabungan (A-363, K-D); area lantai berkapasitas bebas (A-364, K-E).
@@ -424,23 +429,3 @@ docs/
 - **Pengujian:** 493 uji hijau (MariaDB 10.4); alur E2E 9/9 lulus.
 - **prompts/00-lanjutkan-di-rumah.md v1.1:** versi database rumah dikoreksi MySQL 8.3 → 8.4 LTS (selaras CLAUDE.md, 00-setup-lokal, 08-arsitektur); PHP 8.3.33 tetap.
 - **Profil mesin rumah pindah ke XAMPP3** (`C:\xampp3`, PHP 8.3.33 = `php`, MariaDB 10.4.32, `php artisan serve` :8000; Laragon tidak dipakai lagi, A-76 berlaku di kedua mesin — dicatat sebagai [A-162](wms/04-keputusan-dan-asumsi.md#a-162) di v0.31): prompts/00-lanjutkan-di-rumah.md v1.2, 00-setup-lokal v1.5 §1–§4, `CLAUDE.md` *Lingkungan lokal*, `tests/e2e/README.md`.
-
-### v0.29 — 24 September 2026 (modul Issue — pemakaian material di site — selesai Fase 1)
-- **Berkas baru `wms/23-pemakaian.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Issue`, migrasi tenant `000120`.
-  - ISU dari bin penyimpanan Gudang Site proyek, hanya item habis pakai; aset ditolak (BR-PRJ-08, BR-STK-08).
-  - Konfirmasi = barang keluar lewat `StockLedger` dengan kejadian `material_consumed` penanda proyek (matriks §14); stok diperiksa ulang saat konfirmasi.
-  - ISU pembalik: baris terpilih, jumlah negatif, Alasan `*`, approval minimal satu lapis (BR-GEN-04), `StockLedger::reverse()` + `reverses_event_id`, sekali per baris (BR-LED-05).
-  - Laporan **Material per proyek** (diminta, terkirim, terpakai, diretur, di Gudang Site, aset di proyek) dari kartu stok, terdaftar di `ReportRegistry`.
-  - Cetak **Bukti Pemakaian Material** lewat modul Template; menu *Pemakaian di site* dan palet Ctrl+K.
-- **Asumsi baru [A-117](wms/04-keputusan-dan-asumsi.md#a-117)–[A-119](wms/04-keputusan-dan-asumsi.md#a-119), [A-150](wms/04-keputusan-dan-asumsi.md#a-150)–[A-152](wms/04-keputusan-dan-asumsi.md#a-152)** (*Perlu validasi*, `04` → v0.19, §2.8).
-  - A-117: sumber & bentuk baris ISU (bin penyimpanan, potongan utuh, serial per unit, draf tidak memegang stok).
-  - A-118: kolom di luar ERD.
-  - A-119: permission `issue.view`/`issue.approve` & cakupan gudang + proyek.
-  - A-150: ISU pembalik tanpa status baru (tetap `draft` selama approval; ditolak tetap `draft`), lapis minimum Kepala Gudang Site → Manajemen.
-  - A-151: definisi kolom laporan Material per proyek.
-  - A-152: cetak Bukti Pemakaian Material.
-- **Permission baru** modul `issue` (5): `issue.view`, `issue.create`, `issue.confirm`, `issue.cancel`, `issue.approve`. Staf Gudang tanpa `approve`; Pemohon Internal `view/create/cancel`; Manajemen `view/approve`; Auditor `view`.
-- **Katalog** `06` → v0.13: `document_template_type` + `material_issue`, ISU pembalik tersambung ke mesin approval, catatan implementasi §2.9 — **tanpa status baru**.
-- **Model data** 08a–08c → v0.12 (digenerate ulang): kolom implementasi `material_issues`, `material_issue_lines` (A-118).
-- **Modul lain:** `20-approval` → v0.5 (ISU pembalik tersambung), `18-template-dokumen-label` → v0.2 (dokumen ISU), `16-shared-laporan-berkas` → v0.3 (laporan kedelapan), `08-arsitektur` → v0.11 (§12), `00-akun-uji` → v1.6 (§5 lapis minimum ISU pembalik, tanpa aturan demo), laporan progres → v1.7 (ISU ✅).
-- **Uji:** 17 uji TC-ISU (termasuk rantai REQ → SJ ke Gudang Site → GRN → PUT → ISU → laporan). TC-ACC-27b menghitung 5 permission `issue`, TC-RPT-01 menghitung 8 laporan; pemeriksaan "tanpa nilai uang" TC-TPL-01 kini membuang gambar base64 dulu (QR bisa memuat "Rp" secara acak). **493 uji hijau.**

@@ -216,6 +216,7 @@
                     @error('pilah.'.$f) <div class="text-danger small">{{ $message }}</div> @enderror
                 @endforeach
             </div>
+            <div class="px-3">@include('livewire.warehouse.partials.buka-khusus')</div>
             <div class="card-footer">
                 <button class="btn btn-primary" type="button" wire:click="simpanPilah">{{ __('Simpan pemilahan') }}</button>
             </div>

@@ -1,9 +1,29 @@
-# Catatan Perubahan — Arsip (v0.2–v0.28)
+# Catatan Perubahan — Arsip (v0.2–v0.29)
 
-**Versi:** 1.17
-**Tanggal:** 30 September 2026
-**Status:** arsip — v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
+**Versi:** 1.18
+**Tanggal:** 1 Oktober 2026
+**Status:** arsip — v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
 **Dokumen terkait:** [README](README.md)
+
+### v0.29 — 24 September 2026 (modul Issue — pemakaian material di site — selesai Fase 1)
+- **Berkas baru `wms/23-pemakaian.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Issue`, migrasi tenant `000120`.
+  - ISU dari bin penyimpanan Gudang Site proyek, hanya item habis pakai; aset ditolak (BR-PRJ-08, BR-STK-08).
+  - Konfirmasi = barang keluar lewat `StockLedger` dengan kejadian `material_consumed` penanda proyek (matriks §14); stok diperiksa ulang saat konfirmasi.
+  - ISU pembalik: baris terpilih, jumlah negatif, Alasan `*`, approval minimal satu lapis (BR-GEN-04), `StockLedger::reverse()` + `reverses_event_id`, sekali per baris (BR-LED-05).
+  - Laporan **Material per proyek** (diminta, terkirim, terpakai, diretur, di Gudang Site, aset di proyek) dari kartu stok, terdaftar di `ReportRegistry`.
+  - Cetak **Bukti Pemakaian Material** lewat modul Template; menu *Pemakaian di site* dan palet Ctrl+K.
+- **Asumsi baru [A-117](wms/04-keputusan-dan-asumsi.md#a-117)–[A-119](wms/04-keputusan-dan-asumsi.md#a-119), [A-150](wms/04-keputusan-dan-asumsi.md#a-150)–[A-152](wms/04-keputusan-dan-asumsi.md#a-152)** (*Perlu validasi*, `04` → v0.19, §2.8).
+  - A-117: sumber & bentuk baris ISU (bin penyimpanan, potongan utuh, serial per unit, draf tidak memegang stok).
+  - A-118: kolom di luar ERD.
+  - A-119: permission `issue.view`/`issue.approve` & cakupan gudang + proyek.
+  - A-150: ISU pembalik tanpa status baru (tetap `draft` selama approval; ditolak tetap `draft`), lapis minimum Kepala Gudang Site → Manajemen.
+  - A-151: definisi kolom laporan Material per proyek.
+  - A-152: cetak Bukti Pemakaian Material.
+- **Permission baru** modul `issue` (5): `issue.view`, `issue.create`, `issue.confirm`, `issue.cancel`, `issue.approve`. Staf Gudang tanpa `approve`; Pemohon Internal `view/create/cancel`; Manajemen `view/approve`; Auditor `view`.
+- **Katalog** `06` → v0.13: `document_template_type` + `material_issue`, ISU pembalik tersambung ke mesin approval, catatan implementasi §2.9 — **tanpa status baru**.
+- **Model data** 08a–08c → v0.12 (digenerate ulang): kolom implementasi `material_issues`, `material_issue_lines` (A-118).
+- **Modul lain:** `20-approval` → v0.5 (ISU pembalik tersambung), `18-template-dokumen-label` → v0.2 (dokumen ISU), `16-shared-laporan-berkas` → v0.3 (laporan kedelapan), `08-arsitektur` → v0.11 (§12), `00-akun-uji` → v1.6 (§5 lapis minimum ISU pembalik, tanpa aturan demo), laporan progres → v1.7 (ISU ✅).
+- **Uji:** 17 uji TC-ISU (termasuk rantai REQ → SJ ke Gudang Site → GRN → PUT → ISU → laporan). TC-ACC-27b menghitung 5 permission `issue`, TC-RPT-01 menghitung 8 laporan; pemeriksaan "tanpa nilai uang" TC-TPL-01 kini membuang gambar base64 dulu (QR bisa memuat "Rp" secara acak). **493 uji hijau.**
 
 ### v0.28 — 24 September 2026 (modul Template dokumen & label selesai Fase 1)
 - **Berkas baru `wms/18-template-dokumen-label.md` v0.1 (selesai Fase 1)** dan `prompts/18-template-label.md`. Dibangun paralel di branch `feat/template-label`, lalu digabung setelah v0.27.

@@ -107,7 +107,7 @@ class ImportOpeningStock
             }
 
             try {
-                $this->lines->normalize((int) $gudang->id, [$isian]);
+                $this->lines->normalize((int) $gudang->id, [$isian], $actor);
             } catch (AdjustmentRuleException $e) {
                 // Pesan AdjustmentLines diawali "Baris 1 (KODE): "; nomor baris Excel ditulis ImportBatch.
                 throw MasterRuleException::rule($e->rule, (string) preg_replace('/^Baris \d+( \([^)]*\))?: /', '', $e->getMessage()));

@@ -25,8 +25,10 @@ use App\Domain\Stock\Support\MovementRequest;
 use App\Domain\Stock\Support\StockLedger;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
+use App\Domain\Warehouse\Exceptions\WarehouseRuleException;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\Warehouse\Support\StoragePolicy;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -45,12 +47,17 @@ use Illuminate\Support\Facades\DB;
  * Satu kejadian per pergerakan masuk hasil pilah (matriks §14): `goods_returned`
  * dengan penanda kepemilikan dan hasil pilah, atau `asset_returned` untuk aset.
  * Setelah semua baris dipilah, GRN retur ikut selesai (A-112).
+ *
+ * BR-WH-10 (A-366): hasil pilah ke bin penyimpanan yang **Khusus** untuk
+ * barang lain ditolak, kecuali Kepala Gudang membukanya dengan alasan
+ * (`buka_khusus` per bagian, dicatat).
  */
 class SortGoodsReturn
 {
     public function __construct(
         private readonly StockLedger $ledger,
         private readonly ReturnProgress $progress,
+        private readonly StoragePolicy $khusus,
     ) {}
 
     /**
@@ -75,7 +82,7 @@ class SortGoodsReturn
         $rencana = [];
 
         foreach ($baris as $l) {
-            $rencana[$l->id] = $this->periksaBaris($l, $portions[$l->id] ?? [], $gudang, $binRetur, $binWaste);
+            $rencana[$l->id] = $this->periksaBaris($l, $portions[$l->id] ?? [], $gudang, $binRetur, $binWaste, $actor);
         }
 
         return DB::transaction(function () use ($ret, $baris, $rencana, $binRetur, $binWaste, $notes, $actor) {
@@ -107,7 +114,7 @@ class SortGoodsReturn
      * @param  array<int, array<string, mixed>>  $bagian
      * @return array<int, array<string, mixed>>
      */
-    private function periksaBaris(GoodsReturnLine $l, array $bagian, Warehouse $gudang, Bin $binRetur, Bin $binWaste): array
+    private function periksaBaris(GoodsReturnLine $l, array $bagian, Warehouse $gudang, Bin $binRetur, Bin $binWaste, ?User $actor = null): array
     {
         $label = $l->item->code.($l->trackingLabel() !== '' ? ' '.$l->trackingLabel() : '');
         $diterima = (float) $l->qty_received;
@@ -137,7 +144,17 @@ class SortGoodsReturn
                 $offcut = $this->panjangOffcut($l, $p['offcut_length'] ?? null, $label);
             }
 
-            $hasil[] = ['sorting' => $pilah, 'qty' => $qty, 'bin' => $bin, 'reason_code_id' => $alasan, 'offcut_length' => $offcut];
+            $buka = null;
+
+            if ($bin->bin_type === BinType::Storage) {
+                try {
+                    $buka = $this->khusus->periksa($bin, $l->item, $p['buka_khusus'] ?? null, $actor) ? trim((string) $p['buka_khusus']) : null;
+                } catch (WarehouseRuleException $e) {
+                    throw ReturnRuleException::field((string) $e->rule, 'target_bin_id', $label.': '.$e->getMessage());
+                }
+            }
+
+            $hasil[] = ['sorting' => $pilah, 'qty' => $qty, 'bin' => $bin, 'reason_code_id' => $alasan, 'offcut_length' => $offcut, 'buka_khusus' => $buka];
         }
 
         if ($hasil === []) {
@@ -268,6 +285,10 @@ class SortGoodsReturn
         $event = $sumber === ReturnSource::OnSiteAsset ? StockEventType::AssetReturned : StockEventType::GoodsReturned;
         $pieceId = $asal->piece_id;
         $newPieceId = null;
+
+        if (($p['buka_khusus'] ?? null) !== null) {
+            $this->khusus->catatBuka($bin, $asal->item, $p['buka_khusus'], $actor, ['type' => 'goods_return', 'id' => (int) $ret->id, 'number' => $ret->number]);
+        }
 
         if ($pilah === ReturnSorting::Offcut) {
             [$pieceId, $newPieceId] = $this->potong($ret, $asal, (float) $p['offcut_length'], $binRetur, $binWaste, $p, $actor);

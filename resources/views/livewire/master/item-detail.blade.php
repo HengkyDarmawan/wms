@@ -170,6 +170,13 @@
                 </div>
             </div>
 
+            {{-- A-365: tempat simpan per gudang (Tata letak gudang Bagian 3). --}}
+            @can('bin.view')
+                <div class="col-lg-6">
+                    @livewire('warehouse.item-storage-locations', ['item' => $item], key('tempat-simpan-'.$item->id))
+                </div>
+            @endcan
+
             <div class="col-lg-6">
                 <div class="card h-100">
                     <div class="card-header d-flex align-items-center">

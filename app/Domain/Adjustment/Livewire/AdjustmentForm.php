@@ -31,6 +31,9 @@ class AdjustmentForm extends Component
     /** @var array<int, array<string, string>> */
     public array $rows = [];
 
+    /** BR-WH-10 (A-367): alasan Kepala Gudang membuka bin Khusus Barang Ini. */
+    public string $bukaKhusus = '';
+
     #[Locked]
     public ?int $reversalOfId = null;
 
@@ -86,7 +89,7 @@ class AdjustmentForm extends Component
                 'warehouse_id' => $this->form['warehouse_id'],
                 'reason_code_id' => $alasan,
                 'notes' => $this->form['notes'],
-            ], array_map(fn (array $r) => $r + ['reason_code_id' => null], $this->rows), auth()->user());
+            ], array_map(fn (array $r) => $r + ['reason_code_id' => null, 'buka_khusus' => $this->bukaKhusus], $this->rows), auth()->user());
         });
 
         if ($ok && $adj !== null) {

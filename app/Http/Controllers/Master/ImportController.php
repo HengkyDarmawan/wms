@@ -9,6 +9,7 @@ use App\Domain\Master\Actions\ImportItems;
 use App\Domain\Master\Actions\ImportProjects;
 use App\Domain\Master\Actions\ImportVendors;
 use App\Domain\Master\Exceptions\MasterRuleException;
+use App\Domain\Warehouse\Actions\ImportItemStorageLocations;
 use App\Domain\Warehouse\Actions\ImportWarehouses;
 use App\Domain\Warehouse\Actions\ImportWarehouseStructure;
 use App\Http\Controllers\Controller;
@@ -51,10 +52,16 @@ class ImportController extends Controller
             'message' => ':n :jenis diimpor; zona, rak, dan level yang belum ada dibuat otomatis.',
             'example' => ['CKG', 'C', 'Zona C', 'R01', 'L1', 'B01', 'storage', 100],
         ],
+        // A-371: tempat simpan barang (Tata letak gudang Bagian 3).
+        'storage-locations' => [
+            'permission' => 'bin.manage', 'action' => ImportItemStorageLocations::class, 'sheet' => 'Tempat simpan', 'route' => 'warehouses.index', 'label' => 'tempat simpan',
+            'message' => ':n :jenis diimpor; urutan tempat per barang mengikuti urutan baris.',
+            'example' => ['BAUT-M12', 'CKG', 'R01 · L1 · 01', 'Tidak'],
+        ],
     ];
 
     /** Izin tiap kartu di layar impor. */
-    public const PERMISSIONS = ['items' => 'item.create', 'projects' => 'project.create', 'vendors' => 'vendor.create', 'opening-stock' => 'adjustment.create', 'warehouses' => 'warehouse.create', 'bins' => 'bin.manage'];
+    public const PERMISSIONS = ['items' => 'item.create', 'projects' => 'project.create', 'vendors' => 'vendor.create', 'opening-stock' => 'adjustment.create', 'warehouses' => 'warehouse.create', 'bins' => 'bin.manage', 'storage-locations' => 'bin.manage'];
 
     public function index(Request $request): View
     {
@@ -67,6 +74,7 @@ class ImportController extends Controller
             'opening' => ImportOpeningStock::COLUMNS,
             'warehouses' => ImportWarehouses::COLUMNS,
             'bins' => ImportWarehouseStructure::COLUMNS,
+            'storageLocations' => ImportItemStorageLocations::COLUMNS,
             'max' => [
                 'items' => ImportItems::MAX_ROWS,
                 'projects' => ImportProjects::MAX_ROWS,
@@ -74,6 +82,7 @@ class ImportController extends Controller
                 'opening-stock' => ImportOpeningStock::MAX_ROWS,
                 'warehouses' => ImportWarehouses::MAX_ROWS,
                 'bins' => ImportWarehouseStructure::MAX_ROWS,
+                'storage-locations' => ImportItemStorageLocations::MAX_ROWS,
             ],
         ]);
     }

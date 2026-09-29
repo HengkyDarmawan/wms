@@ -140,5 +140,9 @@
         </div>
     @endif
 
+    @unless ($asal)
+        @include('livewire.warehouse.partials.buka-khusus')
+    @endunless
+
     <button class="btn btn-primary" type="button" wire:click="simpan">{{ $asal ? __('Ajukan ADJ pembalik') : __('Ajukan penyesuaian') }}</button>
 </div>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Warehouse\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Models\Item;
 use App\Domain\Warehouse\Exceptions\WarehouseRuleException;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\FloorPlanObject;
@@ -30,7 +31,11 @@ use RuntimeException;
  *
  * Setiap operasi dicoba di titik simpan (savepoint) sendiri supaya semua
  * galat terkumpul; bila ada satu saja yang gagal, **seluruh** perubahan
- * dibatalkan dan galat dikembalikan per objek. Benda baru memakai id
+ * dibatalkan dan galat dikembalikan per objek.
+ *
+ * Bagian 3 (A-365): mode **Tata letak** mengirim `tempat_barang` (taruh barang
+ * di bin/rak/area, boleh Khusus) dan `lepas_barang` lewat
+ * {@see SaveItemStorageLocations} — ikut transaksi & galat per objek yang sama. Benda baru memakai id
  * sementara (mis. `b3`) yang dipetakan ke id sungguhan selama penerapan;
  * level rak baru dirujuk sebagai `{idSementaraRak}#{kodeLevel}`.
  */
@@ -52,6 +57,7 @@ class ApplyLayoutChanges
         private readonly DeleteBin $hapus,
         private readonly SaveBinShape $bentuk,
         private readonly ChangeBinStatus $statusBin,
+        private readonly SaveItemStorageLocations $tempatSimpan,
     ) {}
 
     /**
@@ -133,6 +139,8 @@ class ApplyLayoutChanges
             'hapus_bin' => $this->hapus->handle($this->binGudang($gudang, $op['bin'] ?? null), $actor),
             'lebar_bin' => $this->bentuk->width($this->binGudang($gudang, $op['bin'] ?? null), $op['lebar'] ?? null, $actor),
             'kapasitas_area' => $this->bentuk->areaCapacity($this->rak($gudang, $op['id']), $data, $actor),
+            'tempat_barang' => $this->tempatSimpan->add($this->barang($op['item'] ?? null), $gudang, (string) ($op['tempat'] ?? ''), filter_var($op['khusus'] ?? false, FILTER_VALIDATE_BOOLEAN), $actor),
+            'lepas_barang' => $this->tempatSimpan->remove($this->barang($op['item'] ?? null), $gudang, (string) ($op['tempat'] ?? ''), $actor),
             'nonaktif' => match ($op['jenis'] ?? '') {
                 'rak' => $this->nonaktif->rack($this->rak($gudang, $op['id']), (string) ($op['alasan'] ?? ''), $actor),
                 'zona' => $this->nonaktif->zone($this->zona($gudang, $op['id']), (string) ($op['alasan'] ?? ''), $actor),
@@ -251,6 +259,15 @@ class ApplyLayoutChanges
         return Bin::query()->withoutGlobalScopes()->where('warehouse_id', $gudang->id)->findOrFail((int) $id);
     }
 
+    private function barang(mixed $id): Item
+    {
+        if (! is_int($id) && ! (is_string($id) && ctype_digit($id))) {
+            throw new ModelNotFoundException;
+        }
+
+        return Item::query()->findOrFail((int) $id);
+    }
+
     private function objekDenah(Warehouse $gudang, mixed $id): FloorPlanObject
     {
         return FloorPlanObject::query()->where('warehouse_id', $gudang->id)->findOrFail($this->id('obj', $id));
@@ -268,6 +285,7 @@ class ApplyLayoutChanges
             'gabung' => 'bin:'.($op['utama'] ?? ''),
             'pisah', 'hapus_bin', 'lebar_bin' => 'bin:'.($op['bin'] ?? ''),
             'kapasitas_area' => 'rak:'.($op['id'] ?? ''),
+            'tempat_barang', 'lepas_barang' => 'barang:'.($op['item'] ?? '').'@'.($op['tempat'] ?? ''),
             'objek', 'objek_baru' => 'obj:'.($op['id'] ?? $op['tmp'] ?? ''),
             default => ($op['jenis'] ?? '?').':'.($op['id'] ?? ''),
         };

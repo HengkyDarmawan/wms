@@ -10,6 +10,8 @@ use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\Warehouse\Support\StorageLocationPlanner;
+use App\Domain\Warehouse\Support\StoragePolicy;
 use Illuminate\Support\Collection;
 
 /**
@@ -29,6 +31,11 @@ use Illuminate\Support\Collection;
  * penolakan. Bin beku dan nonaktif tidak pernah disarankan (BR-OPN-02).
  * "Kedekatan zona" diwakili urutan kode bin, karena kode diturunkan dari
  * hierarki zona-rak-level (BR-WH-01).
+ *
+ * Bagian 3 (A-365): **Tempat Simpan** item didahulukan lewat
+ * {@see StorageLocationPlanner::saranBin()}; aturan di atas menjadi cadangan
+ * ({@see suggestByRule()}) dan tidak pernah menyarankan bin yang Khusus untuk
+ * barang lain (BR-WH-10).
  */
 class PutawaySuggester
 {
@@ -37,7 +44,21 @@ class PutawaySuggester
      */
     public function suggest(Item $item, Warehouse $warehouse, float $qty, array $planned = []): ?Bin
     {
-        $bins = $this->storageBins($warehouse);
+        return app(StorageLocationPlanner::class)->saranBin($item, $warehouse, $qty, $planned)['bin'];
+    }
+
+    /**
+     * Aturan lama A-84 (tanpa tempat simpan). Bin yang Khusus untuk barang lain
+     * dilewati.
+     *
+     * @param  array<int, float>  $planned
+     */
+    public function suggestByRule(Item $item, Warehouse $warehouse, float $qty, array $planned = []): ?Bin
+    {
+        $khusus = app(StoragePolicy::class);
+        $bins = $this->storageBins($warehouse)
+            ->filter(fn (Bin $b) => ($p = $khusus->pemilikKhusus($b)) === [] || in_array((int) $item->id, $p, true))
+            ->values();
 
         if ($bins->isEmpty()) {
             return null;

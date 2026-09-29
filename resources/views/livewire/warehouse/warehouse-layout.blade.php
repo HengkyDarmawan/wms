@@ -19,13 +19,23 @@
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     @if ($bolehUbah)
-                        <button class="btn btn-outline-warning d-none d-md-inline-block" type="button" x-show="!edit" x-on:click="aturEdit(true)">
+                        <button class="btn btn-outline-warning d-none d-md-inline-block" type="button" x-show="!edit && !tata" x-on:click="aturEdit(true)">
                             <i class="bi bi-pencil-square"></i> {{ __('Atur denah') }}
                         </button>
                         <button class="btn btn-warning" type="button" x-show="edit" x-cloak x-on:click="aturEdit(false)">
                             <i class="bi bi-check2-square"></i> {{ __('Selesai mengatur') }}
                         </button>
+                        {{-- A-365: mode ketiga — barang ↔ rak/bin/area. --}}
+                        <button class="btn btn-outline-info" type="button" x-show="!edit && !tata" x-on:click="aturTata(true)" data-mode-tata>
+                            <i class="bi bi-boxes"></i> {{ __('Tata letak barang') }}
+                        </button>
+                        <button class="btn btn-info" type="button" x-show="tata" x-cloak x-on:click="aturTata(false)">
+                            <i class="bi bi-check2-square"></i> {{ __('Selesai menata') }}
+                        </button>
                     @endif
+                    <a class="btn btn-outline-secondary" href="{{ route('warehouses.layout.print', $gudang) }}" target="_blank" rel="noopener" data-cetak-denah>
+                        <i class="bi bi-printer"></i> {{ __('Cetak denah') }}
+                    </a>
                     <a class="btn btn-outline-secondary" href="{{ route('warehouses.show', $gudang) }}">{{ __('Kembali ke gudang') }}</a>
                 </div>
             </div>
@@ -50,11 +60,11 @@
                 </button>
 
                 @if ($bolehUbah)
-                    <div class="ms-auto d-flex flex-wrap align-items-center gap-2" x-show="edit" x-cloak>
+                    <div class="ms-auto d-flex flex-wrap align-items-center gap-2" x-show="edit || tata" x-cloak>
                         <button class="btn btn-sm btn-outline-secondary" type="button" x-on:click="urungkan()" :disabled="!riwayat.length" title="Ctrl+Z" data-urungkan>
                             <i class="bi bi-arrow-counterclockwise"></i> {{ __('Urungkan') }}
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" type="button" x-on:click="putar()" :disabled="!pilih || !['rak', 'obj'].includes(pilih.jenis)" title="R" data-putar>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" x-show="edit" x-on:click="putar()" :disabled="!pilih || !['rak', 'obj'].includes(pilih.jenis)" title="R" data-putar>
                             <i class="bi bi-arrow-clockwise"></i> {{ __('Putar 90°') }}
                         </button>
                         <button class="btn btn-sm btn-primary" type="button" x-on:click="simpan()" :disabled="!ops.length || menyimpan" data-simpan-denah>
@@ -80,6 +90,12 @@
             </ul>
         </div>
 
+        @if ($bolehUbah)
+            <div x-show="tata" x-cloak>
+                @include('livewire.warehouse.partials.denah-tata')
+            </div>
+        @endif
+
         <div class="row g-3">
             <div :class="(rak || pilih) ? 'col-xl-8' : 'col-12'">
                 <div class="card mb-3" x-show="!tampilDaftar">
@@ -101,6 +117,7 @@
                                 <span><span class="d-inline-block border rounded-1 align-middle" style="width: 1rem; height: 1rem; background: {{ $w }}"></span> {{ $t }}</span>
                             @endforeach
                         </div>
+                        <span class="text-muted" x-show="tata" x-cloak>{{ __('Titik biru = bin bertempat simpan, oranye = Khusus; ▣ = barang di seluruh rak/area.') }}</span>
                         <span class="text-muted" x-show="edit" x-cloak>{{ __('Seret untuk memindah · tarik kotak kecil di sudut untuk ukuran · panah geser 0,5 m (Shift 0,1 m) · R putar · Ctrl+Z urungkan') }}</span>
                     </div>
                 </div>

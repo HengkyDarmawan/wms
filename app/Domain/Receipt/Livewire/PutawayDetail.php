@@ -36,6 +36,9 @@ class PutawayDetail extends Component
     /** @var array<int, string> */
     public array $peringatan = [];
 
+    /** BR-WH-10 (A-367): alasan Kepala Gudang membuka bin Khusus Barang Ini. */
+    public string $bukaKhusus = '';
+
     public function mount(PutawayTask $putawayTask): void
     {
         $this->authorize('view', $putawayTask);
@@ -91,7 +94,9 @@ class PutawayDetail extends Component
         $task = $this->task();
         $this->authorize('complete', $task);
 
-        if ($this->jalankan(fn () => $action->handle($task, $this->isian, auth()->user()))) {
+        $isian = array_map(fn (array $i) => $i + ['buka_khusus' => $this->bukaKhusus], $this->isian);
+
+        if ($this->jalankan(fn () => $action->handle($task, $isian, auth()->user()))) {
             $this->peringatan = $action->warnings();
             $this->dispatch('pesan', teks: __('Put-away selesai.'));
         }

@@ -249,7 +249,8 @@ class StrukturRakTest extends TenantTestCase
             [$db, 'bins'],
         ))->map(fn ($r) => $r->t.'.'.$r->c)->sort()->values()->all();
 
-        $diperiksa = collect(BinUsage::REFERENSI)->map(fn ($r) => $r[0].'.'.$r[1])->sort()->values()->all();
+        // A-368: pengaturan (tempat simpan) ikut terdaftar, terpisah dari pemakaian.
+        $diperiksa = collect([...BinUsage::REFERENSI, ...BinUsage::KONFIGURASI])->map(fn ($r) => $r[0].'.'.$r[1])->sort()->values()->all();
 
         $this->assertNotEmpty($skema);
         $this->assertSame($skema, $diperiksa, 'Foreign key baru ke `bins` wajib didaftarkan di BinUsage::REFERENSI (A-362) supaya bin yang pernah dipakai tidak bisa dihapus.');

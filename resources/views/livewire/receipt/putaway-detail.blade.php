@@ -108,6 +108,9 @@
         @foreach (['bin_id', 'override_reason'] as $f)
             @error('form.'.$f) <div class="text-danger small px-3">{{ $message }}</div> @enderror
         @endforeach
+        @can('complete', $task)
+            <div class="px-3 pt-2">@include('livewire.warehouse.partials.buka-khusus')</div>
+        @endcan
         <div class="card-footer d-flex gap-2">
             @can('complete', $task)
                 <button class="btn btn-success" type="button" wire:click="selesaikan">{{ __('Selesaikan put-away') }}</button>

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Warehouse;
 
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\Warehouse\Support\FloorPlanPrintData;
+use App\Domain\Warehouse\Support\WarehouseLayoutData;
 use App\Http\Controllers\Controller;
 use Illuminate\View\View;
 
@@ -31,5 +33,17 @@ class WarehouseController extends Controller
         $this->authorize('view', $warehouse);
 
         return view('warehouse.warehouses.layout', ['warehouse' => $warehouse]);
+    }
+
+    /** A-370: cetak denah — tampak atas, barang per rak (tempat simpan), tips tata letak. */
+    public function printLayout(Warehouse $warehouse, FloorPlanPrintData $data): View
+    {
+        $this->authorize('view', $warehouse);
+
+        return view('warehouse.warehouses.layout-print', [
+            'gudang' => $warehouse,
+            'd' => $data->build($warehouse),
+            'skala' => WarehouseLayoutData::SKALA,
+        ]);
     }
 }

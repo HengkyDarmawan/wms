@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Adjustment\Support;
 
+use App\Domain\Access\Models\User;
 use App\Domain\Adjustment\Exceptions\AdjustmentRuleException;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\ReasonContext;
@@ -16,7 +17,9 @@ use App\Domain\Master\Models\Serial;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Warehouse\Enums\BinStatus;
+use App\Domain\Warehouse\Exceptions\WarehouseRuleException;
 use App\Domain\Warehouse\Models\Bin;
+use App\Domain\Warehouse\Support\StoragePolicy;
 use Carbon\Carbon;
 
 /**
@@ -27,14 +30,19 @@ use Carbon\Carbon;
  * ada dan cukup (BR-STK-06); barang masuk boleh menyebut lot/serial yang
  * belum ada — turunannya baru dibuat saat ADJ diposting, supaya ADJ yang
  * ditolak tidak meninggalkan serial yatim (A-102).
+ *
+ * BR-WH-10 (A-366): baris **tambah** ke bin yang Khusus untuk barang lain
+ * ditolak — juga saldo awal — kecuali Kepala Gudang membukanya dengan alasan
+ * (`buka_khusus`); alasannya dibawa di kunci `_buka` untuk dicatat setelah
+ * ADJ lahir. Baris dari opname tidak lewat sini (opname mencatat kenyataan).
  */
 class AdjustmentLines
 {
     /**
      * @param  array<int, array<string, mixed>>  $lines
-     * @return array<int, array<string, mixed>> kolom siap simpan (tanpa stock_adjustment_id)
+     * @return array<int, array<string, mixed>> kolom siap simpan (tanpa stock_adjustment_id; `_buka` dibuang sebelum disimpan)
      */
-    public function normalize(int $warehouseId, array $lines): array
+    public function normalize(int $warehouseId, array $lines, ?User $actor = null): array
     {
         $hasil = [];
         $keluar = [];
@@ -83,6 +91,16 @@ class AdjustmentLines
                 throw AdjustmentRuleException::rule('BR-REQ-03', $label.': item berstatus '.$item->status->label().' tidak bisa ditambahkan ke stok.');
             }
 
+            $buka = null;
+
+            if ($arah === 'in') {
+                try {
+                    $buka = app(StoragePolicy::class)->periksa($bin, $item, $isi['buka_khusus'] ?? null, $actor) ? trim((string) $isi['buka_khusus']) : null;
+                } catch (WarehouseRuleException $e) {
+                    throw AdjustmentRuleException::field((string) $e->rule, 'bin_id', $label.': '.$e->getMessage());
+                }
+            }
+
             $status = StockStatus::tryFrom((string) ($isi['stock_status'] ?? '')) ?? StockStatus::Available;
             $qty = round((float) ($isi['qty'] ?? 0), 4);
 
@@ -114,6 +132,7 @@ class AdjustmentLines
             }
 
             $baris['qty_delta'] = $arah === 'out' ? -$qty : $qty;
+            $baris['_buka'] = $buka;
             $hasil[] = $baris;
         }
 

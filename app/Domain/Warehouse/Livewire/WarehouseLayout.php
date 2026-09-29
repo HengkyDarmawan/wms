@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Domain\Warehouse\Livewire;
 
+use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\ReasonContext;
+use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Warehouse\Actions\ApplyLayoutChanges;
 use App\Domain\Warehouse\Actions\SaveWarehouseLayout;
 use App\Domain\Warehouse\Enums\FloorPlanObjectType;
 use App\Domain\Warehouse\Exceptions\WarehouseRuleException;
+use App\Domain\Warehouse\Models\ItemStorageLocation;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Support\WarehouseLayoutData;
 use Illuminate\View\View;
@@ -32,6 +35,11 @@ use Livewire\Component;
  * tambah zona/rak/tingkat/bin/area lantai/objek, ukuran gedung, putar,
  * tumpukan diperingatkan, nonaktif tanpa hapus. `ringkas` = sematan
  * hanya-lihat di Daftar Gudang (A-323). Tanpa pustaka tambahan (D-05).
+ *
+ * Bagian 3 (A-365, A-369): mode **Tata letak** — panel *Barang belum punya
+ * tempat* dan *Tambah barang…* mencari lewat {@see daftarBarang()} (maks. 50
+ * baris per permintaan, aman di HP); taruh/lepas barang dikirim sebagai op
+ * `tempat_barang`/`lepas_barang` di *Simpan perubahan* yang sama.
  */
 class WarehouseLayout extends Component
 {
@@ -86,6 +94,35 @@ class WarehouseLayout extends Component
         }
 
         return ['ok' => true, 'denah' => $data->payload($gudang->refresh()), 'pesan' => __(':n perubahan disimpan.', ['n' => $hasil['jumlah']])];
+    }
+
+    /** Batas baris per pencarian barang di mode Tata letak. */
+    public const MAKS_BARANG = 50;
+
+    /**
+     * A-369: barang aktif untuk mode Tata letak — `tanpaTempat` = hanya yang
+     * belum punya tempat simpan di gudang ini (panel *Barang belum punya tempat*).
+     *
+     * @return array{barang: array<int, array{id: int, code: string, name: string}>, lebih: bool}
+     */
+    #[Renderless]
+    public function daftarBarang(string $cari = '', bool $tanpaTempat = true): array
+    {
+        abort_if($this->ringkas, 403);
+        $gudang = $this->gudang();
+        $this->authorize('manageLayout', $gudang);
+
+        $q = trim(mb_substr($cari, 0, 60));
+        $barang = Item::query()->where('status', ItemStatus::Active->value)
+            ->when($q !== '', fn ($b) => $b->where(fn ($b) => $b->where('code', 'like', '%'.$q.'%')->orWhere('name', 'like', '%'.$q.'%')))
+            ->when($tanpaTempat, fn ($b) => $b->whereNotIn('id', ItemStorageLocation::query()->withoutGlobalScopes()
+                ->where('warehouse_id', $gudang->id)->select('item_id')))
+            ->orderBy('code')->limit(self::MAKS_BARANG + 1)->get(['id', 'code', 'name']);
+
+        return [
+            'barang' => $barang->take(self::MAKS_BARANG)->map(fn (Item $i) => ['id' => (int) $i->id, 'code' => (string) $i->code, 'name' => (string) $i->name])->values()->all(),
+            'lebih' => $barang->count() > self::MAKS_BARANG,
+        ];
     }
 
     /** Muat ulang data denah (mis. setelah orang lain mengubahnya). */

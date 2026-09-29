@@ -15,7 +15,7 @@
                             <span class="text-muted small" x-show="r.name" x-text="r.name"></span>
                             <span class="badge text-bg-light border" x-text="r.jumlah_bin + ' bin'"></span>
                             <span class="text-muted small" x-show="r.is_area" x-text="teksKapasitasArea(r).replace(' · ', '')"></span>
-                            <button class="btn btn-sm btn-outline-primary py-0 ms-auto" type="button" x-on:click.prevent="bukaRak(r.id)">{{ __('Lihat isi') }}</button>
+                            <button class="btn btn-sm btn-outline-primary py-0 ms-auto" type="button" x-on:click.prevent="ketukDaftar(r.id)" x-text="menaruh ? @js(__('Taruh di rak ini')) : @js(__('Lihat isi'))">{{ __('Lihat isi') }}</button>
                         </summary>
                         <template x-for="l in r.levels" :key="l.id">
                             <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
@@ -24,7 +24,7 @@
                                 <template x-for="b in l.bins.filter((x) => !x.utama)" :key="b.id">
                                     <button class="btn btn-sm border py-0" type="button" :style="'background:' + warnaBin(b)"
                                             :class="cocokBin(b) ? 'border-warning border-2' : ''" :title="labelGabung(b, r) + ' · ' + b.code"
-                                            x-on:click="bukaRak(r.id, b.id)">
+                                            x-on:click="ketukDaftar(r.id, b.id)">
                                         <span x-text="b.short"></span><span class="small" x-show="(b.tergabung ?? []).length" x-text="' ⧉ ' + labelGabung(b, r)" data-gabung-label></span>
                                     </button>
                                 </template>

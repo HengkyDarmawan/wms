@@ -11,6 +11,7 @@ use App\Domain\Warehouse\Actions\DeleteBin;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\FloorPlanObject;
+use App\Domain\Warehouse\Models\ItemStorageLocation;
 use App\Domain\Warehouse\Models\Rack;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Models\Zone;
@@ -42,6 +43,9 @@ use Illuminate\Support\Str;
  * - Bagian 2 (A-359–A-364): per bin `utama`/`arah`/`sifat` (Gabung Bin),
  *   `lebar` (meter, kosong = rata bagi), kapasitas bin utama gabungan;
  *   area lantai membawa kapasitas bebasnya (kosong = tanpa batas).
+ * - Bagian 3 (A-365): per bin & per rak `barang` = Tempat Simpan barang di
+ *   sana (id, kode, Khusus) — ringan, untuk mode Tata letak & cari; nama
+ *   barang ikut di isi rak ("Barang di sini").
  */
 class WarehouseLayoutData
 {
@@ -79,13 +83,14 @@ class WarehouseLayoutData
             ->whereIn('rack_level_id', $levelIds)->orderBy('code')->get()->groupBy('rack_level_id');
 
         $isi = $this->isi($bins->flatten()->pluck('id')->all());
+        $tempat = $this->tempatSimpan((int) $gudang->id);
         $q = mb_strtolower(trim($cari));
         $hasil = [];
         // K-I: awalan zona pada kode pendek hanya bila kode rak kembar antar-zona.
         $kembar = $zona->flatMap(fn (Zone $z) => $z->racks->pluck('code'))->countBy()->filter(fn ($n) => $n > 1)->all();
 
-        $zones = $zona->map(function (Zone $z) use ($bins, $isi, $q, $kembar, &$hasil) {
-            $racks = $z->racks->values()->map(function (Rack $r) use ($bins, $isi, $q, $z, $kembar, &$hasil) {
+        $zones = $zona->map(function (Zone $z) use ($bins, $isi, $q, $kembar, $tempat, &$hasil) {
+            $racks = $z->racks->values()->map(function (Rack $r) use ($bins, $isi, $q, $z, $kembar, $tempat, &$hasil) {
                 $panjang = (float) ($r->length_m ?? self::RAK_PANJANG);
                 $lebar = (float) ($r->width_m ?? self::RAK_LEBAR);
 
@@ -94,12 +99,12 @@ class WarehouseLayoutData
                 }
 
                 $awalan = isset($kembar[$r->code]) ? (string) $z->code : null;
-                $levels = $r->levels->sortByDesc('code')->values()->map(function ($l) use ($bins, $isi, $q, $r, $awalan, &$hasil) {
+                $levels = $r->levels->sortByDesc('code')->values()->map(function ($l) use ($bins, $isi, $q, $r, $awalan, $tempat, &$hasil) {
                     return [
                         'id' => (int) $l->id,
                         'code' => (string) $l->code,
                         'height_m' => $l->height_m !== null ? (float) $l->height_m : null,
-                        'bins' => ($bins->get($l->id) ?? collect())->map(function (Bin $b) use ($isi, $q, $r, $l, $awalan, &$hasil) {
+                        'bins' => ($bins->get($l->id) ?? collect())->map(function (Bin $b) use ($isi, $q, $r, $l, $awalan, $tempat, &$hasil) {
                             $baris = $isi[$b->id] ?? [];
                             $total = round(array_sum(array_column($baris, 'qty')), 4);
                             $cocok = $q !== '' && (str_contains(mb_strtolower($b->code), $q)
@@ -135,6 +140,7 @@ class WarehouseLayoutData
                                 'isi' => $baris,
                                 'umur' => $baris === [] ? null : max(array_column($baris, 'umur')),
                                 'cocok' => $cocok,
+                                'barang' => self::ringan($tempat['bin'][(int) $b->id] ?? []),
                                 // K-H: indeks cari di browser — item, lot/serial/potongan (kode bin dicocokkan terpisah).
                                 'cari' => mb_strtolower(implode(' ', array_column($baris, 'cari'))),
                             ];
@@ -165,6 +171,7 @@ class WarehouseLayoutData
                     'cocok' => $semuaBin->contains('cocok', true) || ($q !== '' && str_contains(mb_strtolower($r->code.' '.$r->name), $q)),
                     'jumlah_bin' => $semuaBin->count(),
                     'kapasitas_area' => $r->is_area ? self::kapasitasArea($bins, $r) : null,
+                    'barang' => self::ringan($tempat['rak'][(int) $r->id] ?? []),
                     'levels' => $levels,
                 ];
             })->all();
@@ -310,11 +317,12 @@ class WarehouseLayoutData
         // K-C: tombol Hapus hanya untuk bin yang belum pernah dipakai (A-362).
         $dipakai = app(BinUsage::class)->dipakai($bins->flatten()->pluck('id')->map(fn ($id) => (int) $id)->all());
         $hapus = app(DeleteBin::class);
+        $tempat = $this->tempatSimpan((int) $gudang->id, (int) $rak->id);
 
         $levels = $rak->levels->sortByDesc('code')->values()->map(fn ($l) => [
             'id' => (int) $l->id,
             'code' => (string) $l->code,
-            'bins' => ($bins->get($l->id) ?? collect())->map(function (Bin $b) use ($isi, $rak, $l, $awalan, $dipakai, $hapus) {
+            'bins' => ($bins->get($l->id) ?? collect())->map(function (Bin $b) use ($isi, $rak, $l, $awalan, $dipakai, $hapus, $tempat) {
                 $baris = $isi[$b->id] ?? [];
                 $b->setRelation('rackLevel', $l->setRelation('rack', $rak));
 
@@ -328,6 +336,8 @@ class WarehouseLayoutData
                     'beku' => $b->bin_status === BinStatus::Frozen,
                     ...self::gabung($b),
                     'boleh_hapus' => $hapus->alasanTolak($b, isset($dipakai[(int) $b->id])) === null,
+                    // A-365: "Barang di sini" — tempat simpan bin ini.
+                    'barang' => $tempat['bin'][(int) $b->id] ?? [],
                     'isi' => array_map(fn ($s) => [
                         'item_code' => $s['item_code'],
                         'item_name' => $s['item_name'],
@@ -352,8 +362,54 @@ class WarehouseLayoutData
             'zona' => (string) $rak->zone->code,
             'zona_nama' => (string) $rak->zone->name,
             'kapasitas_area' => $rak->is_area ? self::kapasitasArea($bins, $rak) : null,
+            // A-365: barang bertempat di seluruh rak / area lantai ini.
+            'barang' => $tempat['rak'][(int) $rak->id] ?? [],
             'levels' => $levels,
         ];
+    }
+
+    /**
+     * Tempat Simpan di gudang ini (A-365), dikelompokkan per bin & per rak,
+     * berurutan kode barang.
+     *
+     * @return array{bin: array<int, array<int, array{id: int, code: string, name: string, khusus: bool, urut: int}>>, rak: array<int, array<int, array{id: int, code: string, name: string, khusus: bool, urut: int}>>}
+     */
+    public function tempatSimpan(int $gudangId, ?int $rakId = null): array
+    {
+        $hasil = ['bin' => [], 'rak' => []];
+
+        $baris = ItemStorageLocation::query()->withoutGlobalScopes()
+            ->join('items', 'items.id', '=', 'item_storage_locations.item_id')
+            ->where('item_storage_locations.warehouse_id', $gudangId)
+            ->when($rakId !== null, fn ($q) => $q->where(fn ($q) => $q->where('item_storage_locations.rack_id', $rakId)
+                ->orWhereIn('item_storage_locations.bin_id', Bin::query()->withoutGlobalScopes()->select('bins.id')
+                    ->join('rack_levels', 'rack_levels.id', '=', 'bins.rack_level_id')->where('rack_levels.rack_id', $rakId))))
+            ->orderBy('items.code')
+            ->get(['item_storage_locations.item_id', 'item_storage_locations.bin_id', 'item_storage_locations.rack_id',
+                'item_storage_locations.is_dedicated', 'item_storage_locations.sequence', 'items.code as item_code', 'items.name as item_name']);
+
+        foreach ($baris as $t) {
+            $isi = ['id' => (int) $t->item_id, 'code' => (string) $t->item_code, 'name' => (string) $t->item_name, 'khusus' => (bool) $t->is_dedicated, 'urut' => (int) $t->sequence];
+
+            if ($t->bin_id !== null) {
+                $hasil['bin'][(int) $t->bin_id][] = $isi;
+            } else {
+                $hasil['rak'][(int) $t->rack_id][] = $isi;
+            }
+        }
+
+        return $hasil;
+    }
+
+    /**
+     * Versi ringan untuk muatan denah: id, kode, Khusus.
+     *
+     * @param  array<int, array<string, mixed>>  $barang
+     * @return array<int, array{id: int, code: string, k: bool}>
+     */
+    private static function ringan(array $barang): array
+    {
+        return array_map(fn ($b) => ['id' => $b['id'], 'code' => $b['code'], 'k' => $b['khusus']], $barang);
     }
 
     /** Relasi bin yang dibutuhkan denah: bin utama & bin tergabung (kapasitas gabungan). */

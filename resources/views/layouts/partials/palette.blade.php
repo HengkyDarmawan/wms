@@ -70,6 +70,7 @@
         ['izin' => 'adjustment.create', 'route' => 'imports.index', 'label' => __('Impor saldo awal stok'), 'ikon' => 'bi-file-earmark-spreadsheet'],
         ['izin' => 'warehouse.create', 'route' => 'imports.index', 'label' => __('Impor gudang dari Excel'), 'ikon' => 'bi-file-earmark-spreadsheet'],
         ['izin' => 'bin.manage', 'route' => 'imports.index', 'label' => __('Impor struktur gudang (zona, rak, bin)'), 'ikon' => 'bi-file-earmark-spreadsheet'],
+        ['izin' => 'bin.manage', 'route' => 'imports.index', 'label' => __('Impor tempat simpan barang'), 'ikon' => 'bi-file-earmark-spreadsheet'],
         ['izin' => 'document_layout.manage', 'route' => 'document-layout.edit', 'label' => __('Layout dokumen'), 'ikon' => 'bi-file-earmark-richtext'],
         ['izin' => 'document_layout.manage', 'route' => 'label-designs.index', 'label' => __('Desain label (tata letak, barcode/QR)'), 'ikon' => 'bi-vector-pen'],
         ['izin' => 'document_layout.manage', 'route' => 'label-formats.index', 'label' => __('Ukuran label'), 'ikon' => 'bi-aspect-ratio'],

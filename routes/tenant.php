@@ -217,8 +217,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/items', [ItemController::class, 'index'])->name('items.index');
         // Impor dari Excel (A-192, A-207, A-258 struktur gudang).
         Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
-        Route::get('/imports/{type}/template', [ImportController::class, 'template'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock', 'warehouses', 'bins'])->name('imports.template');
-        Route::post('/imports/{type}', [ImportController::class, 'store'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock', 'warehouses', 'bins'])->name('imports.store');
+        Route::get('/imports/{type}/template', [ImportController::class, 'template'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock', 'warehouses', 'bins', 'storage-locations'])->name('imports.template');
+        Route::post('/imports/{type}', [ImportController::class, 'store'])->whereIn('type', ['items', 'projects', 'vendors', 'opening-stock', 'warehouses', 'bins', 'storage-locations'])->name('imports.store');
         Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
         Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
         Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
@@ -232,6 +232,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/warehouses/{warehouse}', [WarehouseController::class, 'show'])->name('warehouses.show');
         // A-254: denah gudang 2D (lihat: warehouse.view; ubah: bin.manage lewat aksi Livewire).
         Route::get('/warehouses/{warehouse}/layout', [WarehouseController::class, 'layout'])->name('warehouses.layout');
+        // A-370: cetak denah + barang per rak + tips tata letak (hanya membaca).
+        Route::get('/warehouses/{warehouse}/layout/print', [WarehouseController::class, 'printLayout'])->name('warehouses.layout.print');
         Route::get('/bins', [BinController::class, 'index'])->name('bins.index');
         Route::get('/warehouse-types', [WarehouseTypeController::class, 'index'])->name('warehouse-types.index');
 

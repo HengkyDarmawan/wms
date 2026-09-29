@@ -22,6 +22,7 @@ use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Support\DocumentNumber;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\Warehouse\Support\StoragePolicy;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -58,7 +59,7 @@ class CreateStockAdjustment
         }
 
         $alasan = $this->lines->headerReason($header['reason_code_id'] ?? null);
-        $baris = $this->lines->normalize((int) $gudang->id, $lines);
+        $baris = $this->lines->normalize((int) $gudang->id, $lines, $actor);
 
         return DB::transaction(function () use ($gudang, $alasan, $baris, $header, $actor) {
             $adj = StockAdjustment::create([
@@ -72,7 +73,15 @@ class CreateStockAdjustment
             ]);
 
             foreach ($baris as $b) {
-                StockAdjustmentLine::create($b + ['stock_adjustment_id' => $adj->id]);
+                $buka = $b['_buka'] ?? null;
+                unset($b['_buka']);
+                $line = StockAdjustmentLine::create($b + ['stock_adjustment_id' => $adj->id]);
+
+                // BR-WH-10 (A-367): pembukaan tempat khusus dicatat dengan nomor ADJ.
+                if ($buka !== null) {
+                    app(StoragePolicy::class)->catatBuka(Bin::withoutGlobalScopes()->findOrFail($line->bin_id), $line->item, $buka, $actor,
+                        ['type' => 'stock_adjustment', 'id' => (int) $adj->id, 'number' => $adj->number]);
+                }
             }
 
             activity('adjustment')->performedOn($adj)->causedBy($actor)
