@@ -17,20 +17,13 @@
         </div>
         @if ($jemput['shipment_method'] === 'carrier')
             <div class="col-md-3">
-                <label class="form-label small" for="jemput-ekspedisi">{{ __('Ekspedisi') }}</label>
-                <select class="form-select form-select-sm" id="jemput-ekspedisi" wire:model="jemput.carrier_id">
-                    <option value="">—</option>
-                    @foreach ($pilihanJemput['carriers'] as $c) <option value="{{ $c->id }}">{{ $c->name }}</option> @endforeach
-                </select>
-                @error('jemput.carrier_id') <div class="text-danger small">{{ $message }}</div> @enderror
+                <x-pilih model="jemput.carrier_id" id="jemput-ekspedisi" kecil :label="__('Ekspedisi')" kosong="—"
+                         :options="collect($pilihanJemput['carriers'])->map(fn ($c) => ['value' => $c->id, 'text' => $c->name])->all()" />
             </div>
         @endif
         <div class="col-md-3">
-            <label class="form-label small" for="jemput-kendaraan">{{ __('Kendaraan') }}</label>
-            <select class="form-select form-select-sm" id="jemput-kendaraan" wire:model.live="jemput.vehicle_id">
-                <option value="">{{ __('Bukan kendaraan terdaftar') }}</option>
-                @foreach ($pilihanJemput['vehicles'] as $v) <option value="{{ $v->id }}">{{ $v->plate_no }}</option> @endforeach
-            </select>
+            <x-pilih model="jemput.vehicle_id" id="jemput-kendaraan" live kecil :label="__('Kendaraan')" :kosong="__('Bukan kendaraan terdaftar')"
+                     :options="collect($pilihanJemput['vehicles'])->map(fn ($v) => ['value' => $v->id, 'text' => $v->plate_no])->all()" />
             @if ($jemput['vehicle_id'] === '')
                 <input class="form-control form-control-sm mt-1" type="text" maxlength="20" wire:model="jemput.vehicle_plate" placeholder="{{ __('Plat, mis. B 1234 XY') }}" aria-label="{{ __('Plat kendaraan') }}">
             @endif

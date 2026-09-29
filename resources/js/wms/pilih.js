@@ -106,7 +106,18 @@ function pilih(nilai) {
       this.ts.setValue(teks(this.nilai), true);
 
       this.$watch('nilai', (v) => {
-        if (teks(v) !== teks(this.ts.getValue())) this.ts.setValue(teks(v), true);
+        if (teks(v) === teks(this.ts.getValue())) return;
+        if (server && teks(v) !== '' && !ada(v)) {
+          // Nilai diisi dari server (pindai, baris bergeser) dan belum ada di kotak → minta labelnya (A-392).
+          this.$wire.labelPilihan(model, teks(v)).then((o) => {
+            if (!this.ts || teks(this.nilai) !== teks(v)) return;
+            if (o?.group && !this.ts.optgroups[o.group]) this.ts.addOptionGroup(o.group, { value: o.group, label: o.group });
+            if (o) this.ts.addOption({ ...o, value: String(o.value) });
+            this.ts.setValue(teks(v), true);
+          }).catch(() => {});
+          return;
+        }
+        this.ts.setValue(teks(v), true);
       });
     },
 

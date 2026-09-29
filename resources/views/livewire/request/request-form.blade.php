@@ -22,15 +22,9 @@
         <div class="card-header"><strong>{{ __('Keterangan permintaan') }}</strong></div>
         <div class="card-body row g-3">
             <div class="col-md-5">
-                <label class="form-label" for="req-proyek">{{ __('Proyek') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.project_id') is-invalid @enderror" id="req-proyek"
-                        wire:model="form.project_id" @disabled(! $isBaru)>
-                    <option value="">{{ __('Pilih proyek…') }}</option>
-                    @foreach ($projects as $proyek)
-                        <option value="{{ $proyek->id }}">{{ $proyek->code }} — {{ $proyek->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.project_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                {{-- A-392: proyek aktif dalam cakupan, dicari ke server. --}}
+                <x-pilih model="form.project_id" id="req-proyek" server wajib :label="__('Proyek')" :disabled="! $isBaru"
+                         :kosong="__('Pilih proyek…')" :options="$opsiProyek" />
                 @unless ($isBaru)
                     <div class="form-text">{{ __('Proyek tidak bisa diubah setelah REQ dibuat.') }}</div>
                 @endunless
@@ -89,12 +83,8 @@
                     @foreach ($lines as $i => $baris)
                         <tr wire:key="baris-{{ $i }}" @class(['table-active' => $sorot === $i])>
                             <td>
-                                <select class="form-select form-select-sm" wire:model.live="lines.{{ $i }}.item_id">
-                                    <option value="">{{ __('— tidak dari katalog —') }}</option>
-                                    @foreach ($items as $item)
-                                        <option value="{{ $item->id }}">{{ $item->code }} — {{ $item->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-pilih model="lines.{{ $i }}.item_id" id="req-item-{{ $i }}" server live kecil :kunci="(string) count($lines)"
+                                         :aria="__('Item katalog')" :kosong="__('— tidak dari katalog —')" :options="$opsiItem[$i] ?? []" />
                             </td>
                             <td>
                                 <input class="form-control form-control-sm" type="text"
@@ -113,7 +103,7 @@
                             </td>
                             <td>
                                 {{-- A-286: Beli/Pinjam mengikuti jenis barang; hanya item lama Keduanya yang bisa dipilih. --}}
-                                @php($itemBaris = $baris['item_id'] === '' ? null : $items->firstWhere('id', (int) $baris['item_id']))
+                                @php($itemBaris = $baris['item_id'] === '' ? null : $itemBarisan->get((int) $baris['item_id']))
                                 @if ($itemBaris?->ownership_model?->value === 'both')
                                     <select class="form-select form-select-sm" wire:model="lines.{{ $i }}.line_ownership">
                                         @foreach ($ownerships as $nilai => $label)

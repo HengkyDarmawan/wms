@@ -57,4 +57,17 @@ trait CariPilihan
 
         return $this->pilihanServer($model)?->cari($kata) ?? [];
     }
+
+    /**
+     * Label satu nilai yang diisi dari server (mis. hasil pindai, baris bergeser
+     * setelah dihapus) dan belum ada di kotak. Izin & cakupan sama dengan
+     * pencarian: nilai di luar daftar → null (A-392).
+     *
+     * @return array<string, mixed>|null
+     */
+    #[Json]
+    public function labelPilihan(string $model, string $nilai): ?array
+    {
+        return $this->pilihanServer($model)?->label($nilai);
+    }
 }

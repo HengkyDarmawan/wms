@@ -74,13 +74,9 @@
             <div class="card-header"><strong>{{ __('Petakan baris ke item') }}</strong></div>
             <div class="card-body row g-3">
                 <div class="col-md-12">
-                    <label class="form-label" for="petakan-item">{{ __('Item yang sudah ada') }}</label>
-                    <select class="form-select" id="petakan-item" wire:model="form.item_id">
-                        <option value="">{{ __('— buat item sementara —') }}</option>
-                        @foreach ($items as $item)
-                            <option value="{{ $item->id }}">{{ $item->code }} — {{ $item->name }}</option>
-                        @endforeach
-                    </select>
+                    {{-- A-392: item aktif & sementara, dicari ke server (kode, nama, barcode). --}}
+                    <x-pilih model="form.item_id" id="petakan-item" server :label="__('Item yang sudah ada')"
+                             :kosong="__('— buat item sementara —')" :options="$opsiItem" />
                     <div class="form-text">
                         {{ __('Bila tidak ada yang cocok, isi tiga kolom di bawah untuk membuat item sementara.') }}
                     </div>
@@ -94,13 +90,8 @@
                     <input class="form-control" id="petakan-nama" type="text" wire:model="form.item_name">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label" for="petakan-satuan">{{ __('Satuan dasar') }}</label>
-                    <select class="form-select" id="petakan-satuan" wire:model="form.base_uom_id">
-                        <option value="">{{ __('Pilih satuan…') }}</option>
-                        @foreach ($uoms as $uom)
-                            <option value="{{ $uom->id }}">{{ $uom->code }} — {{ $uom->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="form.base_uom_id" id="petakan-satuan" :label="__('Satuan dasar')" :kosong="__('Pilih satuan…')"
+                             :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' — '.$u->name])->all()" />
                 </div>
             </div>
             <div class="card-footer d-flex gap-2">
@@ -125,12 +116,8 @@
                 @foreach ($splits as $i => $pecahan)
                     <div class="row g-2 mb-2" wire:key="pecah-{{ $i }}">
                         <div class="col-md-7">
-                            <select class="form-select" wire:model="splits.{{ $i }}.warehouse_id">
-                                <option value="">{{ __('Pilih gudang…') }}</option>
-                                @foreach ($warehouses as $gudang)
-                                    <option value="{{ $gudang->id }}">{{ $gudang->code }} — {{ $gudang->name }}</option>
-                                @endforeach
-                            </select>
+                            <x-pilih model="splits.{{ $i }}.warehouse_id" id="pecah-gudang-{{ $i }}" :aria="__('Gudang')" :kosong="__('Pilih gudang…')"
+                                     :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
                         </div>
                         <div class="col-md-5">
                             <input class="form-control" type="number" step="0.0001" min="0"

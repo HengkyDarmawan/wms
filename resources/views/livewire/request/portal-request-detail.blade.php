@@ -50,12 +50,8 @@
                 @foreach ($barisBaru as $i => $baris)
                     <div class="row g-2 mb-2" wire:key="portal-baris-{{ $i }}">
                         <div class="col-md-5">
-                            <select class="form-select" wire:model="barisBaru.{{ $i }}.item_id">
-                                <option value="">{{ __('— tidak dari katalog —') }}</option>
-                                @foreach ($items as $item)
-                                    <option value="{{ $item->id }}">{{ $item->code }} — {{ $item->name }}</option>
-                                @endforeach
-                            </select>
+                            <x-pilih model="barisBaru.{{ $i }}.item_id" id="portal-item-{{ $i }}" server :kunci="(string) count($barisBaru)"
+                                     :aria="__('Item katalog')" :kosong="__('— tidak dari katalog —')" :options="$opsiItem[$i] ?? []" />
                         </div>
                         <div class="col-md-4">
                             <input class="form-control" type="text" wire:model="barisBaru.{{ $i }}.non_catalog_text"

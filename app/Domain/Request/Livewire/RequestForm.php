@@ -14,6 +14,9 @@ use App\Domain\Request\Actions\SubmitRequest;
 use App\Domain\Request\Enums\LineOwnership;
 use App\Domain\Request\Livewire\Concerns\HandlesRequestRules;
 use App\Domain\Request\Models\MaterialRequest;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -27,6 +30,7 @@ use Livewire\Component;
  */
 class RequestForm extends Component
 {
+    use CariPilihan;
     use HandlesRequestRules;
     use PicksItemUnit;
 
@@ -235,9 +239,9 @@ class RequestForm extends Component
         $this->validate([
             'form.required_date' => ['required', 'date'],
             'lines' => ['array', 'min:1'],
-        ], attributes: [
+        ] + $this->aturanPilihan($request), attributes: [
             'form.required_date' => __('Tanggal dibutuhkan'),
-        ]);
+        ] + $this->namaPilihan());
 
         $tersimpan = null;
 
@@ -261,7 +265,7 @@ class RequestForm extends Component
 
         $this->validate([
             'form.required_date' => ['required', 'date'],
-        ], attributes: ['form.required_date' => __('Tanggal dibutuhkan')]);
+        ] + $this->aturanPilihan($request), attributes: ['form.required_date' => __('Tanggal dibutuhkan')] + $this->namaPilihan());
 
         $tersimpan = null;
 
@@ -280,17 +284,73 @@ class RequestForm extends Component
     public function render(): View
     {
         return view('livewire.request.request-form', [
-            'projects' => Project::query()->active()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
-            'items' => Item::query()
-                ->whereIn('status', [ItemStatus::Active->value, ItemStatus::Provisional->value])
-                ->orderBy('code')
-                ->get(['id', 'code', 'name', 'tracking_mode', 'ownership_model', 'default_line_ownership']),
+            'opsiProyek' => $this->pilihanProyek()->awalDengan($this->form['project_id']),
+            'opsiItem' => $this->pilihanItem()->awalPerBaris(array_column($this->lines, 'item_id')),
+            // A-286: kepemilikan item baris (hanya item di daftar pilihan, seperti dulu).
+            'itemBarisan' => $this->pilihanItem()->query()
+                ->whereIn('id', array_map('intval', array_filter(array_column($this->lines, 'item_id'))))
+                ->get(['id', 'ownership_model'])->keyBy('id'),
             'ownerships' => LineOwnership::options(),
             'unitOpsi' => $opsi = $this->opsiSatuan(array_column($this->lines, 'item_id')),
             'satuanLain' => $this->satuanKemasan(),
             'hasilSatuan' => array_map(fn (array $l) => $this->hasilSatuan($l, $l['qty_base'] ?? null, $opsi[(int) ($l['item_id'] ?: 0)] ?? null), $this->lines),
             'isBaru' => $this->requestId === null,
         ]);
+    }
+
+    /** Proyek aktif dalam cakupan (daftar lama, A-354), dicari ke server (A-392). */
+    private function pilihanProyek(): Pilihan
+    {
+        return SumberPilihan::proyek();
+    }
+
+    /** Item aktif & sementara (daftar lama), dicari ke server. */
+    private function pilihanItem(): Pilihan
+    {
+        return SumberPilihan::item([ItemStatus::Active, ItemStatus::Provisional]);
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $request = $this->requestId === null ? null : MaterialRequest::query()->find($this->requestId);
+        $boleh = $request === null
+            ? $this->requestId === null && auth()->user()?->can('create', MaterialRequest::class)
+            : auth()->user()?->can('update', $request);
+
+        return match (true) {
+            ! $boleh => null,
+            $model === 'form.project_id' => $this->requestId === null ? $this->pilihanProyek() : null,
+            (bool) preg_match('/^lines\.\d+\.item_id$/', $model) => $this->pilihanItem(),
+            default => null,
+        };
+    }
+
+    /**
+     * Id dari browser harus ada di daftar; proyek REQ tersimpan (tidak bisa
+     * diubah) dan item baris tersimpan dikecualikan supaya draf lama tetap
+     * bisa disimpan seperti dulu (A-392).
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    private function aturanPilihan(?MaterialRequest $request): array
+    {
+        $aturan = $request === null ? ['form.project_id' => [$this->pilihanProyek()->aturan()]] : [];
+        $tersimpan = $request === null ? [] : $request->lines()->pluck('item_id')->filter()->map(fn ($id) => (string) $id)->all();
+
+        foreach ($this->lines as $i => $l) {
+            if (! in_array((string) ($l['item_id'] ?? ''), $tersimpan, true)) {
+                $aturan["lines.$i.item_id"] = [$this->pilihanItem()->aturan()];
+            }
+        }
+
+        return $aturan;
+    }
+
+    /** @return array<string, string> */
+    private function namaPilihan(): array
+    {
+        return ['form.project_id' => __('Proyek')]
+            + collect($this->lines)->keys()->mapWithKeys(fn ($i) => ["lines.$i.item_id" => __('Item')])->all();
     }
 
     private function requestModel(): ?MaterialRequest

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Domain\Shipment\Livewire;
 
 use App\Domain\Master\Models\Carrier;
-use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\Vehicle;
-use App\Domain\Master\Models\Vendor;
 use App\Domain\Return\Models\GoodsReturn;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Shipment\Actions\CreateShipment;
 use App\Domain\Shipment\Enums\DestinationType;
 use App\Domain\Shipment\Enums\ShipmentMethod;
@@ -31,6 +32,7 @@ use Livewire\Component;
  */
 class ShipmentForm extends Component
 {
+    use CariPilihan;
     use HandlesShipmentRules;
 
     /** @var array<string, mixed> */
@@ -114,9 +116,15 @@ class ShipmentForm extends Component
     {
         $this->authorize('create', Shipment::class);
 
+        // A-392: proyek/vendor tujuan dari daftar; id lain dari browser ditolak di isiannya.
         $this->validate(
-            ['pickTaskIds' => ['array', 'min:1']],
+            ['pickTaskIds' => ['array', 'min:1']] + match ($this->form['destination_type']) {
+                DestinationType::ProjectClient->value => ['form.destination_project_id' => [$this->pilihanProyek()->aturan()]],
+                DestinationType::Vendor->value => ['form.destination_vendor_id' => [$this->pilihanVendor()->aturan()]],
+                default => [],
+            },
             ['pickTaskIds.min' => __('Pilih minimal satu tugas picking.')],
+            ['form.destination_project_id' => __('Proyek tujuan'), 'form.destination_vendor_id' => __('Vendor tujuan')],
         );
 
         $sj = null;
@@ -139,13 +147,40 @@ class ShipmentForm extends Component
             'tasks' => $this->pckTersedia(),
             'destinations' => DestinationType::options(),
             'methods' => ShipmentMethod::options(),
-            'projects' => Project::query()->active()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
+            'opsiProyek' => $this->form['destination_type'] === DestinationType::ProjectClient->value
+                ? $this->pilihanProyek()->awalDengan($this->form['destination_project_id']) : [],
             'gudangTujuan' => Warehouse::query()->withoutGlobalScopes()->active()->orderBy('code')->get(['id', 'code', 'name']),
             // A-310: vendor nonaktif tidak ditawarkan lagi.
-            'vendors' => Vendor::query()->active()->orderBy('name')->get(['id', 'name']),
+            'opsiVendor' => $this->form['destination_type'] === DestinationType::Vendor->value
+                ? $this->pilihanVendor()->awalDengan($this->form['destination_vendor_id']) : [],
             'vehicles' => Vehicle::query()->where('is_active', true)->orderBy('plate_no')->get(['id', 'plate_no']),
             'carriers' => Carrier::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
+    }
+
+    /** Proyek aktif dalam cakupan (daftar lama, A-354), dicari ke server (A-392). */
+    private function pilihanProyek(): Pilihan
+    {
+        return SumberPilihan::proyek();
+    }
+
+    /** Vendor aktif (daftar lama, A-310), dicari ke server. */
+    private function pilihanVendor(): Pilihan
+    {
+        return SumberPilihan::vendor();
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        if (! auth()->user()?->can('create', Shipment::class)) {
+            return null;
+        }
+
+        return match ($model) {
+            'form.destination_project_id' => $this->pilihanProyek(),
+            'form.destination_vendor_id' => $this->pilihanVendor(),
+            default => null,
+        };
     }
 
     /** @return Collection<int, PickTask> */

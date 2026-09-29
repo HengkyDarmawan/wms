@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Domain\Request\Livewire;
 
 use App\Domain\Master\Models\CompanySetting;
-use App\Domain\Master\Models\Project;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Models\MaterialRequest;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\View;
@@ -23,6 +25,7 @@ use Livewire\WithPagination;
  */
 class RequestList extends Component
 {
+    use CariPilihan;
     use WithPagination;
 
     /** Ambang hari sebelum peninjauan dianggap terlambat (BR-REQ-14). */
@@ -64,8 +67,15 @@ class RequestList extends Component
             'requests' => $this->daftar(),
             'sla' => $this->slaHari(),
             'statuses' => MaterialRequestStatus::options(),
-            'projects' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
+            'opsiProyek' => SumberPilihan::proyekSemuaStatus()->awalDengan($this->projectFilter),
         ]);
+    }
+
+    /** Saringan proyek: proyek dalam cakupan, semua status (daftar lama), dicari ke server (A-392). */
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        return $model === 'projectFilter' && auth()->user()?->can('viewAny', MaterialRequest::class)
+            ? SumberPilihan::proyekSemuaStatus() : null;
     }
 
     public function slaHari(): int

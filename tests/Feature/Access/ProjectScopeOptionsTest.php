@@ -75,8 +75,12 @@ class ProjectScopeOptionsTest extends TenantTestCase
     {
         $pemohon = $this->makeUser('internal_requester', ScopeType::Project, $this->proyek->id);
 
-        $ids = fn ($c) => $c->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $this->assertSame([(int) $this->proyek->id], $ids(Livewire::actingAs($pemohon)->test(RequestForm::class)->viewData('projects')));
+        // A-392: pilihan proyek kini `<x-pilih server>` — isian awal dan hasil cari sama-sama mengikuti cakupan.
+        $ids = fn (array $opsi) => array_map('intval', array_column($opsi, 'value'));
+        $req = Livewire::actingAs($pemohon)->test(RequestForm::class);
+        $this->assertSame([(int) $this->proyek->id], $ids($req->viewData('opsiProyek')));
+        $req->call('cariPilihan', 'form.project_id', substr((string) $this->lain->code, 0, 3));
+        $this->assertNotContains((int) $this->lain->id, $ids($req->effects['returns'][0] ?? []));
 
         $this->actingAs($pemohon);
         $opsi = app(ReportRegistry::class)->find('daftar-req')?->filters()['project_id']['options'] ?? null;
@@ -86,7 +90,7 @@ class ProjectScopeOptionsTest extends TenantTestCase
 
         // Cakupan semua (Admin) tetap melihat semua proyek.
         $admin = $this->makeUser('company_admin');
-        $this->assertContains((int) $this->lain->id, $ids(Livewire::actingAs($admin)->test(RequestForm::class)->viewData('projects')));
+        $this->assertContains((int) $this->lain->id, $ids(Livewire::actingAs($admin)->test(RequestForm::class)->viewData('opsiProyek')));
     }
 
     #[Test]
@@ -95,9 +99,15 @@ class ProjectScopeOptionsTest extends TenantTestCase
         $aktif = Vendor::create(['code' => 'V-AKT', 'name' => 'Vendor Aktif', 'vendor_type' => VendorType::Company, 'status' => VendorStatus::Active, 'is_active' => true]);
         $mati = Vendor::create(['code' => 'V-MATI', 'name' => 'Vendor Mati', 'vendor_type' => VendorType::Company, 'status' => VendorStatus::Inactive, 'is_active' => false]);
 
-        $vendor = Livewire::actingAs($this->makeUser('warehouse_head'))->test(ShipmentForm::class)->viewData('vendors')->pluck('id')->all();
+        // A-392: vendor tujuan kini `<x-pilih server>` — isian awal dan hasil cari.
+        $sj = Livewire::actingAs($this->makeUser('warehouse_head'))->test(ShipmentForm::class)->set('form.destination_type', 'vendor');
+        $vendor = array_map('intval', array_column($sj->viewData('opsiVendor'), 'value'));
+        $sj->call('cariPilihan', 'form.destination_vendor_id', 'vendor');
+        $dicari = array_map('intval', array_column($sj->effects['returns'][0] ?? [], 'value'));
 
         $this->assertContains($aktif->id, $vendor);
         $this->assertNotContains($mati->id, $vendor);
+        $this->assertContains($aktif->id, $dicari);
+        $this->assertNotContains($mati->id, $dicari);
     }
 }

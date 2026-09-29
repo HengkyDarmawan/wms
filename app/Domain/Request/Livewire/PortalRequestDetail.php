@@ -6,7 +6,6 @@ namespace App\Domain\Request\Livewire;
 
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\ReasonContext;
-use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Request\Actions\AddRequestLines;
 use App\Domain\Request\Actions\CancelRequestLine;
@@ -15,6 +14,9 @@ use App\Domain\Request\Livewire\Concerns\EditsClientPo;
 use App\Domain\Request\Livewire\Concerns\HandlesRequestRules;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Request\Models\MaterialRequestLine;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -29,6 +31,7 @@ use Livewire\Component;
  */
 class PortalRequestDetail extends Component
 {
+    use CariPilihan;
     use EditsClientPo;
     use HandlesRequestRules;
 
@@ -66,10 +69,7 @@ class PortalRequestDetail extends Component
         return view('livewire.request.portal-request-detail', [
             'req' => $request,
             'lines' => $request->lines()->with('item:id,code,name')->orderBy('id')->get(),
-            'items' => Item::query()
-                ->where('status', ItemStatus::Active->value)
-                ->orderBy('code')
-                ->get(['id', 'code', 'name']),
+            'opsiItem' => $this->dialog === 'tambah' ? $this->pilihanItem()->awalPerBaris(array_column($this->barisBaru, 'item_id')) : [],
             'alasan' => $this->pilihanAlasan(ReasonContext::Cancel),
             'supplements' => $request->supplements()->orderBy('id')->get(['id', 'number', 'status']),
         ]);
@@ -99,6 +99,9 @@ class PortalRequestDetail extends Component
         $request = $this->request();
 
         $this->authorize('addLines', $request);
+
+        // A-392: item dari daftar (item aktif); id lain dari browser ditolak di isiannya.
+        $this->validate(['barisBaru.*.item_id' => ['nullable', $this->pilihanItem()->aturan()]], attributes: ['barisBaru.*.item_id' => __('Item')]);
 
         $tujuan = null;
 
@@ -219,6 +222,21 @@ class PortalRequestDetail extends Component
         $id = ReasonCode::query()->where('code', $this->reasonCode)->value('id');
 
         return $id === null ? null : (int) $id;
+    }
+
+    /** Item aktif (daftar lama; item = master bersama, A-384), dicari ke server. */
+    private function pilihanItem(): Pilihan
+    {
+        return SumberPilihan::item([ItemStatus::Active]);
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        if ($this->dialog !== 'tambah' || ! preg_match('/^barisBaru\.\d+\.item_id$/', $model)) {
+            return null;
+        }
+
+        return auth()->user()?->can('addLines', $this->request()) ? $this->pilihanItem() : null;
     }
 
     private function request(): MaterialRequest

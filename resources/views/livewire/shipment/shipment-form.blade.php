@@ -23,13 +23,8 @@
         <div class="card-body">
             <div class="row g-3 mb-3">
                 <div class="col-md-5">
-                    <label class="form-label" for="sj-gudang">{{ __('Gudang asal') }} <span class="wajib">*</span></label>
-                    <select class="form-select" id="sj-gudang" wire:model.live="form.warehouse_id">
-                        <option value="">{{ __('Pilih gudang…') }}</option>
-                        @foreach ($warehouses as $gudang)
-                            <option value="{{ $gudang->id }}">{{ $gudang->code }} — {{ $gudang->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="form.warehouse_id" id="sj-gudang" live wajib :label="__('Gudang asal')" :kosong="__('Pilih gudang…')"
+                             :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
                 </div>
             </div>
 
@@ -75,41 +70,21 @@
 
             @if ($form['destination_type'] === 'project_client')
                 <div class="col-md-8">
-                    <label class="form-label" for="sj-proyek">{{ __('Proyek tujuan') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.destination_project_id') is-invalid @enderror" id="sj-proyek"
-                            wire:model="form.destination_project_id">
-                        <option value="">{{ __('Pilih proyek…') }}</option>
-                        @foreach ($projects as $proyek)
-                            <option value="{{ $proyek->id }}">{{ $proyek->code }} — {{ $proyek->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.destination_project_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    {{-- A-392: proyek aktif dalam cakupan, dicari ke server. --}}
+                    <x-pilih model="form.destination_project_id" id="sj-proyek" server wajib :label="__('Proyek tujuan')"
+                             :kosong="__('Pilih proyek…')" :options="$opsiProyek" />
                 </div>
             @elseif (in_array($form['destination_type'], ['site_warehouse', 'warehouse'], true))
                 <div class="col-md-8">
-                    <label class="form-label" for="sj-gudang-tujuan">
-                        {{ __('Gudang tujuan') }} <span class="wajib">*</span>
-                    </label>
-                    <select class="form-select @error('form.destination_warehouse_id') is-invalid @enderror"
-                            id="sj-gudang-tujuan" wire:model="form.destination_warehouse_id">
-                        <option value="">{{ __('Pilih gudang…') }}</option>
-                        @foreach ($gudangTujuan as $gudang)
-                            <option value="{{ $gudang->id }}">{{ $gudang->code }} — {{ $gudang->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.destination_warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.destination_warehouse_id" id="sj-gudang-tujuan" wajib :label="__('Gudang tujuan')"
+                             :kosong="__('Pilih gudang…')"
+                             :options="$gudangTujuan->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
                 </div>
             @elseif ($form['destination_type'] === 'vendor')
                 <div class="col-md-8">
-                    <label class="form-label" for="sj-vendor">{{ __('Vendor tujuan') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.destination_vendor_id') is-invalid @enderror" id="sj-vendor"
-                            wire:model="form.destination_vendor_id">
-                        <option value="">{{ __('Pilih vendor…') }}</option>
-                        @foreach ($vendors as $vendor)
-                            <option value="{{ $vendor->id }}">{{ $vendor->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.destination_vendor_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    {{-- A-392: vendor aktif (A-310), dicari ke server (nama atau kode). --}}
+                    <x-pilih model="form.destination_vendor_id" id="sj-vendor" server wajib :label="__('Vendor tujuan')"
+                             :kosong="__('Pilih vendor…')" :options="$opsiVendor" />
                 </div>
             @endif
         </div>
@@ -132,15 +107,8 @@
 
             @if ($form['shipment_method'] === 'own_fleet')
                 <div class="col-md-4">
-                    <label class="form-label" for="sj-kendaraan">{{ __('Kendaraan') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.vehicle_id') is-invalid @enderror" id="sj-kendaraan"
-                            wire:model.live="form.vehicle_id">
-                        <option value="">{{ __('Pilih kendaraan…') }}</option>
-                        @foreach ($vehicles as $k)
-                            <option value="{{ $k->id }}">{{ $k->plate_no }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.vehicle_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.vehicle_id" id="sj-kendaraan" live wajib :label="__('Kendaraan')" :kosong="__('Pilih kendaraan…')"
+                             :options="$vehicles->map(fn ($k) => ['value' => $k->id, 'text' => $k->plate_no])->all()" />
                 </div>
                 {{-- A-311: driver tanpa akun — nama & HP (terisi dari driver bawaan kendaraan). --}}
                 <div class="col-md-4">
@@ -157,15 +125,8 @@
                 </div>
             @elseif ($form['shipment_method'] === 'carrier')
                 <div class="col-md-4">
-                    <label class="form-label" for="sj-ekspedisi">{{ __('Ekspedisi') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.carrier_id') is-invalid @enderror" id="sj-ekspedisi"
-                            wire:model="form.carrier_id">
-                        <option value="">{{ __('Pilih ekspedisi…') }}</option>
-                        @foreach ($carriers as $c)
-                            <option value="{{ $c->id }}">{{ $c->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.carrier_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.carrier_id" id="sj-ekspedisi" wajib :label="__('Ekspedisi')" :kosong="__('Pilih ekspedisi…')"
+                             :options="$carriers->map(fn ($c) => ['value' => $c->id, 'text' => $c->name])->all()" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="sj-resi">{{ __('Nomor resi') }} <span class="wajib">*</span></label>

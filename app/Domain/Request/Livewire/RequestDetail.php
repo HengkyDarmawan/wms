@@ -8,7 +8,6 @@ use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalHistory;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\ReasonContext;
-use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Uom;
 use App\Domain\Request\Actions\ApproveRequest;
@@ -22,6 +21,9 @@ use App\Domain\Request\Livewire\Concerns\EditsClientPo;
 use App\Domain\Request\Livewire\Concerns\HandlesRequestRules;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Request\Models\MaterialRequestLine;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Transfer\Models\Transfer;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
@@ -40,6 +42,7 @@ use Spatie\Activitylog\Models\Activity;
  */
 class RequestDetail extends Component
 {
+    use CariPilihan;
     use EditsClientPo;
     use HandlesRequestRules;
 
@@ -86,10 +89,7 @@ class RequestDetail extends Component
                 ->get(),
             'warehouses' => Warehouse::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
             'sources' => FulfillmentSource::options(),
-            'items' => Item::query()
-                ->whereIn('status', [ItemStatus::Active->value, ItemStatus::Provisional->value])
-                ->orderBy('code')
-                ->get(['id', 'code', 'name']),
+            'opsiItem' => $this->dialog === 'petakan' ? $this->pilihanItem()->awalDengan($this->form['item_id'] ?? '') : [],
             'uoms' => Uom::query()->orderBy('code')->get(['id', 'code', 'name']),
             'alasan' => $this->pilihanAlasan($this->dialog === 'tolak' ? ReasonContext::Reject : ReasonContext::Cancel),
             'riwayat' => $this->riwayat($request),
@@ -142,6 +142,9 @@ class RequestDetail extends Component
         $this->authorize('review', $line->request);
 
         $itemId = (string) ($this->form['item_id'] ?? '');
+
+        // A-392: item yang dipetakan harus dari daftar (aktif/sementara); id lain dari browser ditolak.
+        $this->validate(['form.item_id' => ['nullable', $this->pilihanItem()->aturan()]], attributes: ['form.item_id' => __('Item')]);
 
         $berhasil = $this->jalankan(function () use ($action, $line, $itemId) {
             if ($itemId !== '') {
@@ -366,6 +369,23 @@ class RequestDetail extends Component
         $id = ReasonCode::query()->where('code', $this->reasonCode)->value('id');
 
         return $id === null ? null : (int) $id;
+    }
+
+    /** Item aktif & sementara (daftar lama) untuk memetakan baris non-katalog, dicari ke server. */
+    private function pilihanItem(): Pilihan
+    {
+        return SumberPilihan::item([ItemStatus::Active, ItemStatus::Provisional]);
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        if ($model !== 'form.item_id' || $this->dialog !== 'petakan' || $this->lineId === null) {
+            return null;
+        }
+
+        $line = MaterialRequestLine::query()->with('request')->where('material_request_id', $this->requestId)->find($this->lineId);
+
+        return $line !== null && auth()->user()?->can('review', $line->request) ? $this->pilihanItem() : null;
     }
 
     private function request(): MaterialRequest
