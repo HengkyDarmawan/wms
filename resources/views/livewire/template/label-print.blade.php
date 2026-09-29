@@ -20,13 +20,8 @@
             </div>
             @if ($type === 'label_bin')
                 <div class="col-md-3">
-                    <label class="form-label" for="lbl-gudang">{{ __('Gudang') }}</label>
-                    <select class="form-select" id="lbl-gudang" wire:model.live="warehouseFilter">
-                        <option value="">{{ __('Semua gudang') }}</option>
-                        @foreach ($gudang as $g)
-                            <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="warehouseFilter" id="lbl-gudang" live :label="__('Gudang')" :kosong="__('Semua gudang')"
+                             :options="$gudang->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
                 </div>
             @endif
             <div class="col-md">
@@ -111,12 +106,8 @@
         <div class="card mt-3">
             <div class="card-body row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label" for="lbl-kertas">{{ __('Ukuran label') }} <span class="wajib">*</span></label>
-                    <select class="form-select" id="lbl-kertas" wire:model.live="formatId">
-                        @foreach ($formats as $f)
-                            <option value="{{ $f->id }}">{{ $f->name }} — {{ $f->summary() }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="formatId" id="lbl-kertas" live wajib :label="__('Ukuran label')"
+                             :options="$formats->map(fn ($f) => ['value' => $f->id, 'text' => $f->name.' — '.$f->summary()])->all()" />
                     @if ($bisaDesain)
                         <div class="form-text"><a href="{{ route('label-designs.index', ['type' => $type, 'format' => $formatId]) }}">{{ __('Atur desain label ini') }}</a> · <a href="{{ route('label-formats.index') }}">{{ __('Kelola ukuran') }}</a></div>
                     @endif

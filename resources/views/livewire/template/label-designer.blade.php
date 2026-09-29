@@ -27,12 +27,8 @@
                 </select>
             </div>
             <div class="col-md-5">
-                <label class="form-label" for="ld-format">{{ __('Ukuran label') }} <span class="wajib">*</span></label>
-                <select class="form-select" id="ld-format" wire:model.live="formatId">
-                    @foreach ($formats as $f)
-                        <option value="{{ $f->id }}">{{ $f->name }} — {{ $f->summary() }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="formatId" id="ld-format" live wajib :label="__('Ukuran label')"
+                         :options="$formats->map(fn ($f) => ['value' => $f->id, 'text' => $f->name.' — '.$f->summary()])->all()" />
             </div>
             <div class="col-md-3 small text-muted">
                 {{ __('Teks utama') }}: {{ $sumber['title'] }} · {{ __('Teks kedua') }}: {{ $sumber['subtitle'] }} · {{ __('Keterangan') }}: {{ $sumber['detail'] }}
