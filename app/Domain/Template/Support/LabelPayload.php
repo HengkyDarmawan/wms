@@ -12,6 +12,7 @@ use App\Domain\Master\Models\Serial;
 use App\Domain\Master\Support\QtyFormat;
 use App\Domain\Receipt\Models\GoodsReceiptLine;
 use App\Domain\Warehouse\Models\Bin;
+use App\Domain\Warehouse\Support\BinCode;
 
 /**
  * Isi barcode dan QR per label (A-121). Satu tempat supaya pemindai PWA nanti
@@ -21,15 +22,24 @@ use App\Domain\Warehouse\Models\Bin;
  */
 class LabelPayload
 {
-    /** @return array{title: string, subtitle: string, detail: string, code128: string, qr: string} */
-    public static function bin(Bin $bin): array
+    /**
+     * Label bin (A-379): **kode pendek besar** (K-I) sebagai judul, kode
+     * lengkap + gudang di bawahnya; Code128 = kode lengkap; QR = **tautan**
+     * halaman Isi Bin berisi kode lengkap (keputusan #7, A-373) — kamera HP
+     * biasa membuka halamannya, pemindai di aplikasi membaca kodenya.
+     *
+     * @return array{title: string, subtitle: string, detail: string, code128: string, qr: string}
+     */
+    public static function bin(Bin $bin, ?string $pendek = null): array
     {
+        $kode = (string) $bin->code;
+
         return [
-            'title' => (string) $bin->code,
-            'subtitle' => (string) ($bin->warehouse?->name ?? ''),
+            'title' => $pendek ?? BinCode::pendekUntuk($bin),
+            'subtitle' => trim($kode.' · '.($bin->warehouse?->name ?? ''), ' ·'),
             'detail' => $bin->bin_type?->label() ?? '',
-            'code128' => (string) $bin->code,
-            'qr' => (string) $bin->code,
+            'code128' => $kode,
+            'qr' => BinCode::tautan($kode),
         ];
     }
 

@@ -48,6 +48,14 @@ class ReceiptController extends Controller
         return view('receipt.putaways');
     }
 
+    /** A-376: Menunggu dimasukkan — daftar & pindai put-away di HP. */
+    public function waiting(): View
+    {
+        $this->authorize('viewAny', PutawayTask::class);
+
+        return view('receipt.putaway-waiting');
+    }
+
     public function putaway(PutawayTask $putawayTask): View
     {
         $this->authorize('view', $putawayTask);

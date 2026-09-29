@@ -8,6 +8,7 @@ use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalRegistry;
 use App\Domain\Receipt\Livewire\PutawayDetail;
 use App\Domain\Receipt\Livewire\PutawayList;
+use App\Domain\Receipt\Livewire\PutawayWaiting;
 use App\Domain\Receipt\Livewire\ReceiptDetail;
 use App\Domain\Receipt\Livewire\ReceiptForm;
 use App\Domain\Receipt\Livewire\ReceiptList;
@@ -43,6 +44,7 @@ class ReceiptServiceProvider extends ServiceProvider
         Livewire::component('receipt.receipt-detail', ReceiptDetail::class);
         Livewire::component('receipt.putaway-list', PutawayList::class);
         Livewire::component('receipt.putaway-detail', PutawayDetail::class);
+        Livewire::component('receipt.putaway-waiting', PutawayWaiting::class);
         Livewire::component('receipt.vendor-return-list', VendorReturnList::class);
         Livewire::component('receipt.vendor-return-form', VendorReturnForm::class);
         Livewire::component('receipt.vendor-return-detail', VendorReturnDetail::class);

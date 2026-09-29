@@ -126,11 +126,14 @@ class BackorderTransfers
      * BR-REQ-08 (A-108): barang TRF backorder yang sudah di bin penyimpanan
      * gudang tujuan direservasi lunak ke baris REQ penunggunya.
      */
-    public function reserveArrivals(PutawayTask $task, ?User $actor = null): void
+    public function reserveArrivals(PutawayTask $task, ?User $actor = null, ?iterable $lines = null): void
     {
-        $task->loadMissing('lines.receiptLine.shipmentLine.pickTaskLine');
+        // A-375: put-away per baris — hanya baris yang baru ditaruh bila diberikan.
+        $baris = $lines === null
+            ? $task->loadMissing('lines.receiptLine.shipmentLine.pickTaskLine')->lines
+            : collect($lines)->each(fn ($l) => $l->loadMissing('receiptLine.shipmentLine.pickTaskLine'));
 
-        foreach ($task->lines as $putLine) {
+        foreach ($baris as $putLine) {
             $trfLine = app(TransferProgress::class)->sumber($putLine->receiptLine?->shipmentLine?->pickTaskLine);
 
             if ($trfLine === null || $trfLine->material_request_line_id === null) {

@@ -218,6 +218,7 @@ class MergeBins
     {
         $putaway = DB::table('putaway_task_lines')->join('putaway_tasks', 'putaway_tasks.id', '=', 'putaway_task_lines.putaway_task_id')
             ->where('putaway_tasks.status', 'pending')
+            ->whereNull('putaway_task_lines.scanned_at') // A-375: baris yang sudah ditaruh tidak lagi terbuka
             ->where(fn ($q) => $q->where('putaway_task_lines.suggested_bin_id', $binId)->orWhere('putaway_task_lines.bin_id', $binId))
             ->exists();
 

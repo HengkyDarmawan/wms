@@ -107,11 +107,14 @@ class BackorderPurchases
     }
 
     /** BR-REQ-08: barang PRQ yang sudah di bin penyimpanan direservasi ke baris REQ penunggunya. */
-    public function reserveArrivals(PutawayTask $task, ?User $actor = null): void
+    public function reserveArrivals(PutawayTask $task, ?User $actor = null, ?iterable $lines = null): void
     {
-        $task->loadMissing('lines.receiptLine');
+        // A-375: put-away per baris — hanya baris yang baru ditaruh bila diberikan.
+        $baris = $lines === null
+            ? $task->loadMissing('lines.receiptLine')->lines
+            : collect($lines)->each(fn ($l) => $l->loadMissing('receiptLine'));
 
-        foreach ($task->lines as $putLine) {
+        foreach ($baris as $putLine) {
             $ref = $putLine->receiptLine?->purchase_request_order_line_id;
             $prqLine = $ref !== null ? PurchaseRequestOrderLine::query()->with('line')->find($ref)?->line : null;
 

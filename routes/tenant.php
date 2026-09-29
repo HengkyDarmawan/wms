@@ -235,6 +235,8 @@ Route::middleware('auth')->group(function (): void {
         // A-370: cetak denah + barang per rak + tips tata letak (hanya membaca).
         Route::get('/warehouses/{warehouse}/layout/print', [WarehouseController::class, 'printLayout'])->name('warehouses.layout.print');
         Route::get('/bins', [BinController::class, 'index'])->name('bins.index');
+        // A-374: Isi Bin — tujuan QR label bin (keputusan #7); hanya membaca, izin bin.view + cakupan.
+        Route::get('/bins/{kode}', [BinController::class, 'show'])->where('kode', '[A-Za-z0-9_.\-]+')->name('bins.show');
         Route::get('/warehouse-types', [WarehouseTypeController::class, 'index'])->name('warehouse-types.index');
 
         // Stok (13-stock §6). Semua GET; mutasi stok hanya lewat dokumen.
@@ -270,6 +272,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/receipts/{goodsReceipt}', [ReceiptController::class, 'show'])->name('receipts.show');
         Route::get('/receipts/{goodsReceipt}/edit', [ReceiptController::class, 'edit'])->name('receipts.edit');
         Route::get('/putaways', [ReceiptController::class, 'putaways'])->name('putaways.index');
+        // A-376: Menunggu dimasukkan — put-away pindai di HP (sebelum {putawayTask}).
+        Route::get('/putaways/waiting', [ReceiptController::class, 'waiting'])->name('putaways.waiting');
         Route::get('/putaways/{putawayTask}', [ReceiptController::class, 'putaway'])->name('putaways.show');
         Route::get('/vendor-returns', [ReceiptController::class, 'vendorReturns'])->name('vendor-returns.index');
         Route::get('/vendor-returns/create', [ReceiptController::class, 'createVendorReturn'])->name('vendor-returns.create');

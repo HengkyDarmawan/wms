@@ -33,6 +33,7 @@
         ['Barang masuk', 'masuk', [
             ['receipt.view', 'receipts.index', __('Penerimaan barang'), 'bi-box-arrow-in-down', 'receipts.*'],
             ['putaway.view', 'putaways.index', __('Tugas put-away'), 'bi-inboxes', 'putaways.*'],
+            ['putaway.view', 'putaways.waiting', __('Menunggu dimasukkan'), 'bi-upc-scan', 'putaways.waiting'],
             ['vendor_return.view', 'vendor-returns.index', __('Retur ke vendor'), 'bi-arrow-return-left', 'vendor-returns.*'],
             ['transfer.view', 'transfers.index', __('Transfer'), 'bi-arrow-left-right', 'transfers.*'],
             ['return.view', $klien ? 'portal.returns.index' : 'returns.index', __('Retur dari proyek'), 'bi-arrow-counterclockwise', 'returns.*'],

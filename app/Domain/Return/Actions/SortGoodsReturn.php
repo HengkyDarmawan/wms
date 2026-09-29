@@ -28,6 +28,8 @@ use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Exceptions\WarehouseRuleException;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\Warehouse\Support\BinCode;
+use App\Domain\Warehouse\Support\StorageLocationPlanner;
 use App\Domain\Warehouse\Support\StoragePolicy;
 use Illuminate\Support\Facades\DB;
 
@@ -80,9 +82,10 @@ class SortGoodsReturn
         }
 
         $rencana = [];
+        $saran = $this->saranBin($ret);
 
         foreach ($baris as $l) {
-            $rencana[$l->id] = $this->periksaBaris($l, $portions[$l->id] ?? [], $gudang, $binRetur, $binWaste, $actor);
+            $rencana[$l->id] = $this->periksaBaris($l, $portions[$l->id] ?? [], $gudang, $binRetur, $binWaste, $actor, $saran[$l->id] ?? null);
         }
 
         return DB::transaction(function () use ($ret, $baris, $rencana, $binRetur, $binWaste, $notes, $actor) {
@@ -111,10 +114,45 @@ class SortGoodsReturn
     }
 
     /**
+     * Keputusan #11 (A-378): saran bin per baris yang diterima — dari **Tempat
+     * Simpan** dulu lalu aturan lama (A-372), sama dengan put-away; jumlah yang
+     * sudah disarankan ke baris sebelumnya ikut dihitung. Layar pilah dan aksi
+     * ini memakai hasil yang sama.
+     *
+     * @return array<int, array{bin: ?Bin, penuh: bool, dari_tempat_simpan: bool}> line_id => saran
+     */
+    public function saranBin(GoodsReturn $ret): array
+    {
+        $gudang = Warehouse::withoutGlobalScopes()->find($ret->to_warehouse_id);
+
+        if ($gudang === null) {
+            return [];
+        }
+
+        $planner = app(StorageLocationPlanner::class);
+        $rencana = [];
+        $hasil = [];
+
+        foreach ($ret->requestedLines()->with('item.category')->where('qty_received', '>', 0)->orderBy('id')->get() as $l) {
+            $qty = (float) $l->qty_received;
+            $saran = $planner->saranBin($l->item, $gudang, $qty, $rencana);
+
+            if ($saran['bin'] !== null) {
+                $rencana[$saran['bin']->id] = ($rencana[$saran['bin']->id] ?? 0) + $qty;
+            }
+
+            $hasil[(int) $l->id] = $saran;
+        }
+
+        return $hasil;
+    }
+
+    /**
      * @param  array<int, array<string, mixed>>  $bagian
+     * @param  array{bin: ?Bin, penuh: bool, dari_tempat_simpan: bool}|null  $saran
      * @return array<int, array<string, mixed>>
      */
-    private function periksaBaris(GoodsReturnLine $l, array $bagian, Warehouse $gudang, Bin $binRetur, Bin $binWaste, ?User $actor = null): array
+    private function periksaBaris(GoodsReturnLine $l, array $bagian, Warehouse $gudang, Bin $binRetur, Bin $binWaste, ?User $actor = null, ?array $saran = null): array
     {
         $label = $l->item->code.($l->trackingLabel() !== '' ? ' '.$l->trackingLabel() : '');
         $diterima = (float) $l->qty_received;
@@ -154,7 +192,18 @@ class SortGoodsReturn
                 }
             }
 
-            $hasil[] = ['sorting' => $pilah, 'qty' => $qty, 'bin' => $bin, 'reason_code_id' => $alasan, 'offcut_length' => $offcut, 'buka_khusus' => $buka];
+            // A-378: layak/offcut ke bin selain saran dari tempat simpan menuntut alasan (tercatat).
+            $alasanBin = trim((string) ($p['override_reason'] ?? ''));
+            $menyimpang = in_array($pilah, [ReturnSorting::Good, ReturnSorting::Offcut], true)
+                && ($saran['dari_tempat_simpan'] ?? false) && $saran['bin'] !== null && (int) $saran['bin']->id !== (int) $bin->id;
+
+            if ($menyimpang && $alasanBin === '') {
+                throw ReturnRuleException::field('BR-RET-04', 'override_reason', $label.': bin '.BinCode::pendekUntuk($bin)
+                    .' bukan tempat simpan barang ini (saran '.BinCode::pendekUntuk($saran['bin']).'); isi alasan menaruh di bin lain.');
+            }
+
+            $hasil[] = ['sorting' => $pilah, 'qty' => $qty, 'bin' => $bin, 'reason_code_id' => $alasan, 'offcut_length' => $offcut, 'buka_khusus' => $buka,
+                'override_reason' => $menyimpang ? mb_substr($alasanBin, 0, 255) : null];
         }
 
         if ($hasil === []) {
@@ -315,9 +364,22 @@ class SortGoodsReturn
                 documentNumber: $ret->number,
                 reasonCodeId: $p['reason_code_id'],
                 performedBy: $actor,
+                notes: $p['override_reason'] ?? null,
                 eventType: $event,
                 eventPayload: $this->payload($ret, $asal, $pilah, (float) $p['qty']),
             ));
+        }
+
+        // A-378: hasil layak ke bin penyimpanan — label kemasan ikut pindah dari bin Retur.
+        if ($pilah === ReturnSorting::Good && (int) $bin->id !== (int) $binRetur->id) {
+            app(PackageLabelLedger::class)->moveReturn(
+                GoodsReceiptLine::query()->where('goods_return_line_id', $asal->id)->pluck('id')->map(fn ($id) => (int) $id)->all(),
+                (int) $binRetur->id,
+                (int) $bin->id,
+                (float) $p['qty'],
+                ['type' => 'goods_return', 'id' => (int) $ret->id, 'line_id' => (int) $target->id, 'number' => $ret->number],
+                $actor,
+            );
         }
 
         // A-301: label kemasan yang ikut kembali lewat retur ini dan dipilah
@@ -336,6 +398,7 @@ class SortGoodsReturn
             'sorting' => $pilah,
             'sorted_qty' => $pilah === ReturnSorting::Offcut ? $p['offcut_length'] : $p['qty'],
             'target_bin_id' => $bin->id,
+            'override_reason' => $p['override_reason'] ?? null,
             'reason_code_id' => $p['reason_code_id'],
             'new_piece_id' => $newPieceId,
         ])->save();

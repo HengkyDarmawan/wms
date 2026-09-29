@@ -40,10 +40,13 @@ class CancelPutaway
             'notes' => $keterangan ?? $task->notes,
         ])->save();
 
+        // A-375: baris yang sudah ditaruh tetap di binnya; sisanya tetap di bin Penerimaan.
+        $tertaruh = $task->lines()->whereNotNull('scanned_at')->count();
+
         activity('receipt')
             ->performedOn($task)
             ->causedBy($actor)
-            ->withProperties(['reason_code_id' => $reasonCodeId, 'keterangan' => $keterangan])
+            ->withProperties(['reason_code_id' => $reasonCodeId, 'keterangan' => $keterangan, 'baris_tertaruh' => $tertaruh])
             ->log('Put-away dibatalkan');
 
         return $task->refresh();

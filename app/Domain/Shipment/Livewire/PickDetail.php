@@ -18,6 +18,7 @@ use App\Domain\Shipment\Livewire\Concerns\HandlesShipmentRules;
 use App\Domain\Shipment\Models\PickTask;
 use App\Domain\Shipment\Models\PickTaskLine;
 use App\Domain\Warehouse\Models\Bin;
+use App\Domain\Warehouse\Support\BinCode;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
@@ -146,8 +147,8 @@ class PickDetail extends Component
             return;
         }
 
-        $bin = Bin::query()->where('warehouse_id', $task->warehouse_id)->active()->get(['id', 'code'])
-            ->first(fn (Bin $b) => mb_strtoupper((string) $b->code) === $kode);
+        // A-373: QR bin berisi tautan Isi Bin — kodenya dikenali.
+        $bin = BinCode::cocokkan($kode, Bin::query()->where('warehouse_id', $task->warehouse_id)->active()->get(['id', 'code', 'warehouse_id']));
 
         if ($bin !== null) {
             $this->binPindai = (int) $bin->id;

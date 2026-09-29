@@ -89,9 +89,12 @@ class PutawayPlanner
 
     private function sudahDirencanakan(GoodsReceiptLine $line): bool
     {
+        // A-375: baris yang sudah ditaruh di tugas yang kemudian dibatalkan
+        // tetap dihitung — barangnya sudah di rak, tidak direncanakan lagi.
         return PutawayTaskLine::query()
             ->where('goods_receipt_line_id', $line->id)
-            ->whereHas('task', fn ($q) => $q->withoutGlobalScopes()->where('status', '!=', PutawayTaskStatus::Cancelled->value))
+            ->where(fn ($q) => $q->whereNotNull('scanned_at')
+                ->orWhereHas('task', fn ($t) => $t->withoutGlobalScopes()->where('status', '!=', PutawayTaskStatus::Cancelled->value)))
             ->exists();
     }
 }

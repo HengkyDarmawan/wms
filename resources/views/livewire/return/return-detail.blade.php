@@ -85,6 +85,7 @@
                                 @if ($l->sorting)
                                     <span class="badge {{ $l->sorting->badge() }}">{{ $l->sorting->label() }}</span>
                                     {{ number_format((float) $l->sorted_qty, 2, ',', '.') }} → {{ $l->targetBin?->code }}
+                                    @if ($l->override_reason) <div class="text-muted">{{ __('Bin lain') }}: {{ $l->override_reason }}</div> @endif
                                     @if ($l->newPiece) · {{ __('potongan baru') }} {{ $l->newPiece->piece_no }} @endif
                                     @if ($l->reason) <div class="text-muted">{{ $l->reason->label }}</div> @endif
                                 @else
@@ -173,13 +174,33 @@
                                 @if (($p['sorting'] ?? '') !== 'waste')
                                     <div class="col-md-3">
                                         <label class="form-label small">{{ __('Bin tujuan') }} @if (in_array($p['sorting'] ?? '', ['good', 'offcut'], true)) <span class="wajib">*</span> @endif</label>
-                                        <select class="form-select form-select-sm" wire:model="pilah.{{ $l->id }}.{{ $i }}.target_bin_id">
+                                        <input class="form-control form-control-sm mb-1" type="text" data-scan autocomplete="off"
+                                               aria-label="{{ __('Pindai QR bin') }}" placeholder="{{ __('Pindai QR bin') }}"
+                                               wire:keydown.enter.prevent="pindaiBinPilah({{ $l->id }}, {{ $i }}, $event.target.value)">
+                                        @error('pindai.'.$l->id.'.'.$i) <div class="small text-danger">{{ $message }}</div> @enderror
+                                        <select class="form-select form-select-sm" wire:model.live="pilah.{{ $l->id }}.{{ $i }}.target_bin_id">
                                             <option value="">{{ ($p['sorting'] ?? '') === 'damaged' ? __('Bin Retur (bawaan)') : __('Pilih bin…') }}</option>
                                             @foreach (($p['sorting'] ?? '') === 'damaged' ? $binRusak : $binPenyimpanan as $b)
-                                                <option value="{{ $b->id }}">{{ $b->code }}</option>
+                                                <option value="{{ $b->id }}">{{ $pendekBin[$b->id] ?? $b->code }} — {{ $b->code }}</option>
                                             @endforeach
                                         </select>
+                                        @php $sp = $saranPilah[$l->id] ?? null; @endphp
+                                        @if ($sp && $sp['bin'] && in_array($p['sorting'] ?? '', ['good', 'offcut'], true))
+                                            <div class="small mt-1">
+                                                {{ __('Saran') }}: <span class="fw-semibold font-monospace">{{ $pendekBin[$sp['bin']->id] ?? $sp['bin']->code }}</span>
+                                                @if ($sp['dari_tempat_simpan']) <span class="text-muted">({{ __('tempat simpan') }})</span> @endif
+                                                @if ($sp['penuh']) <span class="badge text-bg-warning">{{ __('Tempat simpan penuh') }}</span> @endif
+                                            </div>
+                                        @endif
                                     </div>
+                                    @if ($sp && $sp['bin'] && $sp['dari_tempat_simpan'] && in_array($p['sorting'] ?? '', ['good', 'offcut'], true)
+                                        && ($p['target_bin_id'] ?? '') !== '' && (int) $p['target_bin_id'] !== (int) $sp['bin']->id)
+                                        <div class="col-md-3">
+                                            <label class="form-label small">{{ __('Alasan bin lain') }} <span class="wajib">*</span></label>
+                                            <input class="form-control form-control-sm" type="text" maxlength="255" wire:model="pilah.{{ $l->id }}.{{ $i }}.override_reason"
+                                                   placeholder="{{ __('Bukan tempat simpan barang ini') }}">
+                                        </div>
+                                    @endif
                                 @else
                                     <div class="col-md-3 small text-muted">{{ __('Ke bin Waste') }}</div>
                                 @endif
@@ -212,7 +233,7 @@
                         @endif
                     </div>
                 @endforeach
-                @foreach (['sorting', 'qty', 'target_bin_id', 'reason_code_id', 'offcut_length'] as $f)
+                @foreach (['sorting', 'qty', 'target_bin_id', 'reason_code_id', 'offcut_length', 'override_reason'] as $f)
                     @error('pilah.'.$f) <div class="text-danger small">{{ $message }}</div> @enderror
                 @endforeach
             </div>

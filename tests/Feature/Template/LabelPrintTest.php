@@ -132,7 +132,10 @@ class LabelPrintTest extends TenantTestCase
     {
         $bin = LabelPayload::bin($this->binA);
         $this->assertSame('CKG-A-R01-L1-B01', $bin['code128']);
-        $this->assertSame('CKG-A-R01-L1-B01', $bin['qr']);
+        // Keputusan #7 (A-373, A-379): QR bin = tautan Isi Bin berisi kode lengkap; judul = kode pendek.
+        $this->assertStringEndsWith('/bins/CKG-A-R01-L1-B01', $bin['qr']);
+        $this->assertStringStartsWith('http', $bin['qr']);
+        $this->assertSame('R01 · L1 · 01', $bin['title']);
 
         $baut = LabelPayload::item($this->baut);
         $this->assertSame('8991234567890', $baut['code128']);

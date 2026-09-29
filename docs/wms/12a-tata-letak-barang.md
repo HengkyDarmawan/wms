@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `warehouse` bagian Tata Letak Barang (Tempat Simpan)
 
-**Versi:** 0.1
+**Versi:** 0.2
 **Tanggal:** 1 Oktober 2026
-**Status:** **dibangun (Tata letak gudang Bagian 3)** — Tempat Simpan per barang & gudang, *Khusus Barang Ini* (BR-WH-10) di put-away / pilah retur / penyesuaian (+) / saldo awal, Buka Tempat Khusus oleh Kepala Gudang, kartu di detail item, mode *Tata letak barang* di Denah, impor Excel, dan Cetak denah ([A-365](04b-asumsi-lanjutan.md#a-365)–[A-372](04b-asumsi-lanjutan.md#a-372)). Pecahan dari [12-warehouse](12-warehouse.md) (berkas itu mendekati batas 450 baris)
+**Status:** **dibangun (Tata letak gudang Bagian 3)** — Tempat Simpan per barang & gudang, *Khusus Barang Ini* (BR-WH-10) di put-away / pilah retur / penyesuaian (+) / saldo awal, Buka Tempat Khusus oleh Kepala Gudang, kartu di detail item, mode *Tata letak barang* di Denah, impor Excel, dan Cetak denah ([A-365](04b-asumsi-lanjutan.md#a-365)–[A-372](04b-asumsi-lanjutan.md#a-372)). Pecahan dari [12-warehouse](12-warehouse.md) (berkas itu mendekati batas 450 baris); v0.2: halaman **Isi Bin**, QR bin berisi tautan, label bin berkode pendek (Bagian 4, [A-373](04b-asumsi-lanjutan.md#a-373)–[A-379](04b-asumsi-lanjutan.md#a-379); §6.6–§6.7, TC-WH-61–62)
 **Modul:** `warehouse`
 **Fase:** F1
 **Dokumen terkait:** [12-warehouse](12-warehouse.md) · [Aturan Bisnis BR-WH](05-aturan-bisnis.md#br-wh) · [Glosarium](03-glosarium.md) · [Model data gudang](08b-model-data-stok-dokumen.md#area-gudang--lokasi-tenant) · [19-receipt-putaway](19-receipt-putaway.md) · [21-opname-penyesuaian](21-opname-penyesuaian.md) · [22-retur-transfer](22-retur-transfer.md)
@@ -14,7 +14,7 @@
 
 [F1] Menghubungkan **barang** ke **tempat** di gudang supaya saran bin tidak lagi menebak (A-84): Kepala Gudang menetapkan untuk tiap barang, per gudang, daftar **Tempat Simpan** berurutan — satu bin tertentu, seluruh rak, atau area lantai — dan boleh menandai tempat itu **Khusus Barang Ini** (barang lain ditolak saat ditaruh). Bagian 4 (put-away pindai & Isi Bin) dan Bagian 5 (setup awal) memakai saran dari sini.
 
-Tidak termasuk: pindai bin di put-away per baris dan halaman Isi Bin (Bagian 4), kolom Lokasi di saldo stok (Bagian 5).
+Bagian 4 menambah halaman **Isi Bin** (§6.6) dan QR bin bertautan (§6.7); put-away pindai per baris ada di [19](19-receipt-putaway.md) §13.7, pilah retur di [22](22-retur-transfer.md) §13.6. Tidak termasuk: kolom Lokasi di saldo stok (Bagian 5).
 
 ## 2. Aktor & permission
 
@@ -77,6 +77,14 @@ Kolom `Kode item | Kode gudang | Tempat | Khusus`. Tempat = kode bin lengkap, ko
 
 Bagi pemegang `adjustment.approve`: lipatan *Buka tempat khusus (Kepala Gudang)* berisi satu alasan untuk layar itu; dicatat per bin yang benar-benar dibuka ([A-367](04b-asumsi-lanjutan.md#a-367)).
 
+### 6.6 Isi Bin — `/bins/{kode}` (`bins.show`, [A-374](04b-asumsi-lanjutan.md#a-374))
+
+Tujuan QR label bin. `bin.view` + cakupan gudang (di luar cakupan = tidak ditemukan). Kode pendek besar, kode lengkap, jenis/status, badge **Khusus** pemiliknya; isi saldo > 0: item (→ Kartu stok bila `stock.view`), jumlah + uraian kemasan, lot + kedaluwarsa / serial / potongan, kondisi, masuk terakhir; total vs kapasitas; tempat simpan di bin/rak itu; label kemasan di bin; bin gabungan (bin tergabung menampilkan isi bin utama). Tombol Denah dan Cetak label bin. Tanpa harga; `Support\BinContents` memuat sekaligus.
+
+### 6.7 QR bin & pemindai ([A-373](04b-asumsi-lanjutan.md#a-373), [A-379](04b-asumsi-lanjutan.md#a-379))
+
+QR label bin = tautan `…/bins/<kode lengkap>`; judul label = kode pendek. `BinCode::dariPindai` membaca tautan itu di semua kotak pindai bin (Menunggu dimasukkan, detail PUT, pilah retur, PCK); `BinCode::cocokkan` juga menerima kode pendek ketikan bila unik.
+
 ## 7. Kejadian stok & integrasi
 
 Tidak ada kejadian stok baru; tempat simpan tidak menyentuh kartu stok.
@@ -106,11 +114,13 @@ Cetak denah (§6.3). Laporan tempat simpan tersendiri: belum.
 | TC-WH-58 | Impor: templat, galat per baris semua-atau-tidak, format tempat (pendek, lengkap, rak, area, berzona), Khusus Ya/Tidak |
 | TC-WH-59 | Kartu detail item: tambah gudang, tambah tempat, urut, Khusus, simpan; galat aturan di kartu; gudang di luar cakupan tidak terlihat |
 | TC-WH-60 | Cetak denah: kode & nama barang, kode pendek, Khusus, tips; tanpa "Rp"; gudang di luar cakupan tidak ditemukan |
+| TC-WH-61 | Bin khusus berisi 30 baut (DUS = 12): `/bins/<kode>` (juga huruf kecil) → kode pendek, Khusus, "30 PCS", "2 DUS 6 PCS", masuk terakhir, tanpa "Rp"; driver 403; staf gudang lain & kode asing 404; setelah gabung permanen ke B02, bin tergabung → "digabung ke bin utama" + isi bin utama |
+| TC-WH-62 | Tautan bin `…/bins/CKG-D-R01-L1-B03`; `dariPindai` membaca tautan & huruf kecil; `cocokkan` menerima tautan dan kode pendek, kode pendek kembar = tidak ada; label bin memuat kode pendek & kode lengkap |
 
 ## 11. Di luar lingkup modul ini
 
-Pindai bin & Isi Bin (Bagian 4), setup awal & kolom Lokasi (Bagian 5), laporan tempat simpan, PDF denah.
+Setup awal & kolom Lokasi (Bagian 5), laporan tempat simpan, PDF denah.
 
 ## 12. Definisi selesai
 
-Migrasi tenant `000510`; aksi `SaveItemStorageLocations`, `ImportItemStorageLocations`; `StoragePolicy`, `StorageLocationPlanner`, `FloorPlanPrintData`; uji `TempatSimpanTest`, `TempatSimpanReturTest`, `TempatSimpanLayarTest` hijau; uji penuh hijau.
+Migrasi tenant `000510`; aksi `SaveItemStorageLocations`, `ImportItemStorageLocations`; `StoragePolicy`, `StorageLocationPlanner`, `FloorPlanPrintData`; uji `TempatSimpanTest`, `TempatSimpanReturTest`, `TempatSimpanLayarTest` hijau; Bagian 4: `BinController::show`, `BinContents`, `BinCode::tautan/dariPindai/cocokkan`, uji `IsiBinTest`; uji penuh hijau.

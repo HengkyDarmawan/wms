@@ -10,7 +10,12 @@
                 <a href="{{ route('receipts.show', $task->goods_receipt_id) }}">{{ $task->receipt?->number }}</a>
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('putaways.index') }}">{{ __('Kembali') }}</a>
+        <div class="d-flex gap-2">
+            @if ($task->status->value === 'pending')
+                <a class="btn btn-outline-primary" href="{{ route('putaways.waiting', ['gudang' => $task->warehouse_id]) }}"><i class="bi bi-upc-scan"></i> {{ __('Pindai di HP') }}</a>
+            @endif
+            <a class="btn btn-outline-secondary" href="{{ route('putaways.index') }}">{{ __('Kembali') }}</a>
+        </div>
     </div>
 
     @if ($ruleError !== '')
@@ -61,6 +66,7 @@
                         <th scope="col">{{ __('Saran') }}</th>
                         <th scope="col">{{ __('Bin tujuan') }} <span class="wajib">*</span></th>
                         <th scope="col">{{ __('Alasan ganti bin') }}</th>
+                        <th scope="col"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -74,9 +80,12 @@
                             </td>
                             <td class="text-end">{{ number_format((float) $l->qty_base, 2, ',', '.') }}</td>
                             <td>{{ $l->fromBin?->code }}</td>
-                            <td>{{ $l->suggestedBin?->code ?? '—' }}</td>
                             <td>
-                                @if ($task->status->value === 'pending')
+                                <span class="fw-semibold font-monospace">{{ $l->suggestedBin ? ($pendek[$l->suggested_bin_id] ?? $l->suggestedBin->code) : '—' }}</span>
+                                @if ($penuh[$l->id] ?? false) <div><span class="badge text-bg-warning">{{ __('Tempat simpan penuh') }}</span></div> @endif
+                            </td>
+                            <td>
+                                @if ($task->status->value === 'pending' && $l->scanned_at === null)
                                     <input class="form-control form-control-sm mb-1" type="text" data-scan
                                            aria-label="{{ __('Pindai kode bin') }}" placeholder="{{ __('Pindai kode bin') }}"
                                            wire:change="pindaiBin({{ $l->id }}, $event.target.value)"
@@ -85,19 +94,29 @@
                                     <select class="form-select form-select-sm" wire:model="isian.{{ $l->id }}.bin_id">
                                         <option value="">{{ __('Pilih bin…') }}</option>
                                         @foreach ($bins as $b)
-                                            <option value="{{ $b->id }}">{{ $b->code }}</option>
+                                            <option value="{{ $b->id }}">{{ $pendek[$b->id] ?? $b->code }} — {{ $b->code }}</option>
                                         @endforeach
                                     </select>
                                 @else
-                                    {{ $l->bin?->code ?? '—' }}
+                                    <span class="font-monospace">{{ $l->bin ? ($pendek[$l->bin_id] ?? $l->bin->code) : '—' }}</span>
+                                    @if ($l->scanned_at) <div class="small text-muted">{{ __('Ditaruh') }} {{ $l->scanned_at->lokal()->format('d/m/Y H:i') }}</div> @endif
                                 @endif
                             </td>
                             <td>
-                                @if ($task->status->value === 'pending')
+                                @if ($task->status->value === 'pending' && $l->scanned_at === null)
                                     <input class="form-control form-control-sm" type="text"
                                            wire:model="isian.{{ $l->id }}.override_reason" placeholder="{{ __('Bila berbeda dari saran') }}">
                                 @else
                                     <span class="small">{{ $l->override_reason }}</span>
+                                @endif
+                            </td>
+                            <td class="text-end">
+                                @if ($l->scanned_at === null)
+                                    @can('complete', $task)
+                                        <button class="btn btn-sm btn-outline-success" type="button" wire:click="taruhBaris({{ $l->id }})">{{ __('Taruh') }}</button>
+                                    @endcan
+                                @else
+                                    <span class="badge text-bg-success">{{ __('Sudah ditaruh') }}</span>
                                 @endif
                             </td>
                         </tr>
@@ -113,7 +132,7 @@
         @endcan
         <div class="card-footer d-flex gap-2">
             @can('complete', $task)
-                <button class="btn btn-success" type="button" wire:click="selesaikan">{{ __('Selesaikan put-away') }}</button>
+                <button class="btn btn-success" type="button" wire:click="selesaikan">{{ $lines->whereNotNull('scanned_at')->isNotEmpty() ? __('Taruh semua sisa & selesaikan') : __('Selesaikan put-away') }}</button>
             @endcan
             @can('cancel', $task)
                 <button class="btn btn-outline-danger" type="button" wire:click="mintaBatal">{{ __('Batalkan') }}</button>

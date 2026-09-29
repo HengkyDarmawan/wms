@@ -11,7 +11,6 @@ use App\Domain\Master\Models\Carrier;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Vehicle;
 use App\Domain\Receipt\Actions\SaveGoodsReceipt;
-use App\Domain\Receipt\Support\PutawaySuggester;
 use App\Domain\Return\Actions\ApproveGoodsReturn;
 use App\Domain\Return\Actions\CancelGoodsReturn;
 use App\Domain\Return\Actions\SortGoodsReturn;
@@ -26,6 +25,7 @@ use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\Warehouse\Support\BinCode;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -84,7 +84,7 @@ class ReturnDetail extends Component
         $bins = Bin::query()->withoutGlobalScopes()->where('warehouse_id', $ret->to_warehouse_id)
             ->where('bin_status', BinStatus::Active->value)
             ->whereIn('bin_type', [BinType::Storage->value, BinType::Return->value, BinType::Quarantine->value])
-            ->orderBy('code')->get(['id', 'code', 'bin_type']);
+            ->orderBy('code')->get(['id', 'code', 'bin_type', 'warehouse_id']);
 
         return view('livewire.return.return-detail', [
             'ret' => $ret,
@@ -94,6 +94,8 @@ class ReturnDetail extends Component
             'pck' => $ret->livePickTask(),
             'grn' => $ret->activeReceipt(),
             'binPenyimpanan' => $bins->where('bin_type', BinType::Storage)->values(),
+            'pendekBin' => BinCode::pendekBanyak($bins),
+            'saranPilah' => $ret->status === GoodsReturnStatus::Received && ! $this->portal ? app(SortGoodsReturn::class)->saranBin($ret) : [],
             'binRusak' => $bins->values(),
             'hasilPilah' => ReturnSorting::options(),
             'alasanRusak' => ReasonCode::query()->where('context', ReasonContext::Damage->value)->where('is_active', true)->pluck('label', 'id'),
@@ -174,13 +176,42 @@ class ReturnDetail extends Component
 
     public function tambahBagian(int $lineId): void
     {
-        $this->pilah[$lineId][] = ['sorting' => 'damaged', 'qty' => '', 'target_bin_id' => '', 'reason_code_id' => '', 'offcut_length' => ''];
+        $this->pilah[$lineId][] = ['sorting' => 'damaged', 'qty' => '', 'target_bin_id' => '', 'reason_code_id' => '', 'offcut_length' => '', 'override_reason' => ''];
     }
 
     public function hapusBagian(int $lineId, int $i): void
     {
         unset($this->pilah[$lineId][$i]);
         $this->pilah[$lineId] = array_values($this->pilah[$lineId] ?? []);
+    }
+
+    /**
+     * A-378: pindai QR bin tujuan satu bagian pilah (tautan Isi Bin, kode
+     * lengkap, atau kode pendek) — sama dengan put-away pindai.
+     */
+    public function pindaiBinPilah(int $lineId, int $i, string $kode): void
+    {
+        $this->authorize('sort', $this->ret());
+
+        if (trim($kode) === '' || ! isset($this->pilah[$lineId][$i])) {
+            return;
+        }
+
+        $ret = $this->ret();
+        $jenis = ($this->pilah[$lineId][$i]['sorting'] ?? '') === 'damaged'
+            ? [BinType::Storage->value, BinType::Return->value, BinType::Quarantine->value]
+            : [BinType::Storage->value];
+        $bin = BinCode::cocokkan($kode, Bin::query()->withoutGlobalScopes()->where('warehouse_id', $ret->to_warehouse_id)
+            ->where('bin_status', BinStatus::Active->value)->whereNull('occupied_by_bin_id')->whereIn('bin_type', $jenis)->get(['id', 'code', 'warehouse_id']));
+
+        if ($bin === null) {
+            $this->addError('pindai.'.$lineId.'.'.$i, __('Bin ":kode" tidak bisa dipakai untuk hasil pilah ini di gudang tujuan.', ['kode' => BinCode::dariPindai($kode)]));
+
+            return;
+        }
+
+        $this->resetErrorBag('pindai.'.$lineId.'.'.$i);
+        $this->pilah[$lineId][$i]['target_bin_id'] = (string) $bin->id;
     }
 
     public function simpanPilah(SortGoodsReturn $action): void
@@ -251,16 +282,18 @@ class ReturnDetail extends Component
 
         $gudang = Warehouse::query()->withoutGlobalScopes()->find($ret->to_warehouse_id);
 
-        foreach ($ret->requestedLines()->with('item.category')->where('qty_received', '>', 0)->get() as $l) {
-            /** @var GoodsReturnLine $l */
-            $saran = $gudang !== null ? app(PutawaySuggester::class)->suggest($l->item, $gudang, (float) $l->qty_received) : null;
+        // Keputusan #11 (A-378): saran dari tempat simpan lalu aturan lama — sama dengan put-away.
+        $saran = $gudang !== null ? app(SortGoodsReturn::class)->saranBin($ret) : [];
 
+        foreach ($ret->requestedLines()->where('qty_received', '>', 0)->get() as $l) {
+            /** @var GoodsReturnLine $l */
             $this->pilah[$l->id] = [[
                 'sorting' => 'good',
                 'qty' => (string) (float) $l->qty_received,
-                'target_bin_id' => (string) ($saran?->id ?? ''),
+                'target_bin_id' => (string) ($saran[$l->id]['bin']?->id ?? ''),
                 'reason_code_id' => '',
                 'offcut_length' => '',
+                'override_reason' => '',
             ]];
         }
     }

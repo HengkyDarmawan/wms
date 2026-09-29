@@ -7,9 +7,12 @@ namespace App\Domain\Receipt\Livewire;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Receipt\Actions\CancelPutaway;
 use App\Domain\Receipt\Actions\CompletePutaway;
+use App\Domain\Receipt\Enums\PutawayTaskStatus;
 use App\Domain\Receipt\Livewire\Concerns\HandlesReceiptRules;
 use App\Domain\Receipt\Models\PutawayTask;
 use App\Domain\Receipt\Support\PutawaySuggester;
+use App\Domain\Receipt\Support\PutawayTargets;
+use App\Domain\Warehouse\Support\BinCode;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -57,10 +60,16 @@ class PutawayDetail extends Component
     {
         $task = $this->task();
 
+        $lines = $task->lines()->with('task:id,warehouse_id', 'item:id,code,name', 'fromBin:id,code', 'suggestedBin:id,code,warehouse_id', 'bin:id,code,warehouse_id', 'lot', 'serial', 'piece')->orderBy('id')->get();
+        $bins = $saran->storageBins($task->warehouse);
+
         return view('livewire.receipt.putaway-detail', [
             'task' => $task,
-            'lines' => $task->lines()->with('item:id,code,name', 'fromBin:id,code', 'suggestedBin:id,code', 'bin:id,code', 'lot', 'serial', 'piece')->orderBy('id')->get(),
-            'bins' => $saran->storageBins($task->warehouse),
+            'lines' => $lines,
+            'bins' => $bins,
+            // K-I: kode pendek untuk tampilan; A-377: tanda tempat simpan penuh.
+            'pendek' => BinCode::pendekBanyak($bins->concat($lines->pluck('suggestedBin'))->concat($lines->pluck('bin'))->filter()->unique('id')),
+            'penuh' => $task->status === PutawayTaskStatus::Pending ? app(PutawayTargets::class)->penuh($lines->whereNull('scanned_at')) : [],
             'alasan' => $this->pilihanAlasan(ReasonContext::Cancel),
         ]);
     }
@@ -71,22 +80,35 @@ class PutawayDetail extends Component
      */
     public function pindaiBin(int $lineId, string $kode): void
     {
-        $kode = mb_strtoupper(trim($kode));
-
-        if ($kode === '' || ! array_key_exists($lineId, $this->isian)) {
+        if (trim($kode) === '' || ! array_key_exists($lineId, $this->isian)) {
             return;
         }
 
-        $bin = app(PutawaySuggester::class)->storageBins($this->task()->warehouse)->first(fn ($b) => mb_strtoupper((string) $b->code) === $kode);
+        // A-373: QR bin berisi tautan Isi Bin; kode pendek yang diketik juga dikenali.
+        $bin = BinCode::cocokkan($kode, app(PutawaySuggester::class)->storageBins($this->task()->warehouse));
 
         if ($bin === null) {
-            $this->addError('pindai.'.$lineId, __('Bin ":kode" bukan bin penyimpanan gudang ini.', ['kode' => $kode]));
+            $this->addError('pindai.'.$lineId, __('Bin ":kode" bukan bin penyimpanan gudang ini.', ['kode' => BinCode::dariPindai($kode)]));
 
             return;
         }
 
         $this->resetErrorBag('pindai.'.$lineId);
         $this->isian[$lineId]['bin_id'] = (string) $bin->id;
+    }
+
+    /** Keputusan #6 (A-375): taruh satu baris sekarang; tugas selesai setelah baris terakhir. */
+    public function taruhBaris(int $lineId, CompletePutaway $action): void
+    {
+        $task = $this->task();
+        $this->authorize('complete', $task);
+
+        $isi = ($this->isian[$lineId] ?? []) + ['buka_khusus' => $this->bukaKhusus];
+
+        if ($this->jalankan(fn () => $action->placeLine($task, $lineId, $isi, auth()->user()))) {
+            $this->peringatan = $action->warnings();
+            $this->dispatch('pesan', teks: __('Baris ditaruh di bin.'));
+        }
     }
 
     public function selesaikan(CompletePutaway $action): void

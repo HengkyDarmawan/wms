@@ -20,6 +20,7 @@ use App\Domain\Template\Support\LabelDesignRules;
 use App\Domain\Template\Support\LabelPayload;
 use App\Domain\Template\Support\PrintAssets;
 use App\Domain\Warehouse\Models\Bin;
+use App\Domain\Warehouse\Support\BinCode;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Url;
@@ -167,7 +168,7 @@ class LabelDesigner extends Component
     public static function contohTetap(DocumentTemplateType $jenis): array
     {
         return match ($jenis) {
-            DocumentTemplateType::LabelBin => ['title' => 'GDG-A-R01-L1-B01', 'subtitle' => 'Gudang Contoh', 'detail' => 'Penyimpanan', 'code128' => 'GDG-A-R01-L1-B01', 'qr' => 'GDG-A-R01-L1-B01'],
+            DocumentTemplateType::LabelBin => ['title' => 'R01 · L1 · 01', 'subtitle' => 'GDG-A-R01-L1-B01 · Gudang Contoh', 'detail' => 'Penyimpanan', 'code128' => 'GDG-A-R01-L1-B01', 'qr' => BinCode::tautan('GDG-A-R01-L1-B01')],
             DocumentTemplateType::LabelItem => ['title' => 'ITEM-001', 'subtitle' => 'Contoh nama item', 'detail' => 'PCS', 'code128' => 'ITEM-001', 'qr' => 'ITEM-001'],
             DocumentTemplateType::LabelLot => ['title' => 'LOT-0001', 'subtitle' => 'ITEM-001 Contoh nama item', 'detail' => 'Masuk 01/10/2026 · Kedaluwarsa 01/10/2027', 'code128' => 'LOT-0001', 'qr' => 'ITEM-001|LOT-0001'],
             DocumentTemplateType::LabelPackage => ['title' => 'PAKU-0001', 'subtitle' => 'PAKU Paku 5 cm', 'detail' => 'Isi 12 BOX (1 DUS) · Masuk 01/10/2026 · PT Vendor Contoh · GRN/GDG/2610/0001', 'code128' => 'PAKU-0001', 'qr' => 'PAKU-0001'],

@@ -18,6 +18,7 @@ use App\Domain\Template\Support\LabelPayload;
 use App\Domain\Template\Support\PdfRenderer;
 use App\Domain\Template\Support\PrintAssets;
 use App\Domain\Warehouse\Models\Bin;
+use App\Domain\Warehouse\Support\BinCode;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -63,8 +64,12 @@ class PrintLabels
         $this->authorize($type, $actor);
         $ids = $this->validate($type, $ids, $format, $copies);
 
-        $isi = $this->load($type, $ids)
-            ->map(fn ($model) => $this->payload($type, $model))
+        $data = $this->load($type, $ids);
+        // A-379: kode pendek bin dihitung sekaligus (awalan zona bila rak kembar).
+        $pendek = $type === DocumentTemplateType::LabelBin ? BinCode::pendekBanyak($data) : [];
+
+        $isi = $data
+            ->map(fn ($model) => $type === DocumentTemplateType::LabelBin ? LabelPayload::bin($model, $pendek[$model->id] ?? null) : $this->payload($type, $model))
             ->flatMap(fn (array $label) => array_fill(0, $copies, $label))
             ->values();
 

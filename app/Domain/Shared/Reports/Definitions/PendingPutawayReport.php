@@ -56,7 +56,8 @@ class PendingPutawayReport extends Report
 
         return PutawayTask::query()
             ->with('receipt:id,number', 'warehouse:id,code', 'assignee:id,name')
-            ->withCount('lines')
+            // A-375: hanya baris yang belum ditaruh (put-away per baris).
+            ->withCount(['lines' => fn ($q) => $q->whereNull('scanned_at')])
             ->where('status', PutawayTaskStatus::Pending->value)
             ->when($gudang !== null, fn ($q) => $q->whereIn('warehouse_id', $gudang))
             ->orderBy('created_at')
