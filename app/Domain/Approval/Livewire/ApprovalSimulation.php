@@ -61,7 +61,7 @@ class ApprovalSimulation extends Component
         return view('livewire.approval.simulation', [
             'types' => app(ApprovalRegistry::class)->typeOptions(),
             'warehouses' => Warehouse::withoutGlobalScopes()->orderBy('code')->get(['id', 'code', 'name']),
-            'projects' => Project::query()->orderBy('code')->get(['id', 'code', 'name']),
+            'projects' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
             'categories' => ItemCategory::query()->orderBy('code')->get(['id', 'code', 'name']),
             'ownerships' => OwnershipModel::options(),
             'vendorTypes' => VendorType::options(),

@@ -276,7 +276,7 @@ class RequestForm extends Component
     public function render(): View
     {
         return view('livewire.request.request-form', [
-            'projects' => Project::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
+            'projects' => Project::query()->active()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
             'items' => Item::query()
                 ->whereIn('status', [ItemStatus::Active->value, ItemStatus::Provisional->value])
                 ->orderBy('code')

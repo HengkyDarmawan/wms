@@ -99,7 +99,7 @@ class ApprovalMap extends Component
             'types' => $registry->typeOptions(),
             'users' => User::query()->active()->orderBy('name')->get(['id', 'name', 'client_id']),
             'warehouses' => Warehouse::withoutGlobalScopes()->orderBy('code')->get(['id', 'code', 'name']),
-            'projects' => Project::query()->orderBy('code')->get(['id', 'code', 'name']),
+            'projects' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
         ]);
     }
 

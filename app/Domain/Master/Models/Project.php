@@ -76,6 +76,27 @@ class Project extends Model
         return $query->where('status', ProjectStatus::Active->value);
     }
 
+    /**
+     * BR-ACC-05 / A-21: proyek yang boleh dilihat pengguna — cakupan proyeknya
+     * (`accessibleProjectIds`, null = semua) dan, untuk akun Klien, hanya
+     * proyek milik kliennya. Dipakai daftar pilihan proyek supaya layar tidak
+     * menawarkan proyek yang tidak boleh dilihat (A-354).
+     */
+    public function scopeDalamCakupan(Builder $query, ?User $user = null): Builder
+    {
+        $user ??= auth()->user();
+
+        if (! $user instanceof User) {
+            return $query;
+        }
+
+        $ids = $user->accessibleProjectIds();
+
+        return $query
+            ->when($ids !== null, fn (Builder $q) => $q->whereIn($q->qualifyColumn('id'), $ids))
+            ->when($user->client_id !== null, fn (Builder $q) => $q->where($q->qualifyColumn('client_id'), $user->client_id));
+    }
+
     /** BR-PRJ-01: hanya proyek aktif yang menerima dokumen baru. */
     public function acceptsDocuments(): bool
     {

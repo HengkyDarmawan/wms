@@ -45,7 +45,7 @@ class RequestListReport extends Report
     {
         return [
             'status' => ['label' => 'Status', 'options' => MaterialRequestStatus::options()],
-            'project_id' => ['label' => 'Proyek', 'options' => Project::query()->orderBy('code')->get(['id', 'code', 'name'])->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])->all()],
+            'project_id' => ['label' => 'Proyek', 'options' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name'])->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])->all()],
             'requester' => ['label' => 'Pemohon mengandung'],
         ] + $this->penyaringPeriode();
     }

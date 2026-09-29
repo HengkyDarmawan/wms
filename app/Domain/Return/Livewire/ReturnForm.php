@@ -124,6 +124,11 @@ class ReturnForm extends Component
             return $semua;
         }
 
+        // A-354: proyek di luar cakupan klien tidak membuka daftar gudang pengirimnya.
+        if (! Project::query()->dalamCakupan()->whereKey((int) $this->form['project_id'])->exists()) {
+            return collect();
+        }
+
         $pengirim = Shipment::query()->withoutGlobalScopes()
             ->where('destination_project_id', (int) $this->form['project_id'])
             ->pluck('warehouse_id')->unique()->all();
@@ -131,17 +136,19 @@ class ReturnForm extends Component
         return $semua->filter(fn (Warehouse $w) => in_array((int) $w->id, array_map('intval', $pengirim), true))->values();
     }
 
-    /** @return Collection<int, Project> proyek aktif dalam cakupan pengguna */
+    /** @return Collection<int, Project> proyek aktif dalam cakupan pengguna — Klien hanya proyek kliennya (A-354) */
     private function proyek(): Collection
     {
-        return Project::query()->active()->orderBy('code')->get(['id', 'code', 'name']);
+        return Project::query()->active()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']);
     }
 
     /** @return Collection<string, array<string, mixed>> */
     private function calon(): Collection
     {
         $proyek = (int) $this->form['project_id'] > 0
-            ? Project::query()->active()->find((int) $this->form['project_id'])
+            // A-354: id proyek dari browser tetap dibatasi cakupan — tanpa ini akun Klien
+            // bisa melihat stok proyek klien lain dengan mengganti id.
+            ? Project::query()->active()->dalamCakupan()->find((int) $this->form['project_id'])
             : null;
 
         if ($proyek === null) {

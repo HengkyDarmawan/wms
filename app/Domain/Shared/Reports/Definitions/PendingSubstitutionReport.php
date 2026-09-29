@@ -43,7 +43,7 @@ class PendingSubstitutionReport extends Report
     public function filters(): array
     {
         return [
-            'project_id' => ['label' => 'Proyek', 'options' => Project::query()->orderBy('code')->get(['id', 'code', 'name'])->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])->all()],
+            'project_id' => ['label' => 'Proyek', 'options' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name'])->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])->all()],
             'deadline_before' => ['label' => 'Tenggat sebelum tanggal'],
         ];
     }

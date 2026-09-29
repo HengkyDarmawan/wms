@@ -104,7 +104,7 @@ class ProjectMove extends Component
 
         return view('livewire.transfer.project-move', [
             'project' => $proyek,
-            'tujuan' => Project::query()->where('status', ProjectStatus::Active->value)->whereKeyNot($proyek->id)->orderBy('code')->get(['id', 'code', 'name']),
+            'tujuan' => Project::query()->where('status', ProjectStatus::Active->value)->dalamCakupan()->whereKeyNot($proyek->id)->orderBy('code')->get(['id', 'code', 'name']),
             'gudangTujuan' => $this->form['to_project_id'] === '' ? collect() : Warehouse::query()->withoutGlobalScopes()->active()
                 ->where('project_id', (int) $this->form['to_project_id'])->orderBy('code')->get(['id', 'code', 'name']),
             'asetDipinjam' => $this->asetDipinjam(),

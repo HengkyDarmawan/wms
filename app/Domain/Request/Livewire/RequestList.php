@@ -64,7 +64,7 @@ class RequestList extends Component
             'requests' => $this->daftar(),
             'sla' => $this->slaHari(),
             'statuses' => MaterialRequestStatus::options(),
-            'projects' => Project::query()->orderBy('code')->get(['id', 'code', 'name']),
+            'projects' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
         ]);
     }
 

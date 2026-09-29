@@ -139,9 +139,10 @@ class ShipmentForm extends Component
             'tasks' => $this->pckTersedia(),
             'destinations' => DestinationType::options(),
             'methods' => ShipmentMethod::options(),
-            'projects' => Project::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
+            'projects' => Project::query()->active()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
             'gudangTujuan' => Warehouse::query()->withoutGlobalScopes()->active()->orderBy('code')->get(['id', 'code', 'name']),
-            'vendors' => Vendor::query()->orderBy('name')->get(['id', 'name']),
+            // A-310: vendor nonaktif tidak ditawarkan lagi.
+            'vendors' => Vendor::query()->active()->orderBy('name')->get(['id', 'name']),
             'vehicles' => Vehicle::query()->where('is_active', true)->orderBy('plate_no')->get(['id', 'plate_no']),
             'carriers' => Carrier::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);

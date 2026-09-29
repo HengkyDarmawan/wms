@@ -59,7 +59,7 @@ class AssetList extends Component
             'assets' => $aset,
             'lokasi' => $lokasi,
             'states' => AssetState::options(),
-            'projects' => Project::query()->orderBy('code')->get(['id', 'code', 'name']),
+            'projects' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
             'ambang' => Serial::lifeAlertPercent(),
         ]);
     }
