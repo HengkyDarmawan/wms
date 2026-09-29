@@ -96,6 +96,9 @@ foreach ($centralDomains as $index => $domain) {
             $r(Route::post('/admin/companies/{company}/reactivate', [CompanyController::class, 'reactivate'])->whereNumber('company'), 'platform.companies.reactivate');
             $r(Route::post('/admin/companies/{company}/flags', [CompanyController::class, 'flag'])->whereNumber('company'), 'platform.companies.flag');
             $r(Route::post('/admin/companies/{company}/support', [CompanyController::class, 'support'])->whereNumber('company'), 'platform.companies.support');
+            // A-335: penyerahan company baru tanpa bergantung email.
+            $r(Route::post('/admin/companies/{company}/admin-invite', [CompanyController::class, 'adminInvite'])->whereNumber('company'), 'platform.companies.admin-invite');
+            $r(Route::post('/admin/companies/{company}/admin-password', [CompanyController::class, 'adminPassword'])->whereNumber('company'), 'platform.companies.admin-password');
 
             $r(Route::get('/admin/payments', [PaymentController::class, 'index']), 'platform.payments.index');
             $r(Route::post('/admin/payments/{payment}/verify', [PaymentController::class, 'verify'])->whereNumber('payment'), 'platform.payments.verify');

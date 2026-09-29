@@ -31,6 +31,7 @@
         @foreach ([
             'ringkasan' => __('Ringkasan'),
             'role' => __('Penugasan Role'),
+            'site' => __('Penugasan site'),
             'perangkat' => __('Perangkat'),
             'riwayat' => __('Riwayat'),
         ] as $key => $label)
@@ -40,6 +41,12 @@
             </li>
         @endforeach
     </ul>
+
+    @if ($ruleError !== '')
+        <div class="alert alert-danger" role="alert">{{ $ruleError }}</div>
+    @endif
+
+    @include('livewire.access.partials.undangan-card')
 
     <div class="card">
         <div class="card-body">
@@ -101,6 +108,22 @@
                                         {{ $assignment->valid_from?->format('d M Y') ?? __('sejak awal') }}
                                         &ndash;
                                         {{ $assignment->valid_until?->format('d M Y') ?? __('tanpa batas') }}
+
+                                        @if ($assignment->valid_until !== null && $assignment->project_team_member_id === null)
+                                            {{-- A-343: sisa dari form lama yang punya isian tanggal. --}}
+                                            <div class="text-warning-emphasis">
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                                {{ __('Penugasan bertanggal lama; masih ditegakkan.') }}
+                                            </div>
+                                            @if ($bolehAtur)
+                                                <button class="btn btn-sm btn-link p-0" type="button"
+                                                        wire:click="jadikanTimSite({{ $assignment->id }})">
+                                                    {{ __('Jadikan Tim site') }}
+                                                </button>
+                                            @endif
+                                        @elseif ($assignment->project_team_member_id !== null)
+                                            <div class="small text-muted">{{ __('Dari Tim site') }}</div>
+                                        @endif
                                     </td>
                                     <td class="small text-muted">{{ $assignment->assignedBy?->name ?? '—' }}</td>
                                     <td>
@@ -115,6 +138,56 @@
                                 <tr>
                                     <td colspan="5" class="text-center text-muted py-4">
                                         {{ __('Belum ada penugasan role. User tidak bisa masuk sampai diberi penugasan.') }}
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            @elseif ($tab === 'site')
+                {{-- A-337: hanya-lihat; penempatan diatur dari Proyek › tab Tim site. --}}
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ __('Proyek') }}</th>
+                                <th>{{ __('Peran di site') }}</th>
+                                <th>{{ __('Mulai') }}</th>
+                                <th>{{ __('Selesai') }}</th>
+                                <th>{{ __('Status') }}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($penugasanSite as $site)
+                                @php($statusSite = $site->status())
+                                <tr wire:key="pts-{{ $site->id }}">
+                                    <td>
+                                        <a href="{{ route('projects.show', ['project' => $site->project_id, 'tab' => 'tim-site']) }}">
+                                            {{ $site->project?->code }}
+                                        </a>
+                                        <div class="small text-muted">{{ $site->project?->name }}</div>
+                                    </td>
+                                    <td>{{ $site->role?->name ?? '—' }}</td>
+                                    <td class="small">{{ $site->starts_on->format('d M Y') }}</td>
+                                    <td class="small">{{ $site->ends_on->format('d M Y') }}</td>
+                                    <td>
+                                        <span class="badge text-bg-{{ $statusSite->badge() }}">{{ $statusSite->label() }}</span>
+                                        @if ($site->ended_at !== null && $site->endReason !== null)
+                                            <div class="small text-muted">{{ $site->endReason->label }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                           href="{{ route('projects.show', ['project' => $site->project_id, 'tab' => 'tim-site']) }}">
+                                            {{ __('Buka Tim site') }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        {{ __('Belum pernah ditempatkan di site proyek.') }}
                                     </td>
                                 </tr>
                             @endforelse

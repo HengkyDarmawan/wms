@@ -26,6 +26,64 @@
         </div>
     @endif
 
+    @if ($adminPertama !== null)
+        {{-- A-335: company ini belum pernah dipakai, jadi tautan Admin pertamanya masih boleh diserahkan. --}}
+        <div class="card border-info mb-3" x-data="{ salin: false }">
+            <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <strong>{{ __('Serahkan akun Admin Company') }}</strong>
+                <span class="small text-muted">
+                    {{ $adminPertama['nama'] }} · {{ $adminPertama['email'] }}
+                    · {{ __('berlaku sampai') }} {{ $adminPertama['expires_at']->format('d M Y H:i') }}
+                    · {{ __('dikirim :n×', ['n' => $adminPertama['sent_count']]) }}
+                </span>
+            </div>
+            <div class="card-body">
+                <input class="form-control font-monospace mb-2" type="text" readonly
+                       value="{{ $adminPertama['url'] }}" aria-label="{{ __('Tautan undangan') }}">
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" type="button"
+                            x-on:click="navigator.clipboard?.writeText(@js($adminPertama['url'])); salin = true; setTimeout(() => salin = false, 1500)">
+                        <i class="bi" :class="salin ? 'bi-clipboard-check' : 'bi-clipboard'"></i> {{ __('Salin tautan') }}
+                    </button>
+
+                    @php($waAdmin = \App\Domain\Shared\Messaging\PhoneNumber::normalize($adminPertama['phone']))
+                    <a class="btn btn-sm btn-success" target="_blank" rel="noopener"
+                       href="https://wa.me/{{ $waAdmin ?? '' }}?text={{ rawurlencode(__('Akun :app untuk :company sudah siap. Atur password lewat tautan ini (berlaku 72 jam): :url', ['app' => config('app.name'), 'company' => $company->name, 'url' => $adminPertama['url']])) }}">
+                        <i class="bi bi-whatsapp"></i> {{ __('Kirim via WhatsApp') }}
+                    </a>
+
+                    <form method="POST" action="{{ route('platform.companies.admin-invite', $company->id) }}">
+                        @csrf
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">
+                            <i class="bi bi-arrow-repeat"></i> {{ __('Kirim ulang undangan') }}
+                        </button>
+                    </form>
+                </div>
+
+                <form class="row g-2 align-items-end mt-2" method="POST"
+                      action="{{ route('platform.companies.admin-password', $company->id) }}">
+                    @csrf
+                    <div class="col-md-4">
+                        <label class="form-label" for="admin-password">{{ __('Atau buatkan passwordnya') }}</label>
+                        <input class="form-control @error('password') is-invalid @enderror" id="admin-password"
+                               name="password" type="text" minlength="10" maxlength="100" required
+                               placeholder="{{ __('minimal 10 karakter') }}">
+                        @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-md-8">
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">
+                            <i class="bi bi-key"></i> {{ __('Buatkan password') }}
+                        </button>
+                        <span class="small text-muted ms-2">
+                            {{ __('Undangan yang tertunda akan dibatalkan. Kartu ini hilang setelah company dipakai.') }}
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
     <div class="row g-3 mb-3">
         @foreach ([
             [__('Langganan'), $sub?->status->label() ?? '—'],

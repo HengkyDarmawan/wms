@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `shared` (Kerangka Laporan & Penyimpanan Berkas)
 
-**Versi:** 0.19
-**Tanggal:** 28 September 2026
-**Status:** selesai Fase 1 — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment selesai 25 Sep 2026 ([A-232](04-keputusan-dan-asumsi.md#a-232), §3.2); laporan modul 19–22 selesai 25 Sep 2026 (16 laporan, [A-241](04-keputusan-dan-asumsi.md#a-241)); total 43 laporan terdaftar; v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9); v0.4: laporan itu menambah kolom konversi & waste ([24-konversi-waste](24-konversi-waste.md) §9, [A-161](04-keputusan-dan-asumsi.md#a-161)); unggah bukti BA waste memakai `StoreUpload`; v0.5: laporan kesembilan *Aset dipinjamkan* ([25-aset](25-aset.md) §9); v0.6: Beranda antrean pekerjaan, lima laporan inti Blueprint §6.9a (total 14), ekspor PDF semua laporan ([27-pendukung-f1](27-pendukung-f1.md), [A-186](04-keputusan-dan-asumsi.md#a-186), [A-190](04-keputusan-dan-asumsi.md#a-190)); v0.13: kompresi foto otomatis di server ([A-23](04-keputusan-dan-asumsi.md#a-23), [A-257](04b-asumsi-lanjutan.md#a-257), §6.4); v0.14: diselaraskan dengan kode — §2 memuat 41 laporan per permission, §3.2 diperbaiki (+5 laporan inti), ekspor PDF di §6, §10 TC-RPT-01, §12 dan §13.1 no. 1 & 3 ditandai selesai; v0.15: *Daftar item* memakai kolom & saring Jenis barang; kolom potong/offcut/kerf mengikuti saklar per potong ([A-283](04b-asumsi-lanjutan.md#a-283), [A-284](04b-asumsi-lanjutan.md#a-284), §10 TC-RPT-01d, TC-RPT-11); v0.16: *Barang karantina menurut umur* ikut barang Rusak di bin Karantina (kolom Kondisi); *Penerimaan per vendor* berkolom Rusak & Kurang ([A-295](04b-asumsi-lanjutan.md#a-295))
+**Versi:** 0.20
+**Tanggal:** 29 September 2026
+**Status:** selesai Fase 1 — dokumen ini **mencatat kode yang sudah ada** (dibangun tanpa spesifikasi); laporan modul Stock, Request, dan Picking/Shipment selesai 25 Sep 2026 ([A-232](04-keputusan-dan-asumsi.md#a-232), §3.2); laporan modul 19–22 selesai 25 Sep 2026 (16 laporan, [A-241](04-keputusan-dan-asumsi.md#a-241)); total 44 laporan terdaftar; v0.3: laporan kedelapan *Material per proyek* dari modul Issue ([23-pemakaian](23-pemakaian.md) §9); v0.4: laporan itu menambah kolom konversi & waste ([24-konversi-waste](24-konversi-waste.md) §9, [A-161](04-keputusan-dan-asumsi.md#a-161)); unggah bukti BA waste memakai `StoreUpload`; v0.5: laporan kesembilan *Aset dipinjamkan* ([25-aset](25-aset.md) §9); v0.6: Beranda antrean pekerjaan, lima laporan inti Blueprint §6.9a (total 14), ekspor PDF semua laporan ([27-pendukung-f1](27-pendukung-f1.md), [A-186](04-keputusan-dan-asumsi.md#a-186), [A-190](04-keputusan-dan-asumsi.md#a-190)); v0.13: kompresi foto otomatis di server ([A-23](04-keputusan-dan-asumsi.md#a-23), [A-257](04b-asumsi-lanjutan.md#a-257), §6.4); v0.14: diselaraskan dengan kode — §2 memuat 41 laporan per permission, §3.2 diperbaiki (+5 laporan inti), ekspor PDF di §6, §10 TC-RPT-01, §12 dan §13.1 no. 1 & 3 ditandai selesai; v0.15: *Daftar item* memakai kolom & saring Jenis barang; kolom potong/offcut/kerf mengikuti saklar per potong ([A-283](04b-asumsi-lanjutan.md#a-283), [A-284](04b-asumsi-lanjutan.md#a-284), §10 TC-RPT-01d, TC-RPT-11); v0.16: *Barang karantina menurut umur* ikut barang Rusak di bin Karantina (kolom Kondisi); *Penerimaan per vendor* berkolom Rusak & Kurang ([A-295](04b-asumsi-lanjutan.md#a-295)); v0.20: laporan ke-44 **Rekap pengiriman per klien** dan kunci `required` pada penyaring ([A-329](04b-asumsi-lanjutan.md#a-329), [A-330](04b-asumsi-lanjutan.md#a-330); §2, §3.2, §6.2, §10 TC-RPT-13)
 **Modul:** `shared` (`app/Domain/Shared`)
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.9a](01-blueprint.md#69a-laporan-inti-fase-1) · [Arsitektur §2 (AD-09, AD-10)](08-arsitektur.md#2-keputusan-arsitektur) · [Blueprint §16 (NFR-14)](01-blueprint.md#16-kebutuhan-non-fungsional) · [A-68](04-keputusan-dan-asumsi.md#a-68) · [Aturan Bisnis §BR-ACC](05-aturan-bisnis.md#br-acc) · [Glosarium](03-glosarium.md)
@@ -21,7 +21,7 @@ Modul ini bukan modul bisnis; ia menyediakan dua layanan bersama yang dipakai mo
 
 ## 2. Aktor & permission
 
-Modul ini **tidak mendaftarkan permission sendiri**. Izin diperiksa per laporan memakai permission `view` milik modul sumber datanya (`permission()` tiap kelas di `Reports/Definitions`; 41 laporan di `ReportRegistry::REPORTS`):
+Modul ini **tidak mendaftarkan permission sendiri**. Izin diperiksa per laporan memakai permission `view` milik modul sumber datanya (`permission()` tiap kelas di `Reports/Definitions`; 44 laporan di `ReportRegistry::REPORTS`):
 
 | Laporan | Permission | Modul pemilik permission |
 |---|---|---|
@@ -34,7 +34,7 @@ Modul ini **tidak mendaftarkan permission sendiri**. Izin diperiksa per laporan 
 | `reservasi-menggantung` | `reservation.view` | `stock` |
 | `permintaan-terbuka`, `daftar-req`, `req-menunggu-tinjau`, `baris-tanpa-sumber`, `penggantian-menunggu` | `request.view` | `request` |
 | `short-pick` | `pick.view` | `picking` |
-| `daftar-pengiriman`, `posisi-rusak-selisih`, `kinerja-pengiriman` | `shipment.view` | `shipment` |
+| `daftar-pengiriman`, `posisi-rusak-selisih`, `kinerja-pengiriman`, `rekap-pengiriman-klien` | `shipment.view` | `shipment` |
 | `penerimaan-vendor`, `karantina-umur`, `barang-bermasalah-vendor` | `receipt.view` | `receipt` |
 | `put-tertunda` | `putaway.view` | `putaway` |
 | `rtv-terbuka` | `vendor_return.view` | `vendor_return` |
@@ -97,6 +97,7 @@ Tidak ada tabel baru. Laporan membaca tabel modul lain lewat model Eloquent, seh
 | `short-pick` | `ShortPickReport` | Short pick | `pick.view` | PCK, gudang, selesai, item, bin, dialokasikan, diambil, selisih, alasan | gudang, rentang tanggal | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard), BR-SJ-01 |
 | `posisi-rusak-selisih` | `DamagedGoodsPositionReport` | Posisi barang rusak & selisih | `shipment.view` | DSC, SJ, gudang, proyek, item, jenis, jumlah, disposisi, status DSC, umur | gudang, umur minimal, termasuk yang selesai | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard), BR-SJ-06/10 |
 | `kinerja-pengiriman` | `DeliveryPerformanceReport` | Kinerja pengiriman | `shipment.view` | per gudang (+ total): dikirim, diterima utuh, bersisa, masih di jalan, dibatalkan, rata-rata hari, utuh (%) | gudang, rentang tanggal (berangkat) | [15-picking-shipment §9](15-picking-shipment.md#9-laporan--dashboard) |
+| `rekap-pengiriman-klien` | `ClientShipmentRecapReport` | Rekap pengiriman per klien | `shipment.view` | tanggal kirim, tanggal diterima, No. SJ, proyek, No. PO klien, No. GR klien, kode & nama item, dikirim, diterima baik, rusak, kurang, satuan; ditutup baris **TOTAL per item** | **klien (wajib)**, proyek klien itu, tujuan (Proyek klien / Gudang Site), rentang tanggal | [11-master §6](11-master.md#6-layar), [A-329](04b-asumsi-lanjutan.md#a-329) |
 | `penerimaan-vendor` | `VendorReceiptReport` | Penerimaan per vendor | `receipt.view` | GRN, vendor, gudang, tanggal terima, SJ vendor, jumlah baris, total diterima, status | gudang, vendor, rentang tanggal (terima) | [19 §9](19-receipt-putaway.md#9-laporan--dashboard), [A-241](04-keputusan-dan-asumsi.md#a-241) |
 | `barang-bermasalah-vendor` | `VendorProblemReport` | Barang bermasalah per vendor | `receipt.view` | vendor, item, satuan, diterima, rusak saat terima, kurang, ditolak QC, rusak saat dikirim, retur rusak/waste, % bermasalah, diretur ke vendor, dilacak lewat | gudang, vendor, periode (tanggal terima GRN asal) | [19 §9](19-receipt-putaway.md), [A-303](04b-asumsi-lanjutan.md#a-303) |
 | `riwayat-harga-beli` | `Purchasing\Reports\PurchasePriceHistoryReport` | Riwayat harga beli | `po.view` | tanggal PO, nomor PO, vendor, item, jumlah, satuan, harga satuan, PPN, status — satu-satunya laporan bernilai uang (domain Purchasing, D-07) | kode item, vendor, periode (bawaan 12 bulan) | [purchasing/02 §9](../purchasing/02-purchasing-inti.md), [A-309](04b-asumsi-lanjutan.md#a-309) |
@@ -145,7 +146,7 @@ View `resources/views/shared/reports/show.blade.php` memuat komponen `ReportView
 
 | Bagian | Perilaku |
 |---|---|
-| Penyaring | Dibangun dari `filters()`: pilihan → select, tanpa pilihan → isian teks. Nilai disimpan di query string; aksi `bersihkanFilter` mengosongkan semuanya |
+| Penyaring | Dibangun dari `filters()`: pilihan → select, tanpa pilihan → isian teks. Nilai disimpan di query string; aksi `bersihkanFilter` mengosongkan semuanya. Penyaring ber-`required` ditandai `*` dan tabelnya menampilkan "Pilih … dulu" selama belum diisi ([A-330](04b-asumsi-lanjutan.md#a-330)) |
 | Tabel | Kolom dari `columns()`; layar **dibatasi 500 baris** pertama, jumlah total ditampilkan |
 | Ekspor | Tautan *Excel* ke `/reports/{report}/export` dan *Ekspor PDF* ke `/reports/{report}/pdf`, keduanya dengan penyaring yang sama |
 | Izin | Diperiksa di `mount()` **dan** di setiap `render()` (403) |
@@ -193,7 +194,7 @@ Uji ada di `tests/Feature/Shared`. ID memakai akhiran huruf untuk varian dalam s
 
 | ID | Given | When | Then | Rujukan |
 |---|---|---|---|---|
-| TC-RPT-01 | Admin Company dan Driver | `ReportRegistry::availableTo` | 41 laporan terdaftar; Admin membuka 41; Driver 12: `daftar-item`, `item-sementara`, `daftar-proyek`, `daftar-gudang`, `saldo-stok`, `mutasi-periode`, `kartu-stok`, `titik-pesan-ulang`, `daftar-pengiriman`, `short-pick`, `posisi-rusak-selisih`, `kinerja-pengiriman` | BR-GEN-09 |
+| TC-RPT-01 | Admin Company dan Driver | `ReportRegistry::availableTo` | 44 laporan terdaftar; Admin membuka 44; Driver 13: `daftar-item`, `item-sementara`, `daftar-proyek`, `daftar-gudang`, `saldo-stok`, `mutasi-periode`, `kartu-stok`, `titik-pesan-ulang`, `daftar-pengiriman`, `short-pick`, `posisi-rusak-selisih`, `kinerja-pengiriman`, `rekap-pengiriman-klien` | BR-GEN-09 |
 | TC-RPT-01b | Driver tanpa `user.view`; Admin Company | buka `/reports`, `/reports/daftar-item`, `/reports/log-login`, `/reports/log-login/export`; Admin buka `/reports/tidak-ada` (+ `/export`) | dua pertama 200; dua berikutnya 403; kunci tak dikenal 404 | BR-GEN-09 |
 | TC-RPT-01c | Kepala Gudang bercakupan gudang CKG | isi `user-role-cakupan` | cakupan tampil sebagai "Gudang: Gudang Utama Cakung", bukan id | — |
 | TC-RPT-01d | Data master demo (4 item) | `daftar-item` dengan jenis *Barang berkedaluwarsa*; jenis *Jenis khusus* | 1 baris (`SEMEN-PCC-50`) dari 4; 0 baris | [A-283](04b-asumsi-lanjutan.md#a-283) |
@@ -201,6 +202,7 @@ Uji ada di `tests/Feature/Shared`. ID memakai akhiran huruf untuk varian dalam s
 | TC-RPT-01f | Dua gudang, Kepala Gudang hanya di CKG | isi `daftar-gudang` | hanya CKG | BR-ACC-05 |
 | TC-RPT-11 | Saklar `piece` mati; item lama per potong bersaldo | kolom *Saldo stok*, *Konversi & waste*, *Retur per proyek*; nyalakan saklar | tanpa jumlah potong, offcut, kerf (label *Lot / serial*), saldo pipa tetap terbaca; lalu kolom itu kembali | [A-284](04b-asumsi-lanjutan.md#a-284) |
 | TC-RPT-12 | kabel 24 dari vendor, 8 kembali lewat retur penjualan dipilah rusak | isi `barang-bermasalah-vendor` | baris vendor × kabel: diterima 24, retur rusak 8, 33,3 %, dilacak "GRN, label" | [A-303](04b-asumsi-lanjutan.md#a-303) |
+| TC-RPT-13 | Klien dengan satu proyek & satu Gudang Site; dua SJ (ke proyek 50 pcs dengan bukti 48/2/0, ke Gudang Site 30 pcs tanpa bukti) | isi tanpa klien; isi dengan klien; saring Tujuan & proyek; klien lain; buka layar, ekspor Excel & PDF; buka tanpa `shipment.view` | tanpa klien 0 baris; dua baris + satu baris TOTAL (dikirim 80, baik 48); SJ tanpa bukti berkolom `—`; saringan memisahkan dua jalur; proyek klien lain 0 baris; layar & kedua ekspor 200; tanpa izin 403; tidak ada kolom nilai uang | [A-329](04b-asumsi-lanjutan.md#a-329), [A-330](04b-asumsi-lanjutan.md#a-330), [D-07](04-keputusan-dan-asumsi.md#d-07) |
 | TC-RIW-01 | Item diubah (riwayat spatie `updated`) | buka tab Riwayat detail item | tampil "diubah", bukan "updated"; deskripsi buatan aplikasi tidak berubah | CLAUDE.md (UI Bahasa Indonesia) |
 | TC-RPT-06 | Fixture transfer (stok awal, TRF → SJ diterima utuh), reservasi lunak 10 hari & baru, `reorder_point` 250 | buka & ekspor 11 laporan baru; `rows()` kartu stok, titik pesan ulang, reservasi menggantung, kinerja & daftar pengiriman; driver | semua 200; kartu memuat mutasi awal; selisih 150; hanya reservasi 10 hari; 1 dikirim & 1 utuh; driver boleh `kartu-stok`, 403 `short-pick` | A-232 |
 | TC-RPT-02–05, 07–10 | — | — | dicatat di tempat lain: 02–05 laporan inti & PDF semua laporan ([27-pendukung-f1 §10](27-pendukung-f1.md), `CoreReportTest`); 07 Receipt/Putaway, 08 Approval, 10 Retur/Transfer (`ModuleReportTest`); 09 Count/Adjustment (`CountReportTest`) | A-190, A-241 |
@@ -237,6 +239,7 @@ Grafik/dashboard per peran; impor Excel dan pratinjau `import_batches` (AD-09); 
 - [x] Ekspor PDF semua laporan (§6.3, [A-190](04-keputusan-dan-asumsi.md#a-190), TC-RPT-05)
 - [x] Kunci laporan tak dikenal → 404 (TC-RPT-01b)
 - [x] Kompresi foto otomatis di server (§6.4, [A-257](04b-asumsi-lanjutan.md#a-257), TC-FIL-03)
+- [x] Rekap pengiriman per klien & penyaring wajib ([A-329](04b-asumsi-lanjutan.md#a-329), [A-330](04b-asumsi-lanjutan.md#a-330), TC-RPT-13)
 - [ ] Penyaring §9 yang belum ada (§13.1 no. 2)
 - [ ] Kolom *Rencana* `[F2]` di *Material per proyek* (§13.4)
 

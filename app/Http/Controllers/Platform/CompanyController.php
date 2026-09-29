@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Platform;
 
+use App\Domain\Access\Actions\InviteUser;
+use App\Domain\Access\Actions\SetInitialPassword;
+use App\Domain\Access\Models\User;
+use App\Domain\Access\Models\UserInvitation;
 use App\Domain\Platform\Actions\ChangeCompanyStatus;
 use App\Domain\Platform\Actions\CreateCompany;
 use App\Domain\Platform\Actions\EnterSupportAccess;
 use App\Domain\Platform\Actions\ProvisionCompany;
 use App\Domain\Platform\Actions\SetFeatureFlag;
+use App\Domain\Platform\Enums\CompanyStatus;
 use App\Domain\Platform\Exceptions\PlatformRuleException;
 use App\Domain\Platform\Models\Company;
 use App\Domain\Platform\Models\Plan;
@@ -16,6 +21,7 @@ use App\Domain\Platform\Models\PlatformAuditLog;
 use App\Domain\Platform\Models\PlatformUser;
 use App\Domain\Platform\Models\SubscriptionInvoice;
 use App\Domain\Platform\Models\SupportAccess;
+use App\Domain\Platform\Support\PlatformAudit;
 use App\Domain\WhatsApp\Models\WaMessageLog;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -69,7 +75,82 @@ class CompanyController extends Controller
             'waUsage' => WaMessageLog::query()->where('company_id', $c->id)->thisMonth()
                 ->selectRaw('category, count(*) as jumlah')->groupBy('category')->pluck('jumlah', 'category')->all(),
             'waQuota' => $c->plan?->wa_quota,
+            // A-335: penyerahan company baru tanpa bergantung email.
+            'adminPertama' => $this->adminPertama($c),
         ]);
+    }
+
+    /**
+     * Admin Company pertama beserta undangannya, selama company itu **belum
+     * pernah dipakai** (A-335).
+     *
+     * Batas itu disengaja: BR-SUB-04 menahan Super Admin dari data company yang
+     * sudah berjalan, jadi kartu ini hilang begitu ada pengguna kedua atau
+     * undangannya sudah diterima.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function adminPertama(Company $c): ?array
+    {
+        if ($c->status !== CompanyStatus::Active) {
+            return null;
+        }
+
+        try {
+            return $c->run(function (): ?array {
+                if (User::query()->count() !== 1) {
+                    return null;
+                }
+
+                $user = User::query()->firstOrFail();
+                $undangan = UserInvitation::query()->where('user_id', $user->id)->pending()->latest('id')->first();
+
+                if ($undangan === null || ! $undangan->isUsable()) {
+                    return null;
+                }
+
+                return [
+                    'nama' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'url' => $undangan->url(),
+                    'expires_at' => $undangan->expires_at,
+                    'sent_count' => (int) $undangan->sent_count,
+                ];
+            });
+        } catch (\Throwable) {
+            // Database company belum siap / gagal provisioning: kartu tidak ditampilkan.
+            return null;
+        }
+    }
+
+    /** A-335: kirim ulang undangan Admin Company pertama. */
+    public function adminInvite(Request $request, int $company): RedirectResponse
+    {
+        $c = Company::query()->findOrFail($company);
+
+        $c->run(function () use ($request): void {
+            $user = User::query()->firstOrFail();
+            app(InviteUser::class)->handle($user);
+            PlatformAudit::record('Undangan Admin Company dikirim ulang', null, $this->admin($request), ['email' => $user->email]);
+        });
+
+        return back()->with('status', __('Undangan baru dibuat; tautan lama tidak berlaku lagi.'));
+    }
+
+    /** A-335: buatkan password Admin Company pertama, tanpa undangan. */
+    public function adminPassword(Request $request, int $company): RedirectResponse
+    {
+        $data = $request->validate(['password' => ['required', 'string', 'min:10', 'max:100']]);
+        $c = Company::query()->findOrFail($company);
+
+        $c->run(function () use ($data, $request): void {
+            $user = User::query()->firstOrFail();
+            app(SetInitialPassword::class)->handle($user, $data['password']);
+            PlatformAudit::record('Password Admin Company dibuatkan Super Admin', null, $this->admin($request), ['email' => $user->email]);
+        });
+
+        return back()->with('status', __('Password dibuat. Serahkan ke Admin Company, lalu minta ia menggantinya.'));
     }
 
     public function provision(Request $request, int $company, ProvisionCompany $action): RedirectResponse

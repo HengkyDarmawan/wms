@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -51,6 +52,12 @@ class Project extends Model
     public function pic(): BelongsTo
     {
         return $this->belongsTo(User::class, 'pic_user_id');
+    }
+
+    /** PIC Klien yang mengurus proyek ini (A-326) — keterangan kontak, bukan hak akses. */
+    public function clientContacts(): BelongsToMany
+    {
+        return $this->belongsToMany(ClientContact::class, 'client_contact_project')->withTimestamps();
     }
 
     public function materialPlans(): HasMany

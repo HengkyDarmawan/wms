@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `access` (Akses, Autentikasi, Role & Cakupan, Organisasi)
 
-**Versi:** 0.13
-**Tanggal:** 28 September 2026
-**Status:** **selesai untuk Fase 1** — kerangka aplikasi, autentikasi, seluruh layar §6.1–§6.7, domain, seeder, dan 100 pengujian sudah jalan. Sisa pekerjaan kecil & penyimpangan: §13; v0.10: §6.2 kanvas tanda tangan profil jalan, §13 butir 1 (A-264); v0.13: role Driver menjadi *Driver (lama)* — tidak ditawarkan untuk user baru, tanpa hak berangkat/bukti terima; seeder demo tanpa akun driver ([A-311](04b-asumsi-lanjutan.md#a-311), [A-314](04b-asumsi-lanjutan.md#a-314))
+**Versi:** 0.14
+**Tanggal:** 29 September 2026
+**Status:** **selesai untuk Fase 1** — kerangka aplikasi, autentikasi, seluruh layar §6.1–§6.7, domain, seeder, dan 100 pengujian sudah jalan. Sisa pekerjaan kecil & penyimpangan: §13; v0.10: §6.2 kanvas tanda tangan profil jalan, §13 butir 1 (A-264); v0.13: role Driver menjadi *Driver (lama)* — tidak ditawarkan untuk user baru, tanpa hak berangkat/bukti terima; seeder demo tanpa akun driver ([A-311](04b-asumsi-lanjutan.md#a-311), [A-314](04b-asumsi-lanjutan.md#a-314)); v0.14: form pengguna **pilih peran dulu** dan **tanpa isian tanggal**, kartu **Undangan** yang bisa disalin, jalur **buatkan password**, dan **Tim site** sebagai satu-satunya akses berbatas waktu ([A-331](04b-asumsi-lanjutan.md#a-331)–[A-337](04b-asumsi-lanjutan.md#a-337); §3.3, §3.4, §6.3, §8, §10 TC-ACC-40–44, §13.5)
 **Modul:** `access`
 **Fase:** F1 (SSO F3 dan auditor eksternal F2 hanya stub)
 **Dokumen terkait:** [Blueprint §4](01-blueprint.md#4-pengguna--peran), [§6.2](01-blueprint.md#62-struktur-organisasi--gudang), [§13](01-blueprint.md#13-autentikasi--sso) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium §11](03-glosarium.md#11-role--akses) · [Model data akses](08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant), [pusat](08a-model-data-inti.md#area-database-pusat-platform) · [Arsitektur §3–§4](08-arsitektur.md#3-tenancy--siklus-request) · [Akun uji](../00-akun-uji.md)
@@ -71,14 +71,16 @@ Indeks: `UK(email)`, `IDX(client_id)`, `IDX(manager_id)`, `IDX(is_active)`.
 | `scope_id` | bigint | ya | `warehouse_id` / `project_id`; null bila `all` |
 | `valid_from`, `valid_until` | date | ya | `valid_until` untuk auditor eksternal F2 |
 | `assigned_by` *(impl.)* | bigint FK `users` | — | |
+| `project_team_member_id` *(impl.)* | bigint FK `project_team_members` | ya | terisi = baris ini **dikelola Tim site**; form pengguna tidak memuat, mengubah, atau menghapusnya ([A-337](04b-asumsi-lanjutan.md#a-337)) |
 
-`UK(user_id, role_id, scope_type, scope_id)`. Cakupan efektif user = gabungan semua penugasan aktif (tanggal berlaku) — dievaluasi oleh global scope `ScopedToUser` ([BR-ACC-05](05-aturan-bisnis.md#br-acc)).
+`UK(user_id, role_id, scope_type, scope_id)` — karena itu satu kunci hanya boleh dimiliki satu pihak: bila penugasan tetap sudah ada, Tim site tidak menimpanya ([A-343](04b-asumsi-lanjutan.md#a-343)). Sejak [A-337](04b-asumsi-lanjutan.md#a-337) `valid_from`/`valid_until` **tidak lagi diisi dari form pengguna**; data lama tetap ada dan tetap ditegakkan. Cakupan efektif user = gabungan semua penugasan aktif (tanggal berlaku) — dievaluasi oleh global scope `ScopedToUser` ([BR-ACC-05](05-aturan-bisnis.md#br-acc)).
 
 ### 3.4 `org_units`, `positions`, `user_invitations`, `devices`, `password_histories`
 
 - `org_units`: `parent_id` self, `code` UK, `name`, `is_active` *(impl.)*.
 - `positions`: `org_unit_id` FK, `code` UK, `name`, `level` int (1 = tertinggi; dipakai aturan approval "jabatan X").
-- `user_invitations`: `user_id` FK, `token` varchar(64) UK (hash SHA-256 dari token acak 40 karakter), `expires_at` (+72 jam), `accepted_at`, `sent_count` *(impl.)*.
+- `user_invitations`: `user_id` FK, `token` varchar(64) UK (hash SHA-256 dari token acak 40 karakter), `token_plain` text *(impl., terenkripsi)* — token mentah supaya tautannya bisa ditampilkan & disalin lagi selama undangan belum dipakai ([A-333](04b-asumsi-lanjutan.md#a-333)), `expires_at` (+72 jam), `accepted_at`, `sent_count` *(impl.)*.
+- `project_team_members` *(impl., [A-337](04b-asumsi-lanjutan.md#a-337))*: `project_id`, `user_id`, `role_id` (peran di site), `starts_on`, `ends_on`, `ended_at`, `end_reason_code_id`, `end_notes`, `reminded_at` (H-7 sekali), `grants_access`, `created_by`. Statusnya turunan: *Belum mulai · Aktif · Akan berakhir · Berakhir · Diakhiri*.
 - `devices`: `user_id` FK, `device_uid` UK, `name`, `platform`, `last_seen_at`, `is_active`.
 - `password_histories` *(impl.)*: `user_id` FK, `password` (hash), `created_at`; simpan 3 terakhir.
 - *Pusat, dibaca saja:* `platform_users`, `companies`, `subscriptions`, `support_accesses`, `sso_identities` (stub).
@@ -94,6 +96,9 @@ erDiagram
   positions ||--o{ users : holds
   users ||--o{ users : manages
   users ||--o{ user_invitations : invited
+  users ||--o{ project_team_members : placed_at
+  projects ||--o{ project_team_members : hosts
+  project_team_members ||--o{ role_assignments : grants
   users ||--o{ devices : owns
   users ||--o{ password_histories : had
   clients ||--o{ users : portal_user
@@ -167,20 +172,23 @@ Tab **Data diri** (nama `*`, email baca-saja, nomor WA, foto), **Tanda tangan** 
 |---|---|---|
 | Nama, email, role & cakupan (ringkas), unit/jabatan, status turunan, login terakhir | role, gudang/proyek cakupan, status, unit | lihat, ubah, undang ulang, nonaktifkan (Alasan `*` + Keterangan), reset password (kirim tautan) |
 
-Form (`/users/create`, `/users/{id}/edit`):
+Form (`/users/create`, `/users/{id}/edit`) — urutan **pilih peran dulu** ([A-331](04b-asumsi-lanjutan.md#a-331)), **tanpa isian tanggal** ([A-337](04b-asumsi-lanjutan.md#a-337)):
 
-| Field | Tipe | Wajib | Validasi | Keterangan |
-|---|---|---|---|---|
-| `name` | text | `*` | maks 100 | |
-| `email` | email | `*` | unik per company | tidak bisa diubah setelah undangan diterima |
-| `phone` | text | — | E.164 | |
-| `org_unit_id`, `position_id` | select | — | jabatan harus milik unit | |
-| `manager_id` | select user | — | bukan diri sendiri; peringatan bila kosong untuk pemohon | |
-| `client_id` | select klien | — | wajib bila role Klien; kosong bila role internal | [BR-ACC-03](05-aturan-bisnis.md#br-acc) |
-| Penugasan role (tabel) | role `*` + cakupan `*` (semua/gudang/proyek) + berlaku dari/sampai | `*` ≥ 1 | [BR-ACC-01](05-aturan-bisnis.md#br-acc), [BR-ACC-04](05-aturan-bisnis.md#br-acc) | tambah/hapus baris |
-| Kirim undangan | toggle | — | default aktif saat buat | email undangan |
+| Langkah | Isi | Wajib | Keterangan |
+|---|---|---|---|
+| 1. Data diri | `name`, `email`, `phone` (No. WA) | nama & email `*` | email tidak bisa diubah setelah undangan diterima; No. WA dipakai mengirim tautan |
+| 2. Peran | kartu per role aktif (kecuali `Role::NOT_OFFERED`), satu kalimat penjelasan per kartu | `*` | kalimat, ikon, dan jenis pertanyaan dari `Support\RoleGuide` |
+| 3. Pertanyaan sesuai peran | Kepala/Staf Gudang → gudang **tetap** (boleh > 1) · Pemohon Internal → proyek (boleh > 1) · Klien → klien `*` + proyek awal `*` ([A-336](04b-asumsi-lanjutan.md#a-336)) · Admin Company, Manajemen, Penindak Lanjut PR, Auditor → tanpa pertanyaan, cakupan otomatis *semua* | sesuai peran | Gudang Site **tidak** ditawarkan: penempatan di site lewat Tim site. Cakupan dipilih pada dimensi yang memang dipakai peran itu ([A-338](04b-asumsi-lanjutan.md#a-338)) |
+| 4. Pengaturan lanjutan (terlipat) | unit organisasi (disarankan dari peran, [A-332](04b-asumsi-lanjutan.md#a-332)), jabatan, atasan langsung, dan *Tambah peran lain* = baris peran × cakupan lama | — | terbuka sendiri di mode Ubah bila ada peran kedua atau penugasan bertanggal lama; baris bertanggal ditandai ⚠ dan tanggalnya dibawa apa adanya |
+| 5. Cara masuk pertama kali | *Kirim undangan* (bawaan) atau *Buatkan password sekarang* ([A-334](04b-asumsi-lanjutan.md#a-334)) | `*` saat membuat | password minimal 10 karakter, ditampilkan sekali setelah simpan |
 
-Detail (`/users/{id}`): tab Ringkasan, Penugasan Role, Perangkat, Riwayat (timeline + audit log ringkas).
+Pengguna yang **seluruh** cakupannya berasal dari Tim site tidak bisa diubah cakupannya dari form ini; layar mengarahkannya ke hub proyek.
+
+Detail (`/users/{id}`): tab Ringkasan, Penugasan Role, **Penugasan site**, Perangkat, Riwayat (timeline + audit log ringkas), ditambah kartu **Undangan** ([A-333](04b-asumsi-lanjutan.md#a-333)) bagi pemegang `user.create` selama undangan belum dipakai/kedaluwarsa: *Tampilkan tautan* (tercatat di riwayat), *Salin*, *Kirim via WhatsApp*, *Kirim ulang* (tautan lama mati), dan *Buatkan password sekarang*. Penugasan bertanggal lama yang cakupannya proyek atau Gudang Site bisa dipindahkan lewat tombol *Jadikan Tim site* ([A-343](04b-asumsi-lanjutan.md#a-343)).
+
+### 6.3a Tim site — tab di hub proyek `/projects/{id}` — `Access\ProjectTeam`
+
+Satu-satunya tempat akses berbatas waktu ([A-337](04b-asumsi-lanjutan.md#a-337)). Daftar anggota: nama, pihak (kita / PIC klien), peran di site, mulai, selesai, status. Tombol *Tambah anggota* (orang `*`, peran di site `*`, mulai `*` = hari ini, selesai `*` = target selesai proyek), *Perpanjang*, dan *Akhiri lebih awal* (Alasan `*`). Mengatur menuntut `role.assign`; *Perpanjang* juga boleh bagi Kepala Gudang yang mencakup Gudang Site proyek itu ([A-342](04b-asumsi-lanjutan.md#a-342)). Riwayat anggota tidak pernah dihapus (P-03).
 
 ### 6.4 Role — `/roles` — `Access\Roles\Index`, `Form`
 
@@ -222,6 +230,7 @@ Tidak ada kejadian stok. Audit log (`spatie/laravel-activitylog`, [AD-07](08-ars
 | Lupa password | user | email | `access.reset_password` (60 menit) |
 | Akun terkunci | user + Admin Company | email + in-app | `access.locked` |
 | Penugasan role berubah | user | in-app | `access.role_changed` |
+| Penempatan di site berakhir 7 hari lagi | orangnya, Kepala Gudang cakupan Gudang Site, pemegang `role.assign` | in-app + email (+ WhatsApp bila company mengizinkan) | `project_team.ending_soon`, sekali per keanggotaan ([A-340](04b-asumsi-lanjutan.md#a-340)) |
 | Akses dukungan diberikan/dicabut | Admin Company, Super Admin | in-app + email | `access.support_access` |
 
 ## 9. Laporan & dashboard
@@ -272,6 +281,11 @@ Tidak ada kejadian stok. Audit log (`spatie/laravel-activitylog`, [AD-07](08-ars
 | TC-ACC-37 | sakelar `access.impersonation.enabled` mati | buka `/impersonate` / POST masuk sebagai | 404 | A-260 |
 | TC-ACC-38 | Admin masuk sebagai staf, lalu Admin dinonaktifkan | *Kembali* | keluar penuh ke `/login`. Juga: GET ke route transisi → 405; layar pemilih menampilkan alur & saringan role; langkah Staf memakai user yang hanya staf | A-260 |
 | TC-ACC-39 | Admin Company; user lama ber-role Driver | buka form user baru; buka form user lama; user lama masuk | role *Driver (lama)* tidak ada di pilihan user baru, tetap tampil untuk user lama; user lama bisa masuk & melihat SJ tanpa `shipment.ship`/`shipment.confirm_delivery`; alur contoh *Masuk sebagai* tanpa langkah driver | [A-311](04b-asumsi-lanjutan.md#a-311), [A-314](04b-asumsi-lanjutan.md#a-314) |
+| TC-ACC-40 | PIC klien beremail yang mengurus satu proyek | *Buat akun portal*; tambahkan role internal ke akun itu; beri cakupan `all`; ulangi pembuatan; PIC tanpa email / tanpa proyek | user role Klien ber-`client_id`, satu penugasan proyek, `client_contacts.user_id` terisi, dan keanggotaan Tim site dibuat; role internal ditolak BR-ACC-03; `all` ditolak BR-ACC-04; pengulangan & PIC tak lengkap ditolak dengan pesan jelas | [A-328](04b-asumsi-lanjutan.md#a-328), [A-339](04b-asumsi-lanjutan.md#a-339) |
+| TC-ACC-41 | Form tambah pengguna | pilih Kepala Gudang lalu simpan tanpa gudang; centang dua gudang; pilih Manajemen; pilih Klien tanpa klien/proyek lalu lengkapi; buka form ubah user berpenugasan bertanggal lalu simpan | "Pilih minimal satu gudang." (tanpa `validation.`); dua penugasan tanpa tanggal; Manajemen tersimpan cakupan `all` tanpa pertanyaan; Klien menuntut klien & proyek, hasilnya masuk Tim site; *Pengaturan lanjutan* terbuka sendiri, tidak ada isian tanggal, dan tanggal lama tetap utuh | [A-331](04b-asumsi-lanjutan.md#a-331), [A-336](04b-asumsi-lanjutan.md#a-336), [A-337](04b-asumsi-lanjutan.md#a-337) |
+| TC-ACC-42 | User baru yang sudah diundang | buka detail sebagai Admin lalu tampilkan tautan; sebagai Kepala Gudang; kirim ulang; terima undangan lalu buka lagi | token mentah tersimpan terenkripsi dan `token` tetap hash; tautan tampil & tercatat di riwayat; Kepala Gudang 403 dan tidak melihat tombolnya; kirim ulang membuat tautan baru, yang lama mati, `sent_count` naik; kartu hilang setelah dipakai | [A-333](04b-asumsi-lanjutan.md#a-333) |
+| TC-ACC-43 | User yang masih diundang | Admin membuatkan password `pendek`, lalu password sah | password pendek ditolak; akun aktif & bisa masuk, undangan tertunda dibatalkan | [A-334](04b-asumsi-lanjutan.md#a-334), BR-ACC-06 |
+| TC-ACC-44 | Anggota Tim site yang berakhir 3 hari lagi | jalankan `notifications:daily` dua kali; perpanjang lalu jalankan lagi; angkat penugasan bertanggal lama; periksa siapa boleh memperpanjang | orangnya, Kepala Gudang site, dan Admin masing-masing dapat **satu** pengingat; jalan kedua tidak menggandakan; setelah diperpanjang dikirim lagi; penugasan lama menjadi anggota Tim site tanpa berubah tanggal, cakupan bukan site ditolak; Kepala Gudang site boleh memperpanjang, kepala gudang lain & staf tidak | [A-340](04b-asumsi-lanjutan.md#a-340), [A-342](04b-asumsi-lanjutan.md#a-342), [A-343](04b-asumsi-lanjutan.md#a-343) |
 
 ## 11. Di luar lingkup modul ini
 
@@ -367,3 +381,18 @@ Seluruh layar §6 sudah ada. Yang masih terbuka:
 5. ~~Kolom *(impl.)* dimasukkan ke generator ERD~~ — **selesai 24 Sep 2026**; 08a–08c dibuat ulang. Kolom `users` untuk 2FA, penguncian, dan riwayat password serta tabel `login_attempts` dan `password_histories` baru masuk ERD pada pencocokan 24 Sep 2026 (08a v0.7).
 6. **Kolom `created_by`/`updated_by` dan skema `audit_logs`** berbeda dari ERD — menunggu [A-74](04-keputusan-dan-asumsi.md#a-74) dan [A-75](04-keputusan-dan-asumsi.md#a-75).
 7. **Nomor WhatsApp di profil (27 Sep 2026)** — isian nomor pindah dari form *Data diri* ke kartu *WhatsApp* (`whatsapp.number`) dengan verifikasi kode; nomor yang diubah di mana pun kehilangan status terverifikasi (`User::booted`) — [A-275](04b-asumsi-lanjutan.md#a-275), [31-whatsapp](31-whatsapp.md).
+
+### 13.5 Tim site — tanggal hanya untuk penempatan di site (29 September 2026)
+
+Isian *Berlaku dari / Sampai* dicabut dari form pengguna ([A-337](04b-asumsi-lanjutan.md#a-337)). Tanggal kini hidup di `project_team_members` (migrasi tenant `000460`) yang memiliki `role_assignments` bertanggal miliknya lewat `role_assignments.project_team_member_id`. Tiga aksi: `AddProjectTeamMember`, `ExtendProjectTeamMember`, `EndProjectTeamMember` (Alasan `*`, tanpa hapus fisik), ditambah `AdoptAssignmentIntoSiteTeam` untuk mengangkat penugasan bertanggal lama.
+
+Dua jebakan yang dijaga dan diuji:
+
+1. **`role_assignments` unik pada (user, role, cakupan)** dan `AssignRole` memakai `updateOrCreate`. Bila penugasan **tetap** dengan kunci sama sudah ada, Tim site tidak menyentuhnya dan keanggotaannya disimpan `grants_access = false` — tanpa itu, mengakhiri penempatan akan memutus akses permanen orang tersebut ([A-343](04b-asumsi-lanjutan.md#a-343)).
+2. **`UpdateUser::syncAssignments()` menghapus** penugasan yang tidak ada di daftar form. Baris ber-`project_team_member_id` dikecualikan dari pembanding dan dari penghapusan, dan `UserForm` tidak memuatnya ke `$assignments` maupun ke `assignmentsChanged()`.
+
+Pemetaan peran → dimensi cakupan ada di `Support\SiteTeam::ROLE_SCOPES` ([A-338](04b-asumsi-lanjutan.md#a-338)); pengingat H-7 di `Notification\Support\DailyReminders::siteTeamEndingSoon()` dengan penjaga `reminded_at`. Layarnya komponen tersendiri `Access\Livewire\ProjectTeam` yang disisipkan sebagai tab hub proyek, supaya `ProjectDetail` dan bladenya tidak melewati batas ±450 baris.
+
+Form pengguna dipecah: `Livewire\Concerns\ComposesRoleAssignments` menerjemahkan antara layar (satu peran utama + centang) dan baris `role_assignments`, dan bladenya menjadi `partials/user-form-{peran,cakupan,lanjutan,akses}.blade.php`. Kartu Undangan ada di `partials/undangan-card.blade.php`, memakai pola salin-papan-klip dan berbagi WhatsApp yang sudah dipakai layar rak dan detail SJ.
+
+Uji: `tests/Feature/Access/{UserFormRoleTest,InvitationLinkTest,PortalAccountTest,SiteTeamReminderTest}` (TC-ACC-40–44) dan `tests/Feature/Master/ProjectTeamTest` (TC-MST-43, TC-MST-44).

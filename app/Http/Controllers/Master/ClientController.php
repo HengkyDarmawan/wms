@@ -17,4 +17,12 @@ class ClientController extends Controller
 
         return view('master.clients.index');
     }
+
+    /** Halaman detail klien (A-327): proyek, PIC klien, dan akun portalnya. */
+    public function show(Client $client): View
+    {
+        $this->authorize('view', $client);
+
+        return view('master.clients.show', ['client' => $client]);
+    }
 }

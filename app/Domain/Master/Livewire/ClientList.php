@@ -12,8 +12,8 @@ use App\Domain\Master\Models\Client;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\View;
-use Livewire\Attributes\Url;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -45,9 +45,6 @@ class ClientList extends Component
         'name' => '',
         'tax_id' => '',
         'address' => '',
-        'contact_name' => '',
-        'phone' => '',
-        'email' => '',
     ];
 
     #[Locked]
@@ -60,6 +57,14 @@ class ClientList extends Component
     public function mount(): void
     {
         $this->authorize('viewAny', Client::class);
+
+        // Tombol "Ubah" di halaman detail klien membuka form ubah di daftar ini.
+        $ubah = request()->query('ubah');
+
+        if (is_numeric($ubah) && Client::query()->whereKey((int) $ubah)->exists()
+            && auth()->user()->can('update', Client::query()->find((int) $ubah))) {
+            $this->ubah((int) $ubah);
+        }
     }
 
     public function updated(string $property): void
@@ -94,9 +99,6 @@ class ClientList extends Component
             'name' => (string) $client->name,
             'tax_id' => (string) $client->tax_id,
             'address' => (string) $client->address,
-            'contact_name' => (string) $client->contact_name,
-            'phone' => (string) $client->phone,
-            'email' => (string) $client->email,
         ];
         $this->showForm = true;
     }
@@ -111,13 +113,10 @@ class ClientList extends Component
             'form.code' => ['required', 'string', 'max:30'],
             'form.name' => ['required', 'string', 'max:150'],
             'form.tax_id' => ['nullable', 'string', 'max:30'],
-            'form.contact_name' => ['nullable', 'string', 'max:100'],
-            'form.phone' => ['nullable', 'string', 'max:20'],
-            'form.email' => ['nullable', 'email', 'max:150'],
+            'form.address' => ['nullable', 'string', 'max:500'],
         ], attributes: [
             'form.code' => __('Kode'),
             'form.name' => __('Nama klien'),
-            'form.email' => __('Email'),
         ]);
 
         $berhasil = $this->jalankan(fn () => $action->handle($client, $this->form, auth()->user()));
@@ -201,12 +200,17 @@ class ClientList extends Component
     private function clients(): LengthAwarePaginator
     {
         return Client::query()
-            ->withCount(['projects as active_projects_count' => fn (Builder $q) => $q->where('status', 'active')])
+            ->withCount([
+                'projects as active_projects_count' => fn (Builder $q) => $q->where('status', 'active'),
+                'contacts as active_contacts_count' => fn (Builder $q) => $q->where('is_active', true),
+            ])
             ->when($this->search !== '', function (Builder $q): void {
                 $cari = '%'.$this->search.'%';
+                // Kontak lama tetap ikut dicari (P-03) bersama nama PIC klien (A-326).
                 $q->where(fn (Builder $s) => $s->where('name', 'like', $cari)
                     ->orWhere('code', 'like', $cari)
-                    ->orWhere('contact_name', 'like', $cari));
+                    ->orWhere('contact_name', 'like', $cari)
+                    ->orWhereHas('contacts', fn (Builder $c) => $c->where('name', 'like', $cari)));
             })
             ->when($this->statusFilter !== '', fn (Builder $q) => $q->where('is_active', $this->statusFilter === 'aktif'))
             ->orderBy('name')

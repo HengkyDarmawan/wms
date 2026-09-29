@@ -28,8 +28,8 @@ class ReportTest extends TenantTestCase
         $admin = $this->makeUser('company_admin');
         $admin->forgetPermissionCache();
 
-        $this->assertCount(43, $registry->all(), 'Empat puluh tiga laporan terdaftar (Riwayat harga beli sejak A-309; Barang bermasalah per vendor sejak A-303; enam belas laporan §9 modul 19–22 sejak A-241; sebelas laporan §9 Stock/Request/Shipment sejak A-232; (Material per proyek sejak modul Issue, Aset dipinjamkan sejak modul Aset, lima laporan inti Blueprint §6.9a sejak Pendukung F1).');
-        $this->assertCount(43, $registry->availableTo($admin), 'Admin Company membuka semuanya.');
+        $this->assertCount(44, $registry->all(), 'Empat puluh empat laporan terdaftar (Rekap pengiriman per klien sejak A-329; Riwayat harga beli sejak A-309; Barang bermasalah per vendor sejak A-303; enam belas laporan §9 modul 19–22 sejak A-241; sebelas laporan §9 Stock/Request/Shipment sejak A-232; (Material per proyek sejak modul Issue, Aset dipinjamkan sejak modul Aset, lima laporan inti Blueprint §6.9a sejak Pendukung F1).');
+        $this->assertCount(44, $registry->availableTo($admin), 'Admin Company membuka semuanya.');
 
         // Driver hanya punya item.view, project.view, warehouse.view, dan stock.view.
         $driver = $this->makeUser('driver');
@@ -38,7 +38,7 @@ class ReportTest extends TenantTestCase
         $kunci = $registry->availableTo($driver)->map(fn ($r) => $r->key())->all();
 
         $this->assertEqualsCanonicalizing(
-            ['daftar-item', 'item-sementara', 'daftar-proyek', 'daftar-gudang', 'saldo-stok', 'mutasi-periode', 'kartu-stok', 'titik-pesan-ulang', 'daftar-pengiriman', 'short-pick', 'posisi-rusak-selisih', 'kinerja-pengiriman'],
+            ['daftar-item', 'item-sementara', 'daftar-proyek', 'daftar-gudang', 'saldo-stok', 'mutasi-periode', 'kartu-stok', 'titik-pesan-ulang', 'daftar-pengiriman', 'short-pick', 'posisi-rusak-selisih', 'kinerja-pengiriman', 'rekap-pengiriman-klien'],
             $kunci,
         );
     }

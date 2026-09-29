@@ -23,7 +23,10 @@
             <div class="card-body row g-3">
                 @foreach ($penyaring as $kunci => $definisi)
                     <div class="col-md-3">
-                        <label class="form-label" for="filter-{{ $kunci }}">{{ $definisi['label'] }}</label>
+                        <label class="form-label" for="filter-{{ $kunci }}">
+                            {{ $definisi['label'] }}
+                            @if ($definisi['required'] ?? false) <span class="wajib">*</span> @endif
+                        </label>
                         @if (isset($definisi['options']))
                             <select class="form-select" id="filter-{{ $kunci }}"
                                     wire:model.live="filters.{{ $kunci }}">
@@ -79,7 +82,12 @@
                     @empty
                         <tr>
                             <td colspan="{{ count($kolom) }}" class="text-center text-muted py-4">
-                                {{ __('Tidak ada baris yang cocok.') }}
+                                @php($belum = collect($penyaring)->filter(fn ($d, $k) => ($d['required'] ?? false) && ($filters[$k] ?? '') === ''))
+                                @if ($belum->isNotEmpty())
+                                    {{ __('Pilih :isian dulu untuk melihat isinya.', ['isian' => $belum->pluck('label')->implode(' dan ')]) }}
+                                @else
+                                    {{ __('Tidak ada baris yang cocok.') }}
+                                @endif
                             </td>
                         </tr>
                     @endforelse

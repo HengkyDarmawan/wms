@@ -46,7 +46,12 @@ abstract class Report
      * Penyaring yang tersedia: kunci => [label, pilihan].
      * Pilihan kosong berarti kotak isian teks.
      *
-     * @return array<string, array{label: string, options?: array<string, string>}>
+     * `required` menandai penyaring yang harus diisi dulu (A-330): layar
+     * menandainya `*` dan `rows()` mengembalikan koleksi kosong selama belum
+     * dipilih — dipakai laporan yang tidak masuk akal tanpa saringannya, mis.
+     * rekap per klien.
+     *
+     * @return array<string, array{label: string, required?: bool, options?: array<string, string>}>
      */
     public function filters(): array
     {

@@ -27,6 +27,7 @@ final class NotificationEvents
         'asset.life_alert' => ['label' => 'Sisa umur aset di bawah ambang', 'email' => false, 'permission' => 'asset.manage'],
         'item.provisional_created' => ['label' => 'Item sementara dibuat dari permintaan', 'email' => false, 'permission' => 'item.create'],
         'project.closed' => ['label' => 'Proyek ditutup atau dibatalkan', 'email' => false],
+        'project_team.ending_soon' => ['label' => 'Penugasan di site akan berakhir', 'email' => true],
         'stock.period_locked' => ['label' => 'Periode stok dikunci', 'email' => false, 'permission' => 'warehouse.update'],
         'stock.balance_mismatch' => ['label' => 'Saldo stok tidak cocok dengan kartu stok', 'email' => true, 'permission' => 'stock.lock_period'],
         'stock.reservation_stale' => ['label' => 'Reservasi menggantung melewati ambang', 'email' => false],

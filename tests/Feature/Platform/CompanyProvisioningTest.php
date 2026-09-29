@@ -102,4 +102,60 @@ class CompanyProvisioningTest extends TenantTestCase
         $this->actingAs($admin, 'platform')->get($this->centralUrl('admin'))->assertOk()->assertSee('PT Provisioning');
         $this->actingAs($admin, 'platform')->post($this->centralUrl('admin/companies/'.$company->id.'/provision'))->assertSessionHasErrors('platform');
     }
+
+    #[Test]
+    public function tc_plt_14_super_admin_menyerahkan_akun_admin_company_pertama(): void
+    {
+        $admin = PlatformUser::create(['email' => 'prv-admin@wms.test', 'name' => 'Super Admin Uji', 'password' => Hash::make('Rahasia#2026!')]);
+        $plan = Plan::query()->where('code', 'uji')->firstOrFail();
+
+        $this->actingAs($admin, 'platform')->post($this->centralUrl('admin/companies'), [
+            'code' => 'prv', 'name' => 'PT Serah Terima', 'subdomain' => 'prv', 'timezone' => 'Asia/Jakarta',
+            'plan_id' => $plan->id, 'admin_name' => 'Rina Admin', 'admin_email' => 'rina@prv.test',
+        ]);
+
+        $company = Company::query()->where('code', self::KODE)->firstOrFail();
+        $this->assertSame(CompanyStatus::Active, $company->status, (string) $company->provisioningError());
+
+        $tautanLama = $company->run(fn () => UserInvitation::query()->latest('id')->firstOrFail()->url());
+
+        $this->assertStringStartsWith('http://prv.', (string) $tautanLama, 'A-333: tautan memakai host company, lengkap dengan port.');
+
+        // A-335: kartu penyerahan tampil selama company belum dipakai.
+        $this->actingAs($admin, 'platform')->get($this->centralUrl('admin/companies/'.$company->id))
+            ->assertOk()
+            ->assertSee('Serahkan akun Admin Company')
+            ->assertSee($tautanLama);
+
+        // Kirim ulang membuat tautan baru dan mematikan yang lama.
+        $this->actingAs($admin, 'platform')
+            ->post($this->centralUrl('admin/companies/'.$company->id.'/admin-invite'))
+            ->assertRedirect();
+
+        $tautanBaru = $company->run(fn () => UserInvitation::query()->pending()->latest('id')->firstOrFail()->url());
+
+        $this->assertNotSame($tautanLama, $tautanBaru);
+
+        // Password pendek ditolak.
+        $this->actingAs($admin, 'platform')
+            ->post($this->centralUrl('admin/companies/'.$company->id.'/admin-password'), ['password' => 'pendek'])
+            ->assertSessionHasErrors('password');
+
+        $this->actingAs($admin, 'platform')
+            ->post($this->centralUrl('admin/companies/'.$company->id.'/admin-password'), ['password' => 'Beton-Palu-2026'])
+            ->assertRedirect();
+
+        $company->run(function (): void {
+            $rina = User::query()->where('email', 'rina@prv.test')->sole();
+
+            $this->assertTrue($rina->canSignIn());
+            $this->assertTrue(password_verify('Beton-Palu-2026', (string) $rina->password));
+            $this->assertSame(0, UserInvitation::query()->pending()->count(), 'Undangan tertunda dibatalkan.');
+        });
+
+        // Kartu hilang setelah tidak ada undangan berjalan.
+        $this->actingAs($admin, 'platform')->get($this->centralUrl('admin/companies/'.$company->id))
+            ->assertOk()
+            ->assertDontSee('Serahkan akun Admin Company');
+    }
 }

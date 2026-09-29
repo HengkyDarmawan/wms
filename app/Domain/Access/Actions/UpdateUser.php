@@ -77,6 +77,14 @@ class UpdateUser
     /** @param  array<int, array<string, mixed>>  $assignments */
     private function syncAssignments(User $user, array $assignments, ?User $actor): void
     {
+        // A-337: penugasan milik Tim site dikelola halaman proyek, bukan form
+        // pengguna. Tanpa pengecualian ini, menyimpan form user akan menghapus
+        // penempatan di site orang itu diam-diam.
+        $timSite = RoleAssignment::query()->where('user_id', $user->id)
+            ->whereNotNull('project_team_member_id')->get()
+            ->mapWithKeys(fn (RoleAssignment $a) => [$a->role_id.'|'.$a->scope_type->value.'|'.($a->scope_id ?? '') => true])
+            ->all();
+
         $kunciBaru = [];
 
         foreach ($assignments as $assignment) {
@@ -85,6 +93,15 @@ class UpdateUser
             $scopeId = $scopeType->needsScopeId() && isset($assignment['scope_id'])
                 ? (int) $assignment['scope_id']
                 : null;
+
+            $kunci = $role->id.'|'.$scopeType->value.'|'.($scopeId ?? '');
+            $kunciBaru[] = $kunci;
+
+            // Kunci yang sudah dipegang Tim site tidak ditimpa: menulis ulang
+            // tanpa tanggal akan mengubah akses berbatas waktu menjadi permanen.
+            if (isset($timSite[$kunci])) {
+                continue;
+            }
 
             $this->assignRole->handle(
                 $user,
@@ -95,14 +112,16 @@ class UpdateUser
                 $assignment['valid_until'] ?? null,
                 $actor,
             );
-
-            $kunciBaru[] = $role->id.'|'.$scopeType->value.'|'.($scopeId ?? '');
         }
 
         // Cabut penugasan yang tidak ada lagi di daftar.
         $user->refresh()->forgetPermissionCache();
 
         foreach ($user->roleAssignments()->with('role')->get() as $existing) {
+            if ($existing->project_team_member_id !== null) {
+                continue;
+            }
+
             $kunci = $existing->role_id.'|'.$existing->scope_type->value.'|'.($existing->scope_id ?? '');
 
             if (in_array($kunci, $kunciBaru, true)) {
@@ -116,6 +135,7 @@ class UpdateUser
             $existing->delete();
         }
     }
+
     /** AD-14: nilai cakupan di luar katalog ditolak sebagai pelanggaran aturan, bukan galat. */
     private function scopeType(mixed $value): ScopeType
     {
@@ -127,5 +147,4 @@ class UpdateUser
 
         return $scope;
     }
-
 }

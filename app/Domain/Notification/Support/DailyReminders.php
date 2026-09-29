@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domain\Notification\Support;
 
+use App\Domain\Access\Enums\SiteTeamStatus;
+use App\Domain\Access\Models\ProjectTeamMember;
 use App\Domain\Access\Models\User;
+use App\Domain\Access\Support\SiteTeam;
 use App\Domain\Master\Enums\AssetState;
 use App\Domain\Master\Models\CompanySetting;
 use App\Domain\Master\Models\Project;
@@ -30,7 +33,8 @@ class DailyReminders
     /** Semua pengingat; hasilnya jumlah entri lonceng yang dibuat. */
     public function run(): int
     {
-        return $this->reviewOverdue() + $this->staleReservations() + $this->assetsOverdue() + $this->assetsLifeAlert();
+        return $this->reviewOverdue() + $this->staleReservations() + $this->assetsOverdue()
+            + $this->assetsLifeAlert() + $this->siteTeamEndingSoon();
     }
 
     /** REQ melewati SLA tinjau (14 §8, BR-REQ-14): pemegang `request.review` di proyeknya. */
@@ -133,6 +137,52 @@ class DailyReminders
                 'Di bawah ambang '.Serial::lifeAlertPercent().' %; rencanakan perawatan atau penggantian.',
                 route('assets.show', $s->id, false), 'serial', (int) $s->id,
             );
+        }
+
+        return $jumlah;
+    }
+
+    /**
+     * Penempatan di site yang berakhir dalam 7 hari (A-340): orangnya, Kepala
+     * Gudang yang mencakup Gudang Site itu, dan pemegang `role.assign`.
+     *
+     * Dikirim **sekali** per keanggotaan lewat penjaga `reminded_at` - beda
+     * dengan pengingat lain di kelas ini yang memang diulang tiap hari.
+     */
+    public function siteTeamEndingSoon(): int
+    {
+        $jumlah = 0;
+        $siteTeam = app(SiteTeam::class);
+
+        $daftar = ProjectTeamMember::query()->endingSoon(SiteTeamStatus::AMBANG_HARI)
+            // `is_active` wajib ikut: Notifier menyaring penerima nonaktif, dan
+            // kolom yang tidak dimuat terbaca null sehingga orangnya ikut terbuang.
+            ->with('user:id,name,is_active', 'role:id,name', 'project:id,code,name,target_end_date')
+            ->get();
+
+        foreach ($daftar as $member) {
+            $proyek = $member->project;
+
+            if ($proyek === null || $member->user === null) {
+                continue;
+            }
+
+            $penerima = collect([$member->user])->merge($this->notifier->recipients('role.assign'));
+
+            foreach ($siteTeam->siteWarehouses($proyek) as $gudang) {
+                $penerima = $penerima->merge($this->notifier->recipients('warehouse.update', (int) $gudang->id));
+            }
+
+            $jumlah += $this->notifier->send(
+                $penerima,
+                'project_team.ending_soon',
+                'Penugasan site '.$member->user->name.' di '.$proyek->code.' berakhir '.$member->ends_on->format('d/m/Y'),
+                'Peran di site: '.($member->role?->name ?? '-').'. Perpanjang sebelum tanggal itu agar aksesnya tidak terputus.',
+                route('projects.show', ['project' => $proyek->id, 'tab' => 'tim-site'], false),
+                'project_team_member', (int) $member->id,
+            );
+
+            $member->forceFill(['reminded_at' => now()])->save();
         }
 
         return $jumlah;

@@ -10,8 +10,10 @@
                 {{ $project->code }}
                 @if ($project->is_internal)
                     · <span class="badge text-bg-info">{{ __('Proyek Internal') }}</span>
+                @elseif ($project->client !== null)
+                    · <a href="{{ route('clients.show', $project->client->id) }}">{{ $project->client->name }}</a>
                 @else
-                    · {{ $project->client?->name ?? '—' }}
+                    · —
                 @endif
                 · {{ __('PIC') }} {{ $project->pic?->name ?? '—' }}
                 · {{ $project->start_date?->format('d/m/Y') ?? '—' }} &rarr; {{ $project->target_end_date?->format('d/m/Y') ?? '—' }}
@@ -432,6 +434,13 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+    @elseif ($tab === 'tim-site')
+        {{-- A-337: penempatan berbatas waktu di site proyek; komponen sendiri agar berkas ini tidak membengkak. --}}
+        <div class="card">
+            <div class="card-body">
+                @livewire('access.project-team', ['project' => $project], key('tim-site-'.$project->id))
             </div>
         </div>
     @elseif ($tab === 'riwayat')

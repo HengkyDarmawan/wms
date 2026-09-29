@@ -1,16 +1,16 @@
-# Model Data — Pusat, akses & organisasi, master, gudang & lokasi
+# Model Data — Pusat, akses & organisasi, master
 
-**Versi:** 0.34 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026, Purchasing inti Fase 1b, lampiran generik, tinjauan pemilik produk 26 Sep 2026, ukuran & desain label A-261/A-262, riwayat cetak & segel tanda tangan A-263/A-264, tanda harga PO termasuk PPN A-265, bonus vendor di GRN A-267, approver sedivisi A-269, kalender libur A-270, OTP bukti terima otomatis A-273, WhatsApp Fase 2a A-274–A-280, kondisi terima Baik/Rusak/Kurang & satuan kemasan di baris dokumen A-287–A-291, label kemasan induk/isi & lot otomatis A-296–A-299, saran vendor dari riwayat A-304–A-305, driver tanpa akun, bukti terima oleh penerima & No. PO/GR klien A-311–A-316, serta denah gedung & objek denah A-320)
+**Versi:** 0.35 (Part 3, diselaraskan dengan migrasi modul Access s.d. Pendukung F1, penutup & tinjauan kode 25 Sep 2026, Purchasing inti Fase 1b, lampiran generik, tinjauan pemilik produk 26 Sep 2026, ukuran & desain label A-261/A-262, riwayat cetak & segel tanda tangan A-263/A-264, tanda harga PO termasuk PPN A-265, bonus vendor di GRN A-267, approver sedivisi A-269, kalender libur A-270, OTP bukti terima otomatis A-273, WhatsApp Fase 2a A-274–A-280, kondisi terima Baik/Rusak/Kurang & satuan kemasan di baris dokumen A-287–A-291, label kemasan induk/isi & lot otomatis A-296–A-299, saran vendor dari riwayat A-304–A-305, driver tanpa akun, bukti terima oleh penerima & No. PO/GR klien A-311–A-316, serta denah gedung & objek denah A-320, PIC klien & Tim site A-326/A-337; area Gudang & lokasi pindah ke 08b agar tiap berkas tetap di bawah 450 baris)
 **Tanggal:** 28 September 2026
 **Status:** berdasarkan Blueprint v0.4, Aturan Bisnis v0.4, Katalog Status v0.13, dan seluruh asumsi A-01–A-71 yang telah disetujui (terakhir A-71, 24 Sep 2026); selisih kode ↔ ERD dicatat di A-74 dan A-75 (perlu validasi); kolom implementasi modul Receipt/Putaway mengikuti A-78–A-84, modul Approval A-94, modul Count/Adjustment A-95–A-105, modul Transfer/Retur A-106–A-116, modul Template A-123, modul Issue A-117–A-118, modul Aset A-165, modul Purchase Request A-172, modul Platform A-184, Pendukung F1 A-189, kartu stok A-194, Purchasing inti A-208–A-215, lampiran A-238, override bin beku A-240, kelebihan terima A-245, tinjauan pemilik produk A-246 dst. dan OTP otomatis A-273, WhatsApp A-274–A-280 ([04b](04b-asumsi-lanjutan.md)). Dibuat otomatis oleh [`diagram/_generate_erd.py`](../diagram/_generate_erd.py) — **jangan diedit manual**; ubah data lalu jalankan ulang.
 **Dokumen terkait:** [Arsitektur](08-arsitektur.md) · [Glosarium](03-glosarium.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Stok & dokumen](08b-model-data-stok-dokumen.md) · [Pendukung](08c-model-data-pendukung.md)
 
-Daftar area (127 tabel):
+Daftar area (130 tabel):
 
 - [Database pusat (platform)](08a-model-data-inti.md#area-database-pusat-platform) — 13 tabel
-- [User, role, cakupan, struktur organisasi (tenant)](08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) — 11 tabel
-- [Master data (tenant)](08a-model-data-inti.md#area-master-data-tenant) — 20 tabel
-- [Gudang & lokasi (tenant)](08a-model-data-inti.md#area-gudang--lokasi-tenant) — 7 tabel
+- [User, role, cakupan, struktur organisasi (tenant)](08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) — 12 tabel
+- [Master data (tenant)](08a-model-data-inti.md#area-master-data-tenant) — 22 tabel
+- [Gudang & lokasi (tenant)](08b-model-data-stok-dokumen.md#area-gudang--lokasi-tenant) — 7 tabel
 - [Stok: ledger, saldo, reservasi, kejadian (tenant)](08b-model-data-stok-dokumen.md#area-stok-ledger-saldo-reservasi-kejadian-tenant) — 6 tabel
 - [Permintaan, picking, pengiriman, bukti terima, selisih (tenant)](08b-model-data-stok-dokumen.md#area-permintaan-picking-pengiriman-bukti-terima-selisih-tenant) — 12 tabel
 - [Penerimaan, put-away, retur ke vendor, PR, transfer, retur, pemakaian (tenant)](08b-model-data-stok-dokumen.md#area-penerimaan-put-away-retur-ke-vendor-pr-transfer-retur-pemakaian-tenant) — 16 tabel
@@ -171,6 +171,9 @@ erDiagram
     bigint id PK
     varchar_64 token UK
   }
+  project_team_members {
+    bigint id PK
+  }
   devices {
     bigint id PK
     varchar_64 device_uid UK
@@ -193,6 +196,8 @@ erDiagram
   users ||--o{ devices : " "
   users ||--o{ password_histories : " "
   users ||--o{ login_attempts : " "
+  users ||--o{ project_team_members : "ditempatkan di site"
+  project_team_members ||--o{ role_assignments : "penugasan bertanggal"
 ```
 
 ### Entitas
@@ -208,14 +213,17 @@ erDiagram
 **`role_permissions` — Role ↔ permission.** ↗`role_id` bigint · ↗`permission_id` bigint
   ↳ PK(role_id, permission_id)
 
-**`role_assignments` — Penugasan role × cakupan.** 🔑`id` bigint · ↗`user_id` bigint · ↗`role_id` bigint · `scope_type` enum *(all|warehouse|project)* · `scope_id` bigint *(warehouse_id / project_id)* · `valid_from` date · `valid_until` date *(auditor eksternal)* · ↗`assigned_by` bigint *(users)*
+**`role_assignments` — Penugasan role × cakupan.** 🔑`id` bigint · ↗`user_id` bigint · ↗`role_id` bigint · `scope_type` enum *(all|warehouse|project)* · `scope_id` bigint *(warehouse_id / project_id)* · `valid_from` date · `valid_until` date *(auditor eksternal)* · ↗`assigned_by` bigint *(users)* · ↗`project_team_member_id` bigint *(terisi = dikelola Tim site (A-337))*
   ↳ UK(user_id, role_id, scope_type, scope_id)
 
 **`org_units` — Unit organisasi.** 🔑`id` bigint · ↗`parent_id` bigint *(self)* · ◆`code` varchar(30) · `name` varchar(100) · `is_active` bool
 
 **`positions` — Jabatan.** 🔑`id` bigint · ↗`org_unit_id` bigint · ◆`code` varchar(30) · `name` varchar(100) · `level` int *(untuk 'atasan')* · `is_active` bool
 
-**`user_invitations` — Undangan user.** 🔑`id` bigint · ↗`user_id` bigint · ◆`token` varchar(64) · `expires_at` datetime · `accepted_at` datetime · `sent_count` tinyint *(jumlah pengiriman undangan)*
+**`user_invitations` — Undangan user.** 🔑`id` bigint · ↗`user_id` bigint · ◆`token` varchar(64) *(hash SHA-256)* · `token_plain` text *(token mentah terenkripsi, untuk menyalin tautan (A-333))* · `expires_at` datetime · `accepted_at` datetime · `sent_count` tinyint *(jumlah pengiriman undangan)*
+
+**`project_team_members` — Anggota Tim site.** 🔑`id` bigint · ↗`project_id` bigint · ↗`user_id` bigint · ↗`role_id` bigint *(peran di site)* · `starts_on` date · `ends_on` date · `ended_at` datetime *(diakhiri lebih awal)* · ↗`end_reason_code_id` bigint *(reason_codes)* · `end_notes` varchar(255) · `reminded_at` datetime *(pengingat H-7 sekali)* · `grants_access` bool *(false = sudah punya akses tetap)* · ↗`created_by` bigint *(users)*
+  ↳ Tanggal hanya di sini (A-337)
 
 **`devices` — Perangkat terdaftar.** 🔑`id` bigint · ↗`user_id` bigint · ◆`device_uid` varchar(64) · `name` varchar(80) · `platform` varchar(30) · `last_seen_at` datetime · `is_active` bool
 
@@ -238,6 +246,12 @@ erDiagram
   clients {
     bigint id PK
     varchar_30 code UK
+  }
+  client_contacts {
+    bigint id PK
+  }
+  client_contact_project {
+    bigint id PK
   }
   projects {
     bigint id PK
@@ -327,11 +341,21 @@ erDiagram
   vendors ||--o{ item_vendors : " "
   projects ||--o{ project_material_plans : "F2"
   items ||--o{ project_material_plans : "F2"
+  clients ||--o{ client_contacts : "PIC klien"
+  client_contacts ||--o{ client_contact_project : " "
+  projects ||--o{ client_contact_project : " "
+  users ||--o{ client_contacts : "akun portal"
 ```
 
 ### Entitas
 
-**`clients` — Klien.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(150) · `tax_id` varchar(30) *(NPWP)* · `address` text · `contact_name` varchar(100) · `phone` varchar(20) · `email` varchar(150) · `is_active` bool
+**`clients` — Klien.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(150) · `tax_id` varchar(30) *(NPWP)* · `address` text · `contact_name` varchar(100) · `phone` varchar(20) · `email` varchar(150) *(kontak tunggal lama, tidak dipakai form (A-326))* · `is_active` bool
+
+**`client_contacts` — PIC Klien.** 🔑`id` bigint · ↗`client_id` bigint · `name` varchar(100) · `position` varchar(100) *(jabatan di company klien)* · `phone` varchar(20) *(No. WA 62…)* · `email` varchar(150) · ↗`user_id` bigint *(akun portal)* · `notes` varchar(255) · `is_active` bool
+  ↳ Orang dari pihak klien (A-326)
+
+**`client_contact_project` — PIC × proyek.** 🔑`id` bigint · ↗`client_contact_id` bigint · ↗`project_id` bigint
+  ↳ UK(client_contact_id, project_id) — keterangan kontak, bukan hak akses
 
 **`projects` — Proyek.** 🔑`id` bigint · ◆`code` varchar(30) · `name` varchar(150) · ↗`client_id` bigint *(null = Proyek Internal)* · `is_internal` bool *([A-06](04-keputusan-dan-asumsi.md#a-06))* · `status` enum *(project_status ([A-40](04-keputusan-dan-asumsi.md#a-40)))* · `address` text · `lat` decimal(10,7) · `lng` decimal(10,7) · `start_date` date · `target_end_date` date · ↗`pic_user_id` bigint · `closed_at` datetime · `close_reason` varchar(255)
 
@@ -381,69 +405,3 @@ erDiagram
 
 **`feature_settings` — Pengaturan fitur stok.** 🔑`key` varchar(60) *(lot|serial|piece|expiry|fefo|rfid|qc|otp_auto)* · `enabled` bool · `config` json
   ↳ Lapis 1 dari P-08
-
-## Area: Gudang & lokasi (tenant)
-
-**Diagram:** [`diagram/erd-gudang.drawio`](../diagram/erd-gudang.drawio) · **Rujukan:** Blueprint §6.2, §6.3, [BR-STK-02](05-aturan-bisnis.md#br-stk), [BR-STK-13](05-aturan-bisnis.md#br-stk), [BR-STK-14](05-aturan-bisnis.md#br-stk)
-
-Lokasi adalah entitas (P-06). Kode bin diturunkan dari hierarki. Bin virtual `in_transit` (satu per gudang) dan `on_site` (satu per proyek) dibuat otomatis.
-
-### Diagram (Mermaid)
-
-```mermaid
-erDiagram
-  warehouse_types {
-    bigint id PK
-    varchar_20 code UK
-  }
-  warehouses {
-    bigint id PK
-    varchar_10 code UK
-  }
-  zones {
-    bigint id PK
-  }
-  floor_plan_objects {
-    bigint id PK
-  }
-  racks {
-    bigint id PK
-  }
-  rack_levels {
-    bigint id PK
-  }
-  bins {
-    bigint id PK
-    varchar_40 code UK
-  }
-  warehouse_types ||--o{ warehouses : " "
-  warehouses ||--o{ warehouses : "induk"
-  warehouses ||--o{ zones : " "
-  warehouses ||--o{ floor_plan_objects : "denah"
-  zones ||--o{ racks : " "
-  racks ||--o{ rack_levels : " "
-  rack_levels ||--o{ bins : " "
-  warehouses ||--o{ bins : " "
-  storage_categories ||--o{ bins : " "
-  projects ||--o{ warehouses : "site"
-  projects ||--o{ bins : "on_site"
-```
-
-### Entitas
-
-**`warehouse_types` — Tipe gudang.** 🔑`id` bigint · ◆`code` varchar(20) *(MAIN|BRANCH|SITE|…)* · `name` varchar(60) · `is_builtin` bool · `is_active` bool
-
-**`warehouses` — Gudang.** 🔑`id` bigint · ◆`code` varchar(10) *(segmen nomor dokumen)* · `name` varchar(100) · ↗`warehouse_type_id` bigint · ↗`parent_id` bigint *(self, hierarki)* · ↗`project_id` bigint *(wajib bila type = site; satu proyek boleh punya beberapa ([A-40](04-keputusan-dan-asumsi.md#a-40)))* · ↗`head_user_id` bigint *(Kepala Gudang)* · `address` text · `length_m` decimal(8,2) *(ukuran gedung, opsional (A-320))* · `width_m` decimal(8,2) *(opsional)* · `is_active` bool
-
-**`zones` — Zona.** 🔑`id` bigint · ↗`warehouse_id` bigint · `code` varchar(10) · `name` varchar(60) · `length_m` decimal(8,2) *(opsional, denah (A-254))* · `width_m` decimal(8,2) *(opsional)* · `pos_x` decimal(8,2) *(posisi di gedung, opsional (A-320))* · `pos_y` decimal(8,2) *(opsional)* · `is_active` bool
-  ↳ UK(warehouse_id, code)
-
-**`floor_plan_objects` — Objek denah (A-320).** 🔑`id` bigint · ↗`warehouse_id` bigint · `object_type` enum *(floor_plan_object_type: door|dock|forklift_lane|pillar|office|open_area)* · `name` varchar(60) · `pos_x` decimal(8,2) *(relatif gedung, meter)* · `pos_y` decimal(8,2) · `length_m` decimal(8,2) · `width_m` decimal(8,2) · `rotation` smallint *(0|90|180|270)* · `is_active` bool *(tanpa stok; tidak dihapus (P-03))*
-
-**`racks` — Rak.** 🔑`id` bigint · ↗`zone_id` bigint · `code` varchar(10) · `name` varchar(60) *(opsional)* · `is_area` bool *(rak area barang besar (A-255))* · `pos_x` decimal(8,2) *(posisi denah, opsional (A-254))* · `pos_y` decimal(8,2) · `length_m` decimal(8,2) · `width_m` decimal(8,2) · `height_m` decimal(8,2) · `orientation` char(1) *(h|v)* · `is_active` bool
-  ↳ UK(zone_id, code)
-
-**`rack_levels` — Level.** 🔑`id` bigint · ↗`rack_id` bigint · `code` varchar(10) · `height_m` decimal(8,2) *(opsional (A-254))* · `is_active` bool
-  ↳ UK(rack_id, code)
-
-**`bins` — Bin.** 🔑`id` bigint · ↗`warehouse_id` bigint *(denormalisasi untuk query)* · ↗`rack_level_id` bigint *(null untuk bin virtual/dock)* · ◆`code` varchar(40) *(CKG-A-R03-L2-B05)* · `bin_type` enum *(bin_type)* · `bin_status` enum *(active|frozen|inactive)* · ↗`storage_category_id` bigint · `capacity_qty` decimal(18,4) · `capacity_weight` decimal(18,4) · `capacity_volume` decimal(18,4) · `capacity_mode` varchar(5) *(warn|block per bin, menimpa kategori (A-255))* · ↗`occupied_by_bin_id` bigint *(ikut terpakai barang besar (A-255))* · `occupied_reason` varchar(255) · `occupied_at` datetime · `capacity_length` decimal(18,4) · ↗`project_id` bigint *(hanya on_site)* · `is_virtual` bool · ↗`frozen_by_count_id` bigint *(stock_counts)* · `freeze_reason` varchar(255) *(alasan pembekuan)* · `count_flag` bool *(perlu dihitung ([A-67](04-keputusan-dan-asumsi.md#a-67), [BR-SJ-02](05-aturan-bisnis.md#br-sj)))*

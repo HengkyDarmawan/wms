@@ -207,6 +207,7 @@ Route::middleware('auth')->group(function (): void {
 
         // Master data (11-master §6). Semua transisi status lewat POST, bukan GET.
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+        Route::get('/clients/{client}', [ClientController::class, 'show'])->whereNumber('client')->name('clients.show');
         Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
         Route::get('/projects/{project}', [ProjectController::class, 'show'])->whereNumber('project')->name('projects.show');
         // A-250: pindahkan sisa proyek (aset On-site + stok Gudang Site) ke proyek lain.

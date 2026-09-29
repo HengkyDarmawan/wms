@@ -48,32 +48,18 @@
                         <input class="form-control" id="klien-npwp" type="text" wire:model="form.tax_id">
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label" for="klien-kontak">{{ __('Nama kontak') }}</label>
-                        <input class="form-control" id="klien-kontak" type="text" wire:model="form.contact_name">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label" for="klien-telepon">{{ __('Telepon') }}</label>
-                        <input class="form-control" id="klien-telepon" type="text" wire:model="form.phone">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label" for="klien-email">{{ __('Email') }}</label>
-                        <input class="form-control @error('form.email') is-invalid @enderror" id="klien-email"
-                               type="email" wire:model="form.email">
-                        @error('form.email') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
                     <div class="col-12">
                         <label class="form-label" for="klien-alamat">{{ __('Alamat') }}</label>
                         <textarea class="form-control" id="klien-alamat" rows="2" wire:model="form.address"></textarea>
                     </div>
                 </div>
             </div>
-            <div class="card-footer d-flex gap-2">
+            <div class="card-footer d-flex flex-wrap align-items-center gap-2">
                 <button class="btn btn-primary" type="button" wire:click="simpan">{{ __('Simpan') }}</button>
                 <button class="btn btn-outline-secondary" type="button" wire:click="batalForm">{{ __('Batal') }}</button>
+                <span class="small text-muted ms-auto">
+                    {{ __('Orang yang bisa dihubungi diisi di halaman klien, tab PIC.') }}
+                </span>
             </div>
         </div>
     @endif
@@ -132,7 +118,7 @@
                 <thead>
                     <tr>
                         <th>{{ __('Klien') }}</th>
-                        <th>{{ __('Kontak') }}</th>
+                        <th class="text-end">{{ __('PIC') }}</th>
                         <th class="text-end">{{ __('Proyek aktif') }}</th>
                         <th>{{ __('Status') }}</th>
                         <th class="text-end">{{ __('Aksi') }}</th>
@@ -142,13 +128,12 @@
                     @forelse ($clients as $client)
                         <tr wire:key="klien-{{ $client->id }}">
                             <td>
-                                <div class="fw-semibold">{{ $client->name }}</div>
+                                <div class="fw-semibold">
+                                    <a href="{{ route('clients.show', $client->id) }}">{{ $client->name }}</a>
+                                </div>
                                 <div class="small text-muted">{{ $client->code }}</div>
                             </td>
-                            <td>
-                                <div>{{ $client->contact_name ?: '—' }}</div>
-                                <div class="small text-muted">{{ $client->phone ?: $client->email ?: '—' }}</div>
-                            </td>
+                            <td class="text-end">{{ $client->active_contacts_count }}</td>
                             <td class="text-end">{{ $client->active_projects_count }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $client->is_active ? 'success' : 'secondary' }}">

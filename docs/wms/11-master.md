@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `master` (Klien, Proyek, Vendor, Item, Satuan, Referensi)
 
-**Versi:** 0.16
-**Tanggal:** 28 September 2026
-**Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192)); v0.6: layar Pengaturan company ([A-230](04-keputusan-dan-asumsi.md#a-230), §6, §13.5 no. 8); v0.8: hub proyek — *Pindahkan ke proyek lain* dan *Riwayat pindahan antar proyek* ([A-250](04b-asumsi-lanjutan.md#a-250), §13.4); v0.9: hari kerja per minggu & kalender libur company ([A-270](04b-asumsi-lanjutan.md#a-270), §3.6, §6, §13.5 no. 9); v0.10: saklar OTP bukti terima otomatis ([A-273](04b-asumsi-lanjutan.md#a-273)); v0.12: **Jenis barang** menggantikan isian teknis form item, saklar fitur benar-benar menyaring, bawaan company baru tanpa per potong & QC ([A-283](04b-asumsi-lanjutan.md#a-283), [A-284](04b-asumsi-lanjutan.md#a-284), §6, §10 TC-MST-30–35, §13.7); v0.13: tab *Kemasan* (dulu Konversi satuan), kemasan nonaktif tidak dimuat lagi, kemasan diingat dari form dokumen, uraian "9 DUS 8 BOX", satuan DUS & PACK ([A-291](04b-asumsi-lanjutan.md#a-291)–[A-294](04b-asumsi-lanjutan.md#a-294); §6, §10 TC-MST-36–37, §13.8); v0.16: driver bawaan kendaraan = nama + No. HP teks ([A-311](04b-asumsi-lanjutan.md#a-311), [A-315](04b-asumsi-lanjutan.md#a-315))
+**Versi:** 0.17
+**Tanggal:** 29 September 2026
+**Status:** **selesai untuk Fase 1** — sembilan layar, tiga belas aksi domain, dan 37 uji hijau; penyimpangan implementasi dicatat §13; v0.4: guard penutupan proyek BR-PRJ-02/04, wizard setup awal, impor item dari Excel ([27-pendukung-f1](27-pendukung-f1.md), [A-187](04-keputusan-dan-asumsi.md#a-187), [A-191](04-keputusan-dan-asumsi.md#a-191), [A-192](04-keputusan-dan-asumsi.md#a-192)); v0.6: layar Pengaturan company ([A-230](04-keputusan-dan-asumsi.md#a-230), §6, §13.5 no. 8); v0.8: hub proyek — *Pindahkan ke proyek lain* dan *Riwayat pindahan antar proyek* ([A-250](04b-asumsi-lanjutan.md#a-250), §13.4); v0.9: hari kerja per minggu & kalender libur company ([A-270](04b-asumsi-lanjutan.md#a-270), §3.6, §6, §13.5 no. 9); v0.10: saklar OTP bukti terima otomatis ([A-273](04b-asumsi-lanjutan.md#a-273)); v0.12: **Jenis barang** menggantikan isian teknis form item, saklar fitur benar-benar menyaring, bawaan company baru tanpa per potong & QC ([A-283](04b-asumsi-lanjutan.md#a-283), [A-284](04b-asumsi-lanjutan.md#a-284), §6, §10 TC-MST-30–35, §13.7); v0.13: tab *Kemasan* (dulu Konversi satuan), kemasan nonaktif tidak dimuat lagi, kemasan diingat dari form dokumen, uraian "9 DUS 8 BOX", satuan DUS & PACK ([A-291](04b-asumsi-lanjutan.md#a-291)–[A-294](04b-asumsi-lanjutan.md#a-294); §6, §10 TC-MST-36–37, §13.8); v0.16: driver bawaan kendaraan = nama + No. HP teks ([A-311](04b-asumsi-lanjutan.md#a-311), [A-315](04b-asumsi-lanjutan.md#a-315)); v0.17: **PIC Klien** banyak per klien, halaman detail klien `/clients/{id}`, akun portal dari PIC, dan tab **Tim site** di hub proyek ([A-326](04b-asumsi-lanjutan.md#a-326)–[A-328](04b-asumsi-lanjutan.md#a-328), [A-337](04b-asumsi-lanjutan.md#a-337)–[A-339](04b-asumsi-lanjutan.md#a-339); §3.1, §6, §10 TC-MST-40–44, §13.11)
 **Modul:** `master`
 **Fase:** F1 (rencana kebutuhan material `[F2]` hanya stub)
 **Dokumen terkait:** [Blueprint §6.3a](01-blueprint.md#63a-master-data-lain), [§6.4](01-blueprint.md#64-item-barang), [§6.5](01-blueprint.md#65-satuan-dinamis-uom), [§6.9](01-blueprint.md#69-proyek) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data master](08a-model-data-inti.md#area-master-data-tenant) · [Akun uji](../00-akun-uji.md)
@@ -42,6 +42,9 @@ Semua tabel di database **tenant**. Kolom umum (`id`, `created_at`, `updated_at`
 ### 3.1 `clients`, `projects`
 
 `clients`: `code` varchar(30) UK, `name` varchar(150), `tax_id` (NPWP), `address`, `contact_name`, `phone`, `email`, `is_active`.
+Tiga kolom kontak terakhir adalah **kontak tunggal lama**: sejak [A-326](04b-asumsi-lanjutan.md#a-326) isinya dipindahkan ke `client_contacts` dan form klien tidak menampilkannya lagi, tetapi kolomnya tetap ada beserta isinya (P-03).
+
+`client_contacts` (PIC Klien — orang dari **pihak klien**): `client_id` FK, `name` varchar(100), `position` varchar(100), `phone` varchar(20) (`62…`), `email` varchar(150), `notes`, `user_id` FK `users` (akun portal), `is_active`. `client_contact_project` (pivot): `client_contact_id`, `project_id`, `UK(client_contact_id, project_id)` — proyek yang **diurus** PIC, keterangan kontak dan bukan hak akses ([A-326](04b-asumsi-lanjutan.md#a-326)).
 
 `projects`: `code` varchar(30) UK, `name` varchar(150), `client_id` FK (null = Proyek Internal), `is_internal` bool ([A-06](04-keputusan-dan-asumsi.md#a-06)), `status` enum `project_status` ([A-40](04-keputusan-dan-asumsi.md#a-40)), `address`, `lat`, `lng`, `start_date`, `target_end_date`, `pic_user_id` FK `users`, `closed_at`.
 
@@ -84,6 +87,8 @@ Semua tabel di database **tenant**. Kolom umum (`id`, `created_at`, `updated_at`
 ```mermaid
 erDiagram
   clients ||--o{ projects : owns
+  clients ||--o{ client_contacts : contacted_by
+  client_contacts }o--o{ projects : handles
   users ||--o{ projects : pic
   item_categories ||--o{ items : classifies
   item_categories ||--o{ item_categories : parent
@@ -148,9 +153,10 @@ Semua layar memakai layout back-office dan komponen Livewire, mengikuti pola mod
 
 | Route | Komponen | Isi |
 |---|---|---|
-| `/clients` | `master.client-list` | Daftar + form klien (kode, nama, NPWP, alamat, kontak); nonaktifkan dengan Alasan `*` |
+| `/clients` | `master.client-list` | Daftar + form klien (kode, nama, NPWP, alamat); kolom **PIC** berisi jumlah PIC aktif; nama klien menaut ke halaman detail; nonaktifkan dengan Alasan `*` |
+| `/clients/{id}` | `master.client-detail` | **Halaman klien** ([A-327](04b-asumsi-lanjutan.md#a-327)): kepala (kode, NPWP, alamat, status) + tombol *Ubah* dan *Rekap pengiriman*; tiga kartu ringkas yang bisa diklik; tab **Proyek** (status, Gudang Site, PIC proyek; tombol *Tambah proyek* membawa kliennya) · **PIC** (tambah/ubah/nonaktifkan dengan Alasan `*`, tombol *Buat akun portal*) · **Akun portal** (hanya-lihat) |
 | `/projects` | `master.project-list` | Daftar + form proyek (kode, nama, klien atau Proyek Internal, PIC, tanggal, alamat & titik peta); nama menaut ke hub |
-| `/projects/{id}` | `master.project-detail` | **Hub proyek** (Blueprint §6.9, [A-228](04-keputusan-dan-asumsi.md#a-228)): kepala + Gudang Site, tombol aksi (permintaan, transfer ke proyek lain, pemakaian, konversi, retur, laporan material), kartu ringkas (stok on-site, permintaan terbuka, aset di proyek, menunggu approval), tab Permintaan · Pengiriman · Stok on-site (Di Gudang Site / Aset di proyek / Terkirim ke klien) · Pemakaian · Konversi & waste · Retur & transfer · Aset · Approval · Riwayat; ubah status / tutup proyek dengan checklist BR-PRJ-02 |
+| `/projects/{id}` | `master.project-detail` | **Hub proyek** (Blueprint §6.9, [A-228](04-keputusan-dan-asumsi.md#a-228)): kepala + Gudang Site, tombol aksi (permintaan, transfer ke proyek lain, pemakaian, konversi, retur, laporan material), kartu ringkas (stok on-site, permintaan terbuka, aset di proyek, menunggu approval), tab Permintaan · Pengiriman · Stok on-site (Di Gudang Site / Aset di proyek / Terkirim ke klien) · Pemakaian · Konversi & waste · Retur & transfer · Aset · Approval · **Tim site** ([A-337](04b-asumsi-lanjutan.md#a-337)) · Riwayat; ubah status / tutup proyek dengan checklist BR-PRJ-02 |
 | `/vendors` | `master.vendor-list` | Daftar + form vendor (jenis, status, kontak, termin); menandai vendor `provisional` yang perlu dilengkapi |
 | `/items` | `master.item-list` | Daftar item dengan filter kategori, **jenis barang** (tiga jenis + *Jenis khusus*), status; kolom Jenis barang; penanda item Sementara ([A-283](04b-asumsi-lanjutan.md#a-283)) |
 | `/items/create`, `/items/{id}/edit` | `master.item-form` | Identitas (kode, nama, kategori, satuan dasar, status, barcode, *Wajib QC* hanya bila saklar `qc` menyala) + satu pilihan wajib **Jenis barang** (kartu Barang biasa / Barang berkedaluwarsa / Alat bernomor seri dengan teks bantuan & contoh; Alat hanya bila saklar `serial`, Berkedaluwarsa bila `lot` + `expiry`); jenis terkunci setelah ada pergerakan stok; item lama di luar tiga jenis tampil **Jenis khusus** dengan pengaturan teknis read-only; kartu *Pengaturan tambahan* (opsional) berisi tab *Stok minimum* dan *Konversi satuan* — isian potong dan tab Vendor tetap tidak lagi ada ([A-283](04b-asumsi-lanjutan.md#a-283)) Tab *Kemasan* ("1 DUS = 12 BOX"), terisi juga dari form penerimaan barang; hanya kemasan aktif yang dimuat ([A-294](04b-asumsi-lanjutan.md#a-294)). |
@@ -218,6 +224,11 @@ Tidak ada kejadian stok. Master vendor dan item dibaca modul Purchasing ([purcha
 | TC-MST-37 | DUS = 12, PACK = 4 | uraikan 116, 117, −12, 3 | "9 DUS 2 PACK", "9 DUS 2 PACK 1 BOX", "−1 DUS", kosong | [A-293](04b-asumsi-lanjutan.md#a-293) |
 | TC-MST-38 | label kemasan semen `…-0001` | pindai kode label (huruf kecil) | `ScanCode::label` menemukan labelnya; `resolve` memberi item + lot label | [A-296](04b-asumsi-lanjutan.md#a-296) |
 | TC-MST-39 | Vendor dengan PO disetujui & catatan pemesanan belum diterima | *Nonaktifkan*: tanpa alasan, lalu dengan alasan | dialog menampilkan nomor PO & PRQ; alasan wajib; vendor Nonaktif, PO tetap Disetujui | [A-310](04b-asumsi-lanjutan.md#a-310) |
+| TC-MST-40 | Klien dengan dua proyek | tambah 2 PIC (No. WA `0812-3456-7890`); ubah proyek yang diurus; nomor `123`; nama kosong; proyek klien lain; nonaktifkan tanpa & dengan Alasan | nomor tersimpan `6281234567890`, email huruf kecil; pivot disinkronkan; tiga yang pertama ditolak di kolomnya; nonaktif tanpa Alasan ditolak, dengan Alasan berhasil dan barisnya tetap ada | [A-326](04b-asumsi-lanjutan.md#a-326), BR-GEN-11 |
+| TC-MST-41 | Klien lama berkontak tunggal; klien berkontak tanpa nama; klien tanpa kontak | jalankan isi balik, lalu ulangi | PIC pertama dibuat dengan nilai apa adanya; nama kosong menjadi "Kontak <nama klien>"; klien tanpa kontak dilewati; `clients.contact_name` tetap ada; diulang tidak menggandakan | [A-326](04b-asumsi-lanjutan.md#a-326), P-03 |
+| TC-MST-42 | Klien dengan proyek, PIC, dan akun portal | buka `/clients/{id}`; pindah ketiga tab; tab tak dikenal; staf gudang membuka; buka daftar Klien & Proyek; `?klien=` di daftar proyek; `?ubah=` di daftar klien | ketiga tab menampilkan isinya; tab tak dikenal kembali ke Proyek; staf 403; nama klien menaut ke halaman ini; form proyek terbuka dengan klien terisi; form klien terbuka untuk diubah | [A-327](04b-asumsi-lanjutan.md#a-327) |
+| TC-MST-43 | Proyek dengan dua Gudang Site; staf bergudang tetap | tambah anggota Tim site; tambah lagi orang & peran yang sama; perpanjang mundur lalu maju; akhiri tanpa & dengan Alasan; proyek tanpa Gudang Site | dua penugasan bertanggal (satu per Gudang Site); kembar ditolak; mundur ditolak, maju memperpanjang & mereset pengingat; Alasan wajib; barisnya tidak dihapus; setelah berakhir akses ke site hilang tetapi gudang tetap & login jalan; peran gudang di proyek tanpa Gudang Site ditolak | [A-337](04b-asumsi-lanjutan.md#a-337), [A-338](04b-asumsi-lanjutan.md#a-338), [A-341](04b-asumsi-lanjutan.md#a-341) |
+| TC-MST-44 | Orang yang sudah punya penugasan tetap ke Gudang Site itu | tambahkan ke Tim site; simpan ulang dari form pengguna; buka tab Tim site tanpa `role.assign` | penugasan tetap tidak diberi tanggal (`grants_access = false` untuk kunci itu); baris Tim site tidak terhapus dan tanggalnya tetap; menambah anggota tanpa izin 403 | [A-343](04b-asumsi-lanjutan.md#a-343), BR-GEN-09 |
 
 ## 11. Di luar lingkup modul ini
 
@@ -319,6 +330,16 @@ dan `MasterScreenTest` (TC-MST-22–23).
 ### 13.10 Vendor tetap berhenti dipakai & dampak nonaktif (28 September 2026)
 
 `SaveItem` mengabaikan isian vendor, detail item mengganti kartu *Vendor tetap* dengan *Saran vendor (dari riwayat)* + tombol *Riwayat harga beli* (hanya `po.view`), daftar vendor menampilkan *Pesanan 12 bln* ([A-305](04b-asumsi-lanjutan.md#a-305)). `Support\VendorImpact` menampilkan dokumen terbuka di dialog nonaktif ([A-310](04b-asumsi-lanjutan.md#a-310)).
+
+### 13.11 PIC klien, halaman klien & Tim site (29 September 2026)
+
+`client_contacts` + pivot `client_contact_project` (migrasi tenant `000450`, isi balik lewat `Support\LegacyClientContacts`) dengan `SaveClientContact` / `DeactivateClientContact`; keduanya memakai izin `client.*` yang sudah ada sehingga `ReferenceSeeder` (yang memakai `sync()`) tidak perlu disentuh. Form klien berhenti menampilkan `contact_name`/`phone`/`email` dan `SaveClient` berhenti menulisnya — kolomnya tetap ada (P-03) dan pencarian klien ikut mencari nama PIC.
+
+`ClientDetail` (`master.client-detail`, route `clients.show`) meniru pola `ProjectDetail`: tab ber-whitelist, data hanya dimuat untuk tab aktif, dan isi tiap tab dipisah ke `livewire/master/partials/client-tab-*.blade.php` supaya tidak ada berkas melewati batas ±450 baris. *Buat akun portal* memanggil `Master\Actions\CreatePortalAccountForContact` ([A-328](04b-asumsi-lanjutan.md#a-328)).
+
+Tab **Tim site** di hub proyek adalah komponen Livewire tersendiri (`Access\Livewire\ProjectTeam`) yang disisipkan ke tab, bukan menumpuk di `ProjectDetail` — alasannya sama: `project-detail.blade.php` sudah 467 baris. Rincian aturannya di [10-access §13.5](10-access.md#135-tim-site--tanggal-hanya-untuk-penempatan-di-site-29-september-2026).
+
+Uji: `tests/Feature/Master/{ClientContactTest,ClientDetailTest,ProjectTeamTest}` (TC-MST-40–44).
 
 ### 13.5 Sisa pekerjaan modul ini
 

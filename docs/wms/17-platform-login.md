@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `platform` (Platform & Langganan)
 
-**Versi:** 0.7
-**Tanggal:** 25 September 2026
-**Status:** selesai Fase 1 — v0.1 mencatat login Super Admin & gerbang langganan yang dibangun tanpa spesifikasi; v0.2 modul Platform penuh (modul kelima belas setelah [Purchase Request](26-purchase-request.md)): pembuatan company otomatis, paket & trial, tagihan & bukti bayar manual, siklus status terjadwal, penangguhan manual, flag fitur, masuk lewat akses dukungan, dan penyelesaian temuan §13.2 v0.1. Keputusan yang tidak tertulis di dokumen dicatat sebagai [A-176](04-keputusan-dan-asumsi.md#a-176)–[A-184](04-keputusan-dan-asumsi.md#a-184) (*Perlu validasi*); v0.3: ekspor PDF laporan (`reports.pdf`) ikut diizinkan saat langganan diakhiri ([27-pendukung-f1](27-pendukung-f1.md), [A-190](04-keputusan-dan-asumsi.md#a-190))
+**Versi:** 0.8
+**Tanggal:** 29 September 2026
+**Status:** selesai Fase 1 — v0.1 mencatat login Super Admin & gerbang langganan yang dibangun tanpa spesifikasi; v0.2 modul Platform penuh (modul kelima belas setelah [Purchase Request](26-purchase-request.md)): pembuatan company otomatis, paket & trial, tagihan & bukti bayar manual, siklus status terjadwal, penangguhan manual, flag fitur, masuk lewat akses dukungan, dan penyelesaian temuan §13.2 v0.1. Keputusan yang tidak tertulis di dokumen dicatat sebagai [A-176](04-keputusan-dan-asumsi.md#a-176)–[A-184](04-keputusan-dan-asumsi.md#a-184) (*Perlu validasi*); v0.3: ekspor PDF laporan (`reports.pdf`) ikut diizinkan saat langganan diakhiri ([27-pendukung-f1](27-pendukung-f1.md), [A-190](04-keputusan-dan-asumsi.md#a-190)); v0.8: kartu serah terima akun Admin Company pertama di layar detail company ([A-335](04b-asumsi-lanjutan.md#a-335); §6.1, §10 TC-PLT-14)
 **Modul:** `platform` (`app/Domain/Platform`, `app/Http/Controllers/Platform`)
 **Fase:** F1 (pembayaran manual); payment gateway `[F3]`; login SSO & pemilih company `[F3]`; WhatsApp `[F2]`
 **Dokumen terkait:** [Blueprint §4.1](01-blueprint.md#41-level-platform-database-pusat) · [Blueprint §14](01-blueprint.md#14-platform--langganan) · [Aturan Bisnis §BR-SUB](05-aturan-bisnis.md#br-sub) · [Arsitektur §3](08-arsitektur.md#3-tenancy--siklus-request) · [Model data pusat](08a-model-data-inti.md#area-database-pusat-platform) · [Katalog Status §3](06-katalog-status-dan-enum.md#3-enum-lain) · [Proses bisnis alur 10](07b-proses-bisnis-pendukung.md#alur-10--siklus-langganan-company-platform) · [Akun uji §1](../00-akun-uji.md#1-platform-database-pusat)
@@ -140,8 +140,9 @@ Route autentikasi tenant (termasuk `support.enter*`) selalu lolos.
 | `GET/POST /admin/login`, `POST /admin/logout` | `PlatformLoginController` | v0.1 + penguncian (A-182) |
 | `GET /admin` | `PlatformDashboardController` | cari company; paket, status company & langganan, masa berjalan, penanda *gagal disiapkan* / *siap dihapus*; jumlah bukti bayar menunggu |
 | `GET /admin/companies/create`, `POST /admin/companies` | `CompanyController@create/store` | kode `*`, nama `*`, subdomain `*`, paket `*`, durasi trial, zona waktu `*`, nama & email Admin Company `*` |
-| `GET /admin/companies/{id}` | `CompanyController@show` | ringkasan langganan, tagihan & bukti bayar, riwayat, tangguhkan/aktifkan, flag fitur, akses dukungan + *Buka company (hanya-baca)* |
+| `GET /admin/companies/{id}` | `CompanyController@show` | ringkasan langganan, tagihan & bukti bayar, riwayat, tangguhkan/aktifkan, flag fitur, akses dukungan + *Buka company (hanya-baca)*; kartu **Serah terima akun Admin Company** selama company belum pernah dipakai ([A-335](04b-asumsi-lanjutan.md#a-335)) |
 | `POST /admin/companies/{id}/provision · suspend · reactivate · flags · support` | `CompanyController` | tindakan §4 |
+| `POST /admin/companies/{id}/admin-invite · admin-password` | `CompanyController@adminInvite/adminPassword` | kirim ulang undangan atau buatkan password Admin Company pertama, supaya company baru bisa diserahkan tanpa bergantung email ([A-335](04b-asumsi-lanjutan.md#a-335)) |
 | `GET /admin/payments`, `POST …/{id}/verify · reject`, `GET …/{id}/proof` | `PaymentController` | daftar bukti (saring status), verifikasi, tolak dengan alasan, lihat bukti dari disk company |
 | `GET /admin/plans`, `…/create`, `…/{id}/edit`, `POST /admin/plans`, `POST /admin/plans/{id}` | `PlanController` | paket |
 
@@ -190,6 +191,7 @@ Uji di `tests/Feature/Platform` (17 uji).
 | TC-PLT-10 | company aktif | tangguhkan tanpa/dengan alasan; staf menulis; aktifkan (2×); flag whatsapp nyala/mati, kunci asing | galat; `suspended` + alasan; 403; `active`, galat; flag berubah, galat | A-179, A-183 |
 | TC-PLT-11 | Admin Company | minta tautan tanpa izin; beri izin; Super Admin lain; tautan; tanda tangan rusak; konfirmasi; masuk; baca; tulis; cabut | galat; galat; tautan ke subdomain; 403; 200; masuk sebagai Admin pemberi; tautan dipakai ulang 403; spanduk; 403; sesi gugur 403 | BR-SUB-04, A-180, A-199 |
 | TC-PLT-13 | Super Admin tanpa 2FA | buka Keamanan akun; mulai; konfirmasi salah/benar; masuk ulang; kode salah; kode pemulihan | lencana *2FA mati*; galat; kode pemulihan tampil, jejak audit; diarahkan ke `/admin/two-factor`, belum masuk; galat; masuk, sisa kode berkurang satu | A-200 |
+| TC-PLT-14 | Company baru yang baru saja disiapkan | buka detailnya; kirim ulang undangan; buatkan password `pendek` lalu yang sah; buka detail lagi | kartu serah terima tampil dengan tautan berhost company (lengkap dengan port); kirim ulang membuat tautan baru; password pendek ditolak; Admin Company bisa masuk dan undangan tertunda dibatalkan; kartu hilang | [A-335](04b-asumsi-lanjutan.md#a-335) |
 | TC-PLT-12 | langganan `suspended`, tagihan periode lampau `overdue` | verifikasi bukti; siklus harian | `active`, periode mulai hari ini s.d. +1 bulan; tidak `past_due` | A-195 |
 
 Uji lain yang berubah: TC-ACC-27b (2 permission `billing`); TC-ACC-28g (update Livewire hanya-baca lolos saat `suspended`, aksi 403 — A-196).
@@ -205,7 +207,7 @@ Payment gateway `[F3]`; SSO & pemilih company `[F3]`; pengingat tagihan (notifik
 - [x] Paket & trial; tagihan, unggah & verifikasi bukti bayar; siklus status terjadwal
 - [x] Penangguhan manual, flag fitur, akses dukungan hanya-baca
 - [x] Temuan §13.2 v0.1 diselesaikan (lihat §13.1)
-- [x] TC-PLT-01 s.d. TC-PLT-13 lulus; `php artisan test` hijau
+- [x] TC-PLT-01 s.d. TC-PLT-14 lulus; `php artisan test` hijau
 - [x] Dokumen diperbarui (versi naik + changelog README)
 
 ## 13. Catatan implementasi (25 September 2026)

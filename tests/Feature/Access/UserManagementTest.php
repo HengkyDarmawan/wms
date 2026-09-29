@@ -190,14 +190,9 @@ class UserManagementTest extends TenantTestCase
             ->set('name', 'Pengguna Baru')
             ->set('email', 'baru@demo.wms.test')
             ->set('phone', '+628123456789')
-            ->set('assignments', [[
-                'role_id' => $roleStaf->id,
-                'scope_type' => ScopeType::Warehouse->value,
-                'scope_id' => 3,
-                'valid_from' => null,
-                'valid_until' => null,
-            ]])
-            ->set('sendInvitation', true)
+            ->call('pilihPeran', $roleStaf->id)
+            ->set('gudangDipilih', ['3'])
+            ->set('caraMasuk', 'undangan')
             ->call('save')
             ->assertHasNoErrors()
             ->assertRedirect();
@@ -220,9 +215,16 @@ class UserManagementTest extends TenantTestCase
         Livewire::actingAs($admin)->test(UserForm::class)
             ->set('name', '')
             ->set('email', 'bukan-email')
-            ->set('assignments', [['role_id' => null, 'scope_type' => 'all', 'scope_id' => null, 'valid_from' => null, 'valid_until' => null]])
             ->call('save')
-            ->assertHasErrors(['name', 'email', 'assignments.0.role_id']);
+            ->assertHasErrors(['name', 'email', 'peranUtama']);
+
+        // A-331: baris peran tambahan tetap menuntut perannya dipilih.
+        Livewire::actingAs($admin)->test(UserForm::class)
+            ->set('name', 'Baris Kosong')
+            ->set('email', 'baris.kosong@demo.wms.test')
+            ->call('addAssignment')
+            ->call('save')
+            ->assertHasErrors('assignments.0.role_id');
 
         // BR-ACC-03: role Klien untuk user tanpa client_id ditolak Action.
         Livewire::actingAs($admin)->test(UserForm::class)
@@ -236,25 +238,20 @@ class UserManagementTest extends TenantTestCase
                 'valid_until' => null,
             ]])
             ->call('save')
-            ->assertHasErrors('assignments');
+            ->assertHasErrors('peranUtama');
 
         $this->assertDatabaseMissing('users', ['email' => 'salah@demo.wms.test'], 'tenant');
 
         // Klien dipilih dari daftar nama (bukan id angka); id yang tidak ada ditolak.
         $klien = $this->makeClient(['name' => 'PT Klien Pilihan']);
         Livewire::actingAs($admin)->test(UserForm::class)
-            ->assertSeeHtml('id="clientId"')
-            ->assertSee('PT Klien Pilihan')
             ->set('name', 'Klien Baru')
             ->set('email', 'klien.baru@demo.wms.test')
+            ->call('pilihPeran', Role::findByCode('client_user')->id)
+            ->assertSeeHtml('id="clientId"')
+            ->assertSee('PT Klien Pilihan')
             ->set('clientId', 999999)
-            ->set('assignments', [[
-                'role_id' => Role::findByCode('client_user')->id,
-                'scope_type' => ScopeType::Project->value,
-                'scope_id' => 1,
-                'valid_from' => null,
-                'valid_until' => null,
-            ]])
+            ->set('proyekDipilih', ['1'])
             ->call('save')
             ->assertHasErrors('clientId');
         $this->assertTrue($klien->exists);
@@ -269,14 +266,11 @@ class UserManagementTest extends TenantTestCase
         $roleKepala = Role::findByCode('warehouse_head');
 
         Livewire::actingAs($admin)->test(UserForm::class, ['userId' => $target->id])
+            ->assertSet('peranUtama', (string) Role::findByCode('warehouse_staff')->id)
+            ->assertSet('gudangDipilih', ['1'])
             ->set('name', 'Nama Diubah')
-            ->set('assignments', [[
-                'role_id' => $roleKepala->id,
-                'scope_type' => ScopeType::Warehouse->value,
-                'scope_id' => 5,
-                'valid_from' => null,
-                'valid_until' => null,
-            ]])
+            ->call('pilihPeran', $roleKepala->id)
+            ->set('gudangDipilih', ['5'])
             ->call('save')
             ->assertHasNoErrors();
 

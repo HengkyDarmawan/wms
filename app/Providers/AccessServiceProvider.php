@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Domain\Access\Livewire\DeviceList;
 use App\Domain\Access\Livewire\ImpersonationPicker;
 use App\Domain\Access\Livewire\OrgTree;
+use App\Domain\Access\Livewire\ProjectTeam;
 use App\Domain\Access\Livewire\RoleForm;
 use App\Domain\Access\Livewire\RoleList;
 use App\Domain\Access\Livewire\SupportAccessManager;
@@ -76,6 +77,7 @@ class AccessServiceProvider extends ServiceProvider
         Livewire::component('access.user-list', UserList::class);
         Livewire::component('access.user-form', UserForm::class);
         Livewire::component('access.user-detail', UserDetail::class);
+        Livewire::component('access.project-team', ProjectTeam::class);
         Livewire::component('access.role-list', RoleList::class);
         Livewire::component('access.role-form', RoleForm::class);
         Livewire::component('access.org-tree', OrgTree::class);

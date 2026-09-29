@@ -218,8 +218,10 @@
                             <td>
                                 @if ($project->is_internal)
                                     <span class="badge text-bg-info">{{ __('Proyek Internal') }}</span>
+                                @elseif ($project->client !== null)
+                                    <a href="{{ route('clients.show', $project->client->id) }}">{{ $project->client->name }}</a>
                                 @else
-                                    {{ $project->client?->name ?? '—' }}
+                                    —
                                 @endif
                             </td>
                             <td>{{ $project->pic?->name ?? '—' }}</td>

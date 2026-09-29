@@ -34,10 +34,12 @@ class UserInvitationNotification extends Notification
 
         // url() memakai APP_URL yang menunjuk domain pusat. Di luar konteks
         // permintaan (antrean, artisan) tautan itu menghasilkan 404 'Company
-        // tidak dikenal', jadi host dibangun dari company-nya sendiri (A-01).
+        // tidak dikenal', jadi alamat dibangun dari company-nya sendiri (A-01).
+        // `Company::url()` ikut membawa skema dan port, yang di lingkungan
+        // lokal `:8000` sebelumnya hilang sehingga tautannya tidak bisa dibuka.
         $url = $tenant === null
             ? url('/invitation/'.$this->plainToken)
-            : 'https://'.$tenant->host().'/invitation/'.$this->plainToken;
+            : $tenant->url('/invitation/'.$this->plainToken);
 
         return (new MailMessage)
             ->subject('Undangan bergabung ke '.$company)

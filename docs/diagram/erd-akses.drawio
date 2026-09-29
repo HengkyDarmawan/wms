@@ -29,10 +29,10 @@
           <mxGeometry y="26" width="260" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="role_assignments" value="role_assignments" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="556" width="260" height="162" as="geometry"/>
+          <mxGeometry x="40" y="556" width="260" height="178" as="geometry"/>
         </mxCell>
-        <mxCell id="role_assignments_cols" value="🔑 id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;↗ role_id : bigint&lt;br&gt;scope_type : enum&lt;br&gt;scope_id : bigint&lt;br&gt;valid_from : date&lt;br&gt;valid_until : date&lt;br&gt;↗ assigned_by : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="role_assignments">
-          <mxGeometry y="26" width="260" height="136" as="geometry"/>
+        <mxCell id="role_assignments_cols" value="🔑 id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;↗ role_id : bigint&lt;br&gt;scope_type : enum&lt;br&gt;scope_id : bigint&lt;br&gt;valid_from : date&lt;br&gt;valid_until : date&lt;br&gt;↗ assigned_by : bigint&lt;br&gt;↗ project_team_member_id : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="role_assignments">
+          <mxGeometry y="26" width="260" height="152" as="geometry"/>
         </mxCell>
         <mxCell id="org_units" value="org_units" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="360" y="556" width="260" height="114" as="geometry"/>
@@ -47,25 +47,31 @@
           <mxGeometry y="26" width="260" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="user_invitations" value="user_invitations" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="556" width="260" height="130" as="geometry"/>
+          <mxGeometry x="1000" y="556" width="260" height="146" as="geometry"/>
         </mxCell>
-        <mxCell id="user_invitations_cols" value="🔑 id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;◆ token : varchar(64)&lt;br&gt;expires_at : datetime&lt;br&gt;accepted_at : datetime&lt;br&gt;sent_count : tinyint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="user_invitations">
-          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        <mxCell id="user_invitations_cols" value="🔑 id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;◆ token : varchar(64)&lt;br&gt;token_plain : text&lt;br&gt;expires_at : datetime&lt;br&gt;accepted_at : datetime&lt;br&gt;sent_count : tinyint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="user_invitations">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="project_team_members" value="project_team_members" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="784" width="260" height="226" as="geometry"/>
+        </mxCell>
+        <mxCell id="project_team_members_cols" value="🔑 id : bigint&lt;br&gt;↗ project_id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;↗ role_id : bigint&lt;br&gt;starts_on : date&lt;br&gt;ends_on : date&lt;br&gt;ended_at : datetime&lt;br&gt;↗ end_reason_code_id : bigint&lt;br&gt;end_notes : varchar(255)&lt;br&gt;reminded_at : datetime&lt;br&gt;grants_access : bool&lt;br&gt;↗ created_by : bigint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="project_team_members">
+          <mxGeometry y="26" width="260" height="200" as="geometry"/>
         </mxCell>
         <mxCell id="devices" value="devices" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="40" y="768" width="260" height="146" as="geometry"/>
+          <mxGeometry x="360" y="784" width="260" height="146" as="geometry"/>
         </mxCell>
         <mxCell id="devices_cols" value="🔑 id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;◆ device_uid : varchar(64)&lt;br&gt;name : varchar(80)&lt;br&gt;platform : varchar(30)&lt;br&gt;last_seen_at : datetime&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="devices">
           <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="password_histories" value="password_histories" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="360" y="768" width="260" height="98" as="geometry"/>
+          <mxGeometry x="680" y="784" width="260" height="98" as="geometry"/>
         </mxCell>
         <mxCell id="password_histories_cols" value="🔑 id : bigint&lt;br&gt;↗ user_id : bigint&lt;br&gt;password : varchar(255)&lt;br&gt;created_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="password_histories">
           <mxGeometry y="26" width="260" height="72" as="geometry"/>
         </mxCell>
         <mxCell id="login_attempts" value="login_attempts" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="768" width="260" height="146" as="geometry"/>
+          <mxGeometry x="1000" y="784" width="260" height="146" as="geometry"/>
         </mxCell>
         <mxCell id="login_attempts_cols" value="🔑 id : bigint&lt;br&gt;email : varchar(150)&lt;br&gt;↗ user_id : bigint&lt;br&gt;ip_address : varchar(45)&lt;br&gt;channel : varchar(20)&lt;br&gt;result : enum&lt;br&gt;attempted_at : datetime" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="login_attempts">
           <mxGeometry y="26" width="260" height="120" as="geometry"/>
@@ -104,6 +110,12 @@
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="r11" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="login_attempts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r12" value="ditempatkan di site" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="project_team_members">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r13" value="penugasan bertanggal" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="project_team_members" target="role_assignments">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
       </root>

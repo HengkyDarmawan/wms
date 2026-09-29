@@ -79,6 +79,19 @@ class ProjectList extends Component
 
         if (is_numeric($ubah) && Project::query()->whereKey((int) $ubah)->exists() && auth()->user()->can('update', Project::query()->find((int) $ubah))) {
             $this->ubah((int) $ubah);
+
+            return;
+        }
+
+        // A-327: tombol "Tambah proyek" di halaman klien membuka form baru
+        // dengan kliennya sudah terisi.
+        $klien = request()->query('klien');
+
+        if (is_numeric($klien) && Client::query()->whereKey((int) $klien)->active()->exists()
+            && auth()->user()->can('create', Project::class)) {
+            $this->buat();
+            $this->form['client_id'] = (string) (int) $klien;
+            $this->clientFilter = (string) (int) $klien;
         }
     }
 

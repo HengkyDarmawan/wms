@@ -31,6 +31,7 @@ class UserInvitation extends Model
     protected function casts(): array
     {
         return [
+            'token_plain' => 'encrypted',
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
             'sent_count' => 'integer',
@@ -40,6 +41,21 @@ class UserInvitation extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Tautan undangan lengkap di subdomain company (A-333). `Company::url()`
+     * ikut membawa skema dan port, yang penting di lingkungan lokal `:8000`.
+     */
+    public function url(): ?string
+    {
+        $token = $this->plainToken ?? $this->token_plain;
+
+        if (! is_string($token) || $token === '') {
+            return null;
+        }
+
+        return tenant()?->url('/invitation/'.$token) ?? route('invitation.show', ['token' => $token]);
     }
 
     public static function hashToken(string $plainToken): string

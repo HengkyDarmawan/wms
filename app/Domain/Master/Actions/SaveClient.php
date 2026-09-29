@@ -42,10 +42,11 @@ class SaveClient
             'name' => $nama,
             'tax_id' => $this->kosongJadiNull($attributes['tax_id'] ?? null),
             'address' => $this->kosongJadiNull($attributes['address'] ?? null),
-            'contact_name' => $this->kosongJadiNull($attributes['contact_name'] ?? null),
-            'phone' => $this->kosongJadiNull($attributes['phone'] ?? null),
-            'email' => $this->kosongJadiNull($attributes['email'] ?? null),
         ];
+
+        // A-326: kontak tunggal lama (`contact_name`, `phone`, `email`) tidak lagi
+        // ditulis dari sini — PIC klien punya tabelnya sendiri. Kolomnya tetap ada
+        // beserta isinya (P-03) dan sengaja tidak disentuh di sini.
 
         $client = DB::transaction(function () use ($client, $baru, $data): Client {
             if ($baru) {

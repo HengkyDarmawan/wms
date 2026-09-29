@@ -45,6 +45,8 @@ class ReportRegistry
         Definitions\ShortPickReport::class,
         Definitions\DamagedGoodsPositionReport::class,
         Definitions\DeliveryPerformanceReport::class,
+        // Rekap pengiriman per klien (A-329): tanpa nilai uang, D-07.
+        Definitions\ClientShipmentRecapReport::class,
         // Sisa Fase 1 2d: §9 modul 19–22 (A-241).
         Definitions\VendorReceiptReport::class,
         Definitions\VendorProblemReport::class,

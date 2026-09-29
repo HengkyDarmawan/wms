@@ -40,6 +40,12 @@ class Client extends Model
         return $this->hasMany(User::class);
     }
 
+    /** PIC Klien — orang dari pihak klien (A-326). */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(ClientContact::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

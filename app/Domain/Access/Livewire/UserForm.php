@@ -5,27 +5,40 @@ declare(strict_types=1);
 namespace App\Domain\Access\Livewire;
 
 use App\Domain\Access\Actions\CreateUser;
+use App\Domain\Access\Actions\SetInitialPassword;
 use App\Domain\Access\Actions\UpdateUser;
 use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Access\Exceptions\AccessRuleException;
+use App\Domain\Access\Livewire\Concerns\ComposesRoleAssignments;
 use App\Domain\Access\Models\OrgUnit;
 use App\Domain\Access\Models\Position;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\User;
+use App\Domain\Access\Support\RoleGuide;
+use App\Domain\Access\Support\SiteTeam;
 use App\Domain\Master\Models\Client;
 use App\Domain\Master\Models\Project;
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\Warehouse\Models\WarehouseType;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
- * Layar 10-access §6.3 — form tambah/ubah pengguna beserta penugasan role × cakupan.
- * Field wajib ditandai `*` di view (BR-GEN-11).
+ * Layar 10-access §6.3 — form tambah/ubah pengguna, urutan "pilih peran dulu"
+ * (A-331): data diri → peran → pertanyaan sesuai peran → pengaturan lanjutan →
+ * cara masuk pertama kali.
+ *
+ * **Tanpa isian tanggal** (A-337): akun dan peran berlaku sampai dinonaktifkan;
+ * penempatan berbatas waktu diatur lewat Tim site di hub proyek. Tanggal pada
+ * penugasan lama tetap ditegakkan dan dibawa apa adanya saat disimpan ulang,
+ * supaya tidak diam-diam menjadi permanen.
  */
 class UserForm extends Component
 {
+    use ComposesRoleAssignments;
+
     /**
      * Terkunci: properti publik Livewire bisa ditimpa dari browser. Tanpa ini,
      * pemegang `user.create` dapat menyulap form "tambah pengguna" menjadi form
@@ -40,18 +53,36 @@ class UserForm extends Component
 
     public string $phone = '';
 
+    /** Peran utama: id role yang dipilih lewat kartu. */
+    public string $peranUtama = '';
+
+    /** @var array<int, string> id gudang tetap untuk peran gudang */
+    public array $gudangDipilih = [];
+
+    /** @var array<int, string> id proyek untuk peran berbasis proyek */
+    public array $proyekDipilih = [];
+
+    public ?int $clientId = null;
+
+    public bool $lanjutanTerbuka = false;
+
     public ?int $orgUnitId = null;
 
     public ?int $positionId = null;
 
     public ?int $managerId = null;
 
-    public ?int $clientId = null;
-
-    public bool $sendInvitation = true;
-
-    /** @var array<int, array<string, mixed>> */
+    /** Peran tambahan (baris peran × cakupan yang lama), tanpa isian tanggal. */
     public array $assignments = [];
+
+    /** `undangan` | `password` — hanya saat membuat pengguna baru (A-334). */
+    public string $caraMasuk = 'undangan';
+
+    public string $passwordAwal = '';
+
+    /** Seluruh cakupan pengguna ini berasal dari Tim site; form tidak mengubahnya. */
+    #[Locked]
+    public bool $penugasanSiteSaja = false;
 
     public function mount(?int $userId = null): void
     {
@@ -59,7 +90,6 @@ class UserForm extends Component
 
         if ($userId === null) {
             $this->authorize('create', User::class);
-            $this->addAssignment();
 
             return;
         }
@@ -74,26 +104,38 @@ class UserForm extends Component
         $this->positionId = $user->position_id;
         $this->managerId = $user->manager_id;
         $this->clientId = $user->client_id;
-        $this->sendInvitation = false;
 
-        $this->assignments = $user->roleAssignments
-            ->map(fn ($a) => [
-                'role_id' => $a->role_id,
-                'scope_type' => $a->scope_type->value,
-                'scope_id' => $a->scope_id,
-                'valid_from' => $a->valid_from?->toDateString(),
-                'valid_until' => $a->valid_until?->toDateString(),
-            ])
-            ->values()
-            ->all();
+        $this->muatPenugasan($user);
+    }
 
-        if ($this->assignments === []) {
-            $this->addAssignment();
+    public function pilihPeran(int $roleId): void
+    {
+        $this->peranUtama = (string) $roleId;
+        $this->gudangDipilih = [];
+        $this->proyekDipilih = [];
+        $this->resetValidation();
+
+        $role = Role::query()->find($roleId);
+
+        if ($role === null) {
+            return;
+        }
+
+        if (RoleGuide::pertanyaan($role) !== RoleGuide::KLIEN) {
+            $this->clientId = null;
+        }
+
+        // A-332: unit organisasi disarankan dari peran, hanya bila Admin belum memilih.
+        $saran = RoleGuide::saranUnit($role);
+
+        if ($this->orgUnitId === null && $saran !== null) {
+            $this->orgUnitId = OrgUnit::query()->where('is_active', true)->where('name', $saran)->value('id');
         }
     }
 
     public function addAssignment(): void
     {
+        $this->lanjutanTerbuka = true;
         $this->assignments[] = [
             'role_id' => null,
             'scope_type' => ScopeType::All->value,
@@ -107,13 +149,16 @@ class UserForm extends Component
     {
         unset($this->assignments[$index]);
         $this->assignments = array_values($this->assignments);
-
-        if ($this->assignments === []) {
-            $this->addAssignment();
-        }
     }
 
-    public function save(CreateUser $createUser, UpdateUser $updateUser)
+    public function acakPassword(): void
+    {
+        $kata = ['Palu', 'Semen', 'Pipa', 'Baja', 'Kabel', 'Beton', 'Gudang', 'Proyek'];
+
+        $this->passwordAwal = $kata[array_rand($kata)].'-'.strtoupper(bin2hex(random_bytes(2))).'-'.now()->year;
+    }
+
+    public function save(CreateUser $createUser, UpdateUser $updateUser, SetInitialPassword $setPassword, SiteTeam $siteTeam)
     {
         // Otorisasi diulang di sini, bukan hanya di mount(): satu permintaan
         // Livewire bisa memanggil metode ini langsung tanpa pernah melewati mount.
@@ -123,6 +168,9 @@ class UserForm extends Component
 
         $data = $this->validate();
 
+        $peran = $this->peranUtama === '' ? null : Role::query()->find((int) $this->peranUtama);
+        $pertanyaan = $peran === null ? null : RoleGuide::pertanyaan($peran);
+
         $attributes = [
             'name' => $data['name'],
             'email' => $data['email'],
@@ -130,38 +178,43 @@ class UserForm extends Component
             'org_unit_id' => $this->orgUnitId,
             'position_id' => $this->positionId,
             'manager_id' => $this->managerId,
-            'client_id' => $this->clientId,
+            'client_id' => $pertanyaan === RoleGuide::KLIEN ? $this->clientId : null,
         ];
 
-        $assignments = array_map(
-            fn (array $a) => [
-                'role_id' => (int) $a['role_id'],
-                'scope_type' => $a['scope_type'],
-                'scope_id' => $a['scope_id'] !== null && $a['scope_id'] !== '' ? (int) $a['scope_id'] : null,
-                'valid_from' => $a['valid_from'] ?: null,
-                'valid_until' => $a['valid_until'] ?: null,
-            ],
-            $this->assignments,
-        );
+        $assignments = $this->penugasanSiteSaja ? null : $this->susunPenugasan($peran, $pertanyaan);
 
         // BR-GEN-09: mengubah penugasan role menuntut `role.assign` tersendiri.
         // Tanpa pemeriksaan ini, pemegang `user.update` bisa menambahkan role
         // Admin Company untuk dirinya sendiri lewat form ini.
-        if ($target === null || $this->assignmentsChanged($target, $assignments)) {
+        if ($assignments !== null && ($target === null || $this->assignmentsChanged($target, $assignments))) {
             $this->authorize('assignRole', $target ?? User::class);
         }
 
         try {
             if ($this->userId === null) {
-                $user = $createUser->handle($attributes, $assignments, $this->sendInvitation, auth()->user());
-                $pesan = $this->sendInvitation
-                    ? 'Pengguna dibuat dan undangan dikirim.'
-                    : 'Pengguna dibuat.';
+                $user = $createUser->handle($attributes, $assignments ?? [], $this->caraMasuk === 'undangan', auth()->user());
+                $pesan = $this->caraMasuk === 'undangan'
+                    ? 'Pengguna dibuat. Salin tautan undangannya di kartu di bawah.'
+                    : 'Pengguna dibuat dengan password yang Anda tentukan.';
+
+                if ($this->caraMasuk === 'password') {
+                    $setPassword->handle($user, $this->passwordAwal, auth()->user());
+                    session()->flash('passwordDibuat', $this->passwordAwal);
+                }
             } else {
                 $user = $updateUser->handle(User::findOrFail($this->userId), $attributes, $assignments, auth()->user());
                 $pesan = 'Perubahan disimpan.';
             }
+
+            // A-339: proyek peran Klien dicatat sebagai penempatan Tim site,
+            // supaya periodenya terlihat dan bisa diperpanjang di hub proyek.
+            if ($pertanyaan === RoleGuide::KLIEN && $assignments !== null) {
+                $siteTeam->catatPenempatanAwal($user, $peran, $this->proyekTerpilih(), auth()->user());
+            }
         } catch (AccessRuleException $e) {
+            // Ditempel di dua tempat supaya terlihat baik saat perannya dipilih
+            // lewat kartu maupun lewat baris Pengaturan lanjutan.
+            $this->addError('peranUtama', $e->getMessage());
             $this->addError('assignments', $e->getMessage());
 
             return null;
@@ -172,44 +225,22 @@ class UserForm extends Component
         return $this->redirectRoute('users.show', ['user' => $user->id], navigate: false);
     }
 
-    /**
-     * Membandingkan penugasan yang dikirim form dengan yang tersimpan, tanpa
-     * memedulikan urutan barisnya.
-     *
-     * @param  array<int, array<string, mixed>>  $submitted
-     */
-    private function assignmentsChanged(User $target, array $submitted): bool
+    /** Pertanyaan cakupan untuk peran yang sedang dipilih. */
+    public function pertanyaanPeran(): ?string
     {
-        $sidik = static fn (array $a): string => implode('|', [
-            $a['role_id'],
-            $a['scope_type'],
-            $a['scope_id'] ?? '',
-            $a['valid_from'] ?? '',
-            $a['valid_until'] ?? '',
-        ]);
+        if ($this->peranUtama === '') {
+            return null;
+        }
 
-        $baru = array_map($sidik, $submitted);
+        $role = Role::query()->find((int) $this->peranUtama);
 
-        $lama = $target->roleAssignments()->get()
-            ->map(fn ($a) => $sidik([
-                'role_id' => (int) $a->role_id,
-                'scope_type' => $a->scope_type->value,
-                'scope_id' => $a->scope_id === null ? null : (int) $a->scope_id,
-                'valid_from' => $a->valid_from?->toDateString(),
-                'valid_until' => $a->valid_until?->toDateString(),
-            ]))
-            ->all();
-
-        sort($baru);
-        sort($lama);
-
-        return $baru !== $lama;
+        return $role === null ? null : RoleGuide::pertanyaan($role);
     }
 
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:100'],
             'email' => [
                 'required', 'email', 'max:150',
@@ -219,13 +250,63 @@ class UserForm extends Component
             'orgUnitId' => ['nullable', 'integer', 'exists:org_units,id'],
             'positionId' => ['nullable', 'integer', 'exists:positions,id'],
             'managerId' => ['nullable', 'integer', 'different:userId', 'exists:users,id'],
-            'clientId' => ['nullable', 'integer', 'exists:clients,id'],
-            'assignments' => ['required', 'array', 'min:1'],
+            'assignments' => ['array'],
             'assignments.*.role_id' => ['required', 'integer', 'exists:roles,id'],
             'assignments.*.scope_type' => ['required', Rule::enum(ScopeType::class)],
             'assignments.*.scope_id' => ['nullable', 'integer', 'min:1'],
-            'assignments.*.valid_from' => ['nullable', 'date'],
-            'assignments.*.valid_until' => ['nullable', 'date', 'after_or_equal:assignments.*.valid_from'],
+        ];
+
+        if ($this->penugasanSiteSaja) {
+            return $rules;
+        }
+
+        $pertanyaan = $this->pertanyaanPeran();
+
+        if ($pertanyaan === null) {
+            // Tanpa peran utama, minimal harus ada satu baris di Pengaturan
+            // lanjutan. Bila keduanya kosong, galatnya menempel di kartu peran
+            // supaya terlihat — bukan di bagian yang sedang terlipat.
+            if ($this->assignments === []) {
+                $rules['peranUtama'] = ['required'];
+            } else {
+                $rules['assignments'] = ['required', 'array', 'min:1'];
+            }
+        } else {
+            $rules['peranUtama'] = ['required', 'integer', 'exists:roles,id'];
+
+            if ($pertanyaan === RoleGuide::GUDANG) {
+                $rules['gudangDipilih'] = ['required', 'array', 'min:1'];
+            }
+
+            if ($pertanyaan === RoleGuide::PROYEK) {
+                $rules['proyekDipilih'] = ['required', 'array', 'min:1'];
+            }
+
+            if ($pertanyaan === RoleGuide::KLIEN) {
+                $rules['clientId'] = ['required', 'integer', 'exists:clients,id'];
+                $rules['proyekDipilih'] = ['required', 'array', 'min:1'];
+            }
+        }
+
+        if ($this->userId === null && $this->caraMasuk === 'password') {
+            $rules['passwordAwal'] = ['required', 'string', 'min:10', 'max:100'];
+        }
+
+        return $rules;
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'peranUtama.required' => __('Pilih satu peran dulu.'),
+            'gudangDipilih.required' => __('Pilih minimal satu gudang.'),
+            'proyekDipilih.required' => __('Pilih minimal satu proyek.'),
+            'clientId.required' => __('Pilih klien dulu.'),
+            'assignments.required' => __('Pilih satu peran dulu.'),
+            'assignments.min' => __('Pilih satu peran dulu.'),
+            'passwordAwal.required' => __('Isi passwordnya, atau pilih kirim undangan.'),
+            'passwordAwal.min' => __('Password minimal 10 karakter.'),
         ];
     }
 
@@ -240,8 +321,12 @@ class UserForm extends Component
             'positionId' => 'Jabatan',
             'managerId' => 'Atasan langsung',
             'clientId' => 'Klien',
-            'assignments' => 'Penugasan role',
-            'assignments.*.role_id' => 'Role',
+            'peranUtama' => 'Peran',
+            'gudangDipilih' => 'Gudang',
+            'proyekDipilih' => 'Proyek',
+            'passwordAwal' => 'Password',
+            'assignments' => 'Peran',
+            'assignments.*.role_id' => 'Peran',
             'assignments.*.scope_type' => 'Cakupan',
             'assignments.*.scope_id' => 'ID cakupan',
         ];
@@ -250,15 +335,17 @@ class UserForm extends Component
     public function render(): View
     {
         $user = $this->userId !== null ? User::find($this->userId) : null;
+        $dipakai = array_filter(array_map(fn ($a) => (int) ($a['role_id'] ?? 0), $this->assignments));
+        $dipakai[] = (int) $this->peranUtama;
 
         return view('livewire.access.user-form', [
             'user' => $user,
             'emailTerkunci' => $user?->email_verified_at !== null,
             // A-314: role lama (Driver) hanya tampil bagi user yang sudah memilikinya.
             'roles' => Role::query()->where('is_active', true)
-                ->where(fn ($q) => $q->whereNotIn('code', Role::NOT_OFFERED)
-                    ->orWhereIn('id', array_filter(array_map(fn ($a) => (int) ($a['role_id'] ?? 0), $this->assignments))))
+                ->where(fn ($q) => $q->whereNotIn('code', Role::NOT_OFFERED)->orWhereIn('id', array_filter($dipakai)))
                 ->orderBy('name')->get(),
+            'pertanyaan' => $this->pertanyaanPeran(),
             'units' => OrgUnit::query()->where('is_active', true)->orderBy('name')->get(),
             'positions' => Position::query()
                 ->when($this->orgUnitId !== null, fn ($q) => $q->where('org_unit_id', $this->orgUnitId))
@@ -271,9 +358,18 @@ class UserForm extends Component
             // Cakupan dipilih lewat nama, bukan id angka (11-master §12, 12-warehouse §12).
             'projects' => Project::query()->active()->orderBy('name')->get(['id', 'code', 'name']),
             'clients' => Client::query()->active()->orderBy('name')->get(['id', 'code', 'name']),
-            // withoutGlobalScopes: yang memberi cakupan harus melihat seluruh
-            // gudang, termasuk yang di luar cakupannya sendiri.
+            // Peran Klien hanya boleh melihat proyek kliennya sendiri (A-21).
+            'proyekKlien' => $this->clientId === null
+                ? collect()
+                : Project::query()->active()->where('client_id', $this->clientId)
+                    ->orderBy('code')->get(['id', 'code', 'name']),
+            // withoutGlobalScopes: yang memberi cakupan harus melihat seluruh gudang,
+            // termasuk yang di luar cakupannya sendiri.
             'warehouses' => Warehouse::withoutGlobalScopes()->orderBy('code')->get(['id', 'code', 'name']),
+            // Gudang Site tidak ditawarkan di sini: penempatan di site lewat Tim site (A-337).
+            'gudangTetap' => Warehouse::withoutGlobalScopes()
+                ->whereHas('type', fn ($q) => $q->where('code', '!=', WarehouseType::SITE))
+                ->orderBy('code')->get(['id', 'code', 'name']),
         ]);
     }
 }

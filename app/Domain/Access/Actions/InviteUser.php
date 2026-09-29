@@ -7,6 +7,7 @@ namespace App\Domain\Access\Actions;
 use App\Domain\Access\Models\User;
 use App\Domain\Access\Models\UserInvitation;
 use App\Domain\Access\Notifications\UserInvitationNotification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -37,11 +38,21 @@ class InviteUser
         $invitation = UserInvitation::create([
             'user_id' => $user->id,
             'token' => UserInvitation::hashToken($plainToken),
+            // A-333: disimpan terenkripsi supaya tautannya bisa ditampilkan &
+            // disalin lagi selama undangan belum dipakai.
+            'token_plain' => $plainToken,
             'expires_at' => now()->addHours((int) config('access.invitation.valid_hours', 72)),
             'sent_count' => $sentCount,
         ]);
 
-        $user->notify(new UserInvitationNotification($plainToken, $invitation->expires_at));
+        // Email boleh gagal (mailer mati / salah setel) tanpa menggagalkan
+        // pembuatan undangan: tautannya tetap bisa diserahkan lewat kartu
+        // Undangan di detail pengguna.
+        try {
+            $user->notify(new UserInvitationNotification($plainToken, $invitation->expires_at));
+        } catch (\Throwable $e) {
+            Log::warning('Email undangan gagal dikirim: '.$e->getMessage(), ['user' => $user->id]);
+        }
 
         activity('access')
             ->performedOn($user)
