@@ -21,24 +21,11 @@
             <div class="card-header"><strong>{{ __('Harga beli baru') }}</strong></div>
             <div class="card-body row g-3">
                 <div class="col-md-4">
-                    <label class="form-label" for="hv-vendor">{{ __('Vendor') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.vendor_id') is-invalid @enderror" id="hv-vendor" wire:model="form.vendor_id">
-                        <option value="">{{ __('Pilih vendor…') }}</option>
-                        @foreach ($vendors as $v)
-                            <option value="{{ $v->id }}">{{ $v->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.vendor_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    {{-- A-393: vendor & item dicari ke server. --}}
+                    <x-pilih model="form.vendor_id" id="hv-vendor" server wajib :label="__('Vendor')" :kosong="__('Pilih vendor…')" :options="$opsiVendor" />
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label" for="hv-item">{{ __('Item') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.item_id') is-invalid @enderror" id="hv-item" wire:model="form.item_id">
-                        <option value="">{{ __('Pilih item…') }}</option>
-                        @foreach ($items as $i)
-                            <option value="{{ $i->id }}">{{ $i->code }} — {{ $i->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.item_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.item_id" id="hv-item" server wajib :label="__('Item')" :kosong="__('Pilih item…')" :options="$opsiItem" />
                 </div>
                 <div class="col-md-2">
                     <label class="form-label" for="hv-harga">{{ __('Harga satuan (Rp)') }} <span class="wajib">*</span></label>
@@ -69,13 +56,7 @@
                 <input class="form-control" id="cari-hv" type="search" wire:model.live.debounce.400ms="search" placeholder="{{ __('Kode/nama item atau vendor') }}">
             </div>
             <div class="col-lg-4">
-                <label class="form-label" for="filter-vendor-hv">{{ __('Vendor') }}</label>
-                <select class="form-select" id="filter-vendor-hv" wire:model.live="vendorFilter">
-                    <option value="">{{ __('Semua') }}</option>
-                    @foreach ($vendors as $v)
-                        <option value="{{ $v->id }}">{{ $v->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="vendorFilter" id="filter-vendor-hv" server live :label="__('Vendor')" :kosong="__('Semua')" :options="$opsiFilter" />
             </div>
             <div class="col-lg-4">
                 <div class="form-check">

@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Purchasing\Livewire;
 
-use App\Domain\Master\Enums\VendorStatus;
 use App\Domain\Master\Models\CompanySetting;
-use App\Domain\Master\Models\Vendor;
 use App\Domain\PurchaseRequest\Models\PurchaseRequest;
 use App\Domain\PurchaseRequest\Models\PurchaseRequestLine;
 use App\Domain\Purchasing\Actions\CreatePurchaseOrder;
@@ -14,9 +12,13 @@ use App\Domain\Purchasing\Actions\SubmitPurchaseOrder;
 use App\Domain\Purchasing\Livewire\Concerns\HandlesPurchasingRules;
 use App\Domain\Purchasing\Models\PurchaseOrder;
 use App\Domain\Purchasing\Support\Money;
+use App\Domain\Purchasing\Support\PilihanVendor;
 use App\Domain\Purchasing\Support\PurchaseOrderLines;
 use App\Domain\Purchasing\Support\VendorPrices;
 use App\Domain\Purchasing\Support\VendorSuggestions;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -31,6 +33,7 @@ use Livewire\Component;
  */
 class PurchaseOrderForm extends Component
 {
+    use CariPilihan;
     use HandlesPurchasingRules;
 
     #[Locked]
@@ -148,13 +151,29 @@ class PurchaseOrderForm extends Component
 
         return view('livewire.purchasing.purchase-order-form', [
             'warehouses' => Warehouse::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
-            'vendors' => Vendor::query()->where('is_active', true)->where('status', VendorStatus::Active->value)->orderBy('name')->get(['id', 'code', 'name', 'vendor_type', 'payment_terms']),
+            'opsiVendor' => $this->pilihanVendor()->awalDengan($this->form['vendor_id']),
+            'termin' => $this->pilihanVendor()->query()->whereKey(is_numeric($this->form['vendor_id']) ? (int) $this->form['vendor_id'] : 0)->value('payment_terms'),
             'terbuka' => $terbuka,
             'riwayat' => $this->riwayatHarga($itemIds),
             'batasNaik' => (float) CompanySetting::get('po_price_increase_pct', 10),
             'total' => Money::round($terbuka->sum(fn ($r) => $this->nilai($r['line']->id))),
             'nomor' => $this->poId !== null ? PurchaseOrder::query()->whereKey($this->poId)->value('number') : null,
         ]);
+    }
+
+    /** Vendor aktif (daftar lama = `Vendor::active`), dicari ke server (A-393). */
+    private function pilihanVendor(): Pilihan
+    {
+        return PilihanVendor::dari(SumberPilihan::vendor()->query());
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $boleh = $this->poId === null
+            ? auth()->user()?->can('create', PurchaseOrder::class)
+            : auth()->user()?->can('update', PurchaseOrder::query()->findOrFail($this->poId));
+
+        return $model === 'form.vendor_id' && $boleh ? $this->pilihanVendor() : null;
     }
 
     public function nilai(int|string $lineId): float
@@ -206,8 +225,9 @@ class PurchaseOrderForm extends Component
 
     private function simpanDraf(CreatePurchaseOrder $action): ?PurchaseOrder
     {
+        // A-393: vendor dari daftar; id lain dari browser ditolak di isiannya.
         $this->validate([
-            'form.vendor_id' => ['required'],
+            'form.vendor_id' => ['required', $this->pilihanVendor()->aturan()],
             'form.warehouse_id' => ['required'],
         ], attributes: ['form.vendor_id' => __('Vendor'), 'form.warehouse_id' => __('Gudang tujuan')]);
 

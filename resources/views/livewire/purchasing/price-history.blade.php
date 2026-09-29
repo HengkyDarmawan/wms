@@ -7,13 +7,9 @@
                 <div class="small text-muted">{{ __('Harga satuan per :u, seperti tercatat di PO (tanda PPN per baris).', ['u' => $item->baseUom?->code]) }}</div>
             </div>
             <div class="col-md-3">
-                <label class="form-label" for="rh-vendor">{{ __('Vendor') }}</label>
-                <select class="form-select" id="rh-vendor" wire:model.live="vendor">
-                    <option value="">{{ __('Semua vendor') }}</option>
-                    @foreach ($vendors as $v)
-                        <option value="{{ $v->id }}">{{ $v->name }}</option>
-                    @endforeach
-                </select>
+                {{-- A-393: hanya vendor yang pernah dipesan untuk item ini — dimuat sekaligus. --}}
+                <x-pilih model="vendor" id="rh-vendor" live :label="__('Vendor')" :kosong="__('Semua vendor')"
+                         :options="$vendors->map(fn ($v) => ['value' => $v->id, 'text' => $v->name])->all()" />
             </div>
             <div class="col-md-2">
                 <label class="form-label" for="rh-dari">{{ __('Dari') }}</label>

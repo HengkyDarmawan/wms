@@ -16,22 +16,11 @@
                 <input class="form-control" id="cari-po" type="search" wire:model.live.debounce.400ms="search" placeholder="{{ __('Nomor PO / PRQ / vendor') }}">
             </div>
             <div class="col-lg-3">
-                <label class="form-label" for="filter-vendor-po">{{ __('Vendor') }}</label>
-                <select class="form-select" id="filter-vendor-po" wire:model.live="vendorFilter">
-                    <option value="">{{ __('Semua') }}</option>
-                    @foreach ($vendors as $v)
-                        <option value="{{ $v->id }}">{{ $v->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="vendorFilter" id="filter-vendor-po" server live :label="__('Vendor')" :kosong="__('Semua')" :options="$opsiVendor" />
             </div>
             <div class="col-lg-3">
-                <label class="form-label" for="filter-gudang-po">{{ __('Gudang tujuan') }}</label>
-                <select class="form-select" id="filter-gudang-po" wire:model.live="warehouseFilter">
-                    <option value="">{{ __('Semua') }}</option>
-                    @foreach ($warehouses as $w)
-                        <option value="{{ $w->id }}">{{ $w->code }} — {{ $w->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="warehouseFilter" id="filter-gudang-po" live :label="__('Gudang tujuan')" :kosong="__('Semua')"
+                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' — '.$w->name])->all()" />
             </div>
             <div class="col-lg-3">
                 <label class="form-label" for="filter-status-po">{{ __('Status') }}</label>

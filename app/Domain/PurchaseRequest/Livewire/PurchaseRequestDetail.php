@@ -17,8 +17,11 @@ use App\Domain\PurchaseRequest\Actions\SubmitPurchaseRequest;
 use App\Domain\PurchaseRequest\Enums\PurchaseRequestStatus;
 use App\Domain\PurchaseRequest\Livewire\Concerns\HandlesPurchaseRequestRules;
 use App\Domain\PurchaseRequest\Models\PurchaseRequest;
+use App\Domain\Purchasing\Support\PilihanVendor;
 use App\Domain\Purchasing\Support\VendorSuggestions;
 use App\Domain\Receipt\Models\GoodsReceipt;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -31,6 +34,7 @@ use Spatie\Activitylog\Models\Activity;
  */
 class PurchaseRequestDetail extends Component
 {
+    use CariPilihan;
     use HandlesPurchaseRequestRules;
 
     #[Locked]
@@ -60,6 +64,8 @@ class PurchaseRequestDetail extends Component
         $prq = $this->prq();
         $orders = $prq->orders()->with('vendor:id,code,name,vendor_type,status', 'orderer:id,name', 'lines.line.item:id,code,name')->orderBy('id')->get();
         $orderLineIds = $orders->flatMap(fn ($o) => $o->lines->pluck('id'))->all();
+        // A-304: saran dari riwayat; termurah hanya nama & hanya bagi po.view (D-07).
+        $saran = $this->dialog === 'pesan' ? $this->saranVendor($prq) : [];
 
         return view('livewire.purchase-request.purchase-request-detail', [
             'prq' => $prq,
@@ -68,12 +74,9 @@ class PurchaseRequestDetail extends Component
             'receipts' => $orderLineIds === [] ? collect() : GoodsReceipt::query()->withoutGlobalScopes()
                 ->whereHas('lines', fn ($q) => $q->whereIn('purchase_request_order_line_id', $orderLineIds))
                 ->orderBy('id')->get(['id', 'number', 'status', 'received_at']),
-            'vendors' => $this->dialog === 'pesan'
-                ? Vendor::query()->where('is_active', true)->where('status', '!=', VendorStatus::Inactive->value)->orderBy('name')->get(['id', 'code', 'name', 'vendor_type'])
-                : collect(),
+            'opsiVendor' => $this->dialog === 'pesan' ? $this->opsiVendor($saran['ids'] ?? []) : [],
             'vendorTypes' => VendorType::options(),
-            // A-304: saran dari riwayat; termurah hanya nama & hanya bagi po.view (D-07).
-            'saran' => $this->dialog === 'pesan' ? $this->saranVendor($prq) : [],
+            'saran' => $saran,
             'menunggu' => $prq->isAwaitingApproval(),
             'alasanTolak' => $this->pilihanAlasan(ReasonContext::Reject),
             'alasanBatal' => $this->pilihanAlasan(ReasonContext::Cancel),
@@ -162,6 +165,45 @@ class PurchaseRequestDetail extends Component
         return ['baris' => $baris, 'ids' => array_values(array_unique(array_map('intval', $ids)))];
     }
 
+    /** Vendor aktif & sementara (daftar lama), dicari ke server (A-393). */
+    private function pilihanVendor(): Pilihan
+    {
+        return PilihanVendor::dari(Vendor::query()->where('is_active', true)
+            ->where('status', '!=', VendorStatus::Inactive->value)->orderBy('name'));
+    }
+
+    /**
+     * Isian awal: vendor saran riwayat paling atas bertanda *disarankan*, lalu
+     * potongan awal daftar + nilai terpilih.
+     *
+     * @param  list<int>  $saranIds
+     * @return list<array<string, mixed>>
+     */
+    private function opsiVendor(array $saranIds): array
+    {
+        $pilihan = $this->pilihanVendor();
+        $atas = [];
+
+        foreach ($saranIds as $id) {
+            if (($o = $pilihan->label($id)) !== null) {
+                $atas[] = ['badge' => __('disarankan'), 'sub' => trim(($o['badge'] ?? '').' · '.$o['sub'], ' ·')] + $o;
+            }
+        }
+
+        $ada = array_map(fn (array $o) => (string) $o['value'], $atas);
+
+        return [...$atas, ...array_values(array_filter(
+            $pilihan->awalDengan($this->order['vendor_id'] ?? ''),
+            fn (array $o) => ! in_array((string) $o['value'], $ada, true),
+        ))];
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        return $model === 'order.vendor_id' && $this->dialog === 'pesan' && (auth()->user()?->can('order', $this->prq()) ?? false)
+            ? $this->pilihanVendor() : null;
+    }
+
     public function tutupDialog(): void
     {
         $this->dialog = '';
@@ -212,6 +254,11 @@ class PurchaseRequestDetail extends Component
     {
         $prq = $this->prq();
         $this->authorize('order', $prq);
+
+        // A-393: vendor dari daftar (kecuali mengisi vendor baru sementara); id lain dari browser ditolak.
+        if (trim((string) ($this->order['new_vendor_name'] ?? '')) === '') {
+            $this->validate(['order.vendor_id' => [$this->pilihanVendor()->aturan()]], attributes: ['order.vendor_id' => __('Vendor')]);
+        }
 
         $ok = $this->jalankan(fn () => $action->handle($prq, $this->order, $this->orderQty, auth()->user()), 'order');
 

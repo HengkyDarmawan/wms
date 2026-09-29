@@ -7,6 +7,9 @@ namespace App\Domain\Purchasing\Livewire;
 use App\Domain\Master\Models\Vendor;
 use App\Domain\Purchasing\Enums\PurchaseOrderStatus;
 use App\Domain\Purchasing\Models\PurchaseOrder;
+use App\Domain\Purchasing\Support\PilihanVendor;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,6 +21,7 @@ use Livewire\WithPagination;
 /** Layar purchasing/02 §6 — daftar PO di gudang tujuan dalam cakupan pengguna. */
 class PurchaseOrderList extends Component
 {
+    use CariPilihan;
     use WithPagination;
 
     #[Url(as: 'q', except: '')]
@@ -49,9 +53,20 @@ class PurchaseOrderList extends Component
         return view('livewire.purchasing.purchase-order-list', [
             'orders' => $this->daftar(),
             'statuses' => PurchaseOrderStatus::options(),
-            'vendors' => Vendor::query()->whereIn('id', PurchaseOrder::query()->select('vendor_id'))->orderBy('name')->get(['id', 'code', 'name']),
+            'opsiVendor' => $this->pilihanVendor()->awalDengan($this->vendorFilter),
             'warehouses' => Warehouse::query()->orderBy('code')->get(['id', 'code', 'name']),
         ]);
+    }
+
+    /** Saringan vendor: vendor yang punya PO (daftar lama), dicari ke server (A-393). */
+    private function pilihanVendor(): Pilihan
+    {
+        return PilihanVendor::dari(Vendor::query()->whereIn('id', PurchaseOrder::query()->select('vendor_id'))->orderBy('name'), false);
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        return $model === 'vendorFilter' && auth()->user()?->can('viewAny', PurchaseOrder::class) ? $this->pilihanVendor() : null;
     }
 
     private function daftar(): LengthAwarePaginator

@@ -6,11 +6,14 @@ namespace App\Domain\Purchasing\Livewire;
 
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\VendorStatus;
-use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Vendor;
 use App\Domain\Purchasing\Actions\SaveVendorPrice;
 use App\Domain\Purchasing\Livewire\Concerns\HandlesPurchasingRules;
 use App\Domain\Purchasing\Models\VendorPrice;
+use App\Domain\Purchasing\Support\PilihanVendor;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\View;
@@ -24,6 +27,7 @@ use Livewire\WithPagination;
  */
 class VendorPriceList extends Component
 {
+    use CariPilihan;
     use HandlesPurchasingRules;
     use WithPagination;
 
@@ -71,9 +75,10 @@ class VendorPriceList extends Component
     {
         $this->authorize('create', VendorPrice::class);
 
+        // A-393: vendor & item dari daftar; id lain dari browser ditolak di isiannya.
         $this->validate([
-            'form.vendor_id' => ['required'],
-            'form.item_id' => ['required'],
+            'form.vendor_id' => ['required', $this->pilihanVendor()->aturan()],
+            'form.item_id' => ['required', $this->pilihanItem()->aturan()],
             'form.unit_price' => ['required', 'numeric', 'gt:0'],
             'form.valid_from' => ['required', 'date'],
             'form.notes' => ['nullable', 'max:255'],
@@ -103,9 +108,35 @@ class VendorPriceList extends Component
     {
         return view('livewire.purchasing.vendor-price-list', [
             'prices' => $this->daftar(),
-            'vendors' => Vendor::query()->where('status', '!=', VendorStatus::Inactive->value)->orderBy('name')->get(['id', 'code', 'name']),
-            'items' => $this->formTerbuka ? Item::query()->where('status', ItemStatus::Active->value)->orderBy('code')->get(['id', 'code', 'name']) : collect(),
+            'opsiFilter' => $this->pilihanVendor()->awalDengan($this->vendorFilter),
+            'opsiVendor' => $this->formTerbuka ? $this->pilihanVendor()->awalDengan($this->form['vendor_id']) : [],
+            'opsiItem' => $this->formTerbuka ? $this->pilihanItem()->awalDengan($this->form['item_id']) : [],
         ]);
+    }
+
+    /** Vendor selain nonaktif (daftar lama, termasuk sementara), dicari ke server (A-393). */
+    private function pilihanVendor(): Pilihan
+    {
+        return PilihanVendor::dari(Vendor::query()->where('status', '!=', VendorStatus::Inactive->value)->orderBy('name'));
+    }
+
+    /** Item aktif (daftar lama), dicari ke server. */
+    private function pilihanItem(): Pilihan
+    {
+        return SumberPilihan::item([ItemStatus::Active]);
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $user = auth()->user();
+
+        return match (true) {
+            $model === 'vendorFilter' => $user?->can('viewAny', VendorPrice::class) ? $this->pilihanVendor() : null,
+            ! $this->formTerbuka || ! $user?->can('create', VendorPrice::class) => null,
+            $model === 'form.vendor_id' => $this->pilihanVendor(),
+            $model === 'form.item_id' => $this->pilihanItem(),
+            default => null,
+        };
     }
 
     private function daftar(): LengthAwarePaginator

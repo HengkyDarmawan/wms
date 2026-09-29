@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `purchase_request` (Purchase Request)
 
-**Versi:** 0.6
-**Tanggal:** 28 September 2026
-**Status:** selesai Fase 1 — modul keempat belas setelah [Aset](25-aset.md); menyambung baris REQ bersumber pembelian ([BR-REQ-05](05-aturan-bisnis.md#br-req)) dan rujukan baris GRN vendor yang sebelumnya stub ([19-receipt-putaway](19-receipt-putaway.md) §3); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-170](04-keputusan-dan-asumsi.md#a-170)–[A-175](04-keputusan-dan-asumsi.md#a-175) (*Perlu validasi*); v0.2: notifikasi PRQ disetujui & draf titik pesan ulang ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.5: hanya bagian **Baik** GRN yang menambah `qty_received`; Rusak & Kurang tetap sisa pesanan ([A-287](04b-asumsi-lanjutan.md#a-287), [A-289](04b-asumsi-lanjutan.md#a-289))
+**Versi:** 0.7
+**Tanggal:** 1 Oktober 2026
+**Status:** selesai Fase 1 — v0.7: pilihan yang bisa dicari; proyek & item PRQ serta vendor *Catat pemesanan* dicari ke server ([A-393](04b-asumsi-lanjutan.md#a-393), §13.5, TC-PRQ-14); modul keempat belas setelah [Aset](25-aset.md); menyambung baris REQ bersumber pembelian ([BR-REQ-05](05-aturan-bisnis.md#br-req)) dan rujukan baris GRN vendor yang sebelumnya stub ([19-receipt-putaway](19-receipt-putaway.md) §3); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-170](04-keputusan-dan-asumsi.md#a-170)–[A-175](04-keputusan-dan-asumsi.md#a-175) (*Perlu validasi*); v0.2: notifikasi PRQ disetujui & draf titik pesan ulang ([27-pendukung-f1](27-pendukung-f1.md), [A-189](04-keputusan-dan-asumsi.md#a-189)); v0.5: hanya bagian **Baik** GRN yang menambah `qty_received`; Rusak & Kurang tetap sisa pesanan ([A-287](04b-asumsi-lanjutan.md#a-287), [A-289](04b-asumsi-lanjutan.md#a-289))
 **Modul:** `purchase_request` (PRQ)
 **Fase:** F1 manual (PRQ dari backorder REQ, titik pesan ulang, dan manual; approval opsional; catatan pemesanan per vendor oleh Penindak Lanjut PR; GRN vendor merujuk catatan pemesanan; reservasi otomatis ke REQ penunggu); sambungan ke modul Purchasing (`po_created`) `[F3]`
 **Dokumen terkait:** [Blueprint §6.3a](01-blueprint.md#63a-master-data-lain) · [Aturan Bisnis §BR-REQ](05-aturan-bisnis.md#br-req), [§BR-GRN](05-aturan-bisnis.md#br-grn), [§14 matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status §2.15, §3](06-katalog-status-dan-enum.md) · [Model data 08b](08b-model-data-stok-dokumen.md) · [A-47](04-keputusan-dan-asumsi.md#a-47), [A-51](04-keputusan-dan-asumsi.md#a-51)–[A-53](04-keputusan-dan-asumsi.md#a-53) · [14-request](14-request.md), [19-receipt-putaway](19-receipt-putaway.md), [20-approval](20-approval.md)
@@ -160,6 +160,7 @@ Uji di `tests/Feature/PurchaseRequest` (12 uji): `PurchaseRequestTest`, `Purchas
 | TC-PRQ-11 | Layar | form (jumlah 0 lalu benar) → daftar → catat pemesanan (vendor terakhir dari riwayat tersaran) → batal lewat dialog | BR-LED-02; `approved` tanpa proyek; `forwarded`, semen tak dipesan; Alasan wajib lalu `cancelled` | §6 |
 | TC-PRQ-12 | PRQ dipesan | form GRN vendor: *Tambah* pesanan, ubah 20, simpan, buka draf | nomor PRQ tampil; baris terisi & terkunci; rujukan tersimpan & dimuat ulang | A-174 |
 | TC-PRQ-13 | Baut pernah di-PO ke Toko Murah (1.000, 60 hari lalu) & vendor fixture (1.500, 3 hari lalu) | buka *Catat pemesanan* sebagai pemegang `po.view`, lalu sebagai peran tanpa `po.view`; ganti vendor + alasan | bawaan vendor fixture (terakhir); "Termurah 6 bln: Toko Murah" tanpa angka/Rp; tanpa `po.view` saran termurah tidak tampil; catatan tersimpan ke vendor pilihan dengan alasannya | [A-304](04b-asumsi-lanjutan.md#a-304) |
+| TC-PRQ-14 | Staf bercakupan proyek P1; P2; item aktif & nonaktif; vendor aktif, sementara, nonaktif | cari "PR" di Proyek & "BAUT" di Item form PRQ; kirim P2 & item nonaktif; driver memanggil pencarian; cari vendor sebelum & sesudah membuka *Catat pemesanan*, kirim vendor nonaktif | hanya P1; tanpa item nonaktif; simpan ditolak di isian Proyek & Item baris 1; driver kosong; sebelum dialog kosong, sesudahnya aktif & sementara; vendor nonaktif ditolak di isian Vendor, catatan tidak dibuat | [A-393](04b-asumsi-lanjutan.md#a-393) |
 
 Uji modul lain yang berubah: TC-ACC-27b (6 permission `purchase_request`), TC-APR-17 (jenis di luar katalog; semua jenis Katalog sudah tersambung), TC-APR-21 (7 aturan demo, termasuk PRQ toko online).
 
@@ -198,6 +199,10 @@ Domain `app/Domain/PurchaseRequest`: 5 aksi (`CreatePurchaseRequest` dengan `upd
 ### 13.4 Saran vendor dari riwayat (28 September 2026)
 
 Dialog *Catat pemesanan* menyarankan vendor terakhir & termurah 6 bulan per item dari riwayat (`Purchasing\Support\VendorSuggestions`), menggantikan vendor tetap item ([A-304](04b-asumsi-lanjutan.md#a-304), [A-305](04b-asumsi-lanjutan.md#a-305)); termurah hanya nama vendor dan hanya bagi `po.view` (D-07). Alasan pilihan tetap opsional (`vendor_note`). Kondisi approval jenis vendor tidak lagi dinilai di PRQ ([A-308](04b-asumsi-lanjutan.md#a-308)); keputusan implementasi no. 2 di atas digantikan.
+
+### 13.5 Pilihan yang bisa dicari (1 Oktober 2026)
+
+`PurchaseRequestForm`: Proyek (query lama persis: `accessibleProjectIds`, semua status — aksi tetap menolak proyek tidak aktif) dan Item baris (aktif & sementara, teks berakhiran satuan dasar, isian awal `Pilihan::awalPerBaris`) memakai `<x-pilih server>`; cari hanya bagi `create` (PRQ baru) / `update` (draf); simpan menolak id di luar daftar di isiannya, kecuali proyek draf (terkunci) dan item baris draf tersimpan. Gudang tujuan & saringan gudang daftar PRQ dimuat sekaligus. `PurchaseRequestDetail`: Vendor *Catat pemesanan* (aktif & sementara, `Purchasing\Support\PilihanVendor`) dicari ke server hanya saat dialog terbuka & izin `order`; vendor saran riwayat paling atas bertanda *disarankan*; id di luar daftar ditolak bila tidak mengisi vendor baru sementara. Uji `tests/Feature/Purchasing/PilihanPembelianTest` (TC-PRQ-14) ([A-393](04b-asumsi-lanjutan.md#a-393)).
 
 ### 13.3 Sisa pekerjaan
 

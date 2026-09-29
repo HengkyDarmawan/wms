@@ -124,6 +124,10 @@ label .wajib {
 .nx-pilih .ts-wrapper.single.input-active.nx-mengetik .ts-control > .item { display: none; }
 .nx-pilih .ts-dropdown .option .badge,
 .nx-pilih .ts-control .item .badge { vertical-align: 1px; }
+/* Di sel tabel baris dokumen (layar HP ±390px) kotak tidak menyempit sampai teks patah per kata;
+   tabel sudah bergulir mendatar (.table-responsive). */
+.table .nx-pilih,
+td .nx-pilih { min-width: 14rem; }
 
 /* A-383: <x-pilih> lengkap — dropdown bisa ditempel ke <body> (di dalam dialog/modal), jadi
    gayanya memakai kelas dropdown sendiri, bukan hanya turunan .nx-pilih. */

@@ -16,13 +16,8 @@
                 <input class="form-control" id="cari-prq" type="search" wire:model.live.debounce.400ms="search" placeholder="{{ __('Nomor PRQ / PO / pesanan') }}">
             </div>
             <div class="col-lg-3">
-                <label class="form-label" for="filter-gudang-prq">{{ __('Gudang tujuan') }}</label>
-                <select class="form-select" id="filter-gudang-prq" wire:model.live="warehouseFilter">
-                    <option value="">{{ __('Semua') }}</option>
-                    @foreach ($warehouses as $w)
-                        <option value="{{ $w->id }}">{{ $w->code }} — {{ $w->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="warehouseFilter" id="filter-gudang-prq" live :label="__('Gudang tujuan')" :kosong="__('Semua')"
+                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' — '.$w->name])->all()" />
             </div>
             <div class="col-lg-3">
                 <label class="form-label" for="filter-asal-prq">{{ __('Asal') }}</label>

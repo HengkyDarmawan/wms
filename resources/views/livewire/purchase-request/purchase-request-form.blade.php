@@ -21,24 +21,13 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-md-4">
-                <label class="form-label" for="prq-gudang">{{ __('Gudang tujuan') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.warehouse_id') is-invalid @enderror" id="prq-gudang" wire:model="form.warehouse_id" @disabled($draf)>
-                    <option value="">{{ __('Pilih gudang…') }}</option>
-                    @foreach ($warehouses as $g)
-                        <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="form.warehouse_id" id="prq-gudang" wajib :label="__('Gudang tujuan')" :disabled="$draf"
+                         :kosong="__('Pilih gudang…')" :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="prq-proyek">{{ __('Proyek') }}</label>
-                <select class="form-select @error('form.project_id') is-invalid @enderror" id="prq-proyek" wire:model="form.project_id" @disabled($draf)>
-                    <option value="">{{ __('Tanpa proyek (stok gudang)') }}</option>
-                    @foreach ($projects as $p)
-                        <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.project_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                {{-- A-393: proyek dalam cakupan, dicari ke server. --}}
+                <x-pilih model="form.project_id" id="prq-proyek" server :label="__('Proyek')" :disabled="$draf"
+                         :kosong="__('Tanpa proyek (stok gudang)')" :options="$opsiProyek" />
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="prq-ket">{{ __('Keterangan') }}</label>
@@ -57,13 +46,8 @@
             @foreach ($rows as $i => $r)
                 <div class="row g-2 align-items-end mb-2" wire:key="prq-row-{{ $i }}">
                     <div class="col-md-5">
-                        <label class="form-label small" for="prq-item-{{ $i }}">{{ __('Item') }} <span class="wajib">*</span></label>
-                        <select class="form-select form-select-sm" id="prq-item-{{ $i }}" wire:model="rows.{{ $i }}.item_id">
-                            <option value="">{{ __('Pilih item…') }}</option>
-                            @foreach ($items as $it)
-                                <option value="{{ $it->id }}">{{ $it->code }} — {{ $it->name }} ({{ $it->baseUom?->code }})</option>
-                            @endforeach
-                        </select>
+                        <x-pilih model="rows.{{ $i }}.item_id" id="prq-item-{{ $i }}" server kecil wajib :label="__('Item')"
+                                 :kunci="(string) count($rows)" :kosong="__('Pilih item…')" :options="$opsiItem[$i] ?? []" />
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small" for="prq-qty-{{ $i }}">{{ __('Jumlah') }} <span class="wajib">*</span></label>

@@ -2,14 +2,8 @@
     <div class="card-header"><strong>{{ __('Catat pemesanan') }}</strong> <span class="small text-muted">{{ __('satu catatan per vendor/toko; baris boleh dipecah ke beberapa vendor') }}</span></div>
     <div class="card-body row g-3">
         <div class="col-md-4">
-            <label class="form-label" for="po-vendor">{{ __('Vendor') }}</label>
-            <select class="form-select @error('order.vendor_id') is-invalid @enderror" id="po-vendor" wire:model="order.vendor_id">
-                <option value="">{{ __('Pilih vendor…') }}</option>
-                @foreach ($vendors as $v)
-                    <option value="{{ $v->id }}">{{ $v->name }} ({{ $vendorTypes[$v->vendor_type?->value] ?? '' }}){{ in_array((int) $v->id, $saran['ids'] ?? [], true) ? ' — '.__('disarankan') : '' }}</option>
-                @endforeach
-            </select>
-            @error('order.vendor_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            {{-- A-393: vendor aktif & sementara dicari ke server; saran riwayat paling atas. --}}
+            <x-pilih model="order.vendor_id" id="po-vendor" server :label="__('Vendor')" :kosong="__('Pilih vendor…')" :options="$opsiVendor" />
             @if (($saran['baris'] ?? []) !== [])
                 <div class="small text-muted mt-1" id="po-saran">
                     {{ __('Saran dari riwayat (bebas diganti):') }}

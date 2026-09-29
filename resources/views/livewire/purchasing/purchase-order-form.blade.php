@@ -17,26 +17,13 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-md-4">
-                <label class="form-label" for="po-vendor">{{ __('Vendor') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.vendor_id') is-invalid @enderror" id="po-vendor" wire:model.live="form.vendor_id">
-                    <option value="">{{ __('Pilih vendor…') }}</option>
-                    @foreach ($vendors as $v)
-                        <option value="{{ $v->id }}">{{ $v->name }} ({{ $v->vendor_type?->label() }})</option>
-                    @endforeach
-                </select>
-                @error('form.vendor_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                @php($terpilih = $vendors->firstWhere('id', (int) $form['vendor_id']))
-                @if ($terpilih?->payment_terms) <div class="form-text">{{ __('Termin') }}: {{ $terpilih->payment_terms }}</div> @endif
+                {{-- A-393: vendor aktif dicari ke server. --}}
+                <x-pilih model="form.vendor_id" id="po-vendor" server live wajib :label="__('Vendor')" :kosong="__('Pilih vendor…')" :options="$opsiVendor" />
+                @if ($termin) <div class="form-text">{{ __('Termin') }}: {{ $termin }}</div> @endif
             </div>
             <div class="col-md-3">
-                <label class="form-label" for="po-gudang">{{ __('Gudang tujuan') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.warehouse_id') is-invalid @enderror" id="po-gudang" wire:model.live="form.warehouse_id">
-                    <option value="">{{ __('Pilih gudang…') }}</option>
-                    @foreach ($warehouses as $w)
-                        <option value="{{ $w->id }}">{{ $w->code }} — {{ $w->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="form.warehouse_id" id="po-gudang" live wajib :label="__('Gudang tujuan')" :kosong="__('Pilih gudang…')"
+                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' — '.$w->name])->all()" />
             </div>
             <div class="col-md-2">
                 <label class="form-label" for="po-eta">{{ __('Perkiraan datang') }}</label>
