@@ -41,6 +41,10 @@ class EndProjectTeamMember
 
         $alasan = ReasonCode::query()->forContext(ReasonContext::Cancel)->where('code', $reasonCode)->first();
 
+        if ($alasan === null) {
+            throw AccessRuleException::rule('BR-GEN-11', 'Alasan tidak dikenal; pilih dari daftar.');
+        }
+
         try {
             $selesai = $endsOn === null || trim($endsOn) === ''
                 ? now()->startOfDay()

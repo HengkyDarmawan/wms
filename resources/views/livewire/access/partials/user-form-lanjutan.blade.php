@@ -25,7 +25,7 @@
 
                 <div class="col-md-4">
                     <label class="form-label" for="positionId">{{ __('Jabatan') }}</label>
-                    <select class="form-select" id="positionId" wire:model="positionId">
+                    <select class="form-select" id="positionId" wire:model.live="positionId">
                         <option value="">{{ __('— Tidak diisi —') }}</option>
                         @foreach ($positions as $position)
                             <option value="{{ $position->id }}">{{ $position->name }}</option>
@@ -34,14 +34,21 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label" for="managerId">{{ __('Atasan langsung') }}</label>
+                    <label class="form-label" for="managerId">{{ __('Atasan langsung (isi manual)') }}</label>
                     <select class="form-select @error('managerId') is-invalid @enderror" id="managerId" wire:model="managerId">
-                        <option value="">{{ __('— Tidak diisi —') }}</option>
+                        <option value="">{{ __('— Ikuti jabatan —') }}</option>
                         @foreach ($managers as $manager)
                             <option value="{{ $manager->id }}">{{ $manager->name }}</option>
                         @endforeach
                     </select>
-                    <div class="form-text">{{ __('Dipakai approval "atasan langsung" dan pemisahan tugas.') }}</div>
+                    {{-- A-345: kosong = pemegang jabatan atasan (peta jabatan); isi hanya bila berbeda. --}}
+                    <div class="form-text">
+                        @if ($atasanDariJabatan !== [])
+                            {{ __('Kosongkan untuk mengikuti jabatan: :nama.', ['nama' => implode(', ', $atasanDariJabatan)]) }}
+                        @else
+                            {{ __('Jabatan ini belum punya atasan di Struktur organisasi; isi bila perlu.') }}
+                        @endif
+                    </div>
                     @error('managerId')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>

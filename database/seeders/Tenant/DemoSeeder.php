@@ -89,21 +89,27 @@ class DemoSeeder extends Seeder
      */
     private function seedPositions(array $units): array
     {
+        // Kolom terakhir = jabatan atasan (peta jabatan, A-344); level mengikuti peta.
         $definitions = [
-            'DIREKTUR' => ['DIR', 'Direktur', 1],
-            'KA_GUDANG' => ['OPS', 'Kepala Gudang', 2],
-            'STAF_GUDANG' => ['OPS', 'Staf Gudang', 3],
-            'ENGINEER' => ['PRJ', 'Engineer / PIC Proyek', 2],
-            'PURCHASING' => ['FIN', 'Purchasing', 2],
-            'AUDITOR' => ['AUD', 'Auditor Internal', 2],
+            'DIREKTUR' => ['DIR', 'Direktur', 1, null],
+            'KA_GUDANG' => ['OPS', 'Kepala Gudang', 2, 'DIREKTUR'],
+            'STAF_GUDANG' => ['OPS', 'Staf Gudang', 3, 'KA_GUDANG'],
+            'ENGINEER' => ['PRJ', 'Engineer / PIC Proyek', 2, 'DIREKTUR'],
+            'PURCHASING' => ['FIN', 'Purchasing', 2, 'DIREKTUR'],
+            'AUDITOR' => ['AUD', 'Auditor Internal', 2, 'DIREKTUR'],
         ];
 
         $positions = [];
 
-        foreach ($definitions as $code => [$unitCode, $name, $level]) {
+        foreach ($definitions as $code => [$unitCode, $name, $level, $atasan]) {
             $positions[$code] = Position::updateOrCreate(
                 ['code' => $code],
-                ['org_unit_id' => $units[$unitCode]->id, 'name' => $name, 'level' => $level],
+                [
+                    'org_unit_id' => $units[$unitCode]->id,
+                    'name' => $name,
+                    'level' => $level,
+                    'reports_to_position_id' => $atasan !== null ? $positions[$atasan]->id : null,
+                ],
             );
         }
 

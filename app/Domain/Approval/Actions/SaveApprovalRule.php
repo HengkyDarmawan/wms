@@ -14,6 +14,7 @@ use App\Domain\Approval\Exceptions\ApprovalRuleException;
 use App\Domain\Approval\Models\ApprovalRule;
 use App\Domain\Approval\Models\ApprovalStep;
 use App\Domain\Approval\Support\ApprovalRegistry;
+use App\Domain\Approval\Support\ApproverResolver;
 use App\Domain\Approval\Support\ConditionMatcher;
 use Illuminate\Support\Facades\DB;
 
@@ -148,6 +149,8 @@ class SaveApprovalRule
                 'step_no' => $no,
                 'approver_type' => $jenis->value,
                 'approver_ref_id' => $ref,
+                // A-346: hanya bermakna untuk Atasan langsung; lainnya kosong.
+                'manager_levels' => $jenis === ApproverType::DirectManager ? ApproverResolver::tingkat($s['manager_levels'] ?? 1) : null,
                 'decision_mode' => $mode->value,
                 // A-269: bawaan menyala; hanya berarti untuk Role/Jabatan.
                 'same_org_unit' => $jenis->limitableToOrgUnit() && filter_var($s['same_org_unit'] ?? true, FILTER_VALIDATE_BOOLEAN),

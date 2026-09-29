@@ -22,6 +22,9 @@ class UserInvitation extends Model
 
     protected $guarded = [];
 
+    /** Jangan pernah ikut terserialisasi (log, JSON, payload Livewire). */
+    protected $hidden = ['token', 'token_plain'];
+
     /**
      * Token mentah hasil pembuatan undangan. Properti PHP biasa (bukan atribut
      * Eloquent) supaya tidak ikut tersimpan ke tabel.

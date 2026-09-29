@@ -49,11 +49,12 @@ class ApprovalPlanner
     {
         $jenis = ApproverType::from((string) $step['approver_type']);
         $ref = isset($step['approver_ref_id']) && $step['approver_ref_id'] !== '' ? (int) $step['approver_ref_id'] : null;
+        $tingkat = $jenis === ApproverType::DirectManager ? ApproverResolver::tingkat($step['manager_levels'] ?? 1) : null;
         $pemohon = $ctx->requesterIds;
         $catatan = [];
         $keAdmin = false;
 
-        $kandidat = $this->resolver->resolve($jenis, $ref, $ctx);
+        $kandidat = $this->resolver->resolve($jenis, $ref, $ctx, $tingkat);
         $satuDivisi = $jenis->limitableToOrgUnit() && (bool) ($step['same_org_unit'] ?? false);
 
         // A-269: hanya approver dari divisi pemohon (atau divisi induknya).
@@ -88,7 +89,7 @@ class ApprovalPlanner
 
         // BR-APR-03: lapis yang hanya menunjuk pengaju dilewati ke atasannya.
         if ($layak === [] && $kenaSod !== [] && $sisa === []) {
-            $layak = $this->pengganti(array_map(fn (int $u) => $this->resolver->managerOf($u), $kenaSod), $pemohon, $permission);
+            $layak = $this->pengganti($this->atasanDari($kenaSod), $pemohon, $permission);
 
             if ($layak !== []) {
                 $catatan[] = 'Dialihkan ke atasan pengaju.'; // BR-APR-03
@@ -111,7 +112,7 @@ class ApprovalPlanner
 
         // BR-APR-06: atasan approver yang tidak memenuhi syarat.
         if ($layak === [] && $tidakLayak !== []) {
-            $layak = $this->pengganti(array_map(fn (int $u) => $this->resolver->managerOf($u), $tidakLayak), $pemohon, $permission);
+            $layak = $this->pengganti($this->atasanDari($tidakLayak), $pemohon, $permission);
 
             if ($layak !== []) {
                 $catatan[] = 'Dialihkan ke atasan approver.'; // BR-APR-06
@@ -133,7 +134,8 @@ class ApprovalPlanner
             'step_no' => (int) $step['step_no'],
             'approver_type' => $jenis->value,
             'approver_ref_id' => $ref,
-            'approver_label' => $this->resolver->label($jenis, $ref),
+            'manager_levels' => $tingkat,
+            'approver_label' => $this->resolver->label($jenis, $ref, $tingkat),
             'decision_mode' => DecisionMode::tryFrom((string) ($step['decision_mode'] ?? ''))?->value ?? DecisionMode::Any->value,
             'same_org_unit' => $satuDivisi,
             'backup_approver_type' => $step['backup_approver_type'] ?? null,
@@ -146,6 +148,17 @@ class ApprovalPlanner
             'blocked' => $layak === [],
             'notes' => $catatan,
         ];
+    }
+
+    /**
+     * Atasan efektif (A-345) semua user itu, digabung.
+     *
+     * @param  array<int, int>  $ids
+     * @return array<int, int>
+     */
+    private function atasanDari(array $ids): array
+    {
+        return array_merge([], ...array_map(fn (int $u) => $this->resolver->managersOf($u), array_values($ids)));
     }
 
     /**

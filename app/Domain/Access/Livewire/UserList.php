@@ -17,8 +17,8 @@ use App\Domain\Access\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\View;
-use Livewire\Attributes\Url;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -137,7 +137,13 @@ class UserList extends Component
 
         $this->authorize('invite', User::class);
 
-        $action->handle($user, auth()->user());
+        try {
+            $action->handle($user, auth()->user());
+        } catch (AccessRuleException $e) {
+            $this->dispatch('pesan', teks: $e->getMessage(), jenis: 'danger');
+
+            return;
+        }
 
         $this->dispatch('pesan', teks: 'Undangan dikirim ulang ke '.$user->email.'.');
     }

@@ -83,6 +83,8 @@ class SameDivisionApproverTest extends TenantTestCase
     {
         Livewire::actingAs($this->makeUser('company_admin'))
             ->test(RuleForm::class)
+            // A-348: centang divisi ada di Mode lanjutan; mode sederhana memakai bawaan (menyala).
+            ->call('keMode', 'lanjutan')
             ->set('steps.0.approver_type', ApproverType::Role->value)
             ->assertSee(__('Hanya dari divisi pemohon'))
             ->assertSet('steps.0.same_org_unit', true)

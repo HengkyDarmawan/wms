@@ -304,6 +304,34 @@ for (const url of links) {
   cek('riwayat harga: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
 }
 
+// 6f. Approval sederhana (A-347–A-350): kotak tag tom-select (klik membuka daftar, tag bisa
+// dihapus, nilai tersimpan ke Livewire), form aturan mode sederhana + ringkasan, Peta approval.
+{
+  const sebelum = errors.length;
+  await go(`${BASE}/approval-rules/create`);
+  cek('aturan: mode sederhana bawaan', await tunggu('[...document.querySelectorAll("main button[aria-pressed=true]")].some(b => /Mode sederhana/.test(b.textContent))'));
+  cek('aturan: kalimat ringkasan tampil', await ev('!!document.querySelector("main [role=status]") && /disetujui/.test(document.querySelector("main [role=status]").textContent)'));
+  await ev('[...document.querySelectorAll("main button")].find(b => /Mode lanjutan/.test(b.textContent)).click()');
+  cek('aturan: kotak tag terpasang', await tunggu('!!document.querySelector("main .nx-pilih-tag .ts-control")'));
+  cek('aturan: tidak ada select multiple mentah', await ev('![...document.querySelectorAll("main select[multiple]")].some(s => !s.closest(".nx-pilih-tag"))'));
+  await klik('#kondisi-gudang-ts-control');
+  cek('tag: klik membuka daftar', await tunggu('!!document.querySelector("main .nx-pilih-tag .ts-dropdown .option")'));
+  await ev('document.querySelector("main .nx-pilih-tag .ts-dropdown .option").dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); document.querySelector("main .nx-pilih-tag .ts-dropdown .option")?.click()');
+  cek('tag: pilihan menjadi tag bertombol hapus', await tunggu('!!document.querySelector("main .nx-pilih-tag .item .remove")'));
+  cek('tag: nilai tersinkron ke Livewire', await tunggu('(Livewire.all().find(c => c.name === "approval.rule-form")?.$wire.conditions.warehouse_ids || []).length === 1'));
+  await ev('document.querySelector("main .nx-pilih-tag .item .remove").click()');
+  cek('tag: hapus tag mengosongkan nilai', await tunggu('(Livewire.all().find(c => c.name === "approval.rule-form")?.$wire.conditions.warehouse_ids || []).length === 0'));
+  const tema = await ev('document.documentElement.getAttribute("data-bs-theme")');
+  await ev(`document.documentElement.setAttribute("data-bs-theme", "${tema === 'dark' ? 'light' : 'dark'}")`);
+  cek('tag: warna mengikuti tema', await ev('getComputedStyle(document.querySelector("main .nx-pilih-tag .ts-control")).backgroundColor === getComputedStyle(document.querySelector("main .card")).backgroundColor'));
+  await ev(`document.documentElement.setAttribute("data-bs-theme", "${tema || 'light'}")`);
+
+  await go(`${BASE}/approval-rules/map`);
+  cek('peta approval: tiga bagian', await ev('["Siapa menyetujui apa", "Bagan jabatan", "Cek untuk orang"].every(t => document.querySelector("main").textContent.includes(t))'));
+  cek('peta approval: menu sidebar', await ev('[...document.querySelectorAll("#nxSidebar a.nx-menu-link")].some(a => a.href.endsWith("/approval-rules/map"))'));
+  cek('approval sederhana: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
+}
+
 // 7. Layar Super Admin di domain pusat (akun dari docs/00-akun-uji.md)
 const PUSAT = process.env.WMS_CENTRAL || BASE.replace('://demo.', '://');
 

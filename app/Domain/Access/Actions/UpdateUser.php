@@ -54,6 +54,7 @@ class UpdateUser
 
             if (array_key_exists('client_id', $attributes)) {
                 $data['client_id'] = $attributes['client_id'];
+                $this->guardPindahKlien($user, $attributes['client_id']);
             }
 
             if (($data['manager_id'] ?? null) === $user->id) {
@@ -133,6 +134,35 @@ class UpdateUser
             }
 
             $existing->delete();
+        }
+    }
+
+    /**
+     * BR-ACC-03: user yang berpindah antara klien dan internal (atau ke klien
+     * lain) tidak boleh membawa penempatan Tim site lamanya — penugasan itu
+     * sengaja dilewati sinkronisasi di bawah, jadi harus diakhiri dulu di hub
+     * proyek.
+     */
+    private function guardPindahKlien(User $user, mixed $clientBaru): void
+    {
+        $baru = $clientBaru === null || $clientBaru === '' ? null : (int) $clientBaru;
+        $lama = $user->client_id === null ? null : (int) $user->client_id;
+
+        if ($baru === $lama) {
+            return;
+        }
+
+        // Penempatan yang sudah berakhir tetap ada barisnya (P-03), tetapi tidak lagi memberi akses.
+        $adaTimSite = RoleAssignment::query()->where('user_id', $user->id)
+            ->whereNotNull('project_team_member_id')
+            ->where(fn ($q) => $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', now()->toDateString()))
+            ->exists();
+
+        if ($adaTimSite) {
+            throw AccessRuleException::rule(
+                'BR-ACC-03',
+                'Pengguna ini masih punya penempatan Tim site. Akhiri dulu penempatannya di halaman proyek sebelum mengganti klien atau jenis akunnya.',
+            );
         }
     }
 

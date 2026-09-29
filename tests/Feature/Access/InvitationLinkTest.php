@@ -109,4 +109,56 @@ class InvitationLinkTest extends TenantTestCase
         $this->assertSame(0, UserInvitation::query()->where('user_id', $baru->id)->pending()->count(), 'Undangan tertunda dibatalkan.');
         $this->assertTrue(password_verify('Palu-Beton-2026', (string) $baru->password));
     }
+
+    #[Test]
+    public function tc_acc_43b_undangan_dan_buatkan_password_ditolak_untuk_akun_yang_sudah_bisa_masuk(): void
+    {
+        Mail::fake();
+
+        $admin = $this->makeUser('company_admin');
+        $aktif = $this->makeUser('warehouse_staff');
+        $passwordLama = (string) $aktif->password;
+
+        // Kirim ulang undangan ke akun aktif ditolak — tautannya tampil ke Admin.
+        Livewire::actingAs($admin)->test(UserDetail::class, ['userId' => $aktif->id])
+            ->call('kirimUlangUndangan')
+            ->assertSet('tautan', '')
+            ->assertNotSet('ruleError', '');
+
+        $this->assertSame(0, UserInvitation::query()->where('user_id', $aktif->id)->count());
+
+        // "Buatkan password" untuk akun aktif ditolak; password tidak berubah.
+        Livewire::actingAs($admin)->test(UserDetail::class, ['userId' => $aktif->id])
+            ->set('passwordBaru', 'Ambil-Alih-2026')
+            ->call('simpanPassword')
+            ->assertNotSet('ruleError', '')
+            ->assertSet('passwordDibuat', '');
+
+        $this->assertSame($passwordLama, (string) $aktif->refresh()->password);
+
+        // Akun nonaktif tidak ikut dihidupkan.
+        $nonaktif = $this->makeUser('warehouse_staff', attributes: ['email_verified_at' => null, 'password' => null, 'is_active' => false]);
+
+        Livewire::actingAs($admin)->test(UserDetail::class, ['userId' => $nonaktif->id])
+            ->set('passwordBaru', 'Hidupkan-Lagi-2026')
+            ->call('simpanPassword')
+            ->assertNotSet('ruleError', '');
+
+        $this->assertFalse($nonaktif->refresh()->is_active);
+    }
+
+    #[Test]
+    public function tc_acc_43c_token_undangan_dibersihkan_setelah_dipakai_dan_tidak_terserialisasi(): void
+    {
+        $admin = $this->makeUser('company_admin');
+        $baru = $this->makeUser('warehouse_staff', attributes: ['email_verified_at' => null, 'password' => null]);
+        $undangan = app(InviteUser::class)->handle($baru, $admin);
+
+        $this->assertArrayNotHasKey('token_plain', UserInvitation::query()->findOrFail($undangan->id)->toArray());
+        $this->assertArrayNotHasKey('token', UserInvitation::query()->findOrFail($undangan->id)->toArray());
+
+        app(AcceptInvitation::class)->handle((string) $undangan->plainToken, 'Rahasia#2026!Baru', null, null);
+
+        $this->assertNull(UserInvitation::query()->findOrFail($undangan->id)->token_plain);
+    }
 }

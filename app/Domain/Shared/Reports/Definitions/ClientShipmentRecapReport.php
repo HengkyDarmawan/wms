@@ -8,6 +8,7 @@ use App\Domain\Master\Models\Client;
 use App\Domain\Master\Models\Project;
 use App\Domain\Shared\Reports\Concerns\PeriodFilter;
 use App\Domain\Shared\Reports\Report;
+use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Shipment\Models\ShipmentLine;
 use App\Domain\Shipment\Support\ShipmentSearch;
@@ -118,8 +119,10 @@ class ClientShipmentRecapReport extends Report
                 'proofLines:id,shipment_line_id,qty_good,qty_damaged,qty_missing',
             ])
             ->whereHas('shipment', function ($q) use ($proyek, $siteIds, $tujuan, $dari, $sampai): void {
-                $q->where(fn ($w) => $w->whereBetween('shipped_at', [$dari, $sampai])
-                    ->orWhere(fn ($b) => $b->whereNull('shipped_at')->whereBetween('created_at', [$dari, $sampai])))
+                // Rekap ini diserahkan ke klien sebagai "barang yang sudah dikirim":
+                // SJ yang belum berangkat atau batal tidak ikut dihitung.
+                $q->whereIn('status', [ShipmentStatus::Shipped->value, ShipmentStatus::PartiallyDelivered->value, ShipmentStatus::Delivered->value])
+                    ->whereBetween('shipped_at', [$dari, $sampai])
                     ->where(function ($w) use ($proyek, $siteIds, $tujuan): void {
                         $ada = false;
 
@@ -227,6 +230,13 @@ class ClientShipmentRecapReport extends Report
         $ids = Project::query()->where('client_id', $klien)->pluck('id')
             ->map(fn ($id) => (int) $id)->all();
 
+        // BR-ACC-05: pembaca bercakupan proyek hanya melihat proyeknya sendiri.
+        $boleh = auth()->user()?->accessibleProjectIds();
+
+        if ($boleh !== null) {
+            $ids = array_values(array_intersect($ids, array_map('intval', $boleh)));
+        }
+
         $pilih = (int) ($filters['project_id'] ?? 0);
 
         if ($pilih > 0) {
@@ -246,7 +256,11 @@ class ClientShipmentRecapReport extends Report
     /** @return array<int, string> */
     private function pilihanProyek(): array
     {
-        return Project::query()->whereNotNull('client_id')->orderBy('code')
+        $boleh = auth()->user()?->accessibleProjectIds();
+
+        return Project::query()->whereNotNull('client_id')
+            ->when($boleh !== null, fn ($q) => $q->whereIn('id', $boleh))
+            ->orderBy('code')
             ->get(['id', 'code', 'name'])
             ->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])
             ->all();

@@ -59,7 +59,15 @@
                     <dd class="col-sm-8 col-lg-9">{{ $user->position?->name ?? '—' }}</dd>
 
                     <dt class="col-sm-4 col-lg-3">{{ __('Atasan langsung') }}</dt>
-                    <dd class="col-sm-8 col-lg-9">{{ $user->manager?->name ?? '—' }}</dd>
+                    {{-- A-345: atasan efektif beserta asalnya. --}}
+                    <dd class="col-sm-8 col-lg-9">
+                        {{ $atasanNama === [] ? '—' : implode(', ', $atasanNama) }}
+                        @if ($atasanSumber === \App\Domain\Access\Support\Atasan::MANUAL)
+                            <span class="badge text-bg-light border ms-1">{{ __('isi manual') }}</span>
+                        @elseif ($atasanSumber === \App\Domain\Access\Support\Atasan::JABATAN)
+                            <span class="badge text-bg-light border ms-1">{{ __('dari jabatan') }}</span>
+                        @endif
+                    </dd>
 
                     <dt class="col-sm-4 col-lg-3">{{ __('Nomor WhatsApp') }}</dt>
                     <dd class="col-sm-8 col-lg-9">{{ $user->phone ?? '—' }}</dd>

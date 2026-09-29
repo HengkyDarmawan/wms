@@ -41,10 +41,10 @@
           <mxGeometry y="26" width="260" height="88" as="geometry"/>
         </mxCell>
         <mxCell id="positions" value="positions" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="680" y="556" width="260" height="130" as="geometry"/>
+          <mxGeometry x="680" y="556" width="260" height="146" as="geometry"/>
         </mxCell>
-        <mxCell id="positions_cols" value="🔑 id : bigint&lt;br&gt;↗ org_unit_id : bigint&lt;br&gt;◆ code : varchar(30)&lt;br&gt;name : varchar(100)&lt;br&gt;level : int&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="positions">
-          <mxGeometry y="26" width="260" height="104" as="geometry"/>
+        <mxCell id="positions_cols" value="🔑 id : bigint&lt;br&gt;↗ org_unit_id : bigint&lt;br&gt;↗ reports_to_position_id : bigint&lt;br&gt;◆ code : varchar(30)&lt;br&gt;name : varchar(100)&lt;br&gt;level : int&lt;br&gt;is_active : bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=9;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="positions">
+          <mxGeometry y="26" width="260" height="120" as="geometry"/>
         </mxCell>
         <mxCell id="user_invitations" value="user_invitations" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fontSize=11;fillColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="1000" y="556" width="260" height="146" as="geometry"/>
@@ -97,25 +97,28 @@
         <mxCell id="r6" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="positions" target="users">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r7" value="atasan" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="users">
+        <mxCell id="r7" value="atasan jabatan" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="positions" target="positions">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r8" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="user_invitations">
+        <mxCell id="r8" value="atasan manual (A-345)" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="users">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r9" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="devices">
+        <mxCell id="r9" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="user_invitations">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r10" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="password_histories">
+        <mxCell id="r10" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="devices">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r11" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="login_attempts">
+        <mxCell id="r11" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="password_histories">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r12" value="ditempatkan di site" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="project_team_members">
+        <mxCell id="r12" value="" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="login_attempts">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="r13" value="penugasan bertanggal" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="project_team_members" target="role_assignments">
+        <mxCell id="r13" value="ditempatkan di site" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="users" target="project_team_members">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r14" value="penugasan bertanggal" style="edgeStyle=entityRelationEdgeStyle;fontSize=9;html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;endFill=0;startFill=0;" edge="1" parent="1" source="project_team_members" target="role_assignments">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
       </root>

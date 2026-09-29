@@ -31,6 +31,7 @@ class ApprovalRule extends Model
 
     protected $attributes = [
         'is_active' => true,
+        'is_basic' => false,
         'priority' => 100,
     ];
 
@@ -40,6 +41,7 @@ class ApprovalRule extends Model
             'document_type' => ApprovalDocumentType::class,
             'conditions' => 'array',
             'is_active' => 'boolean',
+            'is_basic' => 'boolean',
             'priority' => 'integer',
         ];
     }

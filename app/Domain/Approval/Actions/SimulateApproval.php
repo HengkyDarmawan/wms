@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Domain\Approval\Actions;
 
+use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Exceptions\ApprovalRuleException;
 use App\Domain\Approval\Support\ApprovalContext;
 use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Approval\Support\ApprovalPlanner;
 use App\Domain\Approval\Support\ApprovalRegistry;
+use App\Domain\Approval\Support\ApprovalRuleSentence;
 use App\Domain\Approval\Support\ConditionMatcher;
 
 /**
@@ -44,6 +46,31 @@ class SimulateApproval
     }
 
     /**
+     * "Cek untuk orang" di Peta approval (A-349): dokumen rekaan dari seorang
+     * pemohon, jenis dokumen, dan (opsional) gudang/proyek. Pemohon klien
+     * dihitung sebagai permintaan dari klien.
+     */
+    public function contextForPerson(ApprovalDocumentType $type, int $userId, ?int $warehouseId = null, ?int $projectId = null): ApprovalContext
+    {
+        $user = User::query()->find($userId);
+
+        if ($user === null) {
+            throw ApprovalRuleException::field('BR-APR-11', 'requester', 'Pemohon tidak ditemukan.');
+        }
+
+        return new ApprovalContext(
+            documentType: $type,
+            warehouseIds: $warehouseId !== null ? [$warehouseId] : [],
+            projectId: $projectId,
+            lineCount: 1,
+            maxLineQty: 1.0,
+            fromClient: $user->client_id !== null,
+            requesterId: (int) $user->id,
+            requesterIds: [(int) $user->id],
+        );
+    }
+
+    /**
      * @param  array{conditions?: array<string, mixed>, steps?: array<int, array<string, mixed>>}|null  $draft
      * @return array<string, mixed>
      */
@@ -71,8 +98,15 @@ class SimulateApproval
 
         ['rule' => $rule, 'evaluations' => $evaluasi] = $this->engine->matchRule($ctx->documentType, $ctx);
 
-        $mentah = $rule !== null ? $rule->steps->map->toPlanInput()->all() : [];
+        // Tanpa aturan: lapis minimum penangan, sama seperti pengajuan sungguhan
+        // (ApprovalEngine::submit). Butuh dokumennya; untuk data rekaan cukup
+        // disebutkan (A-349) supaya tidak keliru terbaca "disetujui otomatis".
+        $dokumen = $rule === null && $ctx->documentNumber !== null ? $handler->findByNumber($ctx->documentNumber) : null;
+        $mentah = $rule !== null ? $rule->steps->map->toPlanInput()->all() : ($dokumen !== null ? $handler->fallbackSteps($dokumen) : []);
         $lapis = $this->planner->plan($mentah, $ctx, $izin);
+        $minimum = $rule === null && $lapis === [] && $dokumen === null
+            ? (ApprovalRuleSentence::LAPIS_MINIMUM[$ctx->documentType->value] ?? null)
+            : null;
 
         return [
             'mode' => 'stored',
@@ -81,7 +115,8 @@ class SimulateApproval
             'evaluations' => $evaluasi,
             'rule' => $rule === null ? null : ['id' => $rule->id, 'name' => $rule->name, 'priority' => $rule->priority],
             'layers' => $lapis,
-            'auto_approved' => $lapis === [],
+            'auto_approved' => $lapis === [] && $minimum === null,
+            'minimum' => $minimum,
             'blocked' => collect($lapis)->contains(fn (array $l) => $l['blocked']),
             'permission' => $izin,
         ];

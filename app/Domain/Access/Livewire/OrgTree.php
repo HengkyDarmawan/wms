@@ -11,6 +11,7 @@ use App\Domain\Access\Exceptions\AccessRuleException;
 use App\Domain\Access\Models\OrgUnit;
 use App\Domain\Access\Models\Position;
 use App\Domain\Access\Models\User;
+use App\Domain\Access\Support\Atasan;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -43,7 +44,8 @@ class OrgTree extends Component
 
     public string $positionName = '';
 
-    public int $positionLevel = 1;
+    /** Jabatan atasan (peta jabatan, A-344); kosong = puncak. Level dihitung otomatis. */
+    public ?int $positionReportsTo = null;
 
     public function mount(): void
     {
@@ -165,7 +167,7 @@ class OrgTree extends Component
         $this->formPositionTampil = true;
         $this->positionCode = '';
         $this->positionName = '';
-        $this->positionLevel = 1;
+        $this->positionReportsTo = null;
     }
 
     public function editJabatan(int $positionId): void
@@ -179,7 +181,7 @@ class OrgTree extends Component
         $this->editingPositionId = $position->id;
         $this->positionCode = $position->code;
         $this->positionName = $position->name;
-        $this->positionLevel = $position->level;
+        $this->positionReportsTo = $position->reports_to_position_id;
     }
 
     public function simpanJabatan(SavePosition $action): void
@@ -191,11 +193,11 @@ class OrgTree extends Component
         $this->validate([
             'positionCode' => $this->editingPositionId === null ? ['required', 'string', 'max:30'] : ['nullable'],
             'positionName' => ['required', 'string', 'max:100'],
-            'positionLevel' => ['required', 'integer', 'min:1', 'max:99'],
+            'positionReportsTo' => ['nullable', 'integer', 'exists:positions,id'],
         ], [], [
             'positionCode' => 'Kode jabatan',
             'positionName' => 'Nama jabatan',
-            'positionLevel' => 'Level',
+            'positionReportsTo' => 'Atasan jabatan',
         ]);
 
         $position = $this->editingPositionId !== null ? Position::findOrFail($this->editingPositionId) : null;
@@ -204,10 +206,10 @@ class OrgTree extends Component
             $action->handle($position, $unit, [
                 'code' => $this->positionCode,
                 'name' => $this->positionName,
-                'level' => $this->positionLevel,
+                'reports_to_position_id' => $this->positionReportsTo,
             ], auth()->user());
         } catch (AccessRuleException $e) {
-            $this->addError('positionName', $e->getMessage());
+            $this->addError($e->rule === 'A-344' ? 'positionReportsTo' : 'positionName', $e->getMessage());
 
             return;
         }
@@ -250,19 +252,50 @@ class OrgTree extends Component
     {
         $units = OrgUnit::query()->orderBy('name')->get();
         $selected = $this->selectedId !== null ? $units->firstWhere('id', $this->selectedId) : null;
+        $anggota = $selected === null ? collect() : User::query()
+            ->with(['position'])
+            ->where('org_unit_id', $selected->id)
+            ->orderBy('name')->get();
 
         return view('livewire.access.org-tree', [
             'pohon' => $this->ratakan($units),
             'units' => $units,
             'selected' => $selected,
             'positions' => $selected === null ? collect() : Position::query()
+                ->with('reportsTo:id,name')
                 ->where('org_unit_id', $selected->id)
                 ->orderBy('level')->orderBy('name')->get(),
-            'anggota' => $selected === null ? collect() : User::query()
-                ->with(['position', 'manager'])
-                ->where('org_unit_id', $selected->id)
-                ->orderBy('name')->get(),
+            'anggota' => $anggota,
+            'atasan' => $this->atasanAnggota($anggota),
+            // Calon atasan: jabatan aktif mana pun selain yang sedang diubah (A-344).
+            'pilihanAtasan' => ! $this->formPositionTampil ? collect() : Position::query()
+                ->with('orgUnit:id,name')
+                ->where('is_active', true)
+                ->when($this->editingPositionId !== null, fn ($q) => $q->whereKeyNot($this->editingPositionId))
+                ->orderBy('level')->orderBy('name')->get(['id', 'name', 'org_unit_id', 'level']),
         ]);
+    }
+
+    /**
+     * Atasan efektif tiap anggota beserta asalnya (A-345).
+     *
+     * @param  Collection<int, User>  $anggota
+     * @return array<int, array{nama: array<int, string>, sumber: string|null}>
+     */
+    private function atasanAnggota(Collection $anggota): array
+    {
+        $atasan = app(Atasan::class);
+        $hasil = [];
+
+        foreach ($anggota as $orang) {
+            $ids = $atasan->dari((int) $orang->id);
+            $hasil[$orang->id] = [
+                'nama' => $ids === [] ? [] : User::query()->whereIn('id', $ids)->orderBy('name')->pluck('name')->all(),
+                'sumber' => $atasan->sumber($orang),
+            ];
+        }
+
+        return $hasil;
     }
 
     /**

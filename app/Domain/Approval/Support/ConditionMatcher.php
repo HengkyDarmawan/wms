@@ -32,6 +32,23 @@ class ConditionMatcher
         'order_value_min' => 'Nilai PO ≥ (Rp)',
     ];
 
+    /** Prioritas aturan umum (tanpa kondisi) bila dibuat lewat mode sederhana. */
+    public const PRIORITAS_UMUM = 100;
+
+    /**
+     * Prioritas otomatis mode sederhana (A-348): makin banyak jenis kondisi,
+     * makin spesifik, makin dulu diperiksa — `100 − 10 × jumlah jenis kondisi`,
+     * paling kecil 10. Aturan tanpa kondisi = 100 (umum); aturan dasar = 900.
+     *
+     * @param  array<string, mixed>  $conditions
+     */
+    public static function prioritasOtomatis(array $conditions): int
+    {
+        $jumlah = count(array_diff(array_keys(self::normalize($conditions)), ['match']));
+
+        return max(10, self::PRIORITAS_UMUM - 10 * $jumlah);
+    }
+
     /**
      * Membersihkan isian form menjadi bentuk yang disimpan: kunci tak dikenal
      * dibuang, daftar kosong dibuang, angka dijadikan angka.

@@ -40,6 +40,10 @@
             </tbody>
         </table></div>
     @endif
+    @if (! empty($hasil['minimum']))
+        {{-- A-349: jenis ini tetap dijaga lapis minimum sistem walau tanpa aturan. --}}
+        <div class="alert alert-secondary mb-0">{{ __('Tidak ada aturan yang cocok; dokumen dijaga lapis minimum sistem:') }} {{ $hasil['minimum'] }}.</div>
+    @endif
     @if ($hasil['auto_approved'])
         <div class="alert alert-info mb-0">{{ __('Tidak ada aturan yang cocok: dokumen akan langsung disetujui saat diajukan.') }}</div> {{-- A-08 --}}
     @endif

@@ -7,6 +7,7 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 @import 'simplebar/dist/simplebar.min.css';
+@import 'tom-select/dist/css/tom-select.bootstrap5.css';
 
 @import './nexadash/variables.css';
 @import './nexadash/layout.css';
@@ -64,3 +65,30 @@ label .wajib {
 .ld-teks { overflow: hidden; white-space: normal; word-break: break-word; font-family: "DejaVu Sans", Verdana, sans-serif; }
 .ld-img { display: block; width: 100%; image-rendering: pixelated; pointer-events: none; }
 .ld-el img { pointer-events: none; -webkit-user-drag: none; }
+
+/* Kotak tag <x-pilih-tag> (A-350, tom-select): warna dari token tema, jadi
+   ikut terang/gelap tanpa aturan terpisah. */
+.nx-pilih-tag .ts-control,
+.nx-pilih-tag .ts-wrapper.multi .ts-control,
+.nx-pilih-tag .ts-dropdown {
+    background: var(--nx-card-bg);
+    border-color: var(--nx-border);
+    color: var(--nx-text-body);
+    border-radius: var(--nx-radius-sm);
+}
+.nx-pilih-tag .ts-control { min-height: calc(1.5em + .75rem + 2px); }
+.nx-pilih-tag .ts-wrapper.focus .ts-control { box-shadow: var(--nx-shadow-glow); border-color: var(--nx-primary); }
+.nx-pilih-tag .ts-control input { color: var(--nx-text-body); }
+.nx-pilih-tag .ts-control input::placeholder { color: var(--nx-text-muted); }
+.nx-pilih-tag .ts-wrapper.multi .ts-control > .item {
+    background: var(--nx-primary-subtle);
+    border: 1px solid var(--nx-border);
+    color: var(--nx-text);
+    border-radius: var(--nx-radius-xs);
+}
+.nx-pilih-tag .ts-wrapper.multi.plugin-remove_button .item .remove { border-left-color: var(--nx-border); color: var(--nx-text-muted); }
+.nx-pilih-tag .ts-wrapper.multi.plugin-remove_button .item .remove:hover { background: var(--nx-danger-subtle); color: var(--nx-danger); }
+.nx-pilih-tag .ts-dropdown { box-shadow: var(--nx-shadow-lift); }
+.nx-pilih-tag .ts-dropdown .option { color: var(--nx-text-body); }
+.nx-pilih-tag .ts-dropdown .active { background: var(--nx-hover-bg); color: var(--nx-text); }
+.nx-pilih-tag .ts-dropdown .no-results { color: var(--nx-text-muted); padding: .375rem .75rem; }

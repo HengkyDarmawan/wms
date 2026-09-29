@@ -278,6 +278,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/approvals', [ApprovalController::class, 'inbox'])->name('approval.inbox');
         Route::get('/approval-rules', [ApprovalController::class, 'rules'])->name('approval.rules.index');
         Route::get('/approval-rules/create', [ApprovalController::class, 'createRule'])->name('approval.rules.create');
+        Route::get('/approval-rules/map', [ApprovalController::class, 'map'])->name('approval.rules.map');
         Route::get('/approval-rules/{approvalRule}/edit', [ApprovalController::class, 'editRule'])->name('approval.rules.edit');
         Route::get('/approval-delegations', [ApprovalController::class, 'delegations'])->name('approval.delegations');
         Route::get('/approval-simulation', [ApprovalController::class, 'simulation'])->name('approval.simulation');

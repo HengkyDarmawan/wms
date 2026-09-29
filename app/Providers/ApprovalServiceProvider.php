@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Approval\Console\EscalateApprovalsCommand;
+use App\Domain\Approval\Livewire\ApprovalMap;
 use App\Domain\Approval\Livewire\ApprovalSimulation;
 use App\Domain\Approval\Livewire\DelegationManager;
 use App\Domain\Approval\Livewire\RuleForm;
@@ -61,6 +62,7 @@ class ApprovalServiceProvider extends ServiceProvider
 
         Livewire::component('approval.task-inbox', TaskInbox::class);
         Livewire::component('approval.rule-list', RuleList::class);
+        Livewire::component('approval.map', ApprovalMap::class);
         Livewire::component('approval.rule-form', RuleForm::class);
         Livewire::component('approval.delegations', DelegationManager::class);
         Livewire::component('approval.simulation', ApprovalSimulation::class);

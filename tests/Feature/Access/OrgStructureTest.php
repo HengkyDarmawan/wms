@@ -144,7 +144,7 @@ class OrgStructureTest extends TenantTestCase
     }
 
     #[Test]
-    public function tc_acc_ui_34_menambah_dan_mengubah_jabatan(): void
+    public function tc_acc_ui_34_menambah_jabatan_level_dihitung_dari_peta_jabatan(): void
     {
         $admin = $this->makeUser('company_admin');
         $unit = OrgUnit::create(['code' => 'OPS', 'name' => 'Operasional']);
@@ -154,41 +154,61 @@ class OrgStructureTest extends TenantTestCase
             ->call('jabatanBaru')
             ->set('positionCode', 'ka gudang')
             ->set('positionName', 'Kepala Gudang')
-            ->set('positionLevel', 2)
             ->call('simpanJabatan')
             ->assertHasNoErrors();
 
-        $jabatan = Position::where('code', 'KA_GUDANG')->first();
-        $this->assertNotNull($jabatan);
-        $this->assertSame($unit->id, $jabatan->org_unit_id);
-        $this->assertSame(2, $jabatan->level);
+        $kepala = Position::where('code', 'KA_GUDANG')->firstOrFail();
+        $this->assertSame($unit->id, $kepala->org_unit_id);
+        $this->assertSame(1, $kepala->level, 'A-344: tanpa atasan = puncak peta.');
 
-        $komponen->call('editJabatan', $jabatan->id)
+        $komponen->call('jabatanBaru')
+            ->set('positionCode', 'staf')
+            ->set('positionName', 'Staf Gudang')
+            ->set('positionReportsTo', $kepala->id)
+            ->call('simpanJabatan')
+            ->assertHasNoErrors();
+
+        $staf = Position::where('code', 'STAF')->firstOrFail();
+        $this->assertSame($kepala->id, $staf->reports_to_position_id);
+        $this->assertSame(2, $staf->level);
+
+        // Kepala dipasang di bawah Direktur: level Kepala & Staf ikut naik.
+        $direktur = Position::create(['org_unit_id' => $unit->id, 'code' => 'DIR', 'name' => 'Direktur', 'level' => 1, 'is_active' => true]);
+
+        $komponen->call('editJabatan', $kepala->id)
             ->set('positionName', 'Kepala Gudang Utama')
-            ->set('positionLevel', 1)
+            ->set('positionReportsTo', $direktur->id)
             ->call('simpanJabatan')
             ->assertHasNoErrors();
 
-        $this->assertSame('Kepala Gudang Utama', $jabatan->refresh()->name);
-        $this->assertSame(1, $jabatan->level);
+        $this->assertSame('Kepala Gudang Utama', $kepala->refresh()->name);
+        $this->assertSame(2, $kepala->level);
+        $this->assertSame(3, $staf->refresh()->level);
     }
 
     #[Test]
-    public function tc_acc_ui_34b_level_jabatan_minimal_satu(): void
+    public function tc_acc_ui_34b_peta_jabatan_tidak_boleh_berputar(): void
     {
         $admin = $this->makeUser('company_admin');
         $unit = OrgUnit::create(['code' => 'OPS', 'name' => 'Operasional']);
+        $atas = Position::create(['org_unit_id' => $unit->id, 'code' => 'ATAS', 'name' => 'Atas', 'level' => 1, 'is_active' => true]);
+        $bawah = Position::create(['org_unit_id' => $unit->id, 'code' => 'BAWAH', 'name' => 'Bawah', 'level' => 2, 'is_active' => true, 'reports_to_position_id' => $atas->id]);
 
         Livewire::actingAs($admin)->test(OrgTree::class)
             ->call('pilihUnit', $unit->id)
-            ->call('jabatanBaru')
-            ->set('positionCode', 'X')
-            ->set('positionName', 'Jabatan')
-            ->set('positionLevel', 0)
+            ->call('editJabatan', $atas->id)
+            ->set('positionReportsTo', $bawah->id)
             ->call('simpanJabatan')
-            ->assertHasErrors('positionLevel');
+            ->assertHasErrors('positionReportsTo');
 
-        $this->assertSame(0, Position::count());
+        $this->assertNull($atas->refresh()->reports_to_position_id);
+
+        // Jabatan yang masih menjadi atasan jabatan aktif tidak bisa dinonaktifkan.
+        Livewire::actingAs($admin)->test(OrgTree::class)
+            ->call('pilihUnit', $unit->id)
+            ->call('nonaktifkanJabatan', $atas->id);
+
+        $this->assertTrue($atas->refresh()->is_active);
     }
 
     #[Test]
@@ -246,7 +266,7 @@ class OrgStructureTest extends TenantTestCase
             ->assertSee('Dedi Staf')
             ->assertSee('Staf Gudang')
             ->assertSee('Andi Kepala')
-            ->assertSee('belum diisi');   // atasan Andi sendiri belum diisi
+            ->assertSee('belum ada');     // A-345: Andi tanpa atasan manual maupun jabatan atasan
     }
 
     #[Test]

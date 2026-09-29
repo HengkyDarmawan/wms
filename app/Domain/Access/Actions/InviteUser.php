@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Access\Actions;
 
+use App\Domain\Access\Exceptions\AccessRuleException;
 use App\Domain\Access\Models\User;
 use App\Domain\Access\Models\UserInvitation;
 use App\Domain\Access\Notifications\UserInvitationNotification;
@@ -20,6 +21,16 @@ class InviteUser
 {
     public function handle(User $user, ?User $actor = null): UserInvitation
     {
+        // Undangan hanya untuk akun yang belum pernah punya jalan masuk. Tanpa
+        // penjaga ini, tautan undangan (yang tampil ke Admin, A-333) bisa dipakai
+        // mengganti password akun yang sudah aktif — pengambilalihan akun.
+        if ($user->password !== null) {
+            throw AccessRuleException::rule(
+                'A-333',
+                'Pengguna ini sudah bisa masuk; undangan tidak bisa dikirim lagi. Gunakan Reset password.',
+            );
+        }
+
         // Undangan lama yang belum dipakai dibatalkan agar hanya satu token berlaku.
         $previous = UserInvitation::query()
             ->where('user_id', $user->id)

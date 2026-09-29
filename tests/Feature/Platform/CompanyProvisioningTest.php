@@ -157,5 +157,22 @@ class CompanyProvisioningTest extends TenantTestCase
         $this->actingAs($admin, 'platform')->get($this->centralUrl('admin/companies/'.$company->id))
             ->assertOk()
             ->assertDontSee('Serahkan akun Admin Company');
+
+        // TC-PLT-14b (BR-SUB-04): setelah akun bisa masuk, kedua aksi POST ditolak
+        // walau dikirim langsung — Super Admin tidak bisa mengambil alih akun.
+        $this->actingAs($admin, 'platform')
+            ->post($this->centralUrl('admin/companies/'.$company->id.'/admin-password'), ['password' => 'Ambil-Alih-2026'])
+            ->assertForbidden();
+
+        $this->actingAs($admin, 'platform')
+            ->post($this->centralUrl('admin/companies/'.$company->id.'/admin-invite'))
+            ->assertForbidden();
+
+        $company->run(function (): void {
+            $rina = User::query()->where('email', 'rina@prv.test')->sole();
+
+            $this->assertTrue(password_verify('Beton-Palu-2026', (string) $rina->password), 'Password tidak berubah.');
+            $this->assertSame(0, UserInvitation::query()->pending()->count(), 'Tidak ada undangan baru.');
+        });
     }
 }

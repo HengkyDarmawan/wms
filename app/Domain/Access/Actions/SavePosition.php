@@ -8,17 +8,24 @@ use App\Domain\Access\Exceptions\AccessRuleException;
 use App\Domain\Access\Models\OrgUnit;
 use App\Domain\Access\Models\Position;
 use App\Domain\Access\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
  * Permission: `org.manage`.
  *
- * Jabatan melekat pada satu unit; `level` dipakai aturan approval
- * "jabatan X di divisi Y" (Blueprint §8.1). Level 1 = tertinggi.
+ * Jabatan melekat pada satu unit dan (opsional) melapor ke satu jabatan atasan
+ * — peta jabatan (A-344). `level` **dihitung** dari peta itu: tanpa atasan = 1,
+ * selain itu level atasan + 1; mengubah atasan ikut menghitung ulang semua
+ * jabatan di bawahnya. Level tetap dipakai aturan approval "jabatan X di divisi
+ * Y" (Blueprint §8.1). Peta tidak boleh berputar.
  */
 class SavePosition
 {
-    /** @param  array<string, mixed>  $attributes */
+    /** Batas kedalaman peta; menjaga hitung ulang dari data rusak. */
+    private const MAKS_KEDALAMAN = 30;
+
+    /** @param  array<string, mixed>  $attributes  code, name, reports_to_position_id */
     public function handle(?Position $position, OrgUnit $unit, array $attributes, ?User $actor = null): Position
     {
         $nama = trim((string) ($attributes['name'] ?? ''));
@@ -27,46 +34,49 @@ class SavePosition
             throw AccessRuleException::rule('BR-GEN-11', 'Nama jabatan wajib diisi.');
         }
 
-        $level = (int) ($attributes['level'] ?? 1);
+        $atasan = $this->atasan($position, $attributes['reports_to_position_id'] ?? null);
+        $level = $atasan === null ? 1 : $atasan->level + 1;
 
-        if ($level < 1) {
-            throw AccessRuleException::rule('BR-GEN-11', 'Level jabatan minimal 1.');
-        }
+        return DB::transaction(function () use ($position, $unit, $attributes, $actor, $nama, $atasan, $level): Position {
+            if ($position === null) {
+                $kode = Str::of((string) ($attributes['code'] ?? $nama))
+                    ->upper()->replace(' ', '_')->replaceMatches('/[^A-Z0-9_]/', '')->value();
 
-        if ($position === null) {
-            $kode = Str::of((string) ($attributes['code'] ?? $nama))
-                ->upper()->replace(' ', '_')->replaceMatches('/[^A-Z0-9_]/', '')->value();
+                if ($kode === '') {
+                    throw AccessRuleException::rule('BR-GEN-11', 'Kode jabatan wajib diisi.');
+                }
 
-            if ($kode === '') {
-                throw AccessRuleException::rule('BR-GEN-11', 'Kode jabatan wajib diisi.');
+                if (Position::query()->where('code', $kode)->exists()) {
+                    throw new AccessRuleException('Kode jabatan "'.$kode.'" sudah dipakai.');
+                }
+
+                $position = Position::create([
+                    'org_unit_id' => $unit->id,
+                    'reports_to_position_id' => $atasan?->id,
+                    'code' => $kode,
+                    'name' => $nama,
+                    'level' => $level,
+                    'is_active' => true,
+                ]);
+
+                activity('access')->performedOn($position)->causedBy($actor)->log('Jabatan dibuat');
+
+                return $position;
             }
 
-            if (Position::query()->where('code', $kode)->exists()) {
-                throw new AccessRuleException('Kode jabatan "'.$kode.'" sudah dipakai.');
-            }
-
-            $position = Position::create([
+            $position->fill([
                 'org_unit_id' => $unit->id,
-                'code' => $kode,
+                'reports_to_position_id' => $atasan?->id,
                 'name' => $nama,
                 'level' => $level,
-                'is_active' => true,
-            ]);
+            ])->save();
 
-            activity('access')->performedOn($position)->causedBy($actor)->log('Jabatan dibuat');
+            $this->hitungUlangBawahan($position);
 
-            return $position;
-        }
+            activity('access')->performedOn($position)->causedBy($actor)->log('Jabatan diubah');
 
-        $position->fill([
-            'org_unit_id' => $unit->id,
-            'name' => $nama,
-            'level' => $level,
-        ])->save();
-
-        activity('access')->performedOn($position)->causedBy($actor)->log('Jabatan diubah');
-
-        return $position->refresh();
+            return $position->refresh();
+        });
     }
 
     public function deactivate(Position $position, ?User $actor = null): Position
@@ -76,6 +86,14 @@ class SavePosition
         if ($dipakai > 0) {
             throw new AccessRuleException(
                 'Jabatan masih dipakai '.$dipakai.' user aktif. Ubah jabatan mereka lebih dulu.',
+            );
+        }
+
+        $bawahan = Position::query()->where('reports_to_position_id', $position->id)->where('is_active', true)->count();
+
+        if ($bawahan > 0) {
+            throw new AccessRuleException(
+                'Jabatan ini masih menjadi atasan '.$bawahan.' jabatan aktif. Pindahkan atasan jabatan-jabatan itu lebih dulu.',
             );
         }
 
@@ -93,5 +111,50 @@ class SavePosition
         activity('access')->performedOn($position)->causedBy($actor)->log('Jabatan diaktifkan kembali');
 
         return $position->refresh();
+    }
+
+    /** Jabatan atasan yang sah: aktif, bukan dirinya, dan tidak membuat peta berputar. */
+    private function atasan(?Position $position, mixed $id): ?Position
+    {
+        $id = $id === null || $id === '' ? null : (int) $id;
+
+        if ($id === null) {
+            return null;
+        }
+
+        $atasan = Position::query()->where('is_active', true)->find($id);
+
+        if ($atasan === null) {
+            throw AccessRuleException::rule('BR-GEN-11', 'Jabatan atasan tidak ditemukan atau nonaktif.');
+        }
+
+        if ($position === null) {
+            return $atasan;
+        }
+
+        // Naik dari calon atasan; bila bertemu jabatan ini, petanya berputar.
+        $cek = $atasan;
+
+        for ($i = 0; $cek !== null && $i < self::MAKS_KEDALAMAN; $i++) {
+            if ((int) $cek->id === (int) $position->id) {
+                throw AccessRuleException::rule('A-344', 'Jabatan tidak bisa melapor ke dirinya sendiri atau ke jabatan di bawahnya.');
+            }
+
+            $cek = $cek->reports_to_position_id === null ? null : Position::query()->find($cek->reports_to_position_id);
+        }
+
+        return $atasan;
+    }
+
+    private function hitungUlangBawahan(Position $position, int $kedalaman = 0): void
+    {
+        if ($kedalaman >= self::MAKS_KEDALAMAN) {
+            return;
+        }
+
+        foreach (Position::query()->where('reports_to_position_id', $position->id)->get() as $bawahan) {
+            $bawahan->forceFill(['level' => $position->level + 1])->save();
+            $this->hitungUlangBawahan($bawahan, $kedalaman + 1);
+        }
     }
 }

@@ -57,7 +57,8 @@ class AcceptInvitation
 
             $this->changePassword->handle($user, $password, requireCurrent: false);
 
-            $invitation->forceFill(['accepted_at' => now()])->save();
+            // A-333: salinan token hanya perlu selama undangan belum dipakai.
+            $invitation->forceFill(['accepted_at' => now(), 'token_plain' => null])->save();
         });
 
         activity('access')->performedOn($user)->log('Undangan diterima');

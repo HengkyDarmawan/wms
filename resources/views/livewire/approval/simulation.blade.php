@@ -38,9 +38,7 @@
             @else
                 <div class="col-md-4">
                     <label class="form-label" for="sim-gudang">{{ __('Gudang') }}</label>
-                    <select class="form-select" id="sim-gudang" multiple size="3" wire:model="manual.warehouse_ids">
-                        @foreach ($warehouses as $w) <option value="{{ $w->id }}">{{ $w->code }} — {{ $w->name }}</option> @endforeach
-                    </select>
+                    <x-pilih-tag model="manual.warehouse_ids" id="sim-gudang" :options="$warehouses->mapWithKeys(fn ($w) => [$w->id => $w->code.' — '.$w->name])->all()" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="sim-proyek">{{ __('Proyek') }}</label>
@@ -51,15 +49,11 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="sim-kategori">{{ __('Kategori barang') }}</label>
-                    <select class="form-select" id="sim-kategori" multiple size="3" wire:model="manual.category_ids">
-                        @foreach ($categories as $c) <option value="{{ $c->id }}">{{ $c->code }} — {{ $c->name }}</option> @endforeach
-                    </select>
+                    <x-pilih-tag model="manual.category_ids" id="sim-kategori" :options="$categories->mapWithKeys(fn ($c) => [$c->id => $c->code.' — '.$c->name])->all()" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="sim-milik">{{ __('Jenis barang (aset/habis pakai)') }}</label>
-                    <select class="form-select" id="sim-milik" multiple size="3" wire:model="manual.ownership_models">
-                        @foreach ($ownerships as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
-                    </select>
+                    <x-pilih-tag model="manual.ownership_models" id="sim-milik" :options="$ownerships" />
                 </div>
                 <div class="col-md-2">
                     <label class="form-label" for="sim-baris">{{ __('Jumlah baris') }}</label>

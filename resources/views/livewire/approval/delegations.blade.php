@@ -39,11 +39,9 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="del-jenis">{{ __('Jenis dokumen') }}</label>
-                    <select class="form-select @error('form.document_types') is-invalid @enderror" id="del-jenis" multiple size="3" wire:model="form.document_types">
-                        @foreach ($types as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
-                    </select>
+                    <x-pilih-tag model="form.document_types" id="del-jenis" :options="$types" />
                     <div class="form-text">{{ __('Kosong = semua jenis dokumen.') }}</div>
-                    @error('form.document_types') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('form.document_types') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="del-mulai">{{ __('Mulai') }} <span class="wajib">*</span></label>

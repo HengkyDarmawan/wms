@@ -14,3 +14,4 @@ import './wms/signature.js';
 import './wms/pwa.js';
 import './wms/label-designer.js';
 import './wms/floor-plan.js';
+import './wms/pilih-tag.js';

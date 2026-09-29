@@ -628,7 +628,7 @@ class ApprovalEngine
 
         $asal = (int) ($task->delegated_from_user_id ?? $task->approver_user_id);
 
-        if (($u = $pilih([$this->resolver->managerOf($asal), $this->resolver->managerOf((int) $task->approver_user_id)])) !== null) {
+        if (($u = $pilih(array_merge($this->resolver->managersOf($asal), $this->resolver->managersOf((int) $task->approver_user_id)))) !== null) {
             return [$u, 'atasan approver'];
         }
 

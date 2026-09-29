@@ -65,21 +65,13 @@
             @if ($bins->isNotEmpty())
                 <div class="col-md-6">
                     <label class="form-label" for="opn-bin">{{ __('Bin tertentu (opsional; wajib bin/item untuk pemeriksaan mendadak)') }}</label>
-                    <select class="form-select" id="opn-bin" multiple size="6" wire:model="form.bin_ids">
-                        @foreach ($bins as $b)
-                            <option value="{{ $b->id }}">{{ $b->code }}{{ $b->count_flag ? ' ⚑ '.__('perlu dihitung') : '' }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih-tag model="form.bin_ids" id="opn-bin" :options="$bins->mapWithKeys(fn ($b) => [$b->id => $b->code.($b->count_flag ? ' ⚑ '.__('perlu dihitung') : '')])->all()" />
                     @error('form.bin_ids') <div class="text-danger small">{{ $message }}</div> @enderror
                 </div>
             @endif
             <div class="col-md-6">
                 <label class="form-label" for="opn-item">{{ __('Item tertentu (opsional)') }}</label>
-                <select class="form-select" id="opn-item" multiple size="5" wire:model="form.item_ids">
-                    @foreach ($items as $i)
-                        <option value="{{ $i->id }}">{{ $i->code }} — {{ $i->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih-tag model="form.item_ids" id="opn-item" :options="$items->mapWithKeys(fn ($i) => [$i->id => $i->code.' — '.$i->name])->all()" />
             </div>
             <div class="col-md-6">
                 <label class="form-label">{{ __('Tim penghitung') }} <span class="wajib">*</span></label>

@@ -9,6 +9,7 @@ use App\Domain\Access\Exceptions\AccessRuleException;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\RoleAssignment;
 use App\Domain\Access\Models\User;
+use App\Domain\Master\Models\Project;
 
 /**
  * Permission: `role.assign`.
@@ -30,6 +31,7 @@ class AssignRole
     ): RoleAssignment {
         $this->guardClientExclusivity($user, $role);
         $this->guardScope($role, $scopeType, $scopeId);
+        $this->guardClientProject($user, $role, $scopeType, $scopeId);
 
         $assignment = RoleAssignment::updateOrCreate(
             [
@@ -74,6 +76,27 @@ class AssignRole
             throw AccessRuleException::rule(
                 'BR-ACC-03',
                 'Role Klien tidak bisa digabung dengan role internal.',
+            );
+        }
+    }
+
+    /**
+     * A-21: role Klien hanya bercakupan proyek milik kliennya sendiri. Tanpa
+     * ini, mengganti klien di form setelah mencentang proyek membuat user
+     * klien B ikut melihat proyek klien A.
+     */
+    private function guardClientProject(User $user, Role $role, ScopeType $scopeType, ?int $scopeId): void
+    {
+        if (! $role->is_client_role || $scopeType !== ScopeType::Project || $scopeId === null) {
+            return;
+        }
+
+        $pemilik = Project::query()->withoutGlobalScopes()->whereKey($scopeId)->value('client_id');
+
+        if ($pemilik === null || (int) $pemilik !== (int) $user->client_id) {
+            throw AccessRuleException::rule(
+                'A-21',
+                'Proyek itu bukan milik klien pengguna ini.',
             );
         }
     }

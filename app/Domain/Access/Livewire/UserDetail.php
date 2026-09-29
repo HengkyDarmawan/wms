@@ -12,6 +12,7 @@ use App\Domain\Access\Models\ProjectTeamMember;
 use App\Domain\Access\Models\RoleAssignment;
 use App\Domain\Access\Models\User;
 use App\Domain\Access\Models\UserInvitation;
+use App\Domain\Access\Support\Atasan;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -107,7 +108,14 @@ class UserDetail extends Component
         $this->authorize('invite', User::class);
 
         $this->ruleError = '';
-        $this->tautan = (string) ($action->handle($user, auth()->user())->url() ?? '');
+
+        try {
+            $this->tautan = (string) ($action->handle($user, auth()->user())->url() ?? '');
+        } catch (AccessRuleException $e) {
+            $this->ruleError = $e->getMessage();
+
+            return;
+        }
 
         $this->dispatch('pesan', teks: __('Undangan baru dibuat; tautan lama tidak berlaku lagi.'));
     }
@@ -192,8 +200,13 @@ class UserDetail extends Component
         $user = User::with(['orgUnit', 'position', 'manager', 'devices', 'roleAssignments.role', 'roleAssignments.assignedBy'])
             ->findOrFail($this->userId);
 
+        $atasan = app(Atasan::class);
+        $atasanIds = $atasan->dari((int) $user->id);
+
         return view('livewire.access.user-detail', [
             'user' => $user,
+            'atasanNama' => $atasanIds === [] ? [] : User::query()->whereIn('id', $atasanIds)->orderBy('name')->pluck('name')->all(),
+            'atasanSumber' => $atasan->sumber($user),
             'riwayat' => $this->riwayat($user),
             // A-337: penempatan di site, hanya-lihat — diatur dari hub proyek.
             'penugasanSite' => ProjectTeamMember::query()->where('user_id', $user->id)

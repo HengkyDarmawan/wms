@@ -98,11 +98,12 @@ class CompanyController extends Controller
 
         try {
             return $c->run(function (): ?array {
-                if (User::query()->count() !== 1) {
+                $user = $this->penggunaSerahTerima();
+
+                if ($user === null) {
                     return null;
                 }
 
-                $user = User::query()->firstOrFail();
                 $undangan = UserInvitation::query()->where('user_id', $user->id)->pending()->latest('id')->first();
 
                 if ($undangan === null || ! $undangan->isUsable()) {
@@ -124,15 +125,36 @@ class CompanyController extends Controller
         }
     }
 
+    /**
+     * A-335 + BR-SUB-04: satu-satunya pengguna company yang **belum pernah bisa
+     * masuk**. Dipakai kartu serah terima **dan** kedua aksi POST-nya — tanpa
+     * penjaga di aksi, Super Admin bisa mengganti password Admin Company pada
+     * company yang sudah berjalan hanya dengan mengirim POST.
+     *
+     * Dipanggil di dalam `$company->run()`.
+     */
+    private function penggunaSerahTerima(): ?User
+    {
+        if (User::query()->count() !== 1) {
+            return null;
+        }
+
+        $user = User::query()->firstOrFail();
+
+        return $user->password === null && $user->last_login_at === null ? $user : null;
+    }
+
     /** A-335: kirim ulang undangan Admin Company pertama. */
     public function adminInvite(Request $request, int $company): RedirectResponse
     {
         $c = Company::query()->findOrFail($company);
 
-        $c->run(function () use ($request): void {
-            $user = User::query()->firstOrFail();
+        $this->pastikanBolehSerahTerima($c);
+
+        $c->run(function () use ($request, $c): void {
+            $user = $this->penggunaSerahTerima() ?? abort(403);
             app(InviteUser::class)->handle($user);
-            PlatformAudit::record('Undangan Admin Company dikirim ulang', null, $this->admin($request), ['email' => $user->email]);
+            PlatformAudit::record('Undangan Admin Company dikirim ulang', $c, $this->admin($request), ['email' => $user->email]);
         });
 
         return back()->with('status', __('Undangan baru dibuat; tautan lama tidak berlaku lagi.'));
@@ -144,13 +166,20 @@ class CompanyController extends Controller
         $data = $request->validate(['password' => ['required', 'string', 'min:10', 'max:100']]);
         $c = Company::query()->findOrFail($company);
 
-        $c->run(function () use ($data, $request): void {
-            $user = User::query()->firstOrFail();
+        $this->pastikanBolehSerahTerima($c);
+
+        $c->run(function () use ($data, $request, $c): void {
+            $user = $this->penggunaSerahTerima() ?? abort(403);
             app(SetInitialPassword::class)->handle($user, $data['password']);
-            PlatformAudit::record('Password Admin Company dibuatkan Super Admin', null, $this->admin($request), ['email' => $user->email]);
+            PlatformAudit::record('Password Admin Company dibuatkan Super Admin', $c, $this->admin($request), ['email' => $user->email]);
         });
 
         return back()->with('status', __('Password dibuat. Serahkan ke Admin Company, lalu minta ia menggantinya.'));
+    }
+
+    private function pastikanBolehSerahTerima(Company $c): void
+    {
+        abort_if($c->status !== CompanyStatus::Active, 403, __('Serah terima hanya untuk company aktif yang belum pernah dipakai.'));
     }
 
     public function provision(Request $request, int $company, ProvisionCompany $action): RedirectResponse

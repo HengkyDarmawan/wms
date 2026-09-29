@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Shared;
 
+use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Client;
@@ -190,6 +191,35 @@ class ClientRecapReportTest extends TenantTestCase
         $purchasing = $this->makeUser('pr_follow_up');
         $purchasing->forgetPermissionCache();
         $this->actingAs($purchasing)->get($this->tenantUrl('reports/rekap-pengiriman-klien'))->assertForbidden();
+    }
+
+    #[Test]
+    public function tc_rpt_13d_sj_belum_berangkat_tidak_ikut_dan_cakupan_proyek_pembaca_dihormati(): void
+    {
+        $laporan = app(ReportRegistry::class)->find('rekap-pengiriman-klien');
+
+        $berangkat = $this->sjBerangkat(['destination_type' => 'project_client', 'destination_project_id' => $this->proyek->id], 10);
+
+        // SJ disusun tetapi belum berangkat: bukan "barang yang sudah dikirim".
+        $disusun = app(CreateShipment::class)->handle([$this->pckSelesai(7, null)], [
+            'destination_type' => 'project_client',
+            'destination_project_id' => $this->proyek->id,
+            'shipment_method' => 'self_delivered',
+            'carried_by_name' => 'Pak Site',
+        ], $this->makeUser('warehouse_staff'));
+
+        $sj = $laporan->rows(['client_id' => (string) $this->klien->id])
+            ->reject(fn (array $b) => $b['tgl_kirim'] === 'TOTAL')->pluck('sj')->all();
+
+        $this->assertSame([$berangkat->number], $sj);
+        $this->assertNotContains($disusun->number, $sj);
+
+        // BR-ACC-05: pembaca bercakupan proyek lain tidak melihat SJ proyek ini.
+        $proyekLain = $this->makeProject(['client_id' => $this->klien->id]);
+        $this->actingAs($this->makeUser('internal_requester', ScopeType::Project, (int) $proyekLain->id));
+
+        $this->assertTrue($laporan->rows(['client_id' => (string) $this->klien->id])->isEmpty());
+        $this->assertSame([$proyekLain->id], array_keys($laporan->filters()['project_id']['options']));
     }
 
     // ---------------------------------------------------------------- bantuan

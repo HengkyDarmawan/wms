@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Domain\Approval\Livewire;
 
+use App\Domain\Approval\Actions\InstallBasicApprovalRules;
 use App\Domain\Approval\Actions\SaveApprovalRule;
 use App\Domain\Approval\Livewire\Concerns\HandlesApprovalRules;
 use App\Domain\Approval\Models\ApprovalRule;
 use App\Domain\Approval\Support\ApprovalRegistry;
+use App\Domain\Approval\Support\ApprovalRuleSentence;
 use App\Domain\Approval\Support\ApproverResolver;
 use Illuminate\View\View;
 use Livewire\Attributes\Url;
@@ -27,6 +29,9 @@ class RuleList extends Component
     #[Url(except: '')]
     public string $statusFilter = '';
 
+    /** Dialog pratinjau *Pasang aturan dasar* (A-347). */
+    public bool $dialogDasar = false;
+
     public function mount(): void
     {
         $this->authorize('viewAny', ApprovalRule::class);
@@ -43,9 +48,33 @@ class RuleList extends Component
 
         return view('livewire.approval.rule-list', [
             'rules' => $rules,
+            'rencanaDasar' => $this->dialogDasar ? app(InstallBasicApprovalRules::class)->preview() : [],
+            'kalimat' => app(ApprovalRuleSentence::class),
             'types' => $registry->typeOptions(),
             'resolver' => app(ApproverResolver::class),
         ]);
+    }
+
+    public function bukaAturanDasar(): void
+    {
+        $this->authorize('create', ApprovalRule::class);
+        $this->dialogDasar = true;
+    }
+
+    public function pasangAturanDasar(InstallBasicApprovalRules $action): void
+    {
+        $this->authorize('create', ApprovalRule::class);
+
+        $dipasang = [];
+
+        if ($this->jalankan(function () use ($action, &$dipasang) {
+            $dipasang = $action->handle(auth()->user());
+        })) {
+            $this->dialogDasar = false;
+            $this->dispatch('pesan', teks: $dipasang === []
+                ? __('Semua jenis dokumen sudah punya aturan — tidak ada yang dipasang.')
+                : __(':n aturan dasar dipasang.', ['n' => count($dipasang)]));
+        }
     }
 
     public function setAktif(int $id, bool $aktif, SaveApprovalRule $action): void

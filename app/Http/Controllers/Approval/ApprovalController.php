@@ -26,6 +26,14 @@ class ApprovalController extends Controller
         return view('approval.rules');
     }
 
+    /** A-349: Peta approval — hanya membaca. */
+    public function map(): View
+    {
+        $this->authorize('viewAny', ApprovalRule::class);
+
+        return view('approval.map');
+    }
+
     public function createRule(): View
     {
         $this->authorize('create', ApprovalRule::class);

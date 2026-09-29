@@ -14,195 +14,37 @@
         </div>
     @endif
 
-    <div class="card mb-3">
-        <div class="card-header"><strong>{{ __('Aturan') }}</strong></div>
-        <div class="card-body row g-3">
-            <div class="col-md-4">
-                <label class="form-label" for="aturan-jenis">{{ __('Jenis dokumen') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.document_type') is-invalid @enderror" id="aturan-jenis" wire:model.live="form.document_type" @disabled($ruleId)>
-                    @foreach ($types as $nilai => $label)
-                        <option value="{{ $nilai }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-                @error('form.document_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-            <div class="col-md-5">
-                <label class="form-label" for="aturan-nama">{{ __('Nama aturan') }} <span class="wajib">*</span></label>
-                <input class="form-control @error('form.name') is-invalid @enderror" id="aturan-nama" type="text" wire:model="form.name" maxlength="100">
-                @error('form.name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-            <div class="col-md-2">
-                <label class="form-label" for="aturan-prioritas">{{ __('Prioritas') }} <span class="wajib">*</span></label>
-                <input class="form-control @error('form.priority') is-invalid @enderror" id="aturan-prioritas" type="number" min="1" max="9999" wire:model="form.priority">
-                @error('form.priority') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <div class="form-check">
-                    <input class="form-check-input" id="aturan-aktif" type="checkbox" wire:model="form.is_active">
-                    <label class="form-check-label" for="aturan-aktif">{{ __('Aktif') }}</label>
-                </div>
-            </div>
-            <div class="col-12 small text-muted">{{ __('Prioritas kecil diperiksa lebih dulu; aturan pertama yang cocok dipakai.') }}</div>
+    {{-- A-348: mode sederhana bawaan; mode lanjutan memuat semua isian lama. --}}
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="group" aria-label="{{ __('Mode form') }}">
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm {{ $mode === 'sederhana' ? 'btn-primary' : 'btn-outline-primary' }}" wire:click="keMode('sederhana')" aria-pressed="{{ $mode === 'sederhana' ? 'true' : 'false' }}">{{ __('Mode sederhana') }}</button>
+            <button type="button" class="btn btn-sm {{ $mode === 'lanjutan' ? 'btn-primary' : 'btn-outline-primary' }}" wire:click="keMode('lanjutan')" aria-pressed="{{ $mode === 'lanjutan' ? 'true' : 'false' }}">{{ __('Mode lanjutan') }}</button>
         </div>
+        @if ($mode === 'sederhana' && $butuhLanjutan)
+            <span class="small text-warning-emphasis"><i class="bi bi-info-circle"></i> {{ __('Aturan ini memakai pengaturan lanjutan (cara putus, batas waktu, kanal, cadangan, atau jenis approver lain) yang tetap tersimpan; ubah di Mode lanjutan.') }}</span>
+        @endif
     </div>
 
-    <div class="card mb-3">
-        <div class="card-header"><strong>{{ __('Kondisi berlaku') }}</strong> <span class="text-muted small">{{ __('— kosongkan semua agar berlaku untuk semua dokumen jenis ini') }}</span></div>
-        <div class="card-body row g-3">
-            <div class="col-md-4">
-                <label class="form-label" for="kondisi-cocok">{{ __('Cara menggabungkan') }}</label>
-                <select class="form-select" id="kondisi-cocok" wire:model="conditions.match">
-                    @foreach ($matches as $nilai => $label)
-                        <option value="{{ $nilai }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
-            @if (in_array('warehouse_ids', $allowed, true))
-                <div class="col-md-4">
-                    <label class="form-label" for="kondisi-gudang">{{ __('Gudang') }}</label>
-                    <select class="form-select" id="kondisi-gudang" multiple size="4" wire:model="conditions.warehouse_ids">
-                        @foreach ($warehouses as $w) <option value="{{ $w->id }}">{{ $w->code }} — {{ $w->name }}</option> @endforeach
-                    </select>
-                </div>
-            @endif
-            @if (in_array('project_ids', $allowed, true))
-                <div class="col-md-4">
-                    <label class="form-label" for="kondisi-proyek">{{ __('Proyek') }}</label>
-                    <select class="form-select" id="kondisi-proyek" multiple size="4" wire:model="conditions.project_ids">
-                        @foreach ($projects as $p) <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option> @endforeach
-                    </select>
-                </div>
-            @endif
-            @if (in_array('category_ids', $allowed, true))
-                <div class="col-md-4">
-                    <label class="form-label" for="kondisi-kategori">{{ __('Kategori barang (termasuk sub-kategori)') }}</label>
-                    <select class="form-select" id="kondisi-kategori" multiple size="4" wire:model="conditions.category_ids">
-                        @foreach ($categories as $c) <option value="{{ $c->id }}">{{ $c->code }} — {{ $c->name }}</option> @endforeach
-                    </select>
-                </div>
-            @endif
-            @if (in_array('ownership_models', $allowed, true))
-                <div class="col-md-4">
-                    <label class="form-label" for="kondisi-kepemilikan">{{ __('Jenis barang (aset/habis pakai)') }}</label>
-                    <select class="form-select" id="kondisi-kepemilikan" multiple size="3" wire:model="conditions.ownership_models">
-                        @foreach ($ownerships as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
-                    </select>
-                </div>
-            @endif
-            @if (in_array('vendor_types', $kondisiUsang, true))
-                <div class="col-12">
-                    <div class="alert alert-warning py-2 mb-0" role="alert">
-                        {{ __('Aturan ini memakai kondisi Jenis vendor yang tidak lagi dinilai untuk jenis dokumen ini — vendor baru dipilih di PO. Buat aturan PO untuk jenis vendor; bila aturan ini disimpan, kondisi itu dihapus dan aturan berlaku menurut kondisi lainnya.') }}
-                    </div>
-                </div>
-            @endif
-            @if (in_array('vendor_types', $allowed, true))
-                <div class="col-md-4">
-                    <label class="form-label" for="kondisi-vendor">{{ __('Jenis vendor') }}</label>
-                    <select class="form-select" id="kondisi-vendor" multiple size="4" wire:model="conditions.vendor_types">
-                        @foreach ($vendorTypes as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
-                    </select>
-                </div>
-            @endif
-            @if (in_array('line_count_min', $allowed, true))
-                <div class="col-md-3">
-                    <label class="form-label" for="kondisi-baris">{{ __('Jumlah baris ≥') }}</label>
-                    <input class="form-control" id="kondisi-baris" type="number" min="1" wire:model="conditions.line_count_min">
-                </div>
-            @endif
-            @if (in_array('order_value_min', $allowed, true))
-                <div class="col-md-3">
-                    <label class="form-label" for="kondisi-nilai">{{ __('Nilai PO ≥ (Rp)') }}</label>
-                    <input class="form-control" id="kondisi-nilai" type="number" min="0" step="1000" wire:model="conditions.order_value_min">
-                    <div class="form-text">{{ __('Hanya untuk Purchase Order.') }}</div> {{-- D-28 --}}
-                </div>
-            @endif
-            @if (in_array('line_qty_min', $allowed, true))
-                <div class="col-md-3">
-                    <label class="form-label" for="kondisi-qty">{{ __('Jumlah per baris ≥ (satuan dasar)') }}</label>
-                    <input class="form-control" id="kondisi-qty" type="number" min="0" step="0.0001" wire:model="conditions.line_qty_min">
-                </div>
-            @endif
-            @if (in_array('from_client', $allowed, true))
-                <div class="col-md-3">
-                    <label class="form-label" for="kondisi-klien">{{ __('Permintaan dari klien') }}</label>
-                    <select class="form-select" id="kondisi-klien" wire:model="conditions.from_client">
-                        <option value="">{{ __('Abaikan') }}</option>
-                        <option value="1">{{ __('Ya') }}</option>
-                        <option value="0">{{ __('Tidak') }}</option>
-                    </select>
-                </div>
-            @endif
-        </div>
-    </div>
+    @if ($mode === 'sederhana')
+        @include('livewire.approval.partials.rule-form-sederhana')
+    @else
+        @include('livewire.approval.partials.rule-form-lanjutan')
+    @endif
 
-    <div class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>{{ __('Lapis approval') }} <span class="wajib">*</span></strong>
-            <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tambahLapis">{{ __('Tambah lapis') }}</button>
+    {{-- Kalimat ringkasan (A-348) — sama dengan yang tampil di daftar aturan dan Peta approval. --}}
+    @if ($ringkasan !== '')
+        <div class="alert alert-light border mb-3" role="status" aria-live="polite">
+            <div class="small text-muted mb-1">{{ __('Ringkasan') }}</div>
+            <div>{{ $ringkasan }}</div>
+            <div class="small text-muted mt-1">
+                @if (($mode === 'sederhana' && $berlaku === 'selalu') || $prioritasOtomatis === \App\Domain\Approval\Support\ConditionMatcher::PRIORITAS_UMUM)
+                    {{ __('Aturan umum: diperiksa setelah aturan yang punya syarat.') }}
+                @else
+                    {{ __('Punya syarat: diperiksa sebelum aturan umum.') }}
+                @endif
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">{{ __('Approver') }} <span class="wajib">*</span></th>
-                        <th scope="col">{{ __('Cara putus') }} <span class="wajib">*</span></th>
-                        <th scope="col">{{ __('Batas waktu (jam)') }} <span class="wajib">*</span> · {{ __('Kanal') }}</th>
-                        <th scope="col">{{ __('Approver cadangan') }}</th>
-                        <th scope="col"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($steps as $i => $s)
-                        <tr wire:key="lapis-{{ $i }}">
-                            <td>{{ $i + 1 }}</td>
-                            <td>
-                                <select class="form-select form-select-sm mb-1" wire:model.live="steps.{{ $i }}.approver_type" aria-label="{{ __('Jenis approver') }}">
-                                    @foreach ($approverTypes as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
-                                </select>
-                                @include('livewire.approval.partials.approver-ref', ['jenis' => $s['approver_type'] ?? '', 'model' => 'steps.'.$i.'.approver_ref_id'])
-                                @if (in_array($s['approver_type'] ?? '', ['role', 'position'], true))
-                                    {{-- A-269: approver hanya dari divisi pemohon atau divisi induknya. --}}
-                                    <div class="form-check small mt-1">
-                                        <input class="form-check-input" id="lapis-divisi-{{ $i }}" type="checkbox" wire:model="steps.{{ $i }}.same_org_unit">
-                                        <label class="form-check-label" for="lapis-divisi-{{ $i }}">{{ __('Hanya dari divisi pemohon') }}</label>
-                                    </div>
-                                @endif
-                            </td>
-                            <td>
-                                <select class="form-select form-select-sm" wire:model="steps.{{ $i }}.decision_mode" aria-label="{{ __('Cara putus') }}">
-                                    @foreach ($modes as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
-                                </select>
-                            </td>
-                            <td style="max-width: 7rem">
-                                <input class="form-control form-control-sm" type="number" min="1" max="720" wire:model="steps.{{ $i }}.timeout_hours" aria-label="{{ __('Batas waktu') }}">
-                                {{-- Fase 2a (A-277, BR-APR-10): tombol Setujui/Tolak lewat WhatsApp. --}}
-                                <select class="form-select form-select-sm mt-1" wire:model="steps.{{ $i }}.channel" aria-label="{{ __('Kanal lapis') }}" title="{{ $waAktif ? '' : __('WhatsApp belum aktif untuk company ini; lapis tetap lewat web') }}">
-                                    <option value="web">{{ __('Web') }}</option>
-                                    <option value="both">{{ __('Web & WhatsApp') }}</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select class="form-select form-select-sm mb-1" wire:model.live="steps.{{ $i }}.backup_approver_type" aria-label="{{ __('Jenis approver cadangan') }}">
-                                    <option value="">{{ __('Tanpa cadangan') }}</option>
-                                    @foreach ($approverTypes as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
-                                </select>
-                                @include('livewire.approval.partials.approver-ref', ['jenis' => $s['backup_approver_type'] ?? '', 'model' => 'steps.'.$i.'.backup_ref_id'])
-                            </td>
-                            <td class="text-end text-nowrap">
-                                @if ($i > 0)
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" wire:click="naikkanLapis({{ $i }})" title="{{ __('Naikkan') }}"><i class="bi bi-arrow-up"></i></button>
-                                @endif
-                                <button class="btn btn-sm btn-outline-danger" type="button" wire:click="hapusLapis({{ $i }})" title="{{ __('Hapus lapis') }}"><i class="bi bi-x-lg"></i></button>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer small text-muted">{{ __('Pengaju tidak pernah menyetujui dokumennya sendiri; bila lapis menunjuk pengaju, lapis dialihkan ke atasannya. Approver nonaktif dialihkan ke cadangan, atasan, lalu Admin Company. Kanal WhatsApp tersedia di Fase 2a.') }}</div> {{-- BR-APR-03, BR-APR-06 --}}
-    </div>
+    @endif
 
     @can('approval.simulate')
         <div class="card mb-3">

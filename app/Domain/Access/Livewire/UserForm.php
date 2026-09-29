@@ -133,6 +133,12 @@ class UserForm extends Component
         }
     }
 
+    /** A-21: proyek yang sudah dicentang milik klien lama tidak boleh ikut terbawa. */
+    public function updatedClientId(): void
+    {
+        $this->proyekDipilih = [];
+    }
+
     public function addAssignment(): void
     {
         $this->lanjutanTerbuka = true;
@@ -223,6 +229,21 @@ class UserForm extends Component
         session()->flash('status', $pesan);
 
         return $this->redirectRoute('users.show', ['user' => $user->id], navigate: false);
+    }
+
+    /** @return array<int, string> nama pemegang jabatan atasan dari jabatan terpilih */
+    private function atasanDariJabatan(): array
+    {
+        $jabatanAtasan = $this->positionId === null ? null
+            : Position::query()->whereKey($this->positionId)->value('reports_to_position_id');
+
+        if ($jabatanAtasan === null) {
+            return [];
+        }
+
+        return User::query()->active()->internal()->where('position_id', $jabatanAtasan)
+            ->when($this->userId !== null, fn ($q) => $q->whereKeyNot($this->userId))
+            ->orderBy('name')->pluck('name')->all();
     }
 
     /** Pertanyaan cakupan untuk peran yang sedang dipilih. */
@@ -350,6 +371,8 @@ class UserForm extends Component
             'positions' => Position::query()
                 ->when($this->orgUnitId !== null, fn ($q) => $q->where('org_unit_id', $this->orgUnitId))
                 ->orderBy('level')->orderBy('name')->get(),
+            // A-345: siapa atasan bila isian manual dikosongkan.
+            'atasanDariJabatan' => $this->atasanDariJabatan(),
             'managers' => User::query()
                 ->active()->internal()
                 ->when($this->userId !== null, fn ($q) => $q->whereKeyNot($this->userId))

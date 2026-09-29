@@ -162,14 +162,17 @@
                                         @error('positionName')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-12 col-md-3">
-                                        <label class="form-label small" for="positionLevel">
-                                            {{ __('Level') }} <span class="wajib">*</span>
-                                        </label>
-                                        <input class="form-control form-control-sm @error('positionLevel') is-invalid @enderror"
-                                               id="positionLevel" type="number" min="1" max="99"
-                                               wire:model="positionLevel" required>
-                                        <div class="form-text">{{ __('1 = tertinggi') }}</div>
-                                        @error('positionLevel')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <label class="form-label small" for="positionReportsTo">{{ __('Atasan jabatan') }}</label>
+                                        <select class="form-select form-select-sm @error('positionReportsTo') is-invalid @enderror"
+                                                id="positionReportsTo" wire:model="positionReportsTo">
+                                            <option value="">{{ __('— Puncak (tanpa atasan) —') }}</option>
+                                            @foreach ($pilihanAtasan as $calon)
+                                                <option value="{{ $calon->id }}">{{ $calon->name }} · {{ $calon->orgUnit?->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        {{-- A-344: level tidak diketik lagi; dihitung dari peta jabatan. --}}
+                                        <div class="form-text">{{ __('Pemegang jabatan atasan menjadi atasan langsung bawaan. Level dihitung otomatis.') }}</div>
+                                        @error('positionReportsTo')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                 </div>
 
@@ -187,6 +190,7 @@
                                 <thead>
                                     <tr>
                                         <th>{{ __('Jabatan') }}</th>
+                                        <th>{{ __('Atasan jabatan') }}</th>
                                         <th class="text-end">{{ __('Level') }}</th>
                                         <th>{{ __('Status') }}</th>
                                         <th class="text-end">{{ __('Aksi') }}</th>
@@ -199,6 +203,7 @@
                                                 <div class="fw-semibold">{{ $position->name }}</div>
                                                 <div class="small text-muted">{{ $position->code }}</div>
                                             </td>
+                                            <td class="small">{{ $position->reportsTo?->name ?? __('— puncak —') }}</td>
                                             <td class="text-end">{{ $position->level }}</td>
                                             <td>
                                                 <span class="badge text-bg-{{ $position->is_active ? 'success' : 'secondary' }}">
@@ -225,7 +230,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted py-3">
+                                            <td colspan="5" class="text-center text-muted py-3">
                                                 {{ __('Belum ada jabatan di unit ini.') }}
                                             </td>
                                         </tr>
@@ -263,11 +268,17 @@
                                                 @endcan
                                             </td>
                                             <td class="small">{{ $orang->position?->name ?? '—' }}</td>
+                                            {{-- A-345: atasan efektif — isian manual, atau pemegang jabatan atasan. --}}
+                                            @php($atasanOrang = $atasan[$orang->id] ?? ['nama' => [], 'sumber' => null])
                                             <td class="small">
-                                                {{ $orang->manager?->name ?? '—' }}
-                                                @unless ($orang->manager)
-                                                    <span class="badge text-bg-warning ms-1">{{ __('belum diisi') }}</span>
-                                                @endunless
+                                                {{ $atasanOrang['nama'] === [] ? '—' : implode(', ', $atasanOrang['nama']) }}
+                                                @if ($atasanOrang['sumber'] === \App\Domain\Access\Support\Atasan::MANUAL)
+                                                    <span class="badge text-bg-light border ms-1">{{ __('manual') }}</span>
+                                                @elseif ($atasanOrang['sumber'] === \App\Domain\Access\Support\Atasan::JABATAN)
+                                                    <span class="badge text-bg-light border ms-1">{{ __('dari jabatan') }}</span>
+                                                @else
+                                                    <span class="badge text-bg-warning ms-1">{{ __('belum ada') }}</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 <span class="badge text-bg-{{ $statusOrang->badge() }}">{{ $statusOrang->label() }}</span>

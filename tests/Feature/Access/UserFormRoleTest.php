@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Access;
 
+use App\Domain\Access\Actions\UpdateUser;
 use App\Domain\Access\Enums\ScopeType;
+use App\Domain\Access\Exceptions\AccessRuleException;
 use App\Domain\Access\Livewire\UserForm;
 use App\Domain\Access\Models\ProjectTeamMember;
 use App\Domain\Access\Models\Role;
@@ -125,6 +127,51 @@ class UserFormRoleTest extends TenantTestCase
         $this->assertSame((int) $proyek->id, (int) $member->project_id);
         $this->assertSame(now()->addMonths(5)->toDateString(), $member->ends_on->toDateString());
         $this->assertSame($member->id, (int) $user->roleAssignments()->sole()->project_team_member_id);
+    }
+
+    #[Test]
+    public function tc_acc_41f_proyek_klien_lain_tidak_ikut_terbawa_dan_pindah_klien_dijaga(): void
+    {
+        $admin = $this->makeUser('company_admin');
+        $klienA = $this->makeClient(['name' => 'PT Klien A']);
+        $klienB = $this->makeClient(['name' => 'PT Klien B']);
+        $proyekA = $this->makeProject(['client_id' => $klienA->id, 'target_end_date' => now()->addMonths(3)->toDateString()]);
+        $proyekB = $this->makeProject(['client_id' => $klienB->id, 'target_end_date' => now()->addMonths(3)->toDateString()]);
+
+        // Ganti klien setelah mencentang proyek: centang lama dikosongkan.
+        Livewire::actingAs($admin)->test(UserForm::class)
+            ->set('name', 'Portal Pindah')
+            ->set('email', 'portal.pindah@klien-b.test')
+            ->call('pilihPeran', Role::findByCode('client_user')->id)
+            ->set('clientId', $klienA->id)
+            ->set('proyekDipilih', [(string) $proyekA->id])
+            ->set('clientId', $klienB->id)
+            ->assertSet('proyekDipilih', [])
+            // Payload yang diubah tetap ditolak di aksi (A-21).
+            ->set('proyekDipilih', [(string) $proyekA->id, (string) $proyekB->id])
+            ->call('save')
+            ->assertHasErrors('peranUtama');
+
+        $this->assertFalse(RoleAssignment::query()
+            ->whereHas('user', fn ($q) => $q->where('email', 'portal.pindah@klien-b.test'))
+            ->where('scope_type', ScopeType::Project->value)->where('scope_id', $proyekA->id)
+            ->exists(), 'Klien B tidak boleh mendapat proyek klien A.');
+
+        // User klien yang masih punya penempatan Tim site tidak bisa dipindah ke klien lain (BR-ACC-03).
+        Livewire::actingAs($admin)->test(UserForm::class)
+            ->set('name', 'Portal Tetap')
+            ->set('email', 'portal.tetap@klien-a.test')
+            ->call('pilihPeran', Role::findByCode('client_user')->id)
+            ->set('clientId', $klienA->id)
+            ->set('proyekDipilih', [(string) $proyekA->id])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $tetap = User::query()->where('email', 'portal.tetap@klien-a.test')->firstOrFail();
+
+        $this->expectException(AccessRuleException::class);
+
+        app(UpdateUser::class)->handle($tetap, ['name' => $tetap->name, 'client_id' => $klienB->id], null, $admin);
     }
 
     #[Test]

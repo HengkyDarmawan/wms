@@ -10,6 +10,7 @@ use App\Domain\Access\Models\Position;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\RoleAssignment;
 use App\Domain\Access\Models\User;
+use App\Domain\Access\Support\Atasan;
 use App\Domain\Approval\Enums\ApproverType;
 use App\Domain\Master\Models\Project;
 
@@ -26,8 +27,13 @@ class ApproverResolver
     /** @var array<string, bool> */
     private array $eligibleCache = [];
 
-    /** @return array<int, int> kandidat mentah, urut id */
-    public function resolve(ApproverType $type, ?int $refId, ApprovalContext $ctx): array
+    public function __construct(private readonly Atasan $atasan) {}
+
+    /**
+     * @param  int|null  $managerLevels  hanya untuk Atasan langsung: 1 atau 2 tingkat (A-346)
+     * @return array<int, int> kandidat mentah, urut id
+     */
+    public function resolve(ApproverType $type, ?int $refId, ApprovalContext $ctx, ?int $managerLevels = null): array
     {
         $ids = match ($type) {
             ApproverType::User => $refId !== null ? [$refId] : [],
@@ -35,7 +41,10 @@ class ApproverResolver
                 ? User::query()->where('position_id', $refId)->pluck('id')->all()
                 : [],
             ApproverType::Role => $refId !== null ? $this->roleHolders($refId, $ctx) : [],
-            ApproverType::DirectManager => $ctx->requesterId !== null && ($m = $this->managerOf($ctx->requesterId)) !== null ? [$m] : [],
+            // A-344/A-345: atasan efektif — isian manual user, atau pemegang jabatan atasan.
+            ApproverType::DirectManager => $ctx->requesterId !== null
+                ? $this->atasan->dari($ctx->requesterId, self::tingkat($managerLevels))
+                : [],
             ApproverType::WarehouseHead => $this->warehouseHeads($ctx),
             ApproverType::ProjectPic => $ctx->projectId !== null
                 ? array_filter([(int) Project::query()->whereKey($ctx->projectId)->value('pic_user_id')])
@@ -116,11 +125,22 @@ class ApproverResolver
         return array_values(array_filter($ids, fn (int $id) => $this->isEligible($id, $permission)));
     }
 
+    /** Satu atasan efektif (id terkecil) — pengalihan SoD & eskalasi (BR-APR-03, BR-APR-06). */
     public function managerOf(int $userId): ?int
     {
-        $id = User::query()->whereKey($userId)->value('manager_id');
+        return $this->atasan->pertama($userId);
+    }
 
-        return $id === null ? null : (int) $id;
+    /** @return array<int, int> semua atasan efektif tingkat 1 */
+    public function managersOf(int $userId): array
+    {
+        return $this->atasan->dari($userId);
+    }
+
+    /** Tingkat atasan yang sah: 2 bila diminta, selain itu 1. */
+    public static function tingkat(mixed $levels): int
+    {
+        return (int) $levels === 2 ? 2 : 1;
     }
 
     /** @return array<int, int> pemegang role Admin Company (tujuan eskalasi terakhir, BR-APR-06) */
@@ -138,8 +158,12 @@ class ApproverResolver
     }
 
     /** Label manusiawi untuk simulasi dan riwayat. */
-    public function label(ApproverType $type, ?int $refId): string
+    public function label(ApproverType $type, ?int $refId, ?int $managerLevels = null): string
     {
+        if ($type === ApproverType::DirectManager) {
+            return $type->label().' — '.self::tingkat($managerLevels).' tingkat';
+        }
+
         $nama = match ($type) {
             ApproverType::User => $refId !== null ? User::query()->whereKey($refId)->value('name') : null,
             ApproverType::Position => $refId !== null ? Position::query()->whereKey($refId)->value('name') : null,
