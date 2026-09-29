@@ -15,17 +15,8 @@
 
                     <form wire:submit="beri">
                         <div class="mb-3">
-                            <label class="form-label" for="platformUserId">
-                                {{ __('Super Admin') }} <span class="wajib">*</span>
-                            </label>
-                            <select class="form-select @error('platformUserId') is-invalid @enderror"
-                                    id="platformUserId" wire:model="platformUserId" required>
-                                <option value="">{{ __('— Pilih —') }}</option>
-                                @foreach ($superAdmins as $sa)
-                                    <option value="{{ $sa->id }}">{{ $sa->name }} ({{ $sa->email }})</option>
-                                @endforeach
-                            </select>
-                            @error('platformUserId')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <x-pilih model="platformUserId" id="platformUserId" wajib :label="__('Super Admin')" :kosong="__('— Pilih —')"
+                                     :options="$superAdmins->map(fn ($sa) => ['value' => $sa->id, 'text' => $sa->name, 'sub' => $sa->email])->all()" />
                         </div>
 
                         <div class="row g-2 mb-3">

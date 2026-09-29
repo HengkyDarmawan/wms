@@ -72,16 +72,9 @@
                                 </div>
 
                                 <div class="col-12 col-md-4">
-                                    <label class="form-label" for="unitParentId">{{ __('Induk') }}</label>
-                                    <select class="form-select @error('unitParentId') is-invalid @enderror"
-                                            id="unitParentId" wire:model="unitParentId">
-                                        <option value="">{{ __('— Tanpa induk —') }}</option>
-                                        @foreach ($units as $calon)
-                                            @continue($editingUnitId && $calon->id === $editingUnitId)
-                                            <option value="{{ $calon->id }}">{{ $calon->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('unitParentId')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <x-pilih model="unitParentId" id="unitParentId" :label="__('Induk')" :kosong="__('— Tanpa induk —')"
+                                             :options="$units->reject(fn ($u) => $editingUnitId && $u->id === $editingUnitId)
+                                                 ->map(fn ($u) => ['value' => $u->id, 'text' => $u->name])->all()" />
                                 </div>
                             </div>
 
@@ -162,17 +155,12 @@
                                         @error('positionName')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-12 col-md-3">
-                                        <label class="form-label small" for="positionReportsTo">{{ __('Atasan jabatan') }}</label>
-                                        <select class="form-select form-select-sm @error('positionReportsTo') is-invalid @enderror"
-                                                id="positionReportsTo" wire:model="positionReportsTo">
-                                            <option value="">{{ __('— Puncak (tanpa atasan) —') }}</option>
-                                            @foreach ($pilihanAtasan as $calon)
-                                                <option value="{{ $calon->id }}">{{ $calon->name }} · {{ $calon->orgUnit?->name }}</option>
-                                            @endforeach
-                                        </select>
+                                        {{-- A-388: jabatan aktif mana pun, berkelompok per unit (bisa dicari). --}}
+                                        <x-pilih model="positionReportsTo" id="positionReportsTo" kecil :label="__('Atasan jabatan')"
+                                                 :kosong="__('— Puncak (tanpa atasan) —')"
+                                                 :options="$pilihanAtasan->map(fn ($p) => ['value' => $p->id, 'text' => $p->name, 'group' => $p->orgUnit?->name ?? __('Tanpa unit')])->all()" />
                                         {{-- A-344: level tidak diketik lagi; dihitung dari peta jabatan. --}}
                                         <div class="form-text">{{ __('Pemegang jabatan atasan menjadi atasan langsung bawaan. Level dihitung otomatis.') }}</div>
-                                        @error('positionReportsTo')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                 </div>
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Approval\Livewire;
 
-use App\Domain\Access\Models\User;
 use App\Domain\Approval\Actions\SimulateApproval;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Livewire\Concerns\HandlesApprovalRules;
@@ -13,7 +12,9 @@ use App\Domain\Approval\Support\ApprovalRegistry;
 use App\Domain\Master\Enums\OwnershipModel;
 use App\Domain\Master\Enums\VendorType;
 use App\Domain\Master\Models\ItemCategory;
-use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -25,6 +26,7 @@ use Livewire\Component;
  */
 class ApprovalSimulation extends Component
 {
+    use CariPilihan;
     use HandlesApprovalRules;
 
     public string $documentType = '';
@@ -50,6 +52,18 @@ class ApprovalSimulation extends Component
     /** @var array<string, mixed>|null */
     public ?array $hasil = null;
 
+    /** A-384: proyek & pemohon bisa dicari; izin sama dengan layar. */
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $this->authorize('approval.simulate');
+
+        return match ($model) {
+            'manual.project_id' => SumberPilihan::proyekSemuaStatus(),
+            'manual.requester_id' => SumberPilihan::pemohon(),
+            default => null,
+        };
+    }
+
     public function mount(): void
     {
         $this->authorize('approval.simulate');
@@ -61,11 +75,12 @@ class ApprovalSimulation extends Component
         return view('livewire.approval.simulation', [
             'types' => app(ApprovalRegistry::class)->typeOptions(),
             'warehouses' => Warehouse::withoutGlobalScopes()->orderBy('code')->get(['id', 'code', 'name']),
-            'projects' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
+            // A-388: proyek & pemohon dicari ke server (A-384).
+            'opsiProyek' => SumberPilihan::proyekSemuaStatus()->awalDengan($this->manual['project_id'] ?? null),
             'categories' => ItemCategory::query()->orderBy('code')->get(['id', 'code', 'name']),
             'ownerships' => OwnershipModel::options(),
             'vendorTypes' => VendorType::options(),
-            'users' => User::query()->active()->orderBy('name')->get(['id', 'name']),
+            'opsiPemohon' => SumberPilihan::pemohon()->awalDengan($this->manual['requester_id'] ?? null),
         ]);
     }
 

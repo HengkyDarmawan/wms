@@ -6,7 +6,6 @@ namespace App\Domain\Approval\Livewire;
 
 use App\Domain\Access\Models\Position;
 use App\Domain\Access\Models\Role;
-use App\Domain\Access\Models\User;
 use App\Domain\Approval\Actions\SaveApprovalRule;
 use App\Domain\Approval\Actions\SimulateApproval;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
@@ -24,6 +23,9 @@ use App\Domain\Master\Enums\VendorType;
 use App\Domain\Master\Models\ItemCategory;
 use App\Domain\Master\Models\Project;
 use App\Domain\PurchaseRequest\Enums\PurchaseRequestOrigin;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\WhatsApp\Support\WhatsAppChannel;
 use Illuminate\Support\Str;
@@ -42,6 +44,7 @@ use Livewire\Component;
  */
 class RuleForm extends Component
 {
+    use CariPilihan;
     use HandlesApprovalRules;
 
     /** Jenis approver yang ditawarkan mode sederhana. */
@@ -315,8 +318,10 @@ class RuleForm extends Component
             'vendorTypes' => VendorType::options(),
             'origins' => PurchaseRequestOrigin::options(),
             'countTypes' => CountType::options(),
-            'users' => User::query()->internal()->active()->orderBy('name')->get(['id', 'name']),
-            'positions' => Position::query()->orderBy('name')->get(['id', 'name']),
+            // A-388: orang = pengguna internal aktif (sumber baku, dicari ke server); jabatan berkelompok per unit.
+            'opsiOrang' => fn ($nilai) => SumberPilihan::pengguna()->awalDengan($nilai),
+            'opsiJabatan' => Position::query()->with('orgUnit:id,name')->orderBy('name')->get(['id', 'name', 'org_unit_id'])
+                ->map(fn (Position $p) => ['value' => $p->id, 'text' => $p->name, 'group' => $p->orgUnit?->name ?? __('Tanpa unit')])->all(),
             'roles' => Role::query()->where('is_client_role', false)->where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'ringkasan' => $jenis === null ? '' : $kalimat->kalimat($jenis, $this->kondisiDisimpan(), $this->steps),
             'prioritasOtomatis' => $this->prioritasOtomatis(),
@@ -325,6 +330,21 @@ class RuleForm extends Component
     }
 
     // ----------------------------------------------------------------- bantuan
+
+    /** A-384: rujukan approver "orang tertentu" dicari ke server; izin diulang seperti simpan. */
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $rule = $this->ruleId === null ? null : ApprovalRule::findOrFail($this->ruleId);
+        $this->authorize($rule === null ? 'create' : 'update', $rule ?? ApprovalRule::class);
+
+        if (preg_match('/^steps\.(\d+)\.(approver_ref_id|backup_ref_id)$/', $model, $m) !== 1) {
+            return null;
+        }
+
+        $jenis = $this->steps[(int) $m[1]][$m[2] === 'approver_ref_id' ? 'approver_type' : 'backup_approver_type'] ?? null;
+
+        return $jenis === 'user' ? SumberPilihan::pengguna() : null;
+    }
 
     /**
      * Kondisi yang benar-benar disimpan: kosong bila "Selalu" (mode sederhana),

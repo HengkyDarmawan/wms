@@ -28,23 +28,10 @@
             </div>
             <div class="card-body row g-3">
                 <div class="col-md-4">
-                    <label class="form-label" for="tim-orang">{{ __('Orang') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('userId') is-invalid @enderror" id="tim-orang" wire:model="userId">
-                        <option value="">{{ __('— pilih —') }}</option>
-                        <optgroup label="{{ __('Staf kita') }}">
-                            @foreach ($calon['internal'] as $orang)
-                                <option value="{{ $orang->id }}">{{ $orang->name }}</option>
-                            @endforeach
-                        </optgroup>
-                        @if ($calon['klien']->isNotEmpty())
-                            <optgroup label="{{ __('Akun portal klien') }}">
-                                @foreach ($calon['klien'] as $orang)
-                                    <option value="{{ $orang->id }}">{{ $orang->name }}</option>
-                                @endforeach
-                            </optgroup>
-                        @endif
-                    </select>
-                    @error('userId') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    {{-- A-388: staf kita & akun portal klien proyek ini, dicari ke server (A-384). --}}
+                    <x-pilih model="userId" id="tim-orang" server wajib :label="__('Orang')" :kosong="__('— pilih —')"
+                             :kelompok="[__('Staf kita'), __('Akun portal klien')]" :options="$calon"
+                             :placeholder="__('Cari nama, email, jabatan, atau unit…')" />
                 </div>
 
                 <div class="col-md-4">

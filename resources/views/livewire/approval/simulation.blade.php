@@ -41,11 +41,7 @@
                     <x-pilih-tag model="manual.warehouse_ids" id="sim-gudang" :options="$warehouses->mapWithKeys(fn ($w) => [$w->id => $w->code.' — '.$w->name])->all()" />
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label" for="sim-proyek">{{ __('Proyek') }}</label>
-                    <select class="form-select" id="sim-proyek" wire:model="manual.project_id">
-                        <option value="">—</option>
-                        @foreach ($projects as $p) <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option> @endforeach
-                    </select>
+                    <x-pilih model="manual.project_id" id="sim-proyek" server :label="__('Proyek')" kosong="—" :options="$opsiProyek" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="sim-kategori">{{ __('Kategori barang') }}</label>
@@ -64,11 +60,7 @@
                     <input class="form-control" id="sim-qty" type="number" min="0" step="0.0001" wire:model="manual.max_line_qty">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label" for="sim-pemohon">{{ __('Pemohon / pengaju') }}</label>
-                    <select class="form-select" id="sim-pemohon" wire:model="manual.requester_id">
-                        <option value="">—</option>
-                        @foreach ($users as $u) <option value="{{ $u->id }}">{{ $u->name }}</option> @endforeach
-                    </select>
+                    <x-pilih model="manual.requester_id" id="sim-pemohon" server :label="__('Pemohon / pengaju')" kosong="—" :options="$opsiPemohon" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="sim-vendor">{{ __('Jenis vendor') }}</label>

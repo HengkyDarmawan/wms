@@ -13,7 +13,9 @@ use App\Domain\Approval\Livewire\Concerns\HandlesApprovalRules;
 use App\Domain\Approval\Models\ApprovalRule;
 use App\Domain\Approval\Support\ApprovalRegistry;
 use App\Domain\Approval\Support\ApprovalRuleSentence;
-use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -27,6 +29,7 @@ use Livewire\Component;
  */
 class ApprovalMap extends Component
 {
+    use CariPilihan;
     use HandlesApprovalRules;
 
     public string $pemohon = '';
@@ -39,6 +42,18 @@ class ApprovalMap extends Component
 
     /** @var array<string, mixed>|null */
     public ?array $hasil = null;
+
+    /** A-384: pemohon & proyek bisa dicari; izin sama dengan layar. */
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $this->authorize('viewAny', ApprovalRule::class);
+
+        return match ($model) {
+            'pemohon' => SumberPilihan::pemohon(),
+            'proyek' => SumberPilihan::proyekSemuaStatus(),
+            default => null,
+        };
+    }
 
     public function mount(): void
     {
@@ -97,9 +112,10 @@ class ApprovalMap extends Component
             ]),
             'bagan' => $this->bagan(),
             'types' => $registry->typeOptions(),
-            'users' => User::query()->active()->orderBy('name')->get(['id', 'name', 'client_id']),
+            // A-388: pemohon & proyek dicari ke server (A-384) dengan query yang sama dengan daftar lama.
+            'opsiPemohon' => SumberPilihan::pemohon()->awalDengan($this->pemohon),
             'warehouses' => Warehouse::withoutGlobalScopes()->orderBy('code')->get(['id', 'code', 'name']),
-            'projects' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']),
+            'opsiProyek' => SumberPilihan::proyekSemuaStatus()->awalDengan($this->proyek),
         ]);
     }
 

@@ -22,20 +22,11 @@
             <div class="card-body row g-3">
                 @if ($admin)
                     <div class="col-md-4">
-                        <label class="form-label" for="del-dari">{{ __('Pemberi delegasi') }} <span class="wajib">*</span></label>
-                        <select class="form-select @error('form.from_user_id') is-invalid @enderror" id="del-dari" wire:model="form.from_user_id">
-                            @foreach ($users as $u) <option value="{{ $u->id }}">{{ $u->name }}</option> @endforeach
-                        </select>
-                        @error('form.from_user_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <x-pilih model="form.from_user_id" id="del-dari" server wajib :label="__('Pemberi delegasi')" :options="$opsiDari" />
                     </div>
                 @endif
                 <div class="col-md-4">
-                    <label class="form-label" for="del-ke">{{ __('Delegat') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.to_user_id') is-invalid @enderror" id="del-ke" wire:model="form.to_user_id">
-                        <option value="">{{ __('Pilih user…') }}</option>
-                        @foreach ($users as $u) <option value="{{ $u->id }}">{{ $u->name }}</option> @endforeach
-                    </select>
-                    @error('form.to_user_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.to_user_id" id="del-ke" server wajib :label="__('Delegat')" :kosong="__('Pilih user…')" :options="$opsiKe" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="del-jenis">{{ __('Jenis dokumen') }}</label>

@@ -23,13 +23,8 @@
                 </div>
 
                 <div class="col-6 col-lg-2">
-                    <label class="form-label" for="f-role">{{ __('Role') }}</label>
-                    <select class="form-select" id="f-role" wire:model.live="roleFilter">
-                        <option value="">{{ __('Semua') }}</option>
-                        @foreach ($roles as $role)
-                            <option value="{{ $role->id }}">{{ $role->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="roleFilter" id="f-role" live :label="__('Role')" :kosong="__('Semua')"
+                             :options="$roles->map(fn ($r) => ['value' => $r->id, 'text' => $r->name])->all()" />
                 </div>
 
                 <div class="col-6 col-lg-2">
@@ -43,13 +38,8 @@
                 </div>
 
                 <div class="col-6 col-lg-2">
-                    <label class="form-label" for="f-unit">{{ __('Unit') }}</label>
-                    <select class="form-select" id="f-unit" wire:model.live="unitFilter">
-                        <option value="">{{ __('Semua') }}</option>
-                        @foreach ($units as $unit)
-                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="unitFilter" id="f-unit" live :label="__('Unit')" :kosong="__('Semua')"
+                             :options="$units->map(fn ($u) => ['value' => $u->id, 'text' => $u->name])->all()" />
                 </div>
 
                 <div class="col-6 col-lg-2">

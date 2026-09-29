@@ -15,6 +15,8 @@ use App\Domain\Access\Support\SiteTeam;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\ReasonCode;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -29,6 +31,8 @@ use Livewire\Component;
  */
 class ProjectTeam extends Component
 {
+    use CariPilihan;
+
     #[Locked]
     public int $projectId;
 
@@ -84,7 +88,7 @@ class ProjectTeam extends Component
         $this->authorize('role.assign');
 
         $this->validate([
-            'userId' => ['required', 'integer', 'exists:users,id'],
+            'userId' => ['required', 'integer', 'exists:users,id', app(SiteTeam::class)->candidates($this->project())->aturan()],
             'roleId' => ['required', 'integer', 'exists:roles,id'],
             'startsOn' => ['required', 'date'],
             'endsOn' => ['required', 'date', 'after_or_equal:startsOn'],
@@ -200,13 +204,21 @@ class ProjectTeam extends Component
                 ->orderByRaw('ended_at is null desc')->orderByDesc('ends_on')->get(),
             'sites' => $siteTeam->siteWarehouses($project),
             'peranPilihan' => $siteTeam->roleOptions(),
-            'calon' => $siteTeam->candidates($project),
+            'calon' => $siteTeam->candidates($project)->awalDengan($this->userId),
             'bolehAtur' => auth()->user()?->hasPermission('role.assign') ?? false,
             'bolehPerpanjang' => $siteTeam->canExtend(auth()->user(), $project),
             'alasan' => ReasonCode::options(ReasonContext::Cancel),
             'perpanjangkan' => $this->extendingId === null ? null : $this->member($this->extendingId),
             'akhirkan' => $this->endingId === null ? null : $this->member($this->endingId),
         ]);
+    }
+
+    /** A-384: calon anggota dicari ke server — hanya bagi pemegang `role.assign`. */
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $this->authorize('role.assign');
+
+        return $model === 'userId' ? app(SiteTeam::class)->candidates($this->project()) : null;
     }
 
     private function project(): Project

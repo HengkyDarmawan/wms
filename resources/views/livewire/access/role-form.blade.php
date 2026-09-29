@@ -47,15 +47,9 @@
                         <hr>
 
                         <label class="form-label" for="copyFrom">{{ __('Salin permission dari role lain') }}</label>
-                        <div class="input-group">
-                            <select class="form-select" id="copyFrom" wire:model="copyFrom">
-                                <option value="">{{ __('— Pilih role —') }}</option>
-                                @foreach ($roleLain as $lain)
-                                    <option value="{{ $lain->id }}">
-                                        {{ $lain->name }}{{ $lain->is_builtin ? ' ('.__('bawaan').')' : '' }}
-                                    </option>
-                                @endforeach
-                            </select>
+                        <div class="d-flex gap-2 align-items-start">
+                            <x-pilih model="copyFrom" id="copyFrom" class="flex-grow-1" :kosong="__('— Pilih role —')"
+                                     :options="$roleLain->map(fn ($r) => ['value' => $r->id, 'text' => $r->name, 'badge' => $r->is_builtin ? __('bawaan') : null])->all()" />
                             <button class="btn btn-outline-secondary" type="button" wire:click="salin">
                                 {{ __('Salin') }}
                             </button>

@@ -10,6 +10,7 @@ use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\User;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Support\ProjectClosureChecklist;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Support\Collection;
 
@@ -79,19 +80,26 @@ class SiteTeam
 
     /**
      * Calon anggota: staf kita, dan PIC klien yang sudah punya akun portal
-     * untuk klien proyek ini.
-     *
-     * @return array{internal: Collection<int, User>, klien: Collection<int, User>}
+     * untuk klien proyek ini — berkelompok *Staf kita* lalu *Akun portal
+     * klien* (A-388). Satu {@see Pilihan}: isian awal, cari ke server, dan
+     * validasi simpan memakai daftar yang sama (akun klien lain tidak pernah
+     * bisa dipilih).
      */
-    public function candidates(Project $project): array
+    public function candidates(Project $project): Pilihan
     {
-        return [
-            'internal' => User::query()->active()->internal()->orderBy('name')->get(['id', 'name', 'email']),
-            'klien' => $project->client_id === null
-                ? collect()
-                : User::query()->active()->where('client_id', $project->client_id)
-                    ->orderBy('name')->get(['id', 'name', 'email']),
-        ];
+        $query = User::query()->active()
+            ->where(fn ($q) => $q->whereNull('client_id')
+                ->when($project->client_id !== null, fn ($w) => $w->orWhere('client_id', $project->client_id)))
+            ->with(['position:id,name', 'orgUnit:id,name'])
+            ->orderByRaw('client_id is not null')->orderBy('name')->orderBy('id');
+
+        return Pilihan::dari($query, ['name', 'email', 'position.name', 'orgUnit.name'], fn (User $u) => [
+            'value' => (int) $u->id,
+            'text' => $u->name,
+            'badge' => $u->position?->name,
+            'sub' => $u->client_id === null ? $u->orgUnit?->name : $u->email,
+            'group' => $u->client_id === null ? __('Staf kita') : __('Akun portal klien'),
+        ]);
     }
 
     /**

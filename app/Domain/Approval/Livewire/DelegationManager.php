@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Approval\Livewire;
 
-use App\Domain\Access\Models\User;
 use App\Domain\Approval\Actions\SaveDelegation;
 use App\Domain\Approval\Livewire\Concerns\HandlesApprovalRules;
 use App\Domain\Approval\Models\ApprovalDelegation;
 use App\Domain\Approval\Support\ApprovalRegistry;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -22,6 +24,7 @@ use Livewire\Component;
  */
 class DelegationManager extends Component
 {
+    use CariPilihan;
     use HandlesApprovalRules;
 
     public bool $showForm = false;
@@ -35,6 +38,14 @@ class DelegationManager extends Component
         'document_types' => [],
         'notes' => '',
     ];
+
+    /** A-384: pemberi & penerima delegasi bisa dicari; izin sama dengan membuat delegasi. */
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $this->authorize('create', ApprovalDelegation::class);
+
+        return in_array($model, ['form.from_user_id', 'form.to_user_id'], true) ? SumberPilihan::pengguna() : null;
+    }
 
     public function mount(): void
     {
@@ -52,7 +63,9 @@ class DelegationManager extends Component
         return view('livewire.approval.delegations', [
             'delegations' => $daftar,
             'admin' => $admin,
-            'users' => User::query()->internal()->active()->orderBy('name')->get(['id', 'name']),
+            // A-388: pengguna internal aktif, dicari ke server (A-384).
+            'opsiDari' => SumberPilihan::pengguna()->awalDengan($this->form['from_user_id'] ?? null),
+            'opsiKe' => SumberPilihan::pengguna()->awalDengan($this->form['to_user_id'] ?? null),
             'types' => app(ApprovalRegistry::class)->typeOptions(),
             'zona' => $this->zona(),
         ]);

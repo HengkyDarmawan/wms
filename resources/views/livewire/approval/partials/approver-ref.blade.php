@@ -1,17 +1,11 @@
 {{-- Pilihan rujukan approver: user / jabatan / role. Jenis lain tidak butuh rujukan. --}}
+{{-- A-388: user dicari ke server (A-384); jabatan berkelompok per unit; role dimuat sekaligus. --}}
 @if ($jenis === 'user')
-    <select class="form-select form-select-sm" wire:model="{{ $model }}" aria-label="{{ __('User') }}">
-        <option value="">{{ __('Pilih user…') }}</option>
-        @foreach ($users as $u) <option value="{{ $u->id }}">{{ $u->name }}</option> @endforeach
-    </select>
+    <x-pilih :model="$model" kecil server kunci="user" :aria="__('User')" :kosong="__('Pilih user…')"
+             :options="$opsiOrang(data_get(['steps' => $steps], $model))" />
 @elseif ($jenis === 'position')
-    <select class="form-select form-select-sm" wire:model="{{ $model }}" aria-label="{{ __('Jabatan') }}">
-        <option value="">{{ __('Pilih jabatan…') }}</option>
-        @foreach ($positions as $p) <option value="{{ $p->id }}">{{ $p->name }}</option> @endforeach
-    </select>
+    <x-pilih :model="$model" kecil :aria="__('Jabatan')" :kosong="__('Pilih jabatan…')" :options="$opsiJabatan" />
 @elseif ($jenis === 'role')
-    <select class="form-select form-select-sm" wire:model="{{ $model }}" aria-label="{{ __('Role') }}">
-        <option value="">{{ __('Pilih role…') }}</option>
-        @foreach ($roles as $r) <option value="{{ $r->id }}">{{ $r->name }}</option> @endforeach
-    </select>
+    <x-pilih :model="$model" kecil :aria="__('Role')" :kosong="__('Pilih role…')"
+             :options="$roles->map(fn ($r) => ['value' => $r->id, 'text' => $r->name])->all()" />
 @endif

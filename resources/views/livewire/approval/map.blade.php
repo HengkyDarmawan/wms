@@ -60,14 +60,8 @@
         <div class="card-header"><strong>{{ __('3. Cek untuk orang') }}</strong></div>
         <div class="card-body row g-3 align-items-end">
             <div class="col-md-3">
-                <label class="form-label" for="cek-pemohon">{{ __('Pemohon') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('pemohon') is-invalid @enderror" id="cek-pemohon" wire:model="pemohon">
-                    <option value="">{{ __('Pilih orang…') }}</option>
-                    @foreach ($users as $u)
-                        <option value="{{ $u->id }}">{{ $u->name }}@if ($u->client_id) ({{ __('klien') }})@endif</option>
-                    @endforeach
-                </select>
-                @error('pemohon') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="pemohon" id="cek-pemohon" server wajib :label="__('Pemohon')" :kosong="__('Pilih orang…')"
+                         :options="$opsiPemohon" />
             </div>
             <div class="col-md-3">
                 <label class="form-label" for="cek-jenis">{{ __('Dokumen') }} <span class="wajib">*</span></label>
@@ -77,18 +71,11 @@
                 @error('jenis') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-2">
-                <label class="form-label" for="cek-gudang">{{ __('Gudang') }}</label>
-                <select class="form-select" id="cek-gudang" wire:model="gudang">
-                    <option value="">{{ __('— opsional —') }}</option>
-                    @foreach ($warehouses as $w) <option value="{{ $w->id }}">{{ $w->code }}</option> @endforeach
-                </select>
+                <x-pilih model="gudang" id="cek-gudang" :label="__('Gudang')" :kosong="__('— opsional —')"
+                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code, 'sub' => $w->name])->all()" />
             </div>
             <div class="col-md-2">
-                <label class="form-label" for="cek-proyek">{{ __('Proyek') }}</label>
-                <select class="form-select" id="cek-proyek" wire:model="proyek">
-                    <option value="">{{ __('— opsional —') }}</option>
-                    @foreach ($projects as $p) <option value="{{ $p->id }}">{{ $p->code }}</option> @endforeach
-                </select>
+                <x-pilih model="proyek" id="cek-proyek" server :label="__('Proyek')" :kosong="__('— opsional —')" :options="$opsiProyek" />
             </div>
             <div class="col-md-2">
                 <button class="btn btn-primary w-100" type="button" wire:click="cek">{{ __('Cek') }}</button>

@@ -55,15 +55,13 @@
                                         <option value="2">{{ __('2 tingkat di atas') }}</option>
                                     </select>
                                 @elseif ($aktif && $jenis === 'role')
-                                    <select class="form-select form-select-sm mt-1" wire:model.live="steps.{{ $i }}.approver_ref_id" aria-label="{{ __('Peran') }}">
-                                        <option value="">{{ __('Pilih peran…') }}</option>
-                                        @foreach ($roles as $r) <option value="{{ $r->id }}">{{ $r->name }}</option> @endforeach
-                                    </select>
+                                    <x-pilih model="steps.{{ $i }}.approver_ref_id" class="mt-1" kecil live :aria="__('Peran')" :kosong="__('Pilih peran…')"
+                                             :options="$roles->map(fn ($r) => ['value' => $r->id, 'text' => $r->name])->all()" />
                                 @elseif ($aktif && $jenis === 'user')
-                                    <select class="form-select form-select-sm mt-1" wire:model.live="steps.{{ $i }}.approver_ref_id" aria-label="{{ __('Orang') }}">
-                                        <option value="">{{ __('Pilih orang…') }}</option>
-                                        @foreach ($users as $u) <option value="{{ $u->id }}">{{ $u->name }}</option> @endforeach
-                                    </select>
+                                    {{-- A-388: orang dicari ke server (A-384). --}}
+                                    <x-pilih model="steps.{{ $i }}.approver_ref_id" class="mt-1" kecil live server kunci="user"
+                                             :aria="__('Orang')" :kosong="__('Pilih orang…')"
+                                             :options="$opsiOrang($s['approver_ref_id'] ?? null)" />
                                 @endif
                             </div>
                         </div>
