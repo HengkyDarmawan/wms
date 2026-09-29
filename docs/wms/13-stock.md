@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `stock` (Kartu Stok, Saldo, Reservasi, Kejadian)
 
-**Versi:** 0.14
-**Tanggal:** 28 September 2026
-**Status:** terimplementasi (Fase 1) — modul keempat setelah [Warehouse](12-warehouse.md); v0.5: kunci periode otomatis dari sesi opname bulanan dan `reverse()` untuk dokumen pembalik ([21-opname-penyesuaian](21-opname-penyesuaian.md)); v0.6: `Stock\Support\RemovalOrder` — urutan alokasi FIFO/FEFO/sisa potongan/manual untuk PCK ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185)); v0.7: kolom `stock_movements.from_stock_status` — perubahan kondisi bisa dibangun ulang & dibalik dengan benar ([A-194](04-keputusan-dan-asumsi.md#a-194)); v0.13: kolom *Potongan* di Saldo stok & Kartu stok hanya bila saklar per potong menyala ([A-284](04b-asumsi-lanjutan.md#a-284), §6, §10 TC-STK-36); v0.14: saldo & kartu stok menampilkan satuan dasar dan uraian kemasan ("9 DUS 8 BOX") ([A-293](04b-asumsi-lanjutan.md#a-293), §6, §10 TC-STK-37)
+**Versi:** 0.15
+**Tanggal:** 1 Oktober 2026
+**Status:** terimplementasi (Fase 1) — modul keempat setelah [Warehouse](12-warehouse.md); v0.5: kunci periode otomatis dari sesi opname bulanan dan `reverse()` untuk dokumen pembalik ([21-opname-penyesuaian](21-opname-penyesuaian.md)); v0.6: `Stock\Support\RemovalOrder` — urutan alokasi FIFO/FEFO/sisa potongan/manual untuk PCK ([27-pendukung-f1](27-pendukung-f1.md), [A-185](04-keputusan-dan-asumsi.md#a-185)); v0.7: kolom `stock_movements.from_stock_status` — perubahan kondisi bisa dibangun ulang & dibalik dengan benar ([A-194](04-keputusan-dan-asumsi.md#a-194)); v0.13: kolom *Potongan* di Saldo stok & Kartu stok hanya bila saklar per potong menyala ([A-284](04b-asumsi-lanjutan.md#a-284), §6, §10 TC-STK-36); v0.14: saldo & kartu stok menampilkan satuan dasar dan uraian kemasan ("9 DUS 8 BOX") ([A-293](04b-asumsi-lanjutan.md#a-293), §6, §10 TC-STK-37); v0.15: kolom **Lokasi** di Saldo stok — maks. 2 bin berkode pendek + "+n bin lain", tautan ke Kartu stok ([A-382](04b-asumsi-lanjutan.md#a-382), §6, §10 TC-STK-38)
 **Modul:** `stock`
 **Fase:** F1
 **Dokumen terkait:** [Blueprint §6.6](01-blueprint.md#66-stok) · [Aturan Bisnis](05-aturan-bisnis.md) · [Matriks kejadian stok](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status](06-katalog-status-dan-enum.md) · [Glosarium](03-glosarium.md) · [Model data stok](08b-model-data-stok-dokumen.md#area-stok-ledger-saldo-reservasi-kejadian-tenant) · [Akuntansi §4](../akuntansi/01-lingkup-dan-integrasi-wms.md)
@@ -130,7 +130,7 @@ Aturan baru modul ini (`BR-LED`, ditambahkan ke [05-aturan-bisnis](05-aturan-bis
 
 | Route | Komponen | Isi |
 |---|---|---|
-| `/stock` | `stock.balance-list` | Saldo per item dengan pengelompokan gudang; kolom tersedia, dicadangkan, karantina, rusak; untuk item per potong ditambah jumlah potongan — kolom itu hanya bila saklar `piece` menyala ([A-284](04b-asumsi-lanjutan.md#a-284)) Kolom Tersedia bersatuan dasar dengan uraian kemasan di bawahnya ([A-293](04b-asumsi-lanjutan.md#a-293)). |
+| `/stock` | `stock.balance-list` | Saldo per item dengan pengelompokan gudang; kolom tersedia, dicadangkan, karantina, rusak; untuk item per potong ditambah jumlah potongan — kolom itu hanya bila saklar `piece` menyala ([A-284](04b-asumsi-lanjutan.md#a-284)) Kolom Tersedia bersatuan dasar dengan uraian kemasan di bawahnya ([A-293](04b-asumsi-lanjutan.md#a-293)). Kolom **Lokasi**: maks. 2 bin bersaldo terbanyak dalam kode pendek (tautan ke Kartu stok tersaring gudang & bin), sisanya "+n bin lain" (tautan ke Kartu stok gudang itu); dimuat satu query per halaman ([A-382](04b-asumsi-lanjutan.md#a-382)). |
 | `/stock/items/{item}` | `stock.stock-card` | Kartu stok satu item: saldo per bin (kolom *Potongan* hanya bila saklar `piece` menyala) dan riwayat pergerakan dengan penyaring gudang, bin, dan tanggal Jumlah saldo & pergerakan disertai uraian kemasan ([A-293](04b-asumsi-lanjutan.md#a-293)). |
 | `/stock/reservations` | `stock.reservation-list` | Reservasi aktif, lunak dan keras, dengan penanda menggantung dan tombol lepas beserta Alasan `*` |
 | `/stock/events` | `stock.event-list` | Outbox kejadian: jenis, sumber, waktu, status terkirim, dan galat terakhir |
@@ -199,6 +199,7 @@ Seluruh baris [matriks §14](05-aturan-bisnis.md#14-matriks-kejadian-stok) diter
 | TC-STK-35 | Saldo cocok, lalu satu saldo dirusak di luar kartu stok | `stock:reconcile` | cocok → tanpa selisih; dirusak → 1 selisih (kartu 6, saldo 9), saldo **tidak** diubah, Admin Company diberi tahu `stock.balance_mismatch`, Kepala Gudang tidak | BR-STK-01, P-01, [A-243](04-keputusan-dan-asumsi.md#a-243) |
 | TC-STK-36 | Item lama per potong bersaldo, saklar `piece` mati | posting pergerakan; buka Saldo stok & Kartu stok; nyalakan saklar | pergerakan diterima (P-03); kolom *Potongan* tidak tampil, lalu tampil | [A-284](04b-asumsi-lanjutan.md#a-284) |
 | TC-STK-37 | Baut 100 dengan kemasan DUS = 12 | buka Saldo stok & Kartu stok | "8 DUS 4 …" tampil | [A-293](04b-asumsi-lanjutan.md#a-293) |
+| TC-STK-38 | Baut di 4 bin (100, 30, 5, 1); semen di 1 bin | buka Saldo stok | kolom Lokasi: 2 kode pendek terbanyak berurutan + "+2 bin lain", tautan Kartu stok ber-`binFilter`; semen tanpa "+n" | [A-382](04b-asumsi-lanjutan.md#a-382) |
 
 ## 11. Di luar lingkup modul ini
 

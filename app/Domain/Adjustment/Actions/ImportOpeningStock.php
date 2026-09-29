@@ -19,13 +19,14 @@ use App\Domain\Master\Support\ImportBatch;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\Warehouse\Support\StorageLocationPlanner;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 /**
- * Permission: `adjustment.create` â€” impor saldo awal dari Excel (A-192, A-207).
+ * Permission: `adjustment.create` — impor saldo awal dari Excel (A-192, A-207).
  *
  * Stok tidak pernah ditulis langsung (P-01): setiap gudang di berkas menjadi
  * **satu ADJ manual** arah tambah dengan Alasan *Saldo awal*, yang tetap
@@ -37,7 +38,8 @@ class ImportOpeningStock
 {
     public const COLUMNS = [
         'gudang' => 'Kode gudang *',
-        'bin' => 'Kode bin *',
+        // A-381: boleh kosong bila item punya tempat simpan di gudang itu.
+        'bin' => 'Kode bin (kosong = dari tempat simpan)',
         'item' => 'Kode item *',
         'jumlah' => 'Jumlah (satuan dasar) *',
         'kondisi' => 'Kondisi: tersedia/karantina/rusak',
@@ -65,24 +67,34 @@ class ImportOpeningStock
         /** @var array<int, list<array<string, mixed>>> $perGudang */
         $perGudang = [];
         $serial = [];
+        /** @var array<int, array<int, float>> $rencana gudang_id => bin_id => jumlah dari baris sebelumnya */
+        $rencana = [];
 
-        $jumlah = ImportBatch::run($baris, function (array $r, int $nomor) use ($actor, &$perGudang, &$serial) {
+        $jumlah = ImportBatch::run($baris, function (array $r, int $nomor) use ($actor, &$perGudang, &$serial, &$rencana) {
             $gudang = Warehouse::withoutGlobalScopes()->where('code', mb_strtoupper(trim((string) ($r['gudang'] ?? ''))))->first();
 
             if ($gudang === null || ! $actor->canAccessWarehouse((int) $gudang->id)) {
                 throw MasterRuleException::rule('BR-GEN-09', 'gudang "'.trim((string) ($r['gudang'] ?? '')).'" tidak dikenal atau di luar cakupan Anda.');
             }
 
-            $bin = Bin::withoutGlobalScopes()->where('warehouse_id', $gudang->id)->where('code', mb_strtoupper(trim((string) ($r['bin'] ?? ''))))->first();
-
-            if ($bin === null) {
-                throw MasterRuleException::rule('BR-STK-02', 'bin "'.trim((string) ($r['bin'] ?? '')).'" tidak ada di gudang '.$gudang->code.'.');
-            }
-
             $item = Item::query()->where('code', mb_strtoupper(trim((string) ($r['item'] ?? ''))))->first();
 
             if ($item === null) {
                 throw MasterRuleException::rule('BR-GEN-11', 'item "'.trim((string) ($r['item'] ?? '')).'" tidak dikenal.');
+            }
+
+            // Templat lama berjudul "Kode bin *" terbaca sebagai `kode_bin`.
+            $kodeBin = trim((string) ($r['bin'] ?? $r['kode_bin'] ?? ''));
+            $qtyRencana = $this->jumlahRencana($item, $r);
+
+            if ($kodeBin === '') {
+                $bin = $this->binDariTempatSimpan($item, $gudang, $qtyRencana, $rencana[(int) $gudang->id] ?? []);
+            } else {
+                $bin = Bin::withoutGlobalScopes()->where('warehouse_id', $gudang->id)->where('code', mb_strtoupper($kodeBin))->first();
+
+                if ($bin === null) {
+                    throw MasterRuleException::rule('BR-STK-02', 'bin "'.$kodeBin.'" tidak ada di gudang '.$gudang->code.'.');
+                }
             }
 
             $isian = [
@@ -118,6 +130,7 @@ class ImportOpeningStock
             }
 
             $perGudang[(int) $gudang->id][] = $isian;
+            $rencana[(int) $gudang->id][(int) $bin->id] = ($rencana[(int) $gudang->id][(int) $bin->id] ?? 0) + $qtyRencana;
         }, 'saldo awal');
 
         $alasan = $this->alasan();
@@ -139,6 +152,46 @@ class ImportOpeningStock
             ->log('Impor saldo awal dari Excel: '.$jumlah.' baris');
 
         return $jumlah;
+    }
+
+    /**
+     * A-381: kode bin kosong → bin dari **Tempat Simpan** item di gudang itu
+     * (`StorageLocationPlanner::saranBin`: urutan tempat, kapasitas seluruh
+     * isi bin + baris sebelumnya di berkas, bin gabungan lewat bin utama, bin
+     * Khusus barang lain dilewati). Tanpa tempat simpan atau semua tempat
+     * penuh → galat baris; aturan lama A-84 **tidak** dipakai di sini.
+     *
+     * @param  array<int, float>  $rencana  bin_id => jumlah dari baris sebelumnya
+     */
+    private function binDariTempatSimpan(Item $item, Warehouse $gudang, float $qty, array $rencana): Bin
+    {
+        $planner = app(StorageLocationPlanner::class);
+
+        if ($planner->kandidat($item, $gudang)->isEmpty()) {
+            throw MasterRuleException::rule('BR-STK-02', 'kode bin kosong, tetapi '.$item->code.' belum punya tempat simpan di gudang '.$gudang->code
+                .' (atau semua tempatnya khusus barang lain/nonaktif); isi kode bin atau atur tempat simpannya dulu.');
+        }
+
+        $saran = $planner->saranBin($item, $gudang, $qty, $rencana);
+
+        if (! $saran['dari_tempat_simpan'] || $saran['bin'] === null) {
+            throw MasterRuleException::rule('BR-WH-06', 'kode bin kosong, tetapi tempat simpan '.$item->code.' di gudang '.$gudang->code
+                .' penuh untuk '.round($qty, 4).' lagi; isi kode bin lain.');
+        }
+
+        return $saran['bin'];
+    }
+
+    /** Jumlah yang akan masuk bin (satuan dasar) untuk perencanaan kapasitas; serial = 1. */
+    private function jumlahRencana(Item $item, array $r): float
+    {
+        if ($item->tracking_mode === TrackingMode::Serial) {
+            return 1.0;
+        }
+
+        $nilai = $item->tracking_mode === TrackingMode::Piece && ($r['jumlah'] ?? '') === '' ? ($r['panjang'] ?? 0) : ($r['jumlah'] ?? 0);
+
+        return is_numeric($nilai) ? max(0.0, (float) $nilai) : 0.0;
     }
 
     /** Alasan penyesuaian *Saldo awal*; company lama yang belum punya barisnya dibuatkan. */

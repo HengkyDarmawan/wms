@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.87
+**Versi:** 0.88
 **Tanggal:** 1 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -107,6 +107,11 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.88 — 1 Oktober 2026 (tata letak gudang Bagian 5: setup awal & kolom Lokasi)
+- **Asumsi baru** [A-380](wms/04b-asumsi-lanjutan.md#a-380)–[A-382](wms/04b-asumsi-lanjutan.md#a-382) (04b v0.31 §2.52): urutan setup awal dengan langkah *Atur tata letak barang* (A-380), impor saldo awal tanpa kode bin dari tempat simpan (A-381), kolom Lokasi di Saldo stok (A-382).
+- **Spesifikasi** [27-pendukung-f1](wms/27-pendukung-f1.md) v0.10 (§13.3, TC-MST-21b, TC-ADJ-12b–12c); [13-stock](wms/13-stock.md) v0.15 (§6, TC-STK-38); [12a-tata-letak-barang](wms/12a-tata-letak-barang.md) v0.3. Glosarium, katalog 06, dan model data tidak berubah.
+- **Kode:** `SetupWizard::steps` (+`links`), `setup/index`, `WarehouseLayout::$mulaiTata` + `floor-plan.js` (`?mode=tata`), `ImportOpeningStock::binDariTempatSimpan`, `BalanceList::lokasiPerBaris`, `balance-list`, catatan impor; uji `SetupLokasiTest`.
 
 ### v0.87 — 1 Oktober 2026 (tata letak gudang Bagian 4: put-away pindai & Isi Bin)
 - **Asumsi baru** [A-373](wms/04b-asumsi-lanjutan.md#a-373)–[A-379](wms/04b-asumsi-lanjutan.md#a-379) (04b v0.30 §2.51): QR bin berisi tautan & kode pendek ketikan (A-373), halaman Isi Bin (A-374), put-away per baris tanpa status baru (A-375), layar Menunggu dimasukkan (A-376), tanda tempat simpan penuh (A-377), pilah retur dengan urutan pindai (A-378), label bin berkode pendek (A-379).

@@ -94,6 +94,8 @@ function denahGedung(opts = {}) {
       // K-J + batas bin: layar kecil atau gudang sangat besar → versi daftar.
       this.tampilDaftar = this.layarKecil || (this.d.jumlah_bin || 0) > (this.meta.maksBinGambar || 2000);
       this.$nextTick(() => { this.gambar(); this.pas(true); });
+      // A-380: tautan setup awal "?mode=tata" langsung membuka mode Tata letak barang.
+      if (this.meta.mulaiTata) this.$nextTick(() => this.aturTata(true));
       if (window.ResizeObserver && this.$refs.wrap) {
         new ResizeObserver(() => { if (this.otomatis) this.pas(true); }).observe(this.$refs.wrap);
       }

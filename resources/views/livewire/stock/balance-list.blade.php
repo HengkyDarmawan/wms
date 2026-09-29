@@ -40,6 +40,7 @@
                     <tr>
                         <th scope="col">{{ __('Item') }}</th>
                         <th scope="col">{{ __('Gudang') }}</th>
+                        <th scope="col">{{ __('Lokasi') }}</th>
                         <th class="text-end" scope="col">{{ __('Tersedia') }}</th>
                         <th class="text-end" scope="col">{{ __('Dicadangkan') }}</th>
                         <th class="text-end" scope="col">{{ __('Karantina') }}</th>
@@ -63,6 +64,21 @@
                             <td>
                                 {{ $b->warehouse_code }}
                                 <div class="small text-muted">{{ $b->warehouse_name }}</div>
+                            </td>
+                            <td class="small">
+                                {{-- K-M (A-382): maks. 2 bin (terbanyak), sisanya "+n bin lain" → Kartu stok. --}}
+                                @php $lok = $lokasi[$b->item_id.':'.$b->warehouse_id] ?? null; @endphp
+                                @if ($lok)
+                                    @foreach ($lok['bins'] as $lb)
+                                        <a class="d-block font-monospace text-nowrap" title="{{ $lb['kode'] }}"
+                                           href="{{ route('stock.card', ['item' => $b->item_id, 'warehouseFilter' => $b->warehouse_id, 'binFilter' => $lb['id']]) }}">{{ $lb['pendek'] }}</a>
+                                    @endforeach
+                                    @if ($lok['total'] > 2)
+                                        <a class="text-muted" href="{{ route('stock.card', ['item' => $b->item_id, 'warehouseFilter' => $b->warehouse_id]) }}">{{ __('+:n bin lain', ['n' => $lok['total'] - 2]) }}</a>
+                                    @endif
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
                             </td>
                             @php($itemBaris = $itemHalaman[$b->item_id] ?? null)
                             <td class="text-end {{ $tersedia < 0 ? 'text-danger fw-semibold' : '' }}">
@@ -92,7 +108,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td class="text-center text-muted py-4" colspan="{{ $tampilPotongan ? 7 : 6 }}">
+                            <td class="text-center text-muted py-4" colspan="{{ $tampilPotongan ? 8 : 7 }}">
                                 {{ __('Belum ada saldo stok yang cocok dengan penyaring ini.') }}
                             </td>
                         </tr>

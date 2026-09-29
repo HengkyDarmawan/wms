@@ -53,11 +53,16 @@ class WarehouseLayout extends Component
     #[Locked]
     public bool $ringkas = false;
 
+    /** A-380: `?mode=tata` (tautan langkah setup awal) membuka mode Tata letak langsung. */
+    #[Locked]
+    public bool $mulaiTata = false;
+
     public function mount(Warehouse $warehouse, bool $ringkas = false): void
     {
         $this->authorize('view', $warehouse);
         $this->warehouseId = (int) $warehouse->id;
         $this->ringkas = $ringkas;
+        $this->mulaiTata = ! $ringkas && request()->query('mode') === 'tata';
     }
 
     /** K-H: isi satu rak saat diklik — tanpa menggambar ulang halaman. */
@@ -148,6 +153,7 @@ class WarehouseLayout extends Component
                     'skala' => WarehouseLayoutData::SKALA,
                     'gudang' => ['id' => $gudang->id, 'code' => $gudang->code, 'name' => $gudang->name],
                     'bolehUbah' => $bolehUbah,
+                    'mulaiTata' => $bolehUbah && $this->mulaiTata,
                     'ringkas' => $this->ringkas,
                     'maksBinGambar' => self::MAKS_BIN_GAMBAR,
                     'maksLevel' => SaveWarehouseLayout::MAKS_LEVEL,

@@ -11,6 +11,7 @@ use App\Domain\Stock\Enums\ReservationStatus;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockReservation;
 use App\Domain\Warehouse\Models\Warehouse;
+use App\Domain\Warehouse\Support\BinCode;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -63,6 +64,7 @@ class BalanceList extends Component
         return view('livewire.stock.balance-list', [
             'baris' => $baris,
             'reservasi' => $this->reservasiPerBaris($baris),
+            'lokasi' => $this->lokasiPerBaris($baris),
             'warehouses' => Warehouse::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
             // A-284: kolom potongan hanya bila saklar per potong menyala.
             'tampilPotongan' => StockFeatures::piece(),
@@ -140,6 +142,49 @@ class BalanceList extends Component
             ->select('item_id', 'warehouse_id', DB::raw('SUM(qty_base) as qty'))
             ->get()
             ->mapWithKeys(fn ($r) => [$r->item_id.':'.$r->warehouse_id => (float) $r->qty]);
+    }
+
+    /**
+     * K-M (A-382): kolom **Lokasi** — bin bersaldo tiap baris item × gudang di
+     * halaman ini, urut jumlah terbanyak; layar menampilkan maks. 2 kode pendek
+     * + "+n bin lain". Satu query untuk seluruh halaman (tanpa N+1); bin
+     * mengikuti cakupan gudang yang sama dengan daftar.
+     *
+     * @return array<string, array{bins: array<int, array{id: int, pendek: string, kode: string}>, total: int}>
+     */
+    private function lokasiPerBaris(LengthAwarePaginator $baris): array
+    {
+        $items = collect($baris->items())->pluck('item_id')->unique()->all();
+        $gudang = collect($baris->items())->pluck('warehouse_id')->unique()->all();
+
+        if ($items === [] || $gudang === []) {
+            return [];
+        }
+
+        $isi = StockBalance::query()
+            ->join('bins', 'bins.id', '=', 'stock_balances.bin_id')
+            ->whereIn('stock_balances.item_id', $items)
+            ->whereIn('bins.warehouse_id', $gudang)
+            ->groupBy('stock_balances.item_id', 'bins.warehouse_id', 'bins.id', 'bins.code')
+            ->havingRaw('SUM(stock_balances.qty_base) > 0')
+            ->orderByRaw('SUM(stock_balances.qty_base) DESC')
+            ->orderBy('bins.code')
+            ->select('stock_balances.item_id', 'bins.warehouse_id', 'bins.id as bin_id', 'bins.code as bin_code')
+            ->get();
+
+        $pendek = BinCode::pendekBanyak($isi->map(fn ($r) => (object) ['id' => (int) $r->bin_id, 'code' => $r->bin_code, 'warehouse_id' => (int) $r->warehouse_id]));
+        $hasil = [];
+
+        foreach ($isi as $r) {
+            $kunci = $r->item_id.':'.$r->warehouse_id;
+            $hasil[$kunci]['total'] = ($hasil[$kunci]['total'] ?? 0) + 1;
+
+            if (count($hasil[$kunci]['bins'] ?? []) < 2) {
+                $hasil[$kunci]['bins'][] = ['id' => (int) $r->bin_id, 'pendek' => $pendek[(int) $r->bin_id] ?? (string) $r->bin_code, 'kode' => (string) $r->bin_code];
+            }
+        }
+
+        return $hasil;
     }
 
     /** Hanya item per potong yang kolom potongannya bermakna (BR-STK-08). */

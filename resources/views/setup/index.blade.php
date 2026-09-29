@@ -23,6 +23,13 @@
                             @if ($s['optional']) <span class="badge text-bg-light">{{ __('opsional') }}</span> @endif
                         </div>
                         <div class="small text-muted">{{ __($s['hint']) }}</div>
+                        @if (($s['links'] ?? []) !== [])
+                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                @foreach ($s['links'] as $tautan)
+                                    <a class="small" href="{{ $tautan['url'] }}">{{ __($tautan['label']) }}</a>
+                                @endforeach
+                            </div>
+                        @endif
                         @if ($s['key'] === 'terms' && ! $s['done'])
                             <form class="mt-2" method="POST" action="{{ route('setup.terms') }}">
                                 @csrf

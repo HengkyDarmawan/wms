@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `warehouse` bagian Tata Letak Barang (Tempat Simpan)
 
-**Versi:** 0.2
+**Versi:** 0.3
 **Tanggal:** 1 Oktober 2026
-**Status:** **dibangun (Tata letak gudang Bagian 3)** — Tempat Simpan per barang & gudang, *Khusus Barang Ini* (BR-WH-10) di put-away / pilah retur / penyesuaian (+) / saldo awal, Buka Tempat Khusus oleh Kepala Gudang, kartu di detail item, mode *Tata letak barang* di Denah, impor Excel, dan Cetak denah ([A-365](04b-asumsi-lanjutan.md#a-365)–[A-372](04b-asumsi-lanjutan.md#a-372)). Pecahan dari [12-warehouse](12-warehouse.md) (berkas itu mendekati batas 450 baris); v0.2: halaman **Isi Bin**, QR bin berisi tautan, label bin berkode pendek (Bagian 4, [A-373](04b-asumsi-lanjutan.md#a-373)–[A-379](04b-asumsi-lanjutan.md#a-379); §6.6–§6.7, TC-WH-61–62)
+**Status:** **dibangun (Tata letak gudang Bagian 3)** — Tempat Simpan per barang & gudang, *Khusus Barang Ini* (BR-WH-10) di put-away / pilah retur / penyesuaian (+) / saldo awal, Buka Tempat Khusus oleh Kepala Gudang, kartu di detail item, mode *Tata letak barang* di Denah, impor Excel, dan Cetak denah ([A-365](04b-asumsi-lanjutan.md#a-365)–[A-372](04b-asumsi-lanjutan.md#a-372)). Pecahan dari [12-warehouse](12-warehouse.md) (berkas itu mendekati batas 450 baris); v0.2: halaman **Isi Bin**, QR bin berisi tautan, label bin berkode pendek (Bagian 4, [A-373](04b-asumsi-lanjutan.md#a-373)–[A-379](04b-asumsi-lanjutan.md#a-379); §6.6–§6.7, TC-WH-61–62); v0.3: Bagian 5 — langkah setup awal *Atur tata letak barang*, saldo awal tanpa kode bin dari tempat simpan ([27](27-pendukung-f1.md) §13.3), kolom Lokasi di Saldo stok ([13](13-stock.md) §6) ([A-380](04b-asumsi-lanjutan.md#a-380)–[A-382](04b-asumsi-lanjutan.md#a-382))
 **Modul:** `warehouse`
 **Fase:** F1
 **Dokumen terkait:** [12-warehouse](12-warehouse.md) · [Aturan Bisnis BR-WH](05-aturan-bisnis.md#br-wh) · [Glosarium](03-glosarium.md) · [Model data gudang](08b-model-data-stok-dokumen.md#area-gudang--lokasi-tenant) · [19-receipt-putaway](19-receipt-putaway.md) · [21-opname-penyesuaian](21-opname-penyesuaian.md) · [22-retur-transfer](22-retur-transfer.md)
@@ -14,7 +14,7 @@
 
 [F1] Menghubungkan **barang** ke **tempat** di gudang supaya saran bin tidak lagi menebak (A-84): Kepala Gudang menetapkan untuk tiap barang, per gudang, daftar **Tempat Simpan** berurutan — satu bin tertentu, seluruh rak, atau area lantai — dan boleh menandai tempat itu **Khusus Barang Ini** (barang lain ditolak saat ditaruh). Bagian 4 (put-away pindai & Isi Bin) dan Bagian 5 (setup awal) memakai saran dari sini.
 
-Bagian 4 menambah halaman **Isi Bin** (§6.6) dan QR bin bertautan (§6.7); put-away pindai per baris ada di [19](19-receipt-putaway.md) §13.7, pilah retur di [22](22-retur-transfer.md) §13.6. Tidak termasuk: kolom Lokasi di saldo stok (Bagian 5).
+Bagian 4 menambah halaman **Isi Bin** (§6.6) dan QR bin bertautan (§6.7); put-away pindai per baris ada di [19](19-receipt-putaway.md) §13.7, pilah retur di [22](22-retur-transfer.md) §13.6. Bagian 5: setup awal & impor saldo awal tanpa kode bin ([27](27-pendukung-f1.md) §13.3), kolom Lokasi di Saldo stok ([13](13-stock.md) §6).
 
 ## 2. Aktor & permission
 
@@ -119,7 +119,7 @@ Cetak denah (§6.3). Laporan tempat simpan tersendiri: belum.
 
 ## 11. Di luar lingkup modul ini
 
-Setup awal & kolom Lokasi (Bagian 5), laporan tempat simpan, PDF denah.
+Laporan tempat simpan, PDF denah.
 
 ## 12. Definisi selesai
 

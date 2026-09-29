@@ -1,8 +1,8 @@
 # Spesifikasi Modul — Pendukung Fase 1
 
-**Versi:** 0.9
-**Tanggal:** 27 September 2026
-**Status:** selesai Fase 1 — kumpulan pekerjaan pendukung setelah modul [Platform](17-platform-login.md) (urutan prompt serah terima §2 butir 5); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-185](04-keputusan-dan-asumsi.md#a-185)–[A-193](04-keputusan-dan-asumsi.md#a-193) (*Perlu validasi*); v0.4: pindai di form REQ & ISU ([A-206](04-keputusan-dan-asumsi.md#a-206)), impor vendor & saldo awal ([A-207](04-keputusan-dan-asumsi.md#a-207)); v0.6: impor struktur gudang — zona, rak, level, bin ([A-258](04b-asumsi-lanjutan.md#a-258)); v0.7: A-190–A-193 disetujui 27 Sep 2026; pindai kamera di semua browser, dipasang atau lewat web biasa ([A-266](04b-asumsi-lanjutan.md#a-266))
+**Versi:** 0.10
+**Tanggal:** 1 Oktober 2026
+**Status:** selesai Fase 1 — kumpulan pekerjaan pendukung setelah modul [Platform](17-platform-login.md) (urutan prompt serah terima §2 butir 5); keputusan yang tidak tertulis di dokumen dicatat sebagai [A-185](04-keputusan-dan-asumsi.md#a-185)–[A-193](04-keputusan-dan-asumsi.md#a-193) (*Perlu validasi*); v0.4: pindai di form REQ & ISU ([A-206](04-keputusan-dan-asumsi.md#a-206)), impor vendor & saldo awal ([A-207](04-keputusan-dan-asumsi.md#a-207)); v0.6: impor struktur gudang — zona, rak, level, bin ([A-258](04b-asumsi-lanjutan.md#a-258)); v0.7: A-190–A-193 disetujui 27 Sep 2026; pindai kamera di semua browser, dipasang atau lewat web biasa ([A-266](04b-asumsi-lanjutan.md#a-266)); v0.10: urutan setup awal gudang → rak → item → **tata letak barang** (opsional) → saldo awal; impor saldo awal tanpa kode bin memakai tempat simpan ([A-380](04b-asumsi-lanjutan.md#a-380), [A-381](04b-asumsi-lanjutan.md#a-381); §10 TC-MST-21b, TC-ADJ-12b–12c, §13.3)
 **Modul:** lintas modul — `stock` (strategi pengambilan), `shared` (Beranda, laporan, PDF), `master` (penutupan proyek, wizard setup, impor Excel), `request` (konfirmasi & keberatan terima), `notification` (baru), PWA
 **Fase:** F1; WhatsApp `[F2]`, PWA offline penuh `[F2]`
 **Dokumen terkait:** [Blueprint §6.9a, §10, §11, §18](01-blueprint.md) · [Aturan Bisnis BR-STK-04/10/12, BR-PRJ-02/04, BR-REQ-10, BR-SJ-10](05-aturan-bisnis.md) · [Model data 08c `notifications`](08c-model-data-pendukung.md) · [A-49](04-keputusan-dan-asumsi.md#a-49), [A-63](04-keputusan-dan-asumsi.md#a-63), [A-77](04-keputusan-dan-asumsi.md#a-77)
@@ -155,6 +155,9 @@ Kartu stok per item tetap layar `/stock/items/{id}` (13-stock). Total 14 laporan
 | TC-MST-23 | sama | impor proyek: klien tak dikenal membatalkan semua; klien baru dibuat sekali & dipakai baris berikutnya; staf 403 |
 | TC-MST-24 | `Count/OpeningStockImportTest` | impor vendor: kontak kosong (A-53), jenis asing, email salah → tidak ada yang tersimpan; jenis/status boleh label; kode dari nama; kode ganda ditolak |
 | TC-ADJ-12 | sama | impor saldo awal: bin gudang lain, lot baru tanpa kedaluwarsa, serial ganda di berkas, item & kondisi asing → tidak ada ADJ; benar → satu ADJ `OPENING` per gudang menunggu approval, stok bergerak setelah disetujui (lot/serial/potongan dibuat saat posting) |
+| TC-MST-21b | `Count/SetupLokasiTest` | urutan langkah terms → gudang → rak → item → tata letak (opsional, tautan Denah `?mode=tata` & impor tempat simpan) → saldo awal → proyek → pengguna → approval; tercentang bila ada tempat simpan; Denah membuka mode Tata letak |
+| TC-ADJ-12b | sama | saldo awal tanpa kode bin: 40 ke B01, 30 berikutnya ke B02 (kapasitas B01 50); templat lama "Kode bin *" tetap terbaca |
+| TC-ADJ-12c | sama | tanpa kode bin: tempat penuh, item tanpa tempat simpan, bin khusus barang lain → galat baris, tidak ada ADJ; bin gabungan → kapasitas gabungan, bin utama dipakai |
 | TC-WH-26 … 26d | `Warehouse/WarehouseStructureImportTest` | impor struktur gudang: hierarki dibuat & zona lama dipakai; satu baris salah → nol tersimpan; kode ada/ganda ditolak; staf 403, Kepala Gudang hanya kartu ini & cakupan dijaga ([12](12-warehouse.md) §10) |
 | TC-WH-28 … 28c | `Warehouse/WarehouseImportTest` | impor gudang: induk dari baris sebelumnya, Site berproyek, kepala via email, bin bawaan; satu baris salah → nol gudang; tanpa `warehouse.create` 403 ([A-272](04b-asumsi-lanjutan.md#a-272)) |
 | TC-REQ-34 | `Request/RequestScreenTest` | pindai kode, barcode, QR lot: item mengisi baris kosong/baru jumlah 1, pindai ulang +1; kode asing ditolak |
@@ -193,6 +196,10 @@ WhatsApp; offline penuh & antrean sinkron; ~~impor gudang~~ (struktur zona–bin
 12. **Sesi kantor 25 Sep 2026** — pindai di form REQ & ISU (`ScanCode`, [A-206](04-keputusan-dan-asumsi.md#a-206)); impor vendor & saldo awal (`Master\Actions\ImportVendors`, `Adjustment\Actions\ImportOpeningStock`, alasan penyesuaian `OPENING` di `MasterReferenceSeeder`, [A-207](04-keputusan-dan-asumsi.md#a-207)). Uji TC-REQ-34, TC-ISU-18, TC-MST-24, TC-ADJ-12.
 13. **Sesi kantor 26 Sep 2026** — impor struktur gudang (`Warehouse\Actions\ImportWarehouseStructure`, kartu `bins` di `ImportController`, `bin.manage`; [A-258](04b-asumsi-lanjutan.md#a-258), [12](12-warehouse.md) §13.4c). Uji TC-WH-26–26d.
 14. **Sesi 27 Sep 2026 (sisa kecil)** — impor gudang (`Warehouse\Actions\ImportWarehouses`, kartu `warehouses`, `warehouse.create`; [A-272](04b-asumsi-lanjutan.md#a-272), [12](12-warehouse.md) §13.4e). Uji TC-WH-28–28c.
+
+### 13.3 Setup awal & saldo awal dari tempat simpan (1 Oktober 2026)
+
+Tata letak gudang Bagian 5 (K-L, [A-380](04b-asumsi-lanjutan.md#a-380), [A-381](04b-asumsi-lanjutan.md#a-381)): `SetupWizard::steps` berurutan gudang → rak & bin → item → **Atur tata letak barang** (opsional, `links`: Denah `?mode=tata` gudang non-Site pertama & kartu impor tempat simpan) → saldo awal → proyek → pengguna → approval; `WarehouseLayout::$mulaiTata` membuka mode Tata letak dari tautan itu. `ImportOpeningStock`: kolom *Kode bin* boleh kosong → `StorageLocationPlanner::saranBin` (urutan tempat, kapasitas + baris sebelumnya di berkas, bin utama gabungan, khusus barang lain dilewati); tanpa tempat / penuh → galat baris; judul lama "Kode bin *" tetap dibaca. Uji `SetupLokasiTest`.
 
 ### 13.2 Sisa pekerjaan
 
