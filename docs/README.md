@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.90
+**Versi:** 0.91
 **Tanggal:** 1 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -107,6 +107,11 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.91 — 1 Oktober 2026 (pilihan yang bisa dicari: menu Barang masuk)
+- **Asumsi baru** [A-391](wms/04b-asumsi-lanjutan.md#a-391) (04b v0.34 §2.54, *Perlu validasi*): vendor & item GRN, item TRF, proyek tujuan pindahan, proyek RET dicari ke server; id di luar daftar ditolak di isiannya (GRN: kecuali nilai draf/PRQ).
+- **Spesifikasi** [19-receipt-putaway](wms/19-receipt-putaway.md) v0.16 (§13.8, TC-GRN-34–34b); [22-retur-transfer](wms/22-retur-transfer.md) v0.12 (§13.7, TC-TRF-22–22b, TC-RET-26); TC-ACC-46 disesuaikan (isian awal + hasil cari). Glosarium, katalog 06, model data, dan route tidak berubah.
+- **Kode:** `ReceiptForm` (`CariPilihan`, `pilihanVendor/pilihanItem/aturanPilihan`), `Shared\Pilihan\Pilihan::awalPerBaris`; `TransferForm`, `ProjectMove`, `ReturnForm`; view `receipt-form`, `receipt-list`, `putaway-list`, `putaway-waiting`, `vendor-return-form`, `transfer-form`, `project-move`, `return-form`; uji `PilihanBarangMasukTest`, `PilihanTransferReturTest`.
 
 ### v0.90 — 1 Oktober 2026 (pilihan yang bisa dicari: modul Master)
 - **Asumsi baru** [A-389](wms/04b-asumsi-lanjutan.md#a-389)–[A-390](wms/04b-asumsi-lanjutan.md#a-390) (04b v0.33 §2.54, *Perlu validasi*): modul Master memakai `<x-pilih>`, PIC proyek dicari ke server dan divalidasi (A-389); teks nilai terpilih disembunyikan saat mengetik (A-390).

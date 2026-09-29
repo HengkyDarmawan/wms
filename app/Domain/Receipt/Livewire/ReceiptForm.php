@@ -20,6 +20,9 @@ use App\Domain\Receipt\Models\VendorReturn;
 use App\Domain\Return\Enums\GoodsReturnStatus;
 use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Return\Models\GoodsReturnLine;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Shipment\Enums\ShipmentStatus;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Warehouse\Models\Warehouse;
@@ -42,6 +45,7 @@ use Livewire\Component;
  */
 class ReceiptForm extends Component
 {
+    use CariPilihan;
     use HandlesReceiptRules;
     use PicksItemUnit;
 
@@ -256,6 +260,11 @@ class ReceiptForm extends Component
 
         $this->resetValidation();
 
+        if ($this->form['receipt_type'] === ReceiptType::Vendor->value) {
+            $this->validate($this->aturanPilihan($grn), attributes: ['form.vendor_id' => __('Vendor')]
+                + collect($this->rows)->keys()->mapWithKeys(fn ($i) => ["rows.$i.item_id" => __('Item')])->all());
+        }
+
         $baris = match ($this->form['receipt_type']) {
             ReceiptType::Transfer->value => collect($this->transferQty)->map(fn ($q, $id) => ['shipment_line_id' => (int) $id, 'qty_received' => (float) $q])->values()->all(),
             ReceiptType::Return->value => collect($this->returnQty)->map(fn ($q, $id) => ['goods_return_line_id' => (int) $id, 'qty_received' => (float) $q])->values()->all(),
@@ -278,12 +287,13 @@ class ReceiptForm extends Component
     public function render(): View
     {
         $itemIds = collect($this->rows)->pluck('item_id')->filter()->map(fn ($v) => (int) $v)->all();
+        $vendorGrn = $this->form['receipt_type'] === ReceiptType::Vendor->value;
 
         return view('livewire.receipt.receipt-form', [
             'types' => ReceiptType::options(),
             'warehouses' => Warehouse::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
-            'vendors' => Vendor::query()->where('is_active', true)->orderBy('name')->get(['id', 'code', 'name']),
-            'items' => Item::query()->active()->orderBy('code')->get(['id', 'code', 'name', 'tracking_mode', 'has_expiry']),
+            'opsiVendor' => $vendorGrn ? $this->pilihanVendor()->awalDengan($this->form['vendor_id']) : [],
+            'opsiItem' => $vendorGrn ? $this->pilihanItem()->awalPerBaris(collect($this->rows)->pluck('item_id')->all()) : [],
             'modes' => Item::query()->whereIn('id', $itemIds)->pluck('tracking_mode', 'id')->all(),
             'incoming' => $this->sjMenunggu(),
             'sj' => $this->sj(),
@@ -541,5 +551,64 @@ class ReceiptForm extends Component
             ->whereNull('replacement_receipt_id')
             ->orderByDesc('id')
             ->get(['id', 'number']);
+    }
+
+    /** Vendor = daftar lama persis (vendor `is_active`), dicari ke server (A-384, A-391). */
+    private function pilihanVendor(): Pilihan
+    {
+        return Pilihan::dari(Vendor::query()->where('is_active', true)->orderBy('name'), ['code', 'name'], fn (Vendor $v) => [
+            'value' => (int) $v->id,
+            'text' => $v->code.' — '.$v->name,
+        ]);
+    }
+
+    /** Item aktif (daftar lama `Item::active()`), dicari ke server. */
+    private function pilihanItem(): Pilihan
+    {
+        return SumberPilihan::item();
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        // Izin layar diulang seperti aksi simpan.
+        $grn = $this->receiptId === null ? null : GoodsReceipt::query()->find($this->receiptId);
+        $boleh = $grn === null
+            ? $this->receiptId === null && auth()->user()?->can('create', GoodsReceipt::class)
+            : auth()->user()?->can('update', $grn);
+
+        if (! $boleh) {
+            return null;
+        }
+
+        return match (true) {
+            $model === 'form.vendor_id' => $this->pilihanVendor(),
+            (bool) preg_match('/^rows\.\d+\.item_id$/', $model) => $this->pilihanItem(),
+            default => null,
+        };
+    }
+
+    /**
+     * Id dari browser harus ada di daftar (A-384). Dikecualikan: nilai tersimpan
+     * di draf ini dan item dari pesanan PRQ terbuka (baris PRQ/bonus), supaya
+     * draf lama tetap bisa disimpan seperti sebelumnya (A-391).
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    private function aturanPilihan(?GoodsReceipt $grn): array
+    {
+        $bebas = collect($grn?->lines()->pluck('item_id')->all() ?? [])
+            ->merge($this->pesananTerbuka()->map(fn ($ol) => $ol->line?->item_id))
+            ->filter()->map(fn ($id) => (string) $id)->unique()->all();
+
+        $aturan = ['form.vendor_id' => (string) $this->form['vendor_id'] === (string) ($grn?->vendor_id ?? '')
+            ? [] : [$this->pilihanVendor()->aturan()]];
+
+        foreach ($this->rows as $i => $r) {
+            if (! in_array((string) ($r['item_id'] ?? ''), $bebas, true)) {
+                $aturan["rows.$i.item_id"] = [$this->pilihanItem()->aturan()];
+            }
+        }
+
+        return $aturan;
     }
 }

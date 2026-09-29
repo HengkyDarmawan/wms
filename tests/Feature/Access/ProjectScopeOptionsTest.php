@@ -50,7 +50,10 @@ class ProjectScopeOptionsTest extends TenantTestCase
         $klien = $this->makeUser('client_user', ScopeType::Project, $this->proyek->id, ['client_id' => $this->proyek->client_id]);
 
         $form = Livewire::actingAs($klien)->test(ReturnForm::class);
-        $this->assertSame([(int) $this->proyek->id], $form->viewData('projects')->pluck('id')->map(fn ($id) => (int) $id)->all());
+        // A-391: pilihan proyek kini `<x-pilih server>` (isian awal + cari); daftarnya tetap hanya proyek klien.
+        $this->assertSame([(int) $this->proyek->id], array_map('intval', array_column($form->viewData('opsiProyek'), 'value')));
+        $form->call('cariPilihan', 'form.project_id', substr((string) $this->lain->code, 0, 3));
+        $this->assertNotContains((int) $this->lain->id, array_map('intval', array_column($form->effects['returns'][0] ?? [], 'value')));
 
         // Mengganti id proyek dari browser tidak membuka gudang pengirim proyek klien lain.
         $form->set('form.project_id', (string) $this->lain->id);

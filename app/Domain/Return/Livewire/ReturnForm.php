@@ -10,6 +10,9 @@ use App\Domain\Return\Actions\CreateGoodsReturn;
 use App\Domain\Return\Enums\ReturnSource;
 use App\Domain\Return\Models\GoodsReturn;
 use App\Domain\Return\Support\ReturnableStock;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Shipment\Models\Shipment;
 use App\Domain\Transfer\Livewire\Concerns\HandlesTransferRules;
 use App\Domain\Warehouse\Models\Warehouse;
@@ -26,6 +29,7 @@ use Livewire\Component;
  */
 class ReturnForm extends Component
 {
+    use CariPilihan;
     use HandlesTransferRules;
     use PicksItemUnit;
 
@@ -49,9 +53,9 @@ class ReturnForm extends Component
 
         // Dari hub proyek (A-228): proyek yang diminta menang bila ada di pilihan.
         $diminta = request()->query('project');
-        $proyek = is_numeric($diminta) ? $this->proyek()->firstWhere('id', (int) $diminta) : null;
-        $proyek ??= $this->proyek()->first();
-        $this->form['project_id'] = $proyek === null ? '' : (string) $proyek->id;
+        $pilihan = $this->pilihanProyek();
+        $proyek = is_numeric($diminta) && $pilihan->berisi($diminta) ? (int) $diminta : $pilihan->query()->value('id');
+        $this->form['project_id'] = $proyek === null ? '' : (string) $proyek;
     }
 
     public function updatedFormProjectId(): void
@@ -64,8 +68,9 @@ class ReturnForm extends Component
     {
         $this->authorize('create', GoodsReturn::class);
 
+        // A-391: proyek dari daftar (aktif, dalam cakupan — Klien hanya proyeknya).
         $this->validate([
-            'form.project_id' => ['required'],
+            'form.project_id' => ['required', $this->pilihanProyek()->aturan()],
             'form.to_warehouse_id' => ['required'],
         ], attributes: ['form.project_id' => __('Proyek'), 'form.to_warehouse_id' => __('Gudang tujuan')]);
 
@@ -100,7 +105,7 @@ class ReturnForm extends Component
         $opsi = $this->opsiSatuan($calon->pluck('item_id')->all());
 
         return view('livewire.return.return-form', [
-            'projects' => $this->proyek(),
+            'opsiProyek' => $this->pilihanProyek()->awalDengan($this->form['project_id']),
             'warehouses' => $this->gudangTujuan(),
             'calon' => $calon,
             'rute' => $this->portal ? 'portal.returns' : 'returns',
@@ -138,10 +143,15 @@ class ReturnForm extends Component
         return $semua->filter(fn (Warehouse $w) => in_array((int) $w->id, array_map('intval', $pengirim), true))->values();
     }
 
-    /** @return Collection<int, Project> proyek aktif dalam cakupan pengguna — Klien hanya proyek kliennya (A-354) */
-    private function proyek(): Collection
+    /** Proyek aktif dalam cakupan pengguna — Klien hanya proyek kliennya (A-354); dicari ke server (A-391). */
+    private function pilihanProyek(): Pilihan
     {
-        return Project::query()->active()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name']);
+        return SumberPilihan::proyek();
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        return $model === 'form.project_id' && auth()->user()?->can('create', GoodsReturn::class) ? $this->pilihanProyek() : null;
     }
 
     /** @return Collection<string, array<string, mixed>> */

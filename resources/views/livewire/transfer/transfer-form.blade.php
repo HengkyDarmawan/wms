@@ -17,24 +17,13 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-md-4">
-                <label class="form-label" for="trf-asal">{{ __('Gudang asal') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.from_warehouse_id') is-invalid @enderror" id="trf-asal" wire:model.live="form.from_warehouse_id">
-                    <option value="">{{ __('Pilih gudang…') }}</option>
-                    @foreach ($warehouses as $g)
-                        <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}@if ($g->project) ({{ $g->project->code }})@endif</option>
-                    @endforeach
-                </select>
-                @error('form.from_warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                {{-- A-106: asal tidak dibatasi cakupan; daftar sama dengan tujuan (dimuat sekaligus). --}}
+                <x-pilih model="form.from_warehouse_id" id="trf-asal" live wajib :label="__('Gudang asal')" :kosong="__('Pilih gudang…')"
+                         :options="$opsiGudang" />
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="trf-tujuan">{{ __('Gudang tujuan') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.to_warehouse_id') is-invalid @enderror" id="trf-tujuan" wire:model.live="form.to_warehouse_id">
-                    <option value="">{{ __('Pilih gudang…') }}</option>
-                    @foreach ($warehouses as $g)
-                        <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}@if ($g->project) ({{ $g->project->code }})@endif</option>
-                    @endforeach
-                </select>
-                @error('form.to_warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="form.to_warehouse_id" id="trf-tujuan" live wajib :label="__('Gudang tujuan')" :kosong="__('Pilih gudang…')"
+                         :options="$opsiGudang" />
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="trf-ket">{{ __('Keterangan') }}</label>
@@ -62,12 +51,8 @@
                     @foreach ($rows as $i => $r)
                         <tr wire:key="trf-baris-{{ $i }}">
                             <td style="min-width: 16rem">
-                                <select class="form-select form-select-sm" wire:model.live="rows.{{ $i }}.item_id">
-                                    <option value="">{{ __('Pilih item…') }}</option>
-                                    @foreach ($items as $it)
-                                        <option value="{{ $it->id }}">{{ $it->code }} — {{ $it->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-pilih model="rows.{{ $i }}.item_id" id="trf-item-{{ $i }}" server live kecil :kunci="(string) count($rows)"
+                                         :aria="__('Item')" :kosong="__('Pilih item…')" :options="$opsiItem[$i] ?? []" />
                             </td>
                             <td style="max-width: 9rem">
                                 <input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model="rows.{{ $i }}.qty_base">

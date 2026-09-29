@@ -32,53 +32,27 @@
 
             @if ($form['receipt_type'] === 'return')
                 <div class="col-md-8">
-                    <label class="form-label" for="grn-ret">{{ __('Retur dari proyek (RET)') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.goods_return_id') is-invalid @enderror" id="grn-ret"
-                            wire:model.live="form.goods_return_id" @disabled($receiptId)>
-                        <option value="">{{ __('Pilih retur…') }}</option>
-                        @foreach ($returnDocs as $r)
-                            <option value="{{ $r->id }}">{{ $r->number }} ({{ $r->project?->code }})</option>
-                        @endforeach
-                        @if ($ret && ! $returnDocs->contains('id', $ret->id))
-                            <option value="{{ $ret->id }}">{{ $ret->number }}</option>
-                        @endif
-                    </select>
-                    @error('form.goods_return_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.goods_return_id" id="grn-ret" live wajib :label="__('Retur dari proyek (RET)')"
+                             :disabled="(bool) $receiptId" :kosong="__('Pilih retur…')"
+                             :options="$returnDocs->map(fn ($r) => ['value' => $r->id, 'text' => $r->number, 'sub' => $r->project?->code])
+                                 ->when($ret && ! $returnDocs->contains('id', $ret->id), fn ($c) => $c->push(['value' => $ret->id, 'text' => $ret->number]))->all()" />
                 </div>
             @elseif ($form['receipt_type'] === 'transfer')
                 <div class="col-md-8">
-                    <label class="form-label" for="grn-sj">{{ __('Surat jalan transfer') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.shipment_id') is-invalid @enderror" id="grn-sj"
-                            wire:model.live="form.shipment_id" @disabled($receiptId)>
-                        <option value="">{{ __('Pilih surat jalan…') }}</option>
-                        @foreach ($incoming as $s)
-                            <option value="{{ $s->id }}">{{ $s->number }} ({{ $s->warehouse?->code }})</option>
-                        @endforeach
-                    </select>
-                    @error('form.shipment_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.shipment_id" id="grn-sj" live wajib :label="__('Surat jalan transfer')"
+                             :disabled="(bool) $receiptId" :kosong="__('Pilih surat jalan…')"
+                             :options="$incoming->map(fn ($s) => ['value' => $s->id, 'text' => $s->number, 'sub' => $s->warehouse?->code])->all()" />
                 </div>
             @else
                 <div class="col-md-4">
-                    <label class="form-label" for="grn-gudang">{{ __('Gudang penerima') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.warehouse_id') is-invalid @enderror" id="grn-gudang"
-                            wire:model="form.warehouse_id" @disabled($receiptId)>
-                        <option value="">{{ __('Pilih gudang…') }}</option>
-                        @foreach ($warehouses as $g)
-                            <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.warehouse_id" id="grn-gudang" wajib :label="__('Gudang penerima')"
+                             :disabled="(bool) $receiptId" :kosong="__('Pilih gudang…')"
+                             :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label" for="grn-vendor">{{ __('Vendor') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('form.vendor_id') is-invalid @enderror" id="grn-vendor"
-                            wire:model.live="form.vendor_id">
-                        <option value="">{{ __('Pilih vendor…') }}</option>
-                        @foreach ($vendors as $v)
-                            <option value="{{ $v->id }}">{{ $v->code }} — {{ $v->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.vendor_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    {{-- A-391: vendor dicari ke server (kode atau nama). --}}
+                    <x-pilih model="form.vendor_id" id="grn-vendor" server live wajib :label="__('Vendor')"
+                             :kosong="__('Pilih vendor…')" :options="$opsiVendor" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="grn-sjv">{{ __('No. surat jalan vendor') }}</label>
@@ -91,13 +65,9 @@
                 </div>
                 @if ($returns->isNotEmpty())
                     <div class="col-md-4">
-                        <label class="form-label" for="grn-rtv">{{ __('Pengganti untuk RTV') }}</label>
-                        <select class="form-select" id="grn-rtv" wire:model="form.vendor_return_id">
-                            <option value="">{{ __('Bukan barang pengganti') }}</option>
-                            @foreach ($returns as $r)
-                                <option value="{{ $r->id }}">{{ $r->number }}</option>
-                            @endforeach
-                        </select>
+                        <x-pilih model="form.vendor_return_id" id="grn-rtv" :label="__('Pengganti untuk RTV')"
+                                 :kosong="__('Bukan barang pengganti')"
+                                 :options="$returns->map(fn ($r) => ['value' => $r->id, 'text' => $r->number])->all()" />
                     </div>
                 @endif
             @endif
@@ -228,12 +198,9 @@
                                 @if (($r['order_line_id'] ?? '') !== '') <span class="badge text-bg-info">{{ __('PRQ') }}</span> @endif
                                 @if ($r['bonus'] ?? false) <span class="badge text-bg-success">{{ __('Bonus') }}</span> @endif
                             </label>
-                            <select class="form-select form-select-sm" id="row-item-{{ $i }}" wire:model.live="rows.{{ $i }}.item_id" @disabled(($r['order_line_id'] ?? '') !== '')>
-                                <option value="">{{ __('Pilih item…') }}</option>
-                                @foreach ($items as $it)
-                                    <option value="{{ $it->id }}">{{ $it->code }} — {{ $it->name }}</option>
-                                @endforeach
-                            </select>
+                            {{-- A-391: item dicari ke server; `kunci` = jumlah baris supaya kotak dibuat ulang saat baris dihapus. --}}
+                            <x-pilih model="rows.{{ $i }}.item_id" id="row-item-{{ $i }}" server live kecil :kunci="(string) count($rows)"
+                                     :disabled="($r['order_line_id'] ?? '') !== ''" :kosong="__('Pilih item…')" :options="$opsiItem[$i] ?? []" />
                         </div>
                         @if (! $perUnit)
                             <div class="col-md-2">

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Domain\Transfer\Livewire;
 
 use App\Domain\Master\Enums\AssetState;
-use App\Domain\Master\Enums\ProjectStatus;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\Serial;
 use App\Domain\Master\Support\ProjectClosureChecklist;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Support\StockLedger;
@@ -29,6 +31,7 @@ use Livewire\Component;
  */
 class ProjectMove extends Component
 {
+    use CariPilihan;
     use HandlesTransferRules;
 
     #[Locked]
@@ -69,6 +72,9 @@ class ProjectMove extends Component
     {
         $this->authorize('create', Transfer::class);
 
+        // A-391: proyek tujuan dari daftar (aktif, dalam cakupan, bukan proyek ini).
+        $this->validate(['form.to_project_id' => ['nullable', $this->pilihanTujuan()->aturan()]], attributes: ['form.to_project_id' => __('Proyek tujuan')]);
+
         $stok = [];
 
         foreach ($this->stok as $kunci => $qty) {
@@ -104,7 +110,7 @@ class ProjectMove extends Component
 
         return view('livewire.transfer.project-move', [
             'project' => $proyek,
-            'tujuan' => Project::query()->where('status', ProjectStatus::Active->value)->dalamCakupan()->whereKeyNot($proyek->id)->orderBy('code')->get(['id', 'code', 'name']),
+            'opsiTujuan' => $this->pilihanTujuan()->awalDengan($this->form['to_project_id']),
             'gudangTujuan' => $this->form['to_project_id'] === '' ? collect() : Warehouse::query()->withoutGlobalScopes()->active()
                 ->where('project_id', (int) $this->form['to_project_id'])->orderBy('code')->get(['id', 'code', 'name']),
             'asetDipinjam' => $this->asetDipinjam(),
@@ -152,6 +158,23 @@ class ProjectMove extends Component
             ->filter(fn (array $b) => $b['tersedia'] > 0)
             ->sortBy(['kunci'])
             ->values();
+    }
+
+    /** Proyek tujuan = proyek aktif dalam cakupan selain proyek ini (daftar lama), dicari ke server. */
+    private function pilihanTujuan(): Pilihan
+    {
+        return SumberPilihan::proyek()->saring(fn ($q) => $q->whereKeyNot($this->projectId));
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $user = auth()->user();
+
+        if ($model !== 'form.to_project_id' || ! $user?->can('create', Transfer::class) || ! $user->canAccessProject($this->projectId)) {
+            return null;
+        }
+
+        return $this->pilihanTujuan();
     }
 
     private function project(): Project

@@ -24,13 +24,8 @@
         <div class="card mb-3">
             <div class="card-body">
                 @if ($gudangList->count() > 1)
-                    <label class="form-label small" for="mdm-gudang">{{ __('Gudang') }}</label>
-                    <select class="form-select mb-3" id="mdm-gudang" wire:model.live="gudang">
-                        <option value="">{{ __('Semua gudang saya') }}</option>
-                        @foreach ($gudangList as $g)
-                            <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="gudang" id="mdm-gudang" class="mb-3" live :label="__('Gudang')" :kosong="__('Semua gudang saya')"
+                             :options="$gudangList->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
                 @endif
                 <label class="form-label fw-semibold" for="mdm-barang">{{ __('1. Pindai label barang') }}</label>
                 <input class="form-control form-control-lg @error('kodeBarang') is-invalid @enderror" id="mdm-barang" type="text" data-scan

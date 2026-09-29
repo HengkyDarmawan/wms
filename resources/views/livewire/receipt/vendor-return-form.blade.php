@@ -17,14 +17,8 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-md-6">
-                <label class="form-label" for="rtv-grn">{{ __('GRN asal') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('receiptId') is-invalid @enderror" id="rtv-grn" wire:model.live="receiptId">
-                    <option value="">{{ __('Pilih GRN…') }}</option>
-                    @foreach ($receipts as $g)
-                        <option value="{{ $g->id }}">{{ $g->number }} — {{ $g->vendor?->name }}</option>
-                    @endforeach
-                </select>
-                @error('receiptId') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="receiptId" id="rtv-grn" live wajib :label="__('GRN asal')" :kosong="__('Pilih GRN…')"
+                         :options="$receipts->map(fn ($g) => ['value' => $g->id, 'text' => $g->number, 'sub' => $g->vendor?->name])->all()" />
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="rtv-ket">{{ __('Keterangan') }}</label>

@@ -17,24 +17,13 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-md-4">
-                <label class="form-label" for="ret-proyek">{{ __('Proyek') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.project_id') is-invalid @enderror" id="ret-proyek" wire:model.live="form.project_id">
-                    <option value="">{{ __('Pilih proyek…') }}</option>
-                    @foreach ($projects as $p)
-                        <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.project_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                {{-- A-391: proyek dicari ke server (aktif, dalam cakupan; Klien hanya proyeknya). --}}
+                <x-pilih model="form.project_id" id="ret-proyek" server live wajib :label="__('Proyek')"
+                         :kosong="__('Pilih proyek…')" :options="$opsiProyek" />
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="ret-tujuan">{{ __('Kembali ke gudang') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.to_warehouse_id') is-invalid @enderror" id="ret-tujuan" wire:model="form.to_warehouse_id">
-                    <option value="">{{ __('Pilih gudang…') }}</option>
-                    @foreach ($warehouses as $g)
-                        <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.to_warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="form.to_warehouse_id" id="ret-tujuan" wajib :label="__('Kembali ke gudang')" :kosong="__('Pilih gudang…')"
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="ret-angkut">{{ __('Pengangkutan') }} <span class="wajib">*</span></label>

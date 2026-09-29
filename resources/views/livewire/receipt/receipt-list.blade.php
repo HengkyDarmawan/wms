@@ -57,13 +57,8 @@
                 </select>
             </div>
             <div class="col-lg-3">
-                <label class="form-label" for="filter-gudang-grn">{{ __('Gudang') }}</label>
-                <select class="form-select" id="filter-gudang-grn" wire:model.live="warehouseFilter">
-                    <option value="">{{ __('Semua gudang') }}</option>
-                    @foreach ($warehouses as $gudang)
-                        <option value="{{ $gudang->id }}">{{ $gudang->code }} — {{ $gudang->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="warehouseFilter" id="filter-gudang-grn" live :label="__('Gudang')" :kosong="__('Semua gudang')"
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
             </div>
         </div>
     </div>

@@ -93,6 +93,28 @@ final class Pilihan
     }
 
     /**
+     * Isian awal mode server untuk baris dinamis (`rows.3.item_id`): potongan
+     * awal dihitung sekali, lalu tiap baris mendapat label nilainya sendiri
+     * bila di luar potongan itu (tanpa label bila di luar cakupan).
+     *
+     * @param  array<int|string, mixed>  $nilai  kunci baris => nilai terpilih
+     * @return array<int|string, list<array<string, mixed>>>
+     */
+    public function awalPerBaris(array $nilai, int $batas = self::BATAS): array
+    {
+        $awal = $this->awal($batas);
+        $ada = array_map(fn (array $o) => (string) $o['value'], $awal);
+        $hasil = [];
+
+        foreach ($nilai as $kunci => $v) {
+            $label = $this->kosong($v) || in_array((string) $v, $ada, true) ? null : $this->label($v);
+            $hasil[$kunci] = $label === null ? $awal : [$label, ...$awal];
+        }
+
+        return $hasil;
+    }
+
+    /**
      * Setiap kata harus cocok dengan salah satu kolom cari (mis. "andi gudang"
      * = nama Andi di unit Gudang).
      *

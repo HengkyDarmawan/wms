@@ -16,20 +16,13 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-md-5">
-                <label class="form-label" for="pindah-tujuan">{{ __('Proyek tujuan') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.to_project_id') is-invalid @enderror" id="pindah-tujuan" wire:model.live="form.to_project_id">
-                    <option value="">{{ __('Pilih proyek…') }}</option>
-                    @foreach ($tujuan as $p) <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option> @endforeach
-                </select>
-                @error('form.to_project_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                {{-- A-391: proyek tujuan dicari ke server (aktif, dalam cakupan, selain proyek ini). --}}
+                <x-pilih model="form.to_project_id" id="pindah-tujuan" server live wajib :label="__('Proyek tujuan')"
+                         :kosong="__('Pilih proyek…')" :options="$opsiTujuan" />
             </div>
             <div class="col-md-3">
-                <label class="form-label" for="pindah-gudang">{{ __('Gudang Site tujuan (stok)') }}</label>
-                <select class="form-select @error('form.to_warehouse_id') is-invalid @enderror" id="pindah-gudang" wire:model="form.to_warehouse_id">
-                    <option value="">—</option>
-                    @foreach ($gudangTujuan as $g) <option value="{{ $g->id }}">{{ $g->code }}</option> @endforeach
-                </select>
-                @error('form.to_warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="form.to_warehouse_id" id="pindah-gudang" :label="__('Gudang Site tujuan (stok)')" kosong="—"
+                         :options="$gudangTujuan->map(fn ($g) => ['value' => $g->id, 'text' => $g->code])->all()" />
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="pindah-catatan">{{ __('Catatan') }}</label>

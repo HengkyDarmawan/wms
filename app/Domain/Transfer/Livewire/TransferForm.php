@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Transfer\Livewire;
 
-use App\Domain\Master\Models\Item;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Stock\Support\StockLedger;
 use App\Domain\Transfer\Actions\CreateTransfer;
 use App\Domain\Transfer\Enums\TransferKind;
@@ -21,6 +23,7 @@ use Livewire\Component;
  */
 class TransferForm extends Component
 {
+    use CariPilihan;
     use HandlesTransferRules;
 
     /** @var array<string, string> */
@@ -58,10 +61,12 @@ class TransferForm extends Component
     {
         $this->authorize('create', Transfer::class);
 
+        // A-391: item dari daftar (item aktif); id lain dari browser ditolak di isiannya.
         $this->validate([
             'form.from_warehouse_id' => ['required'],
             'form.to_warehouse_id' => ['required'],
-        ], attributes: ['form.from_warehouse_id' => __('Gudang asal'), 'form.to_warehouse_id' => __('Gudang tujuan')]);
+            'rows.*.item_id' => ['nullable', $this->pilihanItem()->aturan()],
+        ], attributes: ['form.from_warehouse_id' => __('Gudang asal'), 'form.to_warehouse_id' => __('Gudang tujuan'), 'rows.*.item_id' => __('Item')]);
 
         $trf = null;
 
@@ -94,12 +99,27 @@ class TransferForm extends Component
         }
 
         return view('livewire.transfer.transfer-form', [
-            'warehouses' => $gudang,
-            'items' => Item::query()->active()->orderBy('code')->get(['id', 'code', 'name', 'tracking_mode']),
+            'opsiGudang' => $gudang->map(fn (Warehouse $g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name, 'sub' => $g->project?->code])->all(),
+            'opsiItem' => $this->pilihanItem()->awalPerBaris(collect($this->rows)->pluck('item_id')->all()),
             'tersedia' => $tersedia,
             'jenis' => $asal !== null && $tujuan !== null && $asal->id !== $tujuan->id
                 ? TransferKind::forWarehouses($asal, $tujuan) : null,
         ]);
+    }
+
+    /** Item aktif (daftar lama `Item::active()`), dicari ke server (A-391). */
+    private function pilihanItem(): Pilihan
+    {
+        return SumberPilihan::item();
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        if (! preg_match('/^rows\.\d+\.item_id$/', $model) || ! auth()->user()?->can('create', Transfer::class)) {
+            return null;
+        }
+
+        return $this->pilihanItem();
     }
 
     /** @return array<string, string> */
