@@ -7,6 +7,7 @@ namespace App\Domain\Shared\Reports\Definitions;
 use App\Domain\Master\Models\Project;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Models\MaterialRequest;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Shared\Reports\Concerns\PeriodFilter;
 use App\Domain\Shared\Reports\Report;
 use Illuminate\Support\Collection;
@@ -45,9 +46,15 @@ class RequestListReport extends Report
     {
         return [
             'status' => ['label' => 'Status', 'options' => MaterialRequestStatus::options()],
-            'project_id' => ['label' => 'Proyek', 'options' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name'])->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])->all()],
+            'project_id' => ['label' => 'Proyek', 'server' => true],
             'requester' => ['label' => 'Pemohon mengandung'],
         ] + $this->penyaringPeriode();
+    }
+
+    /** Proyek dalam cakupan pembaca (`dalamCakupan`, A-354), dicari ke server (A-396). */
+    public function pilihanPenyaring(string $kunci): ?Pilihan
+    {
+        return $kunci === 'project_id' ? $this->pilihanProyekDari(Project::query()->dalamCakupan()->orderBy('code')) : null;
     }
 
     public function rows(array $filters): Collection

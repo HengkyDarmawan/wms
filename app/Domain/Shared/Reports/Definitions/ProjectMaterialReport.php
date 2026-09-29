@@ -6,6 +6,7 @@ namespace App\Domain\Shared\Reports\Definitions;
 
 use App\Domain\Issue\Support\ProjectMaterialSummary;
 use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Shared\Reports\Report;
 use Illuminate\Support\Collection;
 
@@ -61,9 +62,21 @@ class ProjectMaterialReport extends Report
     public function filters(): array
     {
         return [
-            'project_id' => ['label' => 'Proyek', 'options' => $this->proyek()->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])->all()],
+            'project_id' => ['label' => 'Proyek', 'server' => true],
             'item' => ['label' => 'Item (kode/nama mengandung)'],
         ];
+    }
+
+    /** Proyek dalam id cakupan pembaca (query lama), dicari ke server (A-396). */
+    public function pilihanPenyaring(string $kunci): ?Pilihan
+    {
+        if ($kunci !== 'project_id') {
+            return null;
+        }
+
+        $ids = auth()->user()?->accessibleProjectIds();
+
+        return $this->pilihanProyekDari(Project::query()->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))->orderBy('code'));
     }
 
     public function rows(array $filters): Collection

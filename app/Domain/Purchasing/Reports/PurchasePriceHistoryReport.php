@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Purchasing\Reports;
 
-use App\Domain\Master\Models\Vendor;
 use App\Domain\Purchasing\Support\PurchasePriceHistory;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Shared\Reports\Concerns\PeriodFilter;
 use App\Domain\Shared\Reports\Report;
 use Illuminate\Support\Collection;
@@ -49,9 +49,14 @@ class PurchasePriceHistoryReport extends Report
     {
         return [
             'item' => ['label' => 'Kode item'],
-            'vendor_id' => ['label' => 'Vendor', 'options' => Vendor::query()->orderBy('code')->get(['id', 'code', 'name'])
-                ->mapWithKeys(fn (Vendor $v) => [$v->id => $v->code.' — '.$v->name])->all()],
+            'vendor_id' => ['label' => 'Vendor', 'server' => true],
         ] + $this->penyaringPeriode();
+    }
+
+    /** Semua vendor (query lama), dicari ke server (A-396). */
+    public function pilihanPenyaring(string $kunci): ?Pilihan
+    {
+        return $kunci === 'vendor_id' ? $this->pilihanVendorSemua() : null;
     }
 
     public function rows(array $filters): Collection

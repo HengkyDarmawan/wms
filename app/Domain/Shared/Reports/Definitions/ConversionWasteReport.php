@@ -8,6 +8,7 @@ use App\Domain\Conversion\Enums\ConversionStatus;
 use App\Domain\Conversion\Models\Conversion;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Support\StockFeatures;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Shared\Reports\Report;
 use Illuminate\Support\Collection;
 
@@ -51,12 +52,21 @@ class ConversionWasteReport extends Report
 
     public function filters(): array
     {
+        return [
+            'project_id' => ['label' => 'Proyek', 'server' => true],
+        ];
+    }
+
+    /** Proyek dalam id cakupan pembaca (query lama), dicari ke server (A-396). */
+    public function pilihanPenyaring(string $kunci): ?Pilihan
+    {
+        if ($kunci !== 'project_id') {
+            return null;
+        }
+
         $ids = auth()->user()?->accessibleProjectIds();
 
-        return [
-            'project_id' => ['label' => 'Proyek', 'options' => Project::query()->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))
-                ->orderBy('code')->get(['id', 'code', 'name'])->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])->all()],
-        ];
+        return $this->pilihanProyekDari(Project::query()->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))->orderBy('code'));
     }
 
     public function rows(array $filters): Collection

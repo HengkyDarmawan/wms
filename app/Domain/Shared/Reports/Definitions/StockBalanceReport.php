@@ -53,7 +53,7 @@ class StockBalanceReport extends Report
     public function filters(): array
     {
         return [
-            'warehouse_id' => ['label' => 'Gudang', 'options' => Warehouse::query()->orderBy('code')->get(['id', 'code', 'name'])
+            'warehouse_id' => ['label' => 'Gudang', 'cari' => true, 'options' => Warehouse::query()->orderBy('code')->get(['id', 'code', 'name'])
                 ->mapWithKeys(fn (Warehouse $w) => [$w->id => $w->code.' — '.$w->name])->all()],
             'stock_status' => ['label' => 'Kondisi', 'options' => collect(StockStatus::cases())->mapWithKeys(fn (StockStatus $s) => [$s->value => $s->label()])->all()],
             'item' => ['label' => 'Kode item'],

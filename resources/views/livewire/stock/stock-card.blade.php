@@ -12,22 +12,12 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-lg-3">
-                <label class="form-label" for="kartu-gudang">{{ __('Gudang') }}</label>
-                <select class="form-select" id="kartu-gudang" wire:model.live="warehouseFilter">
-                    <option value="">{{ __('Semua gudang') }}</option>
-                    @foreach ($warehouses as $gudang)
-                        <option value="{{ $gudang->id }}">{{ $gudang->code }} — {{ $gudang->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="warehouseFilter" id="kartu-gudang" live :label="__('Gudang')" :kosong="__('Semua gudang')"
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
             </div>
             <div class="col-lg-3">
-                <label class="form-label" for="kartu-bin">{{ __('Bin') }}</label>
-                <select class="form-select" id="kartu-bin" wire:model.live="binFilter">
-                    <option value="">{{ __('Semua bin') }}</option>
-                    @foreach ($bins as $bin)
-                        <option value="{{ $bin->id }}">{{ $bin->code }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="binFilter" id="kartu-bin" server live :kunci="$warehouseFilter" :label="__('Bin')"
+                         :kosong="__('Semua bin')" :options="$opsiBin" />
             </div>
             <div class="col-lg-3">
                 <label class="form-label" for="kartu-dari">{{ __('Dari tanggal') }}</label>

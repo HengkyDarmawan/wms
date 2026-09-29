@@ -8,6 +8,7 @@ use App\Domain\Asset\Enums\AssetHandoverStatus;
 use App\Domain\Asset\Models\AssetHandover;
 use App\Domain\Asset\Support\AssetCustody;
 use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Shared\Reports\Report;
 use Illuminate\Support\Collection;
 
@@ -57,13 +58,22 @@ class LoanedAssetReport extends Report
 
     public function filters(): array
     {
-        $ids = auth()->user()?->accessibleProjectIds();
-
         return [
-            'project_id' => ['label' => 'Proyek', 'options' => Project::query()->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))
-                ->orderBy('code')->get(['id', 'code', 'name'])->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])->all()],
+            'project_id' => ['label' => 'Proyek', 'server' => true],
             'overdue' => ['label' => 'Hanya lewat jatuh tempo', 'options' => ['1' => 'Ya']],
         ];
+    }
+
+    /** Proyek dalam id cakupan pembaca (query lama), dicari ke server (A-396). */
+    public function pilihanPenyaring(string $kunci): ?Pilihan
+    {
+        if ($kunci !== 'project_id') {
+            return null;
+        }
+
+        $ids = auth()->user()?->accessibleProjectIds();
+
+        return $this->pilihanProyekDari(Project::query()->when($ids !== null, fn ($q) => $q->whereIn('id', $ids))->orderBy('code'));
     }
 
     public function rows(array $filters): Collection

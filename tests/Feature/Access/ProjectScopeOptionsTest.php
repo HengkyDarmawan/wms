@@ -83,10 +83,10 @@ class ProjectScopeOptionsTest extends TenantTestCase
         $this->assertNotContains((int) $this->lain->id, $ids($req->effects['returns'][0] ?? []));
 
         $this->actingAs($pemohon);
-        $opsi = app(ReportRegistry::class)->find('daftar-req')?->filters()['project_id']['options'] ?? null;
-        if ($opsi !== null) {
-            $this->assertSame([(int) $this->proyek->id], array_map('intval', array_keys($opsi)), 'Filter laporan tidak menawarkan proyek lain.');
-        }
+        // A-396: penyaring proyek laporan kini dicari ke server (`pilihanPenyaring`).
+        $opsi = app(ReportRegistry::class)->find('daftar-req')->pilihanPenyaring('project_id')?->semua();
+        $this->assertNotNull($opsi);
+        $this->assertSame([(int) $this->proyek->id], $ids($opsi), 'Filter laporan tidak menawarkan proyek lain.');
 
         // Cakupan semua (Admin) tetap melihat semua proyek.
         $admin = $this->makeUser('company_admin');

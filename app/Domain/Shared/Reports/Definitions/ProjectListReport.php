@@ -54,6 +54,7 @@ class ProjectListReport extends Report
             'status' => ['label' => 'Status', 'options' => ProjectStatus::options()],
             'client_id' => [
                 'label' => 'Klien',
+                'cari' => true,
                 'options' => Client::query()->orderBy('name')->pluck('name', 'id')->all(),
             ],
         ];

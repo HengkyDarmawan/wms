@@ -14,6 +14,7 @@ use App\Domain\Receipt\Enums\ReceiptType;
 use App\Domain\Receipt\Models\GoodsReceiptLine;
 use App\Domain\Return\Enums\ReturnSorting;
 use App\Domain\Return\Models\GoodsReturnLine;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Shared\Reports\Concerns\PeriodFilter;
 use App\Domain\Shared\Reports\Report;
 use App\Domain\Shipment\Models\PickTaskLine;
@@ -67,9 +68,14 @@ class VendorProblemReport extends Report
     {
         return [
             'warehouse_id' => $this->penyaringGudang(),
-            'vendor_id' => ['label' => 'Vendor', 'options' => Vendor::query()->orderBy('code')->get(['id', 'code', 'name'])
-                ->mapWithKeys(fn (Vendor $v) => [$v->id => $v->code.' — '.$v->name])->all()],
+            'vendor_id' => ['label' => 'Vendor', 'server' => true],
         ] + $this->penyaringPeriode();
+    }
+
+    /** Semua vendor (query lama), dicari ke server (A-396). */
+    public function pilihanPenyaring(string $kunci): ?Pilihan
+    {
+        return $kunci === 'vendor_id' ? $this->pilihanVendorSemua() : null;
     }
 
     public function rows(array $filters): Collection

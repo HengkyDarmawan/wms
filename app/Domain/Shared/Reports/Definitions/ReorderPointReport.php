@@ -47,7 +47,7 @@ class ReorderPointReport extends Report
     {
         return [
             'warehouse_id' => $this->penyaringGudang(),
-            'item_category_id' => ['label' => 'Kategori', 'options' => ItemCategory::query()->orderBy('name')->pluck('name', 'id')->all()],
+            'item_category_id' => ['label' => 'Kategori', 'cari' => true, 'options' => ItemCategory::query()->orderBy('name')->pluck('name', 'id')->all()],
         ];
     }
 

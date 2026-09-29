@@ -1,9 +1,24 @@
 # Catatan Perubahan — Arsip (v0.2–v0.31)
 
-**Versi:** 1.22
+**Versi:** 1.23
 **Tanggal:** 1 Oktober 2026
-**Status:** arsip — v1.22: blok v0.33 dipindah dari README v0.95; v1.21: blok v0.32 dipindah dari README v0.94; v1.20: blok v0.31 dipindah dari README v0.90; v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
+**Status:** arsip — v1.23: blok v0.34 dipindah dari README v0.96; v1.22: blok v0.33 dipindah dari README v0.95; v1.21: blok v0.32 dipindah dari README v0.94; v1.20: blok v0.31 dipindah dari README v0.90; v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
 **Dokumen terkait:** [README](README.md)
+
+### v0.34 — 25 September 2026 (modul Platform penuh selesai Fase 1)
+- **`wms/17-platform-login.md` → v0.2 (selesai Fase 1).** Domain `app/Domain/Platform`, migrasi pusat `000020` (tanpa tabel tenant baru).
+  - **Buat company** dari layar Super Admin: database → migrasi → `TenantDatabaseSeeder` → Admin Company + undangan → `active`; gagal → tetap `provisioning`, bisa dilanjutkan (A-176).
+  - **Paket & trial** (durasi trial per paket), **tagihan** H-7 `INV/<yymm>/<urut>`, **bukti bayar** diunggah Admin Company (`/billing`, juga saat ditangguhkan) dan diverifikasi/ditolak Super Admin (A-177, A-178).
+  - **Siklus harian** `subscriptions:cycle` 00:30: `trial/active → past_due` (tenggang 7 hari) `→ suspended` (30 hari) `→ terminated` (simpan 90 hari) (BR-SUB-01).
+  - **Penangguhan manual** company, **flag fitur** stub, **masuk lewat akses dukungan** hanya-baca atas nama Admin pemberi izin (A-179, A-180, A-183).
+  - Gerbang: status company ikut menentukan; `terminated` hanya Beranda/Laporan/Tagihan/Profil (A-181); login Super Admin terkunci setelah gagal berulang + `platform_login_attempts` + `audit_logs` pusat (A-182).
+  - Temuan v0.1 §13.2 diselesaikan: data acuan company baru, `TenantDeleted` tidak lagi menghapus database, docblock `ProductionSeeder`.
+- **Asumsi baru [A-176](wms/04-keputusan-dan-asumsi.md#a-176)–[A-184](wms/04-keputusan-dan-asumsi.md#a-184)** (*Perlu validasi*, `04` → v0.23, §2.12).
+- **Permission baru** modul `billing` (2): `billing.view`, `billing.pay` (Admin Company).
+- **Katalog** `06` → v0.17: enum `subscription_invoice_status`, `subscription_payment_status` didaftarkan (nilai ERD) — **tanpa status baru**.
+- **Model data** 08a–08c → v0.16 (digenerate ulang): kolom & tabel pusat A-184.
+- **Modul lain:** `08-arsitektur` → v0.15 (§3 langkah 5, §7, §12), `00-akun-uji` → v1.10, laporan progres → v1.11, `prompts/00-lanjutkan-di-rumah.md` → v1.6, `cek.md`.
+- **Uji:** 9 uji baru TC-PLT-03–11 (termasuk pembuatan database company sungguhan). TC-ACC-27b (2 permission `billing`) disesuaikan. **546 uji hijau** (MariaDB 10.4.32, XAMPP3).
 
 ### v0.33 — 25 September 2026 (modul Purchase Request selesai Fase 1)
 - **Berkas baru `wms/26-purchase-request.md` v0.1 (selesai Fase 1).** Domain `app/Domain/PurchaseRequest`, migrasi tenant `000150` (`purchase_requests`, `purchase_request_lines`, `purchase_request_orders`, `purchase_request_order_lines`; indeks `goods_receipt_lines.purchase_request_order_line_id`).

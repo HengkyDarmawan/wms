@@ -56,12 +56,14 @@ class BinListReport extends Report
         return [
             'warehouse_id' => [
                 'label' => 'Gudang',
+                'cari' => true,
                 'options' => Warehouse::query()->orderBy('code')->pluck('name', 'id')->all(),
             ],
             'bin_type' => ['label' => 'Jenis', 'options' => BinType::options()],
             'bin_status' => ['label' => 'Status', 'options' => BinStatus::options()],
             'storage_category_id' => [
                 'label' => 'Kategori penyimpanan',
+                'cari' => true,
                 'options' => StorageCategory::query()->orderBy('name')->pluck('name', 'id')->all(),
             ],
         ];

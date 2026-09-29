@@ -6,6 +6,8 @@ namespace App\Domain\Stock\Livewire;
 
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Support\StockFeatures;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockMovement;
 use App\Domain\Warehouse\Models\Bin;
@@ -28,6 +30,7 @@ use Livewire\WithPagination;
  */
 class StockCard extends Component
 {
+    use CariPilihan;
     use WithPagination;
 
     #[Locked]
@@ -73,7 +76,8 @@ class StockCard extends Component
             'saldo' => $this->saldoPerBin(),
             'pergerakan' => $this->pergerakan(),
             'warehouses' => Warehouse::query()->orderBy('code')->get(['id', 'code', 'name']),
-            'bins' => $this->pilihanBin(),
+            // A-396: bin yang pernah menyimpan item ini, dicari ke server.
+            'opsiBin' => $this->pilihanBin()->awalDengan($this->binFilter),
             // A-284: kolom potongan hanya bila saklar per potong menyala.
             'tampilPotongan' => StockFeatures::piece(),
         ]);
@@ -119,14 +123,22 @@ class StockCard extends Component
             ->paginate(30);
     }
 
-    /** @return Collection<int, Bin> */
-    private function pilihanBin(): Collection
+    /** Bin (dalam cakupan gudang pembaca) yang punya saldo item ini — daftar lama (A-396). */
+    private function pilihanBin(): Pilihan
     {
-        return Bin::query()
+        $query = Bin::query()
             ->when($this->warehouseFilter !== '', fn (Builder $q) => $q
                 ->where('warehouse_id', (int) $this->warehouseFilter))
             ->whereIn('id', StockBalance::query()->where('item_id', $this->itemId)->select('bin_id'))
-            ->orderBy('code')
-            ->get(['id', 'code']);
+            ->orderBy('code');
+
+        return Pilihan::dari($query, ['code'], fn (Bin $b) => ['value' => (int) $b->id, 'text' => $b->code]);
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        $user = auth()->user();
+
+        return $model === 'binFilter' && $user?->can('viewAny', StockBalance::class) && ! $user->isClient() ? $this->pilihanBin() : null;
     }
 }

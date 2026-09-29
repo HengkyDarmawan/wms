@@ -20,10 +20,10 @@ trait ApprovalScope
 {
     use PeriodFilter;
 
-    /** @return array{label: string, options: array<string, string>} */
+    /** @return array{label: string, cari: bool, options: array<string, string>} */
     protected function penyaringJenisDokumen(): array
     {
-        return ['label' => 'Jenis dokumen', 'options' => collect(ApprovalDocumentType::cases())
+        return ['label' => 'Jenis dokumen', 'cari' => true, 'options' => collect(ApprovalDocumentType::cases())
             ->mapWithKeys(fn (ApprovalDocumentType $t) => [$t->value => $t->longLabel()])->all()];
     }
 

@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.95
+**Versi:** 0.96
 **Tanggal:** 1 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -107,6 +107,12 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.96 — 1 Oktober 2026 (pilihan yang bisa dicari: menu Laporan)
+- **Asumsi baru** [A-396](wms/04b-asumsi-lanjutan.md#a-396) (04b v0.39 §2.54, *Perlu validasi*): penyaring laporan `cari` (dimuat sekaligus) & `server` (proyek, vendor dicari ke server); akun Klien tanpa pilihan di layar laporan; bin Kartu stok dicari ke server; gudang Saldo/Kartu/Reservasi dimuat sekaligus.
+- **Spesifikasi** [16-shared-laporan-berkas](wms/16-shared-laporan-berkas.md) v0.26 (§6.2, TC-RPT-14, TC-RPT-14b); [13-stock](wms/13-stock.md) v0.16 (§6, TC-STK-39). Glosarium, katalog 06, model data, dan route tidak berubah.
+- **Kode:** `Report::pilihanPenyaring/pilihanProyekDari/pilihanVendorSemua`, `ReportViewer` (`CariPilihan`), `PeriodFilter`, `ApprovalScope`, 12 definisi laporan, `StockCard`; view report-viewer, balance-list, reservation-list, stock-card; uji `PilihanLaporanTest`; TC-ACC-46b & TC-RPT-13d membaca `pilihanPenyaring`.
+- **Arsip:** blok v0.34 dipindah ke [arsip](00-catatan-perubahan-arsip.md) v1.23.
 
 ### v0.95 — 1 Oktober 2026 (pilihan yang bisa dicari: menu Di proyek)
 - **Asumsi baru** [A-395](wms/04b-asumsi-lanjutan.md#a-395) (04b v0.38 §2.54, *Perlu validasi*): proyek ISU/CNV/WST, item hasil & bin tujuan CNV, bin tujuan WST, saringan proyek daftar ISU/CNV/WST/Aset/Serah terima dicari ke server; ganti gudang WST mengosongkan proyek di luar daftar.
@@ -409,18 +415,3 @@ docs/
 - **Berkas baru `00-tinjauan-asumsi-2026-09-25.md`:** tabel ringkas semua asumsi *Perlu validasi* (A-72–A-194) dengan kolom keputusan (butir Penutup).
 - **E2E:** `alur-req-sj.mjs` membaca saldo awal dari database; skrip baru `alur-pendukung.mjs` (P1–P6). Pada data demo segar: 9/9 + 6/6 lulus, 0 error console; `ui-check.mjs` 61 pemeriksaan OK.
 - **Uji:** 23 uji baru (TC-PCK-12–15, TC-DSH-01, TC-MST-20–22, TC-REQ-30–32, TC-NTF-01–04, TC-RPT-02–05, TC-PWA-01, TC-GEN-07, TC-STK-26, TC-E2E-01); TC-RPT-01 (14 laporan) disesuaikan. **569 uji hijau** (MariaDB 10.4.32, XAMPP3).
-
-### v0.34 — 25 September 2026 (modul Platform penuh selesai Fase 1)
-- **`wms/17-platform-login.md` → v0.2 (selesai Fase 1).** Domain `app/Domain/Platform`, migrasi pusat `000020` (tanpa tabel tenant baru).
-  - **Buat company** dari layar Super Admin: database → migrasi → `TenantDatabaseSeeder` → Admin Company + undangan → `active`; gagal → tetap `provisioning`, bisa dilanjutkan (A-176).
-  - **Paket & trial** (durasi trial per paket), **tagihan** H-7 `INV/<yymm>/<urut>`, **bukti bayar** diunggah Admin Company (`/billing`, juga saat ditangguhkan) dan diverifikasi/ditolak Super Admin (A-177, A-178).
-  - **Siklus harian** `subscriptions:cycle` 00:30: `trial/active → past_due` (tenggang 7 hari) `→ suspended` (30 hari) `→ terminated` (simpan 90 hari) (BR-SUB-01).
-  - **Penangguhan manual** company, **flag fitur** stub, **masuk lewat akses dukungan** hanya-baca atas nama Admin pemberi izin (A-179, A-180, A-183).
-  - Gerbang: status company ikut menentukan; `terminated` hanya Beranda/Laporan/Tagihan/Profil (A-181); login Super Admin terkunci setelah gagal berulang + `platform_login_attempts` + `audit_logs` pusat (A-182).
-  - Temuan v0.1 §13.2 diselesaikan: data acuan company baru, `TenantDeleted` tidak lagi menghapus database, docblock `ProductionSeeder`.
-- **Asumsi baru [A-176](wms/04-keputusan-dan-asumsi.md#a-176)–[A-184](wms/04-keputusan-dan-asumsi.md#a-184)** (*Perlu validasi*, `04` → v0.23, §2.12).
-- **Permission baru** modul `billing` (2): `billing.view`, `billing.pay` (Admin Company).
-- **Katalog** `06` → v0.17: enum `subscription_invoice_status`, `subscription_payment_status` didaftarkan (nilai ERD) — **tanpa status baru**.
-- **Model data** 08a–08c → v0.16 (digenerate ulang): kolom & tabel pusat A-184.
-- **Modul lain:** `08-arsitektur` → v0.15 (§3 langkah 5, §7, §12), `00-akun-uji` → v1.10, laporan progres → v1.11, `prompts/00-lanjutkan-di-rumah.md` → v1.6, `cek.md`.
-- **Uji:** 9 uji baru TC-PLT-03–11 (termasuk pembuatan database company sungguhan). TC-ACC-27b (2 permission `billing`) disesuaikan. **546 uji hijau** (MariaDB 10.4.32, XAMPP3).

@@ -22,22 +22,33 @@
         <div class="card mb-3">
             <div class="card-body row g-3">
                 @foreach ($penyaring as $kunci => $definisi)
+                    @php
+                        $server = (bool) ($definisi['server'] ?? false);
+                        $dicari = $server || (($definisi['cari'] ?? false) && isset($definisi['options']));
+                    @endphp
                     <div class="col-md-3">
-                        <label class="form-label" for="filter-{{ $kunci }}">
-                            {{ $definisi['label'] }}
-                            @if ($definisi['required'] ?? false) <span class="wajib">*</span> @endif
-                        </label>
-                        @if (isset($definisi['options']))
-                            <select class="form-select" id="filter-{{ $kunci }}"
-                                    wire:model.live="filters.{{ $kunci }}">
-                                <option value="">{{ __('Semua') }}</option>
-                                @foreach ($definisi['options'] as $nilai => $label)
-                                    <option value="{{ $nilai }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
+                        @if ($dicari)
+                            {{-- A-396: daftar master bisa dicari; proyek & vendor dicari ke server. --}}
+                            <x-pilih model="filters.{{ $kunci }}" id="filter-{{ $kunci }}" live :server="$server"
+                                     :label="$definisi['label']" :wajib="$definisi['required'] ?? false" :kosong="__('Semua')"
+                                     :options="$server ? ($opsiServer[$kunci] ?? []) : $definisi['options']" />
                         @else
-                            <input class="form-control" id="filter-{{ $kunci }}" type="search"
-                                   wire:model.live.debounce.400ms="filters.{{ $kunci }}">
+                            <label class="form-label" for="filter-{{ $kunci }}">
+                                {{ $definisi['label'] }}
+                                @if ($definisi['required'] ?? false) <span class="wajib">*</span> @endif
+                            </label>
+                            @if (isset($definisi['options']))
+                                <select class="form-select" id="filter-{{ $kunci }}"
+                                        wire:model.live="filters.{{ $kunci }}">
+                                    <option value="">{{ __('Semua') }}</option>
+                                    @foreach ($definisi['options'] as $nilai => $label)
+                                        <option value="{{ $nilai }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <input class="form-control" id="filter-{{ $kunci }}" type="search"
+                                       wire:model.live.debounce.400ms="filters.{{ $kunci }}">
+                            @endif
                         @endif
                     </div>
                 @endforeach
@@ -82,7 +93,9 @@
                     @empty
                         <tr>
                             <td colspan="{{ count($kolom) }}" class="text-center text-muted py-4">
-                                @php($belum = collect($penyaring)->filter(fn ($d, $k) => ($d['required'] ?? false) && ($filters[$k] ?? '') === ''))
+                                @php
+                                    $belum = collect($penyaring)->filter(fn ($d, $k) => ($d['required'] ?? false) && ($filters[$k] ?? '') === '');
+                                @endphp
                                 @if ($belum->isNotEmpty())
                                     {{ __('Pilih :isian dulu untuk melihat isinya.', ['isian' => $belum->pluck('label')->implode(' dan ')]) }}
                                 @else

@@ -53,13 +53,8 @@
                        wire:model.live.debounce.400ms="search" placeholder="{{ __('Kode atau nama item') }}">
             </div>
             <div class="col-lg-3">
-                <label class="form-label" for="filter-gudang-reservasi">{{ __('Gudang') }}</label>
-                <select class="form-select" id="filter-gudang-reservasi" wire:model.live="warehouseFilter">
-                    <option value="">{{ __('Semua gudang') }}</option>
-                    @foreach ($warehouses as $gudang)
-                        <option value="{{ $gudang->id }}">{{ $gudang->code }} — {{ $gudang->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="warehouseFilter" id="filter-gudang-reservasi" live :label="__('Gudang')" :kosong="__('Semua gudang')"
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
             </div>
             <div class="col-lg-2">
                 <label class="form-label" for="filter-level">{{ __('Tingkat') }}</label>

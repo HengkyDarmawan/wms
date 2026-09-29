@@ -6,6 +6,7 @@ namespace App\Domain\Shared\Reports\Definitions;
 
 use App\Domain\Master\Models\Project;
 use App\Domain\Request\Models\MaterialRequestLine;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Shared\Reports\Concerns\PeriodFilter;
 use App\Domain\Shared\Reports\Report;
 use Illuminate\Support\Collection;
@@ -43,9 +44,15 @@ class PendingSubstitutionReport extends Report
     public function filters(): array
     {
         return [
-            'project_id' => ['label' => 'Proyek', 'options' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name'])->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])->all()],
+            'project_id' => ['label' => 'Proyek', 'server' => true],
             'deadline_before' => ['label' => 'Tenggat sebelum tanggal'],
         ];
+    }
+
+    /** Proyek dalam cakupan pembaca (`dalamCakupan`, A-354), dicari ke server (A-396). */
+    public function pilihanPenyaring(string $kunci): ?Pilihan
+    {
+        return $kunci === 'project_id' ? $this->pilihanProyekDari(Project::query()->dalamCakupan()->orderBy('code')) : null;
     }
 
     public function rows(array $filters): Collection

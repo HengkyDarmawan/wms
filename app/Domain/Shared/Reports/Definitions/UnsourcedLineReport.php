@@ -8,6 +8,7 @@ use App\Domain\Master\Models\Project;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Enums\RequestLineStatus;
 use App\Domain\Request\Models\MaterialRequestLine;
+use App\Domain\Shared\Pilihan\Pilihan;
 use App\Domain\Shared\Reports\Report;
 use Illuminate\Support\Collection;
 
@@ -41,7 +42,13 @@ class UnsourcedLineReport extends Report
 
     public function filters(): array
     {
-        return ['project_id' => ['label' => 'Proyek', 'options' => Project::query()->dalamCakupan()->orderBy('code')->get(['id', 'code', 'name'])->mapWithKeys(fn (Project $p) => [$p->id => $p->code.' — '.$p->name])->all()]];
+        return ['project_id' => ['label' => 'Proyek', 'server' => true]];
+    }
+
+    /** Proyek dalam cakupan pembaca (`dalamCakupan`, A-354), dicari ke server (A-396). */
+    public function pilihanPenyaring(string $kunci): ?Pilihan
+    {
+        return $kunci === 'project_id' ? $this->pilihanProyekDari(Project::query()->dalamCakupan()->orderBy('code')) : null;
     }
 
     public function rows(array $filters): Collection

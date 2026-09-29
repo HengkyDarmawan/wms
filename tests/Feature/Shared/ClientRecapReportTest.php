@@ -219,7 +219,8 @@ class ClientRecapReportTest extends TenantTestCase
         $this->actingAs($this->makeUser('internal_requester', ScopeType::Project, (int) $proyekLain->id));
 
         $this->assertTrue($laporan->rows(['client_id' => (string) $this->klien->id])->isEmpty());
-        $this->assertSame([$proyekLain->id], array_keys($laporan->filters()['project_id']['options']));
+        // A-396: penyaring proyek dicari ke server — daftar sama dengan dulu.
+        $this->assertSame([(int) $proyekLain->id], array_map('intval', array_column($laporan->pilihanPenyaring('project_id')->semua(), 'value')));
     }
 
     // ---------------------------------------------------------------- bantuan
