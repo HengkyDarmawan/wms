@@ -1,7 +1,7 @@
 # Asumsi lanjutan (A-246 dan seterusnya)
 
 **Versi:** 0.27
-**Tanggal:** 29 September 2026
+**Tanggal:** 30 September 2026
 **Status:** lanjutan §2 [04-keputusan-dan-asumsi](04-keputusan-dan-asumsi.md) (berkas itu mendekati batas 450 baris). Cara validasi, anchor, dan aturan *Diganti oleh* sama dengan 04
 **Dokumen terkait:** [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · [Tinjauan asumsi](../00-tinjauan-asumsi-2026-09-25.md) · [Aturan Bisnis](05-aturan-bisnis.md)
 
@@ -297,6 +297,16 @@ Keputusan pemilik produk (30 Sep 2026): P1 pilihan panjang dari data master bisa
 | ID | Asumsi | Dipakai | Validasi |
 |---|---|---|---|
 | <a id="a-354"></a>A-354 | **Daftar pilihan proyek mengikuti cakupan pembaca.** Scope baru `Project::dalamCakupan()` = `accessibleProjectIds()` (null = semua) + untuk akun Klien hanya proyek kliennya. Dipakai: form Retur (daftar proyek, tabel stok retur, dan gudang pengirim — sebelumnya akun Klien melihat **semua proyek aktif** dan id proyek dari browser membuka stok proyek lain), form Permintaan, tujuan SJ, Pindah proyek, filter Aset & Daftar permintaan, Peta & Simulasi approval, filter laporan *Daftar REQ*, *Substitusi tertunda*, *Baris tanpa sumber*. Form aturan approval tetap semua proyek (konfigurasi admin; menyaring akan membuang kondisi tersimpan). Asal TRF **sengaja** tidak dibatasi cakupan: pengaju boleh bercakupan gudang asal **atau** tujuan (A-106). Vendor nonaktif tidak lagi ditawarkan di tujuan SJ (A-310) | [10](10-access.md) §5; `Project::scopeDalamCakupan`, `ReturnForm`; TC-ACC-46–TC-ACC-46c | Setuju (30 Sep 2026) |
+
+### 2.47 Kemasan item sebagai kalimat lengkap (T-10) — 30 Sep 2026
+
+Uji coba pemilik produk: baris "Satuan [BOX] · Isi dalam satuan dasar [12]" dengan satuan dasar DUS terbaca "1 dus = 12 box", padahal tersimpan 1 BOX = 12 DUS. Keputusan pemilik (30 Sep 2026): kemasan dibaca sebagai kalimat, satuan isi boleh kemasan lain yang lebih kecil, validasi berpesan jelas, data lama tetap terbaca. Jawaban audit Tahap A: **satuan isi disimpan** (dua kolom) dan **satuan dasar terkunci bila ada pergerakan stok**.
+
+| ID | Asumsi | Dipakai | Validasi |
+|---|---|---|---|
+| <a id="a-355"></a>A-355 | **Kemasan sebagai kalimat & bertingkat** (memperluas [A-294](#a-294)). Tab *Kemasan* form item: tiap baris "1 [kemasan ▾] berisi [jumlah] [satuan isi ▾] = N <satuan dasar>" dengan rincian ("480 BOX (40 × 12)") tampil saat mengetik, dan di bawah daftar "Contoh: terima 5 DUS → stok bertambah 60 BOX" (kemasan terbesar). Satuan isi = satuan dasar atau kemasan lain item di daftar yang sama; kalimat disimpan di `content_qty`/`content_uom_id` (null = satuan dasar), `qty_base` tetap dihitung ke satuan dasar dan tetap satu-satunya angka yang dipakai stok, uraian, label, dan cetakan. Mengubah isi kemasan kecil menghitung ulang kemasan yang berisi kemasan itu (diberitahukan di form; dokumen lama tidak berubah karena menyalin `uom_qty_base`). Ditolak dengan pesan per baris: kemasan = satuan dasar, satuan dobel, isi ≤ 1, berisi dirinya, satuan isi tidak ada di daftar, saling berisi (lingkaran), hasil ≤ 1 satuan dasar; satu baris salah = tidak ada yang tersimpan. Data lama tampil "berisi N <satuan dasar>"; baris lama yang tidak diubah dikecualikan dari aturan "> 1" (P-03). Detail item menampilkan kalimat yang sama | [11](11-master.md) §3.3, §6, §13.12; `PackagingSentence`, `SaveItem::syncConversions`, `ItemForm`; TC-MST-45–47 | Setuju (30 Sep 2026); rincian pesan & contoh: Perlu validasi |
+| <a id="a-356"></a>A-356 | **Satuan dasar terkunci karena pergerakan stok** — menerapkan [BR-MST-02](05-aturan-bisnis.md#br-mst) yang sudah tertulis ("pernah dipakai dokumen"): kunci = punya lot/serial/potongan **atau** `stock_movement`. Draf dokumen tanpa pergerakan belum mengunci. Alasan tampil di bawah isian ("Terkunci karena item ini sudah punya pergerakan stok."), kemasan tetap boleh ditambah. Aturan hapus item (BR-MST-05) tidak berubah | [11](11-master.md) §6, §13.12; `Item::baseUomLockReason`, `SaveItem::resolveBaseUom`; TC-MST-48 | Setuju (30 Sep 2026) |
+| <a id="a-357"></a>A-357 | **Kalimat yang sama di *Kemasan lain…*** (memperluas [A-291](#a-291), [A-292](#a-292)). Isian di baris GRN vendor, Permintaan, dan Retur: "1 [kemasan ▾] berisi [jumlah] [satuan isi ▾: satuan dasar atau kemasan aktif item] = N <satuan dasar>"; faktor dihitung ke satuan dasar sebelum dikirim ke aksi (kolom dokumen tidak berubah). *Ingat untuk item ini* ikut menyimpan kalimatnya bila satuan isi masih kemasan aktif dan hasilnya cocok; kalau tidak, isi dicatat dalam satuan dasar. Riwayat item: "Kemasan 1 SET berisi 2 DUS (= 24 PCS) ditambahkan dari …". Pilihan kemasan di dropdown satuan kini "DUS (isi 12 BOX)"; *Kemasan lain* tidak lagi menawarkan kemasan yang sudah aktif | [11](11-master.md) §13.12, [19](19-receipt-putaway.md), [14](14-request.md), [22](22-retur-transfer.md); `unit-picker-lain`, `PicksItemUnit::isiKemasanLain`, `UnitInput::faktorLain/contentOf`, `RememberItemPackaging`; TC-MST-49, TC-GRN-27 | Perlu validasi |
 
 ### 2.48 Badge jabatan di pilihan Atasan langsung — 30 Sep 2026
 

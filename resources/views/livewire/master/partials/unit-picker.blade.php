@@ -10,7 +10,7 @@
         <select class="form-select form-select-sm" id="{{ $idAwal }}-satuan" wire:model.live="{{ $prefix }}.uom">
             <option value="">{{ $opsi['base'] }} ({{ __('satuan dasar') }})</option>
             @foreach ($opsi['codes'] as $uomId => $kode)
-                <option value="{{ $uomId }}">{{ $kode }} = {{ \App\Domain\Master\Support\QtyFormat::withUnit($opsi['factors'][$uomId], $opsi['base']) }}</option>
+                <option value="{{ $uomId }}">{{ $kode }} ({{ __('isi') }} {{ \App\Domain\Master\Support\QtyFormat::withUnit($opsi['factors'][$uomId], $opsi['base']) }})</option>
             @endforeach
             <option value="lain">{{ __('Kemasan lain…') }}</option>
         </select>

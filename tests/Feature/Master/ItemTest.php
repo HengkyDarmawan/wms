@@ -236,7 +236,7 @@ class ItemTest extends TenantTestCase
             $this->simpan([], $item, [['uom_id' => $this->uomId('M'), 'qty_base' => 1]]);
             $this->fail('Satuan dasar sebagai konversi seharusnya ditolak.');
         } catch (MasterRuleException $e) {
-            $this->assertArrayHasKey('conversions', $e->fieldErrors);
+            $this->assertSame('M adalah satuan dasar; kemasan harus satuan lain.', $e->fieldErrors['conversions.0'] ?? null);
         }
     }
 

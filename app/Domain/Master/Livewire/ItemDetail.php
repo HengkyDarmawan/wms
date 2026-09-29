@@ -56,6 +56,7 @@ class ItemDetail extends Component
             'baseUom.category',
             'weightUom',
             'activeConversions.uom',
+            'activeConversions.contentUom',
         ]);
 
         return view('livewire.master.item-detail', [

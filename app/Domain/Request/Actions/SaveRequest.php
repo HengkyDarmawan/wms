@@ -125,7 +125,7 @@ class SaveRequest
 
             try {
                 $s = UnitInput::resolve($item, $data['qty_input'] ?? $data['qty_base'] ?? 0, $data['uom_id'], $data['uom_factor'] ?? null,
-                    filter_var($data['remember_uom'] ?? false, FILTER_VALIDATE_BOOLEAN), $this->aktor, $req->number);
+                    filter_var($data['remember_uom'] ?? false, FILTER_VALIDATE_BOOLEAN), $this->aktor, $req->number, UnitInput::contentOf($data));
             } catch (DomainException $e) {
                 throw RequestRuleException::field('A-291', 'uom_id', 'Baris '.$item->code.': '.$e->getMessage());
             }

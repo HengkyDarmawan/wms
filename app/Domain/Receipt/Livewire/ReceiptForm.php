@@ -118,7 +118,7 @@ class ReceiptForm extends Component
     {
         return $isi + [
             'item_id' => '', 'vendor' => '', 'qty' => '', 'damaged' => '', 'short' => '', 'damage_reason' => '',
-            'uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'ingat' => false,
+            'uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'uom_isi' => '', 'ingat' => false,
             'lot_no' => '', 'expiry_date' => '', 'units' => '', 'units_damaged' => '', 'ada_rusak' => false,
             'notes' => '', 'order_line_id' => '', 'bonus' => false,
         ];
@@ -191,7 +191,7 @@ class ReceiptForm extends Component
         }
 
         if ($kolom === 'item_id') {
-            $r = array_merge($r, ['uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'ingat' => false]);
+            $r = array_merge($r, ['uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'uom_isi' => '', 'ingat' => false]);
         }
 
         // A-287: Baik = dikirim vendor − rusak − kurang; mengubah Baik membuat Kurang dihitung ulang.
@@ -312,6 +312,7 @@ class ReceiptForm extends Component
             ->pluck('tracking_mode', 'id');
 
         $hasil = [];
+        $opsi = $this->opsiSatuan(collect($this->rows)->pluck('item_id')->all());
 
         foreach ($this->rows as $r) {
             $mode = $modes[(int) ($r['item_id'] ?? 0)] ?? null;
@@ -328,7 +329,7 @@ class ReceiptForm extends Component
                 'notes' => $r['notes'] ?? '',
                 'purchase_request_order_line_id' => $r['order_line_id'] ?? '',
                 'is_bonus' => (bool) ($r['bonus'] ?? false),
-            ] + $this->isianSatuan($r);
+            ] + $this->isianSatuan($r, $opsi[(int) ($r['item_id'] ?? 0)] ?? null);
 
             if ($mode === TrackingMode::Serial || $mode === TrackingMode::Piece) {
                 $baik = $this->daftarUnit($r['units'] ?? '');

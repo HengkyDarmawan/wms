@@ -112,6 +112,10 @@ docs/
 - **Asumsi baru** [A-358](wms/04b-asumsi-lanjutan.md#a-358) (04b v0.27 §2.48): pilihan *Atasan langsung (bila beda dari jabatan)* bisa dicari, tiap orang ber-badge jabatan + unit; atasan tersimpan yang nonaktif tetap tampil bertanda.
 - **Spesifikasi** [10-access](wms/10-access.md) v0.17: §6.3, TC-ACC-47, TC-ACC-47b. **Kode:** komponen `<x-pilih>` + `wms/pilih.js` (versi awal untuk Prompt 6), `UserForm::opsiAtasan`, CSS `.nx-pilih`/`.nx-badge-jabatan`; uji `UserFormManagerOptionsTest`.
 
+### v0.83 — 30 September 2026 (kemasan item sebagai kalimat, T-10)
+- **Asumsi baru** [A-355](wms/04b-asumsi-lanjutan.md#a-355)–[A-357](wms/04b-asumsi-lanjutan.md#a-357) (04b v0.26 §2.47): kemasan "1 DUS berisi 40 PACK" bertingkat dengan satuan isi tersimpan; kunci satuan dasar karena pergerakan stok (menerapkan BR-MST-02); kalimat sama di *Kemasan lain…* GRN/Permintaan/Retur.
+- **Spesifikasi** [11-master](wms/11-master.md) v0.18: §3.3 (`content_qty`, `content_uom_id`), §6 form item, §13.12, TC-MST-45–49. **Glosarium** v0.27: *Kemasan* diperbarui, *Satuan Isi* baru. **Kode:** migrasi tenant `000490`, `PackagingSentence`, `SaveItem`, `ItemForm`, `Item::baseUomLockReason`, `PicksItemUnit`, `UnitInput`, `RememberItemPackaging`, partial `unit-picker(-lain)`.
+
 ### v0.82 — 30 September 2026 (cakupan daftar pilihan proyek)
 - **Asumsi baru** [A-354](wms/04b-asumsi-lanjutan.md#a-354) (04b v0.25 §2.46): pilihan proyek mengikuti cakupan pembaca; kebocoran form Retur portal Klien (semua proyek & stok proyek lain) ditutup; vendor nonaktif tidak ditawarkan di SJ.
 - **Spesifikasi** [10-access](wms/10-access.md) v0.16: TC-ACC-46–46c. **Kode:** `Project::scopeDalamCakupan`, `ReturnForm`, `RequestForm`, `RequestList`, `ShipmentForm`, `ProjectMove`, `AssetList`, `ApprovalMap`, `ApprovalSimulation`, 3 definisi laporan.

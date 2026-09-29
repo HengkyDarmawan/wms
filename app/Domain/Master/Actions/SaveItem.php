@@ -16,6 +16,7 @@ use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Uom;
 use App\Domain\Master\Support\EnumInput;
 use App\Domain\Master\Support\MasterCode;
+use App\Domain\Master\Support\PackagingSentence;
 use App\Domain\Master\Support\StockFeatures;
 use App\Domain\Master\Support\TrackingCombination;
 use Illuminate\Support\Facades\DB;
@@ -235,17 +236,18 @@ class SaveItem
     }
 
     /**
-     * BR-MST-02: satuan dasar terkunci begitu item punya lot, serial, atau
-     * potongan. Perubahan setelah itu ditolak, bukan diam-diam diabaikan.
+     * BR-MST-02 (A-356): satuan dasar terkunci begitu item punya lot, serial,
+     * potongan, atau pergerakan stok. Perubahan setelah itu ditolak, bukan
+     * diam-diam diabaikan.
      */
     private function resolveBaseUom(?Item $item, mixed $input): Uom
     {
         $idBaru = $this->idAtauNull($input);
 
         if ($item !== null && $item->exists) {
-            if ($idBaru !== null && $idBaru !== (int) $item->base_uom_id && $item->baseUomIsLocked()) {
+            if ($idBaru !== null && $idBaru !== (int) $item->base_uom_id && ($alasan = $item->baseUomLockReason()) !== null) {
                 throw MasterRuleException::fields(
-                    ['base_uom_id' => 'Satuan dasar tidak bisa diubah karena item ini sudah punya lot, serial, atau potongan.'], // BR-MST-02
+                    ['base_uom_id' => 'Satuan dasar tidak bisa diubah. '.$alasan], // BR-MST-02
                     'BR-MST-02',
                 );
             }
@@ -269,48 +271,49 @@ class SaveItem
     /**
      * BR-STK-09: konversi kemasan hanya dipakai untuk **input** transaksi, mis.
      * "1 batang = 6 m". Satuannya boleh beda kategori dengan satuan dasar karena
-     * kemasan memang bukan besaran yang sama; yang dilarang hanya mengulang
-     * satuan dasar itu sendiri dan angka nol atau negatif.
+     * kemasan memang bukan besaran yang sama.
+     *
+     * A-355: tiap baris adalah kalimat "1 DUS berisi 40 PACK"; aturan dan
+     * hitungannya di {@see PackagingSentence}. Galat per baris
+     * (`conversions.{i}`), tidak ada yang tersimpan bila satu baris salah.
+     * Baris lama berkunci `qty_base` saja tetap diterima (isi dalam satuan dasar).
      *
      * @param  array<int, array<string, mixed>>  $conversions
+     * @param  array<int, int>|null  $dimuat  satuan kemasan yang dimuat form; null = semua kemasan item
      */
-    /** @param  array<int, int>|null  $dimuat  satuan kemasan yang dimuat form; null = semua kemasan item */
     private function syncConversions(Item $item, array $conversions, Uom $baseUom, ?array $dimuat = null): void
     {
         $idDipakai = [];
 
-        foreach ($conversions as $baris) {
-            $uomId = $this->idAtauNull($baris['uom_id'] ?? null);
-            $qty = $this->angkaAtauNull($baris['qty_base'] ?? null);
+        // Data lama yang tidak diubah tidak dikenai aturan "lebih dari 1" (P-03).
+        $lama = $item->uomConversions()->where('is_active', true)->whereNull('content_uom_id')
+            ->pluck('qty_base', 'uom_id')->mapWithKeys(fn ($q, $id) => [(int) $id => (float) $q])->all();
 
-            if ($uomId === null || $qty === null || $qty <= 0) {
-                continue;
-            }
+        $baris = array_map(fn (array $b) => array_key_exists('content_qty', $b) ? $b
+            : $b + ['content_qty' => $b['qty_base'] ?? null, 'content_uom_id' => null], $conversions);
 
-            if ($uomId === (int) $baseUom->id) {
-                throw MasterRuleException::fields(
-                    ['conversions' => 'Satuan dasar tidak perlu dimasukkan sebagai konversi.'],
-                    'BR-STK-09',
-                );
-            }
+        $kalimat = PackagingSentence::resolve($baris, (int) $baseUom->id, $item->tracksPiece(), $lama);
 
-            if (! Uom::query()->whereKey($uomId)->exists()) {
-                throw MasterRuleException::fields(
-                    ['conversions' => 'Satuan konversi tidak ditemukan.'],
-                    'BR-STK-09',
-                );
-            }
+        if ($kalimat['errors'] !== []) {
+            throw MasterRuleException::fields(
+                collect($kalimat['errors'])->mapWithKeys(fn (string $pesan, int $i) => ['conversions.'.$i => $pesan])->all(),
+                'BR-STK-09',
+            );
+        }
 
+        foreach ($kalimat['rows'] as $k) {
             $item->uomConversions()->updateOrCreate(
-                ['uom_id' => $uomId],
+                ['uom_id' => $k['uom_id']],
                 [
-                    'qty_base' => $qty,
-                    'is_nominal_piece' => (bool) ($baris['is_nominal_piece'] ?? false),
+                    'qty_base' => $k['qty_base'],
+                    'content_qty' => $k['content_qty'],
+                    'content_uom_id' => $k['content_uom_id'],
+                    'is_nominal_piece' => $k['is_nominal_piece'],
                     'is_active' => true,
                 ],
             );
 
-            $idDipakai[] = $uomId;
+            $idDipakai[] = $k['uom_id'];
         }
 
         // P-03: baris yang dilepas dari form dinonaktifkan, tidak dihapus,

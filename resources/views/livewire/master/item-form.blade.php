@@ -44,15 +44,17 @@
             <div class="col-md-4">
                 <label class="form-label" for="item-satuan">{{ __('Satuan dasar') }} <span class="wajib">*</span></label>
                 <select class="form-select @error('form.base_uom_id') is-invalid @enderror" id="item-satuan"
-                        wire:model="form.base_uom_id" @disabled($baseUomLocked)>
+                        wire:model.live="form.base_uom_id" @disabled($baseUomLocked) aria-describedby="item-satuan-bantuan">
                     <option value="">{{ __('Pilih satuan…') }}</option>
                     @foreach ($uoms as $uom)
                         <option value="{{ $uom->id }}">{{ $uom->code }} — {{ $uom->name }} ({{ $uom->category?->name }})</option>
                     @endforeach
                 </select>
                 @error('form.base_uom_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                @if ($baseUomLocked)
-                    <div class="form-text">{{ __('Terkunci karena item ini sudah punya lot, serial, atau potongan.') }}</div>
+                {{-- A-355: arti satuan dasar dijelaskan supaya kemasan tidak terbaca terbalik. --}}
+                <div class="form-text" id="item-satuan-bantuan">{{ __('Satuan terkecil yang dikeluarkan ke proyek. Stok dihitung dalam satuan ini.') }}</div>
+                @if ($alasanKunciDasar)
+                    <div class="form-text text-warning-emphasis">{{ __($alasanKunciDasar) }} {{ __('Kemasan tetap boleh ditambah.') }}</div>
                 @endif
             </div>
 
@@ -198,52 +200,71 @@
                     </div>
                 </div>
             @else
+                {{-- A-355: tiap baris dibaca sebagai kalimat "1 DUS berisi 12 BOX = 12 BOX". --}}
+                @php($kodeSatuan = $uoms->pluck('code', 'id'))
+                @php($dasarKode = $kodeSatuan[(int) ($form['base_uom_id'] ?: 0)] ?? null)
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                    <span class="text-muted small">{{ __('Kemasan barang saat datang atau diminta, mis. 1 dus = 12 box. Stok tetap dicatat dalam satuan dasar; kemasan juga bisa ditambah langsung dari form penerimaan barang.') }}</span>
-                    <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tambahKonversi">{{ __('Tambah baris') }}</button>
+                    <span class="text-muted small">{{ __('Kemasan barang saat datang atau diminta. Baca tiap baris sebagai kalimat, mis. "1 DUS berisi 12 BOX". Isi boleh ditulis dengan kemasan lain yang lebih kecil; stok tetap dicatat dalam satuan dasar. Kemasan juga bisa ditambah langsung dari form penerimaan barang.') }}</span>
+                    <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tambahKonversi">{{ __('Tambah kemasan') }}</button>
                 </div>
                 <div>
                     @error('form.conversions') <div class="alert alert-danger">{{ $message }}</div> @enderror
+                    @if ($dasarKode === null && $conversions !== [])
+                        <div class="alert alert-warning py-2 small">{{ __('Pilih satuan dasar dulu; isi kemasan dihitung ke satuan itu.') }}</div>
+                    @endif
 
                     @forelse ($conversions as $index => $konversi)
-                        <div class="row g-2 align-items-end mb-2" wire:key="konversi-{{ $index }}">
-                            <div class="col-md-4">
-                                <label class="form-label" for="konversi-satuan-{{ $index }}">{{ __('Satuan') }} <span class="wajib">*</span></label>
-                                <select class="form-select" id="konversi-satuan-{{ $index }}"
-                                        wire:model="conversions.{{ $index }}.uom_id">
-                                    <option value="">{{ __('Pilih satuan…') }}</option>
+                        @php($hasil = $kemasan['hasil'][$index] ?? null)
+                        <div class="border rounded px-2 py-2 mb-2 @error('form.conversions.'.$index) border-danger @enderror" wire:key="konversi-{{ $index }}" data-kalimat-kemasan>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="fw-semibold">1</span>
+                                <select class="form-select form-select-sm w-auto" style="min-width: 8rem" id="konversi-satuan-{{ $index }}"
+                                        wire:model.live="conversions.{{ $index }}.uom_id" aria-label="{{ __('Satuan kemasan') }}">
+                                    <option value="">{{ __('Kemasan…') }}</option>
                                     @foreach ($uoms as $uom)
+                                        @continue((string) $uom->id === (string) $form['base_uom_id'])
                                         <option value="{{ $uom->id }}">{{ $uom->code }} — {{ $uom->name }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label" for="konversi-qty-{{ $index }}">
-                                    {{ __('Isi dalam satuan dasar') }} <span class="wajib">*</span>
-                                </label>
-                                <input class="form-control" id="konversi-qty-{{ $index }}" type="text"
-                                       wire:model="conversions.{{ $index }}.qty_base">
-                            </div>
-                            <div class="col-md-3">
-                                {{-- A-284: tanda batang utuh hanya berarti untuk fitur per potong. --}}
-                                @if ($pieceAktif)
-                                    <div class="form-check">
-                                        <input class="form-check-input" id="konversi-nominal-{{ $index }}" type="checkbox"
-                                               wire:model="conversions.{{ $index }}.is_nominal_piece">
-                                        <label class="form-check-label" for="konversi-nominal-{{ $index }}">
-                                            {{ __('Panjang nominal batang utuh') }}
-                                        </label>
-                                    </div>
+                                <span>{{ __('berisi') }}</span>
+                                <input class="form-control form-control-sm" style="width: 6.5rem" id="konversi-qty-{{ $index }}" type="text" inputmode="decimal"
+                                       wire:model.live.debounce.300ms="conversions.{{ $index }}.content_qty" aria-label="{{ __('Jumlah isi') }}">
+                                <select class="form-select form-select-sm w-auto" style="min-width: 7rem" id="konversi-isi-{{ $index }}"
+                                        wire:model.live="conversions.{{ $index }}.content_uom_id" aria-label="{{ __('Satuan isi') }}">
+                                    <option value="">{{ $dasarKode ?? __('Satuan dasar') }}</option>
+                                    @foreach ($conversions as $j => $lain)
+                                        @continue($j === $index || ($lain['uom_id'] ?? '') === '' || ! isset($kodeSatuan[(int) $lain['uom_id']]))
+                                        <option value="{{ $lain['uom_id'] }}">{{ $kodeSatuan[(int) $lain['uom_id']] }}</option>
+                                    @endforeach
+                                </select>
+                                @if ($hasil)
+                                    <span class="text-nowrap">= <strong data-hasil-kemasan>{{ $hasil['hasil'] }}</strong>@if ($hasil['rincian']) <span class="text-muted small">({{ $hasil['rincian'] }})</span>@endif</span>
                                 @endif
-                            </div>
-                            <div class="col-md-2 text-end">
-                                <button class="btn btn-sm btn-outline-danger" type="button"
+                                <button class="btn btn-sm btn-outline-danger ms-auto" type="button"
                                         wire:click="hapusKonversi({{ $index }})">{{ __('Hapus') }}</button>
                             </div>
+                            {{-- A-284: tanda batang utuh hanya berarti untuk fitur per potong. --}}
+                            @if ($pieceAktif)
+                                <div class="form-check mt-1 mb-0">
+                                    <input class="form-check-input" id="konversi-nominal-{{ $index }}" type="checkbox"
+                                           wire:model="conversions.{{ $index }}.is_nominal_piece">
+                                    <label class="form-check-label small" for="konversi-nominal-{{ $index }}">
+                                        {{ __('Panjang nominal batang utuh') }}
+                                    </label>
+                                </div>
+                            @endif
+                            @error('form.conversions.'.$index) <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                         </div>
                     @empty
                         <p class="text-muted mb-0">{{ __('Belum ada kemasan.') }}</p>
                     @endforelse
+
+                    @foreach ($kemasan['berubah'] as $catatan)
+                        <div class="small text-warning-emphasis">{{ $catatan }} {{ __('Dokumen yang sudah dibuat tidak berubah.') }}</div>
+                    @endforeach
+                    @if ($kemasan['contoh'])
+                        <div class="small text-muted mt-2" data-contoh-kemasan>{{ $kemasan['contoh'] }}</div>
+                    @endif
                 </div>
             @endif
         </div>

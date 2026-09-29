@@ -11,8 +11,11 @@ use App\Domain\Master\Livewire\Concerns\HandlesMasterRules;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\ItemCategory;
 use App\Domain\Master\Models\Uom;
+use App\Domain\Master\Support\PackagingSentence;
+use App\Domain\Master\Support\QtyFormat;
 use App\Domain\Master\Support\StockFeatures;
 use BackedEnum;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
@@ -56,8 +59,22 @@ class ItemForm extends Component
         'weight_uom_id' => '',
     ];
 
-    /** @var array<int, array<string, mixed>> */
+    /**
+     * A-355: satu baris = kalimat "1 [uom_id] berisi [content_qty] [content_uom_id]";
+     * `content_uom_id` '' = satuan dasar.
+     *
+     * @var array<int, array<string, mixed>>
+     */
     public array $conversions = [];
+
+    /**
+     * A-355: isi tersimpan per kemasan (satuan dasar), untuk memberi tahu bila
+     * hitung ulang kemasan bertingkat mengubahnya.
+     *
+     * @var array<int, float>
+     */
+    #[Locked]
+    public array $isiTersimpan = [];
 
     /**
      * A-294: satuan kemasan yang dimuat form; hanya ini yang dinonaktifkan bila dilepas,
@@ -69,6 +86,10 @@ class ItemForm extends Component
     public array $kemasanDimuat = [];
 
     public bool $baseUomLocked = false;
+
+    /** BR-MST-02 (A-356): alasan kunci satuan dasar, tampil di bawah isiannya. */
+    #[Locked]
+    public ?string $alasanKunciDasar = null;
 
     /** Item lama di luar tiga jenis barang (A-283). */
     #[Locked]
@@ -98,7 +119,8 @@ class ItemForm extends Component
         $jenis = ItemKind::fromItem($item);
 
         $this->itemId = $item->id;
-        $this->baseUomLocked = $item->baseUomIsLocked();
+        $this->alasanKunciDasar = $item->baseUomLockReason();
+        $this->baseUomLocked = $this->alasanKunciDasar !== null;
         $this->jenisKhusus = $jenis === null;
         $this->jenisTerkunci = $item->hasStockMovements();
 
@@ -118,15 +140,21 @@ class ItemForm extends Component
         ];
 
         // Kemasan nonaktif tidak dimuat: menyimpan ulang tidak boleh menghidupkannya lagi.
-        $this->conversions = $item->activeConversions()
-            ->get()
+        // Data lama tanpa satuan isi tampil sebagai "berisi N <satuan dasar>" (A-355).
+        $kemasan = $item->activeConversions()->get();
+
+        $this->conversions = $kemasan
+            ->sortBy('qty_base')
             ->map(fn ($k) => [
                 'uom_id' => (string) $k->uom_id,
-                'qty_base' => (string) $k->qty_base,
+                'content_qty' => rtrim(rtrim(number_format((float) ($k->content_qty ?? $k->qty_base), 4, ',', ''), '0'), ','),
+                'content_uom_id' => $k->content_uom_id === null ? '' : (string) $k->content_uom_id,
                 'is_nominal_piece' => (bool) $k->is_nominal_piece,
             ])
+            ->values()
             ->all();
 
+        $this->isiTersimpan = $kemasan->mapWithKeys(fn ($k) => [(int) $k->uom_id => (float) $k->qty_base])->all();
         $this->kemasanDimuat = array_map(fn (array $k) => (int) $k['uom_id'], $this->conversions);
     }
 
@@ -139,7 +167,7 @@ class ItemForm extends Component
 
     public function tambahKonversi(): void
     {
-        $this->conversions[] = ['uom_id' => '', 'qty_base' => '', 'is_nominal_piece' => false];
+        $this->conversions[] = ['uom_id' => '', 'content_qty' => '', 'content_uom_id' => '', 'is_nominal_piece' => false];
     }
 
     public function hapusKonversi(int $index): void
@@ -216,13 +244,51 @@ class ItemForm extends Component
         return StockFeatures::kindOptions($item === null ? null : ItemKind::fromItem($item));
     }
 
+    /**
+     * A-355: hasil kalimat kemasan untuk layar — "= 480 BOX (40 × 12)" per
+     * baris, contoh penerimaan, dan kemasan tersimpan yang ikut berubah.
+     *
+     * @return array{hasil: array<int, array{hasil: string, rincian: ?string}>, contoh: ?string, berubah: array<int, string>}
+     */
+    private function kalimatKemasan(?Item $item, Collection $uoms): array
+    {
+        $dasarId = (int) ($this->form['base_uom_id'] ?: 0);
+
+        if ($dasarId === 0 || $this->conversions === []) {
+            return ['hasil' => [], 'contoh' => null, 'berubah' => []];
+        }
+
+        $kalimat = PackagingSentence::resolve($this->conversions, $dasarId, $item?->tracksPiece() ?? false, $this->isiTersimpan);
+        $kode = $uoms->pluck('code', 'id');
+        $dasar = (string) ($kode[$dasarId] ?? '');
+
+        $terbesar = collect($kalimat['rows'])->reject(fn (array $k) => $k['is_nominal_piece'])->sortByDesc('qty_base')->first();
+        $contoh = $terbesar === null ? null : __('Contoh: terima :jumlah → stok bertambah :hasil.', [
+            'jumlah' => QtyFormat::withUnit(5, $kode[$terbesar['uom_id']] ?? ''),
+            'hasil' => QtyFormat::withUnit(5 * $terbesar['qty_base'], $dasar),
+        ]);
+
+        $berubah = collect($kalimat['rows'])
+            ->filter(fn (array $k) => isset($this->isiTersimpan[$k['uom_id']]) && abs($this->isiTersimpan[$k['uom_id']] - $k['qty_base']) > 0.00005)
+            ->map(fn (array $k) => __(':kemasan berubah dari :lama menjadi :baru.', [
+                'kemasan' => $kode[$k['uom_id']] ?? '',
+                'lama' => QtyFormat::withUnit($this->isiTersimpan[$k['uom_id']], $dasar),
+                'baru' => QtyFormat::withUnit($k['qty_base'], $dasar),
+            ]))
+            ->values()->all();
+
+        return ['hasil' => $kalimat['results'], 'contoh' => $contoh, 'berubah' => $berubah];
+    }
+
     public function render(): View
     {
         $item = $this->itemId === null ? null : Item::query()->with('category')->find($this->itemId);
+        $uoms = Uom::query()->active()->with('category:id,name')->orderBy('code')->get();
 
         return view('livewire.master.item-form', [
+            'kemasan' => $this->kalimatKemasan($item, $uoms),
             'categories' => ItemCategory::query()->active()->orderBy('name')->get(['id', 'name']),
-            'uoms' => Uom::query()->active()->with('category:id,name')->orderBy('code')->get(),
+            'uoms' => $uoms,
             'statuses' => ItemStatus::options(),
             'jenisOpsi' => $this->pilihanJenis($item),
             'jenisTerpilih' => ItemKind::tryFrom((string) $this->form['item_kind']),

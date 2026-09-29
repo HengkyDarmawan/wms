@@ -67,7 +67,7 @@ class PackagingTest extends TenantTestCase
         $this->assertSame(12.0, (float) $item->activeConversions()->where('uom_id', $this->uom('DUS')->id)->value('qty_base'));
         $this->assertFalse((bool) ItemUomConversion::query()->where('item_id', $item->id)->where('uom_id', $this->uom('PACK')->id)->value('is_active'));
 
-        Livewire::test(ItemDetail::class, ['item' => $item])->assertSee('1 DUS = 12 BOX')->assertDontSee('PACK');
+        Livewire::test(ItemDetail::class, ['item' => $item])->assertSee('1 DUS berisi 12 BOX')->assertDontSee('PACK');
 
         // Satuan input: kemasan aktif, isian "1 X = …", dan item per potong ditolak.
         $this->assertSame(36.0, UnitInput::resolve($item, 3, $this->uom('DUS')->id)['qty_base']);

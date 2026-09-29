@@ -95,7 +95,7 @@ class CreateGoodsReturn
                     $satuan = ['uom_id' => $s['uom_id'], 'qty_input' => $s['qty_input'], 'uom_qty_base' => $s['uom_qty_base']];
 
                     if (filter_var($l['remember_uom'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
-                        $kemasanBaru[] = [$item, (int) $s['uom_id'], (float) $s['uom_qty_base']];
+                        $kemasanBaru[] = [$item, (int) $s['uom_id'], (float) $s['uom_qty_base'], UnitInput::contentOf($l)];
                     }
                 }
             }
@@ -187,11 +187,11 @@ class CreateGoodsReturn
             }
 
             // A-292: kemasan baru yang dicentang "ingat" disimpan bersama RET.
-            foreach ($kemasanBaru as [$item, $uomId, $faktor]) {
+            foreach ($kemasanBaru as [$item, $uomId, $faktor, $isi]) {
                 $uom = Uom::query()->find($uomId);
 
                 if ($uom !== null) {
-                    app(RememberItemPackaging::class)->handle($item, $uom, $faktor, $actor, $ret->number);
+                    app(RememberItemPackaging::class)->handle($item, $uom, $faktor, $actor, $ret->number, $isi);
                 }
             }
 

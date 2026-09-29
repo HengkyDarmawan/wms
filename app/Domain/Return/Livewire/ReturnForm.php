@@ -70,10 +70,12 @@ class ReturnForm extends Component
         ], attributes: ['form.project_id' => __('Proyek'), 'form.to_warehouse_id' => __('Gudang tujuan')]);
 
         $baris = [];
+        $calon = $this->calon();
+        $opsi = $this->opsiSatuan($calon->pluck('item_id')->all());
 
         foreach ($this->qty as $kunci => $jumlah) {
             if ((float) $jumlah > 0) {
-                $pilih = $this->isianSatuan($this->satuan[$kunci] ?? []);
+                $pilih = $this->isianSatuan($this->satuan[$kunci] ?? [], $opsi[(int) ($calon[$kunci]['item_id'] ?? 0)] ?? null);
 
                 // A-291: jumlah dalam kemasan dikirim sebagai qty_input + uom_id.
                 $baris[] = ['key' => str_replace('_', ':', (string) $kunci), 'qty_base' => $jumlah]

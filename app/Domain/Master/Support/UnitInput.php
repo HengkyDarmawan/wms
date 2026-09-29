@@ -23,6 +23,7 @@ use DomainException;
 class UnitInput
 {
     /**
+     * @param  array{qty: float, uom_id: int}|null  $isi  kalimat isi kemasan baru yang diingat (A-357)
      * @return array{uom_id: ?int, qty_input: float, uom_qty_base: float, qty_base: float}
      */
     public static function resolve(
@@ -33,6 +34,7 @@ class UnitInput
         bool $remember = false,
         ?User $actor = null,
         ?string $sumber = null,
+        ?array $isi = null,
     ): array {
         $jumlah = is_numeric($qty) ? (float) $qty : 0.0;
         $uom = is_numeric($uomId) ? (int) $uomId : null;
@@ -58,7 +60,7 @@ class UnitInput
                 ?? throw new DomainException('Satuan kemasan tidak dikenal.');
 
             if ($remember) {
-                app(RememberItemPackaging::class)->handle($item, $satuan, $faktor, $actor, $sumber);
+                app(RememberItemPackaging::class)->handle($item, $satuan, $faktor, $actor, $sumber, $isi);
             }
         }
 
@@ -117,10 +119,45 @@ class UnitInput
         }
 
         $faktor = $pilih === 'lain'
-            ? (is_numeric($row['uom_factor'] ?? null) ? (float) $row['uom_factor'] : 0.0)
+            ? self::faktorLain($row, $opsi)
             : (float) ($opsi['factors'][(int) $pilih] ?? 0);
 
         return $faktor <= 0 ? null
             : QtyFormat::withUnit($qty, $kode).' = '.QtyFormat::withUnit(round((float) $qty * $faktor, 4), $opsi['base']);
+    }
+
+    /**
+     * A-357: isi 1 "Kemasan lain" dalam satuan dasar — `uom_factor` dikali isi
+     * satuan isi (`uom_isi`, kemasan aktif item) bila bukan satuan dasar; 0 bila belum lengkap.
+     *
+     * @param  array<string, mixed>  $row
+     * @param  array{factors: array<int, float>}|null  $opsi
+     */
+    public static function faktorLain(array $row, ?array $opsi): float
+    {
+        $qty = str_replace(',', '.', trim((string) ($row['uom_factor'] ?? '')));
+
+        if (! is_numeric($qty) || (float) $qty <= 0) {
+            return 0.0;
+        }
+
+        $satuanIsi = is_numeric($row['uom_isi'] ?? null) ? (int) $row['uom_isi'] : null;
+
+        return round((float) $qty * ($satuanIsi === null ? 1.0 : (float) ($opsi['factors'][$satuanIsi] ?? 0)), 4);
+    }
+
+    /**
+     * A-357: kalimat isi kemasan yang diingat dari baris aksi dokumen
+     * (`uom_content_qty` + `uom_content_uom_id`), atau null = isi dalam satuan dasar.
+     *
+     * @param  array<string, mixed>  $line
+     * @return array{qty: float, uom_id: int}|null
+     */
+    public static function contentOf(array $line): ?array
+    {
+        $qty = $line['uom_content_qty'] ?? null;
+        $uom = $line['uom_content_uom_id'] ?? null;
+
+        return is_numeric($qty) && is_numeric($uom) && (float) $qty > 0 ? ['qty' => (float) $qty, 'uom_id' => (int) $uom] : null;
     }
 }

@@ -106,6 +106,7 @@ class RequestForm extends Component
             'uom' => '',
             'uom_lain' => '',
             'uom_factor' => '',
+            'uom_isi' => '',
             'ingat' => false,
         ];
     }
@@ -123,7 +124,7 @@ class RequestForm extends Component
 
         $i = (int) explode('.', $kunci)[0];
         $this->isiKepemilikan($i);
-        $this->lines[$i] = array_merge($this->lines[$i], ['uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'ingat' => false]);
+        $this->lines[$i] = array_merge($this->lines[$i], ['uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'uom_isi' => '', 'ingat' => false]);
     }
 
     /**
@@ -134,10 +135,13 @@ class RequestForm extends Component
      */
     private function barisAksi(): array
     {
-        return array_map(function (array $l) {
-            $satuan = $this->isianSatuan($l);
+        $opsi = $this->opsiSatuan(array_column($this->lines, 'item_id'));
 
-            return $satuan['uom_id'] === null ? $l : $l + $satuan + ['qty_input' => $l['qty_base'] ?? ''];
+        return array_map(function (array $l) use ($opsi) {
+            $satuan = $this->isianSatuan($l, $opsi[(int) ($l['item_id'] ?: 0)] ?? null);
+
+            // Isian satuan menang atas baris layar: `uom_factor` sudah dihitung ke satuan dasar (A-357).
+            return $satuan['uom_id'] === null ? $l : $satuan + $l + ['qty_input' => $l['qty_base'] ?? ''];
         }, $this->lines);
     }
 

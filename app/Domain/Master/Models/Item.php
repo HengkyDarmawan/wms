@@ -212,14 +212,23 @@ class Item extends Model
         };
     }
 
-    /** BR-MST-02: satuan dasar terkunci begitu ada lot/serial/potong. */
+    /**
+     * BR-MST-02 (A-356): satuan dasar terkunci begitu ada lot/serial/potongan
+     * atau pergerakan stok — saldo lama tercatat dalam satuan itu.
+     */
     public function baseUomIsLocked(): bool
     {
-        return $this->exists && (
-            $this->lots()->exists()
-            || $this->serials()->exists()
-            || $this->pieces()->exists()
-        );
+        return $this->baseUomLockReason() !== null;
+    }
+
+    /** Alasan kunci satuan dasar untuk ditampilkan di dekat isiannya; null = bebas diubah. */
+    public function baseUomLockReason(): ?string
+    {
+        return match (true) {
+            $this->hasTrackingRecords() => 'Terkunci karena item ini sudah punya lot, serial, atau potongan.',
+            $this->hasStockMovements() => 'Terkunci karena item ini sudah punya pergerakan stok.',
+            default => null,
+        };
     }
 
     /** BR-MST-06: jenis barang terkunci begitu item punya pergerakan stok. */
@@ -231,7 +240,11 @@ class Item extends Model
     /** BR-MST-05: item yang sudah punya turunan tidak boleh dihapus, hanya dinonaktifkan. */
     public function hasTrackingRecords(): bool
     {
-        return $this->baseUomIsLocked();
+        return $this->exists && (
+            $this->lots()->exists()
+            || $this->serials()->exists()
+            || $this->pieces()->exists()
+        );
     }
 
     public function statusBadge(): string

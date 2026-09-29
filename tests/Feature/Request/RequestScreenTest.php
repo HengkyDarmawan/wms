@@ -377,4 +377,30 @@ class RequestScreenTest extends TenantTestCase
             ->set('hanyaTerlambat', true)
             ->assertSee($req->number);
     }
+
+    /** TC-MST-49 — A-357: "Kemasan lain" berisi kemasan item dihitung ke satuan dasar dan kalimatnya diingat. */
+    #[Test]
+    public function tc_mst_49b_kemasan_lain_bertingkat_tersimpan_dari_permintaan(): void
+    {
+        [$dus, $set] = [Uom::query()->where('code', 'DUS')->value('id'), Uom::query()->where('code', 'SET')->value('id')];
+        $this->item->uomConversions()->create(['uom_id' => $dus, 'qty_base' => 100, 'is_active' => true]);
+
+        $pemohon = $this->makeUser('internal_requester');
+        $pemohon->forgetPermissionCache();
+
+        Livewire::actingAs($pemohon)->test(RequestForm::class)
+            ->set('form.project_id', (string) $this->proyek->id)
+            ->set('lines.0.item_id', (string) $this->item->id)
+            ->set('lines.0.uom', 'lain')->set('lines.0.uom_lain', (string) $set)
+            ->set('lines.0.uom_factor', '2')->set('lines.0.uom_isi', (string) $dus)->set('lines.0.ingat', true)
+            ->set('lines.0.qty_base', '3')
+            ->call('simpan')
+            ->assertHasNoErrors();
+
+        $baris = MaterialRequest::query()->latest('id')->firstOrFail()->openLines()->sole();
+        $this->assertSame([600.0, 3.0, 200.0], [(float) $baris->qty_base, (float) $baris->qty_input, (float) $baris->uom_qty_base]);
+
+        $kemasan = $this->item->uomConversions()->where('uom_id', $set)->sole();
+        $this->assertSame([200.0, 2.0, (int) $dus], [(float) $kemasan->qty_base, (float) $kemasan->content_qty, (int) $kemasan->content_uom_id]);
+    }
 }

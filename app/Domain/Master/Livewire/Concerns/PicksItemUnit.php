@@ -13,8 +13,9 @@ use Illuminate\Support\Collection;
 /**
  * A-291/A-292: pemilih satuan di baris dokumen (GRN, Permintaan material,
  * Retur). Baris layar memakai kunci `uom` ('' = satuan dasar, id kemasan,
- * atau 'lain'), `uom_lain` (satuan untuk kemasan baru), `uom_factor`
- * ("1 DUS = … BOX"), dan `ingat` (simpan ke kemasan item).
+ * atau 'lain'), `uom_lain` (satuan untuk kemasan baru), `uom_factor` (jumlah
+ * isi), `uom_isi` (satuan isi: '' = satuan dasar atau id kemasan aktif item —
+ * kalimat "1 DUS berisi 40 PACK", A-357), dan `ingat` (simpan ke kemasan item).
  *
  * Pasangannya: partial `livewire.master.partials.unit-picker` dan
  * {@see UnitInput} di aksi dokumen.
@@ -56,20 +57,48 @@ trait PicksItemUnit
     }
 
     /**
-     * Isian baris layar → kunci aksi (`uom_id`, `uom_factor`, `remember_uom`).
+     * Isian baris layar → kunci aksi (`uom_id`, `uom_factor` dalam satuan dasar,
+     * `remember_uom`, dan kalimat isi `uom_content_qty`/`uom_content_uom_id`
+     * untuk kemasan yang diingat, A-357).
      *
      * @param  array<string, mixed>  $row
-     * @return array{uom_id: ?int, uom_factor: ?string, remember_uom: bool}
+     * @param  array{base: string, per_unit: bool, codes: array<int, string>, factors: array<int, float>}|null  $opsi
+     * @return array{uom_id: ?int, uom_factor: ?string, remember_uom: bool, uom_content_qty?: ?string, uom_content_uom_id?: ?int}
      */
-    protected function isianSatuan(array $row): array
+    protected function isianSatuan(array $row, ?array $opsi = null): array
     {
         $pilih = (string) ($row['uom'] ?? '');
         $uom = $pilih === 'lain' ? (string) ($row['uom_lain'] ?? '') : $pilih;
+        $isi = $pilih === 'lain' ? $this->isiKemasanLain($row, $opsi) : null;
 
         return [
             'uom_id' => is_numeric($uom) ? (int) $uom : null,
-            'uom_factor' => $pilih === 'lain' ? (string) ($row['uom_factor'] ?? '') : null,
+            // Belum lengkap → kosong, supaya aksi menolak dengan pesan "Isi berapa …".
+            'uom_factor' => $pilih === 'lain' ? ($isi === null ? '' : (string) $isi['faktor']) : null,
             'remember_uom' => $pilih === 'lain' && (bool) ($row['ingat'] ?? false),
+        ] + ($isi === null || $isi['uom_id'] === null ? [] : ['uom_content_qty' => (string) $isi['qty'], 'uom_content_uom_id' => $isi['uom_id']]);
+    }
+
+    /**
+     * A-357: isian "Kemasan lain" → isi 1 kemasan dalam satuan dasar. Satuan
+     * isi kemasan aktif item dikalikan isinya; null bila belum lengkap.
+     *
+     * @param  array<string, mixed>  $row
+     * @param  array{base: string, per_unit: bool, codes: array<int, string>, factors: array<int, float>}|null  $opsi
+     * @return array{qty: float, uom_id: ?int, faktor: float}|null
+     */
+    protected function isiKemasanLain(array $row, ?array $opsi): ?array
+    {
+        $faktor = UnitInput::faktorLain($row, $opsi);
+
+        if ($faktor <= 0) {
+            return null;
+        }
+
+        return [
+            'qty' => (float) str_replace(',', '.', trim((string) $row['uom_factor'])),
+            'uom_id' => is_numeric($row['uom_isi'] ?? null) ? (int) $row['uom_isi'] : null,
+            'faktor' => $faktor,
         ];
     }
 
@@ -88,7 +117,7 @@ trait PicksItemUnit
         }
 
         if ($pilih === 'lain') {
-            return is_numeric($row['uom_factor'] ?? null) && (float) $row['uom_factor'] > 0 ? (float) $row['uom_factor'] : null;
+            return $this->isiKemasanLain($row, $opsi)['faktor'] ?? null;
         }
 
         return $opsi['factors'][(int) $pilih] ?? null;
@@ -126,13 +155,13 @@ trait PicksItemUnit
     protected function satuanTersimpan(?int $uomId, mixed $faktor, ?array $opsi): array
     {
         if ($uomId === null) {
-            return ['uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'ingat' => false];
+            return ['uom' => '', 'uom_lain' => '', 'uom_factor' => '', 'uom_isi' => '', 'ingat' => false];
         }
 
         if (isset($opsi['factors'][$uomId])) {
-            return ['uom' => (string) $uomId, 'uom_lain' => '', 'uom_factor' => '', 'ingat' => false];
+            return ['uom' => (string) $uomId, 'uom_lain' => '', 'uom_factor' => '', 'uom_isi' => '', 'ingat' => false];
         }
 
-        return ['uom' => 'lain', 'uom_lain' => (string) $uomId, 'uom_factor' => (string) (float) $faktor, 'ingat' => false];
+        return ['uom' => 'lain', 'uom_lain' => (string) $uomId, 'uom_factor' => (string) (float) $faktor, 'uom_isi' => '', 'ingat' => false];
     }
 }

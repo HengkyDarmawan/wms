@@ -202,7 +202,7 @@ class ReceiptConditionTest extends TenantTestCase
         $kemasan = ItemUomConversion::query()->where('item_id', $this->baut->id)->where('uom_id', $dus->id)->sole();
         $this->assertSame(12.0, (float) $kemasan->qty_base);
         $this->assertTrue(Activity::query()->where('subject_type', $this->baut->getMorphClass())->where('subject_id', $this->baut->id)
-            ->where('description', 'like', 'Kemasan 1 DUS = 12%')->exists(), 'A-292: tercatat di riwayat item.');
+            ->where('description', 'like', 'Kemasan 1 DUS berisi 12%')->exists(), 'A-292: tercatat di riwayat item.');
 
         // Kemasan yang sudah ada dipakai; isian lain tidak menimpanya.
         $kedua = $this->grnDraf([['item_id' => $this->baut->id, 'uom_id' => $dus->id, 'uom_factor' => 20, 'remember_uom' => true, 'qty_received' => 2]]);
@@ -210,6 +210,14 @@ class ReceiptConditionTest extends TenantTestCase
         $this->assertSame(12.0, (float) $kemasan->refresh()->qty_base);
 
         $this->assertSame('9 DUS 5 '.$this->baut->baseUom->code, QtyFormat::packaging($this->baut->refresh(), 113));
+
+        // A-357: kemasan baru ditulis dengan kemasan lain — "1 SET berisi 2 DUS" = 24; kalimatnya ikut diingat.
+        $set = Uom::query()->where('code', 'SET')->firstOrFail();
+        $ketiga = $this->grnDraf([['item_id' => $this->baut->id, 'uom_id' => $set->id, 'uom_factor' => 24, 'remember_uom' => true,
+            'uom_content_qty' => 2, 'uom_content_uom_id' => $dus->id, 'qty_received' => 1]]);
+        $this->assertSame(24.0, (float) $ketiga->lines()->sole()->qty_received);
+        $kemasanSet = ItemUomConversion::query()->where('item_id', $this->baut->id)->where('uom_id', $set->id)->sole();
+        $this->assertSame([24.0, 2.0, (int) $dus->id], [(float) $kemasanSet->qty_base, (float) $kemasanSet->content_qty, (int) $kemasanSet->content_uom_id]);
     }
 
     #[Test]

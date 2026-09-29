@@ -121,7 +121,7 @@ class SaveGoodsReceipt
                 $uom = Uom::query()->find($k['uom']);
 
                 if ($uom !== null) {
-                    app(RememberItemPackaging::class)->handle($k['item'], $uom, $k['factor'], $actor, $receipt->number);
+                    app(RememberItemPackaging::class)->handle($k['item'], $uom, $k['factor'], $actor, $receipt->number, $k['isi']);
                 }
             }
 
@@ -534,7 +534,7 @@ class SaveGoodsReceipt
 
         if ($s['uom_id'] !== null && ! $item->activeConversions()->where('uom_id', $s['uom_id'])->exists()
             && filter_var($l['remember_uom'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
-            $this->kemasanBaru[$item->id.'|'.$s['uom_id']] = ['item' => $item, 'uom' => (int) $s['uom_id'], 'factor' => $faktor];
+            $this->kemasanBaru[$item->id.'|'.$s['uom_id']] = ['item' => $item, 'uom' => (int) $s['uom_id'], 'factor' => $faktor, 'isi' => UnitInput::contentOf($l)];
         }
 
         return [$l, [

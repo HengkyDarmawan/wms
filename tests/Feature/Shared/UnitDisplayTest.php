@@ -21,7 +21,7 @@ use Tests\Feature\Receipt\Concerns\ReceiptFixtures;
 use Tests\TenantTestCase;
 
 /**
- * TC-GRN-33, TC-REQ-38, TC-RIW-01 — perapian tampilan A-283 & A-287–A-295
+ * TC-GRN-33, TC-REQ-38, TC-MST-49, TC-RIW-01 — perapian tampilan A-283 & A-287–A-295
  * tanpa mengubah aturan: akhiran satuan di kotak jumlah, hasil satuan dasar
  * di bawah Rusak, isian "Kemasan lain…" selebar baris, bantuan mengikuti
  * saklar, istilah Batch / nomor seri, sisa retur bersatuan, dan deskripsi
@@ -111,6 +111,31 @@ class UnitDisplayTest extends TenantTestCase
             ->set('lines.0.uom', 'lain')
             ->assertSeeHtml('data-kemasan-lain')
             ->assertSeeHtml('colspan="6"');
+    }
+
+    #[Test]
+    public function tc_mst_49_kemasan_lain_berisi_kemasan_item_dan_diingat(): void
+    {
+        $pemohon = $this->makeUser('internal_requester');
+        $pemohon->forgetPermissionCache();
+        $set = Uom::query()->where('code', 'SET')->firstOrFail();
+        $pcs = $this->baut->baseUom->code;
+
+        // A-357: "1 SET berisi 2 DUS" (DUS = 100) → 1 SET = 200; 3 SET = 600.
+        $opsi = ['base' => $pcs, 'per_unit' => false, 'codes' => [$this->dus->id => 'DUS'], 'factors' => [$this->dus->id => 100.0]];
+        $this->assertSame(200.0, UnitInput::faktorLain(['uom_factor' => '2', 'uom_isi' => (string) $this->dus->id], $opsi));
+        $this->assertSame(0.0, UnitInput::faktorLain(['uom_factor' => '2', 'uom_isi' => '999'], $opsi), 'Satuan isi bukan kemasan item.');
+
+        Livewire::actingAs($pemohon)->test(RequestForm::class)
+            ->set('lines.0.item_id', (string) $this->baut->id)
+            ->set('lines.0.uom', 'lain')
+            ->set('lines.0.uom_lain', (string) $set->id)
+            ->set('lines.0.uom_factor', '2')
+            ->set('lines.0.uom_isi', (string) $this->dus->id)
+            ->set('lines.0.qty_base', '3')
+            ->assertSee(__('berisi'))
+            ->assertSee('3 SET = 600 '.$pcs)
+            ->assertSeeHtml('<strong>200 '.$pcs.'</strong>');
     }
 
     #[Test]

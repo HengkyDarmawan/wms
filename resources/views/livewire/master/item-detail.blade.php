@@ -146,7 +146,15 @@
                                 @forelse ($item->activeConversions as $konversi)
                                     <tr>
                                         <td>{{ $konversi->uom?->code }} — {{ $konversi->uom?->name }}</td>
-                                        <td>1 {{ $konversi->uom?->code }} = {{ \App\Domain\Master\Support\QtyFormat::withUnit($konversi->qty_base, $item->baseUom?->code) }}</td>
+                                        {{-- A-355: kalimat yang sama dengan form; data lama berisi satuan dasar. --}}
+                                        <td>
+                                            @if ($konversi->contentUom)
+                                                1 {{ $konversi->uom?->code }} {{ __('berisi') }} {{ \App\Domain\Master\Support\QtyFormat::withUnit($konversi->content_qty, $konversi->contentUom->code) }}
+                                                = {{ \App\Domain\Master\Support\QtyFormat::withUnit($konversi->qty_base, $item->baseUom?->code) }}
+                                            @else
+                                                1 {{ $konversi->uom?->code }} {{ __('berisi') }} {{ \App\Domain\Master\Support\QtyFormat::withUnit($konversi->qty_base, $item->baseUom?->code) }}
+                                            @endif
+                                        </td>
                                         <td>{{ $konversi->is_nominal_piece ? __('Ya') : '—' }}</td>
                                     </tr>
                                 @empty
