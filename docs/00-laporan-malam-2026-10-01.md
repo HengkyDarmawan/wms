@@ -137,7 +137,7 @@ tata letak saja (tanpa stok); boleh diurungkan.
 Tidak ada perintah yang menghapus data. Jangan menjalankan `migrate:fresh`, `tenants:migrate-fresh`, atau seeder ke DEMO.
 
 ```
-git push origin main              # kirim 16 commit malam ini ke GitHub (belum terkirim)
+git push origin main              # kirim semua commit malam ini (d3aab5a … laporan ini) ke GitHub
 php artisan migrate               # pusat — "Nothing to migrate" bila sudah
 php artisan tenants:migrate       # DEMO — menambah kolom/tabel 000490–000520 (sudah dijalankan malam ini)
 npm run build                     # aset JS/CSS terbaru
