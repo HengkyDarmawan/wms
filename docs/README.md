@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.99
+**Versi:** 0.100
 **Tanggal:** 1 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -19,6 +19,7 @@ docs/
 ├── 00-checklist-persiapan.md              ← checklist pemilik produk sebelum Part 4 & coding; peta rilis D-29; halaman login; WhatsApp
 ├── 00-akun-uji.md                         ← SATU-SATUNYA daftar akun seed/demo (Super Admin, company DEMO, 14 akun tenant, org, stok awal, aturan approval demo)
 ├── 00-laporan-progres-2026-09-24.md     ← hasil E2E skenario §5, cakupan TC 178/178, peta progres Fase 1, bug pengiriman ↔ REQ
+├── 00-laporan-malam-2026-10-01.md       ← laporan pagi kerja malam 30 Sep → 1 Okt: tata letak gudang Bagian 2–5, pilihan yang bisa dicari, keputusan tertunda
 ├── 00-tinjauan-asumsi-2026-09-25.md     ← daftar kerja 100 asumsi *Perlu validasi* (A-72–A-194) untuk pemilik produk, ⚠ = paling berdampak
 ├── 00-catatan-perubahan-arsip.md         ← catatan perubahan README v0.2–v0.15 (dipindah agar README ≤ 450 baris)
 ├── 00-setup-lokal.md                      ← instalasi & menjalankan aplikasi: profil rumah (Laragon) dan kantor (XAMPP + MariaDB), hosts, seed, skenario uji manual
@@ -107,6 +108,9 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.100 — 1 Oktober 2026 (laporan pagi kerja malam)
+- **Laporan baru** [00-laporan-malam-2026-10-01](00-laporan-malam-2026-10-01.md) v1.0: hasil per langkah (commit `73026ab`…`9a3d45d`), uji penuh terakhir, daftar *Perlu keputusan pemilik* A-355, A-357, A-359–A-398, cara mencoba 10 langkah, perintah sebelum mencoba. [Laporan progres](00-laporan-progres-2026-09-24.md) v1.46 menautkannya.
 
 ### v0.99 — 1 Oktober 2026 (pilihan yang bisa dicari: Template & label, Platform)
 - **Asumsi baru** [A-398](wms/04b-asumsi-lanjutan.md#a-398) (04b v0.41 §2.54, *Perlu validasi*): ukuran label & gudang cetak label bin dimuat sekaligus; form Platform (non-Livewire, pendek) tetap `<select>`; daftar kerja `<x-pilih>` per modul selesai.
