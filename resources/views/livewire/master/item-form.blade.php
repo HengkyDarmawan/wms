@@ -32,25 +32,14 @@
             </div>
 
             <div class="col-md-4">
-                <label class="form-label" for="item-kategori">{{ __('Kategori') }}</label>
-                <select class="form-select" id="item-kategori" wire:model="form.item_category_id">
-                    <option value="">{{ __('Tanpa kategori') }}</option>
-                    @foreach ($categories as $category)
-                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="form.item_category_id" id="item-kategori" :label="__('Kategori')" :kosong="__('Tanpa kategori')"
+                         :options="$categories->map(fn ($c) => ['value' => $c->id, 'text' => $c->name])->all()" />
             </div>
 
             <div class="col-md-4">
-                <label class="form-label" for="item-satuan">{{ __('Satuan dasar') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.base_uom_id') is-invalid @enderror" id="item-satuan"
-                        wire:model.live="form.base_uom_id" @disabled($baseUomLocked) aria-describedby="item-satuan-bantuan">
-                    <option value="">{{ __('Pilih satuan…') }}</option>
-                    @foreach ($uoms as $uom)
-                        <option value="{{ $uom->id }}">{{ $uom->code }} — {{ $uom->name }} ({{ $uom->category?->name }})</option>
-                    @endforeach
-                </select>
-                @error('form.base_uom_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="form.base_uom_id" id="item-satuan" live wajib :label="__('Satuan dasar')" :disabled="$baseUomLocked"
+                         :kosong="__('Pilih satuan…')"
+                         :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' — '.$u->name, 'sub' => $u->category?->name])->all()" />
                 {{-- A-355: arti satuan dasar dijelaskan supaya kemasan tidak terbaca terbalik. --}}
                 <div class="form-text" id="item-satuan-bantuan">{{ __('Satuan terkecil yang dikeluarkan ke proyek. Stok dihitung dalam satuan ini.') }}</div>
                 @if ($alasanKunciDasar)
@@ -185,16 +174,11 @@
 
                     <div class="col-md-3">
                         <label class="form-label" for="item-berat">{{ __('Berat per satuan dasar') }}</label>
-                        <div class="input-group">
+                        <div class="d-flex gap-2 align-items-start">
                             <input class="form-control @error('form.weight') is-invalid @enderror" id="item-berat"
                                    type="text" wire:model="form.weight">
-                            <select class="form-select" wire:model="form.weight_uom_id"
-                                    aria-label="{{ __('Satuan berat') }}">
-                                <option value="">{{ __('Satuan') }}</option>
-                                @foreach ($uoms as $uom)
-                                    <option value="{{ $uom->id }}">{{ $uom->code }}</option>
-                                @endforeach
-                            </select>
+                            <x-pilih model="form.weight_uom_id" id="item-berat-satuan" style="min-width: 8rem" :aria="__('Satuan berat')"
+                                     :kosong="__('Satuan')" :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code])->all()" />
                         </div>
                         @error('form.weight') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
@@ -218,14 +202,11 @@
                         <div class="border rounded px-2 py-2 mb-2 @error('form.conversions.'.$index) border-danger @enderror" wire:key="konversi-{{ $index }}" data-kalimat-kemasan>
                             <div class="d-flex flex-wrap align-items-center gap-2">
                                 <span class="fw-semibold">1</span>
-                                <select class="form-select form-select-sm w-auto" style="min-width: 8rem" id="konversi-satuan-{{ $index }}"
-                                        wire:model.live="conversions.{{ $index }}.uom_id" aria-label="{{ __('Satuan kemasan') }}">
-                                    <option value="">{{ __('Kemasan…') }}</option>
-                                    @foreach ($uoms as $uom)
-                                        @continue((string) $uom->id === (string) $form['base_uom_id'])
-                                        <option value="{{ $uom->id }}">{{ $uom->code }} — {{ $uom->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-pilih model="conversions.{{ $index }}.uom_id" id="konversi-satuan-{{ $index }}" live kecil style="min-width: 10rem"
+                                         :aria="__('Satuan kemasan')" :kosong="__('Kemasan…')"
+                                         :options="$uoms->reject(fn ($u) => (string) $u->id === (string) $form['base_uom_id'])
+                                             ->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' — '.$u->name])->all()" />
+
                                 <span>{{ __('berisi') }}</span>
                                 <input class="form-control form-control-sm" style="width: 6.5rem" id="konversi-qty-{{ $index }}" type="text" inputmode="decimal"
                                        wire:model.live.debounce.300ms="conversions.{{ $index }}.content_qty" aria-label="{{ __('Jumlah isi') }}">

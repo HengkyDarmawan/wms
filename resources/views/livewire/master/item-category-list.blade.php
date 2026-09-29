@@ -40,24 +40,15 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label" for="kategori-induk">{{ __('Induk') }}</label>
-                    <select class="form-select" id="kategori-induk" wire:model="form.parent_id">
-                        <option value="">{{ __('Kategori tingkat atas') }}</option>
-                        @foreach ($semua as $kategori)
-                            @continue($editingId === $kategori->id)
-                            <option value="{{ $kategori->id }}">{{ $kategori->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="form.parent_id" id="kategori-induk" :label="__('Induk')" :kosong="__('Kategori tingkat atas')"
+                             :options="$semua->reject(fn ($k) => $editingId === $k->id)
+                                 ->map(fn ($k) => ['value' => $k->id, 'text' => $k->name])->all()" />
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label" for="kategori-penyimpanan">{{ __('Kategori penyimpanan bawaan') }}</label>
-                    <select class="form-select" id="kategori-penyimpanan" wire:model="form.storage_category_id">
-                        <option value="">{{ __('Tidak ditentukan') }}</option>
-                        @foreach ($storageCategories as $penyimpanan)
-                            <option value="{{ $penyimpanan->id }}">{{ $penyimpanan->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="form.storage_category_id" id="kategori-penyimpanan" :label="__('Kategori penyimpanan bawaan')"
+                             :kosong="__('Tidak ditentukan')"
+                             :options="$storageCategories->map(fn ($k) => ['value' => $k->id, 'text' => $k->name])->all()" />
                 </div>
 
                 <div class="col-md-4">

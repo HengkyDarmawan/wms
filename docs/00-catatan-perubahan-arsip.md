@@ -1,9 +1,25 @@
-# Catatan Perubahan — Arsip (v0.2–v0.30)
+# Catatan Perubahan — Arsip (v0.2–v0.31)
 
-**Versi:** 1.19
+**Versi:** 1.20
 **Tanggal:** 1 Oktober 2026
-**Status:** arsip — v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
+**Status:** arsip — v1.20: blok v0.31 dipindah dari README v0.90; v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
 **Dokumen terkait:** [README](README.md)
+
+### v0.31 — 24 September 2026 (modul Konversi & Waste selesai Fase 1, mesin rumah XAMPP3)
+- **Berkas baru `wms/24-konversi-waste.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Conversion` dan `app/Domain/Waste`, migrasi tenant `000130` (dari branch `wip/konversi-waste`, digabung lalu diselesaikan; berkas rencana WIP dihapus).
+  - CNV potong/rakit/bongkar/ganti kemasan di satu gudang untuk satu proyek: input dari bin penyimpanan (potongan utuh, item *Bisa dipotong/dikonversi*), hasil output/offcut/waste/kerf dengan neraca ukuran (BR-CNV-02), offcut di bawah minimum otomatis waste (BR-CNV-03), potongan baru bersilsilah (BR-CNV-04), kejadian `material_converted`.
+  - Approval opsional: *Ajukan* hanya bila ada aturan, *Selesaikan* hanya bila tidak; ditolak kembali Draf. **CNV pembalik** hanya bila semua hasil masih utuh (BR-CNV-05).
+  - WST (Berita Acara Waste): baris dari bin Waste, disposisi dibuang/dijual scrap/dipakai ulang, disetujui otomatis tanpa aturan, ditutup dengan foto atau nomor BA; kejadian `waste_disposed`.
+  - Cetak **Bukti Konversi Material** (jenis baru) dan **BA Waste** (tidak lagi stub); menu *Konversi & waste* dan palet Ctrl+K; laporan Material per proyek menambah kolom *Dikonversi*, *Hasil konversi*, *Waste*, *Waste didisposisi*.
+- **Asumsi baru [A-153](wms/04-keputusan-dan-asumsi.md#a-153)–[A-162](wms/04-keputusan-dan-asumsi.md#a-162)** (*Perlu validasi*, `04` → v0.20, §2.9).
+  - A-153: approval CNV opsional tanpa status baru. A-154: input & baris CNV. A-155: kolom di luar ERD. A-156: neraca per jenis konversi.
+  - A-157: CNV pembalik. A-158: permission & cakupan. A-159: baris & alur WST. A-160: bukti tutup WST dan cetak. A-161: kolom laporan.
+  - A-162: mesin dev rumah pindah ke XAMPP3 + MariaDB 10.4.32 (A-76 kini berlaku di kedua mesin).
+- **Permission baru** modul `conversion` (6) dan `waste` (5); Staf Gudang tanpa `approve`, Manajemen `view/approve`, Auditor `view`.
+- **Katalog** `06` → v0.14: enum `conversion_type`, `conversion_output_kind`; `document_template_type` + `conversion`, `waste_disposal` aktif; CNV & WST tersambung ke mesin approval; catatan §2.10 dan §2.14 — **tanpa status baru**.
+- **Model data** 08a–08c → v0.13 (digenerate ulang): kolom implementasi `conversions`, `conversion_inputs`, `conversion_outputs`, `waste_disposals`, `waste_disposal_lines` (A-155).
+- **Modul lain:** `Piece::nextPieceNo()` dipakai GRN, ADJ, pilah RET, dan CNV; `20-approval` → v0.6, `18-template-dokumen-label` → v0.3, `22-retur-transfer` → v0.3, `23-pemakaian` → v0.3, `16-shared-laporan-berkas` → v0.4, `08-arsitektur` → v0.12 (§10 profil rumah XAMPP3, §12), `00-akun-uji` → v1.7 (CNV/WST tanpa aturan demo), laporan progres → v1.8 (Konversi ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.3.
+- **Uji:** 20 uji TC-CNV-01–14 dan TC-WST-01–06 (termasuk rantai RET waste → CNV lewat kotak tugas approval → CNV pembalik → WST → laporan). TC-ACC-27b menghitung 6 + 5 permission baru; TC-APR-17 memakai `purchase_request` sebagai jenis belum tersambung; TC-TPL-04 tidak lagi mengharap 501 untuk BA Waste. **513 uji hijau** (MariaDB 10.4.32, XAMPP3); E2E langkah 0 di mesin rumah: `ui-check` 0 error console, `alur-req-sj` 9/9.
 
 ### v0.30 — 24 September 2026 (serah terima kantor → rumah)
 - **Berkas baru [prompts/00-lanjutkan-di-rumah.md](prompts/00-lanjutkan-di-rumah.md):** keadaan saat serah terima, langkah setup Laragon + MySQL 8.4 setelah pull, cara kerja per modul, jatah nomor (asumsi berikutnya A-153; A-120–A-149 milik modul Template), dan urutan sisa: Konversi/Waste (branch `wip/konversi-waste`, setengah jadi), Aset, Purchase Request, Platform penuh, pendukung F1, penutup.

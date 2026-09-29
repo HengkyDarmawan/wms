@@ -41,15 +41,9 @@
 
                 @if ($editingCategoryId)
                     <div class="col-md-4">
-                        <label class="form-label" for="kat-satuan-acuan">{{ __('Satuan acuan') }} <span class="wajib">*</span></label>
-                        <select class="form-select @error('categoryForm.reference_uom_id') is-invalid @enderror"
-                                id="kat-satuan-acuan" wire:model="categoryForm.reference_uom_id">
-                            <option value="">{{ __('Pilih satuan acuan…') }}</option>
-                            @foreach ($uoms as $uom)
-                                <option value="{{ $uom->id }}">{{ $uom->code }} — {{ $uom->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('categoryForm.reference_uom_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <x-pilih model="categoryForm.reference_uom_id" id="kat-satuan-acuan" wajib :label="__('Satuan acuan')"
+                                 :kosong="__('Pilih satuan acuan…')"
+                                 :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' — '.$u->name])->all()" />
                     </div>
                 @else
                     <div class="col-md-2">

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Master\Livewire;
 
-use App\Domain\Access\Models\User;
 use App\Domain\Master\Actions\ChangeProjectStatus;
 use App\Domain\Master\Actions\SaveProject;
 use App\Domain\Master\Enums\ProjectStatus;
@@ -12,9 +11,11 @@ use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Livewire\Concerns\HandlesMasterRules;
 use App\Domain\Master\Models\Client;
 use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
@@ -30,6 +31,7 @@ use Livewire\WithPagination;
  */
 class ProjectList extends Component
 {
+    use CariPilihan;
     use HandlesMasterRules;
     use WithPagination;
 
@@ -166,8 +168,12 @@ class ProjectList extends Component
             'form.target_end_date' => ['nullable', 'date', 'after_or_equal:form.start_date'],
             'form.lat' => ['nullable', 'numeric', 'between:-90,90'],
             'form.lng' => ['nullable', 'numeric', 'between:-180,180'],
+            // A-389: PIC dari daftar (pengguna internal aktif); PIC tersimpan yang tidak diubah tetap boleh.
+            'form.pic_user_id' => (string) $this->form['pic_user_id'] === (string) $project?->pic_user_id
+                ? ['nullable'] : ['nullable', $this->pilihanPic()->aturan()],
         ], attributes: [
             'form.code' => __('Kode'),
+            'form.pic_user_id' => __('PIC proyek'),
             'form.name' => __('Nama proyek'),
             'form.target_end_date' => __('Target selesai'),
         ]);
@@ -246,17 +252,32 @@ class ProjectList extends Component
         return view('livewire.master.project-list', [
             'projects' => $this->projects(),
             'clients' => Client::query()->active()->orderBy('name')->get(['id', 'name']),
-            'pics' => $this->picOptions(),
+            'opsiPic' => $this->showForm ? $this->pilihanPic()->awalDengan($this->form['pic_user_id']) : [],
             'statuses' => ProjectStatus::options(),
             'targetOptions' => $project === null ? [] : $action->availableTargets($project),
             'alasan' => $this->pilihanAlasan(ReasonContext::Cancel),
         ]);
     }
 
-    /** @return Collection<int, User> */
-    private function picOptions(): Collection
+    /** PIC proyek = pengguna internal aktif, dicari ke server (A-384, A-389). */
+    private function pilihanPic(): Pilihan
     {
-        return User::query()->internal()->active()->orderBy('name')->get(['id', 'name']);
+        return SumberPilihan::pengguna();
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        if ($model !== 'form.pic_user_id') {
+            return null;
+        }
+
+        // Izin layar diulang: hanya pembuat/pengubah proyek yang boleh melihat daftar pengguna.
+        $proyek = $this->editingId === null ? null : Project::find($this->editingId);
+        $boleh = $proyek === null
+            ? $this->editingId === null && auth()->user()?->can('create', Project::class)
+            : auth()->user()?->can('update', $proyek);
+
+        return $boleh ? $this->pilihanPic() : null;
     }
 
     private function projects(): LengthAwarePaginator

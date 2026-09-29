@@ -120,6 +120,8 @@ label .wajib {
 /* Nilai terpilih tetap teks biasa (badge & unit ikut tampil); di kolom sempit turun baris dengan rapi. */
 .nx-pilih .ts-control > .nx-pilih-nilai { display: block; min-width: 0; white-space: normal; }
 .nx-pilih .ts-wrapper.single.has-items .ts-control > input { flex: 1 1 0; min-width: 2rem; }
+/* Sedang mengetik kata cari: nilai terpilih disembunyikan (tampil lagi setelah memilih / blur; pilih.js). */
+.nx-pilih .ts-wrapper.single.input-active.nx-mengetik .ts-control > .item { display: none; }
 .nx-pilih .ts-dropdown .option .badge,
 .nx-pilih .ts-control .item .badge { vertical-align: 1px; }
 

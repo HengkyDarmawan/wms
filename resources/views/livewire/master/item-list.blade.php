@@ -59,13 +59,8 @@
                        wire:model.live.debounce.400ms="search" data-scan placeholder="{{ __('Nama, kode, atau barcode…') }}">
             </div>
             <div class="col-lg-2">
-                <label class="form-label" for="filter-kategori-item">{{ __('Kategori') }}</label>
-                <select class="form-select" id="filter-kategori-item" wire:model.live="categoryFilter">
-                    <option value="">{{ __('Semua') }}</option>
-                    @foreach ($categories as $category)
-                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="categoryFilter" id="filter-kategori-item" live :label="__('Kategori')" :kosong="__('Semua')"
+                         :options="$categories->map(fn ($c) => ['value' => $c->id, 'text' => $c->name])->all()" />
             </div>
             <div class="col-lg-4">
                 <label class="form-label" for="filter-jenis">{{ __('Jenis barang') }}</label>

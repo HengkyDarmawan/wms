@@ -96,6 +96,7 @@ function pilih(nilai) {
       this.ts = new TomSelect(select, pengaturan);
       this.hubungkanLabel(select);
       this.ikutiGalat(select);
+      this.tandaiMengetik();
 
       const ada = (v) => teks(v) === '' || Object.prototype.hasOwnProperty.call(this.ts.options, teks(v));
       if (buatUlang && !ada(this.nilai)) {
@@ -122,6 +123,21 @@ function pilih(nilai) {
       const luar = document.querySelector(`label[for="${CSS.escape(select.id)}"], label[for="${CSS.escape(kontrol.id)}"]`);
       // Label di luar komponen bisa di-morph Livewire (for/id kembali); aria-label tetap bertahan.
       if (luar && !kontrol.getAttribute('aria-label')) kontrol.setAttribute('aria-label', luar.textContent.replace(/\s*\*\s*$/, '').trim());
+    },
+
+    /* Selama kata cari diketik, teks nilai terpilih disembunyikan (bukan "— Ikuti jabatan — ri"):
+       kelas `nx-mengetik` di pembungkus Tom Select + CSS. Setelah memilih, Tom Select mengosongkan
+       kotak cari (event `update`); saat kotak ditinggal (blur) sisa ketikan dikosongkan di sini,
+       jadi nilai terpilih tampil lagi. */
+    tandaiMengetik() {
+      const kontrol = this.ts.control_input;
+      const tandai = () => this.ts?.wrapper.classList.toggle('nx-mengetik', kontrol.value !== '');
+      kontrol.addEventListener('input', tandai);
+      kontrol.addEventListener('update', tandai);
+      this.ts.on('blur', () => {
+        this.ts?.setTextboxValue('');
+        tandai();
+      });
     },
 
     /* Pembungkus .nx-pilih di luar wire:ignore memegang tanda galat → teruskan ke kotak cari. */

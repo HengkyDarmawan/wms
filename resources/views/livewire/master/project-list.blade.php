@@ -56,27 +56,15 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label" for="proyek-klien">
-                            {{ __('Klien') }} @unless ($form['is_internal']) <span class="wajib">*</span> @endunless
-                        </label>
-                        <select class="form-select @error('form.client_id') is-invalid @enderror" id="proyek-klien"
-                                wire:model="form.client_id" @disabled($form['is_internal'])>
-                            <option value="">{{ __('Pilih klien…') }}</option>
-                            @foreach ($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('form.client_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <x-pilih model="form.client_id" id="proyek-klien" :label="__('Klien')" :wajib="! $form['is_internal']"
+                                 :disabled="(bool) $form['is_internal']" :kosong="__('Pilih klien…')"
+                                 :options="$clients->map(fn ($c) => ['value' => $c->id, 'text' => $c->name])->all()" />
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label" for="proyek-pic">{{ __('PIC proyek') }}</label>
-                        <select class="form-select" id="proyek-pic" wire:model="form.pic_user_id">
-                            <option value="">{{ __('Belum ditentukan') }}</option>
-                            @foreach ($pics as $pic)
-                                <option value="{{ $pic->id }}">{{ $pic->name }}</option>
-                            @endforeach
-                        </select>
+                        {{-- A-389: pengguna internal aktif, dicari ke server (nama, email, jabatan, unit). --}}
+                        <x-pilih model="form.pic_user_id" id="proyek-pic" server :label="__('PIC proyek')"
+                                 :kosong="__('Belum ditentukan')" :options="$opsiPic" />
                     </div>
 
                     <div class="col-md-3">
@@ -175,13 +163,8 @@
                        wire:model.live.debounce.400ms="search" placeholder="{{ __('Nama atau kode proyek…') }}">
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="filter-klien">{{ __('Klien') }}</label>
-                <select class="form-select" id="filter-klien" wire:model.live="clientFilter">
-                    <option value="">{{ __('Semua klien') }}</option>
-                    @foreach ($clients as $client)
-                        <option value="{{ $client->id }}">{{ $client->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="clientFilter" id="filter-klien" live :label="__('Klien')" :kosong="__('Semua klien')"
+                         :options="$clients->map(fn ($c) => ['value' => $c->id, 'text' => $c->name])->all()" />
             </div>
             <div class="col-md-3">
                 <label class="form-label" for="filter-status-proyek">{{ __('Status') }}</label>

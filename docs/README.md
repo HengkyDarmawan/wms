@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.89
+**Versi:** 0.90
 **Tanggal:** 1 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -107,6 +107,11 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.90 — 1 Oktober 2026 (pilihan yang bisa dicari: modul Master)
+- **Asumsi baru** [A-389](wms/04b-asumsi-lanjutan.md#a-389)–[A-390](wms/04b-asumsi-lanjutan.md#a-390) (04b v0.33 §2.54, *Perlu validasi*): modul Master memakai `<x-pilih>`, PIC proyek dicari ke server dan divalidasi (A-389); teks nilai terpilih disembunyikan saat mengetik (A-390).
+- **Spesifikasi** [11-master](wms/11-master.md) v0.19 (§13.13, TC-MST-50–50b); [16-shared](wms/16-shared-laporan-berkas.md) v0.23 (§6.5). Glosarium, katalog 06, model data, dan route tidak berubah.
+- **Kode:** `ProjectList` (`CariPilihan`, `pilihanPic`), view `item-form`, `item-list`, `item-category-list`, `uom-list`, `project-list`, `partials/unit-picker-lain`; `wms/pilih.js` (`tandaiMengetik`) + CSS `.nx-mengetik`; uji `PilihanModulMasterTest`. Blok v0.31 dipindah ke [arsip](00-catatan-perubahan-arsip.md) v1.20.
 
 ### v0.89 — 1 Oktober 2026 (pilihan yang bisa dicari: inti, cari ke server, form pengguna P2, modul Pengaturan & pengguna)
 - **Asumsi baru** [A-383](wms/04b-asumsi-lanjutan.md#a-383)–[A-388](wms/04b-asumsi-lanjutan.md#a-388) (04b v0.32 §2.53, *Perlu validasi*): `<x-pilih>` lengkap (A-383), cari ke server dengan query & cakupan yang sama (A-384), jabatan mengikuti unit (A-385), atasan berkelompok (A-386), lingkaran atasan ditolak (A-387), modul Pengaturan & pengguna memakai `<x-pilih>` (A-388).
@@ -420,19 +425,3 @@ docs/
 - **Model data** 08a–08c → v0.14 (digenerate ulang): kolom implementasi `asset_handovers`, `asset_inspections` (A-165).
 - **Modul lain:** `15-picking-shipment` → v0.6 (AST dari SJ), `21-opname-penyesuaian` → v0.3 (ADJ `asset_lost`), `22-retur-transfer` → v0.4 (pemeriksaan sebelum pilah), `18-template-dokumen-label` → v0.4, `16-shared-laporan-berkas` → v0.5 (laporan kesembilan), `08-arsitektur` → v0.13, `00-akun-uji` → v1.8, laporan progres → v1.9 (Aset ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.4. Master: `Serial::usagePercent` memakai max(hari, meter) dan ambang `asset_life_alert_pct`.
 - **Uji:** 12 uji TC-AST-01–12 (termasuk rantai REQ pinjam → PCK → SJ → RET → GRN → periksa → pilah → pinjam lagi, dan aset hilang diputus dari kotak tugas approval). TC-RET-13 kini memeriksa aset dulu; TC-TPL-04, TC-ACC-27b (4 permission `asset`), TC-RPT-01 (9 laporan) disesuaikan. **525 uji hijau** (MariaDB 10.4.32, XAMPP3).
-
-### v0.31 — 24 September 2026 (modul Konversi & Waste selesai Fase 1, mesin rumah XAMPP3)
-- **Berkas baru `wms/24-konversi-waste.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Conversion` dan `app/Domain/Waste`, migrasi tenant `000130` (dari branch `wip/konversi-waste`, digabung lalu diselesaikan; berkas rencana WIP dihapus).
-  - CNV potong/rakit/bongkar/ganti kemasan di satu gudang untuk satu proyek: input dari bin penyimpanan (potongan utuh, item *Bisa dipotong/dikonversi*), hasil output/offcut/waste/kerf dengan neraca ukuran (BR-CNV-02), offcut di bawah minimum otomatis waste (BR-CNV-03), potongan baru bersilsilah (BR-CNV-04), kejadian `material_converted`.
-  - Approval opsional: *Ajukan* hanya bila ada aturan, *Selesaikan* hanya bila tidak; ditolak kembali Draf. **CNV pembalik** hanya bila semua hasil masih utuh (BR-CNV-05).
-  - WST (Berita Acara Waste): baris dari bin Waste, disposisi dibuang/dijual scrap/dipakai ulang, disetujui otomatis tanpa aturan, ditutup dengan foto atau nomor BA; kejadian `waste_disposed`.
-  - Cetak **Bukti Konversi Material** (jenis baru) dan **BA Waste** (tidak lagi stub); menu *Konversi & waste* dan palet Ctrl+K; laporan Material per proyek menambah kolom *Dikonversi*, *Hasil konversi*, *Waste*, *Waste didisposisi*.
-- **Asumsi baru [A-153](wms/04-keputusan-dan-asumsi.md#a-153)–[A-162](wms/04-keputusan-dan-asumsi.md#a-162)** (*Perlu validasi*, `04` → v0.20, §2.9).
-  - A-153: approval CNV opsional tanpa status baru. A-154: input & baris CNV. A-155: kolom di luar ERD. A-156: neraca per jenis konversi.
-  - A-157: CNV pembalik. A-158: permission & cakupan. A-159: baris & alur WST. A-160: bukti tutup WST dan cetak. A-161: kolom laporan.
-  - A-162: mesin dev rumah pindah ke XAMPP3 + MariaDB 10.4.32 (A-76 kini berlaku di kedua mesin).
-- **Permission baru** modul `conversion` (6) dan `waste` (5); Staf Gudang tanpa `approve`, Manajemen `view/approve`, Auditor `view`.
-- **Katalog** `06` → v0.14: enum `conversion_type`, `conversion_output_kind`; `document_template_type` + `conversion`, `waste_disposal` aktif; CNV & WST tersambung ke mesin approval; catatan §2.10 dan §2.14 — **tanpa status baru**.
-- **Model data** 08a–08c → v0.13 (digenerate ulang): kolom implementasi `conversions`, `conversion_inputs`, `conversion_outputs`, `waste_disposals`, `waste_disposal_lines` (A-155).
-- **Modul lain:** `Piece::nextPieceNo()` dipakai GRN, ADJ, pilah RET, dan CNV; `20-approval` → v0.6, `18-template-dokumen-label` → v0.3, `22-retur-transfer` → v0.3, `23-pemakaian` → v0.3, `16-shared-laporan-berkas` → v0.4, `08-arsitektur` → v0.12 (§10 profil rumah XAMPP3, §12), `00-akun-uji` → v1.7 (CNV/WST tanpa aturan demo), laporan progres → v1.8 (Konversi ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.3.
-- **Uji:** 20 uji TC-CNV-01–14 dan TC-WST-01–06 (termasuk rantai RET waste → CNV lewat kotak tugas approval → CNV pembalik → WST → laporan). TC-ACC-27b menghitung 6 + 5 permission baru; TC-APR-17 memakai `purchase_request` sebagai jenis belum tersambung; TC-TPL-04 tidak lagi mengharap 501 untuk BA Waste. **513 uji hijau** (MariaDB 10.4.32, XAMPP3); E2E langkah 0 di mesin rumah: `ui-check` 0 error console, `alur-req-sj` 9/9.

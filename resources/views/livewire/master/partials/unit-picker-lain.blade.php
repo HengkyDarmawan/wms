@@ -9,13 +9,11 @@
     <div class="d-flex flex-wrap align-items-center gap-2 small bg-body-tertiary rounded px-2 py-1" data-kemasan-lain>
         <span class="fw-semibold">{{ __('Kemasan lain') }}:</span>
         <span>1</span>
-        <select class="form-select form-select-sm w-auto" style="min-width: 7rem" id="{{ $idAwal }}-kemasan-lain" wire:model.live="{{ $prefix }}.uom_lain" aria-label="{{ __('Kemasan') }}">
-            <option value="">{{ __('Kemasan…') }}</option>
-            @foreach ($satuanLain as $u)
-                @continue($u->code === $opsi['base'] || isset($opsi['codes'][$u->id]))
-                <option value="{{ $u->id }}">{{ $u->code }}</option>
-            @endforeach
-        </select>
+        {{-- A-389: semua satuan (bisa dicari); satuan isi di sebelahnya = kemasan item (pendek) tetap <select>. --}}
+        <x-pilih model="{{ $prefix }}.uom_lain" id="{{ $idAwal }}-kemasan-lain" live kecil style="min-width: 8rem"
+                 :aria="__('Kemasan')" :kosong="__('Kemasan…')"
+                 :options="collect($satuanLain)->reject(fn ($u) => $u->code === $opsi['base'] || isset($opsi['codes'][$u->id]))
+                     ->map(fn ($u) => ['value' => $u->id, 'text' => $u->code])->all()" />
         <span>{{ __('berisi') }}</span>
         <input class="form-control form-control-sm w-auto" style="min-width: 6rem" type="text" inputmode="decimal" wire:model.live.debounce.500ms="{{ $prefix }}.uom_factor"
                aria-label="{{ __('Jumlah isi') }}">
