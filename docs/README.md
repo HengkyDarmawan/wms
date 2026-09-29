@@ -1,7 +1,7 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.84
-**Tanggal:** 30 September 2026
+**Versi:** 0.85
+**Tanggal:** 1 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
 Dokumentasi ini adalah acuan tunggal untuk membangun WMS baru dari nol. Prototipe lama (`warehouse.sipembantu.com`) hanya referensi; indeks temuan auditnya ada di [00-audit](00-audit/README.md).
@@ -107,6 +107,11 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.85 — 1 Oktober 2026 (tata letak gudang Bagian 2: struktur rak nyata)
+- **Asumsi baru** [A-359](wms/04b-asumsi-lanjutan.md#a-359)–[A-364](wms/04b-asumsi-lanjutan.md#a-364) (04b v0.28 §2.49): Gabung Bin/Pisah (K-B) menggantikan "ikut terpakai" A-255; data lama → gabung sementara samping (A-360); kapasitas per seluruh isi bin & gabungan (A-361, keputusan #10); hapus bin yang belum pernah dipakai (A-362, K-C); lebar bin & blok gabungan (A-363, K-D); area lantai berkapasitas bebas (A-364, K-E).
+- **Aturan** [05-aturan-bisnis](wms/05-aturan-bisnis.md) v0.20: BR-WH-06, BR-WH-07 diubah; **BR-WH-08**, **BR-WH-09** baru. **Katalog** [06](wms/06-katalog-status-dan-enum.md) v0.31: enum `bin_merge_direction`, `bin_merge_type` (tanpa status dokumen baru). **Glosarium** v0.28: *Gabung Bin*, *Pisah*, *Bin Utama*, *Bin Tergabung*, *Lebar Bin*, *Hapus Bin*; *Area Lantai* diperbarui. **ERD** [08b](wms/08b-model-data-stok-dokumen.md) v0.37: kolom `bins.merge_direction`, `merge_type`, `width_m`.
+- **Spesifikasi** [12-warehouse](wms/12-warehouse.md) v0.17: §3.4, §4, §5, §6, §13.11, TC-WH-42–49b baru, TC-WH-21 & TC-WH-22 diubah. **Kode:** migrasi tenant `000500`, `MergeBins` (menggantikan `MarkBinsOccupied`), `DeleteBin`, `SaveBinShape`, `Support\BinUsage`, enum `BinMergeDirection`/`BinMergeType`, op denah `gabung`/`pisah`/`hapus_bin`/`lebar_bin`/`kapasitas_area`/`nonaktif` bin, `StockLedger` (bin tergabung ditolak, kapasitas seluruh isi), partial `denah-atur-petak`; uji `StrukturRakTest`.
 
 ### v0.84 — 30 September 2026 (badge jabatan di pilihan Atasan langsung)
 - **Asumsi baru** [A-358](wms/04b-asumsi-lanjutan.md#a-358) (04b v0.27 §2.48): pilihan *Atasan langsung (bila beda dari jabatan)* bisa dicari, tiap orang ber-badge jabatan + unit; atasan tersimpan yang nonaktif tetap tampil bertanda.

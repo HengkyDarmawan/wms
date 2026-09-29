@@ -71,11 +71,12 @@ class PutawaySuggester
     public function storageBins(Warehouse $warehouse): Collection
     {
         return Bin::query()->withoutGlobalScopes()
-            ->with('storageCategory')
+            ->with('storageCategory', 'mergedBins')
             ->where('warehouse_id', $warehouse->id)
             ->where('bin_type', BinType::Storage->value)
             ->where('bin_status', BinStatus::Active->value)
-            // A-255: bin yang ikut terpakai barang besar di bin sebelahnya tidak disarankan.
+            // A-359: bin tergabung tidak disarankan — stoknya dicatat di bin utama
+            // (kapasitas bin utama = gabungan, Bin::effectiveCapacity).
             ->whereNull('occupied_by_bin_id')
             ->orderBy('code')
             ->get();

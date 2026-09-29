@@ -286,16 +286,27 @@ class SaveWarehouseLayout
     /**
      * Rak area untuk barang besar (A-255): satu rak berisi satu level dan
      * **satu bin** yang mewakili seluruh rak — atau seluruh zona bila
-     * `seluruh_zona` (ukuran = ukuran zona, posisi 0,0). Bin berkapasitas
-     * `capacity_qty` (bawaan 1 unit) bermode **blokir**: isi kedua ditolak.
+     * `seluruh_zona` (ukuran = ukuran zona, posisi 0,0). Bin bermode
+     * **blokir**; kapasitas jumlah/berat/volume bebas diisi, kosong = tanpa
+     * batas (K-E, A-364 — sebelumnya bawaan 1 unit).
      *
-     * @param  array<string, mixed>  $data  code, name, capacity_qty, seluruh_zona, length_m, width_m
+     * @param  array<string, mixed>  $data  code, name, capacity_qty, capacity_weight, capacity_volume, seluruh_zona, length_m, width_m
      */
     public function areaRack(Zone $zone, array $data, ?User $actor = null): Bin
     {
         $gudang = Warehouse::query()->withoutGlobalScopes()->findOrFail($zone->warehouse_id);
         $seluruhZona = filter_var($data['seluruh_zona'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $kapasitas = is_numeric($data['capacity_qty'] ?? null) && (float) $data['capacity_qty'] > 0 ? (float) $data['capacity_qty'] : 1.0;
+        $kapasitas = [];
+
+        foreach (['capacity_qty' => 'Kapasitas jumlah', 'capacity_weight' => 'Kapasitas berat', 'capacity_volume' => 'Kapasitas volume'] as $kolom => $label) {
+            $teks = trim(str_replace(',', '.', (string) ($data[$kolom] ?? '')));
+
+            if ($teks !== '' && (! is_numeric($teks) || (float) $teks <= 0)) {
+                throw WarehouseRuleException::fields([$kolom => $label.' harus angka lebih dari 0, atau kosong = tanpa batas.'], 'BR-GEN-11');
+            }
+
+            $kapasitas[$kolom] = $teks === '' ? null : (float) $teks;
+        }
 
         return DB::transaction(function () use ($zone, $gudang, $data, $seluruhZona, $kapasitas, $actor) {
             $rak = $this->lokasi->saveRack($zone, null, ['code' => $data['code'] ?? ''], $actor);
@@ -313,10 +324,9 @@ class SaveWarehouseLayout
             $bin = $this->bin->handle($gudang, null, [
                 'rack_level_id' => $level->id,
                 'code' => 'AREA',
-                'capacity_qty' => $kapasitas,
             ], $actor);
 
-            $bin->forceFill(['capacity_mode' => CapacityMode::Block->value])->save();
+            $bin->forceFill(['capacity_mode' => CapacityMode::Block->value, ...$kapasitas])->save();
 
             activity('warehouse')->performedOn($rak)->causedBy($actor)
                 ->withProperties(['bin' => $bin->code, 'kapasitas' => $kapasitas, 'seluruh_zona' => $seluruhZona])

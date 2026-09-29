@@ -10,10 +10,12 @@ use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Stock\Support\MovementRequest;
 use App\Domain\Stock\Support\StockLedger;
 use App\Domain\Template\Support\LabelPayload;
-use App\Domain\Warehouse\Actions\MarkBinsOccupied;
+use App\Domain\Warehouse\Actions\MergeBins;
 use App\Domain\Warehouse\Actions\SaveBin;
 use App\Domain\Warehouse\Actions\SaveLocation;
 use App\Domain\Warehouse\Actions\SaveWarehouseLayout;
+use App\Domain\Warehouse\Enums\BinMergeDirection;
+use App\Domain\Warehouse\Enums\BinMergeType;
 use App\Domain\Warehouse\Exceptions\WarehouseRuleException;
 use App\Domain\Warehouse\Livewire\BinList;
 use App\Domain\Warehouse\Livewire\WarehouseLayout;
@@ -78,7 +80,8 @@ class WarehouseLayoutTest extends TenantTestCase
     {
         $this->zona->forceFill(['length_m' => 12, 'width_m' => 6])->save();
 
-        $area = app(SaveWarehouseLayout::class)->areaRack($this->zona, ['code' => 'AB1', 'name' => 'Parkir excavator', 'seluruh_zona' => '1']);
+        // K-E (A-364): kapasitas area kini bebas diisi; kosong = tanpa batas (dulu bawaan 1).
+        $area = app(SaveWarehouseLayout::class)->areaRack($this->zona, ['code' => 'AB1', 'name' => 'Parkir excavator', 'seluruh_zona' => '1', 'capacity_qty' => '1']);
         $rak = $area->rackLevel->rack;
 
         $this->assertSame('CKG-D-AB1-L1-AREA', $area->code);
@@ -94,27 +97,30 @@ class WarehouseLayoutTest extends TenantTestCase
     }
 
     #[Test]
-    public function tc_wh_22_bin_ikut_terpakai_dan_lepas_otomatis(): void
+    public function tc_wh_22_gabung_sementara_dipisah_otomatis_saat_bin_utama_kosong(): void
     {
+        // Sejak A-359 "bin ikut terpakai" (A-255) menjadi Gabung Bin sementara ke samping.
         [$utama, $b2, $b3] = $this->bin;
-        $aksi = app(MarkBinsOccupied::class);
+        $aksi = app(MergeBins::class);
 
-        $this->gagal(fn () => $aksi->handle($utama, [$b2->id], 'genset besar'), 'BR-WH-06'); // bin utama masih kosong
         $this->masuk($utama, $this->baut, 5);
         $this->masuk($b3, $this->kabel, 1);
 
-        $this->gagal(fn () => $aksi->handle($utama, [$b2->id], ''), 'BR-GEN-11');
-        $this->gagal(fn () => $aksi->handle($utama, [$b3->id], 'besar'), 'BR-WH-06'); // tetangga berisi
+        $this->gagal(fn () => $aksi->merge($utama, [$b2->id], 'side', 'temporary', ''), 'BR-GEN-11');
+        $this->gagal(fn () => $aksi->merge($utama, [$b2->id, $b3->id], 'side', 'temporary', 'besar'), 'BR-WH-08'); // B03 berisi
 
-        $this->assertSame(1, $aksi->handle($utama, [$b2->id], 'Barang besar memakan 2 bin'));
-        $this->assertSame((int) $utama->id, (int) $b2->refresh()->occupied_by_bin_id);
+        $this->assertSame(1, $aksi->merge($utama, [$b2->id], 'side', 'temporary', 'Barang besar memakan 2 bin'));
+        $b2->refresh();
+        $this->assertSame((int) $utama->id, (int) $b2->occupied_by_bin_id);
+        $this->assertSame([BinMergeDirection::Side, BinMergeType::Temporary], [$b2->merge_direction, $b2->merge_type]);
 
         $saran = app(PutawaySuggester::class)->storageBins($this->gudang)->pluck('id');
-        $this->assertNotContains((int) $b2->id, $saran->all(), 'Bin ikut terpakai tidak disarankan.');
+        $this->assertNotContains((int) $b2->id, $saran->all(), 'Bin tergabung tidak disarankan.');
 
-        // Barang keluar sampai bin utama kosong → penanda lepas otomatis.
+        // Barang keluar sampai bin utama kosong → gabungan sementara dipisah otomatis.
         app(StockLedger::class)->post(new MovementRequest(item: $this->baut, qtyBase: 5, fromBinId: $utama->id));
         $this->assertNull($b2->refresh()->occupied_by_bin_id);
+        $this->assertNull($b2->merge_type);
     }
 
     #[Test]

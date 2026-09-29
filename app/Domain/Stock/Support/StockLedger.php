@@ -303,6 +303,16 @@ class StockLedger
                 throw LedgerException::rule('BR-STK-02', 'Bin tidak ditemukan.');
             }
 
+            // A-359: bin tergabung tidak menyimpan stok sendiri — stoknya di bin utama.
+            if ($bin->isMerged()) {
+                $utama = Bin::withoutGlobalScopes()->whereKey($bin->occupied_by_bin_id)->value('code');
+
+                throw LedgerException::rule(
+                    'BR-WH-08',
+                    'Bin '.$bin->code.' digabung ke bin utama '.$utama.'. Catat barangnya di bin '.$utama.'.',
+                );
+            }
+
             // A-240: override SJ mendesak — hanya bin asal yang beku, bukan nonaktif.
             $bebasBeku = $request->allowFrozenSource && $binId === $request->fromBinId
                 && $bin->bin_status === BinStatus::Frozen;
@@ -356,9 +366,10 @@ class StockLedger
 
         $sesudah = round((float) $saldo->qty_base + $request->qtyBase, 4);
 
-        // A-255: bin bermode kapasitas sendiri (bin area alat berat) dihitung dari
-        // total isi bin, bukan per baris saldo.
-        $isi = $bin !== null && $bin->capacityCountsWholeBin()
+        // Keputusan #10 (A-361): kapasitas selalu dihitung dari **seluruh isi bin**
+        // (semua item & status), bukan per baris saldo; bin utama gabungan memakai
+        // kapasitas gabungannya (Bin::effectiveCapacity).
+        $isi = $bin !== null
             ? round((float) StockBalance::query()->withoutGlobalScopes()->where('bin_id', $bin->id)->where('qty_base', '>', 0)->sum('qty_base') + $request->qtyBase, 4)
             : $sesudah;
 

@@ -20,11 +20,13 @@ use RuntimeException;
  * Permission: `bin.manage` — **Simpan perubahan** mode Atur denah (K-H, A-353).
  *
  * Semua geser, ubah ukuran, putar, tambah zona/rak/level/bin/area/objek,
- * ubah isian, dan nonaktifkan dikerjakan di browser lalu dikirim sekali
+ * ubah isian, gabung/pisah/hapus/lebar bin, kapasitas area lantai
+ * (Bagian 2: K-B–K-E, A-359–A-364), dan nonaktifkan dikerjakan di browser lalu dikirim sekali
  * sebagai daftar operasi berurutan. Semuanya diterapkan dalam **satu
  * transaksi** lewat aksi yang sudah ada ({@see SaveWarehouseLayout},
  * {@see SaveFloorPlanObject}, {@see SaveLocation}, {@see GenerateBins},
- * {@see DeactivateLocation}) sehingga aturan & jejak audit tetap sama.
+ * {@see DeactivateLocation}, {@see MergeBins}, {@see DeleteBin}, {@see SaveBinShape},
+ * {@see ChangeBinStatus}) sehingga aturan & jejak audit tetap sama.
  *
  * Setiap operasi dicoba di titik simpan (savepoint) sendiri supaya semua
  * galat terkumpul; bila ada satu saja yang gagal, **seluruh** perubahan
@@ -46,7 +48,10 @@ class ApplyLayoutChanges
         private readonly SaveLocation $lokasi,
         private readonly GenerateBins $bin,
         private readonly DeactivateLocation $nonaktif,
-        private readonly MarkBinsOccupied $terpakai,
+        private readonly MergeBins $gabung,
+        private readonly DeleteBin $hapus,
+        private readonly SaveBinShape $bentuk,
+        private readonly ChangeBinStatus $statusBin,
     ) {}
 
     /**
@@ -123,12 +128,16 @@ class ApplyLayoutChanges
             'level_baru' => $this->levelBaru($gudang, $op, $data, $actor),
             'bin_baru' => $this->binBaru($gudang, $op, $actor),
             'area_baru' => $this->areaBaru($gudang, $op, $data, $actor),
-            'tandai' => $this->terpakai->handle($this->binGudang($gudang, $op['utama'] ?? null), array_map('intval', (array) ($op['bins'] ?? [])), (string) ($op['alasan'] ?? ''), $actor),
-            'lepas' => $this->terpakai->release($this->binGudang($gudang, $op['bin'] ?? null), $actor),
+            'gabung' => $this->gabung->merge($this->binGudang($gudang, $op['utama'] ?? null), array_map(fn ($id) => (int) $this->binGudang($gudang, $id)->id, (array) ($op['bins'] ?? [])), $op['arah'] ?? null, $op['sifat'] ?? null, (string) ($op['alasan'] ?? ''), $actor),
+            'pisah' => $this->gabung->split($this->binGudang($gudang, $op['bin'] ?? null), (string) ($op['alasan'] ?? ''), $actor),
+            'hapus_bin' => $this->hapus->handle($this->binGudang($gudang, $op['bin'] ?? null), $actor),
+            'lebar_bin' => $this->bentuk->width($this->binGudang($gudang, $op['bin'] ?? null), $op['lebar'] ?? null, $actor),
+            'kapasitas_area' => $this->bentuk->areaCapacity($this->rak($gudang, $op['id']), $data, $actor),
             'nonaktif' => match ($op['jenis'] ?? '') {
                 'rak' => $this->nonaktif->rack($this->rak($gudang, $op['id']), (string) ($op['alasan'] ?? ''), $actor),
                 'zona' => $this->nonaktif->zone($this->zona($gudang, $op['id']), (string) ($op['alasan'] ?? ''), $actor),
                 'obj' => $this->objek->deactivate($this->objekDenah($gudang, $op['id']), $actor),
+                'bin' => $this->statusBin->deactivate($this->binGudang($gudang, $op['id']), (string) ($op['alasan'] ?? ''), null, $actor),
                 default => $this->tidakDikenal(),
             },
             default => $this->tidakDikenal(),
@@ -232,8 +241,13 @@ class ApplyLayoutChanges
         return RackLevel::query()->whereHas('rack.zone', fn ($q) => $q->where('warehouse_id', $gudang->id))->findOrFail($this->id('level', $id));
     }
 
+    /** Bin milik gudang ini; hanya id sungguhan (bin baru disimpan dulu sebelum digabung/dihapus). */
     private function binGudang(Warehouse $gudang, mixed $id): Bin
     {
+        if (! is_int($id) && ! (is_string($id) && ctype_digit($id))) {
+            throw new ModelNotFoundException;
+        }
+
         return Bin::query()->withoutGlobalScopes()->where('warehouse_id', $gudang->id)->findOrFail((int) $id);
     }
 
@@ -251,8 +265,9 @@ class ApplyLayoutChanges
             'rak', 'rak_baru', 'area_baru' => 'rak:'.($op['id'] ?? $op['tmp'] ?? ''),
             'level_baru' => 'rak:'.($op['rak'] ?? ''),
             'bin_baru', 'tinggi_level' => 'level:'.($op['level'] ?? $op['id'] ?? ''),
-            'tandai' => 'bin:'.($op['utama'] ?? ''),
-            'lepas' => 'bin:'.($op['bin'] ?? ''),
+            'gabung' => 'bin:'.($op['utama'] ?? ''),
+            'pisah', 'hapus_bin', 'lebar_bin' => 'bin:'.($op['bin'] ?? ''),
+            'kapasitas_area' => 'rak:'.($op['id'] ?? ''),
             'objek', 'objek_baru' => 'obj:'.($op['id'] ?? $op['tmp'] ?? ''),
             default => ($op['jenis'] ?? '?').':'.($op['id'] ?? ''),
         };

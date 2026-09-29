@@ -9,11 +9,15 @@
      browser, bisa DIURUNGKAN, lalu satu tombol "Simpan perubahan" mengirim
      semua operasi sekali (`$wire.simpanPerubahan(ops)`); server menerapkannya
      dalam satu transaksi dan mengembalikan galat per objek.
+   - Bagian 2 (A-359–A-364): pilih petak di panel rak → Gabung (samping/atas,
+     sementara/permanen), Pisah, Hapus bin (hanya bila belum pernah dipakai) atau
+     Nonaktifkan, Lebar bin; area lantai berkapasitas bebas. Petak gabungan
+     digambar sebagai satu blok berlabel kode pendek bin utama.
    - Tanpa pembaruan otomatis berkala (tanpa polling/websocket).
    Satuan: meter; SVG = meter × skala. Tanpa pustaka tambahan (D-05).
 */
 
-const WARNA_STATUS = { kosong: '#f1f3f5', terisi: '#b2f2bb', penuh: '#ffc9c9', beku: '#a5d8ff', terpakai: '#d0bfff' };
+const WARNA_STATUS = { kosong: '#f1f3f5', terisi: '#b2f2bb', penuh: '#ffc9c9', beku: '#a5d8ff', terpakai: '#d0bfff', tergabung: '#d0bfff' };
 const warnaUmur = (u) => (u === null || u === undefined ? '#f1f3f5' : u < 30 ? '#b2f2bb' : u < 90 ? '#ffec99' : u < 180 ? '#ffd8a8' : '#ffc9c9');
 const GRID = 0.5;
 const HALUS = 0.1;
@@ -57,14 +61,18 @@ function denahGedung(opts = {}) {
     f: {
       zona: { code: '', name: '' },
       rak: { zona: '', code: '', name: '', levels: '1', bins: '4', capacity_qty: '' },
-      area: { zona: '', code: '', name: '', capacity_qty: '1', seluruh_zona: false },
+      area: { zona: '', code: '', name: '', capacity_qty: '', seluruh_zona: false },
       level: { code: '', bins: '0' },
       binBaru: {},
       gedung: { length_m: '', width_m: '' },
       alasan: '',
       edit: {},
-      tandai: { utama: '', bins: [], alasan: '' },
+      gabung: { utama: '', arah: 'side', sifat: 'temporary', alasan: '' },
+      petak: { lebar: '', alasan: '' },
+      kapasitas: { capacity_qty: '', capacity_weight: '', capacity_volume: '' },
     },
+    pilihPetak: [],
+    hapusBoleh: {},
 
     init() {
       this.isiFormGedung();
@@ -138,6 +146,57 @@ function denahGedung(opts = {}) {
       const bawah = Math.max(0, ...z.racks.map((r) => r.y + r.h)) + JARAK;
       z.w = Math.max(z.length_m ?? 6, kanan);
       z.h = Math.max(z.width_m ?? 2.5, bawah);
+    },
+
+    /**
+     * Petak satu rak sebagai blok (meter gambar relatif bingkai dalam).
+     * Lebar bin (A-363) dibandingkan dengan panjang fisik rak; tanpa lebar = rata bagi.
+     * Bin tergabung (A-359) tidak digambar sendiri — melebarkan/meninggikan blok bin utamanya.
+     */
+    blokPetak(r, lebarDalam) {
+      const posisi = {};
+      const kolom = Math.max(1, r.kolom || 1);
+      const panjang = r.orientation === 'v' ? r.wid : r.len;
+      r.levels.forEach((l, i) => {
+        const ls = lebarDalam / kolom;
+        if (!l.bins.some((b) => b.lebar)) { l.bins.forEach((b, j) => { posisi[b.id] = { x: j * ls, w: ls, i }; }); return; }
+        const tetap = l.bins.reduce((n, b) => n + (b.lebar || 0), 0);
+        const kosong = l.bins.filter((b) => !b.lebar).length;
+        const bawaan = kosong ? Math.max((panjang - tetap) / kosong, 0.1) : 0;
+        const total = Math.max(panjang, tetap + bawaan * kosong);
+        let x = 0;
+        l.bins.forEach((b) => { const w = ((b.lebar || bawaan) / total) * lebarDalam; posisi[b.id] = { x, w, i }; x += w; });
+      });
+      const semua = r.levels.flatMap((l) => l.bins);
+      const blok = [];
+      for (const b of semua) {
+        if (b.utama && posisi[b.utama]) continue;
+        const anggota = semua.filter((x) => x.utama && String(x.utama) === String(b.id));
+        const kotak = [posisi[b.id], ...anggota.map((x) => posisi[x.id])];
+        const x1 = Math.min(...kotak.map((k) => k.x));
+        const x2 = Math.max(...kotak.map((k) => k.x + k.w));
+        blok.push({ bin: b, anggota, x: x1, w: x2 - x1, i1: Math.min(...kotak.map((k) => k.i)), i2: Math.max(...kotak.map((k) => k.i)) });
+      }
+      return blok;
+    },
+
+    /** "R01 · L1 · 01 + 02" (samping) atau "R01 · L1 · 03 + L2 + L3" (atas) — juga untuk versi daftar. */
+    labelGabung(b, r) {
+      const semua = r ? r.levels.flatMap((l) => l.bins) : [];
+      const anggota = semua.filter((x) => x.utama && String(x.utama) === String(b.id));
+      if (!anggota.length) return b.pendek;
+      const bagian = anggota.map((x) => { const s = String(x.pendek).split(' · '); return x.arah === 'above' ? s[s.length - 2] : s[s.length - 1]; });
+      return b.pendek + ' + ' + bagian.join(' + ');
+    },
+
+    teksKapasitasArea(r) {
+      const k = r.kapasitas_area;
+      if (!k) return '';
+      const bagian = [];
+      if (k.qty !== null && k.qty !== undefined) bagian.push(angka(k.qty) + ' unit');
+      if (k.berat !== null && k.berat !== undefined) bagian.push(angka(k.berat) + ' kg');
+      if (k.volume !== null && k.volume !== undefined) bagian.push(angka(k.volume) + ' m³');
+      return ' · ' + (bagian.length ? 'maks. ' + bagian.join(' / ') : 'tanpa batas');
     },
 
     kanvas() {
@@ -235,22 +294,27 @@ function denahGedung(opts = {}) {
           o.push(`<text x="0" y="${-7 * F}" font-size="${13 * F}" font-weight="600" fill="currentColor">${esc(r.code)}${r.is_area ? ' ▦' : ''}${r.name ? ` <tspan font-weight="400" fill-opacity="0.65">· ${esc(potong(r.name, 18))}</tspan>` : ''}</text>`);
           if (r.is_area) {
             o.push(`<rect data-badan x="0" y="0" width="${W}" height="${H}" rx="6" fill="${this.warnaRak(r)}" stroke="${garis}" stroke-width="${tebal}" stroke-dasharray="6 3"/>`);
-            o.push(`<text x="${W / 2}" y="${H / 2 + 4}" font-size="12" text-anchor="middle" fill="#495057" pointer-events="none">${esc(this.meta.teks?.area || 'Area lantai')}</text>`);
+            o.push(`<text x="${W / 2}" y="${H / 2 + 4}" font-size="12" text-anchor="middle" fill="#495057" pointer-events="none">${esc(this.meta.teks?.area || 'Area lantai')}${esc(this.teksKapasitasArea(r))}</text>`);
           } else {
             o.push(`<rect data-badan x="0" y="0" width="${W}" height="${H}" rx="6" fill="#ffffff" stroke="${garis}" stroke-width="${tebal}"${merah ? ' stroke-dasharray="6 3"' : ''}/>`);
             const p = BINGKAI * S;
             const tb = (H - 2 * p) / Math.max(1, r.levels.length);
-            const ls = (W - 2 * p) / Math.max(1, r.kolom || 1);
             r.levels.forEach((l, i) => {
-              const yb = p + i * tb;
-              o.push(`<text x="-5" y="${yb + tb / 2 + 4}" font-size="${11 * F}" font-weight="600" text-anchor="end" fill="currentColor">${esc(l.code)}</text>`);
-              l.bins.forEach((b, j) => {
-                const c = this.cocokBin(b);
-                const bs = this.rak && this.rak.id === r.id && this.binId === b.id;
-                o.push(`<rect data-bin="${b.id}" x="${p + j * ls + 2}" y="${yb + 2}" width="${Math.max(1, ls - 4)}" height="${Math.max(1, tb - 4)}" rx="3" fill="${this.warnaBin(b)}" stroke="${c ? '#f76707' : bs ? '#1c7ed6' : '#ced4da'}" stroke-width="${c || bs ? 2.5 : 1}"><title>${esc(b.pendek)} · ${esc(b.code)}${b.total > 0 ? ' · ' + angka(b.total) : ''}</title></rect>`);
-                if (ls >= 28 && tb >= 16) o.push(`<text x="${p + (j + 0.5) * ls}" y="${yb + tb / 2 + 4}" font-size="${ls >= 44 ? 12 : 10}" text-anchor="middle" fill="#212529" pointer-events="none">${esc(b.short)}</text>`);
-              });
+              o.push(`<text x="-5" y="${p + i * tb + tb / 2 + 4}" font-size="${11 * F}" font-weight="600" text-anchor="end" fill="currentColor">${esc(l.code)}</text>`);
             });
+            // A-363: lebar petak dari lebar bin; A-359: gabungan = satu blok.
+            for (const k of this.blokPetak(r, W - 2 * p)) {
+              const b = k.bin;
+              const c = this.cocokBin(b) || k.anggota.some((x) => this.cocokBin(x));
+              const bs = this.rak && this.rak.id === r.id && (this.binId === b.id || k.anggota.some((x) => x.id === this.binId));
+              const x = p + k.x;
+              const y = p + k.i1 * tb;
+              const w = k.w;
+              const h = (k.i2 - k.i1 + 1) * tb;
+              const gab = k.anggota.length > 0;
+              o.push(`<rect data-bin="${esc(b.id)}" x="${x + 2}" y="${y + 2}" width="${Math.max(1, w - 4)}" height="${Math.max(1, h - 4)}" rx="3" fill="${this.warnaBin(b)}" stroke="${c ? '#f76707' : bs ? '#1c7ed6' : gab ? '#7048e8' : '#ced4da'}" stroke-width="${c || bs || gab ? 2.5 : 1}"><title>${esc(this.labelGabung(b, r))} · ${esc(b.code)}${b.total > 0 ? ' · ' + angka(b.total) : ''}</title></rect>`);
+              if (w >= 28 && tb >= 16) o.push(`<text x="${x + w / 2}" y="${y + h / 2 + 4}" font-size="${w >= 44 ? 12 : 10}" text-anchor="middle" fill="#212529" pointer-events="none">${esc(b.short)}${gab ? ' ⧉' : ''}</text>`);
+            }
             if (!r.levels.length) o.push(`<text x="${W / 2}" y="${H / 2 + 4}" font-size="10" font-style="italic" text-anchor="middle" fill="#868e96">belum ada tingkat</text>`);
           }
           if (this.edit && pil === 'rak:' + r.id) o.push(`<rect data-handle x="${r.len * S - 7}" y="${r.wid * S - 7}" width="14" height="14" fill="#6366f1" style="cursor:nwse-resize"/>`);
@@ -312,6 +376,8 @@ function denahGedung(opts = {}) {
       try {
         this.rak = await this.$wire.isiRak(Number(id));
         const semua = this.rak.levels.flatMap((l) => l.bins);
+        // K-C: server menandai bin yang belum pernah dipakai (boleh dihapus).
+        this.hapusBoleh = Object.fromEntries(semua.map((b) => [String(b.id), !!b.boleh_hapus]));
         this.binId = binId ?? (semua.find((b) => b.total > 0) || semua[0])?.id ?? null;
       } finally {
         this.memuat = false;
@@ -319,7 +385,7 @@ function denahGedung(opts = {}) {
       this.gambar();
     },
 
-    tutup() { this.rak = null; this.pilih = null; this.binId = null; this.gambar(); },
+    tutup() { this.rak = null; this.pilih = null; this.binId = null; this.pilihPetak = []; this.gambar(); },
 
     binTerpilih() {
       if (!this.rak) return null;
@@ -417,6 +483,8 @@ function denahGedung(opts = {}) {
     pilihBenda(jenis, id) {
       this.pilih = { jenis, id };
       this.f.alasan = '';
+      this.pilihPetak = [];
+      if (jenis === 'rak') this.isiKapasitasArea();
       if (jenis === 'rak') { this.bukaRak(id); this.isiFormEdit(); return; }
       this.rak = null;
       this.isiFormEdit();
@@ -436,6 +504,7 @@ function denahGedung(opts = {}) {
       this.d = JSON.parse(r.d);
       this.ops.length = r.n;
       this.galat = [];
+      this.pilihPetak = [];
       if (this.pilih && !this.benda(this.pilih.jenis, this.pilih.id)) this.tutup();
       this.isiFormEdit();
       this.gambar();
@@ -685,28 +754,133 @@ function denahGedung(opts = {}) {
       this.tutup();
     },
 
-    /** A-255: bin kosong di sebelah ikut terpakai barang besar di bin utama (diganti Gabung bin di Bagian 2). */
-    binLama(a) {
-      return a ? a.r.levels.flatMap((l) => l.bins).filter((b) => this.idNyata(b.id)) : [];
+    // ------------------------------------------------------------ petak (Bagian 2)
+
+    /** Petak rak yang sedang dipilih di mode Atur. */
+    petakRak() {
+      const a = this.pilih?.jenis === 'rak' ? this.rakLokal(this.pilih.id) : null;
+      return a ? a.r.levels.flatMap((l) => l.bins.map((b) => ({ ...b, level: l.code }))) : [];
     },
 
-    tandaiTerpakai() {
+    petakLokal(id) {
       const a = this.pilih?.jenis === 'rak' ? this.rakLokal(this.pilih.id) : null;
-      const t = this.f.tandai;
-      if (!a || !t.utama || !t.bins.length || !t.alasan.trim()) { this.pesan('Pilih bin utama, bin yang ikut terpakai, dan isi alasannya.', 'danger'); return; }
-      const utama = this.binLama(a).find((b) => String(b.id) === String(t.utama));
-      this.catat({ op: 'tandai', utama: Number(t.utama), bins: t.bins.map(Number), alasan: t.alasan.trim() });
-      for (const b of this.binLama(a)) if (t.bins.map(String).includes(String(b.id))) Object.assign(b, { status: 'terpakai', terpakai_oleh: utama?.code });
-      this.f.tandai = { utama: '', bins: [], alasan: '' };
+      if (!a) return null;
+      for (const l of a.r.levels) { const b = l.bins.find((x) => String(x.id) === String(id)); if (b) return b; }
+      return null;
+    },
+
+    dipilihPetak(b) { return this.pilihPetak.includes(String(b.id)); },
+
+    togglePetak(b) {
+      if (!this.idNyata(b.id)) { this.pesan('Simpan dulu bin baru sebelum mengaturnya.', 'danger'); return; }
+      // Ketuk bagian gabungan = pilih bin utamanya.
+      const id = String(b.utama || b.id);
+      this.pilihPetak = this.pilihPetak.includes(id) ? this.pilihPetak.filter((x) => x !== id) : [...this.pilihPetak, id];
+      const utama = this.petakTerpilih().find((x) => x.total > 0) || this.petakTerpilih()[0];
+      this.f.gabung.utama = utama ? String(utama.id) : '';
+      this.f.gabung.arah = this.arahOtomatis();
+      const satu = this.pilihPetak.length === 1 ? this.petakLokal(this.pilihPetak[0]) : null;
+      this.f.petak = { lebar: satu?.lebar ? String(satu.lebar) : '', alasan: '' };
+    },
+
+    petakTerpilih() { return this.pilihPetak.map((id) => this.petakLokal(id)).filter(Boolean); },
+
+    /** Satu tingkat → samping; nomor petak sama di beberapa tingkat → atas. */
+    arahOtomatis() {
+      const p = this.petakRak().filter((b) => this.pilihPetak.includes(String(b.id)));
+      return p.length > 1 && new Set(p.map((b) => b.level)).size > 1 ? 'above' : 'side';
+    },
+
+    /** Info server (panel isi rak) untuk satu bin: boleh dihapus? */
+    bisaHapus(b) {
+      return !!this.hapusBoleh[String(b.id)] && !b.utama && !(b.tergabung || []).length;
+    },
+
+    gabungkan() {
+      const g = this.f.gabung;
+      const pilihan = this.petakTerpilih();
+      const utama = pilihan.find((b) => String(b.id) === String(g.utama));
+      const lain = pilihan.filter((b) => b !== utama);
+      if (!utama || !lain.length) { this.pesan('Pilih minimal dua petak dan bin utamanya.', 'danger'); return; }
+      if (!g.alasan.trim()) { this.pesan('Isi alasan gabung.', 'danger'); return; }
+      if (lain.some((b) => b.total > 0)) { this.pesan('Petak yang digabung harus kosong — stok hanya di bin utama.', 'danger'); return; }
+      this.catat({ op: 'gabung', utama: Number(utama.id), bins: lain.map((b) => Number(b.id)), arah: g.arah, sifat: g.sifat, alasan: g.alasan.trim() });
+      for (const b of lain) Object.assign(b, { utama: utama.id, utama_kode: utama.code, arah: g.arah, sifat: g.sifat, status: 'tergabung', alasan_gabung: g.alasan.trim() });
+      utama.tergabung = [...(utama.tergabung || []), ...lain.map((b) => b.id)];
+      this.pilihPetak = [];
+      this.f.gabung = { utama: '', arah: 'side', sifat: 'temporary', alasan: '' };
+      this.pesan('Digabung — belum tersimpan.');
       this.gambar();
     },
 
-    lepasTerpakai(binId) {
-      const a = this.pilih?.jenis === 'rak' ? this.rakLokal(this.pilih.id) : null;
-      const b = this.binLama(a).find((x) => x.id === binId);
+    pisahkan() {
+      const b = this.petakTerpilih()[0];
       if (!b) return;
-      this.catat({ op: 'lepas', bin: binId });
-      Object.assign(b, { status: b.total > 0 ? 'terisi' : 'kosong', terpakai_oleh: null });
+      const anggota = this.petakRak().filter((x) => String(x.utama) === String(b.id));
+      if (!anggota.length) return;
+      const permanen = anggota.some((x) => x.sifat === 'permanent');
+      if (permanen && !this.f.petak.alasan.trim()) { this.pesan('Gabungan permanen hanya bisa dipisah dengan alasan.', 'danger'); return; }
+      this.catat({ op: 'pisah', bin: Number(b.id), alasan: this.f.petak.alasan.trim() });
+      for (const x of anggota) Object.assign(this.petakLokal(x.id), { utama: null, utama_kode: null, arah: null, sifat: null, status: x.total > 0 ? 'terisi' : 'kosong' });
+      this.petakLokal(b.id).tergabung = [];
+      this.pilihPetak = [];
+      this.pesan('Dipisah — belum tersimpan.');
+      this.gambar();
+    },
+
+    hapusBin() {
+      const b = this.petakTerpilih()[0];
+      const a = this.rakLokal(this.pilih?.id);
+      if (!b || !a || !this.bisaHapus(b)) return;
+      if (!window.confirm('Hapus bin ' + b.pendek + '? Bin ini belum pernah dipakai, jadi dihapus permanen saat disimpan.')) return;
+      this.catat({ op: 'hapus_bin', bin: Number(b.id) });
+      for (const l of a.r.levels) l.bins = l.bins.filter((x) => String(x.id) !== String(b.id));
+      a.r.jumlah_bin = Math.max(0, (a.r.jumlah_bin || 1) - 1);
+      this.ukuranRak(a.r);
+      this.ukuranZona(a.z);
+      this.pilihPetak = [];
+      if (this.rak) this.rak = { ...this.rak, levels: this.rak.levels.map((l) => ({ ...l, bins: l.bins.filter((x) => String(x.id) !== String(b.id)) })) };
+      this.gambar();
+    },
+
+    nonaktifBin() {
+      const b = this.petakTerpilih()[0];
+      const a = this.rakLokal(this.pilih?.id);
+      if (!b || !a) return;
+      if (!this.f.alasan) { this.pesan('Pilih alasan.', 'danger'); return; }
+      this.catat({ op: 'nonaktif', jenis: 'bin', id: Number(b.id), alasan: this.f.alasan });
+      Object.assign(this.petakLokal(b.id), { nonaktif: true });
+      this.pilihPetak = [];
+      this.gambar();
+    },
+
+    terapkanLebar() {
+      const b = this.petakTerpilih()[0];
+      if (!b) return;
+      const t = String(this.f.petak.lebar ?? '').trim().replace(',', '.');
+      if (t !== '' && !(Number(t) > 0 && Number(t) <= 99)) { this.pesan('Lebar bin harus angka lebih dari 0 (meter), atau kosong.', 'danger'); return; }
+      this.catat({ op: 'lebar_bin', bin: Number(b.id), lebar: t });
+      this.petakLokal(b.id).lebar = t === '' ? null : Number(t);
+      this.pesan('Lebar diterapkan — belum tersimpan.');
+      this.gambar();
+    },
+
+    isiKapasitasArea() {
+      const a = this.pilih?.jenis === 'rak' ? this.rakLokal(this.pilih.id) : null;
+      const k = a?.r.kapasitas_area || {};
+      const t = (v) => (v === null || v === undefined ? '' : String(v));
+      this.f.kapasitas = { capacity_qty: t(k.qty), capacity_weight: t(k.berat), capacity_volume: t(k.volume) };
+    },
+
+    terapkanKapasitasArea() {
+      const a = this.pilih?.jenis === 'rak' ? this.rakLokal(this.pilih.id) : null;
+      if (!a || !a.r.is_area) return;
+      const num = (v) => { const x = String(v ?? '').trim().replace(',', '.'); return x === '' ? null : Number(x); };
+      const k = this.f.kapasitas;
+      if ([k.capacity_qty, k.capacity_weight, k.capacity_volume].some((v) => { const n = num(v); return n !== null && !(n > 0); })) { this.pesan('Kapasitas harus angka lebih dari 0, atau kosong = tanpa batas.', 'danger'); return; }
+      this.catat({ op: 'kapasitas_area', id: a.r.id, data: { ...k } });
+      a.r.kapasitas_area = { qty: num(k.capacity_qty), berat: num(k.capacity_weight), volume: num(k.capacity_volume) };
+      this.pesan('Kapasitas area diterapkan — belum tersimpan.');
       this.gambar();
     },
 

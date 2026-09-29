@@ -7,6 +7,7 @@ namespace App\Domain\Warehouse\Support;
 use App\Domain\Master\Support\QtyFormat;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockMovement;
+use App\Domain\Warehouse\Actions\DeleteBin;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\FloorPlanObject;
@@ -38,6 +39,9 @@ use Illuminate\Support\Str;
  *   otomatis di bawah zona berposisi), rak relatif zonanya, objek denah
  *   relatif gedung. Tumpukan (rak↔rak, rak↔objek padat, zona↔zona, benda di
  *   luar gedung) hanya diperingatkan (A-321).
+ * - Bagian 2 (A-359–A-364): per bin `utama`/`arah`/`sifat` (Gabung Bin),
+ *   `lebar` (meter, kosong = rata bagi), kapasitas bin utama gabungan;
+ *   area lantai membawa kapasitas bebasnya (kosong = tanpa batas).
  */
 class WarehouseLayoutData
 {
@@ -71,7 +75,7 @@ class WarehouseLayoutData
             ->get();
 
         $levelIds = $zona->flatMap(fn (Zone $z) => $z->racks->flatMap(fn (Rack $r) => $r->levels->pluck('id')));
-        $bins = Bin::query()->withoutGlobalScopes()->with('occupiedBy:id,code')
+        $bins = Bin::query()->withoutGlobalScopes()->with(self::RELASI_BIN)
             ->whereIn('rack_level_id', $levelIds)->orderBy('code')->get()->groupBy('rack_level_id');
 
         $isi = $this->isi($bins->flatten()->pluck('id')->all());
@@ -106,7 +110,8 @@ class WarehouseLayoutData
                                     'isi' => collect($baris)->map(fn ($s) => $s['item_code'].($s['tracking'] !== '' ? ' '.$s['tracking'] : ''))->implode(', ')];
                             }
 
-                            $penuh = $b->capacity_qty !== null && $total + 0.00005 >= (float) $b->capacity_qty && $total > 0;
+                            $kapasitas = $b->effectiveCapacity('capacity_qty');
+                            $penuh = $kapasitas !== null && $total + 0.00005 >= $kapasitas && $total > 0;
                             $beku = $b->bin_status === BinStatus::Frozen;
 
                             return [
@@ -115,15 +120,14 @@ class WarehouseLayoutData
                                 'short' => Str::afterLast((string) $b->code, '-'),
                                 'pendek' => BinCode::dari($awalan, (string) $r->code, (string) $l->code, Str::afterLast((string) $b->code, '-'), (bool) $r->is_area),
                                 'total' => $total,
-                                'capacity_qty' => $b->capacity_qty !== null ? (float) $b->capacity_qty : null,
+                                'capacity_qty' => $kapasitas,
                                 'penuh' => $penuh,
                                 'beku' => $beku,
                                 'nonaktif' => $b->bin_status === BinStatus::Inactive,
-                                'terpakai_oleh' => $b->occupiedBy?->code,
-                                'occupied_reason' => $b->occupied_reason,
+                                ...self::gabung($b),
                                 'status' => match (true) {
                                     $beku => 'beku',
-                                    $b->occupiedBy !== null => 'terpakai',
+                                    $b->isMerged() => 'tergabung',
                                     $penuh => 'penuh',
                                     $total > 0 => 'terisi',
                                     default => 'kosong',
@@ -160,6 +164,7 @@ class WarehouseLayoutData
                     'umur' => $semuaBin->pluck('umur')->filter(fn ($u) => $u !== null)->max(),
                     'cocok' => $semuaBin->contains('cocok', true) || ($q !== '' && str_contains(mb_strtolower($r->code.' '.$r->name), $q)),
                     'jumlah_bin' => $semuaBin->count(),
+                    'kapasitas_area' => $r->is_area ? self::kapasitasArea($bins, $r) : null,
                     'levels' => $levels,
                 ];
             })->all();
@@ -299,26 +304,30 @@ class WarehouseLayoutData
             ->whereHas('zone', fn ($q) => $q->where('warehouse_id', $gudang->id))->exists();
         $awalan = $kembar ? (string) $rak->zone->code : null;
 
-        $bins = Bin::query()->withoutGlobalScopes()->with('occupiedBy:id,code')
+        $bins = Bin::query()->withoutGlobalScopes()->with(self::RELASI_BIN)
             ->whereIn('rack_level_id', $rak->levels->pluck('id'))->orderBy('code')->get()->groupBy('rack_level_id');
         $isi = $this->isi($bins->flatten()->pluck('id')->all(), (int) $gudang->id);
+        // K-C: tombol Hapus hanya untuk bin yang belum pernah dipakai (A-362).
+        $dipakai = app(BinUsage::class)->dipakai($bins->flatten()->pluck('id')->map(fn ($id) => (int) $id)->all());
+        $hapus = app(DeleteBin::class);
 
         $levels = $rak->levels->sortByDesc('code')->values()->map(fn ($l) => [
             'id' => (int) $l->id,
             'code' => (string) $l->code,
-            'bins' => ($bins->get($l->id) ?? collect())->map(function (Bin $b) use ($isi, $rak, $l, $awalan) {
+            'bins' => ($bins->get($l->id) ?? collect())->map(function (Bin $b) use ($isi, $rak, $l, $awalan, $dipakai, $hapus) {
                 $baris = $isi[$b->id] ?? [];
+                $b->setRelation('rackLevel', $l->setRelation('rack', $rak));
 
                 return [
                     'id' => (int) $b->id,
                     'code' => (string) $b->code,
                     'pendek' => BinCode::dari($awalan, (string) $rak->code, (string) $l->code, Str::afterLast((string) $b->code, '-'), (bool) $rak->is_area),
                     'total' => round(array_sum(array_column($baris, 'qty')), 4),
-                    'capacity_qty' => $b->capacity_qty !== null ? (float) $b->capacity_qty : null,
+                    'capacity_qty' => $b->effectiveCapacity('capacity_qty'),
                     'nonaktif' => $b->bin_status === BinStatus::Inactive,
                     'beku' => $b->bin_status === BinStatus::Frozen,
-                    'terpakai_oleh' => $b->occupiedBy?->code,
-                    'occupied_reason' => $b->occupied_reason,
+                    ...self::gabung($b),
+                    'boleh_hapus' => $hapus->alasanTolak($b, isset($dipakai[(int) $b->id])) === null,
                     'isi' => array_map(fn ($s) => [
                         'item_code' => $s['item_code'],
                         'item_name' => $s['item_name'],
@@ -342,8 +351,44 @@ class WarehouseLayoutData
             'is_area' => (bool) $rak->is_area,
             'zona' => (string) $rak->zone->code,
             'zona_nama' => (string) $rak->zone->name,
+            'kapasitas_area' => $rak->is_area ? self::kapasitasArea($bins, $rak) : null,
             'levels' => $levels,
         ];
+    }
+
+    /** Relasi bin yang dibutuhkan denah: bin utama & bin tergabung (kapasitas gabungan). */
+    private const RELASI_BIN = ['mainBin:id,code', 'mergedBins:id,code,occupied_by_bin_id,capacity_qty,capacity_weight,capacity_volume,capacity_length'];
+
+    /**
+     * Gabung Bin (A-359) & lebar bin (A-363) untuk browser.
+     *
+     * @return array<string, mixed>
+     */
+    private static function gabung(Bin $b): array
+    {
+        return [
+            'utama' => $b->occupied_by_bin_id !== null ? (int) $b->occupied_by_bin_id : null,
+            'utama_kode' => $b->mainBin?->code,
+            'arah' => $b->merge_direction?->value,
+            'sifat' => $b->merge_type?->value,
+            'alasan_gabung' => $b->occupied_reason,
+            'tergabung' => $b->mergedBins->pluck('id')->map(fn ($id) => (int) $id)->all(),
+            'lebar' => $b->width_m !== null ? (float) $b->width_m : null,
+        ];
+    }
+
+    /**
+     * K-E (A-364): kapasitas bebas area lantai — null = tanpa batas.
+     *
+     * @param  Collection<int, Collection<int, Bin>>  $bins  per rack_level_id
+     * @return array{qty: ?float, berat: ?float, volume: ?float}
+     */
+    private static function kapasitasArea(Collection $bins, Rack $r): array
+    {
+        $bin = $r->levels->flatMap(fn ($l) => $bins->get($l->id) ?? collect())->first();
+        $f = fn ($v) => $v !== null ? (float) $v : null;
+
+        return ['qty' => $f($bin?->capacity_qty), 'berat' => $f($bin?->capacity_weight), 'volume' => $f($bin?->capacity_volume)];
     }
 
     /**
@@ -459,7 +504,7 @@ class WarehouseLayoutData
     {
         return match (true) {
             $bins->contains('beku', true) => 'beku',
-            $bins->contains(fn ($b) => $b['terpakai_oleh'] !== null) || ($r->is_area && $bins->sum('total') > 0) => 'terpakai',
+            $bins->contains(fn ($b) => $b['utama'] !== null) || ($r->is_area && $bins->sum('total') > 0) => 'terpakai',
             $bins->contains('penuh', true) => 'penuh',
             $bins->sum('total') > 0 => 'terisi',
             default => 'kosong',

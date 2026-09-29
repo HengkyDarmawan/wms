@@ -183,7 +183,7 @@
                                 @else
                                     —
                                 @endif
-                                @if ($bin->occupiedBy) <div class="text-muted">{{ __('ikut terpakai oleh') }} {{ $bin->occupiedBy->code }}</div> @endif
+                                @if ($bin->mainBin) <div class="text-muted">{{ __('digabung ke') }} {{ $bin->mainBin->code }} ({{ mb_strtolower($bin->merge_direction?->label() ?? '') }}, {{ mb_strtolower($bin->merge_type?->label() ?? '') }})</div> @endif
                             </td>
                             <td>{{ $bin->bin_type->label() }}</td>
                             <td>

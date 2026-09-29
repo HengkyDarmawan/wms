@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Domain\Warehouse\Actions;
 
 use App\Domain\Access\Models\User;
+use App\Domain\Stock\Support\StockGuard;
 use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Exceptions\WarehouseRuleException;
-use App\Domain\Stock\Support\StockGuard;
 use App\Domain\Warehouse\Models\Bin;
 
 /**
@@ -15,7 +15,7 @@ use App\Domain\Warehouse\Models\Bin;
  * (12-warehouse §4). Transisi lewat POST, tidak pernah lewat GET.
  *
  * Menonaktifkan bin menuntut saldo dan reservasinya nol (BR-GEN-04), diperiksa
- * lewat {@see \App\Domain\Stock\Support\StockGuard}.
+ * lewat {@see StockGuard}.
  */
 class ChangeBinStatus
 {
@@ -76,6 +76,11 @@ class ChangeBinStatus
                 'BR-WH-02',
                 'Bin '.$bin->bin_type->label().' melekat pada gudang dan tidak bisa dinonaktifkan sendiri.',
             );
+        }
+
+        // A-359: gabungan dipisah dulu supaya bin utama & bin tergabung tidak tertinggal setengah.
+        if ($bin->isMerged() || $bin->mergedBins()->exists()) {
+            throw WarehouseRuleException::rule('BR-WH-08', 'Bin '.$bin->code.' termasuk gabungan. Pisah dulu sebelum menonaktifkan.');
         }
 
         // BR-GEN-04: bin berisi tidak boleh dimatikan.

@@ -14,6 +14,7 @@
                     <span class="badge text-bg-warning" x-show="rak?.baru">{{ __('belum disimpan') }}</span>
                 </div>
                 <div class="small text-muted" x-show="rak?.name" x-text="'Nama rak: ' + (rak?.name ?? '')"></div>
+                <div class="small text-muted" x-show="rak?.is_area" x-text="'Kapasitas' + teksKapasitasArea(rakLokal(rak?.id)?.r ?? rak ?? {})" data-kapasitas-area-isi></div>
             </div>
             <button class="btn-close" type="button" x-on:click="tutup()" aria-label="{{ __('Tutup') }}"></button>
         </div>
@@ -33,9 +34,10 @@
                         <div class="fw-semibold text-muted d-flex align-items-center justify-content-end pe-1" x-text="lv.code"></div>
                         <template x-for="b in lv.bins" :key="b.id">
                             <button type="button" class="btn btn-sm text-start border" :class="binId === b.id && 'border-primary border-2'"
-                                    :style="'line-height: 1.15; background:' + warnaPetak(b)" :data-bin="b.code" x-on:click="binId = b.id; gambar()">
+                                    :style="'line-height: 1.15; background:' + warnaPetak(b)" :data-bin="b.code" x-on:click="binId = b.utama || b.id; gambar()">
                                 <span class="fw-semibold" x-text="b.pendek"></span><br>
-                                <span class="text-muted" x-text="ringkasBin(b)"></span>
+                                {{-- A-359: bin tergabung tidak menyimpan stok; ketuk = bin utamanya. --}}
+                                <span class="text-muted" x-text="b.utama ? '⧉ ikut ' + String(b.utama_kode ?? '').split('-').pop() : ringkasBin(b)"></span>
                             </button>
                         </template>
                     </div>
@@ -63,9 +65,13 @@
                     </div>
                     <span class="badge text-bg-secondary mt-1" x-show="binTerpilih().nonaktif">{{ __('nonaktif') }}</span>
                     <span class="badge text-bg-info mt-1" x-show="binTerpilih().beku">{{ __('dibekukan opname') }}</span>
-                    <div class="mt-1" x-show="binTerpilih().terpakai_oleh">
-                        <span class="badge" style="background: #d0bfff; color: #212529" x-text="'ikut terpakai oleh ' + binTerpilih().terpakai_oleh"></span>
-                        <div class="text-muted" x-text="binTerpilih().occupied_reason ?? ''"></div>
+                    <div class="mt-1" x-show="(binTerpilih().tergabung ?? []).length" data-gabung-panel>
+                        <span class="badge" style="background: #d0bfff; color: #212529" x-text="'Gabungan: ' + labelGabung(binTerpilih(), rakLokal(rak?.id)?.r)"></span>
+                        <div class="text-muted small">{{ __('Stok gabungan dicatat di bin utama ini; kapasitas = jumlah kapasitas semua petaknya.') }}</div>
+                    </div>
+                    <div class="mt-1" x-show="binTerpilih().utama">
+                        <span class="badge" style="background: #d0bfff; color: #212529" x-text="'Tergabung ke bin utama ' + (binTerpilih().utama_kode ?? '')"></span>
+                        <div class="text-muted" x-text="binTerpilih().alasan_gabung ?? ''"></div>
                     </div>
                     <template x-for="(s, i) in (binTerpilih().isi ?? [])" :key="i">
                         <div class="border rounded p-2 mt-2">
@@ -79,7 +85,7 @@
                                 <span class="badge text-bg-warning" x-show="s.tertua" title="{{ __('Masuk paling lama untuk item ini di gudang — ambil dulu (FIFO)') }}">{{ __('tertua — ambil dulu') }}</span></div>
                         </div>
                     </template>
-                    <div class="text-muted mt-2" x-show="!(binTerpilih().isi ?? []).length && !binTerpilih().terpakai_oleh">{{ __('Bin kosong.') }}</div>
+                    <div class="text-muted mt-2" x-show="!(binTerpilih().isi ?? []).length && !binTerpilih().utama">{{ __('Bin kosong.') }}</div>
                     <div class="mt-2"><a :href="@js(route('bins.index')) + '?q=' + encodeURIComponent(binTerpilih().code)">{{ __('Lihat di daftar bin') }}</a></div>
                 </div>
             </template>
@@ -135,33 +141,7 @@
                 </div>
             </template>
 
-            {{-- A-255 (diganti Gabung bin di Bagian 2): bin utama = bin yang berisi barang besar. --}}
-            <hr>
-            <div class="fw-semibold mb-1">{{ __('Tandai bin ikut terpakai barang besar') }}</div>
-            <template x-if="pilih?.jenis === 'rak'">
-                <div>
-                    <div class="text-muted mb-1" x-show="!binLama(rakLokal(pilih.id)).some((b) => b.total > 0)">{{ __('Belum ada bin terisi di rak ini — bin utama harus bin yang sudah berisi barang besar.') }}</div>
-                    <div class="row g-2" x-show="binLama(rakLokal(pilih.id)).some((b) => b.total > 0)">
-                        <div class="col-6">
-                            <select class="form-select form-select-sm" x-model="f.tandai.utama" aria-label="{{ __('Bin utama (berisi barang besar)') }}">
-                                <option value="">{{ __('Bin utama (berisi barang)…') }}</option>
-                                <template x-for="b in binLama(rakLokal(pilih.id)).filter((b) => b.total > 0)" :key="b.id"><option :value="b.id" x-text="b.pendek"></option></template>
-                            </select>
-                        </div>
-                        <div class="col-6"><input class="form-control form-control-sm" type="text" maxlength="255" x-model="f.tandai.alasan" placeholder="{{ __('Alasan, mis. genset besar') }}" aria-label="{{ __('Alasan') }}"></div>
-                        <div class="col-12">
-                            <template x-for="b in binLama(rakLokal(pilih.id)).filter((b) => b.total === 0 && !b.terpakai_oleh)" :key="b.id">
-                                <label class="form-check form-check-inline"><input class="form-check-input" type="checkbox" :value="b.id" x-model="f.tandai.bins"> <span class="form-check-label" x-text="b.pendek"></span></label>
-                            </template>
-                        </div>
-                        <div class="col-12"><button class="btn btn-sm btn-outline-primary" type="button" x-on:click="tandaiTerpakai()">{{ __('Tandai ikut terpakai') }}</button></div>
-                    </div>
-                    <template x-for="b in binLama(rakLokal(pilih.id)).filter((b) => b.terpakai_oleh)" :key="'t' + b.id">
-                        <div class="mt-1"><span x-text="b.pendek + ' ikut terpakai oleh ' + b.terpakai_oleh"></span>
-                            <button class="btn btn-sm btn-link p-0" type="button" x-on:click="lepasTerpakai(b.id)">{{ __('lepas') }}</button></div>
-                    </template>
-                </div>
-            </template>
+            @include('livewire.warehouse.partials.denah-atur-petak')
 
             @include('livewire.warehouse.partials.denah-nonaktif', ['label' => __('Nonaktifkan rak'), 'catatan' => __('Hanya bila semua bin kosong, tanpa reservasi, dan tidak dibekukan opname. Rak nonaktif tidak digambar.')])
         </div>

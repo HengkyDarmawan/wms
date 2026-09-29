@@ -4,7 +4,7 @@
     Server hanya dipanggil untuk isi rak (klik) dan "Simpan perubahan".
 --}}
 @php
-    $labelStatus = ['kosong' => __('Kosong'), 'terisi' => __('Terisi'), 'penuh' => __('Penuh'), 'beku' => __('Dibekukan (opname)'), 'terpakai' => __('Terpakai barang besar / area')];
+    $labelStatus = ['kosong' => __('Kosong'), 'terisi' => __('Terisi'), 'penuh' => __('Penuh'), 'beku' => __('Dibekukan (opname)'), 'terpakai' => __('Bin tergabung / area terisi')];
     $warnaStatus = ['kosong' => '#f1f3f5', 'terisi' => '#b2f2bb', 'penuh' => '#ffc9c9', 'beku' => '#a5d8ff', 'terpakai' => '#d0bfff'];
 @endphp
 <div>

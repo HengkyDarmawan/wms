@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domain\Stock\Models\StockMovement;
-use App\Domain\Warehouse\Actions\MarkBinsOccupied;
+use App\Domain\Warehouse\Actions\MergeBins;
 use App\Domain\Warehouse\Livewire\BinList;
 use App\Domain\Warehouse\Livewire\WarehouseDetail;
 use App\Domain\Warehouse\Livewire\WarehouseLayout;
@@ -34,8 +34,8 @@ class WarehouseServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->registerLivewireComponents();
 
-        // A-255: bin ikut terpakai dilepas otomatis saat bin utamanya kosong.
-        StockMovement::created(fn (StockMovement $m) => app(MarkBinsOccupied::class)->releaseWhenEmpty($m));
+        // A-360: gabungan bin sementara dipisah otomatis saat bin utamanya kosong.
+        StockMovement::created(fn (StockMovement $m) => app(MergeBins::class)->releaseWhenEmpty($m));
     }
 
     protected function registerPolicies(): void

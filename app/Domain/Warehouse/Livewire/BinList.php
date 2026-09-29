@@ -221,7 +221,7 @@ class BinList extends Component
     private function bins(): LengthAwarePaginator
     {
         return Bin::query()
-            ->with('warehouse:id,code,name', 'storageCategory:id,name,capacity_mode', 'project:id,code,name', 'rackLevel:id,code,rack_id', 'rackLevel.rack:id,code,zone_id,is_area', 'rackLevel.rack.zone:id,code', 'occupiedBy:id,code')
+            ->with('warehouse:id,code,name', 'storageCategory:id,name,capacity_mode', 'project:id,code,name', 'rackLevel:id,code,rack_id', 'rackLevel.rack:id,code,zone_id,is_area', 'rackLevel.rack.zone:id,code', 'mainBin:id,code')
             ->when($this->search !== '', fn (Builder $q) => $q->where('code', 'like', '%'.$this->search.'%'))
             ->when($this->warehouseFilter !== '', fn (Builder $q) => $q->where('warehouse_id', (int) $this->warehouseFilter))
             ->when($this->typeFilter !== '', fn (Builder $q) => $q->where('bin_type', $this->typeFilter))

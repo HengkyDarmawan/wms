@@ -46,7 +46,7 @@
             </div>
             <div class="col-md-2"><label class="form-label mb-0" for="area-kode">{{ __('Kode') }}</label><input class="form-control form-control-sm" id="area-kode" type="text" maxlength="10" x-model="f.area.code" placeholder="mis. AB1"></div>
             <div class="col-md-3"><label class="form-label mb-0" for="area-nama">{{ __('Nama') }}</label><input class="form-control form-control-sm" id="area-nama" type="text" maxlength="60" x-model="f.area.name" placeholder="{{ __('mis. Parkir excavator') }}"></div>
-            <div class="col-md-2"><label class="form-label mb-0" for="area-kap">{{ __('Kapasitas (unit)') }}</label><input class="form-control form-control-sm" id="area-kap" type="number" min="1" step="1" x-model="f.area.capacity_qty"></div>
+            <div class="col-md-2"><label class="form-label mb-0" for="area-kap">{{ __('Kapasitas (unit)') }}</label><input class="form-control form-control-sm" id="area-kap" type="number" min="0" step="any" x-model="f.area.capacity_qty" placeholder="{{ __('tanpa batas') }}"></div>
             <div class="col-md-3 d-flex align-items-end"><label class="form-check mb-1"><input class="form-check-input" type="checkbox" x-model="f.area.seluruh_zona"> <span class="form-check-label">{{ __('Seluruh zona') }}</span></label></div>
         </div>
         <button class="btn btn-sm btn-primary mt-2" type="button" x-on:click="tambahArea()">{{ __('Tambah area lantai') }}</button>
