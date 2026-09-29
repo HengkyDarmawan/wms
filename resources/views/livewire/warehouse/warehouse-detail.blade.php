@@ -191,13 +191,9 @@
                                placeholder="B">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" for="gen-kategori">{{ __('Kategori penyimpanan') }}</label>
-                        <select class="form-select" id="gen-kategori" wire:model="generator.storage_category_id">
-                            <option value="">{{ __('Tidak ditentukan') }}</option>
-                            @foreach ($storageCategories as $kategori)
-                                <option value="{{ $kategori->id }}">{{ $kategori->name }}</option>
-                            @endforeach
-                        </select>
+                        <x-pilih model="generator.storage_category_id" id="gen-kategori" :label="__('Kategori penyimpanan')"
+                                 :kosong="__('Tidak ditentukan')"
+                                 :options="$storageCategories->map(fn ($k) => ['value' => $k->id, 'text' => $k->name])->all()" />
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="gen-kapasitas">{{ __('Kapasitas jumlah per bin') }}</label>

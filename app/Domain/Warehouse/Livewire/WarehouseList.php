@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domain\Warehouse\Livewire;
 
-use App\Domain\Access\Models\User;
 use App\Domain\Master\Models\Project;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use App\Domain\Warehouse\Actions\DeactivateWarehouse;
 use App\Domain\Warehouse\Actions\SaveWarehouse;
 use App\Domain\Warehouse\Livewire\Concerns\HandlesWarehouseRules;
@@ -26,6 +28,7 @@ use Livewire\Component;
  */
 class WarehouseList extends Component
 {
+    use CariPilihan;
     use HandlesWarehouseRules;
 
     #[Url(as: 'q', except: '')]
@@ -116,12 +119,14 @@ class WarehouseList extends Component
             'form.name' => ['required', 'string', 'max:100'],
             'form.warehouse_type_id' => ['required', 'integer'],
             'form.parent_id' => ['nullable', 'integer'],
-            'form.project_id' => ['nullable', 'integer'],
-            'form.head_user_id' => ['nullable', 'integer'],
+            'form.project_id' => ['nullable', 'integer', ...$this->aturanPilihan('project_id', $gudang)],
+            'form.head_user_id' => ['nullable', 'integer', ...$this->aturanPilihan('head_user_id', $gudang)],
         ], attributes: [
             'form.code' => __('Kode gudang'),
             'form.name' => __('Nama gudang'),
             'form.warehouse_type_id' => __('Tipe gudang'),
+            'form.project_id' => __('Proyek'),
+            'form.head_user_id' => __('Kepala gudang'),
         ]);
 
         $berhasil = $this->jalankan(fn () => $action->handle($gudang, $this->form, auth()->user()));
@@ -212,6 +217,11 @@ class WarehouseList extends Component
         if ($this->tampilan === 'denah') {
             $pilihan = collect($pohon)->pluck('gudang')->where('is_active', true)->values();
             $denahGudang = $pilihan->firstWhere('id', (int) $this->gudangDenah) ?? $pilihan->first();
+
+            // `<x-pilih>` menampilkan nilai properti: gudang bawaan ditulis supaya terlihat terpilih (A-397).
+            if ($denahGudang !== null && $this->gudangDenah !== (string) $denahGudang->id) {
+                $this->gudangDenah = (string) $denahGudang->id;
+            }
         }
 
         return view('livewire.warehouse.warehouse-list', [
@@ -219,10 +229,73 @@ class WarehouseList extends Component
             'pohon' => $pohon,
             'semua' => $semua,
             'types' => WarehouseType::query()->active()->orderBy('name')->get(['id', 'code', 'name']),
-            'projects' => Project::query()->active()->orderBy('name')->get(['id', 'code', 'name']),
-            'heads' => User::query()->internal()->active()->orderBy('name')->get(['id', 'name']),
+            // A-397: proyek & kepala gudang dicari ke server (daftar lama).
+            'opsiProyek' => $this->pilihanProyek()->awalDengan($this->form['project_id']),
+            'opsiKepala' => $this->pilihanKepala()->awalDengan($this->form['head_user_id']),
             'alasan' => $this->pilihanAlasan(),
         ]);
+    }
+
+    /** Proyek aktif (daftar lama, urut nama) — untuk Gudang Site. */
+    private function pilihanProyek(): Pilihan
+    {
+        return Pilihan::dari(Project::query()->active()->orderBy('name'), ['code', 'name'], fn (Project $p) => [
+            'value' => (int) $p->id,
+            'text' => $p->code.' — '.$p->name,
+        ]);
+    }
+
+    /** Pengguna internal aktif (daftar lama) dengan badge jabatan & unit. */
+    private function pilihanKepala(): Pilihan
+    {
+        return SumberPilihan::pengguna();
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        if (! $this->showForm || ! $this->bolehSimpan()) {
+            return null;
+        }
+
+        return match ($model) {
+            'form.project_id' => $this->pilihanProyek(),
+            'form.head_user_id' => $this->pilihanKepala(),
+            default => null,
+        };
+    }
+
+    private function bolehSimpan(): bool
+    {
+        $user = auth()->user();
+
+        if ($user === null) {
+            return false;
+        }
+
+        if ($this->editingId === null) {
+            return $user->can('create', Warehouse::class);
+        }
+
+        $gudang = Warehouse::query()->find($this->editingId);
+
+        return $gudang !== null && $user->can('update', $gudang);
+    }
+
+    /**
+     * Id dari browser di luar daftar ditolak; nilai yang sudah tersimpan di
+     * gudang itu tetap boleh (mis. proyek sudah ditutup) (A-397).
+     *
+     * @return list<\Closure>
+     */
+    private function aturanPilihan(string $kolom, ?Warehouse $gudang): array
+    {
+        $nilai = (string) ($this->form[$kolom] ?? '');
+
+        if ($nilai === '' || ($gudang !== null && $nilai === (string) $gudang->{$kolom})) {
+            return [];
+        }
+
+        return [($kolom === 'project_id' ? $this->pilihanProyek() : $this->pilihanKepala())->aturan()];
     }
 
     /**

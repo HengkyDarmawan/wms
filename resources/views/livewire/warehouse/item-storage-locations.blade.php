@@ -82,12 +82,9 @@
 
         @if ($bolehUbah && $gudangUbah === 0 && $gudangLain->isNotEmpty())
             <div class="d-flex gap-2 align-items-center">
-                <select class="form-select form-select-sm" wire:model="gudangBaru" aria-label="{{ __('Gudang') }}">
-                    <option value="">{{ __('Atur tempat di gudang…') }}</option>
-                    @foreach ($gudangLain as $g)
-                        <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="gudangBaru" id="tempat-gudang-baru" kecil class="flex-grow-1" :aria="__('Gudang')"
+                         :kosong="__('Atur tempat di gudang…')"
+                         :options="$gudangLain->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
                 <button class="btn btn-sm btn-outline-primary text-nowrap" type="button" wire:click="tambahGudang">{{ __('Atur') }}</button>
             </div>
         @endif

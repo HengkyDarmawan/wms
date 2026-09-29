@@ -68,45 +68,22 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label" for="gudang-induk">{{ __('Gudang induk') }}</label>
-                    <select class="form-select @error('form.parent_id') is-invalid @enderror" id="gudang-induk"
-                            wire:model="form.parent_id">
-                        <option value="">{{ __('Tidak ada induk') }}</option>
-                        @foreach ($semua as $kandidat)
-                            @continue($editingId === $kandidat->id)
-                            <option value="{{ $kandidat->id }}">{{ $kandidat->code }} — {{ $kandidat->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.parent_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.parent_id" id="gudang-induk" :label="__('Gudang induk')" :kosong="__('Tidak ada induk')"
+                             :options="$semua->reject(fn ($k) => $editingId === $k->id)->map(fn ($k) => ['value' => $k->id, 'text' => $k->code.' — '.$k->name])->values()->all()" />
                 </div>
 
                 @php($tipeTerpilih = $types->firstWhere('id', (int) ($form['warehouse_type_id'] ?: 0)))
 
                 <div class="col-md-5">
-                    <label class="form-label" for="gudang-proyek">
-                        {{ __('Proyek') }}
-                        @if ($tipeTerpilih && $tipeTerpilih->code === 'SITE') <span class="wajib">*</span> @endif
-                    </label>
-                    <select class="form-select @error('form.project_id') is-invalid @enderror" id="gudang-proyek"
-                            wire:model="form.project_id"
-                            @disabled(! $tipeTerpilih || $tipeTerpilih->code !== 'SITE')>
-                        <option value="">{{ __('Tanpa proyek') }}</option>
-                        @foreach ($projects as $project)
-                            <option value="{{ $project->id }}">{{ $project->code }} — {{ $project->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('form.project_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-pilih model="form.project_id" id="gudang-proyek" server :label="__('Proyek')"
+                             :wajib="$tipeTerpilih && $tipeTerpilih->code === 'SITE'" :kosong="__('Tanpa proyek')"
+                             :disabled="! $tipeTerpilih || $tipeTerpilih->code !== 'SITE'" :options="$opsiProyek" />
                     <div class="form-text">{{ __('Hanya Gudang Site yang terikat proyek.') }}</div>
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label" for="gudang-kepala">{{ __('Kepala gudang') }}</label>
-                    <select class="form-select" id="gudang-kepala" wire:model="form.head_user_id">
-                        <option value="">{{ __('Belum ditentukan') }}</option>
-                        @foreach ($heads as $head)
-                            <option value="{{ $head->id }}">{{ $head->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="form.head_user_id" id="gudang-kepala" server :label="__('Kepala gudang')"
+                             :kosong="__('Belum ditentukan')" :options="$opsiKepala" />
                 </div>
 
                 <div class="col-12">
@@ -181,12 +158,8 @@
         <div class="card mb-3" data-mode-denah>
             <div class="card-body d-flex flex-wrap align-items-end gap-2">
                 <div>
-                    <label class="form-label small mb-1" for="denah-gudang">{{ __('Gudang') }}</label>
-                    <select class="form-select form-select-sm" id="denah-gudang" style="min-width: 18rem" wire:model.live="gudangDenah">
-                        @foreach ($semua->where('is_active', true) as $g)
-                            <option value="{{ $g->id }}" @selected($denahGudang?->id === $g->id)>{{ $g->code }} — {{ $g->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih model="gudangDenah" id="denah-gudang" live kecil :label="__('Gudang')" style="min-width: 18rem"
+                             :options="$semua->where('is_active', true)->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->values()->all()" />
                 </div>
                 @if ($denahGudang)
                     <a class="btn btn-sm btn-primary ms-auto" href="{{ route('warehouses.layout', $denahGudang) }}"><i class="bi bi-arrows-fullscreen"></i> {{ __('Buka denah penuh / Atur denah') }}</a>

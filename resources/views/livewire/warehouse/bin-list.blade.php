@@ -63,11 +63,8 @@
             <div class="card-header"><strong>{{ __('Ubah bin') }}</strong></div>
             <div class="card-body row g-2">
                 <div class="col-md-4">
-                    <label class="form-label" for="ubah-kategori">{{ __('Kategori penyimpanan') }}</label>
-                    <select class="form-select" id="ubah-kategori" wire:model="formBin.storage_category_id">
-                        <option value="">—</option>
-                        @foreach ($storageCategories as $k) <option value="{{ $k->id }}">{{ $k->name }}</option> @endforeach
-                    </select>
+                    <x-pilih model="formBin.storage_category_id" id="ubah-kategori" :label="__('Kategori penyimpanan')" kosong="—"
+                             :options="$storageCategories->map(fn ($k) => ['value' => $k->id, 'text' => $k->name])->all()" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="ubah-mode">{{ __('Jika melebihi kapasitas') }}</label>
@@ -100,13 +97,8 @@
                        wire:model.live.debounce.400ms="search" placeholder="CKG-A-R01-L1-B01">
             </div>
             <div class="col-lg-3">
-                <label class="form-label" for="filter-gudang-bin">{{ __('Gudang') }}</label>
-                <select class="form-select" id="filter-gudang-bin" wire:model.live="warehouseFilter">
-                    <option value="">{{ __('Semua gudang') }}</option>
-                    @foreach ($warehouses as $gudang)
-                        <option value="{{ $gudang->id }}">{{ $gudang->code }} — {{ $gudang->name }}</option>
-                    @endforeach
-                </select>
+                <x-pilih model="warehouseFilter" id="filter-gudang-bin" live :label="__('Gudang')" :kosong="__('Semua gudang')"
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
             </div>
             <div class="col-lg-2">
                 <label class="form-label" for="filter-jenis-bin">{{ __('Jenis') }}</label>
