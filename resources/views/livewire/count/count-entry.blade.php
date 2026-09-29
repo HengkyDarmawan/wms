@@ -54,14 +54,8 @@
                 <div class="card-header"><strong>{{ __('Temuan barang di luar catatan') }}</strong></div>
                 <div class="card-body row g-2">
                     <div class="col-12">
-                        <label class="form-label" for="temuan-item">{{ __('Item') }} <span class="wajib">*</span></label>
-                        <select class="form-select @error('temuan.item_id') is-invalid @enderror" id="temuan-item" wire:model="temuan.item_id">
-                            <option value="">{{ __('Pilih item…') }}</option>
-                            @foreach ($items as $i)
-                                <option value="{{ $i->id }}">{{ $i->code }} — {{ $i->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('temuan.item_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        {{-- A-394: item aktif tanpa pelacakan / ber-lot, dicari ke server. --}}
+                        <x-pilih model="temuan.item_id" id="temuan-item" server wajib :label="__('Item')" :kosong="__('Pilih item…')" :options="$opsiItem" />
                     </div>
                     <div class="col-6">
                         <label class="form-label" for="temuan-lot">{{ __('Nomor lot') }}</label>

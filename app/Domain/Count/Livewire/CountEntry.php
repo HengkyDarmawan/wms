@@ -9,7 +9,9 @@ use App\Domain\Count\Livewire\Concerns\HandlesCountRules;
 use App\Domain\Count\Models\CountAssignment;
 use App\Domain\Count\Models\CountLine;
 use App\Domain\Master\Enums\TrackingMode;
-use App\Domain\Master\Models\Item;
+use App\Domain\Shared\Livewire\Concerns\CariPilihan;
+use App\Domain\Shared\Pilihan\Pilihan;
+use App\Domain\Shared\Pilihan\SumberPilihan;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
@@ -26,6 +28,7 @@ use Livewire\Component;
  */
 class CountEntry extends Component
 {
+    use CariPilihan;
     use HandlesCountRules;
 
     #[Locked]
@@ -55,10 +58,20 @@ class CountEntry extends Component
             'tugas' => $tugas,
             'lines' => $this->baris($tugas),
             'bolehIsi' => auth()->user()->can('record', $tugas),
-            'items' => $this->tambahTemuan
-                ? Item::query()->active()->whereIn('tracking_mode', [TrackingMode::None->value, TrackingMode::Lot->value])->orderBy('code')->get(['id', 'code', 'name', 'tracking_mode'])
-                : collect(),
+            'opsiItem' => $this->tambahTemuan ? $this->pilihanItem()->awalDengan($this->temuan['item_id']) : [],
         ]);
+    }
+
+    /** Item aktif tanpa pelacakan / ber-lot (daftar lama), dicari ke server (A-394). */
+    private function pilihanItem(): Pilihan
+    {
+        return SumberPilihan::item()->saring(fn ($q) => $q->whereIn('tracking_mode', [TrackingMode::None->value, TrackingMode::Lot->value]));
+    }
+
+    protected function pilihanServer(string $model): ?Pilihan
+    {
+        return $model === 'temuan.item_id' && $this->tambahTemuan && (auth()->user()?->can('record', $this->tugas()) ?? false)
+            ? $this->pilihanItem() : null;
     }
 
     public function simpan(RecordCount $action): void
@@ -95,7 +108,7 @@ class CountEntry extends Component
         $this->authorize('record', $tugas);
 
         $this->validate([
-            'temuan.item_id' => ['required'],
+            'temuan.item_id' => ['required', $this->pilihanItem()->aturan()],
             'temuan.qty' => ['required', 'numeric', 'gt:0'],
         ], attributes: ['temuan.item_id' => __('Item'), 'temuan.qty' => __('Jumlah')]);
 

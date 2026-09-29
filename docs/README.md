@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.93
+**Versi:** 0.94
 **Tanggal:** 1 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -107,6 +107,12 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.94 — 1 Oktober 2026 (pilihan yang bisa dicari: menu Opname & penyesuaian)
+- **Asumsi baru** [A-394](wms/04b-asumsi-lanjutan.md#a-394) (04b v0.37 §2.54, *Perlu validasi*): bin & item baris ADJ manual dan item temuan hitung dicari ke server; ganti gudang ADJ mengosongkan bin baris; penghitung sesi dimuat sekaligus.
+- **Spesifikasi** [21-opname-penyesuaian](wms/21-opname-penyesuaian.md) v0.8 (§13.4, TC-ADJ-14, TC-OPN-23). Glosarium, katalog 06, model data, dan route tidak berubah.
+- **Kode:** `AdjustmentForm`, `CountEntry`, `StockCountDetail`; view `adjustment-form`, `count-entry`, `count-detail`; uji `PilihanOpnameTest`.
+- **Arsip:** blok v0.32 dipindah ke [arsip](00-catatan-perubahan-arsip.md) v1.21.
 
 ### v0.93 — 1 Oktober 2026 (pilihan yang bisa dicari: menu Pembelian)
 - **Asumsi baru** [A-393](wms/04b-asumsi-lanjutan.md#a-393) (04b v0.36 §2.54, *Perlu validasi*): proyek & item PRQ, vendor *Catat pemesanan*, vendor PO, saringan vendor PO, vendor & item harga beli dicari ke server; id di luar daftar ditolak di isiannya; `<x-pilih>` di sel tabel minimal 14rem.
@@ -426,17 +432,3 @@ docs/
 - **Model data** 08a–08c → v0.15 (digenerate ulang): kolom implementasi PRQ (A-172).
 - **Modul lain:** `14-request` → v0.7, `19-receipt-putaway` → v0.7, `20-approval` → v0.7, `08-arsitektur` → v0.14 (§7 job, §12), `00-akun-uji` → v1.9, laporan progres → v1.10 (PRQ ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.5.
 - **Uji:** 12 uji TC-PRQ-01–12 (termasuk rantai REQ pembelian → PRQ → catatan pemesanan → GRN → put-away → reservasi → PCK → SJ). TC-ACC-27b (6 permission), TC-APR-17 (jenis di luar katalog), TC-APR-21 (7 aturan demo) disesuaikan. **537 uji hijau** (MariaDB 10.4.32, XAMPP3).
-
-### v0.32 — 24 September 2026 (modul Aset dipinjamkan selesai Fase 1)
-- **Berkas baru `wms/25-aset.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Asset`, migrasi tenant `000140` (`asset_handovers`, `asset_inspections`, `maintenance_schedules` stub F2).
-  - AST lahir otomatis saat SJ aset diterima proyek (jatuh tempo bawaan = target selesai proyek, meter keluar = pembacaan terakhir), `returned` saat GRN retur diterima (hari pakai BR-AST-05), `inspected` lewat pemeriksaan grade + skor + catatan komponen + foto (BR-AST-03/08).
-  - State aset mengikuti lokasi & kondisi dari kartu stok dan reservasi (BR-AST-01) lewat observer — `reserved`, `in_transit`, `on_loan`, `returned`, hasil pemeriksaan, `written_off`.
-  - Aset dipilah dari bin Retur setelah diperiksa, sesuai grade; `asset_returned` membawa hasil pemeriksaan (melengkapi stub A-116). Grade C/D dan aset hilang menerbitkan `asset_lost_or_damaged`.
-  - Aset hilang → ADJ asal `asset_lost` lewat approval → `written_off`; ditemukan kembali bila ADJ ditolak.
-  - Layar *Aset*, *Serah terima aset*, cetak **BA Serah Terima Aset**, laporan **Aset dipinjamkan** (lewat jatuh tempo, hari pakai), peringatan sisa umur.
-- **Asumsi baru [A-163](wms/04-keputusan-dan-asumsi.md#a-163)–[A-169](wms/04-keputusan-dan-asumsi.md#a-169)** (*Perlu validasi*, `04` → v0.21, §2.10): AST mengikuti SJ/RET, sinkron state, kolom di luar ERD, guard pemeriksaan, aset hilang, permission & cakupan, jatuh tempo tanpa notifikasi.
-- **Permission baru** modul `asset` (4): `asset.view`, `asset.manage`, `asset.inspect`, `asset.mark_lost`.
-- **Katalog** `06` → v0.15: catatan §2.11, `asset_handover` tidak lagi stub, `adjustment_origin = asset_lost` tersambung — **tanpa status baru**.
-- **Model data** 08a–08c → v0.14 (digenerate ulang): kolom implementasi `asset_handovers`, `asset_inspections` (A-165).
-- **Modul lain:** `15-picking-shipment` → v0.6 (AST dari SJ), `21-opname-penyesuaian` → v0.3 (ADJ `asset_lost`), `22-retur-transfer` → v0.4 (pemeriksaan sebelum pilah), `18-template-dokumen-label` → v0.4, `16-shared-laporan-berkas` → v0.5 (laporan kesembilan), `08-arsitektur` → v0.13, `00-akun-uji` → v1.8, laporan progres → v1.9 (Aset ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.4. Master: `Serial::usagePercent` memakai max(hari, meter) dan ambang `asset_life_alert_pct`.
-- **Uji:** 12 uji TC-AST-01–12 (termasuk rantai REQ pinjam → PCK → SJ → RET → GRN → periksa → pilah → pinjam lagi, dan aset hilang diputus dari kotak tugas approval). TC-RET-13 kini memeriksa aset dulu; TC-TPL-04, TC-ACC-27b (4 permission `asset`), TC-RPT-01 (9 laporan) disesuaikan. **525 uji hijau** (MariaDB 10.4.32, XAMPP3).

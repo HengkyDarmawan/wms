@@ -109,14 +109,11 @@
                             <td>{{ $a->round === 2 ? __('Hitung ulang') : __('Pertama') }}</td>
                             <td>
                                 @if ($counters->isNotEmpty() && ! $a->isDone())
-                                    <div class="input-group input-group-sm">
-                                        <select class="form-select" wire:model="penghitung.{{ $a->id }}">
-                                            <option value="">{{ $a->counter?->name ?? __('— belum ditugaskan —') }}</option>
-                                            @foreach ($counters as $u)
-                                                <option value="{{ $u->id }}">{{ $u->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <button class="btn btn-outline-primary" type="button" wire:click="tugaskan({{ $a->id }})">{{ __('Tetapkan') }}</button>
+                                    {{-- A-394: penghitung layak (izin hitung + cakupan gudang sesi) dimuat sekaligus. --}}
+                                    <div class="d-flex gap-1 align-items-start">
+                                        <x-pilih model="penghitung.{{ $a->id }}" id="penghitung-{{ $a->id }}" kecil class="flex-grow-1" :aria="__('Penghitung')"
+                                                 :kosong="$a->counter?->name ?? __('— belum ditugaskan —')" :options="$opsiPenghitung" />
+                                        <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tugaskan({{ $a->id }})">{{ __('Tetapkan') }}</button>
                                     </div>
                                 @else
                                     {{ $a->counter?->name ?? __('— belum ditugaskan —') }}

@@ -1,9 +1,23 @@
 # Catatan Perubahan — Arsip (v0.2–v0.31)
 
-**Versi:** 1.20
+**Versi:** 1.21
 **Tanggal:** 1 Oktober 2026
-**Status:** arsip — v1.20: blok v0.31 dipindah dari README v0.90; v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
+**Status:** arsip — v1.21: blok v0.32 dipindah dari README v0.94; v1.20: blok v0.31 dipindah dari README v0.90; v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
 **Dokumen terkait:** [README](README.md)
+
+### v0.32 — 24 September 2026 (modul Aset dipinjamkan selesai Fase 1)
+- **Berkas baru `wms/25-aset.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Asset`, migrasi tenant `000140` (`asset_handovers`, `asset_inspections`, `maintenance_schedules` stub F2).
+  - AST lahir otomatis saat SJ aset diterima proyek (jatuh tempo bawaan = target selesai proyek, meter keluar = pembacaan terakhir), `returned` saat GRN retur diterima (hari pakai BR-AST-05), `inspected` lewat pemeriksaan grade + skor + catatan komponen + foto (BR-AST-03/08).
+  - State aset mengikuti lokasi & kondisi dari kartu stok dan reservasi (BR-AST-01) lewat observer — `reserved`, `in_transit`, `on_loan`, `returned`, hasil pemeriksaan, `written_off`.
+  - Aset dipilah dari bin Retur setelah diperiksa, sesuai grade; `asset_returned` membawa hasil pemeriksaan (melengkapi stub A-116). Grade C/D dan aset hilang menerbitkan `asset_lost_or_damaged`.
+  - Aset hilang → ADJ asal `asset_lost` lewat approval → `written_off`; ditemukan kembali bila ADJ ditolak.
+  - Layar *Aset*, *Serah terima aset*, cetak **BA Serah Terima Aset**, laporan **Aset dipinjamkan** (lewat jatuh tempo, hari pakai), peringatan sisa umur.
+- **Asumsi baru [A-163](wms/04-keputusan-dan-asumsi.md#a-163)–[A-169](wms/04-keputusan-dan-asumsi.md#a-169)** (*Perlu validasi*, `04` → v0.21, §2.10): AST mengikuti SJ/RET, sinkron state, kolom di luar ERD, guard pemeriksaan, aset hilang, permission & cakupan, jatuh tempo tanpa notifikasi.
+- **Permission baru** modul `asset` (4): `asset.view`, `asset.manage`, `asset.inspect`, `asset.mark_lost`.
+- **Katalog** `06` → v0.15: catatan §2.11, `asset_handover` tidak lagi stub, `adjustment_origin = asset_lost` tersambung — **tanpa status baru**.
+- **Model data** 08a–08c → v0.14 (digenerate ulang): kolom implementasi `asset_handovers`, `asset_inspections` (A-165).
+- **Modul lain:** `15-picking-shipment` → v0.6 (AST dari SJ), `21-opname-penyesuaian` → v0.3 (ADJ `asset_lost`), `22-retur-transfer` → v0.4 (pemeriksaan sebelum pilah), `18-template-dokumen-label` → v0.4, `16-shared-laporan-berkas` → v0.5 (laporan kesembilan), `08-arsitektur` → v0.13, `00-akun-uji` → v1.8, laporan progres → v1.9 (Aset ✅), `prompts/00-lanjutkan-di-rumah.md` → v1.4. Master: `Serial::usagePercent` memakai max(hari, meter) dan ambang `asset_life_alert_pct`.
+- **Uji:** 12 uji TC-AST-01–12 (termasuk rantai REQ pinjam → PCK → SJ → RET → GRN → periksa → pilah → pinjam lagi, dan aset hilang diputus dari kotak tugas approval). TC-RET-13 kini memeriksa aset dulu; TC-TPL-04, TC-ACC-27b (4 permission `asset`), TC-RPT-01 (9 laporan) disesuaikan. **525 uji hijau** (MariaDB 10.4.32, XAMPP3).
 
 ### v0.31 — 24 September 2026 (modul Konversi & Waste selesai Fase 1, mesin rumah XAMPP3)
 - **Berkas baru `wms/24-konversi-waste.md` v0.2 (selesai Fase 1).** Domain `app/Domain/Conversion` dan `app/Domain/Waste`, migrasi tenant `000130` (dari branch `wip/konversi-waste`, digabung lalu diselesaikan; berkas rencana WIP dihapus).

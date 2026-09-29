@@ -6,6 +6,7 @@ namespace App\Domain\Count\Livewire;
 
 use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Approval\Support\ApprovalHistory;
 use App\Domain\Count\Actions\ApproveStockCount;
 use App\Domain\Count\Actions\AssignCounter;
@@ -77,7 +78,8 @@ class StockCountDetail extends Component
             'ringkasan' => $this->ringkasan($count),
             'adjustments' => $count->adjustments()->with('warehouse:id,code')->orderBy('id')->get(),
             'akarOptions' => RootCauseCategory::options(),
-            'counters' => $this->penghitungLayak($count),
+            'counters' => $penghitung = $this->penghitungLayak($count),
+            'opsiPenghitung' => $penghitung->map(fn (User $u) => ['value' => (int) $u->id, 'text' => $u->name])->all(),
             'alasanTolak' => $this->pilihanAlasan(ReasonContext::Reject),
             'alasanBatal' => $this->pilihanAlasan(ReasonContext::Cancel),
             'bisaUbahAkar' => $this->bisaUbahAkar($count),
@@ -229,7 +231,7 @@ class StockCountDetail extends Component
         return auth()->user()->hasPermission('count.reconcile')
             && ($count->status->isCounting()
                 || ($count->status->value === 'reconciling'
-                    && app(\App\Domain\Approval\Support\ApprovalEngine::class)->pendingSnapshot(ApprovalDocumentType::StockCount, (int) $count->id) === null));
+                    && app(ApprovalEngine::class)->pendingSnapshot(ApprovalDocumentType::StockCount, (int) $count->id) === null));
     }
 
     /** @return array<string, int> */

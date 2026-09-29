@@ -17,14 +17,8 @@
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-md-4">
-                <label class="form-label" for="adj-gudang">{{ __('Gudang') }} <span class="wajib">*</span></label>
-                <select class="form-select @error('form.warehouse_id') is-invalid @enderror" id="adj-gudang" wire:model.live="form.warehouse_id" @disabled($asal)>
-                    <option value="">{{ __('Pilih gudang…') }}</option>
-                    @foreach ($warehouses as $g)
-                        <option value="{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</option>
-                    @endforeach
-                </select>
-                @error('form.warehouse_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <x-pilih model="form.warehouse_id" id="adj-gudang" live wajib :label="__('Gudang')" :disabled="(bool) $asal"
+                         :kosong="__('Pilih gudang…')" :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="adj-alasan">{{ __('Alasan') }} <span class="wajib">*</span></label>
@@ -81,20 +75,13 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <select class="form-select form-select-sm" wire:model="rows.{{ $i }}.bin_id">
-                                        <option value="">{{ __('Pilih bin…') }}</option>
-                                        @foreach ($bins as $b)
-                                            <option value="{{ $b->id }}">{{ $b->code }}</option>
-                                        @endforeach
-                                    </select>
+                                    {{-- A-394: bin gudang terpilih & item dicari ke server. --}}
+                                    <x-pilih model="rows.{{ $i }}.bin_id" id="adj-bin-{{ $i }}" server kecil :aria="__('Bin')"
+                                             :kunci="$form['warehouse_id'].'|'.count($rows)" :kosong="__('Pilih bin…')" :options="$opsiBin[$i] ?? []" />
                                 </td>
                                 <td>
-                                    <select class="form-select form-select-sm" wire:model.live="rows.{{ $i }}.item_id">
-                                        <option value="">{{ __('Pilih item…') }}</option>
-                                        @foreach ($items as $it)
-                                            <option value="{{ $it->id }}">{{ $it->code }} — {{ $it->name }}</option>
-                                        @endforeach
-                                    </select>
+                                    <x-pilih model="rows.{{ $i }}.item_id" id="adj-item-{{ $i }}" server live kecil :aria="__('Item')"
+                                             :kunci="(string) count($rows)" :kosong="__('Pilih item…')" :options="$opsiItem[$i] ?? []" />
                                 </td>
                                 <td>
                                     <select class="form-select form-select-sm" wire:model="rows.{{ $i }}.stock_status">
@@ -107,7 +94,7 @@
                                     <input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model="rows.{{ $i }}.qty">
                                 </td>
                                 <td style="min-width: 14rem">
-                                    @php $mode = $items->firstWhere('id', (int) ($r['item_id'] ?? 0))?->tracking_mode?->value; @endphp
+                                    @php $mode = $itemBarisan->get((int) ($r['item_id'] ?? 0))?->tracking_mode?->value; @endphp
                                     @if ($mode === 'lot')
                                         <input class="form-control form-control-sm mb-1" type="text" wire:model="rows.{{ $i }}.lot_no" placeholder="{{ __('Nomor lot *') }}">
                                         @if (($r['direction'] ?? 'in') === 'in')
