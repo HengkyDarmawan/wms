@@ -28,6 +28,7 @@ use App\Domain\Warehouse\Models\Zone;
 use App\Domain\Warehouse\Support\WarehouseLayoutData;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\Activitylog\Models\Activity;
 use Tests\Feature\Receipt\Concerns\ReceiptFixtures;
 use Tests\TenantTestCase;
 
@@ -76,6 +77,17 @@ class FloorPlanTest extends TenantTestCase
         $this->fail('Seharusnya ditolak '.$aturan.'.');
     }
 
+    /**
+     * A-353: semua perubahan mode Atur dikirim sekali lewat "Simpan perubahan".
+     *
+     * @param  array<int, array<string, mixed>>  $ops
+     * @return array<string, mixed>
+     */
+    private function simpan($layar, array $ops): array
+    {
+        return data_get($layar->call('simpanPerubahan', $ops)->effects, 'returns.0');
+    }
+
     private function kepala()
     {
         $u = $this->makeUser('warehouse_head', ScopeType::Warehouse, $this->gudang->id);
@@ -87,28 +99,27 @@ class FloorPlanTest extends TenantTestCase
     #[Test]
     public function tc_wh_31_ukuran_gedung_posisi_dan_ukuran_zona_tersimpan(): void
     {
-        $layar = Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang])
-            ->call('aturEdit', true)
-            ->set('formGedung', ['length_m' => '30', 'width_m' => ''])
-            ->call('simpanGedung')->assertHasErrors(['formGedung.width_m'])
-            ->set('formGedung', ['length_m' => '30', 'width_m' => '18,5'])
-            ->call('simpanGedung')->assertHasNoErrors();
+        $layar = Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang]);
+        $gagal = $this->simpan($layar, [['op' => 'gedung', 'data' => ['length_m' => '30', 'width_m' => '']]]);
+        $this->assertFalse($gagal['ok']);
+        $this->assertSame('gedung', $gagal['galat'][0]['objek']);
 
+        $this->assertTrue($this->simpan($layar, [['op' => 'gedung', 'data' => ['length_m' => '30', 'width_m' => '18,5']]])['ok']);
         $this->assertSame([30.0, 18.5], [(float) $this->gudang->refresh()->length_m, (float) $this->gudang->width_m]);
 
         // Seret zona: snap 0,5 m dan dijepit di dalam gedung.
-        $layar->call('ubahUkuran', 'zona', $this->zona->id, 10.2, 6.1)
-            ->call('geser', 'zona', $this->zona->id, 4.26, 2.74);
+        $this->simpan($layar, [
+            ['op' => 'ukuran', 'jenis' => 'zona', 'id' => $this->zona->id, 'p' => 10.2, 'l' => 6.1],
+            ['op' => 'geser', 'jenis' => 'zona', 'id' => $this->zona->id, 'x' => 4.26, 'y' => 2.74],
+        ]);
         $this->zona->refresh();
         $this->assertSame([10.0, 6.0, 4.5, 2.5], [(float) $this->zona->length_m, (float) $this->zona->width_m, (float) $this->zona->pos_x, (float) $this->zona->pos_y]);
 
-        $layar->call('geser', 'zona', $this->zona->id, 99, 99);
+        $this->simpan($layar, [['op' => 'geser', 'jenis' => 'zona', 'id' => $this->zona->id, 'x' => 99, 'y' => 99]]);
         $this->assertSame([20.0, 12.5], [(float) $this->zona->refresh()->pos_x, (float) $this->zona->pos_y], 'Tetap di dalam gedung 30 × 18,5 m.');
 
-        // Form zona juga menyimpan posisi; denah memakai koordinat gedung.
-        $layar->call('pilih', 'zona', $this->zona->id)
-            ->set('formZona.'.$this->zona->id.'.pos_x', '2')->set('formZona.'.$this->zona->id.'.pos_y', '1')
-            ->call('simpanZona', $this->zona->id)->assertHasNoErrors();
+        // Isian zona juga menyimpan posisi; denah memakai koordinat gedung.
+        $this->assertTrue($this->simpan($layar, [['op' => 'zona', 'id' => $this->zona->id, 'data' => ['name' => 'Denah', 'length_m' => 10, 'width_m' => 6, 'pos_x' => '2', 'pos_y' => '1']]])['ok']);
 
         $denah = app(WarehouseLayoutData::class)->build($this->gudang->refresh());
         $z = collect($denah['zones'])->firstWhere('code', 'D');
@@ -123,30 +134,31 @@ class FloorPlanTest extends TenantTestCase
         app(SaveWarehouseLayout::class)->building($this->gudang, ['length_m' => 20, 'width_m' => 10]);
         $gerakAwal = StockMovement::query()->count();
 
-        $layar = Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang])
-            ->call('aturEdit', true)
-            ->call('tambahObjek', 'dock')->assertHasNoErrors();
+        $layar = Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang]);
+
+        // Tambah → geser → ubah ukuran dalam satu simpan; objek baru dirujuk id sementara.
+        $this->assertTrue($this->simpan($layar, [
+            ['op' => 'objek_baru', 'tmp' => 'b1', 'jenis' => 'dock', 'data' => ['pos_x' => 0.5, 'pos_y' => 0.5]],
+            ['op' => 'geser', 'jenis' => 'obj', 'id' => 'b1', 'x' => 17.3, 'y' => 3.2],
+            ['op' => 'ukuran', 'jenis' => 'obj', 'id' => 'b1', 'p' => 6, 'l' => 2],
+        ])['ok']);
 
         $dock = FloorPlanObject::query()->sole();
         $this->assertSame(FloorPlanObjectType::Dock, $dock->object_type);
-        $this->assertSame([4.0, 4.0], [(float) $dock->length_m, (float) $dock->width_m], 'Ukuran bawaan jenis.');
-        $layar->assertSet('terpilih', 'obj:'.$dock->id);
-
-        $layar->call('geser', 'obj', $dock->id, 17.3, 3.2)->call('ubahUkuran', 'obj', $dock->id, 6, 2);
-        $dock->refresh();
         $this->assertSame([16.0, 3.0, 6.0, 2.0], [(float) $dock->pos_x, (float) $dock->pos_y, (float) $dock->length_m, (float) $dock->width_m], 'Snap & dijepit di gedung 20 m.');
+        $this->assertSame(1, Activity::query()->where('subject_id', $dock->id)->where('description', 'Objek denah digeser')->count(), 'Satu geser = satu baris riwayat.');
 
         // Putar 90°: tampak atas menukar panjang & lebar, posisi dijepit ulang.
-        $layar->call('putar');
+        $this->simpan($layar, [['op' => 'putar', 'jenis' => 'obj', 'id' => $dock->id]]);
         $dock->refresh();
         $this->assertSame(90, $dock->rotation);
         $this->assertSame([2.0, 6.0], $dock->footprint());
 
-        $layar->set('formObjek.name', '')->call('simpanObjek')->assertHasErrors(['formObjek.name'])
-            ->set('formObjek.name', 'Dock utara')->set('formObjek.object_type', 'door')->call('simpanObjek')->assertHasNoErrors();
+        $this->assertFalse($this->simpan($layar, [['op' => 'objek', 'id' => $dock->id, 'data' => ['name' => '']]])['ok']);
+        $this->assertTrue($this->simpan($layar, [['op' => 'objek', 'id' => $dock->id, 'data' => ['name' => 'Dock utara', 'object_type' => 'door']]])['ok']);
         $this->assertSame(['Dock utara', FloorPlanObjectType::Door], [$dock->refresh()->name, $dock->object_type]);
 
-        $layar->call('nonaktifkan')->assertSet('terpilih', '');
+        $this->simpan($layar, [['op' => 'nonaktif', 'jenis' => 'obj', 'id' => $dock->id]]);
         $this->assertFalse($dock->refresh()->is_active, 'Tidak dihapus (P-03).');
         $this->assertSame(1, FloorPlanObject::query()->count());
         $this->assertSame([], app(WarehouseLayoutData::class)->build($this->gudang)['objects']);
@@ -180,13 +192,14 @@ class FloorPlanTest extends TenantTestCase
         $this->assertContains('rak:'.$this->rak->id, $denah['tumpukanId']);
         $this->assertContains('obj:'.$pilar->id, $denah['tumpukanId']);
 
-        // Hanya peringatan: layar tetap bisa menyimpan dan menampilkannya.
-        Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang])
-            ->assertSee(__('Geser salah satunya; peringatan ini tidak menolak simpan.'))
-            ->call('aturEdit', true)
-            ->call('pilih', 'rak', $this->rak->id)
-            ->call('geserHalus', 0.1, 0)->call('geserHalus', 0, 0.5)
-            ->call('putar')->assertHasNoErrors();
+        // Hanya peringatan: layar tetap bisa menyimpan (geser halus 0,1 m + putar).
+        $layar = Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang])
+            ->assertSee(__('Geser salah satunya; peringatan ini tidak menolak simpan.'));
+        $this->assertTrue($this->simpan($layar, [
+            ['op' => 'geser', 'jenis' => 'rak', 'id' => $this->rak->id, 'x' => 1.1, 'y' => 1, 'halus' => true],
+            ['op' => 'geser', 'jenis' => 'rak', 'id' => $this->rak->id, 'x' => 1.1, 'y' => 1.5, 'halus' => true],
+            ['op' => 'putar', 'jenis' => 'rak', 'id' => $this->rak->id],
+        ])['ok']);
 
         $this->rak->refresh();
         $this->assertSame([1.1, 1.5, 'v'], [(float) $this->rak->pos_x, (float) $this->rak->pos_y, $this->rak->orientation], 'Panah 0,1/0,5 m; R memutar rak.');
@@ -217,10 +230,11 @@ class FloorPlanTest extends TenantTestCase
 
         // Kosongkan lalu nonaktifkan dari layar.
         app(StockLedger::class)->post(new MovementRequest(item: $this->baut, qtyBase: 5, fromBinId: $this->bin[0]->id));
-        Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang])
-            ->call('aturEdit', true)->call('pilih', 'rak', $this->rak->id)
-            ->call('nonaktifkan')->assertHasErrors(['nonaktif.reason'])
-            ->set('alasanNonaktif', $alasan)->call('nonaktifkan')->assertHasNoErrors();
+        $layar = Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang]);
+        $tanpaAlasan = $this->simpan($layar, [['op' => 'nonaktif', 'jenis' => 'rak', 'id' => $this->rak->id, 'alasan' => '']]);
+        $this->assertFalse($tanpaAlasan['ok']);
+        $this->assertSame('rak:'.$this->rak->id, $tanpaAlasan['galat'][0]['objek']);
+        $this->assertTrue($this->simpan($layar, [['op' => 'nonaktif', 'jenis' => 'rak', 'id' => $this->rak->id, 'alasan' => $alasan]])['ok']);
 
         $this->assertFalse($this->rak->refresh()->is_active);
         $this->assertSame(BinStatus::Inactive, $this->bin[0]->refresh()->bin_status);
@@ -239,13 +253,16 @@ class FloorPlanTest extends TenantTestCase
         $this->assertTrue($staf->hasPermission('warehouse.view'));
 
         $this->actingAs($staf)->get($this->tenantUrl('warehouses/'.$this->gudang->id.'/layout'))->assertOk()->assertDontSee(__('Atur denah'));
-        foreach ([['geser', 'zona', $this->zona->id, 1, 1], ['ubahUkuran', 'zona', $this->zona->id, 4, 4], ['tambahObjek', 'door'], ['simpanGedung'], ['aturEdit', true]] as $panggil) {
-            Livewire::actingAs($staf)->test(WarehouseLayout::class, ['warehouse' => $this->gudang])->call(...$panggil)->assertForbidden();
+        foreach ([['op' => 'geser', 'jenis' => 'zona', 'id' => $this->zona->id, 'x' => 1, 'y' => 1], ['op' => 'objek_baru', 'tmp' => 'b1', 'jenis' => 'door'], ['op' => 'gedung', 'data' => []]] as $op) {
+            Livewire::actingAs($staf)->test(WarehouseLayout::class, ['warehouse' => $this->gudang])->call('simpanPerubahan', [$op])->assertForbidden();
         }
+
+        // Staf tetap boleh melihat isi rak (tanpa render ulang).
+        $this->assertSame('R01', data_get(Livewire::actingAs($staf)->test(WarehouseLayout::class, ['warehouse' => $this->gudang])->call('isiRak', $this->rak->id)->effects, 'returns.0.code'));
 
         // Sematan hanya-lihat di Daftar Gudang: Kepala Gudang pun tidak mengatur dari sana (A-323).
         Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang, 'ringkas' => true])
-            ->assertDontSee(__('Atur denah'))->call('aturEdit', true)->assertForbidden();
+            ->assertDontSee(__('Atur denah'))->call('simpanPerubahan', [])->assertForbidden();
 
         // Di luar cakupan gudang: halaman denah pun tertutup.
         $lain = $this->buatGudang('BKS', 'Gudang Bekasi');
@@ -261,20 +278,18 @@ class FloorPlanTest extends TenantTestCase
         app(StockLedger::class)->post(new MovementRequest(item: $this->baut, qtyBase: 7, toBinId: $b2->id));
 
         $layar = Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang])
-            ->call('pilih', 'rak', $this->rak->id)
-            ->assertSet('binId', (int) $b2->id)                   // bin berisi dibuka lebih dulu
-            ->assertSee(__('Rak').' R01 · '.__('Zona').' D — Denah')
-            ->assertSee(__('Tampak depan (L1 paling bawah) — klik petak bin'))
-            ->assertSee('L1-B02')->assertSee('BAUT-M12');
-        $this->assertSame($b2->code, $layar->viewData('bin')['code']);
+            ->assertSee(__('Tampak depan (tingkat paling bawah di bawah) — ketuk petak'))
+            ->assertSee(__('Nonaktifkan rak'));   // tab Atur ada di halaman bagi pemegang bin.manage
 
-        $layar->call('pilihBin', $b1->id)->assertSet('binId', (int) $b1->id)->assertSee(__('Bin kosong.'));
-        $this->assertSame($b1->code, $layar->viewData('bin')['code']);
-
-        // Tab Atur hanya di mode Atur denah.
-        $layar->call('pilihTab', 'atur')->assertSet('tabRak', 'isi')
-            ->call('aturEdit', true)->call('pilihTab', 'atur')->assertSet('tabRak', 'atur')->assertSee(__('Nonaktifkan rak'))
-            ->call('aturEdit', false)->assertSet('tabRak', 'isi');
+        // A-353: klik rak → isi rak saja, per bin dengan kode pendek; tanpa HTML baru.
+        $klik = $layar->call('isiRak', $this->rak->id);
+        $this->assertArrayNotHasKey('html', $klik->effects, 'Klik rak tidak menggambar ulang halaman.');
+        $isi = data_get($klik->effects, 'returns.0');
+        $this->assertSame(['R01', 'D', 'Denah'], [$isi['code'], $isi['zona'], $isi['zona_nama']]);
+        $petak = collect($isi['levels'][0]['bins'])->keyBy('code');
+        $this->assertSame('R01 · L1 · 02', $petak[$b2->code]['pendek']);
+        $this->assertSame('BAUT-M12', $petak[$b2->code]['isi'][0]['item_code']);
+        $this->assertSame([], $petak[$b1->code]['isi'], 'Bin kosong.');
     }
 
     #[Test]

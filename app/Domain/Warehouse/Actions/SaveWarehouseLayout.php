@@ -89,9 +89,11 @@ class SaveWarehouseLayout
             $zone->fill(['name' => mb_substr($nama, 0, 60)]);
         }
 
-        $zone->save();
+        $perubahan = $zone->getDirty();
+        $zone->disableLogging()->save();
 
-        activity('warehouse')->performedOn($zone)->causedBy($actor)->log('Ukuran zona diubah');
+        activity('warehouse')->performedOn($zone)->causedBy($actor)
+            ->withProperties(['perubahan' => $perubahan])->log('Zona diubah di denah');
 
         return $zone->refresh();
     }
@@ -115,9 +117,11 @@ class SaveWarehouseLayout
             $rack->fill(['pos_x' => $x, 'pos_y' => $y]);
         }
 
-        $rack->save();
+        $perubahan = $rack->getDirty();
+        $rack->disableLogging()->save();
 
-        activity('warehouse')->performedOn($rack)->causedBy($actor)->log('Denah rak diubah');
+        activity('warehouse')->performedOn($rack)->causedBy($actor)
+            ->withProperties(['perubahan' => $perubahan])->log('Denah rak diubah');
 
         return $rack->refresh();
     }
@@ -161,7 +165,7 @@ class SaveWarehouseLayout
             [$p, $l] = [$l, $p];
         }
 
-        $rack->forceFill(['length_m' => $p, 'width_m' => $l])->save();
+        $rack->disableLogging()->forceFill(['length_m' => $p, 'width_m' => $l])->save();
 
         activity('warehouse')->performedOn($rack)->causedBy($actor)
             ->withProperties(['panjang' => $p, 'lebar' => $l])->log('Ukuran rak diubah di denah');
@@ -172,12 +176,12 @@ class SaveWarehouseLayout
     /** A-322: putar rak 90° = tukar arah memanjang ke samping ↔ ke bawah. */
     public function rotateRack(Rack $rack, ?User $actor = null): Rack
     {
-        $rack->forceFill(['orientation' => $rack->orientation === 'v' ? 'h' : 'v'])->save();
+        $rack->disableLogging()->forceFill(['orientation' => $rack->orientation === 'v' ? 'h' : 'v'])->save();
 
         if ($rack->pos_x !== null && $rack->pos_y !== null) {
             // Jepit ulang tanpa membuang geser halus 0,1 m.
             [$x, $y] = $this->posisi($rack->refresh(), $rack->pos_x, $rack->pos_y, self::GRID_HALUS);
-            $rack->forceFill(['pos_x' => $x, 'pos_y' => $y])->save();
+            $rack->disableLogging()->forceFill(['pos_x' => $x, 'pos_y' => $y])->save();
         }
 
         activity('warehouse')->performedOn($rack)->causedBy($actor)
@@ -190,7 +194,7 @@ class SaveWarehouseLayout
     public function moveRack(Rack $rack, mixed $x, mixed $y, ?User $actor = null, float $grid = self::GRID): Rack
     {
         [$px, $py] = $this->posisi($rack, $x, $y, $grid);
-        $rack->forceFill(['pos_x' => $px, 'pos_y' => $py])->save();
+        $rack->disableLogging()->forceFill(['pos_x' => $px, 'pos_y' => $py])->save();
 
         activity('warehouse')->performedOn($rack)->causedBy($actor)
             ->withProperties(['x' => $px, 'y' => $py])->log('Rak digeser di denah');

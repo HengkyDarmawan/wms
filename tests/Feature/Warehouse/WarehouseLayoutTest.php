@@ -174,13 +174,18 @@ class WarehouseLayoutTest extends TenantTestCase
         $this->get($this->tenantUrl('warehouses/'.$this->gudang->id.'/layout'))->assertOk()
             ->assertSee(__('Denah gudang'))->assertSee('R01')->assertSee(__('Atur denah'));
 
-        Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang])
-            ->call('pilihRak', $this->rak->id)
-            ->assertSee($b1->code)->assertSee('BAUT-M12')->assertSee(__('tertua — ambil dulu'))
-            ->call('aturEdit', true)
-            ->call('pindahRak', $this->rak->id, 1.2, 0.9)
-            ->set('formArea.zone_id', (string) $this->zona->id)->set('formArea.code', 'AX')
-            ->call('buatArea')->assertHasNoErrors();
+        // A-353: klik rak = isi rak saja (tanpa render ulang); simpan = satu kiriman.
+        $layar = Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang]);
+        $isi = data_get($layar->call('isiRak', $this->rak->id)->effects, 'returns.0');
+        $petak = collect($isi['levels'])->flatMap(fn ($l) => $l['bins'])->keyBy('code');
+        $this->assertSame('BAUT-M12', $petak[$b1->code]['isi'][0]['item_code']);
+        $this->assertTrue($petak[$b1->code]['isi'][0]['tertua']);
+
+        $hasil = data_get($layar->call('simpanPerubahan', [
+            ['op' => 'geser', 'jenis' => 'rak', 'id' => $this->rak->id, 'x' => 1.2, 'y' => 0.9],
+            ['op' => 'area_baru', 'tmp' => 'b1', 'zona' => $this->zona->id, 'data' => ['code' => 'AX']],
+        ])->effects, 'returns.0');
+        $this->assertTrue($hasil['ok'], json_encode($hasil));
         $this->assertSame([1.0, 1.0], [(float) $this->rak->refresh()->pos_x, (float) $this->rak->pos_y]);
         $this->assertTrue(Rack::query()->where('code', 'AX')->sole()->is_area);
 
@@ -188,7 +193,8 @@ class WarehouseLayoutTest extends TenantTestCase
         $staf = $this->makeUser('warehouse_staff');
         $this->assertFalse($staf->hasPermission('bin.manage'));
         $this->actingAs($staf)->get($this->tenantUrl('warehouses/'.$this->gudang->id.'/layout'))->assertOk()->assertDontSee(__('Atur denah'));
-        Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang])->call('pindahRak', $this->rak->id, 3, 3)->assertForbidden();
+        Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang])
+            ->call('simpanPerubahan', [['op' => 'geser', 'jenis' => 'rak', 'id' => $this->rak->id, 'x' => 3, 'y' => 3]])->assertForbidden();
 
         // Daftar bin: kolom zona · rak · level, saring rak, ubah kapasitas.
         $this->actingAs($kepala);
@@ -226,29 +232,46 @@ class WarehouseLayoutTest extends TenantTestCase
         $area = app(SaveWarehouseLayout::class)->areaRack($this->zona, ['code' => 'AR']);
         $this->gagal(fn () => $layout->newLevel($area->rackLevel->rack, []), 'BR-WH-06');
 
-        // Layar: Kepala Gudang membangun zona baru → rak → level → bin tanpa pindah halaman.
+        // Layar (A-353): Kepala Gudang membangun zona baru → rak → tingkat → bin di browser,
+        // lalu satu kali simpan; benda baru dirujuk dengan id sementara.
         $this->actingAs($this->makeUser('warehouse_head'));
-        $c = Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang])
-            ->call('aturEdit', true)->assertSee(__('Tambah zona & rak'))
-            ->set('formZonaBaru.code', 'e')->set('formZonaBaru.name', 'Zona besi')->call('tambahZona')->assertHasNoErrors();
+        $c = Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang]);
+        $hasil = data_get($c->call('simpanPerubahan', [
+            ['op' => 'zona_baru', 'tmp' => 'b1', 'data' => ['code' => 'e', 'name' => 'Zona besi']],
+            ['op' => 'rak_baru', 'tmp' => 'b2', 'zona' => 'b1', 'data' => ['code' => 'R01', 'levels' => '2', 'bins_per_level' => '3']],
+            ['op' => 'level_baru', 'tmp' => 'b3', 'rak' => 'b2', 'data' => ['bins' => '1']],
+            ['op' => 'bin_baru', 'level' => 'b2#L1', 'jumlah' => '2'],
+            ['op' => 'bin_baru', 'level' => 'b3', 'jumlah' => '1'],
+            ['op' => 'geser', 'jenis' => 'rak', 'id' => 'b2', 'x' => 1, 'y' => 1],
+            ['op' => 'zona', 'id' => 'b1', 'data' => ['name' => 'Zona besi & pipa']],
+        ])->effects, 'returns.0');
+        $this->assertTrue($hasil['ok'], json_encode($hasil));
         $zonaE = Zone::query()->where('warehouse_id', $this->gudang->id)->where('code', 'E')->sole();
-        $c->assertSet('formRakBaru.zone_id', (string) $zonaE->id)
-            ->set('formRakBaru.code', 'R01')->set('formRakBaru.levels', '2')->set('formRakBaru.bins_per_level', '3')->call('tambahRak')->assertHasNoErrors();
+        $this->assertSame('Zona besi & pipa', $zonaE->name);
         $rakE = Rack::query()->where('zone_id', $zonaE->id)->sole();
-        $c->assertSet('rakId', (int) $rakE->id)->assertSee('CKG-E-R01-L2-B03')
-            ->set('formLevelBaru.bins', '1')->call('tambahLevel')->assertHasNoErrors()->assertSee('CKG-E-R01-L3-B01');
-        $l1 = $rakE->levels()->where('code', 'L1')->sole();
-        $c->set('formBinBaru.'.$l1->id, '2')->call('tambahBin', $l1->id)->assertHasNoErrors()->assertSee('CKG-E-R01-L1-B05');
-        $c->set('formBinBaru.'.$l1->id, '0')->call('tambahBin', $l1->id)->assertHasErrors('formBinBaru.'.$l1->id);
-        $c->set('formZona.'.$zonaE->id.'.name', 'Zona besi & pipa')->call('simpanZona', $zonaE->id)->assertHasNoErrors();
+        $kode = Bin::query()->whereIn('rack_level_id', $rakE->levels()->pluck('id'))->orderBy('code')->pluck('code')->all();
+        $this->assertContains('CKG-E-R01-L2-B03', $kode);
+        $this->assertContains('CKG-E-R01-L1-B05', $kode);
+        $this->assertContains('CKG-E-R01-L3-B02', $kode);
+        $this->assertSame([1.0, 1.0], [(float) $rakE->pos_x, (float) $rakE->pos_y]);
+
+        // Galat per objek; satu gagal = tidak ada yang tersimpan.
+        $gagal = data_get($c->call('simpanPerubahan', [
+            ['op' => 'zona_baru', 'tmp' => 'b1', 'data' => ['code' => 'G', 'name' => 'Zona G']],
+            ['op' => 'zona', 'id' => $zonaE->id, 'data' => ['name' => '']],
+            ['op' => 'zona_baru', 'tmp' => 'b2', 'data' => ['code' => 'E', 'name' => 'Ganda']],
+            ['op' => 'bin_baru', 'level' => $rakE->levels()->where('code', 'L1')->value('id'), 'jumlah' => '0'],
+        ])->effects, 'returns.0');
+        $this->assertFalse($gagal['ok']);
+        $this->assertSame([1, 2, 3], array_column($gagal['galat'], 'i'));
+        $this->assertSame('zona:'.$zonaE->id, $gagal['galat'][0]['objek']);
+        $this->assertFalse(Zone::query()->where('code', 'G')->exists(), 'Zona G ikut dibatalkan.');
         $this->assertSame('Zona besi & pipa', $zonaE->refresh()->name);
-        $c->set('formZona.'.$zonaE->id.'.name', '')->call('simpanZona', $zonaE->id)->assertHasErrors('formZona.'.$zonaE->id.'.name');
-        $c->set('formZonaBaru.code', 'E')->set('formZonaBaru.name', 'Ganda')->call('tambahZona')->assertHasErrors('formZonaBaru.code');
 
         // Staf tanpa bin.manage tidak bisa menambah.
         $this->actingAs($this->makeUser('warehouse_staff'));
         Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang])
-            ->set('formZonaBaru.code', 'F')->set('formZonaBaru.name', 'X')->call('tambahZona')->assertForbidden();
+            ->call('simpanPerubahan', [['op' => 'zona_baru', 'tmp' => 'b1', 'data' => ['code' => 'F', 'name' => 'X']]])->assertForbidden();
         $this->assertFalse(Zone::query()->where('code', 'F')->exists());
     }
 
@@ -284,9 +307,10 @@ class WarehouseLayoutTest extends TenantTestCase
             }
         }
 
-        // Layar: petak bin & label level tampil di SVG.
+        // Layar (A-353): data denah dikirim sekali sebagai JSON; SVG digambar browser.
         $this->actingAs($this->makeUser('warehouse_head'));
-        Livewire::test(WarehouseLayout::class, ['warehouse' => $this->gudang])
-            ->assertSeeHtml('data-rak="R02"')->assertSee('B06')->assertSee('L4');
+        $this->get($this->tenantUrl('warehouses/'.$this->gudang->id.'/layout'))->assertOk()
+            ->assertSee('"code":"R02"', false)->assertSee('"short":"B06"', false)->assertSee('"pendek":"R02 · L4 · 06"', false)
+            ->assertSee('data-denah-gedung', false);
     }
 }

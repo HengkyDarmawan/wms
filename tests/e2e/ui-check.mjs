@@ -178,34 +178,40 @@ for (const url of links) {
   cek('impor: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
 }
 
-// 6c3. Tambah zona & rak dari denah (A-271): mode Atur denah → zona baru → rak 2 level × 2 bin.
+// 6c3. Tambah zona & rak dari denah (A-271, A-353): mode Atur → zona baru → rak 2 tingkat × 2 bin
+// di browser, lalu SATU kali "Simpan perubahan".
 {
   const sebelum = errors.length;
   const kode = 'Z' + (Date.now() % 1000);
   await go(`${BASE}/warehouses/1/layout`);
-  await tunggu('[...document.querySelectorAll("main button")].some(b => /Atur denah/.test(b.textContent))');
+  await tunggu('[...document.querySelectorAll("main button")].some(b => /Atur denah/.test(b.textContent) && b.offsetParent)');
   await ev('[...document.querySelectorAll("main button")].find(b => /Atur denah/.test(b.textContent)).click()');
-  cek('denah: kartu tambah zona & rak', await tunggu('!!document.getElementById("tambah-struktur")'));
+  cek('denah: kartu tambah zona & rak', await tunggu('document.getElementById("tambah-struktur")?.offsetParent !== null'));
   const isi = (id, v) => ev(`(() => { const i = document.getElementById('${id}'); i.value = '${v}'; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); })()`);
   await isi('zb-kode', kode); await isi('zb-nama', 'Zona uji denah');
-  await sleep(500);
   await ev('[...document.querySelectorAll("main button")].find(b => b.textContent.trim() === "Tambah zona").click()');
-  cek('denah: zona baru tampil', await tunggu(`!!document.querySelector('main svg g[data-zona="${kode}"]')`));
+  cek('denah: zona baru langsung tergambar (belum tersimpan)', await tunggu(`!!document.querySelector('main svg g[data-zona="${kode}"]')`));
   await isi('rb-kode', 'R01'); await isi('rb-level', '2'); await isi('rb-bin', '2');
-  await sleep(500);
   await ev('[...document.querySelectorAll("main button")].find(b => b.textContent.trim() === "Tambah rak").click()');
-  cek('denah: rak baru + bin', await tunggu(`document.querySelector("main").textContent.includes('-${kode}-R01-L2-B02')`));
+  cek('denah: antrean perubahan = 2', await tunggu('/\\(2\\)/.test(document.querySelector("main [data-simpan-denah]").textContent)'));
+  await ev('document.querySelector("main [data-urungkan]").click()');
+  cek('denah: urungkan membuang rak baru', await tunggu('/\\(1\\)/.test(document.querySelector("main [data-simpan-denah]").textContent)'));
+  await ev('[...document.querySelectorAll("main button")].find(b => b.textContent.trim() === "Tambah rak").click()');
+  await ev('document.querySelector("main [data-simpan-denah]").click()');
+  cek('denah: simpan sekali → antrean kosong', await tunggu('/\\(0\\)/.test(document.querySelector("main [data-simpan-denah]").textContent)'));
+  cek('denah: rak baru + bin tersimpan', await tunggu(`document.querySelector("main svg").textContent.includes('-${kode}-R01-L2-B02')`));
   cek('denah: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
 }
 
-// 6c4. Denah gedung sesuai kenyataan (A-320–A-323): Daftar Gudang (tombol Denah, mode Denah),
-// garis gedung & objek denah, panel rak (tampak depan, isi per bin, tab Atur), zoom, seret objek.
+// 6c4. Denah ringan (A-320–A-323, A-353): Daftar Gudang (tombol Denah, mode Denah), garis gedung
+// & objek denah, klik rak = satu request kecil, cari & geser tanpa request, panel rak, seret objek.
 {
   const sebelum = errors.length;
+  const lw = () => ev('performance.getEntriesByType("resource").filter(e => e.name.includes("/livewire")).length');
   await go(`${BASE}/warehouses`);
   cek('daftar gudang: tombol Denah per baris', await ev('document.querySelectorAll("main a[data-denah]").length > 0'));
   await ev('document.querySelector("main [data-tampilan=denah]").click()');
-  cek('daftar gudang: mode Denah menampilkan denah', await tunggu('!!document.querySelector("main [data-mode-denah]") && !!document.querySelector("main svg[data-denah-gedung]")'));
+  cek('daftar gudang: mode Denah menampilkan denah', await tunggu('!!document.querySelector("main [data-mode-denah]") && !!document.querySelector("main svg[data-denah-gedung] g")'));
 
   await go(`${BASE}/warehouses/1/layout`);
   cek('denah: garis gedung & objek denah', await tunggu('!!document.querySelector("main rect[data-gedung]") && document.querySelectorAll("main g[data-objek]").length >= 5'));
@@ -214,21 +220,46 @@ for (const url of links) {
   cek('denah: zoom +', await tunggu(`document.querySelector("main svg[data-denah-gedung]").getBoundingClientRect().width > ${zoomAwal} + 5`));
   await ev('document.querySelector("main [data-pas-layar]").click()');
 
+  let n0 = await lw();
+  await ev('(() => { const i = document.querySelector("main [data-cari-denah]"); i.value = "B01"; i.dispatchEvent(new Event("input", { bubbles: true })); })()');
+  await sleep(600);
+  cek('denah: cari tanpa request', (await lw()) === n0, `${n0} → ${await lw()}`);
+  await ev('(() => { const i = document.querySelector("main [data-cari-denah]"); i.value = ""; i.dispatchEvent(new Event("input", { bubbles: true })); })()');
+
+  n0 = await lw();
   await klik('main svg g[data-rak] rect[data-badan]');
   cek('panel rak: tampak depan', await tunggu('document.querySelectorAll("main [data-panel-rak] [data-tampak-depan] button[data-bin]").length >= 2'));
+  cek('denah: klik rak = 1 request', (await lw()) - n0 === 1, `${(await lw()) - n0} request`);
   const kodeBin = await ev('[...document.querySelectorAll("main [data-tampak-depan] button[data-bin]")].at(-1).dataset.bin');
   await ev('[...document.querySelectorAll("main [data-tampak-depan] button[data-bin]")].at(-1).click()');
   cek('panel rak: isi bin yang diklik', await tunggu(`(document.querySelector("main [data-isi-bin]")?.textContent || "").includes("${kodeBin}")`), kodeBin);
-  cek('panel rak: tab Atur terkunci di luar mode Atur', await ev('[...document.querySelectorAll("main [data-panel-rak] .nav-link")].some(b => /Atur/.test(b.textContent) && b.disabled)'));
+  cek('panel rak: tab Atur tersembunyi di luar mode Atur', await ev('!document.querySelector("main [data-tab-atur-rak]")?.offsetParent'));
 
   await ev('[...document.querySelectorAll("main button")].find(b => /Atur denah/.test(b.textContent)).click()');
-  await tunggu('!!document.querySelector("main [data-objek-baru]")');
+  await ev('document.querySelector("main [data-lanjutan] button").click()');
+  cek('denah: tombol objek denah tidak terpotong (T-07)', await tunggu('[...document.querySelectorAll("main [data-objek-baru]")].every(b => b.offsetParent && b.getBoundingClientRect().height > 10)'));
   await klik('main svg g[data-objek="pillar"] rect[data-badan]');
-  cek('denah: panel objek', await tunggu('!!document.querySelector("main [data-panel-objek]")'));
-  const xAwal = Number(await ev('document.querySelector("main svg g[data-objek=pillar]").dataset.x'));
+  cek('denah: panel objek', await tunggu('!!document.querySelector("main [data-panel-objek]")?.offsetParent'));
+  cek('denah: tombol Putar terlihat', await ev('!!document.querySelector("main [data-putar]")?.offsetParent && !document.querySelector("main [data-putar]").disabled'));
+  const posisi = () => ev('document.querySelector("main svg g[data-objek=pillar]").getAttribute("transform")');
+  const tAwal = await posisi();
+  n0 = await lw();
   await seret('main svg g[data-objek="pillar"] rect[data-badan]', 80, 0);
-  cek('denah: seret objek tersimpan', await tunggu(`Number(document.querySelector("main svg g[data-objek=pillar]").dataset.x) > ${xAwal}`), `x ${xAwal} → ${await ev('document.querySelector("main svg g[data-objek=pillar]").dataset.x')}`);
+  cek('denah: seret objek tanpa request', (await lw()) === n0 && (await posisi()) !== tAwal, `${tAwal} → ${await posisi()}`);
+  await ev('document.querySelector("main [data-simpan-denah]").click()');
+  cek('denah: simpan seret tersimpan', await tunggu('/\\(0\\)/.test(document.querySelector("main [data-simpan-denah]").textContent) && !document.querySelector("main [data-galat-denah]")?.offsetParent'));
   cek('denah gedung: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
+}
+
+// 6c5. Denah versi daftar di HP (K-J, A-353).
+{
+  const sebelum = errors.length;
+  await viewport(390, 844);
+  await go(`${BASE}/warehouses/1/layout`);
+  cek('denah HP: versi daftar tampil', await tunggu('!!document.querySelector("main [data-denah-daftar]")?.offsetParent'));
+  cek('denah HP: gambar disembunyikan', await ev('!document.querySelector("main svg[data-denah-gedung]")?.offsetParent'));
+  await viewport(1366, 800);
+  cek('denah HP: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
 }
 
 // 6d. Ukuran & desain label (A-261, A-262): tambah ukuran, geser elemen di kanvas, simpan, contoh PDF.

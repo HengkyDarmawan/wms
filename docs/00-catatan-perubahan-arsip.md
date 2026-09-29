@@ -1,9 +1,34 @@
-# Catatan Perubahan — Arsip (v0.2–v0.27)
+# Catatan Perubahan — Arsip (v0.2–v0.28)
 
-**Versi:** 1.16
-**Tanggal:** 29 September 2026
-**Status:** arsip — v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
+**Versi:** 1.17
+**Tanggal:** 30 September 2026
+**Status:** arsip — v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
 **Dokumen terkait:** [README](README.md)
+
+### v0.28 — 24 September 2026 (modul Template dokumen & label selesai Fase 1)
+- **Berkas baru `wms/18-template-dokumen-label.md` v0.1 (selesai Fase 1)** dan `prompts/18-template-label.md`. Dibangun paralel di branch `feat/template-label`, lalu digabung setelah v0.27.
+  - Domain `app/Domain/Template`.
+  - Layout induk per company: kop, logo, warna, footer, blok tanda tangan. Layar *Administrasi → Layout dokumen*.
+  - Cetak PDF dari tombol **Cetak** di detail dokumen: SJ, bukti terima, picklist PCK, BA selisih DSC, surat retur RTV, BA penyesuaian ADJ. Laporan opname memakai kop yang sama.
+  - Label Code128 + QR untuk bin, item, lot, potongan, dalam dua kertas (thermal 50×30 mm, A4 3×8). Layar *Cetak label*.
+  - Editor template dan template AST/WST berupa stub (BR-GEN-10).
+- **Asumsi baru [A-120](wms/04-keputusan-dan-asumsi.md#a-120)–[A-126](wms/04-keputusan-dan-asumsi.md#a-126)** (*Perlu validasi*, `04` → v0.18, §2.7). A-120–A-149 dicadangkan untuk modul ini.
+  - A-120: ukuran label sementara sampai O-09; batas 200 label per cetak karena memori/waktu.
+  - A-121: isi barcode/QR.
+  - A-122: template F1 = Blade bawaan, kop teks biasa.
+  - A-123: kolom di luar ERD.
+  - A-124: cetak memakai izin `view`.
+  - A-125: blok tanda tangan.
+  - A-126: tanda air "DIBATALKAN", tanpa log cetak.
+- **Permission baru** modul `template` (2): `document_layout.manage` (Admin Company) dan `label.print` (Admin, Kepala Gudang, Staf Gudang).
+- **Katalog** `06` → v0.12: enum `document_template_type` dan `paper_size`, **tanpa status baru**.
+- **Glosarium** `03` → v0.8: Layout Induk, Template Dokumen, Label, Blok Tanda Tangan.
+- **Model data** 08c digenerate ulang: `document_layouts.logo_path`, `document_templates.paper` varchar(20). Migrasi tenant `000200`.
+- **Modul lain:**
+  - `12-warehouse` → v0.6: label bin selesai.
+  - `19-receipt-putaway` → v0.6: cetak RTV selesai.
+  - Laporan progres → v1.6: Template ✅.
+- **Uji:** 15 uji TC-TPL. `phpunit.xml` diberi `memory_limit` 512M karena render PDF dalam satu proses suite melewati 128 MB. **476 uji hijau.**
 
 ### v0.27 — 24 September 2026 (modul Transfer & Retur selesai Fase 1)
 - **Berkas baru `wms/22-retur-transfer.md` v0.2 (selesai Fase 1):** domain `app/Domain/Transfer` dan `app/Domain/Return` (Arsitektur §4). **TRF** antar gudang, antar proyek, dan antar titik dalam proyek (jalur ringan [A-50](wms/04-keputusan-dan-asumsi.md#a-50), [BR-RET-02](wms/05-aturan-bisnis.md#br-ret)); TRF otomatis dari baris REQ bersumber transfer saat REQ disetujui ([BR-REQ-05](wms/05-aturan-bisnis.md#br-req)); disetujui → reservasi lunak gudang asal + PCK otomatis → SJ → bukti terima → GRN transfer → `completed`; barang TRF backorder direservasi ke REQ penunggu setelah put-away lalu dipetik dan dikirim ke proyek ([BR-REQ-08](wms/05-aturan-bisnis.md#br-req)). **RET** dari stok Gudang Site, aset On-site, barang terkirim ke klien (retur penjualan, [BR-RET-03](wms/05-aturan-bisnis.md#br-ret)), dan barang rusak ditinggal ekspedisi ([BR-RET-05](wms/05-aturan-bisnis.md#br-ret)); SJ balik dari Gudang Site; GRN retur ke bin Retur; pemilahan layak/rusak/offcut/waste dengan `goods_returned`/`asset_returned` ([BR-RET-04](wms/05-aturan-bisnis.md#br-ret), matriks §14). Enam layar (RET juga di portal klien `/portal/returns`), menu *Transfer & retur* + palet. Migrasi `2026_01_01_000110_create_transfer_return_tables`. Uji TC-TRF-01–16 dan TC-RET-01–17 (33 uji); **461 uji hijau**.

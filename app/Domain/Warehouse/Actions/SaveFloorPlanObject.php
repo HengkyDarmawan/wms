@@ -39,7 +39,7 @@ class SaveFloorPlanObject
             'is_active' => true,
         ]);
         [$x, $y] = $this->posisi($objek, $gudang, $data['pos_x'] ?? 0.5, $data['pos_y'] ?? 0.5, SaveWarehouseLayout::GRID);
-        $objek->fill(['pos_x' => $x, 'pos_y' => $y])->save();
+        $objek->disableLogging()->fill(['pos_x' => $x, 'pos_y' => $y])->save();
 
         activity('warehouse')->performedOn($objek)->causedBy($actor)
             ->withProperties(['gudang' => $gudang->code, 'jenis' => $tipe->value])->log('Objek denah ditambahkan');
@@ -66,9 +66,12 @@ class SaveFloorPlanObject
             'width_m' => $this->ukuran($data['width_m'] ?? $objek->width_m, 'width_m'),
         ]);
         [$x, $y] = $this->posisi($objek, $gudang, $data['pos_x'] ?? $objek->pos_x, $data['pos_y'] ?? $objek->pos_y, SaveWarehouseLayout::GRID);
-        $objek->fill(['pos_x' => $x, 'pos_y' => $y])->save();
+        $objek->fill(['pos_x' => $x, 'pos_y' => $y]);
+        $perubahan = $objek->getDirty();
+        $objek->disableLogging()->save();
 
-        activity('warehouse')->performedOn($objek)->causedBy($actor)->log('Objek denah diubah');
+        activity('warehouse')->performedOn($objek)->causedBy($actor)
+            ->withProperties(['perubahan' => $perubahan])->log('Objek denah diubah');
 
         return $objek->refresh();
     }
@@ -76,7 +79,7 @@ class SaveFloorPlanObject
     public function move(FloorPlanObject $objek, mixed $x, mixed $y, ?User $actor = null, float $grid = SaveWarehouseLayout::GRID): FloorPlanObject
     {
         [$px, $py] = $this->posisi($objek, $this->gudang($objek), $x, $y, $grid);
-        $objek->forceFill(['pos_x' => $px, 'pos_y' => $py])->save();
+        $objek->disableLogging()->forceFill(['pos_x' => $px, 'pos_y' => $py])->save();
 
         activity('warehouse')->performedOn($objek)->causedBy($actor)
             ->withProperties(['x' => $px, 'y' => $py])->log('Objek denah digeser');
@@ -94,7 +97,7 @@ class SaveFloorPlanObject
             [$p, $l] = [$l, $p];
         }
 
-        $objek->forceFill(['length_m' => $p, 'width_m' => $l])->save();
+        $objek->disableLogging()->forceFill(['length_m' => $p, 'width_m' => $l])->save();
 
         activity('warehouse')->performedOn($objek)->causedBy($actor)->log('Ukuran objek denah diubah');
 
@@ -104,9 +107,9 @@ class SaveFloorPlanObject
     /** A-322: putar 90° searah jarum jam; posisi dijepit ulang di dalam gedung. */
     public function rotate(FloorPlanObject $objek, ?User $actor = null): FloorPlanObject
     {
-        $objek->forceFill(['rotation' => ($objek->rotation + 90) % 360])->save();
+        $objek->disableLogging()->forceFill(['rotation' => ($objek->rotation + 90) % 360])->save();
         [$x, $y] = $this->posisi($objek, $this->gudang($objek), $objek->pos_x, $objek->pos_y, SaveWarehouseLayout::GRID_HALUS);
-        $objek->forceFill(['pos_x' => $x, 'pos_y' => $y])->save();
+        $objek->disableLogging()->forceFill(['pos_x' => $x, 'pos_y' => $y])->save();
 
         activity('warehouse')->performedOn($objek)->causedBy($actor)
             ->withProperties(['rotasi' => $objek->rotation])->log('Objek denah diputar');
@@ -117,7 +120,7 @@ class SaveFloorPlanObject
     /** P-03: objek tidak dihapus; nonaktif = tidak digambar. */
     public function deactivate(FloorPlanObject $objek, ?User $actor = null): FloorPlanObject
     {
-        $objek->forceFill(['is_active' => false])->save();
+        $objek->disableLogging()->forceFill(['is_active' => false])->save();
 
         activity('warehouse')->performedOn($objek)->causedBy($actor)->log('Objek denah dinonaktifkan');
 

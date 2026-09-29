@@ -1,7 +1,7 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.80
-**Tanggal:** 29 September 2026
+**Versi:** 0.81
+**Tanggal:** 30 September 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
 Dokumentasi ini adalah acuan tunggal untuk membangun WMS baru dari nol. Prototipe lama (`warehouse.sipembantu.com`) hanya referensi; indeks temuan auditnya ada di [00-audit](00-audit/README.md).
@@ -107,6 +107,11 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.81 — 30 September 2026 (tata letak gudang Bagian 1: Denah ringan)
+- **Keputusan pemilik** K-A…K-M dan 12 jawaban Tahap A dicatat di 04b v0.24 §2.45. **Asumsi baru** [A-352](wms/04b-asumsi-lanjutan.md#a-352) kode pendek bin, [A-353](wms/04b-asumsi-lanjutan.md#a-353) Denah ringan (*Setuju rancangan*).
+- **Spesifikasi** [12-warehouse](wms/12-warehouse.md) v0.16 (§6 denah, §10 TC-WH-38–41, §13.10 dengan angka beban sebelum–sesudah). **Glosarium** [03](wms/03-glosarium.md) v0.26: *Kode Pendek*, *Area Lantai*, *Denah Versi Daftar*, *Simpan Perubahan (Denah)*. Katalog & model data tidak berubah.
+- **Kode:** `WarehouseLayout` (render sekali + `isiRak`/`simpanPerubahan`/`muatUlang`), `ApplyLayoutChanges`, `WarehouseLayoutData::payload/rakDetail`, `Warehouse\Support\BinCode`, `floor-plan.js` ditulis ulang; partial denah baru; riwayat ganda geser/putar diperbaiki. Changelog v0.28 dipindah ke [arsip](00-catatan-perubahan-arsip.md).
 
 ### v0.80 — 29 September 2026 (audit 3b6e5c3, atasan menurut jabatan, approval sederhana)
 - **Asumsi baru** 04b v0.23 §2.44: [A-344](wms/04b-asumsi-lanjutan.md#a-344) peta jabatan (*Setuju rancangan*), [A-345](wms/04b-asumsi-lanjutan.md#a-345) atasan langsung efektif, [A-346](wms/04b-asumsi-lanjutan.md#a-346) atasan 1/2 tingkat, [A-347](wms/04b-asumsi-lanjutan.md#a-347) aturan dasar (arah *Setuju rancangan*, rincian *Perlu validasi*), [A-348](wms/04b-asumsi-lanjutan.md#a-348) mode sederhana & prioritas otomatis, [A-349](wms/04b-asumsi-lanjutan.md#a-349) Peta approval, [A-350](wms/04b-asumsi-lanjutan.md#a-350) kotak tag (*Setuju rancangan*), [A-351](wms/04b-asumsi-lanjutan.md#a-351) perbaikan audit keamanan (*Perlu validasi*). [A-329](wms/04b-asumsi-lanjutan.md#a-329), [A-333](wms/04b-asumsi-lanjutan.md#a-333)–[A-335](wms/04b-asumsi-lanjutan.md#a-335) sebagian diganti A-351; [A-331](wms/04b-asumsi-lanjutan.md#a-331) ditandai sebagian diganti [A-337](wms/04b-asumsi-lanjutan.md#a-337).
@@ -422,28 +427,3 @@ docs/
 - **Model data** 08a–08c → v0.12 (digenerate ulang): kolom implementasi `material_issues`, `material_issue_lines` (A-118).
 - **Modul lain:** `20-approval` → v0.5 (ISU pembalik tersambung), `18-template-dokumen-label` → v0.2 (dokumen ISU), `16-shared-laporan-berkas` → v0.3 (laporan kedelapan), `08-arsitektur` → v0.11 (§12), `00-akun-uji` → v1.6 (§5 lapis minimum ISU pembalik, tanpa aturan demo), laporan progres → v1.7 (ISU ✅).
 - **Uji:** 17 uji TC-ISU (termasuk rantai REQ → SJ ke Gudang Site → GRN → PUT → ISU → laporan). TC-ACC-27b menghitung 5 permission `issue`, TC-RPT-01 menghitung 8 laporan; pemeriksaan "tanpa nilai uang" TC-TPL-01 kini membuang gambar base64 dulu (QR bisa memuat "Rp" secara acak). **493 uji hijau.**
-
-### v0.28 — 24 September 2026 (modul Template dokumen & label selesai Fase 1)
-- **Berkas baru `wms/18-template-dokumen-label.md` v0.1 (selesai Fase 1)** dan `prompts/18-template-label.md`. Dibangun paralel di branch `feat/template-label`, lalu digabung setelah v0.27.
-  - Domain `app/Domain/Template`.
-  - Layout induk per company: kop, logo, warna, footer, blok tanda tangan. Layar *Administrasi → Layout dokumen*.
-  - Cetak PDF dari tombol **Cetak** di detail dokumen: SJ, bukti terima, picklist PCK, BA selisih DSC, surat retur RTV, BA penyesuaian ADJ. Laporan opname memakai kop yang sama.
-  - Label Code128 + QR untuk bin, item, lot, potongan, dalam dua kertas (thermal 50×30 mm, A4 3×8). Layar *Cetak label*.
-  - Editor template dan template AST/WST berupa stub (BR-GEN-10).
-- **Asumsi baru [A-120](wms/04-keputusan-dan-asumsi.md#a-120)–[A-126](wms/04-keputusan-dan-asumsi.md#a-126)** (*Perlu validasi*, `04` → v0.18, §2.7). A-120–A-149 dicadangkan untuk modul ini.
-  - A-120: ukuran label sementara sampai O-09; batas 200 label per cetak karena memori/waktu.
-  - A-121: isi barcode/QR.
-  - A-122: template F1 = Blade bawaan, kop teks biasa.
-  - A-123: kolom di luar ERD.
-  - A-124: cetak memakai izin `view`.
-  - A-125: blok tanda tangan.
-  - A-126: tanda air "DIBATALKAN", tanpa log cetak.
-- **Permission baru** modul `template` (2): `document_layout.manage` (Admin Company) dan `label.print` (Admin, Kepala Gudang, Staf Gudang).
-- **Katalog** `06` → v0.12: enum `document_template_type` dan `paper_size`, **tanpa status baru**.
-- **Glosarium** `03` → v0.8: Layout Induk, Template Dokumen, Label, Blok Tanda Tangan.
-- **Model data** 08c digenerate ulang: `document_layouts.logo_path`, `document_templates.paper` varchar(20). Migrasi tenant `000200`.
-- **Modul lain:**
-  - `12-warehouse` → v0.6: label bin selesai.
-  - `19-receipt-putaway` → v0.6: cetak RTV selesai.
-  - Laporan progres → v1.6: Template ✅.
-- **Uji:** 15 uji TC-TPL. `phpunit.xml` diberi `memory_limit` 512M karena render PDF dalam satu proses suite melewati 128 MB. **476 uji hijau.**
