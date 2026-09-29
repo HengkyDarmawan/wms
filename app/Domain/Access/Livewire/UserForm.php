@@ -231,6 +231,41 @@ class UserForm extends Component
         return $this->redirectRoute('users.show', ['user' => $user->id], navigate: false);
     }
 
+    /**
+     * A-358: pilihan Atasan langsung — nama + badge jabatan + unit, bisa dicari
+     * ketiganya. Tidak menawarkan diri sendiri, pengguna nonaktif, atau akun
+     * Klien. Atasan yang sudah tersimpan tetapi kini tidak memenuhi syarat
+     * tetap ditampilkan (bertanda) supaya nilainya tidak tampak hilang.
+     *
+     * @return array<int, array{value: int, text: string, badge: ?string, sub: ?string}>
+     */
+    private function opsiAtasan(): array
+    {
+        $opsi = fn (User $u, string $tanda = '') => [
+            'value' => (int) $u->id,
+            'text' => $u->name.$tanda,
+            'badge' => $u->position?->name,
+            'sub' => $u->orgUnit?->name,
+        ];
+
+        $daftar = User::query()
+            ->active()->internal()
+            ->when($this->userId !== null, fn ($q) => $q->whereKeyNot($this->userId))
+            ->with(['position:id,name', 'orgUnit:id,name'])
+            ->orderBy('name')->get(['id', 'name', 'position_id', 'org_unit_id'])
+            ->map(fn (User $u) => $opsi($u))->all();
+
+        if ($this->managerId !== null && ! collect($daftar)->contains('value', (int) $this->managerId)) {
+            $tersimpan = User::query()->with(['position:id,name', 'orgUnit:id,name'])->find($this->managerId, ['id', 'name', 'position_id', 'org_unit_id', 'is_active']);
+
+            if ($tersimpan !== null) {
+                array_unshift($daftar, $opsi($tersimpan, ' ('.($tersimpan->is_active ? __('tidak berlaku') : __('nonaktif')).')'));
+            }
+        }
+
+        return $daftar;
+    }
+
     /** @return array<int, string> nama pemegang jabatan atasan dari jabatan terpilih */
     private function atasanDariJabatan(): array
     {
@@ -373,10 +408,7 @@ class UserForm extends Component
                 ->orderBy('level')->orderBy('name')->get(),
             // A-345: siapa atasan bila isian manual dikosongkan.
             'atasanDariJabatan' => $this->atasanDariJabatan(),
-            'managers' => User::query()
-                ->active()->internal()
-                ->when($this->userId !== null, fn ($q) => $q->whereKeyNot($this->userId))
-                ->orderBy('name')->get(),
+            'managers' => $this->opsiAtasan(),
             'scopeTypes' => ScopeType::cases(),
             // Cakupan dipilih lewat nama, bukan id angka (11-master §12, 12-warehouse §12).
             'projects' => Project::query()->active()->orderBy('name')->get(['id', 'code', 'name']),

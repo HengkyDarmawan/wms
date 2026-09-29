@@ -66,20 +66,31 @@ label .wajib {
 .ld-img { display: block; width: 100%; image-rendering: pixelated; pointer-events: none; }
 .ld-el img { pointer-events: none; -webkit-user-drag: none; }
 
-/* Kotak tag <x-pilih-tag> (A-350, tom-select): warna dari token tema, jadi
-   ikut terang/gelap tanpa aturan terpisah. */
+/* Kotak tag <x-pilih-tag> (A-350) dan pilihan tunggal <x-pilih> (A-358), tom-select:
+   warna dari token tema, jadi ikut terang/gelap tanpa aturan terpisah. */
 .nx-pilih-tag .ts-control,
 .nx-pilih-tag .ts-wrapper.multi .ts-control,
-.nx-pilih-tag .ts-dropdown {
+.nx-pilih-tag .ts-dropdown,
+.nx-pilih .ts-control,
+.nx-pilih .ts-dropdown {
     background: var(--nx-card-bg);
     border-color: var(--nx-border);
     color: var(--nx-text-body);
     border-radius: var(--nx-radius-sm);
 }
-.nx-pilih-tag .ts-control { min-height: calc(1.5em + .75rem + 2px); }
-.nx-pilih-tag .ts-wrapper.focus .ts-control { box-shadow: var(--nx-shadow-glow); border-color: var(--nx-primary); }
-.nx-pilih-tag .ts-control input { color: var(--nx-text-body); }
-.nx-pilih-tag .ts-control input::placeholder { color: var(--nx-text-muted); }
+/* Kotaknya sewarna .form-select di sebelahnya: bertona saat diam, polos saat fokus. */
+.nx-pilih-tag .ts-wrapper .ts-control,
+.nx-pilih .ts-wrapper .ts-control { background: var(--nx-surface-1); }
+.nx-pilih-tag .ts-wrapper.focus .ts-control,
+.nx-pilih .ts-wrapper.focus .ts-control { background: var(--nx-card-bg); }
+.nx-pilih-tag .ts-control,
+.nx-pilih .ts-control { min-height: calc(1.5em + .75rem + 2px); }
+.nx-pilih-tag .ts-wrapper.focus .ts-control,
+.nx-pilih .ts-wrapper.focus .ts-control { box-shadow: var(--nx-shadow-glow); border-color: var(--nx-primary); }
+.nx-pilih-tag .ts-control input,
+.nx-pilih .ts-control input { color: var(--nx-text-body); }
+.nx-pilih-tag .ts-control input::placeholder,
+.nx-pilih .ts-control input::placeholder { color: var(--nx-text-muted); }
 .nx-pilih-tag .ts-wrapper.multi .ts-control > .item {
     background: var(--nx-primary-subtle);
     border: 1px solid var(--nx-border);
@@ -88,7 +99,26 @@ label .wajib {
 }
 .nx-pilih-tag .ts-wrapper.multi.plugin-remove_button .item .remove { border-left-color: var(--nx-border); color: var(--nx-text-muted); }
 .nx-pilih-tag .ts-wrapper.multi.plugin-remove_button .item .remove:hover { background: var(--nx-danger-subtle); color: var(--nx-danger); }
-.nx-pilih-tag .ts-dropdown { box-shadow: var(--nx-shadow-lift); }
-.nx-pilih-tag .ts-dropdown .option { color: var(--nx-text-body); }
-.nx-pilih-tag .ts-dropdown .active { background: var(--nx-hover-bg); color: var(--nx-text); }
-.nx-pilih-tag .ts-dropdown .no-results { color: var(--nx-text-muted); padding: .375rem .75rem; }
+.nx-pilih-tag .ts-dropdown,
+.nx-pilih .ts-dropdown { box-shadow: var(--nx-shadow-lift); }
+.nx-pilih-tag .ts-dropdown .option,
+.nx-pilih .ts-dropdown .option { color: var(--nx-text-body); }
+.nx-pilih-tag .ts-dropdown .active,
+.nx-pilih .ts-dropdown .active { background: var(--nx-hover-bg); color: var(--nx-text); }
+.nx-pilih-tag .ts-dropdown .no-results,
+.nx-pilih .ts-dropdown .no-results { color: var(--nx-text-muted); padding: .375rem .75rem; }
+
+/* A-358: badge jabatan di pilihan (mis. Atasan langsung); netral di tema terang & gelap. */
+.nx-badge-jabatan {
+    background: var(--nx-primary-subtle);
+    color: var(--nx-text);
+    border: 1px solid var(--nx-border);
+    font-weight: 500;
+}
+.nx-pilih.is-invalid .ts-control { border-color: var(--nx-danger); }
+.nx-pilih .ts-control { flex-wrap: nowrap; }
+/* Nilai terpilih tetap teks biasa (badge & unit ikut tampil); di kolom sempit turun baris dengan rapi. */
+.nx-pilih .ts-control > .nx-pilih-nilai { display: block; min-width: 0; white-space: normal; }
+.nx-pilih .ts-wrapper.single.has-items .ts-control > input { flex: 1 1 0; min-width: 2rem; }
+.nx-pilih .ts-dropdown .option .badge,
+.nx-pilih .ts-control .item .badge { vertical-align: 1px; }

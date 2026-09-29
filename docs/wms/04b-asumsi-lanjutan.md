@@ -1,6 +1,6 @@
 # Asumsi lanjutan (A-246 dan seterusnya)
 
-**Versi:** 0.25
+**Versi:** 0.27
 **Tanggal:** 29 September 2026
 **Status:** lanjutan §2 [04-keputusan-dan-asumsi](04-keputusan-dan-asumsi.md) (berkas itu mendekati batas 450 baris). Cara validasi, anchor, dan aturan *Diganti oleh* sama dengan 04
 **Dokumen terkait:** [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · [Tinjauan asumsi](../00-tinjauan-asumsi-2026-09-25.md) · [Aturan Bisnis](05-aturan-bisnis.md)
@@ -297,3 +297,11 @@ Keputusan pemilik produk (30 Sep 2026): P1 pilihan panjang dari data master bisa
 | ID | Asumsi | Dipakai | Validasi |
 |---|---|---|---|
 | <a id="a-354"></a>A-354 | **Daftar pilihan proyek mengikuti cakupan pembaca.** Scope baru `Project::dalamCakupan()` = `accessibleProjectIds()` (null = semua) + untuk akun Klien hanya proyek kliennya. Dipakai: form Retur (daftar proyek, tabel stok retur, dan gudang pengirim — sebelumnya akun Klien melihat **semua proyek aktif** dan id proyek dari browser membuka stok proyek lain), form Permintaan, tujuan SJ, Pindah proyek, filter Aset & Daftar permintaan, Peta & Simulasi approval, filter laporan *Daftar REQ*, *Substitusi tertunda*, *Baris tanpa sumber*. Form aturan approval tetap semua proyek (konfigurasi admin; menyaring akan membuang kondisi tersimpan). Asal TRF **sengaja** tidak dibatasi cakupan: pengaju boleh bercakupan gudang asal **atau** tujuan (A-106). Vendor nonaktif tidak lagi ditawarkan di tujuan SJ (A-310) | [10](10-access.md) §5; `Project::scopeDalamCakupan`, `ReturnForm`; TC-ACC-46–TC-ACC-46c | Setuju (30 Sep 2026) |
+
+### 2.48 Badge jabatan di pilihan Atasan langsung — 30 Sep 2026
+
+Prompt kecil pemilik produk (potongan P2b Prompt 6, dikerjakan lebih dulu). Tidak ada status, enum, atau istilah glosarium baru.
+
+| ID | Asumsi | Dipakai | Validasi |
+|---|---|---|---|
+| <a id="a-358"></a>A-358 | **Pilihan Atasan langsung ber-badge jabatan & bisa dicari** — versi awal `<x-pilih>` (pilihan tunggal Tom Select, dimuat sekaligus; cari-ke-server, kelompok unit, dan jabatan per unit menyusul di Prompt 6 Bagian 1). Label menjadi "Atasan langsung (bila beda dari jabatan)"; *— Ikuti jabatan —* tetap paling atas. Tiap orang: **Nama** + badge jabatan (warna netral, terbaca terang & gelap) + unit kecil abu-abu; tanpa jabatan → tanpa badge, tanpa unit → tanpa teks unit; badge juga tampil pada nilai terpilih (di kolom sempit turun baris). Pencarian: nama, jabatan, unit. Yang ditawarkan tetap pengguna aktif internal selain dirinya ([A-345](#a-345)); atasan tersimpan yang kini nonaktif/tidak berlaku tetap tampil paling atas bertanda, tidak ditawarkan ke pengguna lain. `manager_id`, validasi, dan keterangan A-345 tidak berubah. Kotak Tom Select (`<x-pilih>` dan `<x-pilih-tag>`) kini sewarna `.form-select` (bertona saat diam, polos saat fokus) | [10](10-access.md) §6.3; `components/pilih`, `wms/pilih.js`, `UserForm::opsiAtasan`; TC-ACC-47, TC-ACC-47b | Setuju (30 Sep 2026) |

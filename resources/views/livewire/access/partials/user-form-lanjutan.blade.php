@@ -34,13 +34,10 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label" for="managerId">{{ __('Atasan langsung (isi manual)') }}</label>
-                    <select class="form-select @error('managerId') is-invalid @enderror" id="managerId" wire:model="managerId">
-                        <option value="">{{ __('— Ikuti jabatan —') }}</option>
-                        @foreach ($managers as $manager)
-                            <option value="{{ $manager->id }}">{{ $manager->name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="form-label" for="managerId">{{ __('Atasan langsung (bila beda dari jabatan)') }}</label>
+                    {{-- A-358: nama + badge jabatan + unit; dicari berdasarkan ketiganya. --}}
+                    <x-pilih model="managerId" id="managerId" :kosong="__('— Ikuti jabatan —')" :options="$managers"
+                             :placeholder="__('Cari nama, jabatan, atau unit…')" />
                     {{-- A-345: kosong = pemegang jabatan atasan (peta jabatan); isi hanya bila berbeda. --}}
                     <div class="form-text">
                         @if ($atasanDariJabatan !== [])
@@ -49,7 +46,6 @@
                             {{ __('Jabatan ini belum punya atasan di Struktur organisasi; isi bila perlu.') }}
                         @endif
                     </div>
-                    @error('managerId')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
 

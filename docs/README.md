@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.82
+**Versi:** 0.84
 **Tanggal:** 30 September 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -107,6 +107,10 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.84 — 30 September 2026 (badge jabatan di pilihan Atasan langsung)
+- **Asumsi baru** [A-358](wms/04b-asumsi-lanjutan.md#a-358) (04b v0.27 §2.48): pilihan *Atasan langsung (bila beda dari jabatan)* bisa dicari, tiap orang ber-badge jabatan + unit; atasan tersimpan yang nonaktif tetap tampil bertanda.
+- **Spesifikasi** [10-access](wms/10-access.md) v0.17: §6.3, TC-ACC-47, TC-ACC-47b. **Kode:** komponen `<x-pilih>` + `wms/pilih.js` (versi awal untuk Prompt 6), `UserForm::opsiAtasan`, CSS `.nx-pilih`/`.nx-badge-jabatan`; uji `UserFormManagerOptionsTest`.
 
 ### v0.82 — 30 September 2026 (cakupan daftar pilihan proyek)
 - **Asumsi baru** [A-354](wms/04b-asumsi-lanjutan.md#a-354) (04b v0.25 §2.46): pilihan proyek mengikuti cakupan pembaca; kebocoran form Retur portal Klien (semua proyek & stok proyek lain) ditutup; vendor nonaktif tidak ditawarkan di SJ.
