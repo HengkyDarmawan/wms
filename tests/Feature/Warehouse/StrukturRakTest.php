@@ -348,4 +348,22 @@ class StrukturRakTest extends TenantTestCase
             ->call('simpanPerubahan', [['op' => 'hapus_bin', 'bin' => $this->b('L3', 'B01')->id]])->assertForbidden();
         $this->assertNotNull(Bin::query()->withoutGlobalScopes()->find($this->b('L3', 'B01')->id));
     }
+
+    /**
+     * TC-WH-64 — A-362: tombol Hapus bin disertai pengingat mencopot label fisik (tidak memblokir);
+     * hapus tetap berhasil lewat simpanPerubahan.
+     */
+    #[Test]
+    public function tc_wh_64_hapus_bin_mengingatkan_copot_label_fisik(): void
+    {
+        $this->actingAs($this->kepala())->get($this->tenantUrl('warehouses/'.$this->gudang->id.'/layout'))->assertOk()
+            ->assertSee('data-hapus-bin', false)
+            ->assertSee('data-copot-label', false)
+            ->assertSee('Pastikan label fisik bin ini dicopot dari rak.');
+
+        $id = $this->b('L3', 'B01')->id;
+        Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang])
+            ->call('simpanPerubahan', [['op' => 'hapus_bin', 'bin' => $id]])->assertHasNoErrors();
+        $this->assertNull(Bin::query()->withoutGlobalScopes()->find($id));
+    }
 }

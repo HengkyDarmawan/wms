@@ -73,6 +73,10 @@
                 <div class="mt-2" x-show="bisaHapus(petakTerpilih()[0])">
                     <button class="btn btn-sm btn-outline-danger" type="button" x-on:click="hapusBin()" data-hapus-bin><i class="bi bi-trash"></i> {{ __('Hapus bin') }}</button>
                     <span class="text-muted">{{ __('Belum pernah dipakai — boleh dihapus.') }}</span>
+                    {{-- A-362: label bin tercetak tidak tercatat, jadi hanya diingatkan (tidak memblokir). --}}
+                    <div class="small text-warning mt-1" data-copot-label>
+                        <i class="bi bi-exclamation-triangle"></i> {{ __('Pastikan label fisik bin ini dicopot dari rak.') }}
+                    </div>
                 </div>
                 <div class="mt-2" x-show="!bisaHapus(petakTerpilih()[0]) && !petakTerpilih()[0].nonaktif">
                     <div class="d-flex flex-wrap gap-2">

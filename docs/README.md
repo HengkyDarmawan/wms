@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.101
+**Versi:** 0.102
 **Tanggal:** 30 September 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -108,6 +108,9 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.102 — 30 September 2026 (sesi kantor: pengingat copot label saat hapus bin)
+- Rincian [A-362](wms/04b-asumsi-lanjutan.md#a-362) (*Perlu validasi*, 04b v0.43): tombol *Hapus bin* di Denah (mode Atur) dan dialog konfirmasinya mengingatkan "Pastikan label fisik bin ini dicopot dari rak" — tidak memblokir, karena cetak label bin tidak tercatat. [12-warehouse](wms/12-warehouse.md) v0.20 (TC-WH-64). Glosarium, katalog 06, model data, dan route tidak berubah.
 
 ### v0.101 — 30 September 2026 (sesi kantor: empat pilihan terakhir memakai `<x-pilih>`)
 - `<x-pilih>` menerima opsi `disabled` dan kunci `galat`; bin di detail Put-away, bin Picking, bin tujuan Pilah retur, dan batang Konversi (utama & tambahan) kini kotak yang bisa dicari — nilai, validasi, pindai, dan cakupan tetap. Catatan [A-391](wms/04b-asumsi-lanjutan.md#a-391), [A-392](wms/04b-asumsi-lanjutan.md#a-392), [A-395](wms/04b-asumsi-lanjutan.md#a-395) disesuaikan (04b v0.42). [16-shared](wms/16-shared-laporan-berkas.md) v0.27 (§6.5, TC-PIL-10). Glosarium, katalog 06, model data, dan route tidak berubah.

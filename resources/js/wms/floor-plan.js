@@ -853,7 +853,8 @@ function denahGedung(opts = {}) {
       const b = this.petakTerpilih()[0];
       const a = this.rakLokal(this.pilih?.id);
       if (!b || !a || !this.bisaHapus(b)) return;
-      if (!window.confirm('Hapus bin ' + b.pendek + '? Bin ini belum pernah dipakai, jadi dihapus permanen saat disimpan.')) return;
+      // A-362: label bin tercetak tidak tercatat — pengingat saja, tidak memblokir.
+      if (!window.confirm('Hapus bin ' + b.pendek + '? Bin ini belum pernah dipakai, jadi dihapus permanen saat disimpan.\n\nPastikan label fisik bin ini dicopot dari rak.')) return;
       this.catat({ op: 'hapus_bin', bin: Number(b.id) });
       for (const l of a.r.levels) l.bins = l.bins.filter((x) => String(x.id) !== String(b.id));
       a.r.jumlah_bin = Math.max(0, (a.r.jumlah_bin || 1) - 1);
