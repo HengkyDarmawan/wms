@@ -158,8 +158,9 @@ class TempatSimpanLayarTest extends TenantTestCase
         Livewire::test(ItemStorageLocations::class, ['item' => $this->baut])
             ->set('gudangBaru', (string) $this->gudang->id)->call('tambahGudang')
             ->assertSet('gudangUbah', (int) $this->gudang->id)
-            ->set('tempatBaru', 'rak:'.$this->rak->id)->call('tambah')
-            ->set('tempatBaru', 'bin:'.$this->b('L2', 'B01')->id)->set('khususBaru', true)->call('tambah')
+            ->set('zonaBaru', (string) $this->zona->id)->set('rakBaru', (string) $this->rak->id)->call('tambah')
+            ->set('zonaBaru', (string) $this->zona->id)->set('rakBaru', (string) $this->rak->id)
+            ->set('binBaru', [(string) $this->b('L2', 'B01')->id])->set('khususBaru', true)->call('tambah')
             ->call('geser', 1, -1)
             ->call('simpan')
             ->assertSet('gudangUbah', 0)
@@ -172,7 +173,8 @@ class TempatSimpanLayarTest extends TenantTestCase
         // Galat aturan tampil di kartu, tidak ada yang berubah.
         Livewire::test(ItemStorageLocations::class, ['item' => $this->semen])
             ->call('ubah', $this->gudang->id)
-            ->set('tempatBaru', 'bin:'.$this->b('L2', 'B01')->id)->call('tambah')
+            ->set('zonaBaru', (string) $this->zona->id)->set('rakBaru', (string) $this->rak->id)
+            ->set('binBaru', [(string) $this->b('L2', 'B01')->id])->call('tambah')
             ->call('simpan')
             ->assertSet('galat', fn ($g) => str_contains($g, 'khusus untuk barang BAUT-M12'));
 
@@ -185,6 +187,51 @@ class TempatSimpanLayarTest extends TenantTestCase
             ->assertDontSee('R01 · L2 · 01')
             // BR-ACC-05: gudang di luar cakupan tidak ditemukan (sama dengan halaman gudang).
             ->call('ubah', $this->gudang->id)->assertNotFound();
+    }
+
+    /**
+     * TC-WH-65 — Tambah tempat bertahap: Zona → Rak/area → Bin (banyak sekaligus, tombol per tingkat);
+     * kosong = seluruh rak; area tanpa kotak bin; tempat ganda dilewati; daftar rak ikut zona.
+     */
+    #[Test]
+    public function tc_wh_65_tambah_tempat_bertahap_zona_rak_bin_banyak(): void
+    {
+        $this->actingAs($this->kepala());
+        $l1 = (int) $this->b('L1', 'B01')->rack_level_id;
+
+        $kartu = Livewire::test(ItemStorageLocations::class, ['item' => $this->baut])->call('ubah', $this->gudang->id)
+            ->assertSeeHtml('data-tambah-tempat')->assertDontSeeHtml('data-pilih-bin');
+
+        // Rak baru tampil setelah zona dipilih; kotak bin muncul untuk rak biasa, dengan tombol per tingkat.
+        $kartu->set('zonaBaru', (string) $this->zona->id)
+            ->assertViewHas('opsiRak', fn ($o) => collect($o)->pluck('value')->sort()->values()->all() === collect([$this->rak->id, $this->area->id])->sort()->values()->all())
+            ->set('rakBaru', (string) $this->rak->id)
+            ->assertSeeHtml('data-pilih-bin')->assertSee('L1 · B01')->assertSee('Akan ditambah: seluruh rak ini.')
+            ->call('pilihTingkat', $l1)
+            ->assertSet('binBaru', fn ($v) => collect($v)->sort()->values()->all() === collect([(string) $this->b('L1', 'B01')->id, (string) $this->b('L1', 'B02')->id])->sort()->values()->all())
+            ->assertSee('Akan ditambah: 2 bin.')
+            ->call('tambah')
+            ->assertSet('rakBaru', '')->assertSet('binBaru', [])->assertSet('galat', '')
+            ->assertSet('baris', fn ($b) => count($b) === 2 && collect($b)->every(fn ($r) => str_starts_with($r['tempat'], 'bin:')));
+
+        // Area lantai: tanpa kotak bin → satu baris area.
+        $kartu->set('zonaBaru', (string) $this->zona->id)->set('rakBaru', (string) $this->area->id)
+            ->assertDontSeeHtml('data-pilih-bin')->assertSee('Akan ditambah: seluruh area lantai ini.')
+            ->call('tambah')->assertSet('baris', fn ($b) => count($b) === 3 && $b[2]['tempat'] === 'rak:'.$this->area->id);
+
+        // Tempat yang sudah ada dilewati; bin dari rak lain (dikirim dari browser) diabaikan → seluruh rak.
+        $kartu->set('zonaBaru', (string) $this->zona->id)->set('rakBaru', (string) $this->rak->id)
+            ->set('binBaru', [(string) $this->b('L1', 'B01')->id, (string) $this->b('L2', 'B02')->id])->call('tambah')
+            ->assertSet('galat', fn ($g) => str_contains($g, '1 tempat sudah ada'))
+            ->assertSet('baris', fn ($b) => count($b) === 4);
+        $kartu->set('zonaBaru', (string) $this->zona->id)->set('rakBaru', (string) $this->rak->id)
+            ->set('binBaru', ['999999'])->call('tambah')
+            ->assertSet('baris', fn ($b) => count($b) === 5 && $b[4]['tempat'] === 'rak:'.$this->rak->id);
+
+        // Tanpa rak → galat, daftar tidak berubah; simpan menyimpan urutan yang sama.
+        $kartu->call('tambah')->assertSet('galat', __('Pilih rak atau area dulu.'))
+            ->call('simpan')->assertSet('gudangUbah', 0);
+        $this->assertSame(5, ItemStorageLocation::query()->where('item_id', $this->baut->id)->count());
     }
 
     #[Test]

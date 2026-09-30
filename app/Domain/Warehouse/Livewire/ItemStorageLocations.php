@@ -15,6 +15,7 @@ use App\Domain\Warehouse\Models\Rack;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Support\BinCode;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -36,7 +37,13 @@ class ItemStorageLocations extends Component
     /** @var array<int, array{tempat: string, khusus: bool, label: string}> */
     public array $baris = [];
 
-    public string $tempatBaru = '';
+    /** Tambah tempat bertahap: Zona → Rak/area → Bin (opsional, banyak sekaligus). */
+    public string $zonaBaru = '';
+
+    public string $rakBaru = '';
+
+    /** @var array<int, string> id bin terpilih di rak itu; kosong = seluruh rak */
+    public array $binBaru = [];
 
     public bool $khususBaru = false;
 
@@ -55,8 +62,7 @@ class ItemStorageLocations extends Component
         $gudang = $this->gudangBoleh($gudangId);
         $this->gudangUbah = (int) $gudang->id;
         $this->galat = '';
-        $this->tempatBaru = '';
-        $this->khususBaru = false;
+        $this->reset('zonaBaru', 'rakBaru', 'binBaru', 'khususBaru');
         $label = $this->opsiTempat($gudang)->pluck('text', 'value');
         $this->baris = collect(app(SaveItemStorageLocations::class)->barisSekarang($this->item(), $gudang))
             ->map(fn (array $b) => $b + ['label' => (string) ($label[$b['tempat']] ?? $b['tempat'])])->all();
@@ -70,27 +76,60 @@ class ItemStorageLocations extends Component
         }
     }
 
+    public function updatedZonaBaru(): void
+    {
+        $this->reset('rakBaru', 'binBaru');
+    }
+
+    public function updatedRakBaru(): void
+    {
+        $this->reset('binBaru');
+    }
+
+    /** Tombol "Semua L1" dsb.: tambahkan semua bin satu tingkat ke pilihan bin. */
+    public function pilihTingkat(int $levelId): void
+    {
+        $gudang = $this->gudangBoleh($this->gudangUbah);
+        $bin = $this->binRak($gudang, (int) $this->rakBaru)->where('level_id', $levelId)->pluck('value')->all();
+        $this->binBaru = array_values(array_unique(array_merge(array_map('strval', $this->binBaru), $bin)));
+    }
+
+    /**
+     * Tambah ke daftar: bin terpilih (satu baris per bin), atau seluruh rak / area bila bin kosong.
+     * Nilai `tempat` tetap `rak:<id>` / `bin:<id>` — aksi simpan tidak berubah.
+     */
     public function tambah(): void
     {
         $gudang = $this->gudangBoleh($this->gudangUbah);
-        $opsi = $this->opsiTempat($gudang)->firstWhere('value', $this->tempatBaru);
+        $semua = $this->opsiTempat($gudang)->keyBy('value');
+        $rak = $semua->get('rak:'.$this->rakBaru);
 
-        if ($opsi === null) {
-            $this->galat = __('Pilih tempat dulu.');
+        if ($rak === null) {
+            $this->galat = __('Pilih rak atau area dulu.');
 
             return;
         }
 
-        if (collect($this->baris)->contains('tempat', $this->tempatBaru)) {
+        $binRak = $this->binRak($gudang, (int) $this->rakBaru)->pluck('value')->all();
+        $pilihan = array_values(array_intersect(array_map('strval', $this->binBaru), $binRak));
+        $tempat = $pilihan === [] ? ['rak:'.$this->rakBaru] : array_map(fn ($id) => 'bin:'.$id, $pilihan);
+
+        $ada = collect($this->baris)->pluck('tempat')->all();
+        $baru = array_values(array_diff($tempat, $ada));
+
+        if ($baru === []) {
             $this->galat = __('Tempat itu sudah ada di daftar.');
 
             return;
         }
 
-        $this->baris[] = ['tempat' => $this->tempatBaru, 'khusus' => $this->khususBaru, 'label' => $opsi['text']];
-        $this->tempatBaru = '';
-        $this->khususBaru = false;
-        $this->galat = '';
+        foreach ($baru as $t) {
+            $this->baris[] = ['tempat' => $t, 'khusus' => $this->khususBaru, 'label' => (string) $semua->get($t)['text']];
+        }
+
+        $lewati = count($tempat) - count($baru);
+        $this->galat = $lewati > 0 ? __(':n tempat sudah ada di daftar, dilewati.', ['n' => $lewati]) : '';
+        $this->reset('rakBaru', 'binBaru', 'khususBaru');
     }
 
     public function geser(int $i, int $arah): void
@@ -110,7 +149,7 @@ class ItemStorageLocations extends Component
 
     public function batal(): void
     {
-        $this->reset('gudangUbah', 'baris', 'tempatBaru', 'khususBaru', 'galat');
+        $this->reset('gudangUbah', 'baris', 'zonaBaru', 'rakBaru', 'binBaru', 'khususBaru', 'galat');
     }
 
     public function simpan(SaveItemStorageLocations $aksi): void
@@ -141,40 +180,98 @@ class ItemStorageLocations extends Component
             'bolehUbah' => $bolehUbah,
             'gudangLain' => $bolehUbah ? Warehouse::query()->active()->whereNotIn('id', $tempat->keys())->orderBy('code')->get(['id', 'code', 'name']) : collect(),
             'gudangUbahModel' => $this->gudangUbah > 0 ? Warehouse::query()->find($this->gudangUbah) : null,
-            'opsi' => $this->gudangUbah > 0 ? $this->opsiTempat($this->gudangBoleh($this->gudangUbah))->all() : [],
-        ]);
+        ] + $this->pilihanTambah());
     }
 
     /**
-     * Pilihan tempat satu gudang: seluruh rak, area lantai, lalu bin di rak.
+     * Isi kotak bertahap Tambah tempat: Zona → Rak/area (zona itu) → Bin (rak itu, per tingkat).
      *
-     * @return Collection<int, array{value: string, text: string, badge: string, sub: string}>
+     * @return array<string, mixed>
      */
-    private function opsiTempat(Warehouse $gudang): Collection
+    private function pilihanTambah(): array
     {
-        $rak = Rack::query()->with('zone:id,code')->where('is_active', true)
+        if ($this->gudangUbah === 0) {
+            return ['opsiZona' => [], 'opsiRak' => [], 'opsiBin' => [], 'tingkat' => [], 'rakArea' => false];
+        }
+
+        $gudang = $this->gudangBoleh($this->gudangUbah);
+        $rak = $this->rakGudang($gudang);
+        $diZona = $rak->filter(fn (Rack $r) => (string) $r->zone_id === $this->zonaBaru);
+        $dipilih = $rak->firstWhere('id', (int) $this->rakBaru);
+        $bin = $dipilih && ! $dipilih->is_area ? $this->binRak($gudang, (int) $dipilih->id) : collect();
+
+        return [
+            'opsiZona' => $rak->pluck('zone')->unique('id')->sortBy('code')
+                ->mapWithKeys(fn ($z) => [$z->id => $z->code.($z->name ? ' — '.$z->name : '')])->all(),
+            'opsiRak' => $diZona->sortBy(fn (Rack $r) => [(int) $r->is_area, $r->code])->map(fn (Rack $r) => [
+                'value' => $r->id,
+                'text' => $r->code.($r->name ? ' — '.$r->name : ''),
+                'badge' => $r->is_area ? __('area lantai') : __('rak'),
+            ])->values()->all(),
+            'opsiBin' => $bin->pluck('text', 'value')->all(),
+            'tingkat' => $bin->unique('level_id')->map(fn ($b) => ['id' => $b['level_id'], 'kode' => $b['level_code']])->values()->all(),
+            'rakArea' => (bool) $dipilih?->is_area,
+        ];
+    }
+
+    /** Rak & area aktif di zona aktif gudang itu. @return Collection<int, Rack> */
+    private function rakGudang(Warehouse $gudang): Collection
+    {
+        return Rack::query()->with('zone:id,code,name')->where('is_active', true)
             ->whereHas('zone', fn ($q) => $q->where('warehouse_id', $gudang->id)->where('is_active', true))
             ->orderBy('code')->get();
-        $kembar = $rak->pluck('code')->countBy()->filter(fn ($n) => $n > 1)->all();
-        $opsi = $rak->sortBy(fn (Rack $r) => [(int) $r->is_area, $r->zone->code, $r->code])->map(fn (Rack $r) => [
-            'value' => 'rak:'.$r->id,
-            'text' => ($r->is_area ? __('Area') : __('Rak')).' '.$r->zone->code.' · '.$r->code.($r->name ? ' — '.$r->name : ''),
-            'badge' => $r->is_area ? __('area lantai') : __('seluruh rak'),
-            'sub' => __('Zona :z', ['z' => $r->zone->code]),
-        ])->values();
+    }
 
-        $bins = Bin::query()->withoutGlobalScopes()->with('rackLevel.rack.zone')
+    /**
+     * Bin penyimpanan yang boleh jadi tempat simpan (aktif, bukan tergabung) — satu rak atau seluruh gudang.
+     *
+     * @return Collection<int, Bin>
+     */
+    private function binGudang(Warehouse $gudang, ?int $rakId = null): Collection
+    {
+        return Bin::query()->withoutGlobalScopes()->with('rackLevel.rack')
             ->where('warehouse_id', $gudang->id)->where('bin_type', BinType::Storage->value)
             ->where('bin_status', '!=', BinStatus::Inactive->value)->whereNull('occupied_by_bin_id')
             ->whereNotNull('rack_level_id')
-            ->whereHas('rackLevel.rack', fn ($q) => $q->where('is_area', false)->where('is_active', true))
+            ->whereHas('rackLevel.rack', fn ($q) => $q->where('is_area', false)->where('is_active', true)
+                ->when($rakId !== null, fn ($q) => $q->whereKey($rakId)))
             ->orderBy('code')->get(['id', 'code', 'rack_level_id']);
+    }
 
-        return $opsi->merge($bins->map(fn (Bin $b) => [
+    /**
+     * Bin satu rak untuk kotak tag: label pendek "L1 · B01" dan tingkatnya.
+     *
+     * @return Collection<int, array{value: string, text: string, level_id: int, level_code: string}>
+     */
+    private function binRak(Warehouse $gudang, int $rakId): Collection
+    {
+        return $this->binGudang($gudang, $rakId)
+            ->sortBy(fn (Bin $b) => [(string) $b->rackLevel?->code, (string) $b->code])
+            ->map(fn (Bin $b) => [
+                'value' => (string) $b->id,
+                'text' => $b->rackLevel?->code.' · '.Str::afterLast((string) $b->code, '-'),
+                'level_id' => (int) $b->rack_level_id,
+                'level_code' => (string) $b->rackLevel?->code,
+            ])->values();
+    }
+
+    /**
+     * Label semua tempat satu gudang (seluruh rak, area lantai, bin) untuk daftar berurutan.
+     *
+     * @return Collection<int, array{value: string, text: string}>
+     */
+    private function opsiTempat(Warehouse $gudang): Collection
+    {
+        $rak = $this->rakGudang($gudang);
+        $kembar = $rak->pluck('code')->countBy()->filter(fn ($n) => $n > 1)->all();
+        $opsi = $rak->map(fn (Rack $r) => [
+            'value' => 'rak:'.$r->id,
+            'text' => ($r->is_area ? __('Area') : __('Seluruh rak')).' '.$r->zone->code.' · '.$r->code.($r->name ? ' — '.$r->name : ''),
+        ]);
+
+        return $opsi->merge($this->binGudang($gudang)->map(fn (Bin $b) => [
             'value' => 'bin:'.$b->id,
             'text' => BinCode::pendek((string) $b->code, isset($kembar[$b->rackLevel?->rack?->code])),
-            'badge' => __('bin'),
-            'sub' => (string) $b->code,
         ]))->values();
     }
 

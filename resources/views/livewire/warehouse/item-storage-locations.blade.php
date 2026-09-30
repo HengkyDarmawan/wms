@@ -57,18 +57,57 @@
                     <div class="text-muted mb-1">{{ __('Daftar kosong — simpan untuk melepas semua tempat di gudang ini.') }}</div>
                 @endforelse
 
-                <div class="row g-2 align-items-end mt-1">
-                    <div class="col-12 col-md-7">
-                        <label class="form-label mb-0" for="tempat-baru">{{ __('Tambah tempat') }}</label>
-                        <x-pilih model="tempatBaru" id="tempat-baru" :options="$opsi" :kosong="__('— Pilih rak, area, atau bin —')" />
+                {{-- Tambah tempat bertahap: ① Zona → ② Rak/area → ③ Bin (opsional, banyak sekaligus). --}}
+                <div class="border-top pt-2 mt-2" data-tambah-tempat>
+                    <div class="fw-semibold mb-1">{{ __('Tambah tempat') }}</div>
+                    <div class="row g-2">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label mb-0" for="tempat-zona">① {{ __('Zona') }}</label>
+                            <select class="form-select form-select-sm" id="tempat-zona" wire:model.live="zonaBaru">
+                                <option value="">{{ __('— Pilih zona —') }}</option>
+                                @foreach ($opsiZona as $id => $teks) <option value="{{ $id }}">{{ $teks }}</option> @endforeach
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <label class="form-label mb-0" for="tempat-rak-ts-control">② {{ __('Rak atau area lantai') }}</label>
+                            <x-pilih model="rakBaru" id="tempat-rak" live kecil :options="$opsiRak" :disabled="$zonaBaru === ''"
+                                     :kosong="$zonaBaru === '' ? __('Pilih zona dulu…') : __('— Pilih rak atau area —')" />
+                        </div>
                     </div>
-                    <div class="col-6 col-md-2">
-                        <div class="form-check mb-1">
+
+                    @if ($rakBaru !== '' && ! $rakArea)
+                        <div class="mt-2" data-pilih-bin>
+                            <label class="form-label mb-0" for="tempat-bin">③ {{ __('Bin (opsional — boleh lebih dari satu)') }}</label>
+                            <x-pilih-tag model="binBaru" id="tempat-bin" live :options="$opsiBin" :placeholder="__('Kosongkan = seluruh rak · klik/ketik mis. L1')" />
+                            @if (count($tingkat) > 0)
+                                <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
+                                    <span class="text-muted">{{ __('Pilih semua bin di:') }}</span>
+                                    @foreach ($tingkat as $t)
+                                        <button class="btn btn-sm btn-outline-secondary py-0" type="button" wire:click="pilihTingkat({{ $t['id'] }})">{{ $t['kode'] }}</button>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                        <div class="form-check mb-0">
                             <input class="form-check-input" type="checkbox" id="khusus-baru" wire:model="khususBaru">
                             <label class="form-check-label" for="khusus-baru" title="{{ __('Barang lain ditolak di tempat ini') }}">{{ __('Khusus barang ini') }}</label>
                         </div>
+                        <span class="text-muted ms-auto" data-ringkas-tambah>
+                            @if ($rakBaru === '')
+                                {{ __('Pilih zona, lalu rak atau area.') }}
+                            @elseif ($rakArea)
+                                {{ __('Akan ditambah: seluruh area lantai ini.') }}
+                            @elseif (count($binBaru) === 0)
+                                {{ __('Akan ditambah: seluruh rak ini.') }}
+                            @else
+                                {{ __('Akan ditambah: :n bin.', ['n' => count($binBaru)]) }}
+                            @endif
+                        </span>
+                        <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tambah" @disabled($rakBaru === '')>{{ __('Tambah') }}</button>
                     </div>
-                    <div class="col-6 col-md-3"><button class="btn btn-sm btn-outline-primary w-100" type="button" wire:click="tambah">{{ __('Tambah') }}</button></div>
                 </div>
                 @if ($galat !== '')
                     <div class="text-danger mt-2" data-galat-tempat>{{ $galat }}</div>

@@ -1,7 +1,7 @@
 # Spesifikasi Modul — `warehouse` bagian Tata Letak Barang (Tempat Simpan)
 
-**Versi:** 0.3
-**Tanggal:** 1 Oktober 2026
+**Versi:** 0.4
+**Tanggal:** 30 September 2026
 **Status:** **dibangun (Tata letak gudang Bagian 3)** — Tempat Simpan per barang & gudang, *Khusus Barang Ini* (BR-WH-10) di put-away / pilah retur / penyesuaian (+) / saldo awal, Buka Tempat Khusus oleh Kepala Gudang, kartu di detail item, mode *Tata letak barang* di Denah, impor Excel, dan Cetak denah ([A-365](04b-asumsi-lanjutan.md#a-365)–[A-372](04b-asumsi-lanjutan.md#a-372)). Pecahan dari [12-warehouse](12-warehouse.md) (berkas itu mendekati batas 450 baris); v0.2: halaman **Isi Bin**, QR bin berisi tautan, label bin berkode pendek (Bagian 4, [A-373](04b-asumsi-lanjutan.md#a-373)–[A-379](04b-asumsi-lanjutan.md#a-379); §6.6–§6.7, TC-WH-61–62); v0.3: Bagian 5 — langkah setup awal *Atur tata letak barang*, saldo awal tanpa kode bin dari tempat simpan ([27](27-pendukung-f1.md) §13.3), kolom Lokasi di Saldo stok ([13](13-stock.md) §6) ([A-380](04b-asumsi-lanjutan.md#a-380)–[A-382](04b-asumsi-lanjutan.md#a-382))
 **Modul:** `warehouse`
 **Fase:** F1
@@ -59,7 +59,7 @@ Tidak ada status baru.
 
 ### 6.1 Kartu *Tempat simpan* — detail item (`/items/{id}`, tab Ringkasan) — `Warehouse\Livewire\ItemStorageLocations`
 
-Per gudang: nomor urut, kode pendek bin / "Rak D · R01 (seluruh rak)" / "Area D · AB1", badge **Khusus**. `bin.manage`: *Ubah* → daftar berurutan (naik/turun/lepas, centang Khusus), *Tambah tempat* (`<x-pilih>`: rak, area, bin), *Simpan tempat simpan*; galat aturan tampil di kartu. *Atur tempat di gudang…* untuk gudang yang belum punya.
+Per gudang: nomor urut, kode pendek bin / "Rak D · R01 (seluruh rak)" / "Area D · AB1", badge **Khusus**. `bin.manage`: *Ubah* → daftar berurutan (naik/turun/lepas, centang Khusus), *Tambah tempat* bertahap — ① Zona → ② Rak atau area lantai → ③ Bin opsional, boleh banyak (tag, tombol per tingkat); bin kosong = seluruh rak ([A-399](04b-asumsi-lanjutan.md#a-399)), *Simpan tempat simpan*; galat aturan tampil di kartu. *Atur tempat di gudang…* untuk gudang yang belum punya.
 
 ### 6.2 Denah — mode *Tata letak barang* ([A-369](04b-asumsi-lanjutan.md#a-369))
 
@@ -113,6 +113,7 @@ Cetak denah (§6.3). Laporan tempat simpan tersendiri: belum.
 | TC-WH-57 | `daftarBarang`: hanya barang tanpa tempat, cari, maks. 50 + tanda lebih; pengguna tanpa `bin.manage` 403 |
 | TC-WH-58 | Impor: templat, galat per baris semua-atau-tidak, format tempat (pendek, lengkap, rak, area, berzona), Khusus Ya/Tidak |
 | TC-WH-59 | Kartu detail item: tambah gudang, tambah tempat, urut, Khusus, simpan; galat aturan di kartu; gudang di luar cakupan tidak terlihat |
+| TC-WH-65 | Tambah tempat bertahap: rak ikut zona; kotak bin hanya untuk rak biasa; *Semua L1* memilih semua bin tingkat itu; 2 bin → 2 baris; area → 1 baris; tempat ganda dilewati; bin asing diabaikan → seluruh rak; tanpa rak → galat |
 | TC-WH-60 | Cetak denah: kode & nama barang, kode pendek, Khusus, tips; tanpa "Rp"; gudang di luar cakupan tidak ditemukan |
 | TC-WH-61 | Bin khusus berisi 30 baut (DUS = 12): `/bins/<kode>` (juga huruf kecil) → kode pendek, Khusus, "30 PCS", "2 DUS 6 PCS", masuk terakhir, tanpa "Rp"; driver 403; staf gudang lain & kode asing 404; setelah gabung permanen ke B02, bin tergabung → "digabung ke bin utama" + isi bin utama |
 | TC-WH-62 | Tautan bin `…/bins/CKG-D-R01-L1-B03`; `dariPindai` membaca tautan & huruf kecil; `cocokkan` menerima tautan dan kode pendek, kode pendek kembar = tidak ada; label bin memuat kode pendek & kode lengkap |
