@@ -1,7 +1,7 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.100
-**Tanggal:** 1 Oktober 2026
+**Versi:** 0.101
+**Tanggal:** 30 September 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
 Dokumentasi ini adalah acuan tunggal untuk membangun WMS baru dari nol. Prototipe lama (`warehouse.sipembantu.com`) hanya referensi; indeks temuan auditnya ada di [00-audit](00-audit/README.md).
@@ -108,6 +108,9 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.101 — 30 September 2026 (sesi kantor: empat pilihan terakhir memakai `<x-pilih>`)
+- `<x-pilih>` menerima opsi `disabled` dan kunci `galat`; bin di detail Put-away, bin Picking, bin tujuan Pilah retur, dan batang Konversi (utama & tambahan) kini kotak yang bisa dicari — nilai, validasi, pindai, dan cakupan tetap. Catatan [A-391](wms/04b-asumsi-lanjutan.md#a-391), [A-392](wms/04b-asumsi-lanjutan.md#a-392), [A-395](wms/04b-asumsi-lanjutan.md#a-395) disesuaikan (04b v0.42). [16-shared](wms/16-shared-laporan-berkas.md) v0.27 (§6.5, TC-PIL-10). Glosarium, katalog 06, model data, dan route tidak berubah.
 
 ### v0.100 — 1 Oktober 2026 (laporan pagi kerja malam)
 - **Laporan baru** [00-laporan-malam-2026-10-01](00-laporan-malam-2026-10-01.md) v1.0: hasil per langkah (commit `73026ab`…`9a3d45d`), uji penuh terakhir, daftar *Perlu keputusan pemilik* A-355, A-357, A-359–A-398, cara mencoba 10 langkah, perintah sebelum mencoba. [Laporan progres](00-laporan-progres-2026-09-24.md) v1.46 menautkannya.

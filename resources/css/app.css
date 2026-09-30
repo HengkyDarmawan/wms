@@ -152,6 +152,7 @@ body > .nx-pilih-dropdown { z-index: 1090; } /* di atas .modal (1055) & offcanva
 .nx-pilih-dropdown .optgroup .option { padding-left: 1rem; }
 .nx-pilih-dropdown .ts-dropdown-content { max-height: min(50vh, 20rem); }
 .nx-pilih-dropdown .option .badge { vertical-align: 1px; }
+.nx-pilih-dropdown .option[aria-disabled="true"] { opacity: .5; cursor: not-allowed; } /* opsi nonaktif, mis. bin beku */
 .nx-pilih.is-invalid .ts-wrapper.focus .ts-control { border-color: var(--nx-danger); }
 .nx-pilih .ts-wrapper.disabled .ts-control { opacity: .65; }
 /* Ukuran kecil (form-select-sm) untuk baris tabel / form padat. */

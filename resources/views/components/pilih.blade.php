@@ -6,8 +6,10 @@
     <x-pilih model="managerId" :label="__('Atasan langsung')" kosong="— Ikuti jabatan —"
              :options="[['value' => 5, 'text' => 'Budi', 'badge' => 'Direktur', 'sub' => 'Manajemen', 'group' => 'Unit ini']]" />
 
-    `options`: daftar ['value', 'text', 'badge'?, 'sub'?, 'group'?] atau peta nilai => teks.
+    `options`: daftar ['value', 'text', 'badge'?, 'sub'?, 'group'?, 'disabled'?] atau peta nilai => teks.
       - `group` → kelompok (optgroup), urut sesuai `kelompok` lalu kemunculan pertama.
+      - `disabled` → opsi tampil redup dan tidak bisa dipilih (mis. batang di bin beku).
+    `galat`: kunci galat validasi bila berbeda dari `model` (mis. model `batang`, galat `rencana.batang`).
     `server`: daftar besar dicari ke server lewat `cariPilihan` (trait CariPilihan) — `options`
       cukup isian awal + nilai terpilih (Pilihan::awalDengan). `kunci` = penanda daftar induk
       (mis. id gudang) supaya kotak dibuat ulang bila induknya berganti.
@@ -31,6 +33,7 @@
     'dialog' => false,
     'kelompok' => [],
     'aria' => null,
+    'galat' => null,
 ])
 @php
     $id ??= 'pilih-'.str_replace(['.', '_'], '-', $model);
@@ -42,14 +45,16 @@
     // Mode server: daftar berubah setiap nilai dipilih (label terpilih), jadi kotak hanya dibuat
     // ulang bila induknya berganti (`kunci`). Mode biasa: ikut isi daftar.
     $hash = $server ? md5($kunci.'|'.($disabled ? 1 : 0)) : md5($daftar->toJson().'|'.($disabled ? 1 : 0));
-    $galat = $errors->has($model);
-    // data-badge / data-sub dibaca Tom Select lewat dataset (ikut dicari).
+    $kunciGalat = $galat ?? $model;
+    $adaGalat = $errors->has($kunciGalat);
+    // data-badge / data-sub dibaca Tom Select lewat dataset (ikut dicari); `disabled` dibaca Tom Select langsung.
     $opsiHtml = fn (array $o) => '<option value="'.e($o['value']).'"'
         .(filled($o['badge'] ?? null) ? ' data-badge="'.e($o['badge']).'"' : '')
         .(filled($o['sub'] ?? null) ? ' data-sub="'.e($o['sub']).'"' : '')
+        .(! empty($o['disabled']) ? ' disabled' : '')
         .'>'.e($o['text']).'</option>';
 @endphp
-<div {{ $attributes->class(['nx-pilih', 'nx-pilih-sm' => $kecil, 'is-invalid' => $galat]) }}>
+<div {{ $attributes->class(['nx-pilih', 'nx-pilih-sm' => $kecil, 'is-invalid' => $adaGalat]) }}>
     @if ($label !== null)
         <label class="form-label{{ $kecil ? ' small' : '' }}" id="{{ $id }}-label" for="{{ $id }}-ts-control">
             {{ $label }}@if ($wajib) <span class="wajib">*</span>@endif
@@ -80,5 +85,5 @@
             @endforeach
         </select>
     </div>
-    @error($model) <div class="invalid-feedback d-block" id="{{ $id }}-galat">{{ $message }}</div> @enderror
+    @error($kunciGalat) <div class="invalid-feedback d-block" id="{{ $id }}-galat">{{ $message }}</div> @enderror
 </div>

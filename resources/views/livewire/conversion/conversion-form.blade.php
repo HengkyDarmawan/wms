@@ -61,16 +61,15 @@
             <div class="card-header"><strong>{{ __('Batang yang dipotong') }}</strong> <span class="small text-muted">{{ __('potongan utuh dari stok Tersedia bin penyimpanan') }}</span></div>
             <div class="card-body row g-3">
                 <div class="col-md-7">
-                    <label class="form-label" for="cnv-batang">{{ __('Batang') }} <span class="wajib">*</span></label>
-                    <select class="form-select @error('rencana.batang') is-invalid @enderror" id="cnv-batang" wire:model.live="batang" @disabled($form['warehouse_id'] === '')>
-                        <option value="">{{ $form['warehouse_id'] === '' ? __('Pilih proyek dan gudang dulu…') : __('Pilih batang…') }}</option>
-                        @foreach ($batangCalon as $kunci => $c)
-                            <option value="{{ $kunci }}" @disabled($c['frozen'])>
-                                {{ $c['item_code'] }} · {{ $c['tracking'] }} · {{ $angka($c['balance']) }} {{ $c['uom'] }} · {{ $c['bin_code'] }}@if ($c['is_offcut']) · offcut @endif @if ($c['frozen']) · {{ __('dibeku') }} @endif
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('rencana.batang') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @php($opsiBatang = $batangCalon->map(fn ($c, $kunci) => [
+                        'value' => $kunci,
+                        'text' => $c['item_code'].' · '.$c['tracking'].' · '.$angka($c['balance']).' '.$c['uom'].' · '.$c['bin_code']
+                            .($c['is_offcut'] ? ' · offcut' : '').($c['frozen'] ? ' · '.__('dibeku') : ''),
+                        'disabled' => $c['frozen'],
+                    ])->values()->all())
+                    <x-pilih id="cnv-batang" model="batang" galat="rencana.batang" live :label="__('Batang')" wajib
+                             :options="$opsiBatang" :disabled="$form['warehouse_id'] === ''"
+                             :kosong="$form['warehouse_id'] === '' ? __('Pilih proyek dan gudang dulu…') : __('Pilih batang…')" />
                     @if ($form['warehouse_id'] !== '' && $batangCalon->isEmpty())
                         <div class="form-text text-danger">{{ __('Tidak ada potongan yang bisa dipotong di gudang ini (item harus ditandai Bisa dipotong).') }}</div>
                     @endif
@@ -145,12 +144,13 @@
                     </div>
                 </div>
                 <div class="card-body pb-0">
-                    <select class="form-select form-select-sm mb-2" wire:model.live="tambahan.{{ $bi }}.key" aria-label="{{ __('Batang') }} {{ $bi + 2 }}">
-                        <option value="">{{ __('Pilih batang…') }}</option>
-                        @foreach ($batangCalon as $kunci => $c)
-                            <option value="{{ $kunci }}" @disabled($c['frozen'])>{{ $c['item_code'] }} · {{ $c['tracking'] }} · {{ $angka($c['balance']) }} {{ $c['uom'] }} · {{ $c['bin_code'] }}</option>
-                        @endforeach
-                    </select>
+                    <x-pilih class="mb-2" :model="'tambahan.'.$bi.'.key'" live kecil :kosong="__('Pilih batang…')"
+                             :aria="__('Batang').' '.($bi + 2)"
+                             :options="$batangCalon->map(fn ($c, $kunci) => [
+                                 'value' => $kunci,
+                                 'text' => $c['item_code'].' · '.$c['tracking'].' · '.$angka($c['balance']).' '.$c['uom'].' · '.$c['bin_code'],
+                                 'disabled' => $c['frozen'],
+                             ])->values()->all()" />
                     @if ($kunciAsli !== '' && $errors->first('rencana.batang@'.$kunciAsli) !== '') <div class="text-danger small mb-2">{{ $errors->first('rencana.batang@'.$kunciAsli) }}</div> @endif
                 </div>
                 <div class="table-responsive">

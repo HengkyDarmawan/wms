@@ -70,6 +70,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php($opsiBin = $bins->map(fn ($b) => ['value' => $b->id, 'text' => ($pendek[$b->id] ?? $b->code).' — '.$b->code])->all())
                     @foreach ($lines as $l)
                         <tr wire:key="put-line-{{ $l->id }}">
                             <td>
@@ -91,12 +92,8 @@
                                            wire:change="pindaiBin({{ $l->id }}, $event.target.value)"
                                            wire:keydown.enter.prevent="pindaiBin({{ $l->id }}, $event.target.value)">
                                     @error('pindai.'.$l->id) <div class="small text-danger">{{ $message }}</div> @enderror
-                                    <select class="form-select form-select-sm" wire:model="isian.{{ $l->id }}.bin_id">
-                                        <option value="">{{ __('Pilih bin…') }}</option>
-                                        @foreach ($bins as $b)
-                                            <option value="{{ $b->id }}">{{ $pendek[$b->id] ?? $b->code }} — {{ $b->code }}</option>
-                                        @endforeach
-                                    </select>
+                                    <x-pilih :model="'isian.'.$l->id.'.bin_id'" :options="$opsiBin" :kosong="__('Pilih bin…')"
+                                             kecil :aria="__('Bin tujuan')" />
                                 @else
                                     <span class="font-monospace">{{ $l->bin ? ($pendek[$l->bin_id] ?? $l->bin->code) : '—' }}</span>
                                     @if ($l->scanned_at) <div class="small text-muted">{{ __('Ditaruh') }} {{ $l->scanned_at->lokal()->format('d/m/Y H:i') }}</div> @endif

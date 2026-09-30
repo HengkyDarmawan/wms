@@ -178,12 +178,10 @@
                                                aria-label="{{ __('Pindai QR bin') }}" placeholder="{{ __('Pindai QR bin') }}"
                                                wire:keydown.enter.prevent="pindaiBinPilah({{ $l->id }}, {{ $i }}, $event.target.value)">
                                         @error('pindai.'.$l->id.'.'.$i) <div class="small text-danger">{{ $message }}</div> @enderror
-                                        <select class="form-select form-select-sm" wire:model.live="pilah.{{ $l->id }}.{{ $i }}.target_bin_id">
-                                            <option value="">{{ ($p['sorting'] ?? '') === 'damaged' ? __('Bin Retur (bawaan)') : __('Pilih bin…') }}</option>
-                                            @foreach (($p['sorting'] ?? '') === 'damaged' ? $binRusak : $binPenyimpanan as $b)
-                                                <option value="{{ $b->id }}">{{ $pendekBin[$b->id] ?? $b->code }} — {{ $b->code }}</option>
-                                            @endforeach
-                                        </select>
+                                        @php $rusak = ($p['sorting'] ?? '') === 'damaged'; @endphp
+                                        <x-pilih :model="'pilah.'.$l->id.'.'.$i.'.target_bin_id'" live kecil :aria="__('Bin tujuan')"
+                                                 :kosong="$rusak ? __('Bin Retur (bawaan)') : __('Pilih bin…')"
+                                                 :options="($rusak ? $binRusak : $binPenyimpanan)->map(fn ($b) => ['value' => $b->id, 'text' => ($pendekBin[$b->id] ?? $b->code).' — '.$b->code])->all()" />
                                         @php $sp = $saranPilah[$l->id] ?? null; @endphp
                                         @if ($sp && $sp['bin'] && in_array($p['sorting'] ?? '', ['good', 'offcut'], true))
                                             <div class="small mt-1">

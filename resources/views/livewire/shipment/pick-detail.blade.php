@@ -105,6 +105,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php($opsiBin = $bins->map(fn ($bin) => ['value' => $bin->id, 'text' => $bin->code])->all())
                     @forelse ($lines as $l)
                         <tr wire:key="pck-baris-{{ $l->id }}"
                             @class(['table-warning' => $l->scanned_at !== null && $l->isShort(), 'table-info' => $sorot === $l->id && ! $l->isShort()])>
@@ -128,12 +129,7 @@
                             </td>
                             <td>
                                 @if ($task->status->value === 'in_progress')
-                                    <select class="form-select form-select-sm"
-                                            wire:model="isian.{{ $l->id }}.bin_id">
-                                        @foreach ($bins as $bin)
-                                            <option value="{{ $bin->id }}">{{ $bin->code }}</option>
-                                        @endforeach
-                                    </select>
+                                    <x-pilih :model="'isian.'.$l->id.'.bin_id'" :options="$opsiBin" kecil :aria="__('Bin')" />
                                     @if ($l->binWasOverridden())
                                         <div class="small text-muted">
                                             {{ __('Saran') }}: {{ $l->suggestedBin?->code }}

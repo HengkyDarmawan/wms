@@ -69,6 +69,42 @@ class PilihKomponenTest extends TenantTestCase
         $this->assertSame($this->kunci($s1), $this->kunci($s2), 'Mode server: memilih nilai tidak membuat ulang kotak.');
     }
 
+    /**
+     * TC-PIL-10 — opsi nonaktif (batang di bin beku, Konversi) dan kunci galat yang berbeda
+     * dari model (`batang` ↔ `rencana.batang`); baris dinamis ber-model path mendapat id unik.
+     */
+    #[Test]
+    public function tc_pil_10_opsi_nonaktif_dan_kunci_galat_berbeda(): void
+    {
+        $html = (string) $this->withViewErrors(['rencana.batang' => 'Pilih batang dulu.'])->blade(
+            '<x-pilih id="cnv-batang" model="batang" galat="rencana.batang" live :options="$opsi" />',
+            ['opsi' => [
+                ['value' => 'p_1', 'text' => 'BESI · P-1'],
+                ['value' => 'p_2', 'text' => 'BESI · P-2 · dibeku', 'disabled' => true],
+            ]],
+        );
+
+        // Opsi nonaktif dibawa ke <option disabled> (Tom Select membacanya → tidak bisa dipilih).
+        $this->assertStringContainsString('<option value="p_1">BESI · P-1</option>', $html);
+        $this->assertStringContainsString('<option value="p_2" disabled>BESI · P-2 · dibeku</option>', $html);
+        // Galat dibaca dari kunci `galat`, bukan dari model.
+        $this->assertStringContainsString('class="nx-pilih is-invalid"', $html);
+        $this->assertStringContainsString('id="cnv-batang-galat">Pilih batang dulu.', $html);
+        $this->assertStringContainsString('$wire.entangle(\'batang\').live', $html);
+
+        // Tanpa galat pada kunci itu → tidak bertanda walau model punya galat lain.
+        $bersih = (string) $this->withViewErrors(['batang' => 'x'])->blade(
+            '<x-pilih model="batang" galat="rencana.batang" :options="[1 => \'A\']" />',
+        );
+        $this->assertStringNotContainsString('is-invalid', $bersih);
+
+        // Baris dinamis (Put-away, Picking, Pilah): id & kunci unik per baris.
+        $a = (string) $this->withViewErrors([])->blade('<x-pilih model="isian.7.bin_id" kecil :options="[1 => \'A\']" />');
+        $b = (string) $this->withViewErrors([])->blade('<x-pilih model="isian.8.bin_id" kecil :options="[1 => \'A\']" />');
+        $this->assertStringContainsString('id="pilih-isian-7-bin-id"', $a);
+        $this->assertNotSame($this->kunci($a), $this->kunci($b));
+    }
+
     private function kunci(string $html): string
     {
         preg_match('/wire:key="([^"]+)"/', $html, $m);
