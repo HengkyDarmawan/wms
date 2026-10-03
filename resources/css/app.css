@@ -107,6 +107,19 @@ label .wajib {
 .nx-pilih .ts-dropdown .active { background: var(--nx-hover-bg); color: var(--nx-text); }
 .nx-pilih-tag .ts-dropdown .no-results,
 .nx-pilih .ts-dropdown .no-results { color: var(--nx-text-muted); padding: .375rem .75rem; }
+/* A-404: dropdown kotak tag kini di <body> (kelas sendiri, bukan turunan .nx-pilih-tag). */
+.nx-pilih-tag-dropdown {
+    background: var(--nx-card-bg);
+    border-color: var(--nx-border);
+    color: var(--nx-text-body);
+    border-radius: var(--nx-radius-sm);
+    box-shadow: var(--nx-shadow-lift);
+    max-width: calc(100vw - 16px);
+}
+body > .nx-pilih-tag-dropdown { z-index: 1090; }
+.nx-pilih-tag-dropdown .option { color: var(--nx-text-body); }
+.nx-pilih-tag-dropdown .active { background: var(--nx-hover-bg); color: var(--nx-text); }
+.nx-pilih-tag-dropdown .no-results { color: var(--nx-text-muted); padding: .375rem .75rem; }
 
 /* A-358: badge jabatan di pilihan (mis. Atasan langsung); netral di tema terang & gelap. */
 .nx-badge-jabatan {
@@ -157,7 +170,7 @@ body > .nx-pilih-dropdown { z-index: 1090; } /* di atas .modal (1055) & offcanva
 .nx-pilih .ts-wrapper.disabled .ts-control { opacity: .65; }
 /* Ukuran kecil (form-select-sm) untuk baris tabel / form padat. */
 .nx-pilih-sm .ts-control { min-height: calc(1.5em + .5rem + 2px); padding-top: .25rem; padding-bottom: .25rem; font-size: .875rem; }
-.nx-pilih-sm + .nx-pilih-dropdown, .nx-pilih-sm .ts-dropdown { font-size: .875rem; }
+.nx-pilih-sm + .nx-pilih-dropdown, .nx-pilih-sm .ts-dropdown, .nx-pilih-dropdown-sm { font-size: .875rem; } /* A-404: dropdown di <body> membawa kelas -sm sendiri */
 /* HP / layar sentuh: target sentuh >= 40px, dropdown tidak keluar layar. */
 @media (pointer: coarse), (max-width: 767.98px) {
     .nx-pilih .ts-control, .nx-pilih-sm .ts-control { min-height: 40px; }

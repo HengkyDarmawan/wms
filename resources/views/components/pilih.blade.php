@@ -13,8 +13,10 @@
     `server`: daftar besar dicari ke server lewat `cariPilihan` (trait CariPilihan) — `options`
       cukup isian awal + nilai terpilih (Pilihan::awalDengan). `kunci` = penanda daftar induk
       (mis. id gudang) supaya kotak dibuat ulang bila induknya berganti.
-    `live` (wire:model.live), `disabled`, `kecil` (form-select-sm), `dialog` (dropdown ditempel
-      ke <body>, di atas modal), `label` + `wajib` (label terhubung ke kotak cari; aria),
+    `live` (wire:model.live), `disabled`, `kecil` (form-select-sm), `dialog` (tidak lagi berpengaruh —
+      sejak A-404 dropdown SELALU ditempel ke <body> supaya tidak dipotong .table-responsive atau
+      tertutup kartu lain; prop dipertahankan agar pemanggil lama tidak berubah),
+      `label` + `wajib` (label terhubung ke kotak cari; aria),
       `aria` (aria-label bila tanpa label terlihat, mis. sel tabel).
 --}}
 @props([

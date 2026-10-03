@@ -56,7 +56,9 @@ function pilih(nilai) {
         searchField: ['text', 'badge', 'sub', 'cari'],
         optgroupField: 'group',
         lockOptgroupOrder: true,
-        dropdownClass: 'ts-dropdown nx-pilih-dropdown',
+        // A-404: dropdown selalu ditempel ke <body> (lihat bawah), jadi gaya & ukuran kecil
+        // dibawa lewat kelasnya sendiri, bukan turunan .nx-pilih / .nx-pilih-sm.
+        dropdownClass: 'ts-dropdown nx-pilih-dropdown' + (select.closest('.nx-pilih-sm') ? ' nx-pilih-dropdown-sm' : ''),
         render: {
           option: (d, esc) => (d.value === '' ? `<div class="text-muted">${esc(d.text)}</div>` : `<div>${isi(d, esc)}</div>`),
           // Nilai terpilih: badge & unit ikut tampil (A-358).
@@ -71,7 +73,10 @@ function pilih(nilai) {
         },
       };
 
-      if (select.dataset.dialog === '1') pengaturan.dropdownParent = 'body';
+      // A-404: dropdown SELALU di <body> (dulu hanya `dialog`). Di dalam .ts-wrapper ia dipotong
+      // .table-responsive (baris tabel) dan tertutup kartu berikutnya yang ber-transform saat hover
+      // (motion.css). tom-select menghitung ulang posisinya saat window scroll/resize.
+      pengaturan.dropdownParent = 'body';
 
       if (server) {
         Object.assign(pengaturan, {

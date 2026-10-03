@@ -1,7 +1,7 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.104
-**Tanggal:** 30 September 2026
+**Versi:** 0.105
+**Tanggal:** 3 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
 Dokumentasi ini adalah acuan tunggal untuk membangun WMS baru dari nol. Prototipe lama (`warehouse.sipembantu.com`) hanya referensi; indeks temuan auditnya ada di [00-audit](00-audit/README.md).
@@ -108,6 +108,12 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.105 — 3 Oktober 2026 (sesi kantor: pilih tempat di denah, wizard setup yang jelas)
+- **Asumsi baru** [A-400](wms/04b-asumsi-lanjutan.md#a-400)–[A-403](wms/04b-asumsi-lanjutan.md#a-403) (04b v0.45 §2.56, semua *Perlu validasi*): popup *Pilih tempat di denah* (tampak atas → tampak depan "kursi bioskop", bentuk rak = arah) sebagai cara utama kartu *Tempat simpan* (A-400); denah mini + *Lihat di Denah* `?q=` (A-401); wizard setup dengan *Dianggap selesai bila…*, catatan keadaan, tautan rak/bin → Denah, tata letak → item, saldo awal → `adjustments/create?reason=OPENING` + "menunggu approval" (A-402, menyempurnakan A-191/A-380); pilihan **Arah** di form Rak baru Denah (A-403). Tanpa status/enum/tabel/route baru.
+- **Spesifikasi** [12a](wms/12a-tata-letak-barang.md) v0.5 (§6.1, TC-WH-66–67, §12); [12](wms/12-warehouse.md) v0.21 (§6, TC-WH-68, §13.5 butir 8); [27](wms/27-pendukung-f1.md) v0.11 (§13.3, TC-MST-21b diperbarui, TC-MST-21c); [21](wms/21-opname-penyesuaian.md) v0.9 (§6, TC-ADJ-30); [03-glosarium](wms/03-glosarium.md) v0.31 (*Pilih Tempat di Denah*, *Denah Mini*, *Arah Rak*).
+- **Asumsi baru** [A-404](wms/04b-asumsi-lanjutan.md#a-404) (04b v0.46 §2.56, *Perlu validasi*): dropdown `<x-pilih>`/`<x-pilih-tag>` selalu di `<body>` — temuan "pilihan kehalang" di Penyesuaian baru (dipotong `.table-responsive`, tertutup kartu ber-transform). [16](wms/16-shared-laporan-berkas.md) v0.28 (§6.5, E2E `ui-check` 6b); [21](wms/21-opname-penyesuaian.md) v0.10 (§13.4). Tanpa perubahan PHP.
+- **Arsip:** blok v0.35 dipindah ke [arsip](00-catatan-perubahan-arsip.md) v1.24.
 
 ### v0.104 — 30 September 2026 (sesi kantor: tambah tempat simpan bertahap)
 - **Asumsi baru** [A-399](wms/04b-asumsi-lanjutan.md#a-399) (04b v0.44 §2.55; arah *Setuju rancangan*, rincian *Perlu validasi*): kartu *Tempat simpan* di detail item menambah tempat lewat ① Zona → ② Rak/area → ③ Bin opsional & banyak sekaligus (tag, tombol per tingkat); kosong = seluruh rak. [12a](wms/12a-tata-letak-barang.md) v0.4 (§6, TC-WH-65); TC-WH-59 memakai isian baru. Glosarium, katalog 06, model data, dan route tidak berubah.
@@ -427,20 +433,3 @@ docs/
 - **Uji:** 10 uji baru (TC-NTF-05/06, TC-PLT-12/13, TC-ACC-28g, TC-REQ-33, TC-PCK-16/17/18 + TC-MST-20, TC-PLT-04/11, TC-PUT-08, TC-STK-27 diperluas). **579 uji hijau**; `ui-check.mjs` 67 cek (+ layar Super Admin), `alur-req-sj.mjs` 9/9, `alur-pendukung.mjs` 7/7, 0 error console. `TenantTestCase` memakai manajer transaksi uji Laravel (callback `afterCommit` berjalan di uji).
 - **Prompt serah terima baru** [`prompts/00-lanjutkan-di-kantor.md`](prompts/00-lanjutkan-di-kantor.md) v1.0 (rumah → kantor: langkah 0, jatah A-206, terapkan keputusan tinjauan asumsi); `prompts/00-lanjutkan-di-rumah.md` → v1.9 (arsip).
 - `wms/17-platform-login.md` → v0.4 (§5.1, §5.2, §10 TC-PLT-12/13, §13); `wms/27-pendukung-f1.md` → v0.3 (§5, §10 TC-REQ-33, TC-NTF-05/06, §13.1 butir 11, §13.2); `00-tinjauan-asumsi-2026-09-25.md` → v1.1.
-
-### v0.35 — 25 September 2026 (Pendukung Fase 1 selesai)
-- **Berkas baru `wms/27-pendukung-f1.md` v0.1.** Migrasi tenant `000160` (`notifications`, `notification_preferences`).
-  - **Strategi pengambilan** (`Stock\Support\RemovalOrder`): FIFO/FEFO/sisa potongan/manual, lot kedaluwarsa dilewati; alokasi keras tidak lagi menjanjikan baris saldo yang sama dua kali (A-185).
-  - **Beranda** antrean pekerjaan per izin & cakupan (A-186); **guard penutupan proyek** BR-PRJ-02/04 (A-187).
-  - **Konfirmasi & keberatan terima** BR-REQ-10 di layar REQ & portal, `deliveries:auto-confirm`; DSC `client_dispute` tanpa pergerakan stok (A-188).
-  - **Notifikasi** in-app & email: lonceng, halaman, preferensi, 8 kejadian, `notifications:daily` (A-189).
-  - **Laporan inti** saldo stok, mutasi periode, permintaan terbuka & barang rusak, konversi & waste, akurasi stok (total 14) + **ekspor PDF** semua laporan (A-190).
-  - **Wizard setup awal** (A-191), **impor item & proyek (+klien) dari Excel** (A-192), **PWA** installable + pindai kamera + draf lokal (A-193).
-- **Asumsi baru [A-185](wms/04-keputusan-dan-asumsi.md#a-185)–[A-194](wms/04-keputusan-dan-asumsi.md#a-194)** (*Perlu validasi*, `04` → v0.25, §2.13).
-- **Model data** 08a–08c → v0.18 (kolom `notifications.title/body/url`, A-189; `stock_movements.from_stock_status`, A-194).
-- **Modul lain:** `11-master` → v0.4, `13-stock` → v0.6, `14-request` → v0.8, `15-picking-shipment` → v0.7, `16-shared-laporan-berkas` → v0.6, `17-platform-login` → v0.3, `20-approval` → v0.8, `25-aset` → v0.3, `26-purchase-request` → v0.2, `08-arsitektur` → v0.16, laporan progres → v1.12, `prompts/00-lanjutkan-di-rumah.md` → v1.7, `cek.md`.
-- **Perbaikan tampilan waktu (BR-GEN-07):** 62 tampilan tanggal-jam di 34 view memakai jam UTC; kini macro `lokal()` → zona company.
-- **Temuan & perbaikan kartu stok ([A-194](wms/04-keputusan-dan-asumsi.md#a-194), migrasi tenant `000170`):** uji rantai penuh baru TC-E2E-01 (`tests/Feature/FullLifecycleTest.php`: GRN → QC → put-away → REQ → SJ → konfirmasi → site → ISU → retur → CNV → OPN → ADJ → aset) menunjukkan perubahan kondisi (Karantina → Tersedia, Rusak) tidak bisa dibangun ulang dari kartu stok dan pembaliknya salah kondisi. `stock_movements.from_stock_status` ditambahkan; `13-stock` naik versi, `04` → v0.25, model data → v0.18.
-- **Berkas baru `00-tinjauan-asumsi-2026-09-25.md`:** tabel ringkas semua asumsi *Perlu validasi* (A-72–A-194) dengan kolom keputusan (butir Penutup).
-- **E2E:** `alur-req-sj.mjs` membaca saldo awal dari database; skrip baru `alur-pendukung.mjs` (P1–P6). Pada data demo segar: 9/9 + 6/6 lulus, 0 error console; `ui-check.mjs` 61 pemeriksaan OK.
-- **Uji:** 23 uji baru (TC-PCK-12–15, TC-DSH-01, TC-MST-20–22, TC-REQ-30–32, TC-NTF-01–04, TC-RPT-02–05, TC-PWA-01, TC-GEN-07, TC-STK-26, TC-E2E-01); TC-RPT-01 (14 laporan) disesuaikan. **569 uji hijau** (MariaDB 10.4.32, XAMPP3).

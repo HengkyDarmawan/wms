@@ -139,4 +139,17 @@ class AdjustmentScreenTest extends TenantTestCase
 
         $this->assertSame(StockAdjustmentStatus::Cancelled, $b->refresh()->status);
     }
+
+    /** TC-ADJ-30 (A-402) — `?reason=<kode>` mengisi alasan bila kode alasan penyesuaian aktif; kode asing diabaikan. */
+    #[Test]
+    public function tc_adj_30_alasan_terisi_dari_query_string(): void
+    {
+        Livewire::withQueryParams(['reason' => 'OPENING'])->actingAs($this->staf1)->test(AdjustmentForm::class)
+            ->assertOk()->assertSet('form.reason', 'OPENING');
+        Livewire::withQueryParams(['reason' => 'opening'])->actingAs($this->staf1)->test(AdjustmentForm::class)
+            ->assertSet('form.reason', 'OPENING');
+        Livewire::withQueryParams(['reason' => 'TIDAK-ADA'])->actingAs($this->staf1)->test(AdjustmentForm::class)
+            ->assertSet('form.reason', '');
+        Livewire::actingAs($this->staf1)->test(AdjustmentForm::class)->assertSet('form.reason', '');
+    }
 }

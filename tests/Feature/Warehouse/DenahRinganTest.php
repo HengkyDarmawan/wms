@@ -163,6 +163,26 @@ class DenahRinganTest extends TenantTestCase
         $this->assertSame('B · R01 · L1 · 01', $zona['B']['racks'][0]['levels'][0]['bins'][0]['pendek']);
     }
 
+    /** TC-WH-68 (A-403) — op `rak_baru` membawa arah: 'v' tersimpan memanjang ke bawah, nilai asing diabaikan (bawaan 'h'). */
+    #[Test]
+    public function tc_wh_68_rak_baru_dengan_arah(): void
+    {
+        $this->actingAs($this->kepala());
+        $hasil = app(ApplyLayoutChanges::class)->handle($this->gudang, [
+            ['op' => 'rak_baru', 'tmp' => 'b1', 'zona' => $this->zona->id, 'data' => ['code' => 'R02', 'levels' => '1', 'bins_per_level' => '2', 'orientation' => 'v']],
+            ['op' => 'rak_baru', 'tmp' => 'b2', 'zona' => $this->zona->id, 'data' => ['code' => 'R03', 'levels' => '1', 'bins_per_level' => '2', 'orientation' => 'miring']],
+        ], auth()->user());
+
+        $this->assertTrue($hasil['ok']);
+        $this->assertSame('v', Rack::query()->where('code', 'R02')->sole()->orientation);
+        $this->assertNotSame('v', Rack::query()->where('code', 'R03')->sole()->orientation);
+
+        // Gambar denah: rak 'v' memanjang ke bawah (lebar gambar < tinggi gambar).
+        $rak = collect(app(WarehouseLayoutData::class)->payload($this->gudang)['zones'][0]['racks'])->keyBy('code');
+        $this->assertSame('v', $rak['R02']['orientation']);
+        $this->assertLessThan($rak['R02']['h'], $rak['R02']['w']);
+    }
+
     /** @return array<int, Bin> */
     private function binRak(): array
     {

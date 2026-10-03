@@ -234,6 +234,89 @@ class TempatSimpanLayarTest extends TenantTestCase
         $this->assertSame(5, ItemStorageLocation::query()->where('item_id', $this->baut->id)->count());
     }
 
+    /**
+     * TC-WH-66 (A-400) — popup *Pilih tempat di denah*: tampak atas berisi rak & area yang bisa diklik;
+     * klik rak → tampak depan (tingkat × bin) berarah; ketuk petak = pilih/lepas; bin & rak khusus barang
+     * lain ditolak; Tambah ke daftar menghasilkan baris yang sama dengan isian bertahap A-399.
+     */
+    #[Test]
+    public function tc_wh_66_popup_pilih_tempat_di_denah(): void
+    {
+        $this->actingAs($this->kepala());
+        // Rak kedua memanjang ke bawah; B02/L1 khusus SEMEN (barang lain).
+        $rak2 = app(SaveWarehouseLayout::class)->newRack($this->zona, ['code' => 'R02', 'levels' => '1', 'bins_per_level' => '2', 'orientation' => 'v']);
+        $this->assertSame('v', $rak2->orientation);
+        app(SaveItemStorageLocations::class)->replace($this->semen, $this->gudang, [['tempat' => 'bin:'.$this->b('L1', 'B02')->id, 'khusus' => true]], auth()->user());
+
+        $kartu = Livewire::test(ItemStorageLocations::class, ['item' => $this->baut])->call('ubah', $this->gudang->id)
+            ->assertSeeHtml('data-buka-denah')->assertDontSeeHtml('data-pilih-denah')
+            ->call('bukaDenah')->assertSet('pilihDenah', true)
+            ->assertSeeHtml('data-pilih-denah')->assertSeeHtml('data-mini-rak="R01"')->assertSeeHtml('data-mini-rak="R02"')->assertSeeHtml('data-mini-rak="AB1"')
+            ->assertSeeHtml('wire:click="pilihRakDenah('.$this->rak->id.')"')
+            ->assertSee(__('Belum ada rak yang dipilih.'));
+
+        // Klik rak → tampak depan dengan arah & petak; B02 khusus SEMEN tidak bisa dipilih.
+        $kartu->call('pilihRakDenah', $this->rak->id)
+            ->assertSet('rakBaru', (string) $this->rak->id)->assertSet('zonaBaru', (string) $this->zona->id)
+            ->assertSeeHtml('data-tampak-depan-pilih')->assertSee(__('Memanjang ke samping'))->assertSee('2 '.__('tingkat').' × 2 '.__('bin'))
+            ->assertSeeHtml('data-petak="R01 · L1 · 02"')->assertSee('SEMEN-PCC')
+            ->call('toggleBin', $this->b('L1', 'B02')->id)
+            ->assertSet('binBaru', [])->assertSet('galat', fn ($g) => str_contains($g, 'khusus untuk barang SEMEN-PCC'))
+            ->call('toggleBin', $this->b('L2', 'B01')->id)->call('toggleBin', $this->b('L2', 'B02')->id)
+            ->assertSet('binBaru', [(string) $this->b('L2', 'B01')->id, (string) $this->b('L2', 'B02')->id])
+            ->assertSeeHtml('data-terpilih')->assertSee('Akan ditambah: 2 bin.')
+            ->call('toggleBin', $this->b('L2', 'B02')->id)
+            ->assertSet('binBaru', [(string) $this->b('L2', 'B01')->id])
+            ->call('tambah')
+            ->assertSet('pilihDenah', true)->assertSet('rakBaru', '')
+            ->assertSet('baris', fn ($b) => count($b) === 1 && $b[0]['tempat'] === 'bin:'.$this->b('L2', 'B01')->id);
+
+        // Rak kedua (memanjang ke bawah) tanpa petak = seluruh rak; area lantai = seluruh area; petak yang sudah di daftar disorot.
+        $kartu->call('pilihRakDenah', $rak2->id)->assertSee(__('Memanjang ke bawah'))->assertSee('Akan ditambah: seluruh rak ini.')
+            ->call('tambah')
+            ->call('pilihRakDenah', $this->area->id)->assertSee('Akan ditambah: seluruh area lantai ini.')
+            ->call('tambah')
+            ->assertSet('baris', fn ($b) => count($b) === 3 && $b[1]['tempat'] === 'rak:'.$rak2->id && $b[2]['tempat'] === 'rak:'.$this->area->id)
+            ->call('tutupDenah')->assertSet('pilihDenah', false)->assertDontSeeHtml('data-pilih-denah')
+            ->call('simpan')->assertSet('gudangUbah', 0);
+
+        $this->assertSame(['bin', 'rak', 'area'], ItemStorageLocation::query()->where('item_id', $this->baut->id)->orderBy('sequence')->get()->map->jenis()->all());
+
+        // Rak yang seluruhnya khusus barang lain ditandai ⊘ dan ditolak saat diklik.
+        $rak3 = app(SaveWarehouseLayout::class)->newRack($this->zona, ['code' => 'R03', 'levels' => '1', 'bins_per_level' => '1']);
+        app(SaveItemStorageLocations::class)->replace($this->semen, $this->gudang, [['tempat' => 'rak:'.$rak3->id, 'khusus' => true]], auth()->user());
+        Livewire::test(ItemStorageLocations::class, ['item' => $this->pipa])->call('ubah', $this->gudang->id)->call('bukaDenah')
+            ->assertSeeHtml('data-mini-tolak')
+            ->call('pilihRakDenah', $rak3->id)
+            ->assertSet('rakBaru', '')->assertSet('galat', fn ($g) => str_contains($g, 'khusus untuk barang SEMEN-PCC'));
+    }
+
+    /**
+     * TC-WH-67 (A-401) — kartu menampilkan denah mini dengan tempat barang itu disorot dan tautan
+     * *Lihat di Denah* `?q=<kode>`; Denah membaca `q` sebagai kata cari awal.
+     */
+    #[Test]
+    public function tc_wh_67_denah_mini_dan_lihat_di_denah(): void
+    {
+        $kepala = $this->kepala();
+        $this->actingAs($kepala);
+        app(SaveItemStorageLocations::class)->replace($this->baut, $this->gudang, [['tempat' => 'bin:'.$this->b('L2', 'B01')->id], ['tempat' => 'rak:'.$this->area->id]], $kepala);
+
+        Livewire::test(ItemStorageLocations::class, ['item' => $this->baut])
+            ->assertSeeHtml('data-denah-tersimpan="CKG"')
+            ->assertSeeHtml('fill="#1c7ed6" stroke="#1864ab" stroke-width="2" data-mini-bin="'.$this->b('L2', 'B01')->code.'"')
+            ->assertSeeHtml('data-lihat-denah')
+            ->assertSeeHtml('/layout?q=BAUT-M12');
+
+        $this->get($this->tenantUrl('warehouses/'.$this->gudang->id.'/layout?q=BAUT-M12'))->assertOk()
+            ->assertSee('"cariAwal":"BAUT-M12"', false);
+        $this->get($this->tenantUrl('warehouses/'.$this->gudang->id.'/layout'))->assertOk()
+            ->assertSee('"cariAwal":""', false);
+
+        // Barang tanpa tempat: tidak ada denah mini.
+        Livewire::test(ItemStorageLocations::class, ['item' => $this->semen])->assertDontSeeHtml('data-denah-tersimpan');
+    }
+
     #[Test]
     public function tc_wh_60_cetak_denah_berisi_barang_per_rak_dan_tips(): void
     {

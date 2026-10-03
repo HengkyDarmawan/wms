@@ -24,9 +24,17 @@
                 </select>
             </div>
             <div class="col-md-2"><label class="form-label mb-0" for="rb-kode">{{ __('Kode rak') }} <span class="wajib">*</span></label><input class="form-control form-control-sm" id="rb-kode" type="text" maxlength="10" x-model="f.rak.code" placeholder="mis. R05"></div>
-            <div class="col-md-3"><label class="form-label mb-0" for="rb-nama">{{ __('Nama rak') }}</label><input class="form-control form-control-sm" id="rb-nama" type="text" maxlength="60" x-model="f.rak.name" placeholder="{{ __('opsional') }}"></div>
+            <div class="col-md-2"><label class="form-label mb-0" for="rb-nama">{{ __('Nama rak') }}</label><input class="form-control form-control-sm" id="rb-nama" type="text" maxlength="60" x-model="f.rak.name" placeholder="{{ __('opsional') }}"></div>
+            {{-- A-403: arah rak dipilih saat membuat; sebelumnya hanya lewat panel rak / Putar. --}}
+            <div class="col-md-2">
+                <label class="form-label mb-0" for="rb-arah">{{ __('Arah') }}</label>
+                <select class="form-select form-select-sm" id="rb-arah" x-model="f.rak.orientation" data-arah-rak-baru>
+                    <option value="h">{{ __('Memanjang ke samping') }}</option>
+                    <option value="v">{{ __('Memanjang ke bawah') }}</option>
+                </select>
+            </div>
             <div class="col-md-1"><label class="form-label mb-0" for="rb-level">{{ __('Tingkat') }}</label><input class="form-control form-control-sm" id="rb-level" type="number" min="1" :max="meta.maksLevel" x-model="f.rak.levels"></div>
-            <div class="col-md-2"><label class="form-label mb-0" for="rb-bin">{{ __('Bin per tingkat') }}</label><input class="form-control form-control-sm" id="rb-bin" type="number" min="0" :max="meta.maksBinPerLevel" x-model="f.rak.bins"></div>
+            <div class="col-md-1"><label class="form-label mb-0" for="rb-bin">{{ __('Bin / tingkat') }}</label><input class="form-control form-control-sm" id="rb-bin" type="number" min="0" :max="meta.maksBinPerLevel" x-model="f.rak.bins"></div>
             <div class="col-md-2"><label class="form-label mb-0" for="rb-kap">{{ __('Kapasitas bin') }}</label><input class="form-control form-control-sm" id="rb-kap" type="number" min="0" step="any" x-model="f.rak.capacity_qty" placeholder="{{ __('opsional') }}"></div>
         </div>
         <div class="d-flex flex-wrap align-items-center gap-2 mt-2">

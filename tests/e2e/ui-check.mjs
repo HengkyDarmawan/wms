@@ -346,8 +346,9 @@ for (const url of links) {
   cek('aturan: kotak tag terpasang', await tunggu('!!document.querySelector("main .nx-pilih-tag .ts-control")'));
   cek('aturan: tidak ada select multiple mentah', await ev('![...document.querySelectorAll("main select[multiple]")].some(s => !s.closest(".nx-pilih-tag"))'));
   await klik('#kondisi-gudang-ts-control');
-  cek('tag: klik membuka daftar', await tunggu('!!document.querySelector("main .nx-pilih-tag .ts-dropdown .option")'));
-  await ev('document.querySelector("main .nx-pilih-tag .ts-dropdown .option").dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); document.querySelector("main .nx-pilih-tag .ts-dropdown .option")?.click()');
+  // A-404: dropdown kotak tag ditempel ke <body>.
+  cek('tag: klik membuka daftar', await tunggu('!!document.querySelector("body > .nx-pilih-tag-dropdown .option")'));
+  await ev('document.querySelector("body > .nx-pilih-tag-dropdown .option").dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); document.querySelector("body > .nx-pilih-tag-dropdown .option")?.click()');
   cek('tag: pilihan menjadi tag bertombol hapus', await tunggu('!!document.querySelector("main .nx-pilih-tag .item .remove")'));
   cek('tag: nilai tersinkron ke Livewire', await tunggu('(Livewire.all().find(c => c.name === "approval.rule-form")?.$wire.conditions.warehouse_ids || []).length === 1'));
   await ev('document.querySelector("main .nx-pilih-tag .item .remove").click()');
@@ -361,6 +362,34 @@ for (const url of links) {
   cek('peta approval: tiga bagian', await ev('["Siapa menyetujui apa", "Bagan jabatan", "Cek untuk orang"].every(t => document.querySelector("main").textContent.includes(t))'));
   cek('peta approval: menu sidebar', await ev('[...document.querySelectorAll("#nxSidebar a.nx-menu-link")].some(a => a.href.endsWith("/approval-rules/map"))'));
   cek('approval sederhana: tanpa error console', errors.length === sebelum, errors.slice(sebelum).join(' | '));
+}
+
+// 6b. A-404: dropdown <x-pilih> selalu di <body> — tidak dipotong .table-responsive (Bin/Item baris ADJ)
+// dan tidak tertutup kartu berikutnya (Gudang). Diperiksa dengan elementFromPoint di tengah opsi pertama.
+{
+  // Input kotak cari disembunyikan di luar layar bila sudah berisi nilai (ts .input-hidden) → klik wadah .ts-control.
+  const dropdownUtuh = async (kontrol, nama) => {
+    await klik(`.nx-pilih:has(${kontrol}) .ts-control`);
+    // Beberapa kotak = beberapa dropdown di body; ambil yang sedang tampil.
+    const aktif = '[...document.querySelectorAll("body > .nx-pilih-dropdown")].find(d => getComputedStyle(d).display !== "none")';
+    const ok = await tunggu(`(() => { const d = ${aktif}; return !!d && !!d.querySelector(".option"); })()`);
+    // Opsi pertama yang benar-benar tergambar (opsi kosong/placeholder bisa berukuran 0).
+    const info = await ev(`(() => { const d = ${aktif}; if (!d) return null; const o = [...d.querySelectorAll(".option")].find(x => x.getBoundingClientRect().height > 0); if (!o) return { tanpaOpsi: true }; const r = o.getBoundingClientRect(); const el = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return { dalamLayar: r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth, terlihat: !!el && d.contains(el) }; })()`);
+    cek(`pilih ${nama}: dropdown di body & tidak terhalang`, ok && !!info && info.dalamLayar && info.terlihat, JSON.stringify(info));
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+    await sleep(150);
+  };
+  for (const lebar of [1366, 390]) {
+    await viewport(lebar, lebar < 992 ? 844 : 768);
+    await go(`${BASE}/adjustments/create`);
+    await tunggu('!!document.querySelector("#adj-gudang-ts-control")');
+    await dropdownUtuh('#adj-gudang-ts-control', `gudang @${lebar}`);
+    // Gudang terisi lewat Livewire supaya daftar bin ada; item dicari ke server (ketik 2 huruf).
+    await ev('(async () => { await Livewire.find(document.querySelector("[wire\\\\:id]").getAttribute("wire:id")).set("form.warehouse_id", "1"); return true; })()');
+    await tunggu('!!document.querySelector("#adj-bin-0-ts-control")');
+    await dropdownUtuh('#adj-bin-0-ts-control', `bin baris @${lebar}`);
+  }
+  await viewport(1366, 800);
 }
 
 // 7. Layar Super Admin di domain pusat (akun dari docs/00-akun-uji.md)

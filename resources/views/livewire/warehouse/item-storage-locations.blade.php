@@ -29,6 +29,18 @@
                             </li>
                         @endforeach
                     </ol>
+                    {{-- A-401: denah mini hanya-lihat + tautan ke Denah dengan barang ini disorot. --}}
+                    @if (isset($denahTersimpan[$gudangId]) && $g)
+                        <details class="mt-2" open data-denah-tersimpan="{{ $g->code }}">
+                            <summary class="text-muted">{{ __('Lihat gambar') }}</summary>
+                            <div class="border rounded p-1 mt-1 bg-body">
+                                @include('warehouse.partials.denah-mini', ['d' => $denahTersimpan[$gudangId]['d'], 'sorot' => $denahTersimpan[$gudangId]['sorot'], 'tolak' => [], 'klik' => false, 'rakAktif' => null, 'tinggi' => '12rem'])
+                            </div>
+                        </details>
+                        <a class="small d-inline-block mt-1" href="{{ route('warehouses.layout', ['warehouse' => $g->id, 'q' => $item->code]) }}" data-lihat-denah>
+                            <i class="bi bi-map"></i> {{ __('Lihat di Denah') }}
+                        </a>
+                    @endif
                 </div>
             @endif
         @empty
@@ -57,9 +69,19 @@
                     <div class="text-muted mb-1">{{ __('Daftar kosong — simpan untuk melepas semua tempat di gudang ini.') }}</div>
                 @endforelse
 
-                {{-- Tambah tempat bertahap: ① Zona → ② Rak/area → ③ Bin (opsional, banyak sekaligus). --}}
-                <div class="border-top pt-2 mt-2" data-tambah-tempat>
-                    <div class="fw-semibold mb-1">{{ __('Tambah tempat') }}</div>
+                {{-- Tambah tempat: utama lewat popup bergambar (A-400); isian bertahap ① Zona → ② Rak/area → ③ Bin (A-399) sebagai cadangan. --}}
+                <div class="border-top pt-2 mt-2" data-tambah-tempat x-data="{ daftar: false }">
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <span class="fw-semibold me-auto">{{ __('Tambah tempat') }}</span>
+                        <button class="btn btn-sm btn-primary" type="button" wire:click="bukaDenah" data-buka-denah>
+                            <i class="bi bi-map"></i> {{ __('Pilih di denah…') }}
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" x-on:click="daftar = !daftar" :aria-expanded="daftar" data-pilih-dari-daftar>
+                            <i class="bi" :class="daftar ? 'bi-chevron-up' : 'bi-list-ul'"></i> {{ __('Pilih dari daftar') }}
+                        </button>
+                    </div>
+                    <div class="text-muted mb-2" x-show="!daftar">{{ __('Klik rak di gambar gudang, lalu ketuk petak bin seperti memilih kursi; bentuk kotak rak memperlihatkan arahnya.') }}</div>
+                    <div x-show="daftar" x-cloak>
                     <div class="row g-2">
                         <div class="col-12 col-md-4">
                             <label class="form-label mb-0" for="tempat-zona">① {{ __('Zona') }}</label>
@@ -108,7 +130,14 @@
                         </span>
                         <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tambah" @disabled($rakBaru === '')>{{ __('Tambah') }}</button>
                     </div>
+                    </div>
                 </div>
+                @if ($pilihDenah && $denahPilih !== null)
+                    {{-- Dipindah ke <body> agar modal tidak terkurung kartu (leluhur ber-transform). --}}
+                    @teleport('body')
+                        @include('livewire.warehouse.partials.tempat-pilih-denah')
+                    @endteleport
+                @endif
                 @if ($galat !== '')
                     <div class="text-danger mt-2" data-galat-tempat>{{ $galat }}</div>
                 @endif

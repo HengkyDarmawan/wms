@@ -69,18 +69,70 @@ class SetupLokasiTest extends TenantTestCase
         $tata = $langkah->firstWhere('key', 'layout');
         $this->assertTrue($tata['optional'], 'Tata letak barang opsional tetapi tampil.');
         $this->assertFalse($tata['done']);
-        $this->assertStringContainsString('mode=tata', (string) $tata['url']);
-        $this->assertNotEmpty($tata['links'] ?? []);
+        // A-402: Kerjakan → daftar item (kartu Tempat simpan → Pilih di denah); mode Tata letak Denah jadi tautan kedua.
+        $this->assertStringEndsWith('/items', (string) $tata['url']);
+        $this->assertTrue(collect($tata['links'])->contains(fn ($l) => str_contains($l['url'], 'mode=tata')));
+        $this->assertSame('minimal satu barang punya tempat simpan.', $tata['selesai_bila']);
+        $this->assertStringContainsString('0 dari 4 barang aktif', $tata['catatan']['teks']);
 
         app(SaveItemStorageLocations::class)->replace($this->baut, $this->gudang, [['tempat' => 'bin:'.$this->b('B01')->id]], $this->kepala);
-        $this->assertTrue(collect(app(SetupWizard::class)->steps())->firstWhere('key', 'layout')['done']);
+        $tata = collect(app(SetupWizard::class)->steps())->firstWhere('key', 'layout');
+        $this->assertTrue($tata['done']);
+        $this->assertStringContainsString('1 dari 4 barang aktif', $tata['catatan']['teks']);
 
         $admin = $this->makeUser('company_admin');
         $this->actingAs($admin)->get($this->tenantUrl('setup'))->assertOk()
             ->assertSeeInOrder([__('Buat gudang'), __('Susun lokasi rak & bin'), __('Daftarkan item'), __('Atur tata letak barang'), __('Masukkan saldo awal')])
-            ->assertSee(__('Impor tempat simpan'));
+            ->assertSee(__('Impor tempat simpan dari Excel'))
+            ->assertSee(__('Dianggap selesai bila'))
+            ->assertSee('1 dari 4 barang aktif');
         $this->actingAs($this->kepala)->get($this->tenantUrl('warehouses/'.$this->gudang->id.'/layout?mode=tata'))->assertOk()
             ->assertSee('"mulaiTata":true', false);
+    }
+
+    /**
+     * TC-MST-21c (A-402) — langkah rak & bin menaut ke Denah (bukan /bins); langkah saldo awal
+     * menaut ke form Penyesuaian beralasan Saldo awal, menjelaskan "menunggu approval" selama
+     * ADJ belum disetujui, dan tercentang setelah disetujui.
+     */
+    #[Test]
+    public function tc_mst_21c_langkah_saldo_awal_menaut_form_penyesuaian_dan_menjelaskan_approval(): void
+    {
+        $langkah = collect(app(SetupWizard::class)->steps());
+        $bins = $langkah->firstWhere('key', 'bins');
+        $this->assertStringContainsString('/warehouses/'.$this->gudang->id.'/layout', (string) $bins['url']);
+        $this->assertTrue(collect($bins['links'])->contains(fn ($l) => str_ends_with($l['url'], '#impor-bins')));
+
+        $saldo = $langkah->firstWhere('key', 'opening');
+        $this->assertStringContainsString('/adjustments/create?reason=OPENING', (string) $saldo['url']);
+        $this->assertTrue(collect($saldo['links'])->contains(fn ($l) => str_ends_with($l['url'], '#impor-opening-stock')));
+        $this->assertTrue($saldo['done'], 'Fixture opname sudah punya saldo.');
+
+        // Saldo dikosongkan: langkah belum selesai dan belum ada catatan.
+        \App\Domain\Stock\Models\StockBalance::query()->update(['qty_base' => 0]);
+        $saldo = collect(app(SetupWizard::class)->steps())->firstWhere('key', 'opening');
+        $this->assertFalse($saldo['done']);
+        $this->assertNull($saldo['catatan']);
+
+        // Impor saldo awal → ADJ OPENING menunggu approval → catatan menjelaskan kenapa belum tercentang.
+        $admin = $this->makeUser('company_admin');
+        $this->actingAs($admin)->post($this->tenantUrl('imports/opening-stock'), ['file' => $this->berkas([
+            ['CKG', $this->binA->code, 'BAUT-OPN', 5, '', '', '', '', '', ''],
+        ])])->assertSessionHasNoErrors();
+        $adj = StockAdjustment::query()->sole();
+
+        $saldo = collect(app(SetupWizard::class)->steps())->firstWhere('key', 'opening');
+        $this->assertFalse($saldo['done']);
+        $this->assertStringContainsString('1 penyesuaian saldo awal menunggu approval', $saldo['catatan']['teks']);
+        $this->assertStringContainsString($adj->number, $saldo['catatan']['teks']);
+        $this->assertStringEndsWith('/adjustments/'.$adj->id, (string) $saldo['catatan']['url']);
+        $this->actingAs($admin)->get($this->tenantUrl('setup'))->assertOk()
+            ->assertSee('menunggu approval Kepala Gudang')->assertSee('reason=OPENING', false);
+
+        app(ApproveStockAdjustment::class)->approve($adj, $this->kepala);
+        $saldo = collect(app(SetupWizard::class)->steps())->firstWhere('key', 'opening');
+        $this->assertTrue($saldo['done']);
+        $this->assertNull($saldo['catatan']);
     }
 
     #[Test]

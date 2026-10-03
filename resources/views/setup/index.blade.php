@@ -23,6 +23,16 @@
                             @if ($s['optional']) <span class="badge text-bg-light">{{ __('opsional') }}</span> @endif
                         </div>
                         <div class="small text-muted">{{ __($s['hint']) }}</div>
+                        {{-- A-402: kalimat awam kapan langkah dianggap selesai + keadaan saat ini. --}}
+                        @if (($s['selesai_bila'] ?? '') !== '')
+                            <div class="small mt-1" data-selesai-bila><span class="text-muted">{{ __('Dianggap selesai bila') }}:</span> {{ __($s['selesai_bila']) }}</div>
+                        @endif
+                        @if (! empty($s['catatan']))
+                            <div class="small mt-1 text-{{ $s['done'] ? 'muted' : 'warning-emphasis' }}" data-catatan-langkah>
+                                <i class="bi bi-info-circle"></i> {{ $s['catatan']['teks'] }}
+                                @if ($s['catatan']['url']) <a href="{{ $s['catatan']['url'] }}">{{ __('Buka') }}</a> @endif
+                            </div>
+                        @endif
                         @if (($s['links'] ?? []) !== [])
                             <div class="d-flex flex-wrap gap-2 mt-1">
                                 @foreach ($s['links'] as $tautan)
@@ -45,9 +55,13 @@
                         @endif
                     </div>
                     @if ($s['done'])
-                        <span class="badge text-bg-success"><i class="bi bi-check2"></i> {{ __('Selesai') }}</span>
+                        <div class="text-end">
+                            <span class="badge text-bg-success"><i class="bi bi-check2"></i> {{ __('Selesai') }}</span>
+                            {{-- A-402: langkah selesai tetap bisa dibuka lagi (menambah data). --}}
+                            @if ($s['url']) <div><a class="small" href="{{ $s['url'] }}">{{ __('Buka') }}</a></div> @endif
+                        </div>
                     @elseif ($s['url'])
-                        <a class="btn btn-sm btn-outline-primary" href="{{ $s['url'] }}">{{ __('Kerjakan') }}</a>
+                        <a class="btn btn-sm btn-outline-primary text-nowrap" href="{{ $s['url'] }}">{{ __('Kerjakan') }}</a>
                     @endif
                 </li>
             @endforeach

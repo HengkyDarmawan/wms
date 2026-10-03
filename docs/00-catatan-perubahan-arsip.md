@@ -1,9 +1,26 @@
 # Catatan Perubahan — Arsip (v0.2–v0.31)
 
-**Versi:** 1.23
-**Tanggal:** 1 Oktober 2026
-**Status:** arsip — v1.23: blok v0.34 dipindah dari README v0.96; v1.22: blok v0.33 dipindah dari README v0.95; v1.21: blok v0.32 dipindah dari README v0.94; v1.20: blok v0.31 dipindah dari README v0.90; v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
+**Versi:** 1.24
+**Tanggal:** 3 Oktober 2026
+**Status:** arsip — v1.24: blok v0.35 dipindah dari README v0.105; v1.23: blok v0.34 dipindah dari README v0.96; v1.22: blok v0.33 dipindah dari README v0.95; v1.21: blok v0.32 dipindah dari README v0.94; v1.20: blok v0.31 dipindah dari README v0.90; v1.19: blok v0.30 dipindah dari README v0.89; v1.18: blok v0.29 dipindah dari README v0.86; v1.17: blok v0.28 dipindah dari README v0.81; v1.16: blok v0.26–v0.27 dipindah dari README v0.79; v1.15: blok v0.25 dipindah dari README v0.77; v1.14: blok v0.23–v0.24 dipindah dari README v0.76; v1.13: blok v0.21–v0.22 dipindah dari README v0.70; dipindah dari [README](README.md) v0.37, v0.39, v0.46 (blok v0.7), v0.47 (blok v0.8), v0.49 (blok v0.9), v0.50 (blok v0.10), v0.51 (blok v0.11), v0.52 (blok v0.12), v0.55 (blok v0.13), v0.58 (blok v0.14), v0.60 (blok v0.15), v0.62 (blok v0.16), dan v0.64 (blok v0.17) agar README tetap ≤ 450 baris; isi tidak diubah; v1.12: blok v0.18–v0.20 dipindah dari README v0.66
 **Dokumen terkait:** [README](README.md)
+
+### v0.35 — 25 September 2026 (Pendukung Fase 1 selesai)
+- **Berkas baru `wms/27-pendukung-f1.md` v0.1.** Migrasi tenant `000160` (`notifications`, `notification_preferences`).
+  - **Strategi pengambilan** (`Stock\Support\RemovalOrder`): FIFO/FEFO/sisa potongan/manual, lot kedaluwarsa dilewati; alokasi keras tidak lagi menjanjikan baris saldo yang sama dua kali (A-185).
+  - **Beranda** antrean pekerjaan per izin & cakupan (A-186); **guard penutupan proyek** BR-PRJ-02/04 (A-187).
+  - **Konfirmasi & keberatan terima** BR-REQ-10 di layar REQ & portal, `deliveries:auto-confirm`; DSC `client_dispute` tanpa pergerakan stok (A-188).
+  - **Notifikasi** in-app & email: lonceng, halaman, preferensi, 8 kejadian, `notifications:daily` (A-189).
+  - **Laporan inti** saldo stok, mutasi periode, permintaan terbuka & barang rusak, konversi & waste, akurasi stok (total 14) + **ekspor PDF** semua laporan (A-190).
+  - **Wizard setup awal** (A-191), **impor item & proyek (+klien) dari Excel** (A-192), **PWA** installable + pindai kamera + draf lokal (A-193).
+- **Asumsi baru [A-185](wms/04-keputusan-dan-asumsi.md#a-185)–[A-194](wms/04-keputusan-dan-asumsi.md#a-194)** (*Perlu validasi*, `04` → v0.25, §2.13).
+- **Model data** 08a–08c → v0.18 (kolom `notifications.title/body/url`, A-189; `stock_movements.from_stock_status`, A-194).
+- **Modul lain:** `11-master` → v0.4, `13-stock` → v0.6, `14-request` → v0.8, `15-picking-shipment` → v0.7, `16-shared-laporan-berkas` → v0.6, `17-platform-login` → v0.3, `20-approval` → v0.8, `25-aset` → v0.3, `26-purchase-request` → v0.2, `08-arsitektur` → v0.16, laporan progres → v1.12, `prompts/00-lanjutkan-di-rumah.md` → v1.7, `cek.md`.
+- **Perbaikan tampilan waktu (BR-GEN-07):** 62 tampilan tanggal-jam di 34 view memakai jam UTC; kini macro `lokal()` → zona company.
+- **Temuan & perbaikan kartu stok ([A-194](wms/04-keputusan-dan-asumsi.md#a-194), migrasi tenant `000170`):** uji rantai penuh baru TC-E2E-01 (`tests/Feature/FullLifecycleTest.php`: GRN → QC → put-away → REQ → SJ → konfirmasi → site → ISU → retur → CNV → OPN → ADJ → aset) menunjukkan perubahan kondisi (Karantina → Tersedia, Rusak) tidak bisa dibangun ulang dari kartu stok dan pembaliknya salah kondisi. `stock_movements.from_stock_status` ditambahkan; `13-stock` naik versi, `04` → v0.25, model data → v0.18.
+- **Berkas baru `00-tinjauan-asumsi-2026-09-25.md`:** tabel ringkas semua asumsi *Perlu validasi* (A-72–A-194) dengan kolom keputusan (butir Penutup).
+- **E2E:** `alur-req-sj.mjs` membaca saldo awal dari database; skrip baru `alur-pendukung.mjs` (P1–P6). Pada data demo segar: 9/9 + 6/6 lulus, 0 error console; `ui-check.mjs` 61 pemeriksaan OK.
+- **Uji:** 23 uji baru (TC-PCK-12–15, TC-DSH-01, TC-MST-20–22, TC-REQ-30–32, TC-NTF-01–04, TC-RPT-02–05, TC-PWA-01, TC-GEN-07, TC-STK-26, TC-E2E-01); TC-RPT-01 (14 laporan) disesuaikan. **569 uji hijau** (MariaDB 10.4.32, XAMPP3).
 
 ### v0.34 — 25 September 2026 (modul Platform penuh selesai Fase 1)
 - **`wms/17-platform-login.md` → v0.2 (selesai Fase 1).** Domain `app/Domain/Platform`, migrasi pusat `000020` (tanpa tabel tenant baru).

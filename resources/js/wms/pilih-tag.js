@@ -28,6 +28,9 @@ function pilihTag(nilai) {
         maxOptions: null,
         hideSelected: true,
         closeAfterSelect: false,
+        // A-404: dropdown di <body> (tidak dipotong tabel / tertutup kartu ber-transform); gaya lewat kelas sendiri.
+        dropdownParent: 'body',
+        dropdownClass: 'ts-dropdown nx-pilih-tag-dropdown',
         placeholder: select.dataset.placeholder || '',
         render: {
           no_results: () => `<div class="no-results">${select.dataset.kosong || ''}</div>`,

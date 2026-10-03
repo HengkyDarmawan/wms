@@ -53,6 +53,13 @@ class AdjustmentForm extends Component
             $this->form['warehouse_id'] = (string) $adj->warehouse_id;
         }
 
+        // A-402: `?reason=<kode>` (tautan wizard setup "Masukkan saldo awal") mengisi alasan bila kodenya alasan penyesuaian aktif.
+        $alasan = strtoupper(trim((string) request()->query('reason', '')));
+
+        if ($alasan !== '' && array_key_exists($alasan, $this->pilihanAlasan(ReasonContext::Adjustment))) {
+            $this->form['reason'] = $alasan;
+        }
+
         $this->rows = [$this->barisKosong()];
     }
 

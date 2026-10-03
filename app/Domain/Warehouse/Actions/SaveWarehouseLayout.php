@@ -233,6 +233,12 @@ class SaveWarehouseLayout
                 $rak->forceFill(['name' => mb_substr($nama, 0, 60)])->save();
             }
 
+            // A-403: arah rak boleh ditentukan saat membuat ('h' memanjang ke samping, 'v' ke bawah).
+            if (in_array($data['orientation'] ?? null, ['h', 'v'], true)) {
+                $rak->disableLogging()->forceFill(['orientation' => $data['orientation']])->save();
+                $rak->enableLogging();
+            }
+
             for ($i = 1; $i <= $jumlahLevel; $i++) {
                 $level = $this->lokasi->saveLevel($rak, null, ['code' => 'L'.$i], $actor);
                 $this->isiBin($level, $binPerLevel, $data, $actor);

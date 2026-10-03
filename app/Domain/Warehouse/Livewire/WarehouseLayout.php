@@ -57,12 +57,17 @@ class WarehouseLayout extends Component
     #[Locked]
     public bool $mulaiTata = false;
 
+    /** A-401: `?q=<kode barang>` (tautan *Lihat di Denah* kartu Tempat simpan) = kata cari awal, rak/bin bertempat langsung disorot. */
+    #[Locked]
+    public string $cariAwal = '';
+
     public function mount(Warehouse $warehouse, bool $ringkas = false): void
     {
         $this->authorize('view', $warehouse);
         $this->warehouseId = (int) $warehouse->id;
         $this->ringkas = $ringkas;
         $this->mulaiTata = ! $ringkas && request()->query('mode') === 'tata';
+        $this->cariAwal = $ringkas ? '' : trim(mb_substr((string) request()->query('q', ''), 0, 60));
     }
 
     /** K-H: isi satu rak saat diklik — tanpa menggambar ulang halaman. */
@@ -154,6 +159,7 @@ class WarehouseLayout extends Component
                     'gudang' => ['id' => $gudang->id, 'code' => $gudang->code, 'name' => $gudang->name],
                     'bolehUbah' => $bolehUbah,
                     'mulaiTata' => $bolehUbah && $this->mulaiTata,
+                    'cariAwal' => $this->cariAwal,
                     'ringkas' => $this->ringkas,
                     'maksBinGambar' => self::MAKS_BIN_GAMBAR,
                     'maksLevel' => SaveWarehouseLayout::MAKS_LEVEL,

@@ -64,7 +64,7 @@ function denahGedung(opts = {}) {
     drag: null,
     f: {
       zona: { code: '', name: '' },
-      rak: { zona: '', code: '', name: '', levels: '1', bins: '4', capacity_qty: '' },
+      rak: { zona: '', code: '', name: '', levels: '1', bins: '4', capacity_qty: '', orientation: 'h' },
       area: { zona: '', code: '', name: '', capacity_qty: '', seluruh_zona: false },
       level: { code: '', bins: '0' },
       binBaru: {},
@@ -93,6 +93,8 @@ function denahGedung(opts = {}) {
       mq.addEventListener?.('change', (e) => { this.layarKecil = e.matches; this.$nextTick(() => this.gambar()); });
       // K-J + batas bin: layar kecil atau gudang sangat besar → versi daftar.
       this.tampilDaftar = this.layarKecil || (this.d.jumlah_bin || 0) > (this.meta.maksBinGambar || 2000);
+      // A-401: "?q=" dari tautan Lihat di Denah (kartu Tempat simpan) = kata cari awal → rak/bin barang itu disorot.
+      if (this.meta.cariAwal) this.cari = String(this.meta.cariAwal);
       this.$nextTick(() => { this.gambar(); this.pas(true); });
       // A-380: tautan setup awal "?mode=tata" langsung membuka mode Tata letak barang.
       if (this.meta.mulaiTata) this.$nextTick(() => this.aturTata(true));
@@ -634,10 +636,12 @@ function denahGedung(opts = {}) {
       const id = this.idBaru();
       const lv = [];
       for (let i = levels; i >= 1; i--) lv.push(this.susunLevel(z, kode, id, 'L' + i, bins));
-      const r = { id, code: kode, name: this.f.rak.name.trim() || null, is_area: false, len: 2, wid: 1, orientation: 'h', height_m: null, otomatis: true, status: 'kosong', umur: null, jumlah_bin: levels * bins, levels: lv };
+      // A-403: arah dipilih saat membuat — 'v' = memanjang ke bawah (panjang & lebar gambar ditukar seperti server).
+      const arah = this.f.rak.orientation === 'v' ? 'v' : 'h';
+      const r = { id, code: kode, name: this.f.rak.name.trim() || null, is_area: false, len: arah === 'v' ? 1 : 2, wid: arah === 'v' ? 2 : 1, orientation: arah, height_m: null, otomatis: true, status: 'kosong', umur: null, jumlah_bin: levels * bins, levels: lv };
       this.ukuranRak(r);
       this.tempatRakBaru(z, r);
-      this.catat({ op: 'rak_baru', tmp: id, zona: z.id, data: { code: kode, name: this.f.rak.name.trim(), levels: String(levels), bins_per_level: String(bins), prefix: 'B', capacity_qty: this.f.rak.capacity_qty } });
+      this.catat({ op: 'rak_baru', tmp: id, zona: z.id, data: { code: kode, name: this.f.rak.name.trim(), levels: String(levels), bins_per_level: String(bins), prefix: 'B', capacity_qty: this.f.rak.capacity_qty, orientation: arah } });
       z.racks.push(r);
       this.ukuranZona(z);
       this.f.rak = { ...this.f.rak, code: '', name: '' };
