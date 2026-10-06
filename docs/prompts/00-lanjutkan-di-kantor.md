@@ -1,8 +1,8 @@
 # Prompt: melanjutkan WMS di kantor (XAMPP)
 
-**Versi:** 3.0
-**Tanggal:** 30 September 2026
-**Status:** aktif — v3.0 ditulis ulang setelah sesi kantor 30 Sep 2026 (sinkron kerja malam, `<x-pilih>` empat pilihan terakhir, pengingat copot label A-362). Pola baru: **sinkron & verifikasi → pekerjaan tanpa keputusan → daftar keputusan untuk pemilik**; data DEMO **tidak pernah** di-fresh/seed. Riwayat v1–v2.1 di git; arah sebaliknya: [00-lanjutkan-di-rumah.md](00-lanjutkan-di-rumah.md) v3.0
+**Versi:** 3.1
+**Tanggal:** 6 Oktober 2026
+**Status:** aktif — v3.1: baris *Data DEMO kantor* diperbarui setelah pemilik meminta DEMO dikosongkan (6 Okt 2026); v3.0 ditulis ulang setelah sesi kantor 30 Sep 2026 (sinkron kerja malam, `<x-pilih>` empat pilihan terakhir, pengingat copot label A-362). Pola baru: **sinkron & verifikasi → pekerjaan tanpa keputusan → daftar keputusan untuk pemilik**; data DEMO **tidak pernah** di-fresh/seed. Riwayat v1–v2.1 di git; arah sebaliknya: [00-lanjutkan-di-rumah.md](00-lanjutkan-di-rumah.md) v3.0
 **Dokumen terkait:** [README](../README.md) · [Laporan malam](../00-laporan-malam-2026-10-01.md) · [Setup lokal](../00-setup-lokal.md) · [Asumsi lanjutan](../wms/04b-asumsi-lanjutan.md) · [`../../CLAUDE.md`](../../CLAUDE.md)
 
 Cara pakai: nyalakan MySQL di **XAMPP Control Panel** (`C:\xampp`), buka Claude Code di `C:\xampp\htdocs\wms`, tempel **seluruh blok §2**. Bagian §1 dan §3 untuk dibaca manusia.
@@ -15,7 +15,7 @@ Cara pakai: nyalakan MySQL di **XAMPP Control Panel** (`C:\xampp`), buka Claude 
 |---|---|
 | Git | `main` sejajar `origin/main` setelah sesi kantor 30 Sep (commit "Empat pilihan terakhir memakai <x-pilih>…" dan "Pengingat copot label…"); lihat `git log -3` |
 | Uji | 923+ hijau di XAMPP kantor (MariaDB 10.4.27); `_verify.py` OK; `npm run build` OK. E2E tidak dijalankan (mengisi ulang data DEMO) |
-| Data DEMO kantor | **Data uji coba pemilik produk** (company kosong + gudang CKG, rak/bin, jabatan, item, klien/proyek yang ia buat sendiri). **JANGAN** `migrate:fresh`, `tenants:migrate-fresh`, `db:wipe`, atau seeder ke DEMO |
+| Data DEMO kantor | **Dikosongkan atas permintaan pemilik (6 Okt 2026)** lewat `BlankDemoSeeder`: hanya `admin@demo.wms.test`, 6 akun dasar nonaktif, jabatan dasar, aturan dasar approval ([A-405](../wms/04b-asumsi-lanjutan.md#a-405)–[A-407](../wms/04b-asumsi-lanjutan.md#a-407)); pemilik mengulang setup dari nol. Data lama dicadangkan di `storage/app/backups/wms_tenant_demo-2026-10-06-sebelum-reset.sql` (tidak di git). **JANGAN** `migrate:fresh`, `tenants:migrate-fresh`, `db:wipe`, atau seeder ke DEMO |
 | Menunggu pemilik | Daftar keputusan dari sesi kantor 30 Sep (asumsi A-355–A-398 terpenting, A-307, A-308, T-01 portal Klien membuat REQ) — lihat laporan sesi / changelog README |
 | Jam mesin | Dokumen kerja malam bertanggal 1 Okt padahal kantor 30 Sep — periksa jam mesin rumah |
 

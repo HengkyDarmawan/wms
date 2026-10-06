@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.105
+**Versi:** 0.106
 **Tanggal:** 3 Oktober 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -108,6 +108,11 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.106 — 6 Oktober 2026 (sesi kantor: company baru langsung siap approval)
+- **Asumsi baru** [A-405](wms/04b-asumsi-lanjutan.md#a-405)–[A-407](wms/04b-asumsi-lanjutan.md#a-407) (04b v0.47 §2.57, semua *Perlu validasi*): aturan dasar approval dipasang otomatis & aktif saat provisioning (A-405); tombol *Kembalikan ke aturan dasar* (A-406); jabatan dasar + akun dasar nonaktif per role internal utama (A-407). Rujukan ditambahkan di [A-347](wms/04b-asumsi-lanjutan.md#a-347); A-08 tidak berubah.
+- **Spesifikasi** [20](wms/20-approval.md) v0.17 (§1, §6.2, TC-APR-30–31); [17](wms/17-platform-login.md) v0.10 (§4, TC-PLT-03); [10](wms/10-access.md) v0.20 (§3); [27](wms/27-pendukung-f1.md) v0.12 (§13.3); [03-glosarium](wms/03-glosarium.md) v0.32 (*Akun Dasar*, *Jabatan Dasar*, *Kembalikan ke Aturan Dasar*); [00-akun-uji](00-akun-uji.md) v1.18 catatan akun dasar; §6 DEMO kosong (`BlankDemoSeeder`) kini berisi akun & jabatan dasar dan aturan dasar seperti company baru (TC-ACC-27c).
+- **Prompt** [00-lanjutkan-di-kantor](prompts/00-lanjutkan-di-kantor.md) v3.1: DEMO kantor dikosongkan atas permintaan pemilik (cadangan `.sql` lokal).
 
 ### v0.105 — 3 Oktober 2026 (sesi kantor: pilih tempat di denah, wizard setup yang jelas)
 - **Asumsi baru** [A-400](wms/04b-asumsi-lanjutan.md#a-400)–[A-403](wms/04b-asumsi-lanjutan.md#a-403) (04b v0.45 §2.56, semua *Perlu validasi*): popup *Pilih tempat di denah* (tampak atas → tampak depan "kursi bioskop", bentuk rak = arah) sebagai cara utama kartu *Tempat simpan* (A-400); denah mini + *Lihat di Denah* `?q=` (A-401); wizard setup dengan *Dianggap selesai bila…*, catatan keadaan, tautan rak/bin → Denah, tata letak → item, saldo awal → `adjustments/create?reason=OPENING` + "menunggu approval" (A-402, menyempurnakan A-191/A-380); pilihan **Arah** di form Rak baru Denah (A-403). Tanpa status/enum/tabel/route baru.

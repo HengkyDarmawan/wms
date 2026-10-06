@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Domain\Platform\Actions;
 
 use App\Domain\Access\Actions\CreateUser;
+use App\Domain\Access\Actions\InstallBasicOrganization;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\User;
+use App\Domain\Approval\Actions\InstallBasicApprovalRules;
 use App\Domain\Platform\Enums\CompanyStatus;
 use App\Domain\Platform\Exceptions\PlatformRuleException;
 use App\Domain\Platform\Models\Company;
@@ -18,7 +20,8 @@ use Illuminate\Support\Facades\Artisan;
 /**
  * Provisioning company (alur 10 langkah 3, Arsitektur §3 langkah 5, A-176):
  * database → migrasi tenant → data acuan (`TenantDatabaseSeeder`) → Admin
- * Company pertama + undangan → status `active`. Aman diulang: setiap langkah
+ * Company pertama + undangan → jabatan & akun dasar nonaktif (A-407) → aturan
+ * dasar approval aktif (A-405) → status `active`. Aman diulang: setiap langkah
  * memeriksa hasil sebelumnya, sehingga company yang gagal di tengah jalan
  * bisa dilanjutkan dari layar detail Super Admin.
  */
@@ -37,9 +40,11 @@ class ProvisionCompany
                 $this->database($company);
             }
 
-            $company->run(function () {
+            $company->run(function () use ($company) {
                 (new TenantDatabaseSeeder)->run();
                 $this->adminCompany(tenant());
+                app(InstallBasicOrganization::class)->handle((string) $company->code);
+                app(InstallBasicApprovalRules::class)->handle();
             });
         } catch (\Throwable $e) {
             // Tenant::run() tidak memulihkan konteks bila callback gagal.

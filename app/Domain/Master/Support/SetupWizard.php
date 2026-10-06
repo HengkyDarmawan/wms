@@ -58,6 +58,9 @@ class SetupWizard
         $itemAktif = Item::query()->where('status', ItemStatus::Active->value)->count();
         $itemBertempat = ItemStorageLocation::query()->withoutGlobalScopes()->distinct()->count('item_id');
 
+        // A-407: akun dasar = nonaktif, belum berpassword, email `<role>@<kode>.wms`.
+        $adaAkunDasar = User::query()->where('is_active', false)->whereNull('password')->where('email', 'like', '%.wms')->exists();
+
         return [
             $this->langkah('terms', 'Setujui ketentuan layanan & kebijakan privasi', 'Wajib sebelum memakai data pribadi (UU PDP).', CompanySetting::get(self::TERMS_KEY) !== null, null,
                 selesaiBila: 'kotak persetujuan di bawah dicentang dan disimpan.'),
@@ -84,9 +87,17 @@ class SetupWizard
                 catatan: $this->catatanSaldoAwal()),
             $this->langkah('projects', 'Daftarkan klien & proyek', 'Proyek menentukan tujuan permintaan dan Gudang Site.', Project::query()->where('is_internal', false)->exists(), $this->rute('projects.index'),
                 selesaiBila: 'ada minimal satu proyek klien (bukan internal).'),
-            $this->langkah('users', 'Undang pengguna & atur role', 'Kepala gudang, staf, pemohon, klien.', User::query()->count() > 1, $this->rute('users.index'),
-                selesaiBila: 'ada pengguna lain selain Admin Company.'),
-            $this->langkah('approval', 'Atur aturan approval', 'Opsional: tanpa aturan dokumen disetujui otomatis.', ApprovalRule::query()->exists(), $this->rute('approval.rules.index'), true,
+            // A-407: akun dasar dibuat nonaktif, jadi hanya pengguna aktif yang dihitung.
+            $this->langkah('users', 'Undang pengguna & atur role', $adaAkunDasar
+                    ? 'Akun dasar per role (Manajemen, Kepala Gudang, Staf Gudang, Pemohon Internal, dll.) sudah dibuat tetapi nonaktif. Buka akunnya, ganti nama & email ke orang sebenarnya, aktifkan, lalu buatkan password atau kirim undangan. Klien ditambahkan sendiri.'
+                    : 'Kepala gudang, staf, pemohon, klien.',
+                User::query()->where('is_active', true)->count() > 1, $this->rute('users.index'),
+                selesaiBila: 'ada pengguna aktif lain selain Admin Company.'),
+            // A-405: company baru sudah memegang aturan dasar aktif sejak provisioning.
+            $this->langkah('approval', 'Atur aturan approval', ApprovalRule::query()->where('is_basic', true)->exists()
+                    ? 'Opsional: aturan dasar sudah aktif — Permintaan disetujui Kepala gudang terkait, dokumen lain oleh atasan langsung pemohon. Ubah bila perlu; tombol Kembalikan ke aturan dasar memulihkannya.'
+                    : 'Opsional: tanpa aturan dokumen disetujui otomatis. Tombol Pasang aturan dasar membuat aturan umum sekali klik.',
+                ApprovalRule::query()->exists(), $this->rute('approval.rules.index'), true,
                 selesaiBila: 'ada minimal satu aturan approval.'),
         ];
     }

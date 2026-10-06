@@ -26,6 +26,10 @@ use Illuminate\Support\Facades\DB;
  * sistem, dan aturan "atasan langsung" akan menggantikannya (keputusan pemilik
  * produk 29 Sep 2026). Idempoten; tidak pernah menimpa aturan yang ada. Mesin
  * tidak berubah: jenis tanpa aturan tetap disetujui otomatis (A-08).
+ *
+ * Juga dijalankan otomatis saat provisioning company baru (A-405), dan
+ * {@see ResetBasicApprovalRules} memakai {@see tulis()} sebagai satu sumber
+ * bentuk aturan dasar (A-406).
  */
 class InstallBasicApprovalRules
 {
@@ -95,16 +99,7 @@ class InstallBasicApprovalRules
                     continue;
                 }
 
-                $rule = $this->saveRule->handle(null, [
-                    'document_type' => $jenis->value,
-                    'name' => 'Aturan dasar — '.$jenis->label(),
-                    'priority' => self::PRIORITAS,
-                    'is_active' => true,
-                    'conditions' => [],
-                ], [$this->lapis($jenis)], $actor);
-
-                $rule->forceFill(['is_basic' => true])->save();
-                $dipasang[] = $rule;
+                $dipasang[] = $this->tulis(null, $jenis, $actor);
             }
 
             activity('approval')->causedBy($actor)
@@ -113,6 +108,25 @@ class InstallBasicApprovalRules
 
             return $dipasang;
         });
+    }
+
+    /**
+     * Satu sumber "seperti apa aturan dasar": membuat aturan baru, atau menulis
+     * ulang aturan dasar yang ada ke bawaan (A-406). Selalu aktif.
+     */
+    public function tulis(?ApprovalRule $rule, ApprovalDocumentType $jenis, ?User $actor = null): ApprovalRule
+    {
+        $rule = $this->saveRule->handle($rule, [
+            'document_type' => $jenis->value,
+            'name' => 'Aturan dasar — '.$jenis->label(),
+            'priority' => self::PRIORITAS,
+            'is_active' => true,
+            'conditions' => [],
+        ], [$this->lapis($jenis)], $actor);
+
+        $rule->forceFill(['is_basic' => true])->save();
+
+        return $rule;
     }
 
     /** @return array<string, mixed> */
@@ -132,7 +146,7 @@ class InstallBasicApprovalRules
         ];
     }
 
-    private function labelApprover(ApprovalDocumentType $jenis): string
+    public function labelApprover(ApprovalDocumentType $jenis): string
     {
         return $jenis === ApprovalDocumentType::MaterialRequest ? 'Kepala gudang terkait' : 'Atasan langsung pemohon (1 tingkat)';
     }

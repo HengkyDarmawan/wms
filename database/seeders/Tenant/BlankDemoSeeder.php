@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Database\Seeders\Tenant;
 
+use App\Domain\Access\Actions\InstallBasicOrganization;
 use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\RoleAssignment;
 use App\Domain\Access\Models\User;
+use App\Domain\Approval\Actions\InstallBasicApprovalRules;
 use App\Domain\Master\Models\FeatureSetting;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -15,9 +17,10 @@ use RuntimeException;
 
 /**
  * Company DEMO "kosong" untuk latihan dari nol (docs/00-akun-uji.md §6):
- * hanya data acuan company baru (sama dengan provisioning, `TenantDatabaseSeeder`)
- * dan satu Admin Company yang langsung bisa masuk. Tanpa gudang, master, user
- * lain, stok, maupun aturan approval — wizard *Setup awal* mulai dari 0.
+ * isi company baru yang sama dengan provisioning — data acuan
+ * (`TenantDatabaseSeeder`), jabatan & akun dasar nonaktif (A-407), aturan dasar
+ * approval aktif (A-405) — dan satu Admin Company yang langsung bisa masuk.
+ * Tanpa gudang, master, atau stok — wizard *Setup awal* mulai dari 0.
  * HANYA dev/demo/staging; jalankan setelah `tenants:migrate-fresh`.
  */
 class BlankDemoSeeder extends Seeder
@@ -56,6 +59,11 @@ class BlankDemoSeeder extends Seeder
             ['valid_from' => null, 'valid_until' => null],
         );
 
-        $this->command?->info('Company kosong siap: hanya '.self::EMAIL.' (password '.self::PASSWORD.').');
+        // A-405/A-407: sama dengan company baru hasil provisioning — jabatan &
+        // akun dasar nonaktif, aturan dasar approval aktif.
+        $dasar = app(InstallBasicOrganization::class)->handle('DEMO');
+        app(InstallBasicApprovalRules::class)->handle();
+
+        $this->command?->info('Company kosong siap: '.self::EMAIL.' (password '.self::PASSWORD.') + '.count($dasar).' akun dasar nonaktif & aturan dasar approval.');
     }
 }

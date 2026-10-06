@@ -8,6 +8,7 @@
             <a class="btn btn-outline-secondary" href="{{ route('approval.rules.map') }}"><i class="bi bi-diagram-3"></i> {{ __('Peta approval') }}</a>
             @can('create', App\Domain\Approval\Models\ApprovalRule::class)
                 <button class="btn btn-outline-primary" type="button" wire:click="bukaAturanDasar">{{ __('Pasang aturan dasar') }}</button>
+                <button class="btn btn-outline-primary" type="button" wire:click="bukaKembalikan"><i class="bi bi-arrow-counterclockwise"></i> {{ __('Kembalikan ke aturan dasar') }}</button>
             @endcan
             @can('approval.simulate')
                 <a class="btn btn-outline-secondary" href="{{ route('approval.simulation') }}">{{ __('Simulasi') }}</a>
@@ -56,6 +57,40 @@
                         {{ $jumlahPasang === 0 ? __('Tidak ada yang perlu dipasang') : __('Pasang :n aturan', ['n' => $jumlahPasang]) }}
                     </button>
                     <button class="btn btn-outline-secondary" type="button" wire:click="$set('dialogDasar', false)">{{ __('Batal') }}</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($dialogKembali)
+        {{-- A-406: aturan buatan sendiri dinonaktifkan (tidak dihapus), aturan dasar dipulihkan. --}}
+        <div class="card border-primary mb-3" role="dialog" aria-labelledby="judul-kembali">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong id="judul-kembali">{{ __('Kembalikan ke aturan dasar') }}</strong>
+                <button class="btn-close" type="button" wire:click="$set('dialogKembali', false)" aria-label="{{ __('Tutup') }}"></button>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">{{ __('Untuk jenis dokumen yang dicentang, aturan buatan sendiri dinonaktifkan (tidak dihapus; bisa diaktifkan lagi kapan saja) dan aturan dasar dipakai kembali. Dokumen yang sedang menunggu approval tidak berubah.') }}</p>
+                <ul class="list-unstyled mb-3">
+                    @foreach ($rencanaKembali as $r)
+                        <li class="mb-2 form-check" wire:key="kembali-{{ $r['jenis']->value }}">
+                            <input class="form-check-input" type="checkbox" id="kembali-{{ $r['jenis']->value }}" value="{{ $r['jenis']->value }}" wire:model="jenisKembali">
+                            <label class="form-check-label" for="kembali-{{ $r['jenis']->value }}">
+                                <strong>{{ $r['jenis']->label() }}</strong> →
+                                @if ($r['dinonaktifkan'] > 0)
+                                    {{ trans_choice(':n aturan buatan sendiri dinonaktifkan|:n aturan buatan sendiri dinonaktifkan', $r['dinonaktifkan'], ['n' => $r['dinonaktifkan']]) }} →
+                                @endif
+                                {{ __('dipakai:') }} {{ $r['hasil'] }}
+                            </label>
+                            @if ($r['peringatan'])
+                                <div class="small text-warning-emphasis"><i class="bi bi-exclamation-triangle"></i> {{ __($r['peringatan']) }}</div>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" type="button" wire:click="kembalikanAturanDasar" wire:confirm="{{ __('Kembalikan jenis yang dicentang ke aturan dasar?') }}">{{ __('Kembalikan') }}</button>
+                    <button class="btn btn-outline-secondary" type="button" wire:click="$set('dialogKembali', false)">{{ __('Batal') }}</button>
                 </div>
             </div>
         </div>

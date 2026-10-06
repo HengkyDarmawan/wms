@@ -1,11 +1,13 @@
 # Akun Uji & Data Demo (dev / demo / staging)
 
-**Versi:** 1.17
-**Tanggal:** 28 September 2026
+**Versi:** 1.18
+**Tanggal:** 6 Oktober 2026
 **Status:** aktif — **hanya untuk dev, demo, dan staging**. Produksi tidak memakai berkas ini: Super Admin produksi dibuat dari `.env` saat instalasi, semua user lain lewat undangan dan mengatur password sendiri ([Blueprint §13](wms/01-blueprint.md#13-autentikasi--sso), [NFR-02](wms/01-blueprint.md#16-kebutuhan-non-fungsional)).; v1.12: lapis Manajemen demo dibatasi divisi pemohon (Direksi = induk semua divisi), lapis Auditor opname lintas divisi ([A-269](wms/04b-asumsi-lanjutan.md#a-269)); v1.13: §6 company DEMO kosong untuk latihan (`BlankDemoSeeder`); v1.14: saklar fitur DEMO (per potong & QC mati) dan `PIPA-PVC-4` menjadi Barang biasa ([A-283](wms/04b-asumsi-lanjutan.md#a-283), [A-284](wms/04b-asumsi-lanjutan.md#a-284)); v1.16: akun `driver1`/`driver2` dihapus — driver tanpa akun, kendaraan menyimpan nama + HP driver bawaan, `klien1` mengisi bukti terima SJ PRJ-001 lewat portal ([A-311](wms/04b-asumsi-lanjutan.md#a-311), [A-312](wms/04b-asumsi-lanjutan.md#a-312)); v1.17: denah demo CKG 30 × 18 m dengan zona berposisi & objek denah ([A-320](wms/04b-asumsi-lanjutan.md#a-320))
 **Dokumen terkait:** [Blueprint §4](wms/01-blueprint.md#4-pengguna--peran) · [BR-GEN-09](wms/05-aturan-bisnis.md#br-gen) · [Model data pusat & akses](wms/08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) · [Spesifikasi modul Access](wms/10-access.md)
 
 Berkas ini adalah **satu-satunya sumber** daftar akun seed. Seeder `DemoSeeder` (modul Access) harus sama persis dengan tabel di bawah; bila akun berubah, ubah berkas ini dulu lalu seeder-nya. Password di sini tidak boleh dipakai di produksi.
+
+> **Bukan akun uji:** company baru yang dibuat Super Admin otomatis mendapat **akun dasar** per role (`kepala-gudang@<kode>.wms`, dst., [A-407](wms/04b-asumsi-lanjutan.md#a-407)). Akun itu nonaktif, tanpa password, dan tidak bisa dipakai masuk sampai Admin Company mengaktifkan dan membuatkan password — tidak dicatat di berkas ini. DEMO tidak memakainya.
 
 ---
 
@@ -109,7 +111,7 @@ php artisan db:seed --class="Database\Seeders\PlatformDemoSeeder"
 php artisan tenants:seed --tenants=1 --class="Database\Seeders\Tenant\DemoSeeder"
 ```
 
-**Company DEMO kosong (latihan dari nol).** Untuk mencoba alur sebagai company baru: hapus isi database tenant DEMO lalu isi hanya data acuan (role, permission, satuan, alasan, tipe gudang, template — sama dengan provisioning) dan **satu akun** `admin@demo.wms.test` / `Demo#2026!`. Tanpa gudang, master, user lain, stok, atau aturan approval; wizard *Setup awal* mulai dari 0. Kembali ke data demo lengkap dengan `DemoSeeder` seperti di atas (TC-ACC-27c).
+**Company DEMO kosong (latihan dari nol).** Untuk mencoba alur sebagai company baru: hapus isi database tenant DEMO lalu isi hanya data acuan (role, permission, satuan, alasan, tipe gudang, template — sama dengan provisioning) dan **satu akun** `admin@demo.wms.test` / `Demo#2026!`, ditambah isi company baru sejak 6 Okt 2026: 6 **akun dasar nonaktif** (`<role>@demo.wms`), jabatan dasar, dan **aturan dasar approval aktif** ([A-405](wms/04b-asumsi-lanjutan.md#a-405), [A-407](wms/04b-asumsi-lanjutan.md#a-407)). Tanpa gudang, master, atau stok; wizard *Setup awal* mulai dari 0. Kembali ke data demo lengkap dengan `DemoSeeder` seperti di atas (TC-ACC-27c).
 
 ```
 php artisan tenants:migrate-fresh --tenants=1

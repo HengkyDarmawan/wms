@@ -7,6 +7,7 @@ namespace Tests\Feature\Access;
 use App\Domain\Access\Models\Permission;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\User;
+use App\Domain\Approval\Models\ApprovalRule;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
 use App\Domain\Warehouse\Models\Warehouse;
@@ -115,13 +116,19 @@ class DemoSeederTest extends TenantTestCase
         );
     }
 
-    /** TC-ACC-27c — company kosong untuk latihan: hanya data acuan + satu Admin Company yang bisa masuk. */
+    /**
+     * TC-ACC-27c — company kosong untuk latihan: isi sama dengan company baru
+     * (data acuan, akun & jabatan dasar nonaktif, aturan dasar — A-405/A-407)
+     * + satu Admin Company yang bisa masuk.
+     */
     #[Test]
     public function tc_acc_27c_seeder_kosong_hanya_admin_company(): void
     {
         (new BlankDemoSeeder)->run();
 
-        $this->assertSame(1, User::query()->count());
+        $this->assertSame(1, User::query()->where('is_active', true)->count(), 'Hanya Admin Company yang aktif.');
+        $this->assertSame(6, User::query()->where('is_active', false)->whereNull('password')->where('email', 'like', '%@demo.wms')->count(), 'Akun dasar nonaktif.');
+        $this->assertTrue(ApprovalRule::query()->where('is_basic', true)->where('is_active', true)->exists(), 'Aturan dasar aktif.');
         $admin = User::query()->where('email', BlankDemoSeeder::EMAIL)->firstOrFail();
         $this->assertSame(['company_admin'], $admin->roleCodes());
         $this->assertTrue($admin->canSignIn());

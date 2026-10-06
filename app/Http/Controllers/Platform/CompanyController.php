@@ -135,11 +135,16 @@ class CompanyController extends Controller
      */
     private function penggunaSerahTerima(): ?User
     {
-        if (User::query()->count() !== 1) {
+        // A-407: akun dasar yang belum pernah dipegang (nonaktif, tanpa password,
+        // belum pernah masuk) tidak menandakan company sudah dipakai.
+        $dipakai = User::query()->where(fn ($q) => $q->where('is_active', true)
+            ->orWhereNotNull('password')->orWhereNotNull('last_login_at'));
+
+        if ((clone $dipakai)->count() !== 1) {
             return null;
         }
 
-        $user = User::query()->firstOrFail();
+        $user = $dipakai->firstOrFail();
 
         return $user->password === null && $user->last_login_at === null ? $user : null;
     }

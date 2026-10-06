@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Approval\Livewire;
 
 use App\Domain\Approval\Actions\InstallBasicApprovalRules;
+use App\Domain\Approval\Actions\ResetBasicApprovalRules;
 use App\Domain\Approval\Actions\SaveApprovalRule;
 use App\Domain\Approval\Livewire\Concerns\HandlesApprovalRules;
 use App\Domain\Approval\Models\ApprovalRule;
@@ -32,6 +33,12 @@ class RuleList extends Component
     /** Dialog pratinjau *Pasang aturan dasar* (A-347). */
     public bool $dialogDasar = false;
 
+    /** Dialog *Kembalikan ke aturan dasar* (A-406). */
+    public bool $dialogKembali = false;
+
+    /** @var array<int, string> jenis yang dicentang untuk dikembalikan */
+    public array $jenisKembali = [];
+
     public function mount(): void
     {
         $this->authorize('viewAny', ApprovalRule::class);
@@ -49,6 +56,7 @@ class RuleList extends Component
         return view('livewire.approval.rule-list', [
             'rules' => $rules,
             'rencanaDasar' => $this->dialogDasar ? app(InstallBasicApprovalRules::class)->preview() : [],
+            'rencanaKembali' => $this->dialogKembali ? app(ResetBasicApprovalRules::class)->preview() : [],
             'kalimat' => app(ApprovalRuleSentence::class),
             'types' => $registry->typeOptions(),
             'resolver' => app(ApproverResolver::class),
@@ -58,6 +66,7 @@ class RuleList extends Component
     public function bukaAturanDasar(): void
     {
         $this->authorize('create', ApprovalRule::class);
+        $this->dialogKembali = false;
         $this->dialogDasar = true;
     }
 
@@ -74,6 +83,38 @@ class RuleList extends Component
             $this->dispatch('pesan', teks: $dipasang === []
                 ? __('Semua jenis dokumen sudah punya aturan — tidak ada yang dipasang.')
                 : __(':n aturan dasar dipasang.', ['n' => count($dipasang)]));
+        }
+    }
+
+    public function bukaKembalikan(): void
+    {
+        $this->authorize('create', ApprovalRule::class);
+        $this->dialogDasar = false;
+        $this->dialogKembali = true;
+        // Filter jenis aktif → hanya jenis itu yang dicentang; selain itu semua.
+        $this->jenisKembali = $this->typeFilter !== ''
+            ? [$this->typeFilter]
+            : array_map(fn ($t) => $t->value, app(ApprovalRegistry::class)->types());
+    }
+
+    public function kembalikanAturanDasar(ResetBasicApprovalRules $action): void
+    {
+        $this->authorize('create', ApprovalRule::class);
+
+        if ($this->jenisKembali === []) {
+            $this->ruleError = __('Centang minimal satu jenis dokumen.');
+            $this->ruleCode = 'BR-GEN-11';
+
+            return;
+        }
+
+        $hasil = [];
+
+        if ($this->jalankan(function () use ($action, &$hasil) {
+            $hasil = $action->handle(array_map('strval', $this->jenisKembali), auth()->user());
+        })) {
+            $this->dialogKembali = false;
+            $this->dispatch('pesan', teks: __(':n jenis dokumen dikembalikan ke aturan dasar.', ['n' => count($hasil)]));
         }
     }
 

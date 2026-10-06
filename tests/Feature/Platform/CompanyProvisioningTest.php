@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Platform;
 
+use App\Domain\Access\Actions\InstallBasicOrganization;
+use App\Domain\Access\Models\Position;
 use App\Domain\Access\Models\Role;
 use App\Domain\Access\Models\User;
 use App\Domain\Access\Models\UserInvitation;
+use App\Domain\Approval\Actions\InstallBasicApprovalRules;
+use App\Domain\Approval\Enums\ApprovalDocumentType;
+use App\Domain\Approval\Models\ApprovalRule;
+use App\Domain\Approval\Support\ApprovalRegistry;
 use App\Domain\Platform\Enums\CompanyStatus;
 use App\Domain\Platform\Enums\SubscriptionStatus;
 use App\Domain\Platform\Models\Company;
@@ -20,7 +26,8 @@ use Tests\TenantTestCase;
 
 /**
  * TC-PLT-03 — Super Admin membuat company dari layar: database company dibuat,
- * dimigrasi, diisi data acuan, trial dimulai, Admin Company diundang (A-176).
+ * dimigrasi, diisi data acuan, trial dimulai, Admin Company diundang (A-176),
+ * jabatan & akun dasar nonaktif dibuat (A-407), aturan dasar approval aktif (A-405).
  *
  * Uji ini membuat database sungguhan (`wms_tenant_test_prv`). CREATE DATABASE
  * menutup transaksi koneksi pusat, jadi semua baris yang dibuat dibersihkan
@@ -93,6 +100,30 @@ class CompanyProvisioningTest extends TenantTestCase
             $this->assertNull($rina->password);
             $this->assertTrue($rina->hasRoleCode('company_admin'));
             $this->assertSame(1, UserInvitation::query()->where('user_id', $rina->id)->count());
+
+            // A-407: 6 akun dasar nonaktif tanpa password + peta jabatan dasar.
+            $dasar = User::query()->where('email', 'like', '%@prv.wms')->with('position')->get();
+            $this->assertSame(
+                ['auditor-internal@prv.wms', 'kepala-gudang@prv.wms', 'manajemen@prv.wms', 'pemohon-internal@prv.wms', 'penindak-lanjut-pr@prv.wms', 'staf-gudang@prv.wms'],
+                $dasar->pluck('email')->sort()->values()->all(),
+            );
+            $this->assertTrue($dasar->every(fn (User $u) => ! $u->is_active && $u->password === null && $u->position !== null));
+            $this->assertSame(0, UserInvitation::query()->whereIn('user_id', $dasar->pluck('id'))->count(), 'Akun dasar tidak diundang.');
+            $kepala = $dasar->firstWhere('email', 'kepala-gudang@prv.wms');
+            $this->assertTrue($kepala->hasRoleCode('warehouse_head'));
+            $this->assertSame('MGT', Position::query()->find($kepala->position->reports_to_position_id)->code);
+
+            // A-405: aturan dasar aktif untuk setiap jenis kecuali lapis minimum.
+            $harap = collect(app(ApprovalRegistry::class)->types())
+                ->reject(fn (ApprovalDocumentType $t) => in_array($t, InstallBasicApprovalRules::DILEWATI, true))
+                ->map->value->sort()->values()->all();
+            $aturan = ApprovalRule::query()->get();
+            $this->assertSame($harap, $aturan->map(fn ($r) => $r->document_type->value)->sort()->values()->all());
+            $this->assertTrue($aturan->every(fn ($r) => $r->is_basic && $r->is_active && $r->priority === 900));
+
+            // Diulang (mis. lanjut setelah gagal) tidak menggandakan.
+            $this->assertSame([], app(InstallBasicOrganization::class)->handle('PRV'));
+            $this->assertSame([], app(InstallBasicApprovalRules::class)->handle());
         });
 
         $this->assertTrue(PlatformAuditLog::query()->where('description', 'Company siap dipakai')->where('subject_id', $company->id)->exists());
