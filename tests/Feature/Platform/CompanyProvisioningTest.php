@@ -134,6 +134,43 @@ class CompanyProvisioningTest extends TenantTestCase
         $this->actingAs($admin, 'platform')->post($this->centralUrl('admin/companies/'.$company->id.'/provision'))->assertSessionHasErrors('platform');
     }
 
+    /** TC-PLT-15 (A-408) — satu perintah membuat contoh company yang langsung bisa dimasuki; diulang aman. */
+    #[Test]
+    public function tc_plt_15_perintah_contoh_company_siap_login(): void
+    {
+        PlatformUser::create(['email' => 'prv-admin@wms.test', 'name' => 'Super Admin Uji', 'password' => Hash::make('Rahasia#2026!')]);
+
+        // Seperti di cPanel: database company dibuat manual lebih dulu, sehingga
+        // langkah "buat database" gagal dan perintah melanjutkan penyiapan.
+        DB::connection('central')->statement('CREATE DATABASE IF NOT EXISTS `'.config('tenancy.database.prefix').'prv`');
+
+        $this->artisan('companies:create-sample', [
+            '--code' => 'prv', '--subdomain' => 'prv', '--email' => 'rina@prv.test', '--password' => 'pendek',
+        ])->assertFailed();
+
+        // Company sudah aktif, password pendek ditolak → ulangi dengan password sah.
+        $this->artisan('companies:create-sample', [
+            '--code' => 'prv', '--subdomain' => 'prv', '--email' => 'rina@prv.test', '--password' => 'Beton-Palu-2026',
+        ])->expectsOutputToContain('/login')->assertSuccessful();
+
+        $company = Company::query()->where('code', self::KODE)->sole();
+        $this->assertSame(CompanyStatus::Active, $company->status);
+
+        $company->run(function (): void {
+            $rina = User::query()->where('email', 'rina@prv.test')->sole();
+            $this->assertTrue($rina->canSignIn());
+            $this->assertTrue(password_verify('Beton-Palu-2026', (string) $rina->password));
+            $this->assertTrue(ApprovalRule::query()->where('is_basic', true)->exists(), 'Aturan dasar ikut (A-405).');
+            $this->assertSame(6, User::query()->where('email', 'like', '%@prv.wms')->count(), 'Akun dasar ikut (A-407).');
+        });
+
+        // Diulang: tidak membuat company baru dan tidak mengganti password yang sudah dipakai.
+        $this->artisan('companies:create-sample', ['--code' => 'prv', '--password' => 'Ambil-Alih-2026'])
+            ->expectsOutputToContain('tidak diubah')->assertSuccessful();
+        $this->assertSame(1, Company::query()->where('code', self::KODE)->count());
+        $company->run(fn () => $this->assertTrue(password_verify('Beton-Palu-2026', (string) User::query()->where('email', 'rina@prv.test')->value('password'))));
+    }
+
     #[Test]
     public function tc_plt_14_super_admin_menyerahkan_akun_admin_company_pertama(): void
     {

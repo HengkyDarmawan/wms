@@ -1,0 +1,239 @@
+==============================================================================
+ TUTORIAL PASANG WMS DI SERVER cPanel
+ Domain pusat : http://wms.nexateknologigroup.com          (Super Admin)
+ Company      : http://<kode>.wms.nexateknologigroup.com    (mis. demo.wms...)
+==============================================================================
+
+Di semua langkah, ganti CPUSER dengan username cPanel Anda
+(lihat pojok kanan atas cPanel, mis. "nexatek").
+Folder aplikasi di server: /home/CPUSER/wms   (DI LUAR public_html)
+
+
+------------------------------------------------------------------------------
+LANGKAH 1 — PERSIAPAN DI cPanel (sekali saja)
+------------------------------------------------------------------------------
+1a. PHP 8.3
+    cPanel > MultiPHP Manager > pilih wms.nexateknologigroup.com > PHP 8.3
+    cPanel > Select PHP Version (bila ada) > centang ekstensi:
+      pdo_mysql, mbstring, intl, gd, zip, xml, bcmath, fileinfo, openssl
+
+1b. Subdomain pusat
+    cPanel > Domains > Create A New Domain
+      Domain         : wms.nexateknologigroup.com
+      Document Root  : /home/CPUSER/wms/public
+
+1c. Subdomain wildcard (agar semua company bisa dibuka)
+    cPanel > Domains > Create A New Domain
+      Domain         : *.wms.nexateknologigroup.com
+      Document Root  : /home/CPUSER/wms/public      (SAMA dengan 1b)
+
+    Bila DNS domain dikelola di luar cPanel (mis. Cloudflare), tambahkan:
+      A   wms     -> IP server
+      A   *.wms   -> IP server
+
+1d. Database pusat
+    cPanel > MySQL Databases
+      - Create New Database : wms_central   -> jadi CPUSER_wms_central
+      - Add New User        : wms           -> jadi CPUSER_wms (catat passwordnya)
+      - Add User To Database: CPUSER_wms + CPUSER_wms_central > ALL PRIVILEGES
+
+    Dianggap selesai bila: database CPUSER_wms_central dan user CPUSER_wms
+    terlihat di daftar MySQL Databases.
+
+
+------------------------------------------------------------------------------
+LANGKAH 2 — ASET TAMPILAN (public/build)
+------------------------------------------------------------------------------
+Tidak perlu apa-apa: folder public/build sudah ikut GitHub (hasil
+npm run build di komputer kantor), jadi ikut terambil saat clone / git pull.
+Server TIDAK perlu Node / npm.
+
+
+------------------------------------------------------------------------------
+LANGKAH 3 — UNGGAH KE SERVER
+------------------------------------------------------------------------------
+3a. Kode aplikasi ke /home/CPUSER/wms
+    Cara A (disarankan): cPanel > Git Version Control > Create
+        Clone URL      : https://github.com/HengkyDarmawan/wms.git
+        Repository Path: /home/CPUSER/wms
+      Bila repo GitHub privat: pakai URL berisi token,
+        https://<TOKEN>@github.com/HengkyDarmawan/wms.git
+        (token dari GitHub > Settings > Developer settings > Personal access tokens)
+    Cara B: zip seluruh folder proyek TANPA node_modules, vendor, .env,
+        lalu unggah lewat File Manager dan Extract di /home/CPUSER/wms
+
+3b. Pastikan ada berkas: /home/CPUSER/wms/public/build/manifest.json
+    (ikut dari GitHub; bila memakai Cara B, ikutkan folder public/build)
+
+3c. File .env
+    Unggah berkas .env.production dari komputer kantor ke /home/CPUSER/wms/
+    lalu ganti namanya menjadi  .env
+    Buka & ubah:
+      - semua CPUSER                -> username cPanel
+      - GANTI_PASSWORD_DATABASE     -> password user CPUSER_wms (langkah 1d)
+      - GANTI_EMAIL_SUPERADMIN      -> email Super Admin
+      - GANTI_PASSWORD_SUPERADMIN   -> password Super Admin (min. 10 karakter)
+
+
+------------------------------------------------------------------------------
+LANGKAH 4 — PERINTAH TERMINAL: INSTALASI PERTAMA
+------------------------------------------------------------------------------
+cPanel > Terminal (atau SSH). Jalankan satu per satu:
+
+    cd ~/wms
+    php -v
+
+  >> Harus "PHP 8.3.x". Bila bukan, di semua perintah ganti "php" dengan:
+       /opt/cpanel/ea-php83/root/usr/bin/php
+
+    composer install --no-dev --optimize-autoloader
+    php artisan key:generate --force
+    php artisan migrate --force
+    php artisan db:seed --class="Database\Seeders\ProductionSeeder" --force
+      (jalankan SEBELUM config:cache — seeder ini membaca email & password
+       Super Admin langsung dari .env)
+    chmod -R 775 storage bootstrap/cache
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+
+  >> Bila "composer: command not found", coba:
+       php /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
+
+    Dianggap selesai bila: http://wms.nexateknologigroup.com/admin/login
+    tampil dan bisa masuk dengan email & password Super Admin dari .env.
+
+
+------------------------------------------------------------------------------
+LANGKAH 5 — CRON (jadwal otomatis: eskalasi approval, pengingat, dll.)
+------------------------------------------------------------------------------
+cPanel > Cron Jobs > Common Settings: Once Per Minute (* * * * *)
+Command:
+
+    cd /home/CPUSER/wms && php artisan schedule:run >> /dev/null 2>&1
+
+(Bila php bukan 8.3, pakai /opt/cpanel/ea-php83/root/usr/bin/php)
+
+
+------------------------------------------------------------------------------
+LANGKAH 6 — CONTOH COMPANY "DEMO" SIAP LOGIN (satu perintah)
+------------------------------------------------------------------------------
+6a. cPanel > MySQL Databases (cPanel biasanya melarang aplikasi membuat
+    database sendiri, jadi dibuat dulu):
+      - Create New Database: wmst_demo   -> jadi CPUSER_wmst_demo
+      - Add User To Database: CPUSER_wms + CPUSER_wmst_demo > ALL PRIVILEGES
+
+6b. Terminal:
+      cd ~/wms
+      php artisan companies:create-sample
+    Ketik password Admin Company saat diminta (min. 10 karakter).
+    Hasil akhir mencetak alamat login, mis.:
+      Company siap. Masuk di: http://demo.wms.nexateknologigroup.com/login
+      Email Admin Company: admin@demo.wms.test
+
+    Bila muncul "Penyiapan gagal ... Access denied": database di 6a belum
+    dibuat / belum diberi user. Perbaiki, lalu jalankan perintah yang sama lagi
+    (aman diulang; tidak membuat company dobel, tidak mengganti password).
+
+    Pilihan lain (opsional):
+      php artisan companies:create-sample --code=ABC --subdomain=abc --name="PT ABC" --email=admin@abc.co.id
+      (database yang harus dibuat dulu: CPUSER_wmst_abc)
+
+6c. Buka http://demo.wms.nexateknologigroup.com/login > masuk dengan
+    admin@demo.wms.test + password tadi. Akun dasar per role (nonaktif) dan
+    aturan approval dasar sudah ada; ikuti wizard Setup awal.
+
+    Dianggap selesai bila: halaman login company tampil bertampilan WMS
+    dan Admin Company bisa masuk.
+
+------------------------------------------------------------------------------
+LANGKAH 6 (CARA LAYAR) — COMPANY BERIKUTNYA LEWAT SUPER ADMIN
+------------------------------------------------------------------------------
+6d. Buka http://wms.nexateknologigroup.com/admin/login > masuk Super Admin
+    > Company baru > isi Kode: ABC, Subdomain: abc, nama, paket,
+      nama & email Admin Company > Buat company
+
+6e. Bila muncul error database (biasanya "Access denied ... CREATE DATABASE",
+    karena cPanel tidak mengizinkan aplikasi membuat database sendiri):
+      - cPanel > MySQL Databases > Create New Database:  wmst_abc
+        -> jadi CPUSER_wmst_abc   (HARUS persis = TENANT_DB_PREFIX + kode kecil)
+      - Add User To Database: CPUSER_wms + CPUSER_wmst_abc > ALL PRIVILEGES
+      - Kembali ke halaman detail company > klik "Lanjutkan provisioning"
+    Lakukan hal yang sama untuk setiap company baru berikutnya
+    (kode ABC -> database CPUSER_wmst_abc).
+
+6f. Di halaman detail company > kartu Serah terima > "Buatkan password"
+    untuk Admin Company (email belum aktif, jadi undangan tidak terkirim).
+
+6g. Buka http://<subdomain>.wms.nexateknologigroup.com/login > masuk
+    sebagai Admin Company.
+
+
+------------------------------------------------------------------------------
+LANGKAH 7 — PERINTAH SETIAP KALI UPDATE KODE
+------------------------------------------------------------------------------
+Aset tampilan (public/build) ikut terambil oleh git pull.
+
+Di terminal server:
+
+    cd ~/wms
+    git pull origin main
+    composer install --no-dev --optimize-autoloader
+    php artisan migrate --force
+    php artisan tenants:migrate --force
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+
+(Bila memakai Cara B / zip: unggah ulang kode, JANGAN menimpa .env dan
+storage, lalu jalankan perintah di atas mulai dari composer install.)
+
+
+------------------------------------------------------------------------------
+MASALAH UMUM
+------------------------------------------------------------------------------
+"Oops! An Error Occurred" 404 di subdomain company
+    - .env: APP_CENTRAL_DOMAIN=wms.nexateknologigroup.com (bukan wms.test)
+      lalu: php artisan config:clear && php artisan config:cache
+    - folder public/build/manifest.json belum ada -> git pull lagi (langkah 3b)
+    - company dengan subdomain itu belum dibuat -> langkah 6
+
+"Not Found" polos dari server (bukan tampilan WMS)
+    - Document Root subdomain belum /home/CPUSER/wms/public -> langkah 1b/1c
+    - wildcard *.wms belum dibuat / DNS belum ada -> langkah 1c
+
+Error 419 "Page Expired" saat login
+    - masih http:// tapi SESSION_SECURE_COOKIE=true -> ubah ke false,
+      lalu php artisan config:cache
+
+Error 500 / halaman kosong
+    - lihat penyebabnya:  tail -n 80 ~/wms/storage/logs/laravel.log
+    - izin folder:        chmod -R 775 ~/wms/storage ~/wms/bootstrap/cache
+    - APP_KEY kosong:     php artisan key:generate --force && php artisan config:cache
+
+"This cache store does not support tagging"
+    - .env: CACHE_STORE=array, lalu php artisan config:cache
+
+Mengubah .env tapi tidak berpengaruh
+    - setiap selesai mengubah .env:  php artisan config:cache
+
+
+------------------------------------------------------------------------------
+SETELAH HTTPS (AutoSSL) AKTIF
+------------------------------------------------------------------------------
+Ubah di .env:
+    APP_URL=https://wms.nexateknologigroup.com
+    SESSION_SECURE_COOKIE=true
+Lalu:
+    php artisan config:cache
+
+
+------------------------------------------------------------------------------
+DILARANG DIJALANKAN DI SERVER (menghapus semua data)
+------------------------------------------------------------------------------
+    php artisan migrate:fresh
+    php artisan tenants:migrate-fresh
+    php artisan db:wipe
+    php artisan db:seed            (tanpa --class=ProductionSeeder)
+    DemoSeeder / BlankDemoSeeder / PlatformDemoSeeder
