@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Platform\Models;
 
 use App\Domain\Platform\Enums\CompanyStatus;
+use App\Domain\Platform\Support\SingleCompany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -85,9 +86,13 @@ class Company extends BaseTenant implements TenantWithDatabase
         return $this->hasMany(FeatureFlag::class);
     }
 
-    /** Host penuh company, mis. demo.wms.test (A-01). */
+    /** Host penuh company, mis. demo.wms.test (A-01); mode satu company = host APP_URL (A-417). */
     public function host(): string
     {
+        if (SingleCompany::enabled()) {
+            return SingleCompany::host();
+        }
+
         return $this->subdomain.'.'.config('tenancy.central_domains.0', 'wms.test');
     }
 

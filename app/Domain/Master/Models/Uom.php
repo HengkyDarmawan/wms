@@ -29,8 +29,44 @@ class Uom extends Model
         return [
             'factor_to_reference' => 'decimal:8',
             'rounding' => 'decimal:4',
+            'is_packaging' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Kalimat setara untuk layar (A-411), mis. "1 KM = 1.000 M" atau "1 M = 100 CM"
+     * (satuan lebih kecil ditulis dari satuan acuan kategori bila hasilnya bilangan bulat).
+     * Null untuk satuan acuan dan kemasan — layar menulis teksnya sendiri.
+     */
+    public function kalimatSetara(?self $dasar): ?string
+    {
+        if ($dasar === null || (int) $dasar->id === (int) $this->id || $this->is_packaging) {
+            return null;
+        }
+
+        $faktor = (float) $this->factor_to_reference;
+
+        if ($faktor > 0 && $faktor < 1) {
+            $balik = 1 / $faktor;
+
+            if (abs($balik - round($balik)) < 1e-6) {
+                return '1 '.$dasar->code.' = '.self::angka(round($balik)).' '.$this->code;
+            }
+        }
+
+        return '1 '.$this->code.' = '.self::angka($faktor).' '.$dasar->code;
+    }
+
+    /**
+     * Angka gaya Indonesia tanpa nol berlebih: 1000 → "1.000", 0.0254 → "0,0254".
+     * `$ribuan` = false untuk isian form ("1000", "0,5").
+     */
+    public static function angka(float $n, bool $ribuan = true): string
+    {
+        $teks = number_format($n, 8, ',', $ribuan ? '.' : '');
+
+        return rtrim(rtrim($teks, '0'), ',');
     }
 
     public function category(): BelongsTo
@@ -62,7 +98,7 @@ class Uom extends Model
     {
         return LogOptions::defaults()
             ->useLogName('master')
-            ->logOnly(['uom_category_id', 'code', 'name', 'factor_to_reference', 'rounding', 'is_active'])
+            ->logOnly(['uom_category_id', 'code', 'name', 'factor_to_reference', 'is_packaging', 'rounding', 'is_active'])
             ->logOnlyDirty();
     }
 }

@@ -22,6 +22,7 @@
             ['stock.lock_period', 'stock.period', __('Kunci periode'), 'bi-calendar-check', 'stock.period'],
             ['warehouse.view', 'warehouses.index', __('Daftar gudang'), 'bi-buildings', 'warehouses.*'],
             ['bin.view', 'bins.index', __('Bin'), 'bi-grid-3x3-gap', 'bins.*'],
+            ['putaway.complete', 'bin-moves.create', __('Pindah bin'), 'bi-arrow-left-right', 'bin-moves.*'],
             ['warehouse_type.view', 'warehouse-types.index', __('Tipe gudang'), 'bi-diagram-2', 'warehouse-types.*'],
         ]],
         ['Barang keluar', 'keluar', [
@@ -150,12 +151,14 @@
             @php($tampil = collect($butir)->filter(fn ($b) => $boleh($b[0]) && Route::has($b[1])))
             @if ($tampil->isNotEmpty())
                 @php($idSeksi = 'nxSec'.\Illuminate\Support\Str::studly($kunci))
-                <div class="nx-menu-section" data-nx-section="{{ $kunci }}">
+                {{-- Grup halaman yang sedang dibuka (termasuk detail/ubah, mis. /items/1) selalu terbuka. --}}
+                @php($seksiAktif = $tampil->contains(fn ($b) => request()->routeIs($b[4])))
+                <div class="nx-menu-section {{ $seksiAktif ? 'has-active' : '' }}" data-nx-section="{{ $kunci }}">
                     <button class="nx-menu-group" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $idSeksi }}"
-                            aria-expanded="false" aria-controls="{{ $idSeksi }}">
+                            aria-expanded="{{ $seksiAktif ? 'true' : 'false' }}" aria-controls="{{ $idSeksi }}">
                         <span class="nx-menu-group-text">{{ __($judul) }}</span><i class="bi bi-chevron-down nx-group-chevron"></i>
                     </button>
-                    <div class="collapse nx-section-body" id="{{ $idSeksi }}">
+                    <div class="collapse nx-section-body {{ $seksiAktif ? 'show' : '' }}" id="{{ $idSeksi }}">
                         @foreach ($tampil as [$izin, $rute, $label, $ikon, $pola])
                             <div class="nx-menu-item">
                                 <a class="nx-menu-link {{ request()->routeIs($pola) ? 'active' : '' }}"

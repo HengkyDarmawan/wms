@@ -9,6 +9,7 @@ use App\Domain\Warehouse\Enums\BinStatus;
 use App\Domain\Warehouse\Exceptions\WarehouseRuleException;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Rack;
+use App\Domain\Warehouse\Models\RackLevel;
 use App\Domain\Warehouse\Models\Zone;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +51,33 @@ class DeactivateLocation
                 ->withProperties(['reason_code' => $reasonCode, 'bin' => $bins->count()])->log('Rak dinonaktifkan');
 
             return $rack->refresh();
+        });
+    }
+
+    /** A-410: satu tingkat yang pernah dipakai — binnya ikut nonaktif (wajib kosong). */
+    public function level(RackLevel $level, string $reasonCode, ?User $actor = null): RackLevel
+    {
+        if (trim($reasonCode) === '') {
+            throw WarehouseRuleException::fields(['reason' => 'Alasan wajib dipilih.'], 'BR-GEN-11');
+        }
+
+        $bins = Bin::query()->withoutGlobalScopes()->where('rack_level_id', $level->id)->get();
+
+        if ($beku = $bins->first(fn (Bin $b) => $b->bin_status === BinStatus::Frozen)) {
+            throw WarehouseRuleException::rule('BR-OPN-02', 'Bin '.$beku->code.' sedang dibekukan opname.');
+        }
+
+        return DB::transaction(function () use ($level, $bins, $reasonCode, $actor) {
+            foreach ($bins->where('bin_status', '!=', BinStatus::Inactive) as $b) {
+                $this->bin->deactivate($b, $reasonCode, 'Tingkat '.$level->code.' dinonaktifkan', $actor);
+            }
+
+            $level->forceFill(['is_active' => false])->save();
+
+            activity('warehouse')->performedOn($level)->causedBy($actor)
+                ->withProperties(['reason_code' => $reasonCode, 'bin' => $bins->count()])->log('Tingkat dinonaktifkan');
+
+            return $level->refresh();
         });
     }
 

@@ -233,7 +233,13 @@
                 <a class="btn btn-outline-primary" href="{{ route('receipts.edit', $grn) }}">{{ __('Ubah draf') }}</a>
             @endcan
             @can('receive', $grn)
-                <button class="btn btn-primary" type="button" wire:click="terima">{{ __('Terima barang') }}</button>
+                {{-- A-420: satu klik untuk penerimaan tanpa QC; tombol lama tetap. --}}
+                @if ($bisaTerimaSelesaikan)
+                    <button class="btn btn-success" type="button" wire:click="terimaDanSelesaikan" data-terima-selesaikan>
+                        <i class="bi bi-check2-all"></i> {{ __('Terima & selesaikan') }}
+                    </button>
+                @endif
+                <button class="btn btn-outline-primary" type="button" wire:click="terima">{{ __('Terima barang saja') }}</button>
             @endcan
             @if ($grn->status->value === 'received')
                 @can('complete', $grn)

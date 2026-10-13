@@ -125,7 +125,7 @@ class PurchaseOrderForm extends Component
         $po = $this->simpanDraf($action);
 
         if ($po !== null) {
-            $this->redirectRoute('purchase-orders.show', $po, navigate: true);
+            $this->redirectRoute('purchase-orders.show', $po);
         }
     }
 
@@ -140,7 +140,7 @@ class PurchaseOrderForm extends Component
         $this->authorize('submit', $po);
 
         if ($this->jalankan(fn () => $ajukan->handle($po, auth()->user()))) {
-            $this->redirectRoute('purchase-orders.show', $po, navigate: true);
+            $this->redirectRoute('purchase-orders.show', $po);
         }
     }
 

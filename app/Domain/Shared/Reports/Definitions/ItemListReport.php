@@ -42,7 +42,7 @@ class ItemListReport extends Report
             'satuan_dasar' => 'Satuan dasar',
             'jenis' => 'Jenis barang',
             'titik_pesan_ulang' => 'Titik pesan ulang',
-            'stok_minimum' => 'Stok minimum',
+            'stok_minimum' => 'Isi sampai (stok ideal)',
             'status' => 'Status',
         ];
     }

@@ -3,7 +3,8 @@
         <div>
             <h1 class="h3 mb-1">{{ __('Klien') }}</h1>
             <p class="text-muted mb-0">
-                {{ __('Pemilik proyek. Klien tidak pernah dihapus, hanya dinonaktifkan.') }}
+                {{-- A-419: bedakan dari perusahaan Anda (pemilik gudang, Pengaturan company). --}}
+                {{ __('Perusahaan pemberi kerja / pemilik proyek — bukan perusahaan Anda. Klien tidak memakai WMS kecuali diberi akun portal. Klien tidak pernah dihapus, hanya dinonaktifkan.') }}
             </p>
         </div>
 

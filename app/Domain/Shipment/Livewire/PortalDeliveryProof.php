@@ -62,13 +62,13 @@ class PortalDeliveryProof extends Component
         $req = $sj->materialRequestIds()[0] ?? null;
 
         $req === null
-            ? $this->redirectRoute('portal.dashboard', navigate: true)
-            : $this->redirectRoute('portal.requests.show', $req, navigate: true);
+            ? $this->redirectRoute('portal.dashboard')
+            : $this->redirectRoute('portal.requests.show', $req);
     }
 
     public function kembali(): void
     {
-        $this->redirectRoute('portal.dashboard', navigate: true);
+        $this->redirectRoute('portal.dashboard');
     }
 
     public function render(): View

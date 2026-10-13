@@ -1,8 +1,8 @@
 # Checklist Persiapan Pemilik Produk
 
-**Versi:** 1.1
-**Tanggal:** 24 September 2026
-**Status:** aktif; dicentang oleh pemilik produk. Part 4 dan coding sudah berjalan (enam modul selesai Fase 1, lihat [README](README.md)); butir yang belum dicentang tetap berlaku untuk fase berikutnya
+**Versi:** 1.2
+**Tanggal:** 7 Oktober 2026
+**Status:** aktif; v1.2 (7 Okt 2026): A-50 dan repo git dicentang, butir lain diberi keadaan terkini — sisi teknis sudah dibangun, pilihan bisnisnya tetap menunggu pemilik. Dicentang oleh pemilik produk. Part 4 dan coding sudah berjalan (enam modul selesai Fase 1, lihat [README](README.md)); butir yang belum dicentang tetap berlaku untuk fase berikutnya
 **Dokumen terkait:** [README](README.md) · [Keputusan & Asumsi](wms/04-keputusan-dan-asumsi.md) · [Arsitektur §10, §12](wms/08-arsitektur.md#10-lingkungan) · [Blueprint §13, §18](wms/01-blueprint.md#13-autentikasi--sso)
 
 Peta rilis yang disepakati 23 Sep 2026 ([D-29](wms/04-keputusan-dan-asumsi.md#d-29)): **Fase 1** WMS inti → **Fase 1b** Purchasing inti → **Fase 2a** WhatsApp → **Fase 2b** PWA offline penuh → **Fase 3** SSO, Purchasing lengkap, payment gateway, API. Login **lokal dulu** ([D-26](wms/04-keputusan-dan-asumsi.md#d-26)); SSO NXTG menyusul sebagai tombol tambahan di halaman login yang sama.
@@ -13,10 +13,10 @@ Peta rilis yang disepakati 23 Sep 2026 ([D-29](wms/04-keputusan-dan-asumsi.md#d-
 
 | ☐ | Keputusan | Untuk apa | Rujukan |
 |---|---|---|---|
-| ☐ | **Migrasi data prototipe:** impor Excel dari data lama, atau mulai dari saldo awal lewat opname pembukaan | Modul Master & Stock; format template impor | [O-12](wms/04-keputusan-dan-asumsi.md#o-12) |
-| ☐ | **Tanda tangan digital:** cukup gambar tanda tangan + jejak audit (foto, GPS, waktu), atau penyedia tersertifikasi | Bukti terima, berita acara | [O-13](wms/04-keputusan-dan-asumsi.md#o-13) |
-| ☐ | **OTP bukti terima tanpa akun:** SMS gateway mana selama WhatsApp belum aktif (atau tautan tanpa OTP dengan risiko diterima) | Modul Shipment | [O-15](wms/04-keputusan-dan-asumsi.md#o-15) |
-| ☐ | **A-50** jalur ringan transfer dalam proyek (setuju / ubah) | Modul Transfer | [A-50](wms/04-keputusan-dan-asumsi.md#a-50) |
+| ☐ | **Migrasi data prototipe:** impor Excel dari data lama, atau mulai dari saldo awal lewat opname pembukaan | Modul Master & Stock; format template impor | [O-12](wms/04-keputusan-dan-asumsi.md#o-12) — *keadaan 7 Okt:* kedua jalur sudah tersedia (impor [A-207](wms/04-keputusan-dan-asumsi.md#a-207), [A-258](wms/04b-asumsi-lanjutan.md#a-258); saldo awal manual di Penyesuaian stok); tinggal memilih per klien |
+| ☐ | **Tanda tangan digital:** cukup gambar tanda tangan + jejak audit (foto, GPS, waktu), atau penyedia tersertifikasi | Bukti terima, berita acara | [O-13](wms/04-keputusan-dan-asumsi.md#o-13) — *keadaan 7 Okt:* gambar tanda tangan + jejak audit sudah dibangun ([A-125](wms/04-keputusan-dan-asumsi.md#a-125)); keabsahan hukumnya belum diputuskan |
+| ☐ | **OTP bukti terima tanpa akun:** SMS gateway mana selama WhatsApp belum aktif (atau tautan tanpa OTP dengan risiko diterima) | Modul Shipment | [O-15](wms/04-keputusan-dan-asumsi.md#o-15) — *keadaan 7 Okt:* pengiriman OTP sudah dibangun, saklar mati bawaan ([A-273](wms/04b-asumsi-lanjutan.md#a-273), [A-279](wms/04b-asumsi-lanjutan.md#a-279)); penyedia SMS/WA belum dipilih |
+| ✔ | **A-50** jalur ringan transfer dalam proyek — disetujui 24 Sep 2026 | Modul Transfer | [A-50](wms/04-keputusan-dan-asumsi.md#a-50) |
 | ☐ | Keterangan temuan prototipe yang masih kosong | Konteks Part 4 | [00-audit](00-audit/README.md) |
 
 ## 2. Bahan & akses sebelum coding
@@ -24,7 +24,7 @@ Peta rilis yang disepakati 23 Sep 2026 ([D-29](wms/04-keputusan-dan-asumsi.md#d-
 | ☐ | Bahan | Untuk apa | Rujukan | Catatan |
 |---|---|---|---|---|
 | ✔ | **Template NexaDash** | Semua layar back-office | [D-05](wms/04-keputusan-dan-asumsi.md#d-05) | Sudah ada di `template/` (249 halaman statis, Bootstrap 5.3 + jQuery 3.7; `partials/` menjadi layout Blade; jQuery hanya untuk plugin, bukan logika Livewire). Folder ini referensi UI, tidak di-deploy |
-| ☐ | Repo git remote (GitHub/GitLab) + akses tim | Kerja bersama, CI | — | Cabang `main` terlindungi; PR per modul |
+| ✔ | Repo git remote (GitHub/GitLab) + akses tim | Kerja bersama, CI | — | GitHub `HengkyDarmawan/wms`, cabang `main` |
 | ☐ | **Data contoh satu klien pilot** dalam Excel: item (dengan satuan & mode pelacakan), gudang & lokasi, proyek, user & role, vendor | Uji impor Excel dan alur nyata sejak modul Master | Blueprint §6.3a | Cukup 20–50 item, 2 gudang, 1 proyek |
 | ☐ | Domain produksi + VPS/hosting + **SSL wildcard** untuk subdomain company | Tenancy per subdomain | [O-05](wms/04-keputusan-dan-asumsi.md#o-05) | Lokal memakai `*.wms.test` (08 §10) |
 | ☐ | Penyedia **email transaksional** (undangan, reset password, tagihan) | Modul Access & Platform | [O-14](wms/04-keputusan-dan-asumsi.md#o-14) | SMTP/API + domain terverifikasi (SPF/DKIM) |

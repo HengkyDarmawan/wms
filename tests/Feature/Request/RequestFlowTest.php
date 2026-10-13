@@ -11,6 +11,7 @@ use App\Domain\Approval\Enums\ApproverType;
 use App\Domain\Master\Enums\ItemStatus;
 use App\Domain\Master\Enums\ProjectStatus;
 use App\Domain\Master\Enums\TrackingMode;
+use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
 use App\Domain\Master\Models\ReasonCode;
@@ -26,6 +27,7 @@ use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Enums\RequestLineStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Request\Models\MaterialRequest;
+use App\Domain\Shipment\Models\PickTask;
 use App\Domain\Stock\Enums\ReservationStatus;
 use App\Domain\Stock\Models\StockReservation;
 use App\Domain\Stock\Support\MovementRequest;
@@ -436,6 +438,23 @@ class RequestFlowTest extends TenantTestCase
     }
 
     /** REQ internal lengkap yang sudah sampai `pending_approval`. */
+    /**
+     * TC-REQ-42 (A-420) — saklar Picking otomatis menyala: REQ disetujui langsung
+     * melahirkan PCK; saklar mati: REQ tetap Disetujui tanpa PCK (tombol manual).
+     */
+    #[Test]
+    public function tc_req_42_picking_otomatis_setelah_disetujui(): void
+    {
+        FeatureSetting::seed(['auto_pick_request' => true], overwrite: true);
+        $req = app(ApproveRequest::class)->handle($this->reqMenungguApproval(), $this->kepala);
+        $this->assertSame(1, PickTask::query()->forSource('material_request', (int) $req->id)->count(), 'PCK dibuat otomatis.');
+
+        FeatureSetting::seed(['auto_pick_request' => false], overwrite: true);
+        $lain = app(ApproveRequest::class)->handle($this->reqMenungguApproval(), $this->kepala);
+        $this->assertSame(MaterialRequestStatus::Approved, $lain->status);
+        $this->assertSame(0, PickTask::query()->forSource('material_request', (int) $lain->id)->count(), 'Saklar mati: tanpa PCK otomatis.');
+    }
+
     private function reqMenungguApproval(?User $pemohon = null): MaterialRequest
     {
         $pemohon ??= $this->makeUser('internal_requester');

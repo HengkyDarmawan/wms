@@ -98,7 +98,7 @@ class CountEntry extends Component
 
         if ($ok) {
             $this->dispatch('draft-clear', key: 'count-task-'.$tugas->id.'-r'.$tugas->round);
-            $this->redirectRoute('count-tasks.index', navigate: true);
+            $this->redirectRoute('count-tasks.index');
         }
     }
 

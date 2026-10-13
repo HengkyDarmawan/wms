@@ -26,7 +26,7 @@
                             <dd class="col-sm-8">
                                 {{ $label->isParent() ? __('Label induk (kemasan)') : __('Label isi') }}
                                 @if ($label->parent)
-                                    · {{ __('dari') }} <a href="{{ route('labels.trace', ['code' => $label->parent->code]) }}" wire:navigate class="font-monospace">{{ $label->parent->code }}</a>
+                                    · {{ __('dari') }} <a href="{{ route('labels.trace', ['code' => $label->parent->code]) }}" class="font-monospace">{{ $label->parent->code }}</a>
                                 @endif
                             </dd>
                             <dt class="col-sm-4">{{ __('Item') }}</dt>
@@ -65,7 +65,7 @@
                             <dt class="col-sm-4">{{ __('Penerimaan') }}</dt>
                             <dd class="col-sm-8">
                                 @if ($asal['grnEntry'])
-                                    <a href="{{ $asal['grnEntry']['url'] }}" wire:navigate>{{ $asal['grnEntry']['number'] }}</a>
+                                    <a href="{{ $asal['grnEntry']['url'] }}">{{ $asal['grnEntry']['number'] }}</a>
                                 @else
                                     {{ $asal['grn']?->number ?? '—' }}
                                 @endif
@@ -82,7 +82,7 @@
                             <dt class="col-sm-4">{{ __('Dokumen asal') }}</dt>
                             <dd class="col-sm-8">
                                 @forelse ($asal['dokumen'] as $d)
-                                    <a class="me-2" href="{{ $d['url'] }}" wire:navigate><span class="badge text-bg-light border">{{ $d['jenis'] }}</span> {{ $d['number'] }}</a>
+                                    <a class="me-2" href="{{ $d['url'] }}"><span class="badge text-bg-light border">{{ $d['jenis'] }}</span> {{ $d['number'] }}</a>
                                 @empty
                                     —
                                 @endforelse
@@ -98,7 +98,7 @@
                 <div class="card-header"><strong>{{ __('Label isi (:n)', ['n' => $label->children->count()]) }}</strong></div>
                 <div class="card-body d-flex flex-wrap gap-2">
                     @foreach ($label->children as $c)
-                        <a class="badge {{ $c->status->badge() }} font-monospace text-decoration-none" href="{{ route('labels.trace', ['code' => $c->code]) }}" wire:navigate>
+                        <a class="badge {{ $c->status->badge() }} font-monospace text-decoration-none" href="{{ route('labels.trace', ['code' => $c->code]) }}">
                             {{ $c->code }} · {{ \App\Domain\Label\Support\PackageLabelLedger::angka((float) $c->qty_remaining) }}/{{ \App\Domain\Label\Support\PackageLabelLedger::angka((float) $c->qty) }}
                         </a>
                     @endforeach
@@ -132,12 +132,12 @@
                                 <td class="text-end">{{ (float) $m->qty_change > 0 ? '+' : '' }}{{ \App\Domain\Label\Support\PackageLabelLedger::angka((float) $m->qty_change) }}</td>
                                 <td class="small">
                                     @if ($r['dokumen'])
-                                        <a href="{{ $r['dokumen']['url'] }}" wire:navigate>{{ $r['dokumen']['number'] }}</a>
+                                        <a href="{{ $r['dokumen']['url'] }}">{{ $r['dokumen']['number'] }}</a>
                                     @else
                                         {{ $m->document_number ?? '—' }}
                                     @endif
                                     @if ($r['sj'])
-                                        · <a href="{{ $r['sj']['url'] }}" wire:navigate>{{ $r['sj']['number'] }}</a>
+                                        · <a href="{{ $r['sj']['url'] }}">{{ $r['sj']['number'] }}</a>
                                     @endif
                                 </td>
                                 <td class="small">{{ $m->warehouse?->code }} @if ($m->fromBin || $m->toBin) · {{ $m->fromBin?->code ?? '—' }} → {{ $m->toBin?->code ?? '—' }} @endif</td>
@@ -168,7 +168,7 @@
                     <tbody>
                         @forelse ($daftar as $l)
                             <tr wire:key="trace-l-{{ $l->id }}">
-                                <td class="font-monospace"><a href="{{ route('labels.trace', ['code' => $l->code]) }}" wire:navigate>{{ $l->code }}</a></td>
+                                <td class="font-monospace"><a href="{{ route('labels.trace', ['code' => $l->code]) }}">{{ $l->code }}</a></td>
                                 <td>{{ $l->item?->code }}</td>
                                 <td class="text-end">{{ \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_remaining, $l->item?->baseUom?->code) }}</td>
                                 <td class="small">{{ $l->receipt?->number }}</td>

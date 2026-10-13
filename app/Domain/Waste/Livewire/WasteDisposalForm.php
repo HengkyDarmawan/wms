@@ -113,7 +113,7 @@ class WasteDisposalForm extends Component
         });
 
         if ($ok && $wst !== null) {
-            $this->redirectRoute('waste-disposals.show', $wst, navigate: true);
+            $this->redirectRoute('waste-disposals.show', $wst);
         }
     }
 

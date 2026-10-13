@@ -59,6 +59,7 @@ class CompanySettingCatalog
             'fefo' => ['label' => 'Strategi FEFO', 'hint' => 'Ambil yang paling dekat kedaluwarsa lebih dulu.', 'tetap' => false],
             'qc' => ['label' => 'QC penerimaan', 'hint' => 'GRN vendor untuk item yang butuh QC masuk bin Karantina dulu.', 'tetap' => false],
             'otp_auto' => ['label' => 'OTP bukti terima otomatis', 'hint' => 'Kode OTP tautan penerima dikirim ke WhatsApp/SMS penerima dan tidak tampil ke staf; bila gagal terkirim, kode tampil untuk disampaikan staf/pengantar. Jalur cadangan bila penerima belum punya akun portal (A-312).', 'tetap' => false],
+            'auto_pick_request' => ['label' => 'Picking otomatis', 'hint' => 'Setelah permintaan material disetujui, tugas picking langsung dibuat. Bila stok belum cukup, tetap disetujui dan tombol Buat tugas picking tetap ada.', 'tetap' => false],
             'rfid' => ['label' => 'RFID', 'hint' => 'Tersedia di Fase 2; saklar hanya disimpan.', 'tetap' => true],
         ];
     }
@@ -101,6 +102,7 @@ class CompanySettingCatalog
                 + ItemCategory::query()->where('removal_strategy', RemovalStrategy::Fefo->value)->count(),
             'qc' => Item::query()->where('requires_qc', true)->count(),
             'otp_auto' => 0,
+            'auto_pick_request' => 0,
             'rfid' => 0,
         ];
     }

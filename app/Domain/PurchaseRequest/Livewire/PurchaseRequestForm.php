@@ -95,7 +95,7 @@ class PurchaseRequestForm extends Component
         });
 
         if ($ok && $hasil !== null) {
-            $this->redirectRoute('purchase-requests.show', $hasil, navigate: true);
+            $this->redirectRoute('purchase-requests.show', $hasil);
         }
     }
 

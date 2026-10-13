@@ -100,7 +100,7 @@ class VendorReturnForm extends Component
         });
 
         if ($ok && $rtv !== null) {
-            $this->redirectRoute('vendor-returns.show', $rtv, navigate: true);
+            $this->redirectRoute('vendor-returns.show', $rtv);
         }
     }
 

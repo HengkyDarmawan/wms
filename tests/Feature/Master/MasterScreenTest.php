@@ -138,9 +138,9 @@ class MasterScreenTest extends TenantTestCase
     {
         $this->actingAs($this->makeUser('company_admin'));
 
-        // A-283: tab tinggal Stok minimum & Kemasan; Vendor tetap tidak lagi ada.
+        // A-283: tab tinggal Stok & pembelian otomatis (A-412) & Kemasan; Vendor tetap tidak lagi ada.
         $c = Livewire::test(ItemForm::class)
-            ->assertSee(__('Pengaturan tambahan'))->assertSee(__('Stok minimum'))
+            ->assertSee(__('Pengaturan tambahan'))->assertSee(__('Stok & pembelian otomatis'))
             ->assertSee(__('Titik pesan ulang'))->assertDontSee(__('Vendor tetap'))
             ->set('tabTambahan', 'konversi')->assertSee(__('Belum ada kemasan.'))->assertDontSee(__('Titik pesan ulang'))
             ->set('tabTambahan', 'vendor')->assertSet('tabTambahan', 'stok')

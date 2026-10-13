@@ -45,12 +45,19 @@ class UomList extends Component
     #[Locked]
     public ?int $editingUomId = null;
 
-    /** @var array<string, string> */
+    /**
+     * Form satuan sebagai kalimat (A-411): `mode` besar = "1 [baru] = [angka] [pembanding]",
+     * kecil = "1 [pembanding] = [angka] [baru]", kemasan = isi ditentukan per barang.
+     *
+     * @var array<string, string>
+     */
     public array $form = [
         'code' => '',
         'name' => '',
         'uom_category_id' => '',
-        'factor_to_reference' => '',
+        'mode' => 'besar',
+        'angka' => '',
+        'pembanding' => '',
         'rounding' => '',
     ];
 
@@ -170,7 +177,9 @@ class UomList extends Component
             'code' => '',
             'name' => '',
             'uom_category_id' => (string) $this->activeCategoryId,
-            'factor_to_reference' => '',
+            'mode' => 'besar',
+            'angka' => '',
+            'pembanding' => (string) (UomCategory::query()->find($this->activeCategoryId)?->reference_uom_id ?? ''),
             'rounding' => '',
         ];
         $this->showUomForm = true;
@@ -185,12 +194,18 @@ class UomList extends Component
         $this->resetValidation();
         $this->ruleError = '';
         $this->editingUomId = $uom->id;
+        // Isian kalimat dari faktor tersimpan: < 1 ditulis "1 [dasar] = n [satuan]" bila n bulat.
+        $faktor = (float) $uom->factor_to_reference;
+        $balik = $faktor > 0 && $faktor < 1 ? 1 / $faktor : null;
+        $kecil = $balik !== null && abs($balik - round($balik)) < 1e-6;
         $this->form = [
             'code' => (string) $uom->code,
             'name' => (string) $uom->name,
             'uom_category_id' => (string) $uom->uom_category_id,
-            'factor_to_reference' => (string) $uom->factor_to_reference,
-            'rounding' => (string) $uom->rounding,
+            'mode' => $uom->is_packaging ? 'kemasan' : ($kecil ? 'kecil' : 'besar'),
+            'angka' => $uom->is_packaging ? '' : Uom::angka($kecil ? round($balik) : $faktor, ribuan: false),
+            'pembanding' => (string) ($uom->category?->reference_uom_id ?? ''),
+            'rounding' => $uom->rounding === null ? '' : (string) (float) $uom->rounding,
         ];
         $this->showUomForm = true;
     }
@@ -201,20 +216,55 @@ class UomList extends Component
 
         $this->authorize($uom === null ? 'create' : 'update', $uom ?? Uom::class);
 
+        $dasar = $uom !== null && $uom->isReference();
+        $kemasan = ! $dasar && $this->form['mode'] === 'kemasan';
+        $this->form['angka'] = str_replace(',', '.', trim((string) $this->form['angka']));
+
         $this->validate([
             'form.code' => ['required', 'string', 'max:15'],
             'form.name' => ['required', 'string', 'max:60'],
             'form.uom_category_id' => ['required'],
-            'form.factor_to_reference' => ['required', 'numeric', 'gt:0'],
+            'form.mode' => ['required', 'in:besar,kecil,kemasan'],
+            'form.angka' => $dasar || $kemasan ? ['nullable'] : ['required', 'numeric', 'gt:0'],
+            'form.pembanding' => $dasar || $kemasan ? ['nullable'] : ['required'],
             'form.rounding' => ['nullable', 'numeric', 'min:0'],
         ], attributes: [
             'form.code' => __('Kode satuan'),
             'form.name' => __('Nama satuan'),
             'form.uom_category_id' => __('Kategori satuan'),
-            'form.factor_to_reference' => __('Faktor ke satuan acuan'),
+            'form.angka' => __('Angka setara'),
+            'form.pembanding' => __('Satuan pembanding'),
         ]);
 
-        $berhasil = $this->jalankan(fn () => $action->handle($uom, $this->form, auth()->user()));
+        $faktor = 1.0;
+
+        if (! $dasar && ! $kemasan) {
+            // Pembanding harus satuan di kategori yang sama (D-11), bukan satuan ini sendiri.
+            $pembanding = Uom::query()->where('uom_category_id', (int) $this->form['uom_category_id'])
+                ->whereKey((int) $this->form['pembanding'])->when($uom !== null, fn ($q) => $q->whereKeyNot($uom->id))->first();
+
+            if ($pembanding === null) {
+                $this->addError('form.pembanding', __('Pilih satuan pembanding dari kategori ini.'));
+
+                return;
+            }
+
+            $n = (float) $this->form['angka'];
+            $faktor = $this->form['mode'] === 'kecil'
+                ? (float) $pembanding->factor_to_reference / $n
+                : $n * (float) $pembanding->factor_to_reference;
+        }
+
+        $data = [
+            'code' => $this->form['code'],
+            'name' => $this->form['name'],
+            'uom_category_id' => $this->form['uom_category_id'],
+            'factor_to_reference' => (string) $faktor,
+            'is_packaging' => $kemasan,
+            'rounding' => $this->form['rounding'],
+        ];
+
+        $berhasil = $this->jalankan(fn () => $action->handle($uom, $data, auth()->user()));
 
         if (! $berhasil) {
             return;
@@ -261,12 +311,17 @@ class UomList extends Component
             ? null
             : UomCategory::query()->with('referenceUom')->find($this->activeCategoryId);
 
+        $uoms = $kategoriAktif === null ? collect() : $kategoriAktif->uoms()->orderBy('is_packaging')->orderByDesc('factor_to_reference')->orderBy('code')->get();
+        $sedangDiubah = $this->editingUomId !== null ? $uoms->firstWhere('id', $this->editingUomId) : null;
+
         return view('livewire.master.uom-list', [
             'categories' => UomCategory::query()->withCount('uoms')->orderBy('code')->get(),
             'kategoriAktif' => $kategoriAktif,
-            'uoms' => $kategoriAktif === null
-                ? collect()
-                : $kategoriAktif->uoms()->orderByDesc('factor_to_reference')->get(),
+            'uoms' => $uoms,
+            // Pembanding kalimat: satuan aktif bukan kemasan di kategori ini (selain yang sedang diubah).
+            'pembanding' => $uoms->where('is_active', true)->where('is_packaging', false)
+                ->reject(fn (Uom $u) => (int) $u->id === (int) $this->editingUomId)->values(),
+            'formDasar' => $sedangDiubah !== null && (int) $kategoriAktif?->reference_uom_id === (int) $sedangDiubah->id,
         ]);
     }
 }

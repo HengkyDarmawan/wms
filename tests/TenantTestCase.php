@@ -10,6 +10,7 @@ use App\Domain\Access\Models\RoleAssignment;
 use App\Domain\Access\Models\User;
 use App\Domain\Master\Enums\ProjectStatus;
 use App\Domain\Master\Models\Client;
+use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\Project;
 use App\Domain\Platform\Enums\CompanyStatus;
 use App\Domain\Platform\Enums\SubscriptionStatus;
@@ -66,6 +67,10 @@ abstract class TenantTestCase extends TestCase
             DB::connection($koneksi)->setTransactionManager($manager);
             DB::connection($koneksi)->beginTransaction();
         }
+
+        // A-420: uji alur picking membuat PCK sendiri setelah approval; picking
+        // otomatis diuji khusus di SederhanaAlurTest (saklar dinyalakan di sana).
+        FeatureSetting::seed(['auto_pick_request' => false], overwrite: true);
     }
 
     protected function tearDown(): void

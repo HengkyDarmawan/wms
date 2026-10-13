@@ -19,7 +19,14 @@
                 <a class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-warehouses">
                     <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
                 </a>
-                <button class="btn btn-primary" type="button" wire:click="buat">
+                {{-- A-414: pemandu di layar. --}}
+                <x-tur kunci="gudang" :langkah="[
+                    ['el' => '', 'judul' => __('Daftar gudang'), 'isi' => __('Gudang = tempat fisik menyimpan barang, mis. Gudang Cikarang. Gudang Site dibuat per proyek.')],
+                    ['el' => '[data-tambah-gudang]', 'judul' => __('1. Tambah gudang'), 'isi' => __('Klik, lalu isi kode singkat (mis. CKG), nama, dan tipe gudang. Simpan.')],
+                    ['el' => '[data-tampilan=denah]', 'judul' => __('Tabel atau Denah'), 'isi' => __('Denah menampilkan gambar gudang. Untuk awal cukup Tabel.')],
+                    ['el' => '', 'judul' => __('2. Isi rak & bin'), 'isi' => __('Klik nama gudang di tabel, buka tab Zona & rak, lalu Tambah zona dan Tambah rak. Dianggap selesai bila gudang punya minimal satu bin.')],
+                ]" />
+                <button class="btn btn-primary" type="button" wire:click="buat" data-tambah-gudang>
                     <i class="bi bi-plus-lg"></i> {{ __('Tambah gudang') }}
                 </button>
             </div>

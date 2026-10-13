@@ -303,6 +303,40 @@ class PackageLabelLedger
     }
 
     /**
+     * A-416: **Pindah bin** — label kemasan barang itu (lot sama) yang Di gudang
+     * di bin asal ikut pindah ke bin tujuan, utuh per label, tertua dulu, selama
+     * isinya muat dalam jumlah yang dipindah. Sisa yang tidak berlabel utuh tetap
+     * di labelnya (label tidak pernah dipecah diam-diam).
+     *
+     * @param  array{type: string, id: int, line_id: ?int, number: ?string}  $doc
+     */
+    public function moveBin(int $itemId, ?int $lotId, int $fromBinId, int $toBinId, float $qty, array $doc, ?User $actor): void
+    {
+        if ($qty <= self::EPS || $fromBinId === $toBinId) {
+            return;
+        }
+
+        $sisa = round($qty, 4);
+        $labels = PackageLabel::query()->inStock()->where('item_id', $itemId)->where('bin_id', $fromBinId)
+            ->when($lotId !== null, fn ($q) => $q->where('lot_id', $lotId))
+            ->orderBy('id')->lockForUpdate()->get();
+
+        foreach ($labels as $l) {
+            if ((float) $l->qty_remaining <= self::EPS || (float) $l->qty_remaining - $sisa > self::EPS) {
+                continue;
+            }
+
+            $l->forceFill(['bin_id' => $toBinId])->save();
+            $this->catat($l, 0.0, $doc, $actor, ['warehouse_id' => $l->warehouse_id, 'from_bin_id' => $fromBinId, 'to_bin_id' => $toBinId]);
+            $sisa = round($sisa - (float) $l->qty_remaining, 4);
+
+            if ($sisa <= self::EPS) {
+                break;
+            }
+        }
+    }
+
+    /**
      * A-301: barang retur yang dipilah rusak/waste — label yang dibuka lagi oleh
      * GRN retur baris itu dibatalkan sebesar jumlahnya (asal vendornya tetap
      * terbaca untuk laporan barang bermasalah).

@@ -75,7 +75,7 @@ class TransferForm extends Component
         });
 
         if ($ok && $trf !== null) {
-            $this->redirectRoute('transfers.show', $trf, navigate: true);
+            $this->redirectRoute('transfers.show', $trf);
         }
     }
 

@@ -177,3 +177,15 @@ body > .nx-pilih-dropdown { z-index: 1090; } /* di atas .modal (1055) & offcanva
     .nx-pilih-dropdown .option { min-height: 40px; display: flex; align-items: center; flex-wrap: wrap; gap: .25rem; }
     .nx-pilih .ts-dropdown, .nx-pilih-dropdown { max-width: calc(100vw - 16px); }
 }
+
+/* ===================== Pemandu di layar (A-414, driver.js) ===================== */
+.driver-popover.nx-tur { background: var(--nx-card-bg, #fff); color: var(--nx-text, #212529); border-radius: .75rem; max-width: min(360px, calc(100vw - 32px)); font-family: inherit; }
+.driver-popover.nx-tur .driver-popover-title { font-size: 1rem; font-weight: 600; }
+.driver-popover.nx-tur .driver-popover-description { font-size: .9rem; line-height: 1.45; color: inherit; }
+.driver-popover.nx-tur .driver-popover-progress-text { color: var(--nx-text-muted, #6c757d); }
+.driver-popover.nx-tur .driver-popover-footer button { text-shadow: none; border-radius: .5rem; padding: .3rem .75rem; font-size: .85rem; }
+.driver-popover.nx-tur .driver-popover-next-btn { background: var(--nx-primary, #6366f1); border-color: var(--nx-primary, #6366f1); color: #fff; }
+.driver-popover.nx-tur .driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: var(--nx-card-bg, #fff); }
+.driver-popover.nx-tur .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: var(--nx-card-bg, #fff); }
+.driver-popover.nx-tur .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: var(--nx-card-bg, #fff); }
+.driver-popover.nx-tur .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: var(--nx-card-bg, #fff); }

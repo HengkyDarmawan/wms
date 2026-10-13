@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Domain\Platform\Models\Company;
+use App\Domain\Platform\Support\SingleCompany;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,6 +36,11 @@ class InitializeTenancyBySubdomain
 
     private function resolveCompany(string $host): ?Company
     {
+        // A-417: mode satu company — host apa pun membuka company yang ditetapkan.
+        if (SingleCompany::enabled()) {
+            return SingleCompany::company();
+        }
+
         $subdomain = $this->extractSubdomain($host);
 
         if ($subdomain === null) {

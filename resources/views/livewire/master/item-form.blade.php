@@ -4,7 +4,20 @@
             <h1 class="h3 mb-1">{{ $itemId ? __('Ubah item') : __('Item baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Field bertanda * wajib diisi.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali ke daftar') }}</a>
+        <div class="d-flex flex-wrap gap-2">
+            {{-- A-414: pemandu di layar. --}}
+            <x-tur kunci="item-form" :langkah="[
+                ['el' => '', 'judul' => __('Membuat item'), 'isi' => __('Item = satu jenis barang yang disimpan di gudang, mis. pipa PVC 4 inci. Cukup isi 4 hal wajib (bertanda *), lalu Simpan. Sisanya boleh diisi nanti.')],
+                ['el' => '#item-kode', 'judul' => __('1. Kode item'), 'isi' => __('Kode singkat yang unik, mis. PIPA-PVC4. Dipakai di label & pencarian. Huruf, angka, dan tanda minus.')],
+                ['el' => '#item-nama', 'judul' => __('2. Nama item'), 'isi' => __('Nama lengkap yang mudah dikenali staf, mis. Pipa PVC 4 inci AW.')],
+                ['el' => '.col-md-4:has(#item-kategori)', 'judul' => __('Kategori (boleh kosong)'), 'isi' => __('Pengelompokan barang, mis. Pipa, Semen, Alat. Buat dulu di Master data → Kategori item bila ingin dipakai.')],
+                ['el' => '.col-md-4:has(#item-satuan)', 'judul' => __('3. Satuan dasar'), 'isi' => __('Satuan saat stok dihitung dan dikeluarkan. Barang utuh: BATANG, PCS, SAK. Barang yang dipotong (mis. pipa per meter): M. Setelah ada stok, satuan dasar terkunci.')],
+                ['el' => '#jenis-barang', 'judul' => __('4. Jenis barang'), 'isi' => __('Klik satu kartu yang paling cocok. Penjelasan dan contoh barangnya tertulis di tiap kartu.')],
+                ['el' => '#pengaturan-tambahan', 'judul' => __('Pengaturan tambahan (opsional)'), 'isi' => __('Isian pembelian otomatis, ukuran barang (mis. 1 BATANG = 6 M), dan kemasan (mis. 1 DUS = 12 PCS). Boleh dilewati, bisa diisi nanti.')],
+                ['el' => '[data-tur-simpan]', 'judul' => __('5. Simpan'), 'isi' => __('Klik Simpan item. Dianggap selesai bila muncul tulisan Item disimpan di halaman detail item.')],
+            ]" />
+            <a class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali ke daftar') }}</a>
+        </div>
     </div>
 
     @if ($ruleError !== '')
@@ -133,7 +146,7 @@
     {{-- Bagian opsional berdampingan sebagai tab agar form utama tidak memanjang ke bawah. --}}
     @php($galat = collect($errors->keys()))
     @php($tabGalat = [
-        'stok' => $galat->contains(fn ($k) => in_array($k, ['form.weight', 'form.reorder_point', 'form.min_stock'], true)),
+        'stok' => $galat->contains(fn ($k) => in_array($k, ['form.measure_qty', 'form.measure_uom_id', 'form.reorder_point', 'form.min_stock'], true)),
         'konversi' => $galat->contains(fn ($k) => str_starts_with($k, 'form.conversions') || str_starts_with($k, 'conversions')),
     ])
     @php($tabAktif = ! $tabGalat[$tabTambahan] && in_array(true, $tabGalat, true) ? array_search(true, $tabGalat, true) : $tabTambahan)
@@ -144,7 +157,7 @@
         </div>
         <div class="px-3 pt-3">
             <ul class="nav nav-tabs" role="tablist">
-                @foreach (['stok' => __('Stok minimum'), 'konversi' => __('Kemasan') . ($conversions !== [] ? ' ('.count($conversions).')' : '')] as $kunci => $judul)
+                @foreach (['stok' => __('Stok & pembelian otomatis'),'konversi' => __('Kemasan') . ($conversions !== [] ? ' ('.count($conversions).')' : '')] as $kunci => $judul)
                     <li class="nav-item" role="presentation">
                         <button class="nav-link @if ($tabAktif === $kunci) active @endif" type="button" role="tab" id="tab-{{ $kunci }}"
                                 aria-selected="{{ $tabAktif === $kunci ? 'true' : 'false' }}" wire:click="$set('tabTambahan', '{{ $kunci }}')">
@@ -156,32 +169,57 @@
         </div>
         <div class="card-body">
             @if ($tabAktif === 'stok')
-                <p class="text-muted small">{{ __('Titik pesan ulang & stok minimum memicu pengingat pembelian.') }}</p>
+                @php($angkaStok = fn ($v) => is_numeric(str_replace(',', '.', (string) $v)) ? (float) str_replace(',', '.', (string) $v) : null)
+                @php($titik = $angkaStok($form['reorder_point']))
+                @php($isiSampai = $angkaStok($form['min_stock']))
+                @php($satuanStok = $kodeDasar !== '' ? ' '.$kodeDasar : '')
+                @php($fmt = fn ($n) => \App\Domain\Master\Support\QtyFormat::number($n))
+                <p class="text-muted small mb-3">{{ __('Opsional. Bila diisi, setiap pagi sistem membuat draf permintaan pembelian untuk barang yang stoknya menipis. Kosongkan bila tidak perlu.') }}</p>
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label" for="item-rop">{{ __('Titik pesan ulang') }}</label>
                         <input class="form-control @error('form.reorder_point') is-invalid @enderror" id="item-rop"
-                               type="text" wire:model="form.reorder_point">
+                               type="text" inputmode="decimal" wire:model.live.debounce.400ms="form.reorder_point" placeholder="{{ __('mis. 20') }}">
+                        <div class="form-text">{{ __('Bila stok tersedia di bawah angka ini → sistem membuat draf pembelian.') }}</div>
                         @error('form.reorder_point') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label" for="item-min-stok">{{ __('Stok minimum') }}</label>
+                    <div class="col-md-4">
+                        <label class="form-label" for="item-min-stok">{{ __('Isi sampai (stok ideal)') }}</label>
                         <input class="form-control @error('form.min_stock') is-invalid @enderror" id="item-min-stok"
-                               type="text" wire:model="form.min_stock">
+                               type="text" inputmode="decimal" wire:model.live.debounce.400ms="form.min_stock" placeholder="{{ __('mis. 100') }}">
+                        <div class="form-text">{{ __('Jumlah stok yang ingin dicapai setelah membeli.') }}</div>
                         @error('form.min_stock') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label" for="item-berat">{{ __('Berat per satuan dasar') }}</label>
+                    <div class="col-md-4">
+                        <label class="form-label" for="item-ukuran">{{ $kodeDasar !== '' ? __('Ukuran per 1 :s', ['s' => $kodeDasar]) : __('Ukuran per satuan dasar') }}</label>
                         <div class="d-flex gap-2 align-items-start">
-                            <input class="form-control @error('form.weight') is-invalid @enderror" id="item-berat"
-                                   type="text" wire:model="form.weight">
-                            <x-pilih model="form.weight_uom_id" id="item-berat-satuan" style="min-width: 8rem" :aria="__('Satuan berat')"
-                                     :kosong="__('Satuan')" :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code])->all()" />
+                            <input class="form-control @error('form.measure_qty') is-invalid @enderror" id="item-ukuran"
+                                   type="text" inputmode="decimal" wire:model="form.measure_qty" placeholder="{{ __('mis. 6') }}">
+                            <x-pilih model="form.measure_uom_id" id="item-ukuran-satuan" style="min-width: 7rem" :aria="__('Satuan ukuran')"
+                                     :kosong="__('Satuan')" :kelompok="$uomUkuran->map(fn ($u) => $u->category?->name)->unique()->values()->all()"
+                                     :options="$uomUkuran->map(fn ($u) => ['value' => $u->id, 'text' => $u->code, 'group' => $u->category?->name])->all()" />
                         </div>
-                        @error('form.weight') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        <div class="form-text">{{ __('Informasi saja, mis. 6 M per batang, 12 KG per batang, atau 5 L per kaleng.') }}</div>
+                        @error('form.measure_qty') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        @error('form.measure_uom_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
+
+                    @if ($titik !== null && $titik > 0)
+                        <div class="col-12" data-contoh-pembelian>
+                            @if ($isiSampai !== null && $isiSampai > $titik)
+                                @php($sisa = max(0, round($titik / 2, 4)))
+                                <div class="alert alert-info py-2 mb-0 small">
+                                    {{ __('Contoh: bila stok tersedia tinggal :sisa:s (di bawah :titik:s), besok pagi dibuat draf pembelian :beli:s supaya stok kembali :isi:s.', ['sisa' => $fmt($sisa), 's' => $satuanStok, 'titik' => $fmt($titik), 'beli' => $fmt($isiSampai - $sisa), 'isi' => $fmt($isiSampai)]) }}
+                                </div>
+                            @else
+                                <div class="alert alert-warning py-2 mb-0 small" data-peringatan-isi-sampai>
+                                    {{ __('Isi sampai kosong atau tidak lebih besar dari titik pesan ulang, jadi sistem selalu memesan :titik:s setiap kali stok di bawah :titik:s. Isi angka yang lebih besar (mis. :saran) bila ingin stok terisi kembali penuh.', ['titik' => $fmt($titik), 's' => $satuanStok, 'saran' => $fmt($titik * 5)]) }}
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             @else
                 {{-- A-355: tiap baris dibaca sebagai kalimat "1 DUS berisi 12 BOX = 12 BOX". --}}
@@ -252,7 +290,7 @@
     </div>
 
     <div class="d-flex gap-2 mb-4">
-        <button class="btn btn-primary" type="button" wire:click="simpan">{{ __('Simpan item') }}</button>
+        <button class="btn btn-primary" type="button" wire:click="simpan" data-tur-simpan>{{ __('Simpan item') }}</button>
         <a class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Batal') }}</a>
     </div>
 </div>

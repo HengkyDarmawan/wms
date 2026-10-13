@@ -9,6 +9,7 @@ use App\Domain\Approval\Contracts\ApprovalHandler;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Models\ApprovalSnapshot;
 use App\Domain\Approval\Support\ApprovalContext;
+use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\Item;
 use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\PurchaseRequest\Support\BackorderPurchases;
@@ -16,11 +17,14 @@ use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Exceptions\RequestRuleException;
 use App\Domain\Request\Models\MaterialRequest;
 use App\Domain\Request\Models\MaterialRequestLine;
+use App\Domain\Shipment\Actions\CreatePickTask;
+use App\Domain\Shipment\Exceptions\ShipmentRuleException;
 use App\Domain\Stock\Actions\ManageReservation;
 use App\Domain\Stock\Exceptions\LedgerException;
 use App\Domain\Transfer\Support\BackorderTransfers;
 use App\Domain\Warehouse\Models\Warehouse;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Penangan approval REQ untuk mesin approval (20-approval §13, D-28).
@@ -136,6 +140,26 @@ class RequestApprovalHandler implements ApprovalHandler
         activity('request')->performedOn($document)->causedBy($actor)->log('REQ disetujui');
 
         app(DomainNotifications::class)->requestDecided($document, $actor);
+
+        // A-420: tugas picking dibuat otomatis (saklar `auto_pick_request`).
+        if (FeatureSetting::enabled('auto_pick_request')) {
+            $this->cobaBuatPicking($document, $actor);
+        }
+    }
+
+    /**
+     * A-420: seperti TRF (A-107) — gagal karena stok/aturan tidak menggagalkan
+     * persetujuan; dicatat di riwayat dan tombol *Buat tugas picking* tetap ada.
+     */
+    private function cobaBuatPicking(MaterialRequest $req, ?User $actor): void
+    {
+        try {
+            DB::transaction(fn () => app(CreatePickTask::class)->handle($req->refresh(), $actor));
+        } catch (ShipmentRuleException|LedgerException $e) {
+            activity('request')->performedOn($req)->causedBy($actor)
+                ->withProperties(['aturan' => $e->rule, 'pesan' => $e->getMessage()])
+                ->log('Tugas picking belum bisa dibuat otomatis');
+        }
     }
 
     /** @param  MaterialRequest  $document */

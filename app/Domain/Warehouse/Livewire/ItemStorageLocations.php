@@ -283,7 +283,7 @@ class ItemStorageLocations extends Component
         }
 
         return [
-            'd' => $data->payload($gudang),
+            'd' => $data->payload($gudang, denganStok: false),
             'sorot' => $sorot,
             'tolak' => $tolak,
             'rakAktif' => $tersimpan === null && $this->rakBaru !== '' ? (int) $this->rakBaru : null,

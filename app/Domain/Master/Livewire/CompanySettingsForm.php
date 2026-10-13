@@ -31,6 +31,9 @@ class CompanySettingsForm extends Component
 
     public string $timezone = 'Asia/Jakarta';
 
+    /** A-419: nama perusahaan pemilik gudang. */
+    public string $nama = '';
+
     public function mount(): void
     {
         $this->authorize('company_setting.view');
@@ -45,7 +48,7 @@ class CompanySettingsForm extends Component
         $this->ruleError = '';
 
         try {
-            $action->handle($this->nilai, $this->fitur, $this->timezone, auth()->user());
+            $action->handle($this->nilai, $this->fitur, $this->timezone, auth()->user(), $this->nama);
         } catch (MasterRuleException $e) {
             // Kunci galat sudah memuat awalan properti (`nilai.<kunci>`, `timezone`).
             foreach ($e->fieldErrors as $field => $pesan) {
@@ -82,6 +85,7 @@ class CompanySettingsForm extends Component
         $this->nilai = CompanySettingCatalog::nilaiSaatIni();
         $this->fitur = CompanySettingCatalog::fiturSaatIni();
         $this->timezone = (string) (tenant()?->timezone ?? 'Asia/Jakarta');
+        $this->nama = (string) (tenant()?->name ?? '');
     }
 
     /** A-306: pengaturan Purchasing hanya tampil bagi pemegang `po.view` (D-07). */

@@ -58,7 +58,7 @@ class Item extends Model
             'kerf' => 'decimal:4',
             'reorder_point' => 'decimal:4',
             'min_stock' => 'decimal:4',
-            'weight' => 'decimal:4',
+            'measure_qty' => 'decimal:4',
         ];
     }
 
@@ -72,9 +72,10 @@ class Item extends Model
         return $this->belongsTo(Uom::class, 'base_uom_id');
     }
 
-    public function weightUom(): BelongsTo
+    /** A-413: satuan ukuran per satuan dasar (berat, panjang, volume, atau luas). */
+    public function measureUom(): BelongsTo
     {
-        return $this->belongsTo(Uom::class, 'weight_uom_id');
+        return $this->belongsTo(Uom::class, 'measure_uom_id');
     }
 
     public function uomConversions(): HasMany
@@ -264,7 +265,7 @@ class Item extends Model
                 'code', 'name', 'item_category_id', 'status', 'ownership_model',
                 'default_line_ownership', 'tracking_mode', 'has_expiry', 'base_uom_id',
                 'is_cuttable', 'min_offcut_length', 'kerf', 'requires_qc',
-                'removal_strategy', 'reorder_point', 'min_stock', 'barcode',
+                'removal_strategy', 'reorder_point', 'min_stock', 'barcode', 'measure_qty', 'measure_uom_id',
             ])
             ->logOnlyDirty();
     }

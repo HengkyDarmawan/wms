@@ -118,7 +118,7 @@ class PortalRequestDetail extends Component
         // REQ yang sudah disetujui melahirkan REQ Tambahan; klien dibawa ke
         // dokumen barunya supaya tahu tambahannya punya nomor sendiri.
         if ((int) $tujuan->id !== $this->requestId) {
-            $this->redirectRoute('portal.requests.show', $tujuan, navigate: true);
+            $this->redirectRoute('portal.requests.show', $tujuan);
 
             return;
         }

@@ -197,7 +197,7 @@ class IssueDetail extends Component
         });
 
         if ($ok && $pembalik !== null) {
-            $this->redirectRoute('issues.show', $pembalik, navigate: true);
+            $this->redirectRoute('issues.show', $pembalik);
         }
     }
 

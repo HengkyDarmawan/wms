@@ -58,7 +58,7 @@
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DWkYoLPL.css",
+    "file": "assets/app-s5Gt4FL9.css",
     "name": "app",
     "names": [
       "app.css"
@@ -84,12 +84,15 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DpG5KnwR.js",
+    "file": "assets/app-DekK4tSu.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
       "node_modules/@zxing/browser/esm/index.js"
+    ],
+    "css": [
+      "assets/app-CTZuBZOi.css"
     ]
   },
   "resources/js/landing.js": {

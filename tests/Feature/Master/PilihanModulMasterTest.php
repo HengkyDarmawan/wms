@@ -77,7 +77,7 @@ class PilihanModulMasterTest extends TenantTestCase
             ->assertSeeHtml('id="filter-klien"')->assertSeeHtml('class="nx-pilih"');
         Livewire::actingAs($admin)->test(ItemList::class)->assertSeeHtml('id="filter-kategori-item"');
         Livewire::actingAs($admin)->test(ItemForm::class)
-            ->assertSeeHtml('id="item-kategori"')->assertSeeHtml('id="item-satuan"')->assertSeeHtml('id="item-berat-satuan"');
+            ->assertSeeHtml('id="item-kategori"')->assertSeeHtml('id="item-satuan"')->assertSeeHtml('id="item-ukuran-satuan"');
         Livewire::actingAs($admin)->test(ItemCategoryList::class)->call('buat')
             ->assertSeeHtml('id="kategori-induk"')->assertSeeHtml('id="kategori-penyimpanan"');
     }

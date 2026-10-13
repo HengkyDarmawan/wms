@@ -114,6 +114,33 @@ class ReceiptScreenTest extends TenantTestCase
         $this->assertSame(1, $grn->putawayTasks()->count());
     }
 
+    /**
+     * TC-GRN-30 (A-420) — Terima & selesaikan sekali klik: tanpa QC → dialog jumlah
+     * dus (barang berlabel) lalu Selesai + PUT; ada baris QC → berhenti di Diterima.
+     */
+    #[Test]
+    public function tc_grn_30_terima_dan_selesaikan_sekali_klik(): void
+    {
+        $staf = $this->makeUser('warehouse_staff');
+
+        $grn = $this->grnDraf([['item_id' => $this->baut->id, 'qty_received' => 5]]);
+        $layar = Livewire::actingAs($staf)->test(ReceiptDetail::class, ['goodsReceipt' => $grn])
+            ->assertSeeHtml('data-terima-selesaikan')
+            ->call('terimaDanSelesaikan')->assertSet('ruleError', '');
+
+        if ($layar->get('dialog') === 'selesai') {
+            $layar->call('selesaikan')->assertSet('ruleError', '');
+        }
+
+        $this->assertSame('completed', $grn->refresh()->status->value);
+        $this->assertSame(1, $grn->putawayTasks()->count());
+
+        $qc = $this->grnDraf([['item_id' => $this->kabel->id, 'qty_received' => 10]]);
+        Livewire::actingAs($staf)->test(ReceiptDetail::class, ['goodsReceipt' => $qc])
+            ->call('terimaDanSelesaikan')->assertSet('ruleError', '');
+        $this->assertSame('received', $qc->refresh()->status->value, 'Barang QC berhenti setelah Diterima.');
+    }
+
     #[Test]
     public function tc_grn_21_grn_gudang_lain_tidak_ditemukan(): void
     {

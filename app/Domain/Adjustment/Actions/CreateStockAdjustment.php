@@ -11,11 +11,13 @@ use App\Domain\Adjustment\Exceptions\AdjustmentRuleException;
 use App\Domain\Adjustment\Models\StockAdjustment;
 use App\Domain\Adjustment\Models\StockAdjustmentLine;
 use App\Domain\Adjustment\Support\AdjustmentLines;
+use App\Domain\Adjustment\Support\AdjustmentPoster;
 use App\Domain\Approval\Enums\ApprovalDocumentType;
 use App\Domain\Approval\Support\ApprovalEngine;
 use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Serial;
+use App\Domain\Master\Support\SetupWizard;
 use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Stock\Models\StockBalance;
@@ -33,6 +35,12 @@ use Illuminate\Support\Facades\DB;
  * penangan memberi satu lapis Kepala Gudang. Alasan dokumen wajib dari master
  * Alasan konteks penyesuaian (BR-GEN-02).
  *
+ * Pengecualian A-415 — **saldo awal masa setup**: selama Setup awal belum
+ * ditandai selesai, ADJ manual beralasan Saldo awal (semua baris menambah)
+ * yang diajukan pemegang `company_setting.manage` (Admin Company / tim IT)
+ * langsung `submitted → approved → posted`, seperti ADJ dari OPN yang
+ * approval-nya di sesi (Katalog §2.12). Jejak tetap: activity log + kartu stok.
+ *
  * `reverse()` membuat **ADJ pembalik** untuk ADJ yang sudah diposting
  * (BR-GEN-03): baris sama dengan jumlah berlawanan, `reversal_of_id` menunjuk
  * ADJ asal, dan saat diposting pergerakan asal dibalik sekali saja
@@ -44,6 +52,8 @@ class CreateStockAdjustment
         private readonly AdjustmentLines $lines,
         private readonly DocumentNumber $nomor,
         private readonly ApprovalEngine $approval,
+        private readonly AdjustmentPoster $poster,
+        private readonly SetupWizard $setup,
     ) {}
 
     /**
@@ -247,11 +257,35 @@ class CreateStockAdjustment
     /** Katalog §2.12: manual `submitted → pending_approval` selalu (A-09). */
     private function ajukan(StockAdjustment $adj, ?User $actor): StockAdjustment
     {
+        if ($this->saldoAwalMasaSetup($adj, $actor)) {
+            $adj->forceFill(['status' => StockAdjustmentStatus::Approved])->save();
+
+            activity('adjustment')->performedOn($adj)->causedBy($actor)
+                ->log('Saldo awal masa setup — langsung tercatat tanpa approval (A-415)');
+
+            return $this->poster->post($adj, $actor);
+        }
+
         $adj->forceFill(['status' => StockAdjustmentStatus::PendingApproval])->save();
 
         $this->approval->submit(ApprovalDocumentType::StockAdjustment, $adj, $actor);
 
         return $adj->refresh();
+    }
+
+    /** A-415: saldo awal oleh Admin Company/tim IT selama Setup awal belum ditandai selesai. */
+    private function saldoAwalMasaSetup(StockAdjustment $adj, ?User $actor): bool
+    {
+        if ($actor === null || $adj->origin !== AdjustmentOrigin::Manual || $adj->reversal_of_id !== null
+            || ! $actor->hasPermission('company_setting.manage') || $this->setup->isCompleted()) {
+            return false;
+        }
+
+        if (ReasonCode::query()->whereKey($adj->reason_code_id)->value('code') !== SetupWizard::ALASAN_SALDO_AWAL) {
+            return false;
+        }
+
+        return ! $adj->lines()->where('qty_delta', '<=', 0)->exists();
     }
 
     private function teks(mixed $nilai): ?string

@@ -18,6 +18,12 @@
                     </button>
                 </form>
             @endif
+            @if ($bisaAktifkanSekaligus)
+                <button class="btn btn-success" type="button" wire:click="aktifkanDanBuatkanPassword" data-aktifkan-sekaligus
+                        wire:confirm="{{ __('Aktifkan akun ini dan buatkan password sekarang?') }}">
+                    <i class="bi bi-person-check"></i> {{ __('Aktifkan & buatkan password') }}
+                </button>
+            @endif
             @can('update', $user)
                 <a class="btn btn-primary" href="{{ route('users.edit', $user) }}">
                     <i class="bi bi-pencil"></i> {{ __('Ubah') }}

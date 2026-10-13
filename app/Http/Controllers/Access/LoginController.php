@@ -8,6 +8,7 @@ use App\Domain\Access\Actions\RecordFailedLogin;
 use App\Domain\Access\Enums\LoginResult;
 use App\Domain\Access\Models\LoginAttempt;
 use App\Domain\Access\Models\User;
+use App\Domain\Access\Support\DemoLogin;
 use App\Domain\Platform\Enums\SubscriptionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureSubscriptionState;
@@ -36,6 +37,30 @@ class LoginController extends Controller
     public function showPortal(): View
     {
         return view('access.auth.login', ['portal' => true]);
+    }
+
+    /** A-417: halaman depan untuk tamu — tombol Masuk, Coba demo (A-418), portal klien. */
+    public function welcome(): View
+    {
+        return view('access.auth.welcome');
+    }
+
+    /**
+     * A-418: Coba demo — masuk sekali klik sebagai pengguna aktif peran itu.
+     * 404 bila `WMS_DEMO_LOGIN` mati atau peran tidak punya pengguna aktif.
+     */
+    public function demo(Request $request, string $peran): RedirectResponse
+    {
+        abort_unless(DemoLogin::enabled(), 404);
+
+        $user = DemoLogin::pengguna($peran);
+        abort_if($user === null, 404);
+
+        activity('access')->performedOn($user)->causedBy($user)
+            ->withProperties(['peran' => $peran, 'ip' => $request->ip()])
+            ->log('Masuk demo sebagai '.DemoLogin::PERAN[$peran]);
+
+        return $this->completeLogin($request, $user, false, false);
     }
 
     public function store(Request $request): RedirectResponse

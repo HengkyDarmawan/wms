@@ -137,7 +137,7 @@ class ShipmentForm extends Component
             return;
         }
 
-        $this->redirectRoute('shipments.show', $sj, navigate: true);
+        $this->redirectRoute('shipments.show', $sj);
     }
 
     public function render(): View

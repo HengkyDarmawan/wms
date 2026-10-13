@@ -62,8 +62,10 @@ class SaveUom
 
         $adalahAcuan = ! $baru && (int) $kategori->reference_uom_id === (int) $uom->getKey();
         $faktor = $this->angkaAtauNull($attributes['factor_to_reference'] ?? null);
+        // A-411: kemasan (isi ditentukan per barang, A-294) selalu berfaktor 1; satuan acuan bukan kemasan.
+        $kemasan = ! $adalahAcuan && filter_var($attributes['is_packaging'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
-        if ($adalahAcuan) {
+        if ($adalahAcuan || $kemasan) {
             $faktor = 1.0;
         }
 
@@ -79,6 +81,7 @@ class SaveUom
             'code' => $kode,
             'name' => $nama,
             'factor_to_reference' => $faktor,
+            'is_packaging' => $kemasan,
             'rounding' => $this->angkaAtauNull($attributes['rounding'] ?? null),
         ];
 

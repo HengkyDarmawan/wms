@@ -9,6 +9,7 @@ use App\Domain\Adjustment\Actions\ImportOpeningStock;
 use App\Domain\Adjustment\Models\StockAdjustment;
 use App\Domain\Master\Support\SetupWizard;
 use App\Domain\Stock\Livewire\BalanceList;
+use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Support\MovementRequest;
 use App\Domain\Stock\Support\StockLedger;
 use App\Domain\Warehouse\Actions\MergeBins;
@@ -91,7 +92,7 @@ class SetupLokasiTest extends TenantTestCase
     }
 
     /**
-     * TC-MST-21c (A-402) — langkah rak & bin menaut ke Denah (bukan /bins); langkah saldo awal
+     * TC-MST-21c (A-402, A-414) — langkah rak & bin menaut ke tab Zona & rak di detail gudang, Denah jadi tautan tambahan; langkah saldo awal
      * menaut ke form Penyesuaian beralasan Saldo awal, menjelaskan "menunggu approval" selama
      * ADJ belum disetujui, dan tercentang setelah disetujui.
      */
@@ -100,8 +101,14 @@ class SetupLokasiTest extends TenantTestCase
     {
         $langkah = collect(app(SetupWizard::class)->steps());
         $bins = $langkah->firstWhere('key', 'bins');
-        $this->assertStringContainsString('/warehouses/'.$this->gudang->id.'/layout', (string) $bins['url']);
+        $this->assertStringEndsWith('/warehouses/'.$this->gudang->id, (string) $bins['url']);
+        $this->assertTrue(collect($bins['links'])->contains(fn ($l) => str_ends_with($l['url'], '/warehouses/'.$this->gudang->id.'/layout')));
         $this->assertTrue(collect($bins['links'])->contains(fn ($l) => str_ends_with($l['url'], '#impor-bins')));
+
+        // A-414: item diisi manual lebih dulu; impor Excel hanya tautan tambahan.
+        $item = $langkah->firstWhere('key', 'items');
+        $this->assertStringEndsWith('/items/create', (string) $item['url']);
+        $this->assertTrue(collect($item['links'])->contains(fn ($l) => str_ends_with($l['url'], '#impor-items')));
 
         $saldo = $langkah->firstWhere('key', 'opening');
         $this->assertStringContainsString('/adjustments/create?reason=OPENING', (string) $saldo['url']);
@@ -109,13 +116,15 @@ class SetupLokasiTest extends TenantTestCase
         $this->assertTrue($saldo['done'], 'Fixture opname sudah punya saldo.');
 
         // Saldo dikosongkan: langkah belum selesai dan belum ada catatan.
-        \App\Domain\Stock\Models\StockBalance::query()->update(['qty_base' => 0]);
+        StockBalance::query()->update(['qty_base' => 0]);
         $saldo = collect(app(SetupWizard::class)->steps())->firstWhere('key', 'opening');
         $this->assertFalse($saldo['done']);
         $this->assertNull($saldo['catatan']);
 
         // Impor saldo awal → ADJ OPENING menunggu approval → catatan menjelaskan kenapa belum tercentang.
+        // (Setelah setup ditandai selesai; selama setup saldo awal admin langsung tercatat — A-415, TC-ADJ-31.)
         $admin = $this->makeUser('company_admin');
+        app(SetupWizard::class)->complete($admin);
         $this->actingAs($admin)->post($this->tenantUrl('imports/opening-stock'), ['file' => $this->berkas([
             ['CKG', $this->binA->code, 'BAUT-OPN', 5, '', '', '', '', '', ''],
         ])])->assertSessionHasNoErrors();
@@ -139,6 +148,7 @@ class SetupLokasiTest extends TenantTestCase
     public function tc_adj_12b_impor_saldo_awal_tanpa_kode_bin_memakai_tempat_simpan(): void
     {
         $admin = $this->makeUser('company_admin');
+        app(SetupWizard::class)->complete($admin);
         $this->b('B01')->forceFill(['capacity_qty' => 50])->save();
         app(SaveItemStorageLocations::class)->replace($this->baut, $this->gudang, [
             ['tempat' => 'bin:'.$this->b('B01')->id],

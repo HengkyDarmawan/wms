@@ -298,7 +298,7 @@ class ConversionForm extends Component
         $cnv = $this->simpanDraf($action);
 
         if ($cnv !== null) {
-            $this->redirectRoute('conversions.show', $cnv, navigate: true);
+            $this->redirectRoute('conversions.show', $cnv);
         }
     }
 
@@ -316,7 +316,7 @@ class ConversionForm extends Component
             : $selesai->handle($cnv, auth()->user()));
 
         if ($ok) {
-            $this->redirectRoute('conversions.show', $cnv, navigate: true);
+            $this->redirectRoute('conversions.show', $cnv);
         }
     }
 

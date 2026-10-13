@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Domain\Platform\Support\SingleCompany;
 use App\Http\Controllers\Access\TwoFactorSetupController;
 use App\Http\Controllers\Central\LandingController;
 use App\Http\Controllers\Platform\CompanyController;
@@ -28,21 +29,26 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-$centralDomains = (array) config('tenancy.central_domains', ['wms.test']);
+// A-417: mode satu company — rute pusat didaftarkan sekali TANPA batasan domain,
+// supaya /admin melayani host tunggal (APP_URL) dan route() menunjuk host itu.
+$centralDomains = SingleCompany::enabled() ? [null] : (array) config('tenancy.central_domains', ['wms.test']);
 
 foreach ($centralDomains as $index => $domain) {
-    Route::domain($domain)->group(function () use ($index): void {
+    ($domain === null ? Route::prefix('') : Route::domain($domain))->group(function () use ($index): void {
         // Nama route cukup dipasang sekali; domain lain hanya alias.
         $utama = $index === 0;
 
         // Landing page produk (30-landing-page). "Masuk ke company Anda" hanya
         // mengalihkan ke subdomain company lewat GET tanpa mengubah data (A-221).
-        $home = Route::get('/', [LandingController::class, 'show']);
-        $masuk = Route::get('/masuk', [LandingController::class, 'enter'])->middleware('throttle:60,1');
+        // A-417: mode satu company — "/" milik aplikasi company (halaman depan /selamat-datang).
+        if (! SingleCompany::enabled()) {
+            $home = Route::get('/', [LandingController::class, 'show']);
+            $masuk = Route::get('/masuk', [LandingController::class, 'enter'])->middleware('throttle:60,1');
 
-        if ($utama) {
-            $home->name('central.home');
-            $masuk->name('central.enter');
+            if ($utama) {
+                $home->name('central.home');
+                $masuk->name('central.enter');
+            }
         }
 
         // WhatsApp Fase 2a (31-whatsapp §6, Arsitektur §8): webhook Meta (tanpa CSRF,

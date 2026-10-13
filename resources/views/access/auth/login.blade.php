@@ -46,6 +46,10 @@
         <button class="btn btn-primary w-100 btn-lg" type="submit">{{ __('Masuk') }}</button>
     </form>
 
+    @unless ($portal)
+        @include('access.auth.partials.coba-demo')
+    @endunless
+
     <p class="text-center text-muted small mt-4 mb-0">
         @if ($portal)
             {{ __('Karyawan company?') }} <a class="nx-link" href="{{ route('login') }}">{{ __('Masuk di sini') }}</a>

@@ -1,8 +1,8 @@
 # Blueprint WMS Proyek
 
-**Versi:** 0.8 (v0.8: §9 selisih besar ikut dihitung ulang, A-259; pasca-validasi & diskusi lanjutan 23 Sep 2026 — lihat [laporan validasi](../00-laporan-validasi-2026-09-23.md), [laporan audit](../00-laporan-audit-dokumentasi.md), dan catatan perubahan di [README](../README.md))
-**Tanggal:** 26 September 2026
-**Status:** D-01–D-29; A-01–A-49 dan A-51–A-66 disetujui (A-40 diubah); [A-50](04-keputusan-dan-asumsi.md#a-50) menunggu validasi
+**Versi:** 0.9 (v0.9: baris status — A-50 sudah disetujui; v0.8: §9 selisih besar ikut dihitung ulang, A-259; pasca-validasi & diskusi lanjutan 23 Sep 2026 — lihat [laporan validasi](../00-laporan-validasi-2026-09-23.md), [laporan audit](../00-laporan-audit-dokumentasi.md), dan catatan perubahan di [README](../README.md))
+**Tanggal:** 7 Oktober 2026
+**Status:** D-01–D-29; A-01–A-49 dan A-51–A-66 disetujui (A-40 diubah); [A-50](04-keputusan-dan-asumsi.md#a-50) disetujui 24 Sep 2026; asumsi sesudah A-66 dan statusnya ada di [04](04-keputusan-dan-asumsi.md), [04b](04b-asumsi-lanjutan.md), [04c](04c-asumsi-lanjutan.md)
 **Sumber:** sesi diskusi kebutuhan dengan pemilik produk · audit prototipe ([00-audit](../00-audit/README.md)) · [riset](02-riset-wms-sejenis.md)
 **Dokumen terkait:** [Glosarium](03-glosarium.md) · [Keputusan & Asumsi](04-keputusan-dan-asumsi.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Katalog Status & Enum](06-katalog-status-dan-enum.md)
 

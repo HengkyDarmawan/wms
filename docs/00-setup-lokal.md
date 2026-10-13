@@ -1,8 +1,8 @@
 # Setup Lokal — menjalankan dan mengetes aplikasi
 
-**Versi:** 1.10
-**Tanggal:** 28 September 2026
-**Status:** aktif — dua profil mesin dev: **rumah** (XAMPP3 + MariaDB 10.4) dan **kantor** (XAMPP + MariaDB 10.4), keduanya [A-76](wms/04-keputusan-dan-asumsi.md#a-76) / [A-162](wms/04-keputusan-dan-asumsi.md#a-162); v1.5: mesin rumah pindah dari Laragon ke `C:\xampp3`; v1.6: batas unggah PHP untuk foto 20 MB (§4); v1.7: tombol kamera butuh HTTPS atau `localhost` (§7, A-266)
+**Versi:** 1.12
+**Tanggal:** 13 Oktober 2026
+**Status:** aktif — v1.12: profil tanpa hosts — mode satu company & Coba demo (A-417, A-418); v1.11: OPcache wajib (§4, A-414); dua profil mesin dev: **rumah** (XAMPP3 + MariaDB 10.4) dan **kantor** (XAMPP + MariaDB 10.4), keduanya [A-76](wms/04-keputusan-dan-asumsi.md#a-76) / [A-162](wms/04-keputusan-dan-asumsi.md#a-162); v1.5: mesin rumah pindah dari Laragon ke `C:\xampp3`; v1.6: batas unggah PHP untuk foto 20 MB (§4); v1.7: tombol kamera butuh HTTPS atau `localhost` (§7, A-266)
 **Dokumen terkait:** [Akun uji](00-akun-uji.md) · [Arsitektur §10](wms/08-arsitektur.md#10-lingkungan) · [README](README.md) · [`../CLAUDE.md`](../CLAUDE.md)
 
 Panduan dari klon bersih sampai bisa login dan mencoba alur REQ → PCK → SJ di browser. Semua akun dan password berasal dari [00-akun-uji](00-akun-uji.md). Semua database berprefiks `wms_`; MySQL/MariaDB lokal dipakai bersama proyek lain, jadi **jangan menyentuh database lain**.
@@ -51,6 +51,8 @@ Berkas hosts `C:\Windows\System32\drivers\etc\hosts` (buka Notepad **sebagai Adm
 
 Berkas hosts tidak mengenal wildcard: company baru dengan kode lain butuh satu baris lagi (`<kode>.wms.test`).
 
+**Tanpa berkas hosts — mode satu company** ([A-417](wms/04c-asumsi-lanjutan.md#a-417)): isi `.env` dengan `WMS_SINGLE_COMPANY=demo` dan `APP_URL=http://localhost:8000`, lalu buka `http://localhost:8000` — langsung company DEMO, tanpa subdomain. Super Admin tetap di `http://localhost:8000/admin/login`. Untuk demo ke orang lain tambahkan `WMS_DEMO_LOGIN=true` (tombol *Coba demo* di halaman login, [A-418](wms/04c-asumsi-lanjutan.md#a-418)); **jangan** dinyalakan di server berisi data sungguhan. Kosongkan `WMS_SINGLE_COMPANY` untuk kembali ke alamat per subdomain.
+
 ## 3. Database dan data demo
 
 ```bash
@@ -79,10 +81,24 @@ Identifikasi company memakai host tanpa port, jadi `:8000` tidak mengganggu. Ses
 | Halaman | Alamat | Akun |
 |---|---|---|
 | Super Admin | `wms.test:8000/admin/login` | `superadmin@wms.test` / `Wms#2026!Admin` |
-| Back-office company | `demo.wms.test:8000/login` | akun [00-akun-uji §3](00-akun-uji.md#3-akun-tenant-demowmstest), password `Demo#2026!` |
+| Back-office company | `demo.wms.test:8000/login` (mode satu company: `localhost:8000/login`) | akun [00-akun-uji §3](00-akun-uji.md#3-akun-tenant-demowmstest), password `Demo#2026!` |
 | Portal klien | `demo.wms.test:8000/portal/login` | `klien1@klien-satu.test` / `Demo#2026!` |
 
 Surel (undangan, reset password) masuk ke `storage/logs/laravel.log` karena `MAIL_MAILER=log`.
+
+### OPcache (wajib, kecepatan)
+
+Tanpa OPcache, PHP menyusun ulang ribuan berkas Laravel di setiap klik; halaman kosong saja butuh ±1 detik dan daftar item 2–3 detik. Dengan OPcache: 0,1–0,3 detik ([A-414](wms/04c-asumsi-lanjutan.md#a-414)). Di php.ini (kantor `C:\xampp\php-8.3.33\php.ini`, rumah `C:\xampp3\php\php.ini`) buang `;` di depan baris berikut dan samakan nilainya:
+
+| Kunci php.ini | Nilai | Alasan |
+|---|---|---|
+| `zend_extension` | `opcache` | Memuat ekstensi |
+| `opcache.enable` / `opcache.enable_cli` | `1` / `1` | `php artisan serve` berjalan sebagai CLI |
+| `opcache.memory_consumption` | `256` | Cukup untuk vendor + aplikasi |
+| `opcache.max_accelerated_files` | `20000` | Jumlah berkas PHP proyek |
+| `opcache.validate_timestamps` / `opcache.revalidate_freq` | `1` / `0` | Perubahan kode langsung terbaca saat mengembangkan |
+
+Periksa dengan `php -r "var_dump(function_exists('opcache_get_status'));"` (harus `true`), lalu hentikan dan jalankan ulang `php artisan serve`. **Jangan** `php artisan config:cache` di mesin dev: uji otomatis akan membaca konfigurasi tersimpan dan bisa mengenai database non-uji.
 
 ### Batas unggah PHP
 

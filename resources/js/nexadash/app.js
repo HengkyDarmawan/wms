@@ -270,7 +270,8 @@
       $(this).closest('.nx-menu-section').addClass('has-active');
     });
 
-    initSidebarSections(matched);
+    // Server sudah membuka grup halaman aktif (termasuk halaman detail) — anggap cocok.
+    initSidebarSections(matched || $('#nxSidebar .nx-section-body.show').length > 0);
 
     // Clone submenu menjadi flyout untuk mode collapsed.
     $('#nxSidebar .nx-menu-item.has-submenu').each(function () {

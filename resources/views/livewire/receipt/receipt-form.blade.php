@@ -6,7 +6,18 @@
                 {{ __('Draf belum menyentuh stok. Stok tercatat saat GRN diterima.') }}
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Kembali') }}</a>
+        <div class="d-flex flex-wrap gap-2">
+            {{-- A-414: pemandu di layar. --}}
+            <x-tur kunci="penerimaan" :langkah="[
+                ['el' => '', 'judul' => __('Penerimaan barang (GRN)'), 'isi' => __('Mencatat barang datang dari vendor. Draf belum mengubah stok; stok bertambah setelah GRN diterima.')],
+                ['el' => '#grn-sumber', 'judul' => __('1. Sumber'), 'isi' => __('Untuk barang dari vendor pilih Vendor. Retur dari proyek dan transfer antar-gudang punya pilihan sendiri.')],
+                ['el' => '[class^=col]:has(#grn-gudang)', 'judul' => __('2. Gudang penerima'), 'isi' => __('Gudang tempat barang diturunkan.')],
+                ['el' => '[class^=col]:has(#grn-vendor)', 'judul' => __('3. Vendor'), 'isi' => __('Ketik minimal 2 huruf nama vendor untuk mencari. Nomor surat jalan vendor dan nomor PO boleh diisi.')],
+                ['el' => '[data-tambah-baris]', 'judul' => __('4. Baris barang'), 'isi' => __('Satu baris per barang: pilih item, isi jumlah dan satuannya. Tambah baris untuk barang berikutnya.')],
+                ['el' => '[data-simpan-draf]', 'judul' => __('5. Simpan draf'), 'isi' => __('Lalu di halaman detail klik Terima barang, kemudian Selesaikan. Dianggap selesai bila status GRN Selesai dan muncul di Barang masuk, Tugas put-away.')],
+            ]" />
+            <a class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Kembali') }}</a>
+        </div>
     </div>
 
     @if ($ruleError !== '')
@@ -177,7 +188,7 @@
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <strong>{{ __('Baris barang') }}</strong>
-                <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tambahBaris">{{ __('Tambah baris') }}</button>
+                <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tambahBaris" data-tambah-baris>{{ __('Tambah baris') }}</button>
             </div>
             <div class="card-body">
                 <p class="text-muted small">
@@ -333,7 +344,7 @@
     @endif
 
     <div class="d-flex gap-2">
-        <button class="btn btn-primary" type="button" wire:click="simpan">{{ __('Simpan draf') }}</button>
+        <button class="btn btn-primary" type="button" wire:click="simpan" data-simpan-draf>{{ __('Simpan draf') }}</button>
         <a class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Batal') }}</a>
     </div>
 </div>

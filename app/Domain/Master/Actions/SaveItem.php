@@ -128,8 +128,9 @@ class SaveItem
             'qr_payload' => $this->kosongJadiNull($attributes['qr_payload'] ?? null),
             'photo_path' => $this->kosongJadiNull($attributes['photo_path'] ?? null),
             'dimensions' => $attributes['dimensions'] ?? $item?->dimensions,
-            'weight' => $this->angkaAtauNull($attributes['weight'] ?? null),
-            'weight_uom_id' => $this->idAtauNull($attributes['weight_uom_id'] ?? null),
+            // A-413: ukuran per satuan dasar — informasi, satuan kategori mana pun kecuali Hitung.
+            'measure_qty' => $this->angkaAtauNull($attributes['measure_qty'] ?? null),
+            'measure_uom_id' => $this->idAtauNull($attributes['measure_uom_id'] ?? null),
         ];
 
         // A-294: form item mengirim satuan kemasan yang dimuatnya; hanya kemasan itu yang boleh

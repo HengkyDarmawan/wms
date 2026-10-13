@@ -7,10 +7,12 @@ namespace App\Providers;
 use App\Domain\Stock\Models\StockMovement;
 use App\Domain\Warehouse\Actions\MergeBins;
 use App\Domain\Warehouse\Livewire\BinList;
+use App\Domain\Warehouse\Livewire\BinMove;
 use App\Domain\Warehouse\Livewire\ItemStorageLocations;
 use App\Domain\Warehouse\Livewire\WarehouseDetail;
 use App\Domain\Warehouse\Livewire\WarehouseLayout;
 use App\Domain\Warehouse\Livewire\WarehouseList;
+use App\Domain\Warehouse\Livewire\WarehouseLocations;
 use App\Domain\Warehouse\Livewire\WarehouseTypeList;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
@@ -51,6 +53,8 @@ class WarehouseServiceProvider extends ServiceProvider
     {
         Livewire::component('warehouse.warehouse-list', WarehouseList::class);
         Livewire::component('warehouse.warehouse-detail', WarehouseDetail::class);
+        Livewire::component('warehouse.warehouse-locations', WarehouseLocations::class);
+        Livewire::component('warehouse.bin-move', BinMove::class);
         Livewire::component('warehouse.bin-list', BinList::class);
         Livewire::component('warehouse.type-list', WarehouseTypeList::class);
         Livewire::component('warehouse.warehouse-layout', WarehouseLayout::class);

@@ -124,7 +124,7 @@
                             @endif
                         </td>
                         <td class="font-monospace">
-                            <label for="lbl-pilih-{{ $l->id }}"><a href="{{ route('labels.trace', ['code' => $l->code]) }}" wire:navigate>{{ $l->code }}</a></label>
+                            <label for="lbl-pilih-{{ $l->id }}"><a href="{{ route('labels.trace', ['code' => $l->code]) }}">{{ $l->code }}</a></label>
                             @if ($l->children->isNotEmpty())
                                 <div class="small text-muted">{{ __(':n label isi', ['n' => $l->children->count()]) }}
                                     · {{ __(':n di gudang', ['n' => $l->children->filter(fn ($c) => $c->status->value === 'in_stock')->count()]) }}</div>

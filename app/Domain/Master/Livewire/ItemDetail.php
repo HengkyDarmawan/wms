@@ -54,7 +54,7 @@ class ItemDetail extends Component
         $this->item->load([
             'category',
             'baseUom.category',
-            'weightUom',
+            'measureUom',
             'activeConversions.uom',
             'activeConversions.contentUom',
         ]);

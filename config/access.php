@@ -37,6 +37,18 @@ return [
         'enabled' => (bool) env('WMS_IMPERSONATION', env('APP_ENV', 'production') !== 'production'),
     ],
 
+    /*
+     * A-417: mode satu company — semua host membuka company bersubdomain ini
+     * (tanpa subdomain, baris hosts, atau SSL wildcard). Kosong = multi-company.
+     */
+    'single_company' => env('WMS_SINGLE_COMPANY') ?: null,
+
+    /*
+     * A-418: kartu "Coba demo" di halaman login — masuk sekali klik sebagai
+     * pengguna aktif per peran. Bawaan MATI; nyalakan hanya di server demo.
+     */
+    'demo_login' => (bool) env('WMS_DEMO_LOGIN', false),
+
     'two_factor' => [
         'max_attempts' => (int) env('ACCESS_2FA_MAX_ATTEMPTS', 5),
         'recovery_codes' => 8,

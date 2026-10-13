@@ -50,6 +50,9 @@ class User extends Authenticatable
     /** Cache per instance agar satu request tidak menghitung ulang. */
     private ?array $permissionCache = null;
 
+    /** Penugasan role berlaku, di-cache per instance — dipakai scope setiap query model bercakupan. */
+    private ?Collection $assignmentCache = null;
+
     protected function casts(): array
     {
         return [
@@ -167,7 +170,7 @@ class User extends Authenticatable
     /** Penugasan role yang berlaku hari ini. */
     public function validAssignments(): Collection
     {
-        return $this->roleAssignments()
+        return $this->assignmentCache ??= $this->roleAssignments()
             ->valid()
             ->with('role')
             ->get()
@@ -222,6 +225,7 @@ class User extends Authenticatable
     public function forgetPermissionCache(): void
     {
         $this->permissionCache = null;
+        $this->assignmentCache = null;
     }
 
     /**

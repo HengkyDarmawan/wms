@@ -21,6 +21,7 @@
         ['izin' => 'receipt.create', 'route' => 'receipts.create', 'label' => __('Penerimaan baru'), 'ikon' => 'bi-plus-square'],
         ['izin' => 'putaway.view', 'route' => 'putaways.index', 'label' => __('Tugas put-away'), 'ikon' => 'bi-inboxes'],
         ['izin' => 'putaway.view', 'route' => 'putaways.waiting', 'label' => __('Menunggu dimasukkan (pindai put-away)'), 'ikon' => 'bi-upc-scan'],
+        ['izin' => 'putaway.complete', 'route' => 'bin-moves.create', 'label' => __('Pindah bin'), 'ikon' => 'bi-arrow-left-right'],
         ['izin' => 'vendor_return.view', 'route' => 'vendor-returns.index', 'label' => __('Retur ke vendor'), 'ikon' => 'bi-arrow-return-left'],
         ['izin' => 'vendor_return.create', 'route' => 'vendor-returns.create', 'label' => __('RTV baru'), 'ikon' => 'bi-plus-square'],
         ['izin' => 'transfer.view', 'route' => 'transfers.index', 'label' => __('Transfer'), 'ikon' => 'bi-arrow-left-right'],

@@ -20,6 +20,14 @@ class BinController extends Controller
         return view('warehouse.bins.index');
     }
 
+    /** A-416: Pindah bin — izin `putaway.complete` diperiksa komponen & aksinya. */
+    public function move(): View
+    {
+        abort_unless(auth()->user()?->hasPermission('putaway.complete'), 403);
+
+        return view('warehouse.bins.move');
+    }
+
     /**
      * Isi Bin (K-G, A-374) — tujuan QR label bin. Bin dicari lewat query
      * bercakupan (BR-ACC-05): bin di luar gudang pengguna = tidak ditemukan.

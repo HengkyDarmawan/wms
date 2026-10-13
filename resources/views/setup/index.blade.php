@@ -8,15 +8,26 @@
             <h1 class="h3 mb-1">{{ __('Setup awal company') }}</h1>
             <p class="text-muted mb-0">{{ __('Ikuti langkah berikut agar company siap dipakai. Langkah dicentang otomatis begitu datanya ada.') }}</p>
         </div>
-        <span class="badge text-bg-{{ $completed ? 'success' : 'secondary' }} fs-6">{{ $progress['done'] }}/{{ $progress['total'] }}</span>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            {{-- A-414: pemandu di layar. --}}
+            <x-tur kunci="setup" :langkah="[
+                ['el' => '', 'judul' => __('Setup awal'), 'isi' => __('Daftar ini urutan menyiapkan company dari nol. Kerjakan dari atas ke bawah; tiap langkah tercentang sendiri begitu datanya ada.')],
+                ['el' => '[data-langkah]', 'judul' => __('Satu langkah'), 'isi' => __('Judul = apa yang dikerjakan, tulisan kecil = caranya, Dianggap selesai bila = tanda langkah beres. Klik tombol di kanan untuk membuka layarnya.')],
+                ['el' => '[data-langkah] .btn', 'judul' => __('Tombol Kerjakan'), 'isi' => __('Membuka layar yang tepat. Di layar itu ada tombol Tunjukkan caranya lagi bila bingung.')],
+                ['el' => '', 'judul' => __('Impor Excel tidak wajib'), 'isi' => __('Semua data bisa diisi satu per satu. Impor Excel hanya jalan pintas bila datanya banyak.')],
+                ['el' => '[data-tandai-selesai]', 'judul' => __('Terakhir'), 'isi' => __('Bila semua langkah wajib tercentang, klik Tandai setup selesai.')],
+            ]" />
+            <span class="badge text-bg-{{ $completed ? 'success' : 'secondary' }} fs-6">{{ $progress['done'] }}/{{ $progress['total'] }}</span>
+        </div>
     </div>
 
     @if ($errors->any()) <div class="alert alert-danger" role="alert">{{ $errors->first() }}</div> @endif
 
     <div class="card mb-3">
         <ol class="list-group list-group-flush list-group-numbered">
+            @php($langkahTur = collect($steps)->first(fn ($s) => ! $s['done'] && $s['url'])['key'] ?? ($steps[0]['key'] ?? null))
             @foreach ($steps as $s)
-                <li class="list-group-item d-flex justify-content-between align-items-start gap-2">
+                <li class="list-group-item d-flex justify-content-between align-items-start gap-2" @if ($s['key'] === $langkahTur) data-langkah @endif>
                     <div class="ms-2 me-auto">
                         <div class="fw-semibold">
                             {{ __($s['label']) }}
@@ -72,7 +83,7 @@
             @else
                 <form method="POST" action="{{ route('setup.complete') }}">
                     @csrf
-                    <button class="btn btn-primary" type="submit" @disabled($progress['required_left'] > 0)>{{ __('Tandai setup selesai') }}</button>
+                    <button class="btn btn-primary" type="submit" @disabled($progress['required_left'] > 0) data-tandai-selesai>{{ __('Tandai setup selesai') }}</button>
                     @if ($progress['required_left'] > 0) <span class="small text-muted ms-2">{{ __(':n langkah wajib tersisa', ['n' => $progress['required_left']]) }}</span> @endif
                 </form>
             @endif

@@ -95,7 +95,7 @@ class ReturnForm extends Component
         });
 
         if ($ok && $ret !== null) {
-            $this->redirectRoute($this->portal ? 'portal.returns.show' : 'returns.show', $ret, navigate: true);
+            $this->redirectRoute($this->portal ? 'portal.returns.show' : 'returns.show', $ret);
         }
     }
 

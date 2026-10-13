@@ -38,7 +38,8 @@ class EventMail extends Notification
         }
 
         if ($this->url) {
-            $akar = $tenant === null ? rtrim((string) config('app.url'), '/') : 'https://'.$tenant->host();
+            // Skema & port mengikuti APP_URL lewat Company::url() (juga mode satu company, A-417).
+            $akar = $tenant === null ? rtrim((string) config('app.url'), '/') : rtrim($tenant->url(), '/');
             $pesan->action('Buka', str_starts_with($this->url, 'http') ? $this->url : $akar.$this->url);
         }
 

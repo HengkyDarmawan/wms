@@ -149,7 +149,7 @@ class ReturnDetail extends Component
         }, 'jemput');
 
         if ($ok && $sj !== null) {
-            $this->redirectRoute('shipments.show', $sj, navigate: true);
+            $this->redirectRoute('shipments.show', $sj);
         }
     }
 
@@ -170,7 +170,7 @@ class ReturnDetail extends Component
         });
 
         if ($ok && $grn !== null) {
-            $this->redirectRoute('receipts.show', $grn, navigate: true);
+            $this->redirectRoute('receipts.show', $grn);
         }
     }
 

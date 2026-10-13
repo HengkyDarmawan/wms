@@ -9,8 +9,7 @@ use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\StorageCategory;
-use App\Domain\Master\Models\Uom;
-use App\Domain\Master\Models\UomCategory;
+use App\Domain\Master\Support\DefaultUoms;
 use Illuminate\Database\Seeder;
 
 /**
@@ -20,68 +19,6 @@ use Illuminate\Database\Seeder;
  */
 class MasterReferenceSeeder extends Seeder
 {
-    /**
-     * Kategori satuan => satuan acuan + daftar satuan [kode, nama, faktor ke acuan].
-     *
-     * @var array<string, array{name: string, reference: string, uoms: array<int, array{0: string, 1: string, 2: float}>}>
-     */
-    private const UOM = [
-        'COUNT' => [
-            'name' => 'Hitung',
-            'reference' => 'PCS',
-            'uoms' => [
-                ['PCS', 'Pieces', 1],
-                ['LSN', 'Lusin', 12],
-                ['BOX', 'Box', 1],
-                // A-294: satuan kemasan; isinya ditentukan per item (kemasan item).
-                ['DUS', 'Dus', 1],
-                ['PACK', 'Pack', 1],
-                ['SET', 'Set', 1],
-                ['ROLL', 'Roll', 1],
-                ['BATANG', 'Batang', 1],
-            ],
-        ],
-        'LENGTH' => [
-            'name' => 'Panjang',
-            'reference' => 'M',
-            'uoms' => [
-                ['M', 'Meter', 1],
-                ['CM', 'Sentimeter', 0.01],
-                ['MM', 'Milimeter', 0.001],
-                ['INCH', 'Inci', 0.0254],
-                ['FT', 'Kaki', 0.3048],
-            ],
-        ],
-        'WEIGHT' => [
-            'name' => 'Berat',
-            'reference' => 'KG',
-            'uoms' => [
-                ['KG', 'Kilogram', 1],
-                ['G', 'Gram', 0.001],
-                ['TON', 'Ton', 1000],
-                ['SAK', 'Sak 50 kg', 50],
-            ],
-        ],
-        'VOLUME' => [
-            'name' => 'Volume',
-            'reference' => 'L',
-            'uoms' => [
-                ['L', 'Liter', 1],
-                ['ML', 'Mililiter', 0.001],
-                ['M3', 'Meter kubik', 1000],
-                ['DRUM', 'Drum 200 L', 200],
-            ],
-        ],
-        'AREA' => [
-            'name' => 'Luas',
-            'reference' => 'M2',
-            'uoms' => [
-                ['M2', 'Meter persegi', 1],
-                ['CM2', 'Sentimeter persegi', 0.0001],
-            ],
-        ],
-    ];
-
     /** @var array<string, array<string, string>> konteks => [kode => label] */
     private const REASONS = [
         'reject' => [
@@ -161,6 +98,8 @@ class MasterReferenceSeeder extends Seeder
         'fefo' => true,
         'qc' => false,
         'rfid' => false,
+        // A-420: tugas picking dibuat otomatis setelah REQ disetujui.
+        'auto_pick_request' => true,
     ];
 
     public function run(): void
@@ -173,33 +112,10 @@ class MasterReferenceSeeder extends Seeder
         $this->command?->info('Referensi master siap: satuan, alasan, kategori penyimpanan, saklar fitur.');
     }
 
+    /** A-411: satuan bawaan dari satu sumber ({@see DefaultUoms}); company baru = disamakan dengan daftar. */
     private function seedUoms(): void
     {
-        foreach (self::UOM as $kode => $definisi) {
-            $kategori = UomCategory::updateOrCreate(
-                ['code' => $kode],
-                ['name' => $definisi['name'], 'is_active' => true],
-            );
-
-            foreach ($definisi['uoms'] as [$uomKode, $uomNama, $faktor]) {
-                Uom::updateOrCreate(
-                    ['code' => $uomKode],
-                    [
-                        'uom_category_id' => $kategori->id,
-                        'name' => $uomNama,
-                        'factor_to_reference' => $faktor,
-                        'is_active' => true,
-                    ],
-                );
-            }
-
-            // BR-MST-03: satuan acuan kategori selalu berfaktor 1.
-            $acuan = Uom::query()->where('code', $definisi['reference'])->first();
-
-            if ($acuan !== null) {
-                $kategori->forceFill(['reference_uom_id' => $acuan->id])->save();
-            }
-        }
+        DefaultUoms::pasang(timpa: true);
     }
 
     private function seedReasons(): void

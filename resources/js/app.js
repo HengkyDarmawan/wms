@@ -16,3 +16,4 @@ import './wms/label-designer.js';
 import './wms/floor-plan.js';
 import './wms/pilih-tag.js';
 import './wms/pilih.js';
+import './wms/tur.js';

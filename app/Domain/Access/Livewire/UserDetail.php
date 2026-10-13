@@ -6,6 +6,7 @@ namespace App\Domain\Access\Livewire;
 
 use App\Domain\Access\Actions\AdoptAssignmentIntoSiteTeam;
 use App\Domain\Access\Actions\InviteUser;
+use App\Domain\Access\Actions\ReactivateUser;
 use App\Domain\Access\Actions\SetInitialPassword;
 use App\Domain\Access\Exceptions\AccessRuleException;
 use App\Domain\Access\Models\ProjectTeamMember;
@@ -14,6 +15,7 @@ use App\Domain\Access\Models\User;
 use App\Domain\Access\Models\UserInvitation;
 use App\Domain\Access\Support\Atasan;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
@@ -141,6 +143,45 @@ class UserDetail extends Component
         $this->passwordBaru = $kata[array_rand($kata)].'-'.Str::upper(Str::random(4)).'-'.now()->year;
     }
 
+    /**
+     * A-420: akun dasar (nonaktif, belum pernah bisa masuk) → satu klik: Aktifkan
+     * kembali + Buatkan password (A-334) dalam satu transaksi. Aturan A-351 tetap
+     * dijaga aksinya: akun yang sudah pernah bisa masuk ditolak.
+     */
+    public function aktifkanDanBuatkanPassword(ReactivateUser $aktifkan, SetInitialPassword $password): void
+    {
+        $user = User::query()->findOrFail($this->userId);
+
+        $this->authorize('deactivate', $user);
+        $this->authorize('resetPassword', $user);
+        $this->ruleError = '';
+        $this->acakPassword();
+
+        if ($user->is_active || $user->password !== null) {
+            $this->ruleError = __('Hanya untuk akun nonaktif yang belum pernah bisa masuk.');
+
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($user, $aktifkan, $password): void {
+                $aktifkan->handle($user, auth()->user());
+                $password->handle($user->refresh(), $this->passwordBaru, auth()->user());
+            });
+        } catch (AccessRuleException $e) {
+            $this->ruleError = $e->getMessage();
+
+            return;
+        }
+
+        $this->passwordDibuat = $this->passwordBaru;
+        $this->passwordBaru = '';
+        $this->formPassword = false;
+        $this->tautan = '';
+
+        $this->dispatch('pesan', teks: __('Akun diaktifkan dan password dibuat. Serahkan ke pemiliknya, lalu minta ia menggantinya.'));
+    }
+
     public function simpanPassword(SetInitialPassword $action): void
     {
         $user = User::query()->findOrFail($this->userId);
@@ -214,6 +255,9 @@ class UserDetail extends Component
                 ->orderByRaw('ended_at is null desc')->orderByDesc('ends_on')->get(),
             'bolehAtur' => auth()->user()?->hasPermission('role.assign') ?? false,
             'undangan' => auth()->user()?->hasPermission('user.create') ? $this->undangan() : null,
+            // A-420: tombol satu klik untuk akun dasar yang belum pernah dipakai.
+            'bisaAktifkanSekaligus' => ! $user->is_active && $user->password === null
+                && (auth()->user()?->can('deactivate', $user) ?? false) && (auth()->user()?->can('resetPassword', $user) ?? false),
         ]);
     }
 

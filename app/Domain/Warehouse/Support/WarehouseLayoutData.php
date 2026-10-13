@@ -71,7 +71,7 @@ class WarehouseLayoutData
     public const BINGKAI = 0.1;
 
     /** @return array{zones: array<int, array<string, mixed>>, hasil: array<int, array<string, mixed>>, gedung: ?array{p: float, l: float}, objects: array<int, array<string, mixed>>, tumpukan: array<int, string>, tumpukanId: array<int, string>, kanvas: array{w: float, h: float}} */
-    public function build(Warehouse $gudang, string $cari = ''): array
+    public function build(Warehouse $gudang, string $cari = '', bool $denganStok = true): array
     {
         $zona = Zone::query()->where('warehouse_id', $gudang->id)->where('is_active', true)->orderBy('code')
             ->with(['racks' => fn ($q) => $q->where('is_active', true)->orderBy('code'),
@@ -82,7 +82,8 @@ class WarehouseLayoutData
         $bins = Bin::query()->withoutGlobalScopes()->with(self::RELASI_BIN)
             ->whereIn('rack_level_id', $levelIds)->orderBy('code')->get()->groupBy('rack_level_id');
 
-        $isi = $this->isi($bins->flatten()->pluck('id')->all());
+        // Denah mini (A-401) tidak menampilkan stok — lewati kueri saldo & umur yang berat.
+        $isi = $denganStok ? $this->isi($bins->flatten()->pluck('id')->all()) : [];
         $tempat = $this->tempatSimpan((int) $gudang->id);
         $q = mb_strtolower(trim($cari));
         $hasil = [];
@@ -272,9 +273,9 @@ class WarehouseLayoutData
      *
      * @return array<string, mixed>
      */
-    public function payload(Warehouse $gudang): array
+    public function payload(Warehouse $gudang, bool $denganStok = true): array
     {
-        $d = $this->build($gudang);
+        $d = $this->build($gudang, '', $denganStok);
         unset($d['hasil']);
 
         foreach ($d['zones'] as $zi => $z) {

@@ -22,6 +22,15 @@ LANGKAH 1 — PERSIAPAN DI cPanel (sekali saja)
       Domain         : wms.nexateknologigroup.com
       Document Root  : /home/CPUSER/wms/public
 
+1c. PILIH SALAH SATU:
+    (A) MODE SATU COMPANY (paling mudah untuk demo, A-417) — LEWATI 1c.
+        Tidak perlu wildcard DNS/SSL. Di .env (langkah 3c) isi:
+          WMS_SINGLE_COMPANY=demo
+          WMS_DEMO_LOGIN=true        (hanya server demo; tombol "Coba demo")
+        Semua orang membuka https://wms.nexateknologigroup.com langsung ke
+        company DEMO; Super Admin di https://wms.nexateknologigroup.com/admin/login.
+    (B) MULTI-COMPANY (tiap company punya subdomain) — lakukan 1c di bawah.
+
 1c. Subdomain wildcard (agar semua company bisa dibuka)
     cPanel > Domains > Create A New Domain
       Domain         : *.wms.nexateknologigroup.com
@@ -139,7 +148,8 @@ LANGKAH 6 — CONTOH COMPANY "DEMO" SIAP LOGIN (satu perintah)
       php artisan companies:create-sample --code=ABC --subdomain=abc --name="PT ABC" --email=admin@abc.co.id
       (database yang harus dibuat dulu: CPUSER_wmst_abc)
 
-6c. Buka http://demo.wms.nexateknologigroup.com/login > masuk dengan
+6c. Buka http://demo.wms.nexateknologigroup.com/login (mode satu company:
+    http://wms.nexateknologigroup.com/login) > masuk dengan
     admin@demo.wms.test + password tadi. Akun dasar per role (nonaktif) dan
     aturan approval dasar sudah ada; ikuti wizard Setup awal.
 

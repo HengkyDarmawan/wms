@@ -1,8 +1,8 @@
 # Arsitektur Sistem
 
-**Versi:** 0.19 (Part 3; v0.19: §9 paket front-end interactjs untuk desain label, A-262; v0.18: §4 mesin approval permanen di `app/Domain/Approval`, A-92 diubah; v0.17: §12 Purchasing inti Fase 1b dibangun; §4, §10, §12 diselaraskan dengan kode 24 Sep 2026; §4 mesin approval, [A-92](04-keputusan-dan-asumsi.md#a-92); v0.9: §4 dan §12 modul Count/Adjustment; v0.10: §4 dan §12 modul Transfer/Retur; v0.16: §7 job konfirmasi otomatis & pengingat harian, §12 Pendukung F1; v0.15: §3 langkah 5, §7 siklus langganan, §12 modul Platform penuh; v0.14: §7 job titik pesan ulang, §12 modul PurchaseRequest; v0.13: §12 modul Asset; v0.12: §10 profil rumah XAMPP3 (A-162), §12 modul Conversion/Waste; v0.11: §12 modul Issue)
-**Tanggal:** 26 September 2026
-**Status:** berlaku (asumsi A-25–A-71 disetujui; [A-73](04-keputusan-dan-asumsi.md#a-73), [A-76](04-keputusan-dan-asumsi.md#a-76) menunggu validasi); keputusan arsitektur diberi ID `AD-xx` dan berlaku sampai diganti. Paket diverifikasi terhadap Laravel 13 pada 23 Sep 2026 (menutup [O-01](04-keputusan-dan-asumsi.md#o-01))
+**Versi:** 0.21 (Part 3; v0.21: §3 mode satu company, A-417; v0.20: baris status — A-73 & A-76 sudah disetujui; v0.19: §9 paket front-end interactjs untuk desain label, A-262; v0.18: §4 mesin approval permanen di `app/Domain/Approval`, A-92 diubah; v0.17: §12 Purchasing inti Fase 1b dibangun; §4, §10, §12 diselaraskan dengan kode 24 Sep 2026; §4 mesin approval, [A-92](04-keputusan-dan-asumsi.md#a-92); v0.9: §4 dan §12 modul Count/Adjustment; v0.10: §4 dan §12 modul Transfer/Retur; v0.16: §7 job konfirmasi otomatis & pengingat harian, §12 Pendukung F1; v0.15: §3 langkah 5, §7 siklus langganan, §12 modul Platform penuh; v0.14: §7 job titik pesan ulang, §12 modul PurchaseRequest; v0.13: §12 modul Asset; v0.12: §10 profil rumah XAMPP3 (A-162), §12 modul Conversion/Waste; v0.11: §12 modul Issue)
+**Tanggal:** 7 Oktober 2026
+**Status:** berlaku (asumsi A-25–A-71 disetujui; [A-73](04-keputusan-dan-asumsi.md#a-73) dan [A-76](04-keputusan-dan-asumsi.md#a-76) disetujui 26 Sep 2026); keputusan arsitektur diberi ID `AD-xx` dan berlaku sampai diganti. Paket diverifikasi terhadap Laravel 13 pada 23 Sep 2026 (menutup [O-01](04-keputusan-dan-asumsi.md#o-01))
 **Dokumen terkait:** [Blueprint §17](01-blueprint.md#17-stack-teknologi) · [Model data 08a](08a-model-data-inti.md) · [08b](08b-model-data-stok-dokumen.md) · [08c](08c-model-data-pendukung.md) · [Aturan Bisnis](05-aturan-bisnis.md) · [Riset §2.8](02-riset-wms-sejenis.md#28-riset-teknis-untuk-part-3)
 
 ---
@@ -75,6 +75,8 @@ Prinsip: satu aplikasi Laravel melayani database pusat dan semua database tenant
 | AD-15 | **Semua waktu UTC di DB**, konversi ke zona company di lapisan presentasi (Carbon + `company_settings.timezone`) | BR-GEN-07 | Scheduler harian per company dijalankan per zona (job dipecah per tenant) |
 
 ## 3. Tenancy & siklus request
+
+> **Mode satu company** ([A-417](04c-asumsi-lanjutan.md#a-417)): bila `WMS_SINGLE_COMPANY` terisi, langkah identifikasi di bawah dilewati — semua host membuka company itu; rute pusat tanpa batas domain, sesi pusat bercookie `-platform`. Kosong = alur subdomain di bawah berlaku.
 
 1. Request masuk ke `abc.wms-domain.id/...`. Middleware tenancy mencari `companies.subdomain`, memuat koneksi `tenant`, memeriksa `subscriptions.status`:
    - `active`/`trial` → normal; `past_due` → normal + spanduk; `suspended` → hanya GET (kecuali unggah bukti bayar); `terminated` → hanya login Admin Company & ekspor ([BR-SUB-02..03](05-aturan-bisnis.md#br-sub)).

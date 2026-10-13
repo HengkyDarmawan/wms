@@ -12,6 +12,7 @@ use App\Domain\Receipt\Actions\CompleteGoodsReceipt;
 use App\Domain\Receipt\Actions\ReceiveGoodsReceipt;
 use App\Domain\Receipt\Actions\RecordQcResult;
 use App\Domain\Receipt\Enums\QcResult;
+use App\Domain\Receipt\Enums\ReceiptType;
 use App\Domain\Receipt\Livewire\Concerns\HandlesReceiptRules;
 use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Receipt\Models\GoodsReceiptLine;
@@ -71,6 +72,7 @@ class ReceiptDetail extends Component
 
         return view('livewire.receipt.receipt-detail', [
             'grn' => $grn,
+            'bisaTerimaSelesaikan' => $this->bisaTerimaSelesaikan($grn),
             'lines' => $lines,
             'putaways' => $grn->putawayTasks()->withoutGlobalScopes()->orderBy('id')->get(),
             'returns' => $grn->vendorReturns()->withoutGlobalScopes()->orderBy('id')->get(),
@@ -104,6 +106,39 @@ class ReceiptDetail extends Component
         if ($this->jalankan(fn () => $action->handle($grn, auth()->user()))) {
             $this->dispatch('pesan', teks: __('Barang diterima dan tercatat di kartu stok.'));
         }
+    }
+
+    /**
+     * A-420: **Terima & selesaikan** sekali klik — Terima barang, lalu langsung
+     * Selesaikan (dialog jumlah dus tetap muncul bila ada barang berlabel). Bila
+     * ada baris di Karantina yang belum diisi hasil QC, berhenti setelah Terima.
+     */
+    public function terimaDanSelesaikan(ReceiveGoodsReceipt $terima, CreatePackageLabels $labels): void
+    {
+        $grn = $this->grn();
+        $this->authorize('receive', $grn);
+        // Policy `complete` baru berlaku setelah Diterima; di sini cukup izin & jenis GRN-nya.
+        abort_unless($this->bisaTerimaSelesaikan($grn), 403);
+
+        if (! $this->jalankan(fn () => $terima->handle($grn, auth()->user()))) {
+            return;
+        }
+
+        $perluQc = $this->grn()->lines()->get()
+            ->contains(fn (GoodsReceiptLine $l) => $l->receivingBinIsQuarantine() && $l->qc_result === null);
+
+        if ($perluQc) {
+            $this->dispatch('pesan', teks: __('Barang diterima. Ada barang yang perlu QC — isi hasil QC dulu, lalu klik Selesaikan.'), jenis: 'warning');
+
+            return;
+        }
+
+        $this->mintaSelesai($labels);
+    }
+
+    private function bisaTerimaSelesaikan(GoodsReceipt $grn): bool
+    {
+        return (auth()->user()?->hasPermission('receipt.complete') ?? false) && $grn->receipt_type !== ReceiptType::Return;
     }
 
     /**

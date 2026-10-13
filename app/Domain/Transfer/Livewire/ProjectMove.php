@@ -100,7 +100,7 @@ class ProjectMove extends Component
         if ($ok && $hasil !== null) {
             $nomor = array_filter(array_merge([$hasil['asset']?->number], array_map(fn (Transfer $t) => $t->number, $hasil['stock'])));
             session()->flash('pesan', __('Pindahan dibuat: :n.', ['n' => implode(', ', $nomor)]));
-            $this->redirectRoute('projects.show', $this->projectId, navigate: true);
+            $this->redirectRoute('projects.show', $this->projectId);
         }
     }
 

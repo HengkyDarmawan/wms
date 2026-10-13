@@ -34,6 +34,14 @@
     <main class="nx-content">
         @include('layouts.partials.subscription-banner')
 
+        {{-- A-418: pengingat server demo (WMS_DEMO_LOGIN menyala). --}}
+        @if (\App\Domain\Access\Support\DemoLogin::enabled())
+            <div class="alert alert-warning py-1 small d-flex align-items-center gap-2" role="note" data-mode-demo>
+                <i class="bi bi-cone-striped"></i> <strong>{{ __('MODE DEMO') }}</strong>
+                <span>{{ __('Siapa pun bisa masuk lewat tombol Coba demo — jangan isi data sungguhan.') }}</span>
+            </div>
+        @endif
+
         @if (session('status'))
             <div class="alert alert-success py-2" role="status">{{ session('status') }}</div>
         @endif

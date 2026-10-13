@@ -16,6 +16,23 @@
         <div class="alert alert-info py-2 small">{{ __('Anda hanya bisa melihat; pengubahan butuh izin Ubah pengaturan company.') }}</div>
     @endif
 
+    {{-- A-419: perusahaan pemilik gudang vs klien. --}}
+    <div class="card mb-3" data-nama-perusahaan>
+        <div class="card-body row g-3 align-items-start">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="set-nama">{{ __('Nama perusahaan Anda (pemilik gudang)') }} <span class="wajib">*</span></label>
+                <input class="form-control @error('nama') is-invalid @enderror" id="set-nama" type="text" maxlength="150" wire:model="nama" @disabled(! $bolehUbah)>
+                @error('nama') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <div class="form-text">{{ __('Tampil di atas layar, halaman login, kop cetak dokumen, dan email.') }}</div>
+            </div>
+            <div class="col-md-6 small">
+                <div class="fw-semibold mb-1">{{ __('Bedanya perusahaan Anda dan klien') }}</div>
+                <div><strong>{{ __('Perusahaan Anda') }}</strong> — {{ __('pemilik gudang dan pengguna WMS ini (admin, kepala gudang, staf).') }}</div>
+                <div><strong>{{ __('Klien') }}</strong> — {{ __('perusahaan pemberi kerja / pemilik proyek, dicatat di Master data → Klien. Bukan pengguna WMS; boleh diberi akun portal klien.') }}</div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-3">
         <div class="col-lg-7">
             @foreach ($grup as $judul => $kunciKunci)

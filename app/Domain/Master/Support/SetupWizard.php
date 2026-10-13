@@ -66,24 +66,28 @@ class SetupWizard
                 selesaiBila: 'kotak persetujuan di bawah dicentang dan disimpan.'),
             $this->langkah('warehouse', 'Buat gudang', 'Gudang utama/cabang; Gudang Site dibuat per proyek.', Warehouse::query()->withoutGlobalScopes()->exists(), $this->rute('warehouses.index'),
                 selesaiBila: 'ada minimal satu gudang.'),
-            $this->langkah('bins', 'Susun lokasi rak & bin', 'Buka Denah gudang → Atur denah → Tambah zona, lalu Tambah rak (isi tingkat & bin per tingkat) → Simpan perubahan.',
-                $bins->exists(), $denahUrl ?? $this->rute('warehouses.index'), false, array_values(array_filter([
-                    $gudang !== null && app('router')->has('warehouses.show') ? ['label' => 'Zona & rak di detail gudang', 'url' => route('warehouses.show', $gudang)] : null,
+            // A-414: jalur utama tab Zona & rak (popup, A-410); Denah jadi tautan tambahan.
+            $this->langkah('bins', 'Susun lokasi rak & bin', 'Buka gudang → tab Zona & rak → Tambah zona, lalu Tambah rak (isi jumlah tingkat & bin per tingkat) → Simpan.',
+                $bins->exists(), $gudang !== null && app('router')->has('warehouses.show') ? route('warehouses.show', $gudang) : $this->rute('warehouses.index'), false, array_values(array_filter([
+                    $denahUrl !== null ? ['label' => 'Atur lewat gambar Denah', 'url' => $denahUrl] : null,
                     $impor !== null ? ['label' => 'Impor struktur gudang dari Excel', 'url' => $impor.'#impor-bins'] : null,
                 ])), selesaiBila: 'ada minimal satu bin penyimpanan di gudang.'),
-            $this->langkah('items', 'Daftarkan item', 'Satu per satu atau impor Excel.', Item::query()->exists(), $impor ?? $this->rute('items.index'),
-                selesaiBila: 'ada minimal satu item.'),
+            // A-414: isi manual lebih dulu; impor Excel hanya pilihan untuk banyak barang.
+            $this->langkah('items', 'Daftarkan item', 'Klik Item baru, isi kode, nama, satuan dasar, dan jenis barang, lalu Simpan item. Impor Excel tidak wajib — hanya untuk banyak barang sekaligus.',
+                Item::query()->exists(), $this->rute('items.create') ?? $this->rute('items.index'), false, array_values(array_filter([
+                    $impor !== null ? ['label' => 'Banyak barang sekaligus: impor Excel', 'url' => $impor.'#impor-items'] : null,
+                ])), selesaiBila: 'ada minimal satu item.'),
             $this->langkah('layout', 'Atur tata letak barang', 'Opsional: tetapkan di mana tiap barang disimpan. Buka barang → kartu Tempat simpan → Ubah → Pilih di denah (klik rak di gambar, ketuk petak bin). Dipakai untuk saran bin saat barang masuk dan saldo awal.',
                 $itemBertempat > 0, $this->rute('items.index'), true, array_values(array_filter([
                     $tataUrl !== null ? ['label' => 'Banyak barang sekaligus: mode Tata letak di Denah', 'url' => $tataUrl] : null,
                     $impor !== null ? ['label' => 'Impor tempat simpan dari Excel', 'url' => $impor.'#impor-storage-locations'] : null,
                 ])), selesaiBila: 'minimal satu barang punya tempat simpan.',
                 catatan: $itemAktif > 0 ? ['teks' => __(':n dari :m barang aktif sudah punya tempat simpan.', ['n' => $itemBertempat, 'm' => $itemAktif]), 'url' => null] : null),
-            $this->langkah('opening', 'Masukkan saldo awal', 'Sedikit barang: isi lewat Penyesuaian stok dengan alasan Saldo awal (tombol Kerjakan). Banyak barang: impor Excel. Stok baru tercatat setelah penyesuaian disetujui.',
+            $this->langkah('opening', 'Masukkan saldo awal', 'Hanya bila gudang sudah berisi barang. Sedikit barang: isi lewat Penyesuaian stok dengan alasan Saldo awal (tombol Kerjakan). Banyak barang: impor Excel. Selama setup belum ditandai selesai, saldo awal dari Admin langsung tercatat tanpa approval; sesudahnya wajib disetujui Kepala Gudang.',
                 StockBalance::query()->where('qty_base', '>', 0)->exists(), $this->urlSaldoAwal(), true, array_values(array_filter([
                     $impor !== null ? ['label' => 'Impor Excel saldo awal', 'url' => $impor.'#impor-opening-stock'] : null,
                     ($adj = $this->rute('adjustments.index')) !== null ? ['label' => 'Daftar penyesuaian', 'url' => $adj] : null,
-                ])), selesaiBila: 'penyesuaian Saldo awal sudah disetujui Kepala Gudang dan stok tercatat.',
+                ])), selesaiBila: 'stok saldo awal sudah tercatat di Saldo stok.',
                 catatan: $this->catatanSaldoAwal()),
             $this->langkah('projects', 'Daftarkan klien & proyek', 'Proyek menentukan tujuan permintaan dan Gudang Site.', Project::query()->where('is_internal', false)->exists(), $this->rute('projects.index'),
                 selesaiBila: 'ada minimal satu proyek klien (bukan internal).'),

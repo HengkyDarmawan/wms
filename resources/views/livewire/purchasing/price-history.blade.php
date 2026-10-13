@@ -102,7 +102,7 @@
                     @forelse ($baris as $l)
                         <tr wire:key="rh-l-{{ $l['id'] }}" @class(['text-muted' => ! $l['dihitung']])>
                             <td class="small">{{ $l['tanggal']->format('d/m/Y') }}</td>
-                            <td><a href="{{ route('purchase-orders.show', $l['po_id']) }}" wire:navigate>{{ $l['po'] }}</a></td>
+                            <td><a href="{{ route('purchase-orders.show', $l['po_id']) }}">{{ $l['po'] }}</a></td>
                             <td>{{ $l['vendor'] }}</td>
                             <td class="text-end">{{ \App\Domain\Master\Support\QtyFormat::withUnit($l['jumlah'], $l['satuan']) }}</td>
                             <td class="text-end text-nowrap">{{ $rp($l['harga']) }} @if ($l['ppn']) <div class="small text-muted">{{ __('termasuk PPN') }}</div> @endif</td>

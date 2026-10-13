@@ -7,6 +7,7 @@ namespace App\Domain\Master\Livewire;
 use App\Domain\Master\Actions\SaveItem;
 use App\Domain\Master\Enums\ItemKind;
 use App\Domain\Master\Enums\ItemStatus;
+use App\Domain\Master\Enums\UomCategoryCode;
 use App\Domain\Master\Livewire\Concerns\HandlesMasterRules;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\ItemCategory;
@@ -55,8 +56,8 @@ class ItemForm extends Component
         'reorder_point' => '',
         'min_stock' => '',
         'barcode' => '',
-        'weight' => '',
-        'weight_uom_id' => '',
+        'measure_qty' => '',
+        'measure_uom_id' => '',
     ];
 
     /**
@@ -112,6 +113,7 @@ class ItemForm extends Component
         }
 
         $this->authorize('create', Item::class);
+
     }
 
     private function isiDari(Item $item): void
@@ -135,8 +137,8 @@ class ItemForm extends Component
             'reorder_point' => (string) $item->reorder_point,
             'min_stock' => (string) $item->min_stock,
             'barcode' => (string) $item->barcode,
-            'weight' => (string) $item->weight,
-            'weight_uom_id' => (string) $item->weight_uom_id,
+            'measure_qty' => $item->measure_qty === null ? '' : (string) (float) $item->measure_qty,
+            'measure_uom_id' => (string) $item->measure_uom_id,
         ];
 
         // Kemasan nonaktif tidak dimuat: menyimpan ulang tidak boleh menghidupkannya lagi.
@@ -192,12 +194,16 @@ class ItemForm extends Component
             'form.status' => ['required', Rule::enum(ItemStatus::class)],
             'form.reorder_point' => ['nullable', 'numeric', 'min:0'],
             'form.min_stock' => ['nullable', 'numeric', 'min:0'],
-            'form.weight' => ['nullable', 'numeric', 'min:0'],
+            'form.measure_qty' => ['nullable', 'numeric', 'gt:0'],
+            // A-413: satuan ukuran dari kategori mana pun kecuali Hitung; wajib bila angka diisi.
+            'form.measure_uom_id' => [$this->form['measure_qty'] !== '' ? 'required' : 'nullable', Rule::in($this->satuanUkuran()->pluck('id')->map(fn ($id) => (string) $id)->all())],
         ], attributes: [
             'form.code' => __('Kode item'),
             'form.name' => __('Nama item'),
             'form.base_uom_id' => __('Satuan dasar'),
             'form.item_kind' => __('Jenis barang'),
+            'form.measure_qty' => __('Ukuran'),
+            'form.measure_uom_id' => __('Satuan ukuran'),
         ]);
 
         $data = $this->form + ['conversion_uoms_loaded' => $this->kemasanDimuat];
@@ -235,7 +241,21 @@ class ItemForm extends Component
 
         session()->flash('pesan', __('Item disimpan.'));
 
-        $this->redirectRoute('items.show', $tersimpan, navigate: true);
+        $this->redirectRoute('items.show', $tersimpan);
+    }
+
+    /**
+     * A-413: satuan ukuran = satuan aktif bukan kategori Hitung & bukan kemasan, urut kategori lalu besar ke kecil.
+     *
+     * @return Collection<int, Uom>
+     */
+    private function satuanUkuran(?Collection $uoms = null): Collection
+    {
+        $uoms ??= Uom::query()->active()->with('category:id,code,name')->get();
+
+        return $uoms->filter(fn (Uom $u) => $u->category?->enum() !== UomCategoryCode::Count && ! $u->is_packaging)
+            ->sortBy([fn ($a, $b) => strcmp((string) $a->category?->name, (string) $b->category?->name), fn ($a, $b) => (float) $b->factor_to_reference <=> (float) $a->factor_to_reference])
+            ->values();
     }
 
     /** @return array<string, ItemKind> */
@@ -283,12 +303,14 @@ class ItemForm extends Component
     public function render(): View
     {
         $item = $this->itemId === null ? null : Item::query()->with('category')->find($this->itemId);
-        $uoms = Uom::query()->active()->with('category:id,name')->orderBy('code')->get();
+        $uoms = Uom::query()->active()->with('category:id,code,name')->orderBy('code')->get();
 
         return view('livewire.master.item-form', [
             'kemasan' => $this->kalimatKemasan($item, $uoms),
             'categories' => ItemCategory::query()->active()->orderBy('name')->get(['id', 'name']),
             'uoms' => $uoms,
+            'uomUkuran' => $this->satuanUkuran($uoms),
+            'kodeDasar' => (string) ($uoms->firstWhere('id', (int) $this->form['base_uom_id'])?->code ?? ''),
             'statuses' => ItemStatus::options(),
             'jenisOpsi' => $this->pilihanJenis($item),
             'jenisTerpilih' => ItemKind::tryFrom((string) $this->form['item_kind']),

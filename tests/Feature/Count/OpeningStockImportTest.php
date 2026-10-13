@@ -6,14 +6,18 @@ namespace Tests\Feature\Count;
 
 use App\Domain\Access\Enums\ScopeType;
 use App\Domain\Adjustment\Actions\ApproveStockAdjustment;
+use App\Domain\Adjustment\Actions\CreateStockAdjustment;
 use App\Domain\Adjustment\Actions\ImportOpeningStock;
 use App\Domain\Adjustment\Enums\StockAdjustmentStatus;
 use App\Domain\Adjustment\Models\StockAdjustment;
 use App\Domain\Master\Actions\ImportVendors;
+use App\Domain\Master\Enums\ReasonContext;
 use App\Domain\Master\Enums\VendorStatus;
 use App\Domain\Master\Enums\VendorType;
 use App\Domain\Master\Models\Lot;
+use App\Domain\Master\Models\ReasonCode;
 use App\Domain\Master\Models\Vendor;
+use App\Domain\Master\Support\SetupWizard;
 use App\Domain\Stock\Enums\StockStatus;
 use App\Domain\Warehouse\Actions\SaveWarehouse;
 use App\Domain\Warehouse\Enums\BinType;
@@ -23,6 +27,7 @@ use Illuminate\Http\UploadedFile;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\Activitylog\Models\Activity;
 use Tests\Feature\Count\Concerns\CountFixtures;
 use Tests\TenantTestCase;
 
@@ -107,6 +112,8 @@ class OpeningStockImportTest extends TenantTestCase
         ]);
         $binBks = Bin::create(['warehouse_id' => $bks->id, 'code' => 'BKS-A-01', 'bin_type' => BinType::Storage]);
         $kepalaBks = $this->makeUser('warehouse_head', ScopeType::Warehouse, $bks->id);
+        // Setup sudah ditandai selesai → saldo awal kembali lewat approval (A-09; masa setup: TC-ADJ-31).
+        app(SetupWizard::class)->complete($admin);
 
         $this->actingAs($admin)->get($this->tenantUrl('imports/opening-stock/template'))->assertOk();
         $this->actingAs($this->makeUser('driver'))->get($this->tenantUrl('imports/opening-stock/template'))->assertForbidden();
@@ -141,7 +148,7 @@ class OpeningStockImportTest extends TenantTestCase
 
         $adj = StockAdjustment::query()->orderBy('id')->get();
         $this->assertCount(2, $adj, 'Satu ADJ per gudang.');
-        $this->assertTrue($adj->every(fn (StockAdjustment $a) => $a->status === StockAdjustmentStatus::PendingApproval), 'Saldo awal tetap lewat approval (A-09).');
+        $this->assertTrue($adj->every(fn (StockAdjustment $a) => $a->status === StockAdjustmentStatus::PendingApproval), 'Setelah setup selesai, saldo awal lewat approval (A-09, A-415).');
         $this->assertSame('OPENING', $adj->first()->reason->code);
         $this->assertSame(100.0, $this->saldoBin($this->binA, $this->baut), 'Belum ada stok bergerak sebelum disetujui (P-01).');
 
@@ -157,5 +164,37 @@ class OpeningStockImportTest extends TenantTestCase
         $this->assertSame(2.0, $this->saldoBin($this->binB, $this->genset));
         $this->assertSame(10.5, $this->saldoBin($this->binA, $this->pipa));
         $this->assertSame(15.0, $this->saldoBin($binBks, $this->baut));
+    }
+
+    /**
+     * TC-ADJ-31 (A-415) — saldo awal masa setup: selama Setup awal belum ditandai selesai,
+     * ADJ Saldo awal dari Admin Company langsung tercatat tanpa approval. Staf, baris
+     * pengurang, alasan lain, dan setelah setup selesai tetap lewat approval.
+     */
+    #[Test]
+    public function tc_adj_31_saldo_awal_masa_setup_langsung_tercatat(): void
+    {
+        $admin = $this->makeUser('company_admin');
+        $buat = app(CreateStockAdjustment::class);
+        $opening = ReasonCode::query()->where('code', SetupWizard::ALASAN_SALDO_AWAL)->value('id');
+        $lain = ReasonCode::query()->where('context', ReasonContext::Adjustment->value)->where('code', '!=', SetupWizard::ALASAN_SALDO_AWAL)->value('id');
+        $baris = fn (string $arah = 'in', int $qty = 7) => [['bin_id' => $this->binA->id, 'item_id' => $this->baut->id, 'direction' => $arah, 'stock_status' => 'available', 'qty' => $qty]];
+        $awal = $this->saldoBin($this->binA, $this->baut);
+
+        // Admin, masa setup, semua baris menambah → langsung Diposting.
+        $adj = $buat->handle(['warehouse_id' => $this->gudang->id, 'reason_code_id' => $opening], $baris(), $admin);
+        $this->assertSame(StockAdjustmentStatus::Posted, $adj->status);
+        $this->assertSame($awal + 7, $this->saldoBin($this->binA, $this->baut));
+        $this->assertTrue(Activity::query()->where('subject_id', $adj->id)->where('description', 'like', '%masa setup%')->exists());
+
+        // Pengecualian sempit: baris pengurang, alasan lain, dan staf tetap menunggu approval.
+        $this->assertSame(StockAdjustmentStatus::PendingApproval, $buat->handle(['warehouse_id' => $this->gudang->id, 'reason_code_id' => $opening], $baris('out', 1), $admin)->status);
+        $this->assertSame(StockAdjustmentStatus::PendingApproval, $buat->handle(['warehouse_id' => $this->gudang->id, 'reason_code_id' => $lain], $baris(), $admin)->status);
+        $this->assertSame(StockAdjustmentStatus::PendingApproval, $buat->handle(['warehouse_id' => $this->gudang->id, 'reason_code_id' => $opening], $baris(), $this->staf1)->status);
+
+        // Setup ditandai selesai → admin pun lewat approval.
+        app(SetupWizard::class)->complete($admin);
+        $this->assertSame(StockAdjustmentStatus::PendingApproval, $buat->handle(['warehouse_id' => $this->gudang->id, 'reason_code_id' => $opening], $baris(), $admin)->status);
+        $this->assertSame($awal + 7, $this->saldoBin($this->binA, $this->baut));
     }
 }

@@ -76,6 +76,7 @@ class PackageLabelMove extends Model
             $this->document_type === 'goods_receipt' && $q > 0 && $this->notes === 'transfer' => 'Diterima di gudang tujuan',
             $this->document_type === 'goods_receipt' && $q > 0 => 'Diterima',
             $this->document_type === 'putaway_task' => 'Ditaruh di bin',
+            $this->document_type === 'bin_move' => 'Pindah bin',
             $this->document_type === 'pick_task' && $q < 0 => 'Keluar (dipetik)',
             $this->document_type === 'material_issue' && $q < 0 => 'Keluar (dipakai)',
             $this->document_type === 'material_issue' && $q > 0 => 'Kembali (pembalik pemakaian)',

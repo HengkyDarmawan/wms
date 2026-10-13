@@ -79,7 +79,7 @@ class StockCountForm extends Component
         });
 
         if ($ok && $sesi !== null) {
-            $this->redirectRoute('counts.show', $sesi, navigate: true);
+            $this->redirectRoute('counts.show', $sesi);
         }
     }
 

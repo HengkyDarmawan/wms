@@ -51,6 +51,8 @@ class SaveLocation
             $zone = Zone::create([
                 'warehouse_id' => $warehouse->id,
                 'code' => $kode,
+                // A-410: zona baru di urutan paling akhir.
+                'sort_order' => (int) Zone::query()->where('warehouse_id', $warehouse->id)->max('sort_order') + 1,
                 'name' => $nama,
                 'is_active' => true,
             ]);
@@ -84,7 +86,13 @@ class SaveLocation
         }
 
         if ($baru) {
-            $rack = Rack::create(['zone_id' => $zone->id, 'code' => $kode, 'is_active' => true]);
+            $rack = Rack::create([
+                'zone_id' => $zone->id,
+                'code' => $kode,
+                // A-410: rak baru di urutan paling akhir zonanya.
+                'sort_order' => (int) Rack::query()->where('zone_id', $zone->id)->max('sort_order') + 1,
+                'is_active' => true,
+            ]);
         }
 
         $this->catat($rack, $baru, 'Rak', $actor);

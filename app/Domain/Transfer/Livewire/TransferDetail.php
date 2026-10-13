@@ -132,7 +132,7 @@ class TransferDetail extends Component
         }, 'jemput');
 
         if ($ok && $sj !== null) {
-            $this->redirectRoute('shipments.show', $sj, navigate: true);
+            $this->redirectRoute('shipments.show', $sj);
         }
     }
 

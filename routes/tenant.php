@@ -74,6 +74,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function (): void {
     // Back-office
     Route::get('/login', [LoginController::class, 'show'])->name('login');
+    // A-417: halaman depan tamu (mode satu company: "/" untuk tamu diarahkan ke sini).
+    Route::get('/selamat-datang', [LoginController::class, 'welcome'])->name('welcome');
+    // A-418: Coba demo — hanya bila WMS_DEMO_LOGIN menyala (404 bila mati).
+    Route::post('/demo-login/{peran}', [LoginController::class, 'demo'])
+        ->where('peran', '[a-z_]+')->middleware('throttle:30,1')->name('demo-login');
     Route::post('/login', [LoginController::class, 'store'])
         ->middleware('throttle:login')
         ->name('login.store');
@@ -235,6 +240,8 @@ Route::middleware('auth')->group(function (): void {
         // A-370: cetak denah + barang per rak + tips tata letak (hanya membaca).
         Route::get('/warehouses/{warehouse}/layout/print', [WarehouseController::class, 'printLayout'])->name('warehouses.layout.print');
         Route::get('/bins', [BinController::class, 'index'])->name('bins.index');
+        // A-416: Pindah bin antar bin penyimpanan satu gudang (putaway.complete), sebelum /bins/{kode}.
+        Route::get('/bin-moves', [BinController::class, 'move'])->name('bin-moves.create');
         // A-374: Isi Bin — tujuan QR label bin (keputusan #7); hanya membaca, izin bin.view + cakupan.
         Route::get('/bins/{kode}', [BinController::class, 'show'])->where('kode', '[A-Za-z0-9_.\-]+')->name('bins.show');
         Route::get('/warehouse-types', [WarehouseTypeController::class, 'index'])->name('warehouse-types.index');

@@ -10,12 +10,13 @@ use App\Domain\Master\Enums\ProjectStatus;
 use App\Domain\Master\Enums\TrackingMode;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Uom;
+use App\Domain\Warehouse\Actions\SaveLocation;
 use App\Domain\Warehouse\Actions\SaveWarehouse;
 use App\Domain\Warehouse\Enums\BinType;
 use App\Domain\Warehouse\Livewire\BinList;
 use App\Domain\Warehouse\Livewire\ItemStorageLocations;
-use App\Domain\Warehouse\Livewire\WarehouseDetail;
 use App\Domain\Warehouse\Livewire\WarehouseList;
+use App\Domain\Warehouse\Livewire\WarehouseLocations;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
 use App\Domain\Warehouse\Models\WarehouseType;
@@ -116,8 +117,12 @@ class PilihanGudangTest extends TenantTestCase
         Livewire::actingAs($admin)->test(BinList::class)->assertSeeHtml('id="filter-gudang-bin"')
             ->call('mintaUbah', $bin->id)->assertSeeHtml('id="ubah-kategori"');
 
-        Livewire::actingAs($admin)->test(WarehouseDetail::class, ['warehouse' => $ckg])
-            ->call('mintaBuatBin', 1)->assertSeeHtml('id="gen-kategori"');
+        $level = app(SaveLocation::class)->saveLevel(
+            app(SaveLocation::class)->saveRack(app(SaveLocation::class)->saveZone($ckg, null, ['code' => 'A', 'name' => 'Zona A']), null, ['code' => 'R01']),
+            null, ['code' => 'L1'],
+        );
+        Livewire::actingAs($admin)->test(WarehouseLocations::class, ['warehouse' => $ckg])
+            ->call('mintaBuatBin', $level->id)->assertSeeHtml('id="gen-kategori"');
 
         $item = Item::create([
             'code' => 'BAUT-M12', 'name' => 'Baut M12', 'status' => ItemStatus::Active, 'tracking_mode' => TrackingMode::None,

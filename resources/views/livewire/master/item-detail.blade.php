@@ -12,7 +12,7 @@
                 <a class="btn btn-outline-secondary" href="{{ route('items.edit', $item) }}">{{ __('Ubah') }}</a>
             @endcan
             @can('po.view')
-                <a class="btn btn-outline-secondary" href="{{ route('items.price-history', $item) }}" wire:navigate>
+                <a class="btn btn-outline-secondary" href="{{ route('items.price-history', $item) }}">
                     <i class="bi bi-graph-up"></i> {{ __('Riwayat harga beli') }}
                 </a>
             @endcan
@@ -114,12 +114,12 @@
                             <dt class="col-sm-6">{{ __('Titik pesan ulang') }}</dt>
                             <dd class="col-sm-6">{{ $item->reorder_point ? (float) $item->reorder_point : '—' }}</dd>
 
-                            <dt class="col-sm-6">{{ __('Stok minimum') }}</dt>
+                            <dt class="col-sm-6">{{ __('Isi sampai (stok ideal)') }}</dt>
                             <dd class="col-sm-6">{{ $item->min_stock ? (float) $item->min_stock : '—' }}</dd>
 
-                            <dt class="col-sm-6">{{ __('Berat') }}</dt>
+                            <dt class="col-sm-6">{{ __('Ukuran') }}</dt>
                             <dd class="col-sm-6">
-                                {{ $item->weight ? (float) $item->weight.' '.($item->weightUom?->code ?? '') : '—' }}
+                                {{ $item->measure_qty ? __('1 :dasar = :n :satuan', ['dasar' => $item->baseUom?->code, 'n' => \App\Domain\Master\Support\QtyFormat::number($item->measure_qty), 'satuan' => $item->measureUom?->code]) : '—' }}
                             </dd>
                         </dl>
                     </div>
@@ -182,7 +182,7 @@
                     <div class="card-header d-flex align-items-center">
                         <strong class="me-auto">{{ __('Saran vendor (dari riwayat)') }}</strong>
                         @can('po.view')
-                            <a class="btn btn-sm btn-outline-primary" href="{{ route('items.price-history', $item) }}" wire:navigate>{{ __('Riwayat harga beli') }}</a>
+                            <a class="btn btn-sm btn-outline-primary" href="{{ route('items.price-history', $item) }}">{{ __('Riwayat harga beli') }}</a>
                         @endcan
                     </div>
                     <div class="card-body small">

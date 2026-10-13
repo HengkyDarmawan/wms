@@ -28,8 +28,10 @@ class SaveCompanySettings
      * @param  array<string, mixed>  $fitur  kunci feature_settings => bool
      * @return array{nilai: array<string, int|float>, fitur: array<string, bool>, timezone: string}
      */
-    public function handle(array $nilai, array $fitur, ?string $timezone, User $actor): array
+    public function handle(array $nilai, array $fitur, ?string $timezone, User $actor, ?string $nama = null): array
     {
+        // A-419: nama perusahaan pemilik gudang (companies.name di database pusat).
+        $nama = $nama === null ? null : trim(preg_replace('/\s+/u', ' ', $nama) ?? '');
         $katalog = CompanySettingCatalog::nilai();
         $galat = [];
         $bersih = [];
@@ -52,6 +54,10 @@ class SaveCompanySettings
             }
 
             $bersih[$kunci] = $angka;
+        }
+
+        if ($nama !== null && (mb_strlen($nama) < 3 || mb_strlen($nama) > 150)) {
+            $galat['nama'] = 'Nama perusahaan wajib 3–150 karakter.';
         }
 
         if ($timezone !== null && ! array_key_exists($timezone, CompanySettingCatalog::ZONA_WAKTU)) {
@@ -96,6 +102,16 @@ class SaveCompanySettings
                 ->causedBy($actor)
                 ->withProperties(['dari' => $dari, 'ke' => $timezone])
                 ->log('Zona waktu company diubah');
+        }
+
+        if ($nama !== null && $company !== null && $company->name !== $nama) {
+            $dari = $company->name;
+            $company->forceFill(['name' => $nama])->save();
+
+            activity('master')
+                ->causedBy($actor)
+                ->withProperties(['dari' => $dari, 'ke' => $nama])
+                ->log('Nama perusahaan diubah');
         }
 
         return [

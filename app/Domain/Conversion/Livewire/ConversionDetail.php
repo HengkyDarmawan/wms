@@ -184,7 +184,7 @@ class ConversionDetail extends Component
         });
 
         if ($ok && $pembalik !== null) {
-            $this->redirectRoute('conversions.show', $pembalik, navigate: true);
+            $this->redirectRoute('conversions.show', $pembalik);
         }
     }
 

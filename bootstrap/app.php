@@ -1,9 +1,11 @@
 <?php
 
+use App\Domain\Platform\Support\SingleCompany;
 use App\Http\Middleware\EnsureClientPortal;
 use App\Http\Middleware\EnsureInternalArea;
 use App\Http\Middleware\EnsureSubscriptionState;
 use App\Http\Middleware\InitializeTenancyBySubdomain;
+use App\Http\Middleware\SeparatePlatformSessionCookie;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
@@ -40,6 +42,16 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // A-417: sesi Super Admin bernama cookie sendiri dalam mode satu company.
+        $middleware->web(prepend: [SeparatePlatformSessionCookie::class]);
+
+        // Tamu: /admin* → login Super Admin; mode satu company "/" → halaman depan; lainnya → login company.
+        $middleware->redirectGuestsTo(fn (Request $request) => match (true) {
+            $request->is('admin', 'admin/*') => route('platform.login'),
+            SingleCompany::enabled() && $request->is('/') && ! $request->expectsJson() => route('welcome'),
+            default => route('login'),
+        });
+
         $middleware->alias([
             'tenant' => InitializeTenancyBySubdomain::class,
             'subscription' => EnsureSubscriptionState::class,
