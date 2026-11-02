@@ -6,7 +6,7 @@
                 {{ $item->name }} · {{ __('Satuan dasar') }}: {{ $item->baseUom?->code ?? '—' }}
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('stock.index') }}">{{ __('Kembali ke saldo') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('stock.index') }}">{{ __('Kembali ke saldo') }}</a>
     </div>
 
     <div class="card mb-3">

@@ -20,7 +20,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::PickTask, 'id' => $task->id, 'teks' => __('Cetak picklist')])
-            <a class="btn btn-outline-secondary" href="{{ route('picks.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('picks.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 

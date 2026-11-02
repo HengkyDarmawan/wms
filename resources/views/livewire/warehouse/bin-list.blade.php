@@ -8,7 +8,7 @@
         </div>
         <div class="d-flex gap-2">
             @can('bin.manage')
-                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-bins">
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-bins">
                     <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
                 </a>
             @endcan

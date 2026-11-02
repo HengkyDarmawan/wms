@@ -8,7 +8,7 @@
         </div>
 
         @can('create', \App\Domain\Access\Models\Role::class)
-            <a class="btn btn-primary" href="{{ route('roles.create') }}">
+            <a wire:navigate class="btn btn-primary" href="{{ route('roles.create') }}">
                 <i class="bi bi-plus-lg"></i> {{ __('Tambah role') }}
             </a>
         @endcan
@@ -61,7 +61,7 @@
                             </td>
                             <td class="text-end">
                                 @can('update', $role)
-                                    <a class="btn btn-sm btn-outline-secondary" href="{{ route('roles.edit', $role) }}">
+                                    <a wire:navigate class="btn btn-sm btn-outline-secondary" href="{{ route('roles.edit', $role) }}">
                                         {{ __('Ubah') }}
                                     </a>
                                 @endcan

@@ -8,7 +8,7 @@
             </h1>
             <p class="text-muted mb-0">
                 {{ $isu->project?->code }} — {{ $isu->project?->name }} · {{ __('Gudang Site') }} {{ $isu->warehouse?->code }}
-                @if ($isu->reversalOf) · {{ __('Pembalik') }} <a href="{{ route('issues.show', $isu->reversal_of_id) }}">{{ $isu->reversalOf->number }}</a> @endif
+                @if ($isu->reversalOf) · {{ __('Pembalik') }} <a wire:navigate href="{{ route('issues.show', $isu->reversal_of_id) }}">{{ $isu->reversalOf->number }}</a> @endif
                 · {{ __('Dibuat') }} {{ $isu->issuer?->name }}
                 @if ($isu->submitter) · {{ __('Diajukan') }} {{ $isu->submitter->name }} @endif
                 @if ($isu->confirmed_at) · {{ __('Dikonfirmasi') }} {{ $isu->confirmer?->name }} {{ $isu->confirmed_at->lokal()->format('d/m/Y H:i') }} @endif
@@ -21,12 +21,12 @@
             @endif
             @if ($isu->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $isu->cancelReason->label }}</p> @endif
             @foreach ($pembalik as $p)
-                <p class="small mb-0">{{ __('Pembalik') }} <a href="{{ route('issues.show', $p->id) }}">{{ $p->number }}</a> ({{ $p->status->label() }})</p>
+                <p class="small mb-0">{{ __('Pembalik') }} <a wire:navigate href="{{ route('issues.show', $p->id) }}">{{ $p->number }}</a> ({{ $p->status->label() }})</p>
             @endforeach
         </div>
         <div class="d-flex flex-wrap gap-2">
             @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::MaterialIssue, 'id' => $isu->id])
-            <a class="btn btn-outline-secondary" href="{{ route('issues.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('issues.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -123,7 +123,7 @@
                 </button>
             @endcan
             @can('update', $isu)
-                <a class="btn btn-outline-secondary" href="{{ route('issues.edit', $isu) }}">{{ __('Ubah draf') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('issues.edit', $isu) }}">{{ __('Ubah draf') }}</a>
             @endcan
             @can('approve', $isu)
                 <button class="btn btn-primary" type="button" wire:click="setujui">{{ __('Setujui') }}</button>

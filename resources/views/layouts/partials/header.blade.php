@@ -22,7 +22,7 @@
                 <div class="dropdown-menu dropdown-menu-end p-0" style="min-width:320px">
                     <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
                         <strong class="small">{{ __('Notifikasi') }}</strong>
-                        <a class="small" href="{{ route('notifications.index') }}">{{ __('Lihat semua') }}</a>
+                        <a class="small" wire:navigate.hover href="{{ route('notifications.index') }}">{{ __('Lihat semua') }}</a>
                     </div>
                     @forelse ($belumDibaca as $n)
                         <form method="POST" action="{{ route('notifications.open', $n->id) }}">
@@ -52,7 +52,7 @@
                 <div class="px-3 py-2 small text-muted">{{ auth()->user()?->email }}</div>
                 <div class="dropdown-divider"></div>
                 @if (! auth()->user()?->isClient())
-                    <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                    <a class="dropdown-item" wire:navigate.hover href="{{ route('profile.edit') }}">
                         <i class="bi bi-person"></i> {{ __('Profil') }}
                     </a>
                 @endif
@@ -65,7 +65,7 @@
                         </button>
                     </form>
                 @elseif (auth()->check() && \App\Domain\Access\Support\Impersonation::enabled() && auth()->user()->can('user.impersonate'))
-                    <a class="dropdown-item" href="{{ route('impersonate.index') }}">
+                    <a class="dropdown-item" wire:navigate.hover href="{{ route('impersonate.index') }}">
                         <i class="bi bi-people"></i> {{ __('Masuk sebagai…') }}
                     </a>
                 @endif

@@ -15,7 +15,7 @@
             </p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('assets.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('assets.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -119,7 +119,7 @@
             <button class="btn btn-outline-success" type="button" wire:click="ditemukan" wire:confirm="{{ __('Batalkan tanda hilang? Penyesuaian stoknya harus sudah ditolak atau dibatalkan.') }}">{{ __('Ditemukan kembali') }}</button>
         @endcan
         @foreach ($adjustments as $adj)
-            <a class="btn btn-outline-secondary" href="{{ route('adjustments.show', $adj->id) }}">{{ $adj->number }} ({{ $adj->status->label() }})</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('adjustments.show', $adj->id) }}">{{ $adj->number }} ({{ $adj->status->label() }})</a>
         @endforeach
     </div>
 
@@ -140,7 +140,7 @@
                 <tbody>
                     @forelse ($handovers as $h)
                         <tr>
-                            <td><a href="{{ route('asset-handovers.show', $h) }}">{{ $h->number }}</a> <div class="small text-muted">{{ $h->shipment?->number }} @if ($h->goodsReturn) · {{ $h->goodsReturn->number }} @endif</div></td>
+                            <td><a wire:navigate href="{{ route('asset-handovers.show', $h) }}">{{ $h->number }}</a> <div class="small text-muted">{{ $h->shipment?->number }} @if ($h->goodsReturn) · {{ $h->goodsReturn->number }} @endif</div></td>
                             <td>{{ $h->project?->code }}</td>
                             <td class="small">{{ $h->checked_out_at?->lokal()->format('d/m/Y') }} @if ($h->due_return_date) <div class="text-muted">{{ __('jatuh tempo') }} {{ $h->due_return_date->format('d/m/Y') }}</div> @endif</td>
                             <td class="small">{{ $h->returned_at?->lokal()->format('d/m/Y') ?? '—' }}</td>
@@ -165,7 +165,7 @@
                 <li class="list-group-item">
                     {{ $i->inspected_at?->lokal()->format('d/m/Y H:i') }} · {{ $i->inspector?->name }} · {{ __('Grade') }} {{ $i->condition_grade->value }} · {{ $i->condition_score }} % → {{ $i->resulting_state->label() }}
                     @if ($i->meter_in !== null) · {{ __('meter') }} {{ number_format((float) $i->meter_in, 1, ',', '.') }} @endif
-                    @if ($i->handover) · <a href="{{ route('asset-handovers.show', $i->handover->id) }}">{{ $i->handover->number }}</a> @endif
+                    @if ($i->handover) · <a wire:navigate href="{{ route('asset-handovers.show', $i->handover->id) }}">{{ $i->handover->number }}</a> @endif
                     <div class="text-muted">
                         @foreach ($i->component_notes ?? [] as $k) {{ $k['component'] }}: {{ $k['note'] }}@if (! $loop->last); @endif @endforeach
                     </div>
@@ -185,7 +185,7 @@
                     @if (! $loop->first) <i class="bi bi-arrow-right text-muted" aria-hidden="true"></i> @endif
                     <span @class(['badge', 'text-bg-primary' => $t['sekarang'], 'text-bg-light border' => ! $t['sekarang']])>
                         @if ($t['project_id'])
-                            <a class="{{ $t['sekarang'] ? 'link-light' : '' }}" href="{{ route('projects.show', $t['project_id']) }}">{{ $t['label'] }}</a>
+                            <a wire:navigate class="{{ $t['sekarang'] ? 'link-light' : '' }}" href="{{ route('projects.show', $t['project_id']) }}">{{ $t['label'] }}</a>
                         @else
                             {{ $t['label'] }}
                         @endif

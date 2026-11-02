@@ -5,7 +5,7 @@
 @section('content')
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <h1 class="h3 mb-0">{{ $plan->exists ? __('Ubah paket').' '.$plan->name : __('Paket baru') }}</h1>
-        <a class="btn btn-outline-secondary" href="{{ route('platform.plans.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('platform.plans.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     <form class="card" method="POST" action="{{ $plan->exists ? route('platform.plans.update', $plan->id) : route('platform.plans.store') }}" novalidate>

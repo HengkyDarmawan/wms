@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ $asal ? __('ADJ pembalik untuk').' '.$asal->number : __('Penyesuaian baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Stok baru bergerak setelah disetujui (minimal satu lapis approval, A-09). Jumlah dalam satuan dasar item.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('adjustments.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('adjustments.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')

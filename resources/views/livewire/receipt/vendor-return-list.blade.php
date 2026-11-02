@@ -5,7 +5,7 @@
             <p class="text-muted mb-0">{{ __('Barang dari Karantina yang dikembalikan ke vendor. Stok keluar saat RTV dikirim.') }}</p>
         </div>
         @can('create', App\Domain\Receipt\Models\VendorReturn::class)
-            <a class="btn btn-primary" href="{{ route('vendor-returns.create') }}">{{ __('RTV baru') }}</a>
+            <a wire:navigate class="btn btn-primary" href="{{ route('vendor-returns.create') }}">{{ __('RTV baru') }}</a>
         @endcan
     </div>
 
@@ -44,7 +44,7 @@
                 <tbody>
                     @forelse ($returns as $r)
                         <tr>
-                            <td><a href="{{ route('vendor-returns.show', $r) }}">{{ $r->number }}</a></td>
+                            <td><a wire:navigate href="{{ route('vendor-returns.show', $r) }}">{{ $r->number }}</a></td>
                             <td>{{ $r->vendor?->name }}</td>
                             <td>{{ $r->receipt?->number }}</td>
                             <td>{{ $r->warehouse?->code }}</td>

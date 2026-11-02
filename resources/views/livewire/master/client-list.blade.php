@@ -130,7 +130,7 @@
                         <tr wire:key="klien-{{ $client->id }}">
                             <td>
                                 <div class="fw-semibold">
-                                    <a href="{{ route('clients.show', $client->id) }}">{{ $client->name }}</a>
+                                    <a wire:navigate href="{{ route('clients.show', $client->id) }}">{{ $client->name }}</a>
                                 </div>
                                 <div class="small text-muted">{{ $client->code }}</div>
                             </td>

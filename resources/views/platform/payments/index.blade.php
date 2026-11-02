@@ -38,7 +38,7 @@
                         <tr>
                             <td>
                                 @if ($inv?->subscription?->company)
-                                    <a href="{{ route('platform.companies.show', $inv->subscription->company->id) }}">{{ $inv->subscription->company->name }}</a>
+                                    <a wire:navigate href="{{ route('platform.companies.show', $inv->subscription->company->id) }}">{{ $inv->subscription->company->name }}</a>
                                 @endif
                                 <div class="small text-muted">{{ $p->uploaded_by_name }} · {{ $p->created_at?->lokal()->format('d/m/Y H:i') }}</div>
                             </td>

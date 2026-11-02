@@ -5,7 +5,7 @@
             <p class="text-muted mb-0">{{ __('Siapa yang akan menyetujui dokumen ini bila diajukan sekarang? Memakai aturan aktif, pemisahan tugas, dan eskalasi yang sama dengan pengajuan sungguhan. Tidak ada yang disimpan.') }}</p>
         </div>
         @can('viewAny', App\Domain\Approval\Models\ApprovalRule::class)
-            <a class="btn btn-outline-secondary" href="{{ route('approval.rules.index') }}">{{ __('Aturan approval') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('approval.rules.index') }}">{{ __('Aturan approval') }}</a>
         @endcan
     </div>
 

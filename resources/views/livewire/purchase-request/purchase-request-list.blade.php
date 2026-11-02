@@ -5,7 +5,7 @@
             <p class="text-muted mb-0">{{ __('Permintaan pembelian ke tim Purchasing: dari backorder REQ, titik pesan ulang, atau manual. Tanpa harga — PO dan nilai ada di sistem Purchasing.') }}</p>
         </div>
         @can('create', App\Domain\PurchaseRequest\Models\PurchaseRequest::class)
-            <a class="btn btn-primary" href="{{ route('purchase-requests.create') }}">{{ __('PRQ manual') }}</a>
+            <a wire:navigate class="btn btn-primary" href="{{ route('purchase-requests.create') }}">{{ __('PRQ manual') }}</a>
         @endcan
     </div>
 
@@ -58,7 +58,7 @@
                     @forelse ($requests as $p)
                         <tr>
                             <td>
-                                <a href="{{ route('purchase-requests.show', $p) }}">{{ $p->number }}</a>
+                                <a wire:navigate href="{{ route('purchase-requests.show', $p) }}">{{ $p->number }}</a>
                                 <div class="small text-muted">{{ $p->creator?->name ?? __('Sistem') }} · {{ $p->created_at?->lokal()->format('d/m/Y') }}</div>
                             </td>
                             <td>{{ $p->warehouse?->code }}</td>

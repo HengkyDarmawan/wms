@@ -241,7 +241,7 @@ class ItemForm extends Component
 
         session()->flash('pesan', __('Item disimpan.'));
 
-        $this->redirectRoute('items.show', $tersimpan);
+        $this->redirectRoute('items.show', $tersimpan, navigate: true);
     }
 
     /**

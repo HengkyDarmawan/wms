@@ -25,7 +25,7 @@
             @can('report', $count)
                 <a class="btn btn-outline-primary" href="{{ route('counts.report', $count) }}">{{ __('Laporan PDF') }}</a>
             @endcan
-            <a class="btn btn-outline-secondary" href="{{ route('counts.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('counts.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -122,7 +122,7 @@
                             <td><span class="badge {{ $a->status->badge() }}">{{ $a->status->label() }}</span></td>
                             <td>
                                 @if ((int) $a->counter_user_id === (int) auth()->id() && ! $a->isDone() && $count->status->isCounting())
-                                    <a class="btn btn-sm btn-primary" href="{{ route('count-tasks.show', $a) }}">{{ __('Hitung') }}</a>
+                                    <a wire:navigate class="btn btn-sm btn-primary" href="{{ route('count-tasks.show', $a) }}">{{ __('Hitung') }}</a>
                                 @endif
                             </td>
                         </tr>
@@ -209,7 +209,7 @@
                 @foreach ($adjustments as $adj)
                     <li class="list-group-item d-flex justify-content-between">
                         @can('view', $adj)
-                            <a href="{{ route('adjustments.show', $adj) }}">{{ $adj->number }}</a>
+                            <a wire:navigate href="{{ route('adjustments.show', $adj) }}">{{ $adj->number }}</a>
                         @else
                             <span>{{ $adj->number }}</span>
                         @endcan

@@ -7,7 +7,7 @@
                 · <span class="badge {{ $tugas->status->badge() }}">{{ $tugas->status->label() }}</span>
             </p>
         </div>
-        <a class="btn btn-outline-secondary btn-sm" href="{{ route('count-tasks.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary btn-sm" href="{{ route('count-tasks.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')

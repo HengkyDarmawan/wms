@@ -29,7 +29,7 @@
                 @foreach ($menunggu as $req)
                     <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
                         <div>
-                            <a href="{{ route('requests.show', $req) }}">{{ $req->number }}</a>
+                            <a wire:navigate href="{{ route('requests.show', $req) }}">{{ $req->number }}</a>
                             <span class="text-muted small">
                                 · {{ $req->project?->code }} · {{ __('dibutuhkan') }}
                                 {{ $req->required_date?->format('d/m/Y') }}
@@ -90,7 +90,7 @@
                 <tbody>
                     @forelse ($tasks as $t)
                         <tr>
-                            <td><a href="{{ route('picks.show', $t) }}">{{ $t->number }}</a></td>
+                            <td><a wire:navigate href="{{ route('picks.show', $t) }}">{{ $t->number }}</a></td>
                             <td>
                                 {{ $t->warehouse?->code }}
                                 <div class="small text-muted">{{ $t->warehouse?->name }}</div>

@@ -14,7 +14,7 @@
     @if ($setup)
         <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
             <span><i class="bi bi-rocket-takeoff"></i> {{ __('Setup awal company: :done dari :total langkah selesai.', ['done' => $setup['done'], 'total' => $setup['total']]) }}</span>
-            <a class="btn btn-sm btn-info" href="{{ route('setup.index') }}">{{ __('Lanjutkan setup') }}</a>
+            <a wire:navigate class="btn btn-sm btn-info" href="{{ route('setup.index') }}">{{ __('Lanjutkan setup') }}</a>
         </div>
     @endif
 

@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ __('BA waste baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Pilih isi bin Waste yang ditutup. Potongan dan serial ditutup utuh. Setelah disetujui, BA ditutup dengan foto atau nomor berita acara bertanda tangan.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('waste-disposals.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('waste-disposals.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')

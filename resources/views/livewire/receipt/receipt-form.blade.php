@@ -16,7 +16,7 @@
                 ['el' => '[data-tambah-baris]', 'judul' => __('4. Baris barang'), 'isi' => __('Satu baris per barang: pilih item, isi jumlah dan satuannya. Tambah baris untuk barang berikutnya.')],
                 ['el' => '[data-simpan-draf]', 'judul' => __('5. Simpan draf'), 'isi' => __('Lalu di halaman detail klik Terima barang, kemudian Selesaikan. Dianggap selesai bila status GRN Selesai dan muncul di Barang masuk, Tugas put-away.')],
             ]" />
-            <a class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -345,6 +345,6 @@
 
     <div class="d-flex gap-2">
         <button class="btn btn-primary" type="button" wire:click="simpan" data-simpan-draf>{{ __('Simpan draf') }}</button>
-        <a class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Batal') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Batal') }}</a>
     </div>
 </div>

@@ -9,7 +9,7 @@
 
         @can('create', \App\Domain\Master\Models\Vendor::class)
             <div class="d-flex gap-2">
-                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}">
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('imports.index') }}">
                     <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
                 </a>
                 <button class="btn btn-primary" type="button" wire:click="buat">
@@ -123,14 +123,14 @@
                         @if ($dampak['po']->isNotEmpty())
                             <div>{{ __('PO') }} ({{ $dampak['po']->count() }}):
                                 @foreach ($dampak['po'] as $po)
-                                    @can('view', $po)<a href="{{ route('purchase-orders.show', $po) }}">{{ $po->number }}</a>@else{{ $po->number }}@endcan <span class="text-muted">({{ $po->status->label() }})</span>@if (! $loop->last), @endif
+                                    @can('view', $po)<a wire:navigate href="{{ route('purchase-orders.show', $po) }}">{{ $po->number }}</a>@else{{ $po->number }}@endcan <span class="text-muted">({{ $po->status->label() }})</span>@if (! $loop->last), @endif
                                 @endforeach
                             </div>
                         @endif
                         @if ($dampak['pesanan']->isNotEmpty())
                             <div>{{ __('Catatan pemesanan belum diterima penuh') }} ({{ $dampak['pesanan']->count() }}) {{ __('pada PRQ') }}:
                                 @foreach ($dampak['prq'] as $prq)
-                                    @can('view', $prq)<a href="{{ route('purchase-requests.show', $prq) }}">{{ $prq->number }}</a>@else{{ $prq->number }}@endcan @if (! $loop->last), @endif
+                                    @can('view', $prq)<a wire:navigate href="{{ route('purchase-requests.show', $prq) }}">{{ $prq->number }}</a>@else{{ $prq->number }}@endcan @if (! $loop->last), @endif
                                 @endforeach
                             </div>
                         @endif

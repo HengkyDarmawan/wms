@@ -25,7 +25,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::WasteDisposal, 'id' => $wst->id])
-            <a class="btn btn-outline-secondary" href="{{ route('waste-disposals.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('waste-disposals.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 

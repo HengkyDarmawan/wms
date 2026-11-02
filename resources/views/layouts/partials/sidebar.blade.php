@@ -104,7 +104,7 @@
 @endphp
 <aside class="nx-sidebar" id="nxSidebar" aria-label="{{ __('Navigasi utama') }}">
     <div class="nx-sidebar-head">
-        <a class="nx-sidebar-brand" href="{{ route('dashboard') }}">
+        <a class="nx-sidebar-brand" wire:navigate.hover href="{{ route('dashboard') }}">
             <img src="{{ asset('img/logo.svg') }}" alt="{{ config('app.name') }}">
             <span class="nx-brand-text">{{ config('app.name') }}</span>
         </a>
@@ -129,14 +129,14 @@
             <div class="nx-section-body show" id="nxSecAtas">
                 <div class="nx-menu-item">
                     <a class="nx-menu-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                       href="{{ route('dashboard') }}" data-title="{{ __('Beranda') }}">
+                       wire:navigate.hover href="{{ route('dashboard') }}" data-title="{{ __('Beranda') }}">
                         <i class="bi bi-grid-1x2"></i><span class="nx-menu-label">{{ __('Beranda') }}</span>
                     </a>
                 </div>
                 @can('approval-inbox')
                     <div class="nx-menu-item">
                         <a class="nx-menu-link {{ request()->routeIs('approval.inbox') ? 'active' : '' }}"
-                           href="{{ route('approval.inbox') }}" data-title="{{ __('Tugas approval saya') }}">
+                           wire:navigate.hover href="{{ route('approval.inbox') }}" data-title="{{ __('Tugas approval saya') }}">
                             <i class="bi bi-check2-square"></i><span class="nx-menu-label">{{ __('Tugas approval saya') }}</span>
                             @if ($tugasApproval > 0)
                                 <span class="badge text-bg-warning ms-auto">{{ $tugasApproval }}</span>
@@ -162,7 +162,7 @@
                         @foreach ($tampil as [$izin, $rute, $label, $ikon, $pola])
                             <div class="nx-menu-item">
                                 <a class="nx-menu-link {{ request()->routeIs($pola) ? 'active' : '' }}"
-                                   href="{{ route($rute) }}" data-title="{{ $label }}">
+                                   wire:navigate.hover href="{{ route($rute) }}" data-title="{{ $label }}">
                                     <i class="bi {{ $ikon }}"></i><span class="nx-menu-label">{{ $label }}</span>
                                 </a>
                             </div>

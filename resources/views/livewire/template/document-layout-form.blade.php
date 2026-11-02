@@ -131,8 +131,8 @@
                             <tr>
                                 <td>{{ __('Label bin, item, lot, potongan') }}</td>
                                 <td>
-                                    <a href="{{ route('label-designs.index') }}">{{ __('Desain label') }}</a> ·
-                                    <a href="{{ route('label-formats.index') }}">{{ __('Ukuran label') }}</a>
+                                    <a wire:navigate href="{{ route('label-designs.index') }}">{{ __('Desain label') }}</a> ·
+                                    <a wire:navigate href="{{ route('label-formats.index') }}">{{ __('Ukuran label') }}</a>
                                 </td>
                             </tr>
                         </tbody>

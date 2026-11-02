@@ -7,8 +7,8 @@
             </h1>
             <p class="text-muted mb-0">
                 {{ $adj->warehouse?->code }} · {{ $adj->origin->label() }}
-                @if ($adj->stockCount) · <a href="{{ route('counts.show', $adj->stock_count_id) }}">{{ $adj->stockCount->number }}</a> @endif
-                @if ($adj->reversalOf) · {{ __('Pembalik') }} <a href="{{ route('adjustments.show', $adj->reversal_of_id) }}">{{ $adj->reversalOf->number }}</a> @endif
+                @if ($adj->stockCount) · <a wire:navigate href="{{ route('counts.show', $adj->stock_count_id) }}">{{ $adj->stockCount->number }}</a> @endif
+                @if ($adj->reversalOf) · {{ __('Pembalik') }} <a wire:navigate href="{{ route('adjustments.show', $adj->reversal_of_id) }}">{{ $adj->reversalOf->number }}</a> @endif
                 · {{ __('Alasan') }}: {{ $adj->reason?->label }}
                 · {{ __('Diajukan') }} {{ $adj->submitter?->name }}
                 @if ($adj->approver) · {{ __('Diputus') }} {{ $adj->approver->name }} @endif
@@ -17,11 +17,11 @@
             @if ($adj->notes) <p class="small mb-0">{{ $adj->notes }}</p> @endif
             @if ($adj->rejectReason) <p class="text-danger small mb-0">{{ __('Ditolak') }}: {{ $adj->rejectReason->label }}</p> @endif
             @if ($adj->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $adj->cancelReason->label }}</p> @endif
-            @if ($pembalik) <p class="small mb-0">{{ __('Dibalik oleh') }} <a href="{{ route('adjustments.show', $pembalik) }}">{{ $pembalik->number }}</a></p> @endif
+            @if ($pembalik) <p class="small mb-0">{{ __('Dibalik oleh') }} <a wire:navigate href="{{ route('adjustments.show', $pembalik) }}">{{ $pembalik->number }}</a></p> @endif
         </div>
         <div class="d-flex flex-wrap gap-2">
             @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::StockAdjustment, 'id' => $adj->id, 'teks' => __('Cetak BA')])
-            <a class="btn btn-outline-secondary" href="{{ route('adjustments.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('adjustments.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -99,7 +99,7 @@
                 <button class="btn btn-outline-danger" type="button" wire:click="mintaDialog('batal')">{{ __('Batalkan') }}</button>
             @endcan
             @can('reverse', $adj)
-                <a class="btn btn-outline-warning" href="{{ route('adjustments.create', ['reversal_of' => $adj->id]) }}">{{ __('Buat ADJ pembalik') }}</a>
+                <a wire:navigate class="btn btn-outline-warning" href="{{ route('adjustments.create', ['reversal_of' => $adj->id]) }}">{{ __('Buat ADJ pembalik') }}</a>
             @endcan
         </div>
     </div>

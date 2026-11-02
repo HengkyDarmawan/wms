@@ -112,7 +112,7 @@ class AdjustmentForm extends Component
         });
 
         if ($ok && $adj !== null) {
-            $this->redirectRoute('adjustments.show', $adj);
+            $this->redirectRoute('adjustments.show', $adj, navigate: true);
         }
     }
 

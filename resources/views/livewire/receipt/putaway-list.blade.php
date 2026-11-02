@@ -37,7 +37,7 @@
                 <tbody>
                     @forelse ($tasks as $t)
                         <tr>
-                            <td><a href="{{ route('putaways.show', $t) }}">{{ $t->number }}</a></td>
+                            <td><a wire:navigate href="{{ route('putaways.show', $t) }}">{{ $t->number }}</a></td>
                             <td>{{ $t->receipt?->number }}</td>
                             <td>{{ $t->warehouse?->code }}</td>
                             <td class="text-end">{{ $t->lines_count }}</td>

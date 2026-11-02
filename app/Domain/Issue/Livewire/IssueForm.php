@@ -231,7 +231,7 @@ class IssueForm extends Component
         });
 
         if ($ok && $isu !== null) {
-            $this->redirectRoute('issues.show', $isu);
+            $this->redirectRoute('issues.show', $isu, navigate: true);
         }
     }
 

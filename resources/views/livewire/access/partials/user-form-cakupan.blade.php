@@ -84,7 +84,7 @@
                         @error('proyekDipilih')<div class="small text-danger mt-1">{{ $message }}</div>@enderror
                         <div class="form-text">
                             {{ __('Periodenya diatur di Proyek › tab Tim site; di sini hanya penempatan awalnya. Lebih cepat: Master data › Klien › tab PIC › Buat akun portal.') }}
-                            <a href="{{ route('clients.index') }}">{{ __('Buka daftar klien') }}</a>
+                            <a wire:navigate href="{{ route('clients.index') }}">{{ __('Buka daftar klien') }}</a>
                         </div>
                     </div>
                 </div>

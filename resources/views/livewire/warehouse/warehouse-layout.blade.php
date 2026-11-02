@@ -36,7 +36,7 @@
                     <a class="btn btn-outline-secondary" href="{{ route('warehouses.layout.print', $gudang) }}" target="_blank" rel="noopener" data-cetak-denah>
                         <i class="bi bi-printer"></i> {{ __('Cetak denah') }}
                     </a>
-                    <a class="btn btn-outline-secondary" href="{{ route('warehouses.show', $gudang) }}">{{ __('Kembali ke gudang') }}</a>
+                    <a wire:navigate class="btn btn-outline-secondary" href="{{ route('warehouses.show', $gudang) }}">{{ __('Kembali ke gudang') }}</a>
                 </div>
             </div>
         @endunless

@@ -9,7 +9,7 @@
 
         @can('create', \App\Domain\Master\Models\Project::class)
             <div class="d-flex gap-2">
-                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}">
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('imports.index') }}">
                     <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
                 </a>
                 <button class="btn btn-primary" type="button" wire:click="buat">
@@ -195,14 +195,14 @@
                     @forelse ($projects as $project)
                         <tr wire:key="proyek-{{ $project->id }}">
                             <td>
-                                <a class="fw-semibold" href="{{ route('projects.show', $project) }}">{{ $project->name }}</a>
+                                <a wire:navigate class="fw-semibold" href="{{ route('projects.show', $project) }}">{{ $project->name }}</a>
                                 <div class="small text-muted">{{ $project->code }}</div>
                             </td>
                             <td>
                                 @if ($project->is_internal)
                                     <span class="badge text-bg-info">{{ __('Proyek Internal') }}</span>
                                 @elseif ($project->client !== null)
-                                    <a href="{{ route('clients.show', $project->client->id) }}">{{ $project->client->name }}</a>
+                                    <a wire:navigate href="{{ route('clients.show', $project->client->id) }}">{{ $project->client->name }}</a>
                                 @else
                                     —
                                 @endif
@@ -219,7 +219,7 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <a class="btn btn-sm btn-outline-primary" href="{{ route('projects.show', $project) }}">{{ __('Buka') }}</a>
+                                <a wire:navigate class="btn btn-sm btn-outline-primary" href="{{ route('projects.show', $project) }}">{{ __('Buka') }}</a>
                                 @can('update', $project)
                                     <button class="btn btn-sm btn-outline-secondary" type="button"
                                             wire:click="ubah({{ $project->id }})">{{ __('Ubah') }}</button>

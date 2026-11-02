@@ -25,11 +25,11 @@
                 </button>
             @endif
             @can('update', $user)
-                <a class="btn btn-primary" href="{{ route('users.edit', $user) }}">
+                <a wire:navigate class="btn btn-primary" href="{{ route('users.edit', $user) }}">
                     <i class="bi bi-pencil"></i> {{ __('Ubah') }}
                 </a>
             @endcan
-            <a class="btn btn-outline-secondary" href="{{ route('users.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('users.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -177,7 +177,7 @@
                                 @php($statusSite = $site->status())
                                 <tr wire:key="pts-{{ $site->id }}">
                                     <td>
-                                        <a href="{{ route('projects.show', ['project' => $site->project_id, 'tab' => 'tim-site']) }}">
+                                        <a wire:navigate href="{{ route('projects.show', ['project' => $site->project_id, 'tab' => 'tim-site']) }}">
                                             {{ $site->project?->code }}
                                         </a>
                                         <div class="small text-muted">{{ $site->project?->name }}</div>

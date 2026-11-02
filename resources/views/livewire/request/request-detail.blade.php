@@ -10,15 +10,15 @@
                 {{ __('Pemohon') }}: {{ $req->requester?->name ?? '—' }} ({{ $req->requester_type->label() }}) ·
                 {{ __('Dibutuhkan') }}: {{ $req->required_date?->format('d/m/Y') }}
                 @if ($req->parent)
-                    · {{ __('Tambahan dari') }} <a href="{{ route('requests.show', $req->parent) }}">{{ $req->parent->number }}</a>
+                    · {{ __('Tambahan dari') }} <a wire:navigate href="{{ route('requests.show', $req->parent) }}">{{ $req->parent->number }}</a>
                 @endif
             </p>
             @include('request.partials.client-po')
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('requests.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('requests.index') }}">{{ __('Kembali') }}</a>
             @can('update', $req)
-                <a class="btn btn-outline-primary" href="{{ route('requests.edit', $req) }}">{{ __('Ubah') }}</a>
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('requests.edit', $req) }}">{{ __('Ubah') }}</a>
             @endcan
         </div>
     </div>
@@ -305,7 +305,7 @@
             <ul class="list-group list-group-flush">
                 @foreach ($supplements as $s)
                     <li class="list-group-item d-flex justify-content-between">
-                        <a href="{{ route('requests.show', $s->id) }}">{{ $s->number }}</a>
+                        <a wire:navigate href="{{ route('requests.show', $s->id) }}">{{ $s->number }}</a>
                         <span class="badge {{ $s->status->badge() }}">{{ $s->status->label() }}</span>
                     </li>
                 @endforeach
@@ -320,7 +320,7 @@
                 @foreach ($transferBackorder as $t)
                     <li class="list-group-item">
                         @can('view', $t)
-                            <a href="{{ route('transfers.show', $t) }}">{{ $t->number }}</a>
+                            <a wire:navigate href="{{ route('transfers.show', $t) }}">{{ $t->number }}</a>
                         @else
                             {{ $t->number }}
                         @endcan

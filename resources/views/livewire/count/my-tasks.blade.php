@@ -7,7 +7,7 @@
     </div>
 
     @forelse ($terbuka as $a)
-        <a class="card mb-2 text-decoration-none" href="{{ route('count-tasks.show', $a) }}" wire:key="terbuka-{{ $a->id }}">
+        <a wire:navigate class="card mb-2 text-decoration-none" href="{{ route('count-tasks.show', $a) }}" wire:key="terbuka-{{ $a->id }}">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
                     <div class="h5 mb-1 text-body">{{ $a->bin?->code }} @if ($a->bin?->count_flag) <span class="badge text-bg-warning">⚑</span> @endif</div>

@@ -7,7 +7,7 @@
             </h1>
             <p class="text-muted mb-0">
                 {{ $rtv->warehouse?->code }} → {{ $rtv->vendor?->name }} · GRN
-                <a href="{{ route('receipts.show', $rtv->goods_receipt_id) }}">{{ $rtv->receipt?->number }}</a>
+                <a wire:navigate href="{{ route('receipts.show', $rtv->goods_receipt_id) }}">{{ $rtv->receipt?->number }}</a>
                 · {{ __('Diajukan') }} {{ $rtv->submitter?->name }}
                 @if ($rtv->approver) · {{ __('Diputus') }} {{ $rtv->approver->name }} @endif
                 @if ($rtv->replacementReceipt) · {{ __('Pengganti') }} {{ $rtv->replacementReceipt->number }} @endif
@@ -17,7 +17,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::VendorReturn, 'id' => $rtv->id, 'teks' => __('Cetak surat retur')])
-            <a class="btn btn-outline-secondary" href="{{ route('vendor-returns.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('vendor-returns.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 

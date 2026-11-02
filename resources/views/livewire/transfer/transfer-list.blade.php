@@ -5,7 +5,7 @@
             <p class="text-muted mb-0">{{ __('Pemindahan stok antar gudang, antar proyek, dan antar titik dalam satu proyek. Barang bergerak lewat tugas picking, surat jalan, dan penerimaan.') }}</p>
         </div>
         @can('create', App\Domain\Transfer\Models\Transfer::class)
-            <a class="btn btn-primary" href="{{ route('transfers.create') }}">{{ __('Transfer baru') }}</a>
+            <a wire:navigate class="btn btn-primary" href="{{ route('transfers.create') }}">{{ __('Transfer baru') }}</a>
         @endcan
     </div>
 
@@ -53,7 +53,7 @@
                     @forelse ($transfers as $t)
                         <tr>
                             <td>
-                                <a href="{{ route('transfers.show', $t) }}">{{ $t->number }}</a>
+                                <a wire:navigate href="{{ route('transfers.show', $t) }}">{{ $t->number }}</a>
                                 <div class="small text-muted">{{ $t->submitter?->name ?? __('Sistem') }}</div>
                             </td>
                             <td>{{ $t->fromWarehouse?->code }} → {{ $t->toWarehouse?->code }}</td>

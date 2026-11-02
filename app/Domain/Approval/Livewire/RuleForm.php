@@ -290,7 +290,7 @@ class RuleForm extends Component
 
         if ($ok) {
             session()->flash('pesan', __('Aturan approval disimpan.'));
-            $this->redirectRoute('approval.rules.index');
+            $this->redirectRoute('approval.rules.index', navigate: true);
         }
     }
 

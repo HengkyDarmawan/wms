@@ -126,7 +126,7 @@
                         <li class="list-group-item text-muted">{{ __('Belum ada tagihan.') }}</li>
                     @endforelse
                 </ul>
-                <div class="card-footer small"><a href="{{ route('platform.payments.index') }}">{{ __('Verifikasi bukti bayar') }}</a></div>
+                <div class="card-footer small"><a wire:navigate href="{{ route('platform.payments.index') }}">{{ __('Verifikasi bukti bayar') }}</a></div>
             </div>
 
             <div class="card mb-3">

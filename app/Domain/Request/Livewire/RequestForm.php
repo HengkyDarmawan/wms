@@ -253,7 +253,7 @@ class RequestForm extends Component
             return;
         }
 
-        $this->redirectRoute('requests.show', $tersimpan);
+        $this->redirectRoute('requests.show', $tersimpan, navigate: true);
     }
 
     /** Simpan lalu ajukan sekaligus: dua tombol terpisah hanya menambah langkah. */
@@ -278,7 +278,7 @@ class RequestForm extends Component
             return;
         }
 
-        $this->redirectRoute('requests.show', $tersimpan);
+        $this->redirectRoute('requests.show', $tersimpan, navigate: true);
     }
 
     public function render(): View

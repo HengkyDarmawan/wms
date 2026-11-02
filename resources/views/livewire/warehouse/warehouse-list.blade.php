@@ -16,7 +16,7 @@
         @can('create', \App\Domain\Warehouse\Models\Warehouse::class)
             <div class="d-flex flex-wrap gap-2">
                 {{-- A-272: impor banyak gudang sekaligus. --}}
-                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-warehouses">
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-warehouses">
                     <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
                 </a>
                 {{-- A-414: pemandu di layar. --}}

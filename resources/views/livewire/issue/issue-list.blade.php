@@ -6,10 +6,10 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @can('issue.view')
-                <a class="btn btn-outline-secondary" href="{{ route('reports.show', 'material-per-proyek') }}">{{ __('Material per proyek') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('reports.show', 'material-per-proyek') }}">{{ __('Material per proyek') }}</a>
             @endcan
             @can('create', App\Domain\Issue\Models\MaterialIssue::class)
-                <a class="btn btn-primary" href="{{ route('issues.create') }}">{{ __('Pemakaian baru') }}</a>
+                <a wire:navigate class="btn btn-primary" href="{{ route('issues.create') }}">{{ __('Pemakaian baru') }}</a>
             @endcan
         </div>
     </div>
@@ -52,7 +52,7 @@
                     @forelse ($issues as $i)
                         <tr>
                             <td>
-                                <a href="{{ route('issues.show', $i) }}">{{ $i->number }}</a>
+                                <a wire:navigate href="{{ route('issues.show', $i) }}">{{ $i->number }}</a>
                                 <div class="small text-muted">
                                     {{ $i->issuer?->name }}
                                     @if ($i->reversalOf) · {{ __('Pembalik') }} {{ $i->reversalOf->number }} @endif

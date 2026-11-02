@@ -189,3 +189,7 @@ body > .nx-pilih-dropdown { z-index: 1090; } /* di atas .modal (1055) & offcanva
 .driver-popover.nx-tur .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: var(--nx-card-bg, #fff); }
 .driver-popover.nx-tur .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: var(--nx-card-bg, #fff); }
 .driver-popover.nx-tur .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: var(--nx-card-bg, #fff); }
+
+/* A-421: progress bar wire:navigate mengikuti warna tema (bawaan Livewire biru #2299dd). */
+#nprogress .bar { background: var(--nx-primary, #6366f1) !important; height: 3px !important; }
+#nprogress .peg { box-shadow: 0 0 10px var(--nx-primary, #6366f1), 0 0 5px var(--nx-primary, #6366f1) !important; }

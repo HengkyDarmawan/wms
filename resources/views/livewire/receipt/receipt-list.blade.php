@@ -7,7 +7,7 @@
             </p>
         </div>
         @can('create', App\Domain\Receipt\Models\GoodsReceipt::class)
-            <a class="btn btn-primary" href="{{ route('receipts.create') }}">{{ __('Penerimaan baru') }}</a>
+            <a wire:navigate class="btn btn-primary" href="{{ route('receipts.create') }}">{{ __('Penerimaan baru') }}</a>
         @endcan
     </div>
 
@@ -78,7 +78,7 @@
                 <tbody>
                     @forelse ($receipts as $grn)
                         <tr>
-                            <td><a href="{{ route('receipts.show', $grn) }}">{{ $grn->number }}</a></td>
+                            <td><a wire:navigate href="{{ route('receipts.show', $grn) }}">{{ $grn->number }}</a></td>
                             <td>{{ $grn->warehouse?->code }}</td>
                             <td>
                                 {{ $grn->sourceLabel() }}

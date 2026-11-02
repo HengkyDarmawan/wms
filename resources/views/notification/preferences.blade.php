@@ -8,12 +8,12 @@
             <h1 class="h3 mb-1">{{ __('Preferensi notifikasi') }}</h1>
             <p class="text-muted mb-0">{{ $waEvents === [] ? __('Pilih kanal per kejadian.') : __('Pilih kanal per kejadian. Kolom WhatsApp hanya untuk kejadian yang diizinkan company.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('notifications.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('notifications.index') }}">{{ __('Kembali') }}</a>
     </div>
 
 
     @if ($waEvents !== [] && ! $waNomor)
-        <div class="alert alert-info small">{{ __('Verifikasi nomor WhatsApp Anda di profil agar pesan WhatsApp bisa dikirim.') }} <a href="{{ route('profile.edit') }}#whatsapp">{{ __('Buka profil') }}</a></div>
+        <div class="alert alert-info small">{{ __('Verifikasi nomor WhatsApp Anda di profil agar pesan WhatsApp bisa dikirim.') }} <a wire:navigate href="{{ route('profile.edit') }}#whatsapp">{{ __('Buka profil') }}</a></div>
     @endif
 
     <form class="card" method="POST" action="{{ route('notifications.preferences.save') }}">

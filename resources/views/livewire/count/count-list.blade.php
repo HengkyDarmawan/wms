@@ -6,10 +6,10 @@
         </div>
         <div class="d-flex gap-2">
             @can('viewAny', App\Domain\Count\Models\CountAssignment::class)
-                <a class="btn btn-outline-primary" href="{{ route('count-tasks.index') }}">{{ __('Hitungan saya') }}</a>
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('count-tasks.index') }}">{{ __('Hitungan saya') }}</a>
             @endcan
             @can('create', App\Domain\Count\Models\StockCount::class)
-                <a class="btn btn-primary" href="{{ route('counts.create') }}">{{ __('Sesi baru') }}</a>
+                <a wire:navigate class="btn btn-primary" href="{{ route('counts.create') }}">{{ __('Sesi baru') }}</a>
             @endcan
         </div>
     </div>
@@ -80,7 +80,7 @@
                     @forelse ($counts as $c)
                         <tr>
                             <td>
-                                <a href="{{ route('counts.show', $c) }}">{{ $c->number }}</a>
+                                <a wire:navigate href="{{ route('counts.show', $c) }}">{{ $c->number }}</a>
                                 <div class="small text-muted">{{ $c->creator?->name }} @if ($c->is_audit) · {{ __('audit') }} @endif</div>
                             </td>
                             <td>{{ $c->count_type->label() }} @unless ($c->freeze_bins) <span class="badge text-bg-light">{{ __('tanpa beku') }}</span> @endunless</td>

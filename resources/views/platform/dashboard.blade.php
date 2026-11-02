@@ -10,9 +10,9 @@
         </div>
         <div class="d-flex gap-2">
             @if ($pendingPayments > 0)
-                <a class="btn btn-outline-warning" href="{{ route('platform.payments.index') }}">{{ __(':n bukti bayar menunggu', ['n' => $pendingPayments]) }}</a>
+                <a wire:navigate class="btn btn-outline-warning" href="{{ route('platform.payments.index') }}">{{ __(':n bukti bayar menunggu', ['n' => $pendingPayments]) }}</a>
             @endif
-            <a class="btn btn-primary" href="{{ route('platform.companies.create') }}">{{ __('Company baru') }}</a>
+            <a wire:navigate class="btn btn-primary" href="{{ route('platform.companies.create') }}">{{ __('Company baru') }}</a>
         </div>
     </div>
 
@@ -38,7 +38,7 @@
                     @forelse ($companies as $company)
                         <tr>
                             <td>
-                                <a class="fw-semibold" href="{{ route('platform.companies.show', $company->id) }}">{{ $company->name }}</a>
+                                <a wire:navigate class="fw-semibold" href="{{ route('platform.companies.show', $company->id) }}">{{ $company->name }}</a>
                                 <div class="small text-muted">{{ $company->code }}</div>
                             </td>
                             <td>{{ $company->host() }}</td>

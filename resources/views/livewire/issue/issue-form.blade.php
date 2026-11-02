@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ $nomor ? __('Ubah draf').' '.$nomor : __('Pemakaian baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Catat barang habis pakai yang dipakai proyek dari Gudang Site. Jumlah dalam satuan dasar; serial dipakai per unit, potongan dipakai utuh. Stok baru keluar saat dikonfirmasi.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('issues.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('issues.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')

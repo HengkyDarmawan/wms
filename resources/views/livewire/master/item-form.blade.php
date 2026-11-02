@@ -16,7 +16,7 @@
                 ['el' => '#pengaturan-tambahan', 'judul' => __('Pengaturan tambahan (opsional)'), 'isi' => __('Isian pembelian otomatis, ukuran barang (mis. 1 BATANG = 6 M), dan kemasan (mis. 1 DUS = 12 PCS). Boleh dilewati, bisa diisi nanti.')],
                 ['el' => '[data-tur-simpan]', 'judul' => __('5. Simpan'), 'isi' => __('Klik Simpan item. Dianggap selesai bila muncul tulisan Item disimpan di halaman detail item.')],
             ]" />
-            <a class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali ke daftar') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali ke daftar') }}</a>
         </div>
     </div>
 
@@ -291,6 +291,6 @@
 
     <div class="d-flex gap-2 mb-4">
         <button class="btn btn-primary" type="button" wire:click="simpan" data-tur-simpan>{{ __('Simpan item') }}</button>
-        <a class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Batal') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Batal') }}</a>
     </div>
 </div>

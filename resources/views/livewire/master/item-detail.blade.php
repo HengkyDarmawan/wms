@@ -9,7 +9,7 @@
         </div>
         <div class="d-flex gap-2">
             @can('update', $item)
-                <a class="btn btn-outline-secondary" href="{{ route('items.edit', $item) }}">{{ __('Ubah') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('items.edit', $item) }}">{{ __('Ubah') }}</a>
             @endcan
             @can('po.view')
                 <a class="btn btn-outline-secondary" href="{{ route('items.price-history', $item) }}">
@@ -22,7 +22,7 @@
                     <i class="bi bi-upc-scan"></i> {{ __('Cetak label') }}
                 </a>
             @endcan
-            <a class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 

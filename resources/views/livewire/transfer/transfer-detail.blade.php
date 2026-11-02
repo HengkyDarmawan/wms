@@ -9,7 +9,7 @@
                 {{ $trf->fromWarehouse?->code }}@if ($trf->fromProject) ({{ $trf->fromProject->code }})@endif
                 → {{ $trf->toWarehouse?->code }}@if ($trf->toProject) ({{ $trf->toProject->code }})@endif
                 · {{ $trf->kind()->label() }} · {{ $trf->origin->label() }}
-                @if ($req) · <a href="{{ route('requests.show', $req) }}">{{ $req->number }}</a> @endif
+                @if ($req) · <a wire:navigate href="{{ route('requests.show', $req) }}">{{ $req->number }}</a> @endif
                 · {{ __('Diajukan') }} {{ $trf->submitter?->name ?? __('Sistem') }}
                 @if ($trf->approver) · {{ __('Diputus') }} {{ $trf->approver->name }} @endif
                 @if ($trf->completed_at) · {{ __('Selesai') }} {{ $trf->completed_at->lokal()->format('d/m/Y H:i') }} @endif
@@ -19,7 +19,7 @@
             @if ($trf->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $trf->cancelReason->label }}</p> @endif
         </div>
         <a class="btn btn-outline-secondary" href="{{ route('print.document', ['type' => 'transfer', 'id' => $trf->id]) }}" target="_blank" rel="noopener"><i class="bi bi-printer"></i> {{ __('Cetak') }}</a>
-        <a class="btn btn-outline-secondary" href="{{ route('transfers.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('transfers.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')
@@ -78,7 +78,7 @@
                             <td class="text-end">{{ number_format((float) $l->qty_received, 2, ',', '.') }}</td>
                             <td class="small">
                                 @if ($l->serial)
-                                    <a href="{{ route('assets.show', $l->serial_id) }}">{{ $l->serial->serial_no }}</a>
+                                    <a wire:navigate href="{{ route('assets.show', $l->serial_id) }}">{{ $l->serial->serial_no }}</a>
                                 @else
                                     {{ $l->requestLine?->request?->number ?? '—' }}
                                 @endif
@@ -98,12 +98,12 @@
             @endcan
             @if ($pckSiapKirim)
                 @can('create', App\Domain\Shipment\Models\Shipment::class)
-                    <a class="btn btn-outline-primary" href="{{ route('shipments.create', ['pick_task' => $pckSiapKirim->id]) }}">{{ __('Susun surat jalan') }}</a>
+                    <a wire:navigate class="btn btn-outline-primary" href="{{ route('shipments.create', ['pick_task' => $pckSiapKirim->id]) }}">{{ __('Susun surat jalan') }}</a>
                 @endcan
             @endif
             @if ($sjMenungguGrn)
                 @can('create', App\Domain\Receipt\Models\GoodsReceipt::class)
-                    <a class="btn btn-outline-primary" href="{{ route('receipts.create', ['shipment' => $sjMenungguGrn->id]) }}">{{ __('Terima di gudang tujuan') }}</a>
+                    <a wire:navigate class="btn btn-outline-primary" href="{{ route('receipts.create', ['shipment' => $sjMenungguGrn->id]) }}">{{ __('Terima di gudang tujuan') }}</a>
                 @endcan
             @endif
             @can('cancel', $trf)
@@ -121,17 +121,17 @@
         <div class="card-header"><strong>{{ __('Pergerakan fisik') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($pickTasks as $p)
-                <li class="list-group-item">{{ __('Tugas picking') }} <a href="{{ route('picks.show', $p->id) }}">{{ $p->number }}</a> · {{ $p->warehouse?->code }} · {{ $p->status->label() }}</li>
+                <li class="list-group-item">{{ __('Tugas picking') }} <a wire:navigate href="{{ route('picks.show', $p->id) }}">{{ $p->number }}</a> · {{ $p->warehouse?->code }} · {{ $p->status->label() }}</li>
             @empty
                 @unless ($trf->asset_onsite)
                     <li class="list-group-item text-muted">{{ __('Belum ada tugas picking.') }}</li>
                 @endunless
             @endforelse
             @foreach ($shipments as $s)
-                <li class="list-group-item">{{ __('Surat jalan') }} <a href="{{ route('shipments.show', $s->id) }}">{{ $s->number }}</a> · {{ $s->shipment_method->label() }} · {{ $s->status->label() }}</li>
+                <li class="list-group-item">{{ __('Surat jalan') }} <a wire:navigate href="{{ route('shipments.show', $s->id) }}">{{ $s->number }}</a> · {{ $s->shipment_method->label() }} · {{ $s->status->label() }}</li>
             @endforeach
             @foreach ($receipts as $g)
-                <li class="list-group-item">{{ __('Penerimaan') }} <a href="{{ route('receipts.show', $g->id) }}">{{ $g->number }}</a> · {{ $g->status->label() }}</li>
+                <li class="list-group-item">{{ __('Penerimaan') }} <a wire:navigate href="{{ route('receipts.show', $g->id) }}">{{ $g->number }}</a> · {{ $g->status->label() }}</li>
             @endforeach
         </ul>
     </div>

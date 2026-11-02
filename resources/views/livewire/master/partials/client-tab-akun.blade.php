@@ -24,7 +24,7 @@
                     <tr wire:key="akun-{{ $akun->id }}">
                         <td>
                             @can('view', $akun)
-                                <a href="{{ route('users.show', $akun->id) }}">{{ $akun->name }}</a>
+                                <a wire:navigate href="{{ route('users.show', $akun->id) }}">{{ $akun->name }}</a>
                             @else
                                 {{ $akun->name }}
                             @endcan

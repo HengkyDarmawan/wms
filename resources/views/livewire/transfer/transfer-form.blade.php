@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ __('Transfer baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Stok gudang asal dicadangkan saat disetujui; tugas picking dibuat otomatis di gudang asal. Jumlah dalam satuan dasar item.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('transfers.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('transfers.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')

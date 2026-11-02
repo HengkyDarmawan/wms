@@ -152,7 +152,7 @@
                             <td>{{ $dsc->number }}</td>
                             <td>
                                 @if ($dsc->shipment)
-                                    <a href="{{ route('shipments.show', $dsc->shipment) }}">{{ $dsc->shipment->number }}</a>
+                                    <a wire:navigate href="{{ route('shipments.show', $dsc->shipment) }}">{{ $dsc->shipment->number }}</a>
                                 @else
                                     —
                                 @endif

@@ -23,7 +23,7 @@
             @if ($bukti)
                 @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::ProofOfDelivery, 'id' => $sj->id, 'teks' => __('Cetak bukti terima')])
             @endif
-            <a class="btn btn-outline-secondary" href="{{ route('shipments.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('shipments.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -245,7 +245,7 @@
                 @foreach ($selisih as $dsc)
                     <li class="list-group-item">
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('discrepancies.index') }}">{{ $dsc->number }}</a>
+                            <a wire:navigate href="{{ route('discrepancies.index') }}">{{ $dsc->number }}</a>
                             <span>
                                 <a class="small me-2" target="_blank" rel="noopener"
                                    href="{{ route('print.document', ['type' => 'delivery-discrepancy', 'id' => $dsc->id]) }}"><i class="bi bi-printer"></i> {{ __('Cetak BA') }}</a>

@@ -10,13 +10,13 @@
                 {{ __('Dibutuhkan') }}: {{ $req->required_date?->format('d/m/Y') }}
                 @if ($req->parent)
                     · {{ __('Tambahan dari') }}
-                    <a href="{{ route('portal.requests.show', $req->parent) }}">{{ $req->parent->number }}</a>
+                    <a wire:navigate href="{{ route('portal.requests.show', $req->parent) }}">{{ $req->parent->number }}</a>
                 @endif
             </p>
             @include('request.partials.client-po')
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('portal.requests.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('portal.requests.index') }}">{{ __('Kembali') }}</a>
             @can('addLines', $req)
                 <button class="btn btn-primary" type="button" wire:click="mintaTambah">{{ __('Tambah baris') }}</button>
             @endcan
@@ -186,7 +186,7 @@
             <ul class="list-group list-group-flush">
                 @foreach ($supplements as $s)
                     <li class="list-group-item d-flex justify-content-between">
-                        <a href="{{ route('portal.requests.show', $s->id) }}">{{ $s->number }}</a>
+                        <a wire:navigate href="{{ route('portal.requests.show', $s->id) }}">{{ $s->number }}</a>
                         <span class="badge {{ $s->status->badge() }}">{{ $s->status->label() }}</span>
                     </li>
                 @endforeach

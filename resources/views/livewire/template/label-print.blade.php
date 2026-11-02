@@ -109,7 +109,7 @@
                     <x-pilih model="formatId" id="lbl-kertas" live wajib :label="__('Ukuran label')"
                              :options="$formats->map(fn ($f) => ['value' => $f->id, 'text' => $f->name.' — '.$f->summary()])->all()" />
                     @if ($bisaDesain)
-                        <div class="form-text"><a href="{{ route('label-designs.index', ['type' => $type, 'format' => $formatId]) }}">{{ __('Atur desain label ini') }}</a> · <a href="{{ route('label-formats.index') }}">{{ __('Kelola ukuran') }}</a></div>
+                        <div class="form-text"><a wire:navigate href="{{ route('label-designs.index', ['type' => $type, 'format' => $formatId]) }}">{{ __('Atur desain label ini') }}</a> · <a wire:navigate href="{{ route('label-formats.index') }}">{{ __('Kelola ukuran') }}</a></div>
                     @endif
                 </div>
                 <div class="col-md-2">

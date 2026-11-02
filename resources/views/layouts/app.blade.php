@@ -19,6 +19,7 @@
     </script>
     @include('layouts.partials.palette')
     @fonts
+    @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 {{-- data-nx-layout menyalakan sidebar, filter menu, dan header NexaDash (resources/js/nexadash/app.js). --}}
@@ -67,5 +68,6 @@
     </footer>
 </div>
 
+@livewireScripts
 </body>
 </html>

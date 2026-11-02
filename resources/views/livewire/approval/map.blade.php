@@ -5,9 +5,9 @@
             <p class="text-muted mb-0">{{ __('Siapa menyetujui apa, dan siapa atasan siapa. Hanya membaca — ubah lewat Aturan approval dan Struktur organisasi.') }}</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('approval.rules.index') }}">{{ __('Aturan approval') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('approval.rules.index') }}">{{ __('Aturan approval') }}</a>
             @can('org.view')
-                <a class="btn btn-outline-secondary" href="{{ route('org.index') }}">{{ __('Struktur organisasi') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('org.index') }}">{{ __('Struktur organisasi') }}</a>
             @endcan
         </div>
     </div>

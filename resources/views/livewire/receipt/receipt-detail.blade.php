@@ -12,13 +12,13 @@
             </p>
             @if ($grn->receipt_type->value === 'return' && $grn->goods_return_id)
                 <p class="small mb-0">
-                    {{ __('Retur') }} <a href="{{ route('returns.show', $grn->goods_return_id) }}">{{ $grn->goodsReturn?->number }}</a>
+                    {{ __('Retur') }} <a wire:navigate href="{{ route('returns.show', $grn->goods_return_id) }}">{{ $grn->goodsReturn?->number }}</a>
                     — {{ __('barang masuk bin Retur; GRN selesai otomatis saat barangnya dipilah di detail RET.') }}
                 </p>
             @endif
         </div>
         @if ($grn->status !== \App\Domain\Receipt\Enums\GoodsReceiptStatus::Draft) <a class="btn btn-outline-secondary" href="{{ route('print.document', ['type' => 'goods-receipt', 'id' => $grn->id]) }}" target="_blank" rel="noopener"><i class="bi bi-printer"></i> {{ __('Cetak') }}</a> @endif
-        <a class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('receipts.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')
@@ -230,7 +230,7 @@
         </div>
         <div class="card-footer d-flex flex-wrap gap-2">
             @can('update', $grn)
-                <a class="btn btn-outline-primary" href="{{ route('receipts.edit', $grn) }}">{{ __('Ubah draf') }}</a>
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('receipts.edit', $grn) }}">{{ __('Ubah draf') }}</a>
             @endcan
             @can('receive', $grn)
                 {{-- A-420: satu klik untuk penerimaan tanpa QC; tombol lama tetap. --}}
@@ -253,7 +253,7 @@
             @endif
             @if ($bisaRetur)
                 @can('create', App\Domain\Receipt\Models\VendorReturn::class)
-                    <a class="btn btn-outline-danger" href="{{ route('vendor-returns.create', ['receipt' => $grn->id]) }}">{{ __('Retur ke vendor') }}</a>
+                    <a wire:navigate class="btn btn-outline-danger" href="{{ route('vendor-returns.create', ['receipt' => $grn->id]) }}">{{ __('Retur ke vendor') }}</a>
                 @endcan
             @endif
             @can('cancel', $grn)
@@ -286,7 +286,7 @@
                 <ul class="list-group list-group-flush">
                     @forelse ($putaways as $p)
                         <li class="list-group-item d-flex justify-content-between">
-                            <a href="{{ route('putaways.show', $p) }}">{{ $p->number }}</a>
+                            <a wire:navigate href="{{ route('putaways.show', $p) }}">{{ $p->number }}</a>
                             <span class="badge {{ $p->status->badge() }}">{{ $p->status->label() }}</span>
                         </li>
                     @empty
@@ -301,7 +301,7 @@
                 <ul class="list-group list-group-flush">
                     @forelse ($returns as $r)
                         <li class="list-group-item d-flex justify-content-between">
-                            <a href="{{ route('vendor-returns.show', $r) }}">{{ $r->number }}</a>
+                            <a wire:navigate href="{{ route('vendor-returns.show', $r) }}">{{ $r->number }}</a>
                             <span class="badge {{ $r->status->badge() }}">{{ $r->status->label() }}</span>
                         </li>
                     @empty

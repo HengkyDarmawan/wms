@@ -107,7 +107,7 @@
             @endcan
             @if (! $portal && $pck && $pck->status->value === 'completed' && ! $ret->return_shipment_id)
                 @can('create', App\Domain\Shipment\Models\Shipment::class)
-                    <a class="btn btn-outline-primary" href="{{ route('shipments.create', ['pick_task' => $pck->id]) }}">{{ __('Susun SJ balik') }}</a>
+                    <a wire:navigate class="btn btn-outline-primary" href="{{ route('shipments.create', ['pick_task' => $pck->id]) }}">{{ __('Susun SJ balik') }}</a>
                 @endcan
             @endif
             @can('receive', $ret)
@@ -129,13 +129,13 @@
             <div class="card-header"><strong>{{ __('Pergerakan fisik') }}</strong></div>
             <ul class="list-group list-group-flush small">
                 @if ($pck)
-                    <li class="list-group-item">{{ __('Tugas picking') }} <a href="{{ route('picks.show', $pck->id) }}">{{ $pck->number }}</a> · {{ $pck->status->label() }}</li>
+                    <li class="list-group-item">{{ __('Tugas picking') }} <a wire:navigate href="{{ route('picks.show', $pck->id) }}">{{ $pck->number }}</a> · {{ $pck->status->label() }}</li>
                 @endif
                 @if ($ret->returnShipment)
-                    <li class="list-group-item">{{ $ret->isPickup() ? __('SJ jemput') : __('SJ balik') }} <a href="{{ route('shipments.show', $ret->return_shipment_id) }}">{{ $ret->returnShipment->number }}</a> · {{ $ret->returnShipment->status->label() }}</li>
+                    <li class="list-group-item">{{ $ret->isPickup() ? __('SJ jemput') : __('SJ balik') }} <a wire:navigate href="{{ route('shipments.show', $ret->return_shipment_id) }}">{{ $ret->returnShipment->number }}</a> · {{ $ret->returnShipment->status->label() }}</li>
                 @endif
                 @if ($grn)
-                    <li class="list-group-item">{{ __('GRN retur') }} <a href="{{ route('receipts.show', $grn->id) }}">{{ $grn->number }}</a> · {{ $grn->status->label() }}</li>
+                    <li class="list-group-item">{{ __('GRN retur') }} <a wire:navigate href="{{ route('receipts.show', $grn->id) }}">{{ $grn->number }}</a> · {{ $grn->status->label() }}</li>
                 @endif
                 @if (! $pck && ! $ret->returnShipment && ! $grn)
                     <li class="list-group-item text-muted">{{ __('Belum ada pergerakan fisik.') }}</li>
@@ -152,7 +152,7 @@
                     <div class="border-bottom pb-2 mb-3" wire:key="pilah-{{ $l->id }}">
                         <div class="mb-2"><strong>{{ $l->item?->code }}</strong> {{ $l->trackingLabel() }} · {{ __('diterima') }} {{ number_format((float) $l->qty_received, 2, ',', '.') }}
                             @if ($l->source() === \App\Domain\Return\Enums\ReturnSource::OnSiteAsset && ($ast = \App\Domain\Asset\Models\AssetHandover::query()->withoutGlobalScopes()->where('goods_return_line_id', $l->id)->latest('id')->first()))
-                                · <a href="{{ route('asset-handovers.show', $ast->id) }}">{{ $ast->number }}</a>
+                                · <a wire:navigate href="{{ route('asset-handovers.show', $ast->id) }}">{{ $ast->number }}</a>
                                 <span class="badge {{ $ast->status->badge() }}">{{ $ast->status->label() }}</span>
                                 @if ($ast->status->value !== 'inspected') <span class="small text-danger">{{ __('periksa aset dulu sebelum dipilah') }}</span> @endif
                             @endif

@@ -6,7 +6,7 @@
                 {{ __('Beberapa tugas picking boleh digabung selama gudang asal dan tujuannya sama.') }}
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('shipments.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('shipments.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')

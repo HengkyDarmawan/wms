@@ -6,7 +6,7 @@
                 {{ __('Field bertanda') }} <span class="wajib">*</span> {{ __('wajib diisi.') }}
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('users.index') }}">{{ __('Kembali ke daftar') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('users.index') }}">{{ __('Kembali ke daftar') }}</a>
     </div>
 
     <form wire:submit="save">
@@ -61,7 +61,7 @@
                 <span wire:loading.remove wire:target="save">{{ __('Simpan') }}</span>
                 <span wire:loading wire:target="save">{{ __('Menyimpan…') }}</span>
             </button>
-            <a class="btn btn-outline-secondary" href="{{ route('users.index') }}">{{ __('Batal') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('users.index') }}">{{ __('Batal') }}</a>
         </div>
     </form>
 </div>

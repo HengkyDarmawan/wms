@@ -5,7 +5,7 @@
             <p class="text-muted mb-0">{{ __('PO ke vendor dari Purchase Request yang disetujui, lengkap dengan harga beli. PO yang disetujui otomatis menjadi catatan pemesanan di gudang.') }}</p>
         </div>
         @can('create', App\Domain\Purchasing\Models\PurchaseOrder::class)
-            <a class="btn btn-primary" href="{{ route('purchase-orders.create') }}"><i class="bi bi-plus-lg"></i> {{ __('PO baru') }}</a>
+            <a wire:navigate class="btn btn-primary" href="{{ route('purchase-orders.create') }}"><i class="bi bi-plus-lg"></i> {{ __('PO baru') }}</a>
         @endcan
     </div>
 
@@ -52,7 +52,7 @@
                     @forelse ($orders as $po)
                         <tr wire:key="po-{{ $po->id }}">
                             <td>
-                                <a href="{{ route('purchase-orders.show', $po) }}">{{ $po->number }}</a>
+                                <a wire:navigate href="{{ route('purchase-orders.show', $po) }}">{{ $po->number }}</a>
                                 <div class="small text-muted">{{ $po->creator?->name }} · {{ $po->order_date?->format('d/m/Y') }}</div>
                             </td>
                             <td>{{ $po->vendor?->name }} <div class="small text-muted">{{ $po->vendor?->code }}</div></td>

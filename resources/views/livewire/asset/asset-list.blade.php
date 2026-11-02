@@ -6,8 +6,8 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @can('asset.view')
-                <a class="btn btn-outline-secondary" href="{{ route('asset-handovers.index') }}">{{ __('Serah terima aset') }}</a>
-                <a class="btn btn-outline-secondary" href="{{ route('reports.show', 'aset-dipinjamkan') }}">{{ __('Laporan aset dipinjamkan') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('asset-handovers.index') }}">{{ __('Serah terima aset') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('reports.show', 'aset-dipinjamkan') }}">{{ __('Laporan aset dipinjamkan') }}</a>
             @endcan
         </div>
     </div>
@@ -59,7 +59,7 @@
                         @php($sisa = $a->remainingLifePercent())
                         <tr>
                             <td>
-                                <a href="{{ route('assets.show', $a) }}">{{ $a->serial_no }}</a>
+                                <a wire:navigate href="{{ route('assets.show', $a) }}">{{ $a->serial_no }}</a>
                                 <div class="small text-muted">{{ $a->item?->code }} — {{ $a->item?->name }}</div>
                             </td>
                             <td><span class="badge text-bg-{{ $a->stateBadge() }}">{{ $a->asset_state->label() }}</span></td>

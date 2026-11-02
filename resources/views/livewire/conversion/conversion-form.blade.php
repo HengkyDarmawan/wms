@@ -5,7 +5,7 @@
             <h1 class="h3 mb-1">{{ $nomor ? __('Ubah draf').' '.$nomor : __('Konversi baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Pilih jenis konversi, tunjuk stok yang dipakai, lalu isi hasilnya. Sisa dan rugi potong dihitung otomatis; stok baru bergerak saat konversi selesai.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('conversions.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('conversions.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')

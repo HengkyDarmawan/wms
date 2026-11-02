@@ -34,7 +34,7 @@
     <div class="card mb-4" id="proyek">
         <div class="card-header d-flex justify-content-between align-items-center">
             <strong>{{ __('Proyek Anda') }}</strong>
-            <a class="btn btn-sm btn-primary" href="{{ route('portal.requests.index') }}"><i class="bi bi-list-check"></i> {{ __('Permintaan material') }}</a>
+            <a wire:navigate class="btn btn-sm btn-primary" href="{{ route('portal.requests.index') }}"><i class="bi bi-list-check"></i> {{ __('Permintaan material') }}</a>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">

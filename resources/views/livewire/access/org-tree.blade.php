@@ -250,7 +250,7 @@
                                         <tr wire:key="anggota-{{ $orang->id }}">
                                             <td>
                                                 @can('view', $orang)
-                                                    <a class="nx-link" href="{{ route('users.show', $orang) }}">{{ $orang->name }}</a>
+                                                    <a wire:navigate class="nx-link" href="{{ route('users.show', $orang) }}">{{ $orang->name }}</a>
                                                 @else
                                                     {{ $orang->name }}
                                                 @endcan

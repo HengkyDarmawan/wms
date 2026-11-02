@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ __('Menunggu dimasukkan') }}</h1>
             <p class="text-muted mb-0">{{ __('Pindai label barang, lalu pindai QR bin tujuan.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('putaways.index') }}">{{ __('Tugas put-away') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('putaways.index') }}">{{ __('Tugas put-away') }}</a>
     </div>
 
     @if ($terakhir !== '')

@@ -7,14 +7,14 @@
             </h1>
             <p class="text-muted mb-0">
                 {{ $task->warehouse?->code }} · {{ __('dari') }}
-                <a href="{{ route('receipts.show', $task->goods_receipt_id) }}">{{ $task->receipt?->number }}</a>
+                <a wire:navigate href="{{ route('receipts.show', $task->goods_receipt_id) }}">{{ $task->receipt?->number }}</a>
             </p>
         </div>
         <div class="d-flex gap-2">
             @if ($task->status->value === 'pending')
                 <a class="btn btn-outline-primary" href="{{ route('putaways.waiting', ['gudang' => $task->warehouse_id]) }}"><i class="bi bi-upc-scan"></i> {{ __('Pindai di HP') }}</a>
             @endif
-            <a class="btn btn-outline-secondary" href="{{ route('putaways.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('putaways.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 

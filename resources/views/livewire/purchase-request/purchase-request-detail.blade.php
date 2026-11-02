@@ -7,7 +7,7 @@
             </h1>
             <p class="text-muted mb-0">
                 {{ $prq->origin->label() }}
-                @if ($prq->materialRequest) · <a href="{{ route('requests.show', $prq->material_request_id) }}">{{ $prq->materialRequest->number }}</a> @endif
+                @if ($prq->materialRequest) · <a wire:navigate href="{{ route('requests.show', $prq->material_request_id) }}">{{ $prq->materialRequest->number }}</a> @endif
                 · {{ __('Gudang tujuan') }} {{ $prq->warehouse?->code }}
                 @if ($prq->project) · {{ $prq->project->code }} — {{ $prq->project->name }} @endif
                 · {{ __('Dibuat') }} {{ $prq->creator?->name ?? __('Sistem') }}
@@ -22,7 +22,7 @@
             @if ($menunggu) <p class="small mb-0">{{ __('Menunggu keputusan approver.') }}</p> @endif
         </div>
         @if ($prq->status !== \App\Domain\PurchaseRequest\Enums\PurchaseRequestStatus::Draft) <a class="btn btn-outline-secondary" href="{{ route('print.document', ['type' => 'purchase-request', 'id' => $prq->id]) }}" target="_blank" rel="noopener"><i class="bi bi-printer"></i> {{ __('Cetak') }}</a> @endif
-        <a class="btn btn-outline-secondary" href="{{ route('purchase-requests.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('purchase-requests.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')
@@ -95,14 +95,14 @@
                 <button class="btn btn-primary" type="button" wire:click="ajukan" wire:confirm="{{ __('Ajukan PRQ ini?') }}">{{ __('Ajukan') }}</button>
             @endcan
             @can('update', $prq)
-                <a class="btn btn-outline-secondary" href="{{ route('purchase-requests.edit', $prq) }}">{{ __('Tinjau draf') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('purchase-requests.edit', $prq) }}">{{ __('Tinjau draf') }}</a>
             @endcan
             @can('approve', $prq)
                 <button class="btn btn-primary" type="button" wire:click="setujui">{{ __('Setujui') }}</button>
                 <button class="btn btn-outline-danger" type="button" wire:click="mintaDialog('tolak')">{{ __('Tolak') }}</button>
             @endcan
             @if ($prq->status->acceptsOrders() && auth()->user()?->can('po.create') && Route::has('purchase-orders.create'))
-                <a class="btn btn-primary" href="{{ route('purchase-orders.create', ['prq' => $prq->id]) }}"><i class="bi bi-receipt-cutoff"></i> {{ __('Buat PO') }}</a>
+                <a wire:navigate class="btn btn-primary" href="{{ route('purchase-orders.create', ['prq' => $prq->id]) }}"><i class="bi bi-receipt-cutoff"></i> {{ __('Buat PO') }}</a>
             @endif
             @can('order', $prq)
                 <button class="btn btn-outline-primary" type="button" wire:click="mintaDialog('pesan')">{{ __('Catat pemesanan') }}</button>
@@ -121,7 +121,7 @@
                     <strong>{{ $o->vendor?->name }}</strong>
                     @if ($o->vendor?->status === \App\Domain\Master\Enums\VendorStatus::Provisional) <span class="badge text-bg-warning">{{ __('vendor sementara') }}</span> @endif
                     · @if ($o->purchase_order_id && auth()->user()?->can('po.view'))
-                        <a href="{{ route('purchase-orders.show', $o->purchase_order_id) }}">{{ $o->reference() }}</a>
+                        <a wire:navigate href="{{ route('purchase-orders.show', $o->purchase_order_id) }}">{{ $o->reference() }}</a>
                     @else
                         {{ $o->reference() }}
                     @endif
@@ -138,7 +138,7 @@
                 <li class="list-group-item text-muted">{{ __('Belum ada catatan pemesanan.') }}</li>
             @endforelse
             @foreach ($receipts as $g)
-                <li class="list-group-item">{{ __('GRN') }} <a href="{{ route('receipts.show', $g->id) }}">{{ $g->number }}</a> · {{ $g->status->label() }} @if ($g->received_at) · {{ $g->received_at->format('d/m/Y') }} @endif</li>
+                <li class="list-group-item">{{ __('GRN') }} <a wire:navigate href="{{ route('receipts.show', $g->id) }}">{{ $g->number }}</a> · {{ $g->status->label() }} @if ($g->received_at) · {{ $g->received_at->format('d/m/Y') }} @endif</li>
             @endforeach
         </ul>
     </div>

@@ -6,7 +6,7 @@
                 {{ __('Baris boleh menyebut item katalog atau ditulis bebas; staf gudang yang memetakannya nanti.') }}
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('requests.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('requests.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')

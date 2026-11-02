@@ -281,7 +281,7 @@ class ReceiptForm extends Component
             return;
         }
 
-        $this->redirectRoute('receipts.show', $hasil);
+        $this->redirectRoute('receipts.show', $hasil, navigate: true);
     }
 
     public function render(): View

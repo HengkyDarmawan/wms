@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ __('Pindahkan ke proyek lain') }}</h1>
             <p class="text-muted mb-0">{{ __('Dari') }} {{ $project->code }} — {{ $project->name }}. {{ __('Aset yang dipinjam pindah langsung antar proyek; stok Gudang Site dikirim lewat transfer biasa.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('projects.show', $project) }}">{{ __('Kembali ke proyek') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('projects.show', $project) }}">{{ __('Kembali ke proyek') }}</a>
     </div>
 
     @if ($ruleError !== '')

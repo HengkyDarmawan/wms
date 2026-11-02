@@ -164,7 +164,7 @@
                         <td class="small">{{ $pic->projects->pluck('code')->implode(', ') ?: '—' }}</td>
                         <td>
                             @if ($pic->portalUser !== null)
-                                <a href="{{ route('users.show', $pic->portalUser->id) }}">{{ $pic->portalUser->name }}</a>
+                                <a wire:navigate href="{{ route('users.show', $pic->portalUser->id) }}">{{ $pic->portalUser->name }}</a>
                                 <span class="badge text-bg-{{ $pic->portalUser->is_active ? 'success' : 'secondary' }}">
                                     {{ $pic->portalUser->is_active ? __('Aktif') : __('Nonaktif') }}
                                 </span>

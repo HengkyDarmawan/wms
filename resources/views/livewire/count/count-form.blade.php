@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ __('Sesi opname baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Pilih jenis, cakupan, dan tim. Bin berpenanda hitung (short pick/selisih) didahulukan.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('counts.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('counts.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')
