@@ -38,6 +38,7 @@ class BinUsage
         ['goods_receipt_lines', 'receiving_bin_id', 'penerimaan'],
         ['goods_return_lines', 'from_bin_id', 'retur'],
         ['goods_return_lines', 'target_bin_id', 'retur'],
+        ['maintenance_schedules', 'origin_bin_id', 'servis aset'],
         ['material_issue_lines', 'bin_id', 'pemakaian'],
         ['package_labels', 'bin_id', 'label kemasan'],
         ['package_label_moves', 'from_bin_id', 'label kemasan'],
