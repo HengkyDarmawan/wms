@@ -112,6 +112,8 @@ docs/
 
 ### v0.125 — 3 November 2026 (audit antislop 001)
 - **Asumsi baru** [A-422](wms/04c-asumsi-lanjutan.md#a-422) (04c v0.10, *Setuju*): kontras teks redup & warna primary, tanda proses `[data-loading]`, fokus pencarian cepat, teks UI tanpa em dash (sel kosong `-`), kartu Beranda `wire:navigate.hover`.
+- Nama aturan demo RTV jadi "RTV: kepala gudang": [00-akun-uji](00-akun-uji.md) v1.19, [19-receipt-putaway](wms/19-receipt-putaway.md) v0.18, [20-approval](wms/20-approval.md) v0.18 (ID tidak berubah). Perbaikan tombol Back `wire:navigate`: palet Ctrl+K, flyout, dan pesan filter menu dibuat ulang dari snapshot ([A-421](wms/04c-asumsi-lanjutan.md#a-421)).
+- Denah gudang: perubahan belum disimpan kini juga dijaga saat pindah lewat `wire:navigate` (konfirmasi; listener dilepas saat komponen dibuang) ([A-421](wms/04c-asumsi-lanjutan.md#a-421)). Tabel bergulir `position: relative` agar select tersembunyi tom-select tidak melebarkan halaman di HP (CNV baru) ([A-422](wms/04c-asumsi-lanjutan.md#a-422)).
 
 ### v0.124 — 2 November 2026 (navigasi Livewire tanpa muat ulang)
 - **Asumsi baru** [A-421](wms/04c-asumsi-lanjutan.md#a-421) (04c v0.9, *Setuju*): `wire:navigate.hover` di sidebar, header, menu Super Admin; `wire:navigate` di tautan konten, dan redirect aksi Livewire; migrasi Inertia + Vue dibatalkan, [D-05](wms/04-keputusan-dan-asumsi.md#d-05) tetap.

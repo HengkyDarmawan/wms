@@ -88,10 +88,6 @@
 }
 
 [data-bs-theme="dark"] {
-  /* Teks/link berwarna primary di latar gelap butuh rona lebih terang (8,6:1);
-     tombol tetap --nx-primary dengan teks putih. */
-  --bs-link-color: #a5b4fc;
-  --bs-link-hover-color: #c7d2fe;
   --nx-primary-subtle: #26264d;
   --nx-secondary-subtle: #1c2740;
   --nx-success-subtle: #0c2b22;
@@ -155,4 +151,6 @@ h6, .h6 {
   outline-offset: 2px;
 }
 
+/* Teks berwarna primary di latar gelap butuh rona lebih terang (8,6:1); tombol tetap
+   --nx-primary dengan teks putih. Link biasa di tema gelap memakai warna Bootstrap (#6ea8fe). */
 [data-bs-theme="dark"] .text-primary, [data-bs-theme="dark"] .link-primary { color: #a5b4fc !important; }

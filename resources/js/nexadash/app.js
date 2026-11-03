@@ -40,7 +40,9 @@
   var paletteIndex = 0;
 
   function buildPalette() {
-    if (document.getElementById('nxPalette')) return;
+    // Snapshot tombol Back (wire:navigate) ikut menyimpan markup palet tanpa
+    // handler-nya, jadi selalu dibuat ulang.
+    $('#nxPalette, #nxPaletteBackdrop').remove();
     var html =
       '<div class="nx-palette-backdrop" id="nxPaletteBackdrop"></div>' +
       '<div class="nx-palette" id="nxPalette" role="dialog" aria-modal="true" aria-label="Pencarian cepat">' +
@@ -239,6 +241,7 @@
     // Clone submenu menjadi flyout untuk mode collapsed.
     $('#nxSidebar .nx-menu-item.has-submenu').each(function () {
       var $ul = $(this).find('.nx-submenu').first();
+      $(this).children('.nx-flyout').remove(); // sisa snapshot tombol Back
       var $fly = $('<ul class="nx-flyout"></ul>').append($ul.children().clone());
       $(this).append($fly);
     });
@@ -288,6 +291,7 @@
     // Pesan "tidak ada hasil" ditambahkan sekali, di dalam area scroll nav.
     var $scroll = $nav.find('.simplebar-content').first();
     if (!$scroll.length) $scroll = $nav;
+    $scroll.find('.nx-menu-empty').remove(); // sisa snapshot tombol Back
     $scroll.append('<div class="nx-menu-empty">Tidak ada menu yang cocok.</div>');
 
     function esc(s) { return $('<span>').text(s).html(); }

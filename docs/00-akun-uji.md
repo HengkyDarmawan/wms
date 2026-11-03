@@ -1,6 +1,6 @@
 # Akun Uji & Data Demo (dev / demo / staging)
 
-**Versi:** 1.18
+**Versi:** 1.19
 **Tanggal:** 6 Oktober 2026
 **Status:** aktif — **hanya untuk dev, demo, dan staging**. Produksi tidak memakai berkas ini: Super Admin produksi dibuat dari `.env` saat instalasi, semua user lain lewat undangan dan mengatur password sendiri ([Blueprint §13](wms/01-blueprint.md#13-autentikasi--sso), [NFR-02](wms/01-blueprint.md#16-kebutuhan-non-fungsional)).; v1.12: lapis Manajemen demo dibatasi divisi pemohon (Direksi = induk semua divisi), lapis Auditor opname lintas divisi ([A-269](wms/04b-asumsi-lanjutan.md#a-269)); v1.13: §6 company DEMO kosong untuk latihan (`BlankDemoSeeder`); v1.14: saklar fitur DEMO (per potong & QC mati) dan `PIPA-PVC-4` menjadi Barang biasa ([A-283](wms/04b-asumsi-lanjutan.md#a-283), [A-284](wms/04b-asumsi-lanjutan.md#a-284)); v1.16: akun `driver1`/`driver2` dihapus — driver tanpa akun, kendaraan menyimpan nama + HP driver bawaan, `klien1` mengisi bukti terima SJ PRJ-001 lewat portal ([A-311](wms/04b-asumsi-lanjutan.md#a-311), [A-312](wms/04b-asumsi-lanjutan.md#a-312)); v1.17: denah demo CKG 30 × 18 m dengan zona berposisi & objek denah ([A-320](wms/04b-asumsi-lanjutan.md#a-320))
 **Dokumen terkait:** [Blueprint §4](wms/01-blueprint.md#4-pengguna--peran) · [BR-GEN-09](wms/05-aturan-bisnis.md#br-gen) · [Model data pusat & akses](wms/08a-model-data-inti.md#area-user-role-cakupan-struktur-organisasi-tenant) · [Spesifikasi modul Access](wms/10-access.md)
@@ -81,7 +81,7 @@ Nomor WA dummy: `+6281200000001` … `+6281200000014` berurutan sesuai urutan ak
 |---|---|---|---|---|---|
 | REQ | REQ besar atau aset (10) | **salah satu**: ≥ 21 baris, **atau** barang berkepemilikan aset ("kategori Aset", [A-87](wms/04-keputusan-dan-asumsi.md#a-87)) | 1. Kepala gudang sumber (semua harus setuju) → 2. Manajemen | ✔ | [BR-APR-07](wms/05-aturan-bisnis.md#br-apr) |
 | REQ | REQ lainnya (100) | — | 1. Kepala gudang sumber | ✔ | [A-08](wms/04-keputusan-dan-asumsi.md#a-08) |
-| RTV | RTV — kepala gudang (100) | — | 1. Kepala gudang (cukup salah satu) | ✔ | [A-93](wms/04-keputusan-dan-asumsi.md#a-93) |
+| RTV | RTV: kepala gudang (100) | — | 1. Kepala gudang (cukup salah satu) | ✔ | [A-93](wms/04-keputusan-dan-asumsi.md#a-93) |
 | ADJ manual | ADJ di atas 100 unit (10) | jumlah satuan dasar per baris > 100 (`line_qty_min` 100,0001, [A-105](wms/04-keputusan-dan-asumsi.md#a-105)) | 1. Kepala gudang (cukup salah satu) → 2. Manajemen | ✔ | [A-09](wms/04-keputusan-dan-asumsi.md#a-09) |
 | ADJ manual | ADJ lainnya (100) | — | 1. Kepala gudang (cukup salah satu). Tanpa aturan pun tetap satu lapis Kepala Gudang (lapis minimum) | ✔ | [A-09](wms/04-keputusan-dan-asumsi.md#a-09) |
 | PRQ | — (tanpa aturan) | — | PRQ disetujui otomatis; aturan lama *PRQ toko online* dinonaktifkan karena vendor baru dipilih Purchasing setelah PRQ disetujui ([A-308](wms/04b-asumsi-lanjutan.md#a-308)) | ✔ (nonaktif) | [A-173](wms/04-keputusan-dan-asumsi.md#a-173) |

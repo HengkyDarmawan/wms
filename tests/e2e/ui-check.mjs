@@ -29,6 +29,8 @@ ws.addEventListener('message', (ev) => {
   if (m.method === 'Runtime.exceptionThrown') errors.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text);
   if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') errors.push(m.params.args.map((a) => a.value ?? a.description).join(' '));
   if (m.method === 'Log.entryAdded' && m.params.entry.level === 'error') errors.push(m.params.entry.text + ' ' + (m.params.entry.url || ''));
+  // Dialog (confirm/beforeunload) menahan halaman; catat lalu terima supaya skrip tidak menggantung.
+  if (m.method === 'Page.javascriptDialogOpening') { console.log(`DIALOG ${m.params.type}: ${m.params.message}`); ws.send(JSON.stringify({ id: ++id, method: 'Page.handleJavaScriptDialog', params: { accept: true } })); }
 });
 const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
 const ev = async (expr) => (await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true })).result.result.value;
@@ -137,7 +139,7 @@ for (const url of links) {
   const judul = await ev('document.querySelector("main h1")?.textContent?.trim() || ""');
   cek('hub proyek: judul', /PRJ-001|Pipa Karawang/.test(judul), judul);
   const tabs = await ev('[...document.querySelectorAll("main .nav-tabs .nav-link")].map(b => b.textContent.trim())');
-  cek('hub proyek: 9 tab', tabs.length === 9, tabs.join(' | '));
+  cek('hub proyek: 10 tab', tabs.length === 10, tabs.join(' | '));
   for (const [i, nama] of tabs.entries()) {
     await ev(`document.querySelectorAll("main .nav-tabs .nav-link")[${i}].click()`);
     await sleep(900);
@@ -196,6 +198,8 @@ for (const url of links) {
   cek('denah: antrean perubahan = 2', await tunggu('/\\(2\\)/.test(document.querySelector("main [data-simpan-denah]").textContent)'));
   await ev('document.querySelector("main [data-urungkan]").click()');
   cek('denah: urungkan membuang rak baru', await tunggu('/\\(1\\)/.test(document.querySelector("main [data-simpan-denah]").textContent)'));
+  // Form rak dikosongkan setelah Tambah rak (siap untuk rak berikutnya), jadi isi lagi kodenya.
+  await isi('rb-kode', 'R01');
   await ev('[...document.querySelectorAll("main button")].find(b => b.textContent.trim() === "Tambah rak").click()');
   await ev('document.querySelector("main [data-simpan-denah]").click()');
   cek('denah: simpan sekali → antrean kosong', await tunggu('/\\(0\\)/.test(document.querySelector("main [data-simpan-denah]").textContent)'));
@@ -341,7 +345,7 @@ for (const url of links) {
   const sebelum = errors.length;
   await go(`${BASE}/approval-rules/create`);
   cek('aturan: mode sederhana bawaan', await tunggu('[...document.querySelectorAll("main button[aria-pressed=true]")].some(b => /Mode sederhana/.test(b.textContent))'));
-  cek('aturan: kalimat ringkasan tampil', await ev('!!document.querySelector("main [role=status]") && /disetujui/.test(document.querySelector("main [role=status]").textContent)'));
+  cek('aturan: kalimat ringkasan tampil', await ev('[...document.querySelectorAll("main [role=status]")].some(e => e.offsetParent && /disetujui/.test(e.textContent))'));
   await ev('[...document.querySelectorAll("main button")].find(b => /Mode lanjutan/.test(b.textContent)).click()');
   cek('aturan: kotak tag terpasang', await tunggu('!!document.querySelector("main .nx-pilih-tag .ts-control")'));
   cek('aturan: tidak ada select multiple mentah', await ev('![...document.querySelectorAll("main select[multiple]")].some(s => !s.closest(".nx-pilih-tag"))'));

@@ -222,3 +222,7 @@ form[data-loading] [type="submit"] { pointer-events: none; opacity: .65; cursor:
 
 /* Kotak pencarian cepat (Ctrl+K): input-nya tanpa outline, jadi fokus ditandai di wadahnya. */
 .nx-palette-input-wrap:focus-within { box-shadow: inset 0 -2px 0 var(--nx-primary); }
+
+/* Select tersembunyi milik tom-select (.ts-hidden-accessible, position:absolute) di dalam tabel
+   bergulir harus ikut terpotong wadahnya; tanpa ini ia melebarkan halaman di HP (CNV baru: 477px di layar 390px). */
+.table-responsive { position: relative; }

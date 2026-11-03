@@ -101,9 +101,20 @@ function denahGedung(opts = {}) {
       if (window.ResizeObserver && this.$refs.wrap) {
         new ResizeObserver(() => { if (this.otomatis) this.pas(true); }).observe(this.$refs.wrap);
       }
-      window.addEventListener('beforeunload', (e) => {
-        if (this.ops.length) { e.preventDefault(); e.returnValue = ''; }
-      });
+      // Jaga perubahan yang belum disimpan: muat ulang/tutup tab (beforeunload) DAN pindah
+      // halaman lewat wire:navigate (A-421), yang tidak memicu beforeunload.
+      this._jagaTutup = (e) => { if (this.ops.length) { e.preventDefault(); e.returnValue = ''; } };
+      // ponytail: tombol Back (detail.history) tidak dijaga; membatalkannya membuat URL dan isi halaman tidak cocok.
+      this._jagaPindah = (e) => {
+        if (this.ops.length && !e.detail?.history && !window.confirm('Ada ' + this.ops.length + ' perubahan denah belum disimpan. Tinggalkan halaman?')) e.preventDefault();
+      };
+      window.addEventListener('beforeunload', this._jagaTutup);
+      document.addEventListener('livewire:navigate', this._jagaPindah);
+    },
+
+    destroy() {
+      window.removeEventListener('beforeunload', this._jagaTutup);
+      document.removeEventListener('livewire:navigate', this._jagaPindah);
     },
 
     // ------------------------------------------------------------ tampilan
