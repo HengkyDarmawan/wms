@@ -36,7 +36,7 @@ class ProjectMaterialReport extends Report
 
     public function description(): string
     {
-        return 'Per proyek dan item: jumlah diminta, terkirim, terpakai (ISU), diretur, sisa di Gudang Site, aset di proyek, dikonversi, hasil konversi, waste, dan waste didisposisi — dibaca dari kartu stok.';
+        return 'Per proyek dan item: jumlah diminta, terkirim, terpakai (ISU), diretur, sisa di Gudang Site, aset di proyek, dikonversi, hasil konversi, waste, dan waste didisposisi, dibaca dari kartu stok.';
     }
 
     public function columns(): array

@@ -75,7 +75,7 @@ class TransferForm extends Component
         });
 
         if ($ok && $trf !== null) {
-            $this->redirectRoute('transfers.show', $trf);
+            $this->redirectRoute('transfers.show', $trf, navigate: true);
         }
     }
 
@@ -99,7 +99,7 @@ class TransferForm extends Component
         }
 
         return view('livewire.transfer.transfer-form', [
-            'opsiGudang' => $gudang->map(fn (Warehouse $g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name, 'sub' => $g->project?->code])->all(),
+            'opsiGudang' => $gudang->map(fn (Warehouse $g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name, 'sub' => $g->project?->code])->all(),
             'opsiItem' => $this->pilihanItem()->awalPerBaris(collect($this->rows)->pluck('item_id')->all()),
             'tersedia' => $tersedia,
             'jenis' => $asal !== null && $tujuan !== null && $asal->id !== $tujuan->id

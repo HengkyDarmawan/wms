@@ -72,7 +72,7 @@
                                 </div>
 
                                 <div class="col-12 col-md-4">
-                                    <x-pilih model="unitParentId" id="unitParentId" :label="__('Induk')" :kosong="__('— Tanpa induk —')"
+                                    <x-pilih model="unitParentId" id="unitParentId" :label="__('Induk')" :kosong="__('(Tanpa induk)')"
                                              :options="$units->reject(fn ($u) => $editingUnitId && $u->id === $editingUnitId)
                                                  ->map(fn ($u) => ['value' => $u->id, 'text' => $u->name])->all()" />
                                 </div>
@@ -157,7 +157,7 @@
                                     <div class="col-12 col-md-3">
                                         {{-- A-388: jabatan aktif mana pun, berkelompok per unit (bisa dicari). --}}
                                         <x-pilih model="positionReportsTo" id="positionReportsTo" kecil :label="__('Atasan jabatan')"
-                                                 :kosong="__('— Puncak (tanpa atasan) —')"
+                                                 :kosong="__('(Puncak (tanpa atasan))')"
                                                  :options="$pilihanAtasan->map(fn ($p) => ['value' => $p->id, 'text' => $p->name, 'group' => $p->orgUnit?->name ?? __('Tanpa unit')])->all()" />
                                         {{-- A-344: level tidak diketik lagi; dihitung dari peta jabatan. --}}
                                         <div class="form-text">{{ __('Pemegang jabatan atasan menjadi atasan langsung bawaan. Level dihitung otomatis.') }}</div>
@@ -191,7 +191,7 @@
                                                 <div class="fw-semibold">{{ $position->name }}</div>
                                                 <div class="small text-muted">{{ $position->code }}</div>
                                             </td>
-                                            <td class="small">{{ $position->reportsTo?->name ?? __('— puncak —') }}</td>
+                                            <td class="small">{{ $position->reportsTo?->name ?? __('(puncak)') }}</td>
                                             <td class="text-end">{{ $position->level }}</td>
                                             <td>
                                                 <span class="badge text-bg-{{ $position->is_active ? 'success' : 'secondary' }}">
@@ -250,16 +250,16 @@
                                         <tr wire:key="anggota-{{ $orang->id }}">
                                             <td>
                                                 @can('view', $orang)
-                                                    <a class="nx-link" href="{{ route('users.show', $orang) }}">{{ $orang->name }}</a>
+                                                    <a wire:navigate class="nx-link" href="{{ route('users.show', $orang) }}">{{ $orang->name }}</a>
                                                 @else
                                                     {{ $orang->name }}
                                                 @endcan
                                             </td>
-                                            <td class="small">{{ $orang->position?->name ?? '—' }}</td>
+                                            <td class="small">{{ $orang->position?->name ?? '-' }}</td>
                                             {{-- A-345: atasan efektif — isian manual, atau pemegang jabatan atasan. --}}
                                             @php($atasanOrang = $atasan[$orang->id] ?? ['nama' => [], 'sumber' => null])
                                             <td class="small">
-                                                {{ $atasanOrang['nama'] === [] ? '—' : implode(', ', $atasanOrang['nama']) }}
+                                                {{ $atasanOrang['nama'] === [] ? '-' : implode(', ', $atasanOrang['nama']) }}
                                                 @if ($atasanOrang['sumber'] === \App\Domain\Access\Support\Atasan::MANUAL)
                                                     <span class="badge text-bg-light border ms-1">{{ __('manual') }}</span>
                                                 @elseif ($atasanOrang['sumber'] === \App\Domain\Access\Support\Atasan::JABATAN)

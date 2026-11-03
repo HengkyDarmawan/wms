@@ -23,7 +23,7 @@
             </div>
             <div class="col-md-4">
                 <x-pilih model="form.to_warehouse_id" id="ret-tujuan" wajib :label="__('Kembali ke gudang')" :kosong="__('Pilih gudang…')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="ret-angkut">{{ __('Pengangkutan') }} <span class="wajib">*</span></label>
@@ -59,7 +59,7 @@
                         <tr wire:key="ret-calon-{{ $kunci }}">
                             <td class="small">{{ $c['source']->label() }}</td>
                             <td>{{ $c['item_code'] }} <div class="small text-muted">{{ $c['item_name'] }} @if ($c['tracking']) · {{ $c['tracking'] }} @endif</div></td>
-                            <td class="small">{{ $c['bin_code'] ?? ($c['shipment_number'] ?? '—') }}</td>
+                            <td class="small">{{ $c['bin_code'] ?? ($c['shipment_number'] ?? '-') }}</td>
                             <td class="text-end">{{ number_format((float) $c['max'], 2, ',', '.') }}</td>
                             <td style="max-width: 14rem">
                                 @php($opsiBaris = $c['serial_id'] === null && $c['piece_id'] === null ? ($unitOpsi[(int) $c['item_id']] ?? null) : null)

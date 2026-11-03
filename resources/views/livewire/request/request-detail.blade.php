@@ -6,19 +6,19 @@
                 <span class="badge {{ $req->status->badge() }}">{{ $req->status->label() }}</span>
             </h1>
             <p class="text-muted mb-0">
-                {{ $req->project?->code }} — {{ $req->project?->name }} ·
-                {{ __('Pemohon') }}: {{ $req->requester?->name ?? '—' }} ({{ $req->requester_type->label() }}) ·
+                {{ $req->project?->code }} · {{ $req->project?->name }} ·
+                {{ __('Pemohon') }}: {{ $req->requester?->name ?? '-' }} ({{ $req->requester_type->label() }}) ·
                 {{ __('Dibutuhkan') }}: {{ $req->required_date?->format('d/m/Y') }}
                 @if ($req->parent)
-                    · {{ __('Tambahan dari') }} <a href="{{ route('requests.show', $req->parent) }}">{{ $req->parent->number }}</a>
+                    · {{ __('Tambahan dari') }} <a wire:navigate href="{{ route('requests.show', $req->parent) }}">{{ $req->parent->number }}</a>
                 @endif
             </p>
             @include('request.partials.client-po')
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('requests.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('requests.index') }}">{{ __('Kembali') }}</a>
             @can('update', $req)
-                <a class="btn btn-outline-primary" href="{{ route('requests.edit', $req) }}">{{ __('Ubah') }}</a>
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('requests.edit', $req) }}">{{ __('Ubah') }}</a>
             @endcan
         </div>
     </div>
@@ -76,7 +76,7 @@
                 <div class="col-md-12">
                     {{-- A-392: item aktif & sementara, dicari ke server (kode, nama, barcode). --}}
                     <x-pilih model="form.item_id" id="petakan-item" server :label="__('Item yang sudah ada')"
-                             :kosong="__('— buat item sementara —')" :options="$opsiItem" />
+                             :kosong="__('(buat item sementara)')" :options="$opsiItem" />
                     <div class="form-text">
                         {{ __('Bila tidak ada yang cocok, isi tiga kolom di bawah untuk membuat item sementara.') }}
                     </div>
@@ -91,7 +91,7 @@
                 </div>
                 <div class="col-md-4">
                     <x-pilih model="form.base_uom_id" id="petakan-satuan" :label="__('Satuan dasar')" :kosong="__('Pilih satuan…')"
-                             :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' — '.$u->name])->all()" />
+                             :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' · '.$u->name])->all()" />
                 </div>
             </div>
             <div class="card-footer d-flex gap-2">
@@ -117,7 +117,7 @@
                     <div class="row g-2 mb-2" wire:key="pecah-{{ $i }}">
                         <div class="col-md-7">
                             <x-pilih model="splits.{{ $i }}.warehouse_id" id="pecah-gudang-{{ $i }}" :aria="__('Gudang')" :kosong="__('Pilih gudang…')"
-                                     :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                                     :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
                         </div>
                         <div class="col-md-5">
                             <input class="form-control" type="number" step="0.0001" min="0"
@@ -185,7 +185,7 @@
                                 @can('review', $req)
                                     <select class="form-select form-select-sm"
                                             wire:change="simpanSumber({{ $l->id }}, $event.target.value, '{{ $l->fulfillment_source?->value }}', '{{ $l->promised_date?->toDateString() }}')">
-                                        <option value="">{{ __('— belum —') }}</option>
+                                        <option value="">{{ __('(belum)') }}</option>
                                         @foreach ($warehouses as $gudang)
                                             <option value="{{ $gudang->id }}" @selected($l->source_warehouse_id === $gudang->id)>
                                                 {{ $gudang->code }}
@@ -193,14 +193,14 @@
                                         @endforeach
                                     </select>
                                 @else
-                                    {{ $l->sourceWarehouse?->code ?? '—' }}
+                                    {{ $l->sourceWarehouse?->code ?? '-' }}
                                 @endcan
                             </td>
                             <td>
                                 @can('review', $req)
                                     <select class="form-select form-select-sm"
                                             wire:change="simpanSumber({{ $l->id }}, '{{ $l->source_warehouse_id }}', $event.target.value, '{{ $l->promised_date?->toDateString() }}')">
-                                        <option value="">{{ __('— belum —') }}</option>
+                                        <option value="">{{ __('(belum)') }}</option>
                                         @foreach ($sources as $nilai => $label)
                                             <option value="{{ $nilai }}" @selected($l->fulfillment_source?->value === $nilai)>
                                                 {{ $label }}
@@ -208,7 +208,7 @@
                                         @endforeach
                                     </select>
                                 @else
-                                    {{ $l->fulfillment_source?->label() ?? '—' }}
+                                    {{ $l->fulfillment_source?->label() ?? '-' }}
                                 @endcan
                             </td>
                             <td>
@@ -217,7 +217,7 @@
                                            value="{{ $l->promised_date?->toDateString() }}"
                                            wire:change="simpanSumber({{ $l->id }}, '{{ $l->source_warehouse_id }}', '{{ $l->fulfillment_source?->value }}', $event.target.value)">
                                 @else
-                                    {{ $l->promised_date?->format('d/m/Y') ?? '—' }}
+                                    {{ $l->promised_date?->format('d/m/Y') ?? '-' }}
                                 @endcan
                             </td>
                             <td>
@@ -305,7 +305,7 @@
             <ul class="list-group list-group-flush">
                 @foreach ($supplements as $s)
                     <li class="list-group-item d-flex justify-content-between">
-                        <a href="{{ route('requests.show', $s->id) }}">{{ $s->number }}</a>
+                        <a wire:navigate href="{{ route('requests.show', $s->id) }}">{{ $s->number }}</a>
                         <span class="badge {{ $s->status->badge() }}">{{ $s->status->label() }}</span>
                     </li>
                 @endforeach
@@ -320,7 +320,7 @@
                 @foreach ($transferBackorder as $t)
                     <li class="list-group-item">
                         @can('view', $t)
-                            <a href="{{ route('transfers.show', $t) }}">{{ $t->number }}</a>
+                            <a wire:navigate href="{{ route('transfers.show', $t) }}">{{ $t->number }}</a>
                         @else
                             {{ $t->number }}
                         @endcan

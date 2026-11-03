@@ -28,7 +28,7 @@
             @if ($po->status !== \App\Domain\Purchasing\Enums\PurchaseOrderStatus::Draft)
                 <a class="btn btn-outline-secondary" href="{{ route('print.document', ['type' => 'purchase-order', 'id' => $po->id]) }}" target="_blank" rel="noopener"><i class="bi bi-printer"></i> {{ __('Cetak PO') }}</a>
             @endif
-            <a class="btn btn-outline-secondary" href="{{ route('purchase-orders.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('purchase-orders.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -104,7 +104,7 @@
                             <td>{{ $l->item?->code }} <div class="small text-muted">{{ $l->item?->name }}</div></td>
                             <td class="small">
                                 @if ($l->requestLine?->purchaseRequest)
-                                    <a href="{{ route('purchase-requests.show', $l->requestLine->purchase_request_id) }}">{{ $l->requestLine->purchaseRequest->number }}</a>
+                                    <a wire:navigate href="{{ route('purchase-requests.show', $l->requestLine->purchase_request_id) }}">{{ $l->requestLine->purchaseRequest->number }}</a>
                                 @endif
                             </td>
                             <td class="text-end">
@@ -114,7 +114,7 @@
                                 @endif
                             </td>
                             <td class="text-end">{{ number_format((float) $l->qty_received, 2, ',', '.') }}</td>
-                            <td class="text-end">{{ (float) $l->qty_cancelled > 0 ? number_format((float) $l->qty_cancelled, 2, ',', '.') : '—' }}</td>
+                            <td class="text-end">{{ (float) $l->qty_cancelled > 0 ? number_format((float) $l->qty_cancelled, 2, ',', '.') : '-' }}</td>
                             <td class="text-end text-nowrap">{{ $rp($l->unit_price) }}</td>
                             <td class="text-end text-nowrap">{{ $rp($l->line_amount) }}</td>
                         </tr>
@@ -130,7 +130,7 @@
         </div>
         <div class="card-footer d-flex flex-wrap gap-2">
             @can('update', $po)
-                <a class="btn btn-outline-secondary" href="{{ route('purchase-orders.edit', $po) }}">{{ __('Ubah draf') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('purchase-orders.edit', $po) }}">{{ __('Ubah draf') }}</a>
             @endcan
             @can('submit', $po)
                 <button class="btn btn-primary" type="button" wire:click="ajukan" wire:confirm="{{ __('Ajukan PO ini?') }}">{{ __('Ajukan') }}</button>
@@ -155,10 +155,10 @@
         <div class="card-header"><strong>{{ __('Terkait di gudang') }}</strong> <span class="small text-muted">{{ __('PRQ asal dan GRN yang menerima barang PO ini') }}</span></div>
         <ul class="list-group list-group-flush small">
             @foreach ($prqs as $p)
-                <li class="list-group-item">{{ __('PRQ') }} <a href="{{ route('purchase-requests.show', $p->id) }}">{{ $p->number }}</a></li>
+                <li class="list-group-item">{{ __('PRQ') }} <a wire:navigate href="{{ route('purchase-requests.show', $p->id) }}">{{ $p->number }}</a></li>
             @endforeach
             @forelse ($receipts as $g)
-                <li class="list-group-item">{{ __('GRN') }} <a href="{{ route('receipts.show', $g->id) }}">{{ $g->number }}</a> · {{ $g->status->label() }} @if ($g->received_at) · {{ $g->received_at->format('d/m/Y') }} @endif</li>
+                <li class="list-group-item">{{ __('GRN') }} <a wire:navigate href="{{ route('receipts.show', $g->id) }}">{{ $g->number }}</a> · {{ $g->status->label() }} @if ($g->received_at) · {{ $g->received_at->format('d/m/Y') }} @endif</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada barang diterima.') }}</li>
             @endforelse
@@ -168,7 +168,7 @@
                 <strong class="small">{{ __('Bonus dari vendor') }}</strong>
                 <ul class="small mb-0">
                     @foreach ($bonus as $b)
-                        <li>{{ $b->item?->code }} {{ $b->item?->name }} — {{ rtrim(rtrim(number_format((float) $b->qty_received, 4, ',', '.'), '0'), ',') }} {{ $b->item?->baseUom?->code }} ({{ $b->receipt?->number }}){{ $b->notes ? ': '.$b->notes : '' }}</li>
+                        <li>{{ $b->item?->code }} {{ $b->item?->name }} · {{ rtrim(rtrim(number_format((float) $b->qty_received, 4, ',', '.'), '0'), ',') }} {{ $b->item?->baseUom?->code }} ({{ $b->receipt?->number }}){{ $b->notes ? ': '.$b->notes : '' }}</li>
                     @endforeach
                 </ul>
             </div>

@@ -6,7 +6,7 @@
                 {{ __('Baris boleh menyebut item katalog atau ditulis bebas; staf gudang yang memetakannya nanti.') }}
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('requests.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('requests.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')
@@ -84,7 +84,7 @@
                         <tr wire:key="baris-{{ $i }}" @class(['table-active' => $sorot === $i])>
                             <td>
                                 <x-pilih model="lines.{{ $i }}.item_id" id="req-item-{{ $i }}" server live kecil :kunci="(string) count($lines)"
-                                         :aria="__('Item katalog')" :kosong="__('— tidak dari katalog —')" :options="$opsiItem[$i] ?? []" />
+                                         :aria="__('Item katalog')" :kosong="__('(tidak dari katalog)')" :options="$opsiItem[$i] ?? []" />
                             </td>
                             <td>
                                 <input class="form-control form-control-sm" type="text"

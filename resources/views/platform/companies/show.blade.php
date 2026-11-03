@@ -9,7 +9,7 @@
             <h1 class="h3 mb-1">{{ $company->name }} <span class="badge text-bg-secondary">{{ $company->status->label() }}</span></h1>
             <p class="text-muted mb-0">
                 {{ $company->code }} · {{ $company->host() }} · {{ __('Database') }} {{ $company->db_name }} · {{ $company->timezone }}
-                · {{ __('Admin pertama') }} {{ $company->getAttribute('admin_email') ?? '—' }}
+                · {{ __('Admin pertama') }} {{ $company->getAttribute('admin_email') ?? '-' }}
             </p>
             @if ($company->getAttribute('status_reason')) <p class="small text-danger mb-0">{{ __('Alasan penangguhan') }}: {{ $company->getAttribute('status_reason') }}</p> @endif
         </div>
@@ -86,12 +86,12 @@
 
     <div class="row g-3 mb-3">
         @foreach ([
-            [__('Langganan'), $sub?->status->label() ?? '—'],
-            [__('Paket'), $sub?->plan?->name ?? $company->plan?->name ?? '—'],
-            [__('Trial sampai'), $sub?->trial_ends_at?->format('d/m/Y') ?? '—'],
-            [__('Masa berjalan sampai'), $sub?->periodEnd()?->format('d/m/Y') ?? '—'],
-            [__('Tenggang sampai'), $sub?->grace_ends_at?->format('d/m/Y') ?? '—'],
-            [__('Data disimpan sampai'), $sub?->purge_after?->format('d/m/Y') ?? '—'],
+            [__('Langganan'), $sub?->status->label() ?? '-'],
+            [__('Paket'), $sub?->plan?->name ?? $company->plan?->name ?? '-'],
+            [__('Trial sampai'), $sub?->trial_ends_at?->format('d/m/Y') ?? '-'],
+            [__('Masa berjalan sampai'), $sub?->periodEnd()?->format('d/m/Y') ?? '-'],
+            [__('Tenggang sampai'), $sub?->grace_ends_at?->format('d/m/Y') ?? '-'],
+            [__('Data disimpan sampai'), $sub?->purge_after?->format('d/m/Y') ?? '-'],
         ] as [$label, $nilai])
             <div class="col-6 col-md-2">
                 <div class="card h-100"><div class="card-body py-2">
@@ -117,7 +117,7 @@
                                 <div class="ms-3 mt-1">
                                     {{ __('Bukti') }} #{{ $p->id }} · {{ $p->paid_at?->lokal()->format('d/m/Y') }} · {{ __('Rp') }} {{ number_format((float) $p->amount, 0, ',', '.') }} · {{ $p->uploaded_by_name }}
                                     <span class="badge {{ $p->status->badge() }}">{{ $p->status->label() }}</span>
-                                    @if ($p->reject_reason) <span class="text-danger">— {{ $p->reject_reason }}</span> @endif
+                                    @if ($p->reject_reason) <span class="text-danger">{{ $p->reject_reason }}</span> @endif
                                     @if ($p->proof_path) <a href="{{ route('platform.payments.proof', $p->id) }}" target="_blank" rel="noopener">{{ __('Lihat bukti') }}</a> @endif
                                 </div>
                             @endforeach
@@ -126,7 +126,7 @@
                         <li class="list-group-item text-muted">{{ __('Belum ada tagihan.') }}</li>
                     @endforelse
                 </ul>
-                <div class="card-footer small"><a href="{{ route('platform.payments.index') }}">{{ __('Verifikasi bukti bayar') }}</a></div>
+                <div class="card-footer small"><a wire:navigate href="{{ route('platform.payments.index') }}">{{ __('Verifikasi bukti bayar') }}</a></div>
             </div>
 
             <div class="card mb-3">

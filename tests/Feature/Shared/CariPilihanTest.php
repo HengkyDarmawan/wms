@@ -100,11 +100,11 @@ class CariPilihanTest extends TenantTestCase
     public function tc_pil_03_proyek_mengikuti_cakupan_dan_klien_hanya_proyeknya(): void
     {
         $pemohon = $this->makeUser('internal_requester', ScopeType::Project, $this->proyekA->id);
-        $this->assertSame(['CARI-A — Proyek Cari Alfa'], $this->cari($pemohon, 'proyek', 'proyek cari'));
+        $this->assertSame(['CARI-A · Proyek Cari Alfa'], $this->cari($pemohon, 'proyek', 'proyek cari'));
         $this->assertSame([], $this->cari($pemohon, 'proyek', 'beta'), 'Proyek di luar cakupan tidak muncul walau cocok.');
 
         $klien = $this->makeUser('client_user', ScopeType::Project, $this->proyekA->id, ['client_id' => $this->proyekA->client_id]);
-        $this->assertSame(['CARI-A — Proyek Cari Alfa'], $this->cari($klien, 'proyek', 'CARI'));
+        $this->assertSame(['CARI-A · Proyek Cari Alfa'], $this->cari($klien, 'proyek', 'CARI'));
 
         $admin = $this->makeUser('company_admin');
         $this->assertCount(2, $this->cari($admin, 'proyek', 'CARI'));
@@ -114,7 +114,7 @@ class CariPilihanTest extends TenantTestCase
     public function tc_pil_04_item_hanya_status_daftar_dan_minimal_dua_huruf(): void
     {
         $staf = $this->makeUser('warehouse_staff', ScopeType::Warehouse, $this->gudangA->id);
-        $this->assertSame(['CARI-AKTIF — Barang CARI-AKTIF'], $this->cari($staf, 'item', 'barang cari'));
+        $this->assertSame(['CARI-AKTIF · Barang CARI-AKTIF'], $this->cari($staf, 'item', 'barang cari'));
         $this->assertSame([], $this->cari($staf, 'item', 'c'), 'Kurang dari 2 huruf tidak mencari.');
         $this->assertSame([], $this->cari($staf, 'item', '%'), 'Wildcard SQL tidak membuka semua baris.');
     }
@@ -148,7 +148,7 @@ class CariPilihanTest extends TenantTestCase
 
         $proyek = SumberPilihan::proyek();
         $this->assertNull($proyek->label($this->proyekB->id), 'Nilai di luar cakupan tidak diberi label.');
-        $this->assertSame('CARI-A — Proyek Cari Alfa', $proyek->label($this->proyekA->id)['text']);
+        $this->assertSame('CARI-A · Proyek Cari Alfa', $proyek->label($this->proyekA->id)['text']);
         $this->assertNotContains((int) $this->proyekB->id, array_column($proyek->awalDengan($this->proyekB->id), 'value'));
         $this->assertFalse($proyek->berisi($this->proyekA->id.'abc'), '"5abc" tidak dianggap id 5.');
 

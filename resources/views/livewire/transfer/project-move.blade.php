@@ -2,9 +2,9 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
             <h1 class="h3 mb-1">{{ __('Pindahkan ke proyek lain') }}</h1>
-            <p class="text-muted mb-0">{{ __('Dari') }} {{ $project->code }} — {{ $project->name }}. {{ __('Aset yang dipinjam pindah langsung antar proyek; stok Gudang Site dikirim lewat transfer biasa.') }}</p>
+            <p class="text-muted mb-0">{{ __('Dari') }} {{ $project->code }} · {{ $project->name }}. {{ __('Aset yang dipinjam pindah langsung antar proyek; stok Gudang Site dikirim lewat transfer biasa.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('projects.show', $project) }}">{{ __('Kembali ke proyek') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('projects.show', $project) }}">{{ __('Kembali ke proyek') }}</a>
     </div>
 
     @if ($ruleError !== '')
@@ -21,7 +21,7 @@
                          :kosong="__('Pilih proyek…')" :options="$opsiTujuan" />
             </div>
             <div class="col-md-3">
-                <x-pilih model="form.to_warehouse_id" id="pindah-gudang" :label="__('Gudang Site tujuan (stok)')" kosong="—"
+                <x-pilih model="form.to_warehouse_id" id="pindah-gudang" :label="__('Gudang Site tujuan (stok)')" kosong="-"
                          :options="$gudangTujuan->map(fn ($g) => ['value' => $g->id, 'text' => $g->code])->all()" />
             </div>
             <div class="col-md-4">

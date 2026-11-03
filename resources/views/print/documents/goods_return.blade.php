@@ -6,27 +6,27 @@
     <table class="info">
         <tr>
             <td class="k">{{ __('Proyek') }}</td>
-            <td>{{ $ret->project?->code }} — {{ $ret->project?->name }}</td>
+            <td>{{ $ret->project?->code }} · {{ $ret->project?->name }}</td>
             <td class="k">{{ __('Pemohon') }}</td>
-            <td>{{ $ret->requester?->name ?? '—' }}@if ($ret->isFromClient()) <small>({{ __('klien') }})</small>@endif</td>
+            <td>{{ $ret->requester?->name ?? '-' }}@if ($ret->isFromClient()) <small>({{ __('klien') }})</small>@endif</td>
         </tr>
         <tr>
             <td class="k">{{ __('Dari') }}</td>
-            <td>{{ $ret->fromWarehouse ? $ret->fromWarehouse->code.' — '.$ret->fromWarehouse->name : __('Lokasi klien') }}</td>
+            <td>{{ $ret->fromWarehouse ? $ret->fromWarehouse->code.' · '.$ret->fromWarehouse->name : __('Lokasi klien') }}</td>
             <td class="k">{{ __('Ke gudang') }}</td>
-            <td>{{ $ret->toWarehouse?->code }} — {{ $ret->toWarehouse?->name }}</td>
+            <td>{{ $ret->toWarehouse?->code }} · {{ $ret->toWarehouse?->name }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Cara kirim') }}</td>
             <td>{{ $ret->self_delivered ? __('Diantar sendiri') : ($ret->returnShipment?->number ?? __('Dijemput gudang')) }}</td>
             <td class="k">{{ __('SJ asal') }}</td>
-            <td>{{ $ret->originShipment?->number ?? '—' }}</td>
+            <td>{{ $ret->originShipment?->number ?? '-' }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Diterima') }}</td>
-            <td>{{ $ret->received_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $ret->received_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
             <td class="k">{{ __('Dipilah') }}</td>
-            <td>{{ $ret->sorted_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $ret->sorted_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
         </tr>
     </table>
 
@@ -49,7 +49,7 @@
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $l->item?->code }}</td>
                     <td>{{ $l->item?->name }}@if ($l->reason) <br><small>{{ __('Alasan') }}: {{ $l->reason->label }}</small>@endif@if ($l->notes) <br><small>{{ $l->notes }}</small>@endif</td>
-                    <td>{{ $l->trackingLabel() ?: '—' }}</td>
+                    <td>{{ $l->trackingLabel() ?: '-' }}</td>
                     <td>{{ $l->source()->label() }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_base) }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_received) }}</td>

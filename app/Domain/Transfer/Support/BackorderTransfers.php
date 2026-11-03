@@ -206,7 +206,7 @@ class BackorderTransfers
         try {
             $trf = DB::transaction(fn () => $this->buat->handle(
                 ['from_warehouse_id' => $asal->id, 'to_warehouse_id' => $tujuan->id,
-                    'notes' => 'Backorder '.$reqLine->request->number.' — sisa short pick '.$trfLama?->number],
+                    'notes' => 'Backorder '.$reqLine->request->number.' · sisa short pick '.$trfLama?->number],
                 [['item_id' => $reqLine->item_id, 'qty_base' => $qty, 'material_request_line_id' => $reqLine->id]],
                 $actor,
                 TransferOrigin::Backorder,

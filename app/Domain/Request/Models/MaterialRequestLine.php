@@ -205,10 +205,10 @@ class MaterialRequestLine extends Model
     public function displayName(): string
     {
         if ($this->relationLoaded('item') && $this->item !== null) {
-            return $this->item->code.' — '.$this->item->name;
+            return $this->item->code.' · '.$this->item->name;
         }
 
-        return $this->non_catalog_text ?? '—';
+        return $this->non_catalog_text ?? '-';
     }
 
     public function getActivitylogOptions(): LogOptions

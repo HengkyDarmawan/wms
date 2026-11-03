@@ -101,7 +101,7 @@ class ReservationList extends Component
         );
 
         $alasan = $this->reasonNotes !== ''
-            ? $this->reasonCode.' — '.$this->reasonNotes
+            ? $this->reasonCode.' · '.$this->reasonNotes
             : $this->reasonCode;
 
         if (! $this->jalankan(fn () => $action->release($reservasi, $alasan, auth()->user()))) {

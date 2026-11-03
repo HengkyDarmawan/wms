@@ -76,10 +76,10 @@ class RequestListReport extends Report
                 'nomor' => $r->number,
                 'dibuat' => $r->created_at?->lokal()->format('d/m/Y'),
                 'proyek' => $r->project?->code,
-                'pemohon' => $r->requester?->name ?? '—',
+                'pemohon' => $r->requester?->name ?? '-',
                 'status' => $r->status->label(),
                 'baris' => (int) $r->lines_count,
-                'dibutuhkan' => $r->required_date?->format('d/m/Y') ?? '—',
+                'dibutuhkan' => $r->required_date?->format('d/m/Y') ?? '-',
             ]);
     }
 }

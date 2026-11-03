@@ -76,7 +76,7 @@ class ChangeProjectStatus
                 'closed_at' => $target === ProjectStatus::Archived
                     ? $project->closed_at
                     : now(),
-                'close_reason' => trim($reasonCode.($notes ? ' — '.$notes : '')),
+                'close_reason' => trim($reasonCode.($notes ? ' · '.$notes : '')),
             ])->save();
 
             // BR-PRJ-04: Gudang Site proyek yang sudah kosong dinonaktifkan.

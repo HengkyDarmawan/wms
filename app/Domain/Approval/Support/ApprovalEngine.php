@@ -633,7 +633,7 @@ class ApprovalEngine
         }
 
         if (($u = $pilih($this->resolver->companyAdmins())) !== null) {
-            return [$u, 'Admin Company — peringatan: tidak ada cadangan/atasan'];
+            return [$u, 'Admin Company, peringatan: tidak ada cadangan/atasan'];
         }
 
         return null;

@@ -32,7 +32,7 @@ class ImpersonationTest extends TenantTestCase
         $this->assertSame($admin->id, session(Impersonation::SESSION_IMPERSONATOR_ID));
 
         $this->get($this->tenantUrl('/'))->assertOk()
-            ->assertSee(__('Mode presentasi — Anda sedang masuk sebagai'))
+            ->assertSee(__('Mode presentasi: Anda sedang masuk sebagai'))
             ->assertSee('Dedi Staf')
             ->assertSee(__('Kembali ke :nama', ['nama' => 'Rina Admin']));
 
@@ -40,7 +40,7 @@ class ImpersonationTest extends TenantTestCase
 
         $this->assertAuthenticatedAs($admin);
         $this->assertFalse(session()->has(Impersonation::SESSION_IMPERSONATOR_ID));
-        $this->get($this->tenantUrl('/'))->assertOk()->assertDontSee(__('Mode presentasi — Anda sedang masuk sebagai'));
+        $this->get($this->tenantUrl('/'))->assertOk()->assertDontSee(__('Mode presentasi: Anda sedang masuk sebagai'));
     }
 
     #[Test]
@@ -54,7 +54,7 @@ class ImpersonationTest extends TenantTestCase
             ->assertRedirect($this->tenantUrl('/portal'));
         $this->assertAuthenticatedAs($klien);
 
-        $this->get($this->tenantUrl('/portal'))->assertOk()->assertSee(__('Mode presentasi — Anda sedang masuk sebagai'));
+        $this->get($this->tenantUrl('/portal'))->assertOk()->assertSee(__('Mode presentasi: Anda sedang masuk sebagai'));
 
         $this->post($this->tenantUrl('/impersonate/leave'))->assertRedirect();
         $this->assertAuthenticatedAs($admin);

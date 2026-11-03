@@ -18,7 +18,7 @@
         <div class="border rounded p-2 mt-2" x-show="tata" x-cloak data-tambah-barang>
             <div class="fw-semibold mb-1">{{ __('Tambah barang…') }}</div>
             <div class="d-flex flex-wrap gap-3 mb-1" x-show="!rak?.is_area">
-                <label class="form-check mb-0"><input class="form-check-input" type="radio" value="bin" x-model="tambahBrg.ke"> <span x-text="'Bin ' + (binTerpilih()?.pendek ?? '—')"></span></label>
+                <label class="form-check mb-0"><input class="form-check-input" type="radio" value="bin" x-model="tambahBrg.ke"> <span x-text="'Bin ' + (binTerpilih()?.pendek ?? '-')"></span></label>
                 <label class="form-check mb-0"><input class="form-check-input" type="radio" value="rak" x-model="tambahBrg.ke"> {{ __('Seluruh rak') }}</label>
             </div>
             <div class="form-check mb-1">
@@ -34,7 +34,7 @@
                     </button>
                 </template>
             </div>
-            <div class="text-muted" x-show="tambahBrg.lebih">{{ __('Menampilkan 50 barang pertama — persempit pencarian.') }}</div>
+            <div class="text-muted" x-show="tambahBrg.lebih">{{ __('Menampilkan 50 barang pertama. Persempit pencarian.') }}</div>
         </div>
     @endif
 </div>

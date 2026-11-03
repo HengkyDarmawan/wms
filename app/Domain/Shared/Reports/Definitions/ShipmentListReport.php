@@ -84,13 +84,13 @@ class ShipmentListReport extends Report
             'gudang' => $sj->warehouse?->code,
             'tujuan' => $sj->destination_type->label().': '.$sj->destinationLabel(),
             'cara' => $sj->shipment_method->label(),
-            'driver' => $sj->driverLabel() ?: '—',
+            'driver' => $sj->driverLabel() ?: '-',
             'status' => $sj->status->label(),
-            'berangkat' => $sj->shipped_at?->lokal()->format('d/m/Y H:i') ?? '—',
-            'diterima' => $sj->delivered_at?->lokal()->format('d/m/Y H:i') ?? '—',
-            'penerima' => $sj->proof?->received_by_name ?? '—',
-            'po_klien' => $po[$sj->id] ?? '—',
-            'gr_klien' => $sj->proof?->client_gr_number ?? '—',
+            'berangkat' => $sj->shipped_at?->lokal()->format('d/m/Y H:i') ?? '-',
+            'diterima' => $sj->delivered_at?->lokal()->format('d/m/Y H:i') ?? '-',
+            'penerima' => $sj->proof?->received_by_name ?? '-',
+            'po_klien' => $po[$sj->id] ?? '-',
+            'gr_klien' => $sj->proof?->client_gr_number ?? '-',
         ]);
     }
 }

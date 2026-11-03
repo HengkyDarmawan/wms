@@ -7,7 +7,7 @@
             </p>
         </div>
         @can('create', App\Domain\Shipment\Models\Shipment::class)
-            <a class="btn btn-primary" href="{{ route('shipments.create') }}">{{ __('Surat jalan baru') }}</a>
+            <a wire:navigate class="btn btn-primary" href="{{ route('shipments.create') }}">{{ __('Surat jalan baru') }}</a>
         @endcan
     </div>
 
@@ -29,7 +29,7 @@
             </div>
             <div class="col-lg-3">
                 <x-pilih model="warehouseFilter" id="filter-gudang-sj" live :label="__('Gudang asal')" :kosong="__('Semua gudang')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-lg-2">
                 <label class="form-label" for="filter-cara-sj">{{ __('Cara kirim') }}</label>
@@ -67,7 +67,7 @@
                     @forelse ($shipments as $sj)
                         <tr @class(['table-warning' => $sj->open_discrepancies_count > 0])>
                             <td>
-                                <a href="{{ route('shipments.show', $sj) }}">{{ $sj->number }}</a>
+                                <a wire:navigate href="{{ route('shipments.show', $sj) }}">{{ $sj->number }}</a>
                                 @if ($sj->open_discrepancies_count > 0)
                                     <div class="small text-danger">
                                         {{ __(':n selisih terbuka', ['n' => $sj->open_discrepancies_count]) }}

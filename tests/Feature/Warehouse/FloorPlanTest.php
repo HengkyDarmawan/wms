@@ -278,7 +278,7 @@ class FloorPlanTest extends TenantTestCase
         app(StockLedger::class)->post(new MovementRequest(item: $this->baut, qtyBase: 7, toBinId: $b2->id));
 
         $layar = Livewire::actingAs($this->kepala())->test(WarehouseLayout::class, ['warehouse' => $this->gudang])
-            ->assertSee(__('Tampak depan (tingkat paling bawah di bawah) — ketuk petak'))
+            ->assertSee(__('Tampak depan (tingkat paling bawah di bawah). Ketuk petak'))
             ->assertSee(__('Nonaktifkan rak'));   // tab Atur ada di halaman bagi pemegang bin.manage
 
         // A-353: klik rak → isi rak saja, per bin dengan kode pendek; tanpa HTML baru.

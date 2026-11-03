@@ -64,7 +64,7 @@ final class SumberPilihan
 
         return Pilihan::dari($query, ['code', 'name'], fn (Project $p) => [
             'value' => (int) $p->id,
-            'text' => $p->code.' — '.$p->name,
+            'text' => $p->code.' · '.$p->name,
         ]);
     }
 
@@ -75,7 +75,7 @@ final class SumberPilihan
 
         return Pilihan::dari($query, ['code', 'name'], fn (Project $p) => [
             'value' => (int) $p->id,
-            'text' => $p->code.' — '.$p->name,
+            'text' => $p->code.' · '.$p->name,
         ]);
     }
 
@@ -95,7 +95,7 @@ final class SumberPilihan
 
         return Pilihan::dari($query, ['code', 'name'], fn (Project $p) => [
             'value' => (int) $p->id,
-            'text' => $p->code.' — '.$p->name,
+            'text' => $p->code.' · '.$p->name,
         ]);
     }
 
@@ -112,7 +112,7 @@ final class SumberPilihan
 
         return Pilihan::dari($query, ['code', 'name', 'barcode'], fn (Item $i) => [
             'value' => (int) $i->id,
-            'text' => $i->code.' — '.$i->name,
+            'text' => $i->code.' · '.$i->name,
         ]);
     }
 

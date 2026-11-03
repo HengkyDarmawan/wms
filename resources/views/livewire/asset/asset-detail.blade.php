@@ -8,14 +8,14 @@
                 @if ($aset->isOverdue()) <span class="badge text-bg-danger">{{ __('Lewat jatuh tempo') }}</span> @endif
             </h1>
             <p class="text-muted mb-0">
-                {{ $aset->item?->code }} — {{ $aset->item?->name }}
-                · {{ __('Lokasi') }} {{ $saldo?->bin?->code ?? '—' }}
+                {{ $aset->item?->code }} · {{ $aset->item?->name }}
+                · {{ __('Lokasi') }} {{ $saldo?->bin?->code ?? '-' }}
                 @if ($aset->currentProject) · {{ __('Proyek') }} {{ $aset->currentProject->code }} @endif
                 @if ($aset->due_return_date) · {{ __('Kembali') }} {{ $aset->due_return_date->format('d/m/Y') }} @endif
             </p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('assets.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('assets.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -28,11 +28,11 @@
 
     <div class="row g-3 mb-3">
         @foreach ([
-            [__('Grade / skor'), ($aset->condition_grade ?? '—').($aset->condition_score !== null ? ' · '.$aset->condition_score.' %' : '')],
-            [__('Meter'), $aset->meter_unit?->value === 'none' ? '—' : number_format((float) $aset->meter_total, 1, ',', '.').' '.$aset->meter_unit?->label()],
-            [__('Diperoleh'), $aset->acquired_at?->format('d/m/Y') ?? '—'],
-            [__('Umur harapan'), trim(($aset->expected_life_days ? $aset->expected_life_days.' '.__('hari') : '').($aset->expected_life_hours ? ' · '.number_format((float) $aset->expected_life_hours, 1, ',', '.').' '.$aset->meter_unit?->label() : '')) ?: '—'],
-            [__('Sisa umur'), $sisa === null ? '—' : number_format($sisa, 1, ',', '.').' %'],
+            [__('Grade / skor'), ($aset->condition_grade ?? '-').($aset->condition_score !== null ? ' · '.$aset->condition_score.' %' : '')],
+            [__('Meter'), $aset->meter_unit?->value === 'none' ? '-' : number_format((float) $aset->meter_total, 1, ',', '.').' '.$aset->meter_unit?->label()],
+            [__('Diperoleh'), $aset->acquired_at?->format('d/m/Y') ?? '-'],
+            [__('Umur harapan'), trim(($aset->expected_life_days ? $aset->expected_life_days.' '.__('hari') : '').($aset->expected_life_hours ? ' · '.number_format((float) $aset->expected_life_hours, 1, ',', '.').' '.$aset->meter_unit?->label() : '')) ?: '-'],
+            [__('Sisa umur'), $sisa === null ? '-' : number_format($sisa, 1, ',', '.').' %'],
         ] as [$label, $nilai])
             <div class="col-6 col-md">
                 <div class="card h-100"><div class="card-body py-2">
@@ -119,7 +119,7 @@
             <button class="btn btn-outline-success" type="button" wire:click="ditemukan" wire:confirm="{{ __('Batalkan tanda hilang? Penyesuaian stoknya harus sudah ditolak atau dibatalkan.') }}">{{ __('Ditemukan kembali') }}</button>
         @endcan
         @foreach ($adjustments as $adj)
-            <a class="btn btn-outline-secondary" href="{{ route('adjustments.show', $adj->id) }}">{{ $adj->number }} ({{ $adj->status->label() }})</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('adjustments.show', $adj->id) }}">{{ $adj->number }} ({{ $adj->status->label() }})</a>
         @endforeach
     </div>
 
@@ -140,11 +140,11 @@
                 <tbody>
                     @forelse ($handovers as $h)
                         <tr>
-                            <td><a href="{{ route('asset-handovers.show', $h) }}">{{ $h->number }}</a> <div class="small text-muted">{{ $h->shipment?->number }} @if ($h->goodsReturn) · {{ $h->goodsReturn->number }} @endif</div></td>
+                            <td><a wire:navigate href="{{ route('asset-handovers.show', $h) }}">{{ $h->number }}</a> <div class="small text-muted">{{ $h->shipment?->number }} @if ($h->goodsReturn) · {{ $h->goodsReturn->number }} @endif</div></td>
                             <td>{{ $h->project?->code }}</td>
                             <td class="small">{{ $h->checked_out_at?->lokal()->format('d/m/Y') }} @if ($h->due_return_date) <div class="text-muted">{{ __('jatuh tempo') }} {{ $h->due_return_date->format('d/m/Y') }}</div> @endif</td>
-                            <td class="small">{{ $h->returned_at?->lokal()->format('d/m/Y') ?? '—' }}</td>
-                            <td class="text-end">{{ $h->usage_days ?? '—' }}</td>
+                            <td class="small">{{ $h->returned_at?->lokal()->format('d/m/Y') ?? '-' }}</td>
+                            <td class="text-end">{{ $h->usage_days ?? '-' }}</td>
                             <td>
                                 <span class="badge {{ $h->status->badge() }}">{{ $h->status->label() }}</span>
                                 @if ($h->lost_at) <span class="badge text-bg-danger">{{ __('Hilang') }}</span> @endif
@@ -158,6 +158,8 @@
         </div>
     </div>
 
+    @livewire('asset.asset-maintenance', ['serialId' => $aset->id], key('servis-'.$aset->id))
+
     <div class="card mb-3">
         <div class="card-header"><strong>{{ __('Riwayat kondisi') }}</strong></div>
         <ul class="list-group list-group-flush small">
@@ -165,7 +167,7 @@
                 <li class="list-group-item">
                     {{ $i->inspected_at?->lokal()->format('d/m/Y H:i') }} · {{ $i->inspector?->name }} · {{ __('Grade') }} {{ $i->condition_grade->value }} · {{ $i->condition_score }} % → {{ $i->resulting_state->label() }}
                     @if ($i->meter_in !== null) · {{ __('meter') }} {{ number_format((float) $i->meter_in, 1, ',', '.') }} @endif
-                    @if ($i->handover) · <a href="{{ route('asset-handovers.show', $i->handover->id) }}">{{ $i->handover->number }}</a> @endif
+                    @if ($i->handover) · <a wire:navigate href="{{ route('asset-handovers.show', $i->handover->id) }}">{{ $i->handover->number }}</a> @endif
                     <div class="text-muted">
                         @foreach ($i->component_notes ?? [] as $k) {{ $k['component'] }}: {{ $k['note'] }}@if (! $loop->last); @endif @endforeach
                     </div>
@@ -185,7 +187,7 @@
                     @if (! $loop->first) <i class="bi bi-arrow-right text-muted" aria-hidden="true"></i> @endif
                     <span @class(['badge', 'text-bg-primary' => $t['sekarang'], 'text-bg-light border' => ! $t['sekarang']])>
                         @if ($t['project_id'])
-                            <a class="{{ $t['sekarang'] ? 'link-light' : '' }}" href="{{ route('projects.show', $t['project_id']) }}">{{ $t['label'] }}</a>
+                            <a wire:navigate class="{{ $t['sekarang'] ? 'link-light' : '' }}" href="{{ route('projects.show', $t['project_id']) }}">{{ $t['label'] }}</a>
                         @else
                             {{ $t['label'] }}
                         @endif
@@ -202,7 +204,7 @@
         <div class="card-header"><strong>{{ __('Kartu stok serial') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($movements as $m)
-                <li class="list-group-item">#{{ $m->id }} · {{ $m->occurred_at?->lokal()->format('d/m/Y H:i') }} · {{ $m->fromBin?->code ?? __('luar') }} → {{ $m->toBin?->code ?? __('luar') }} · {{ $m->stock_status->label() }} · {{ $m->document_number }}</li>
+                <li class="list-group-item">#{{ $m->id }} · {{ $m->occurred_at?->lokal()->format('d/m/Y H:i') }} · {{ $m->fromBin?->code ?? __('luar') }} → {{ $m->toBin?->code ?? __('luar') }} · {{ $m->stock_status->label() }} · {{ $m->document_number ?? $m->notes }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada pergerakan.') }}</li>
             @endforelse

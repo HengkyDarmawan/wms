@@ -17,6 +17,7 @@ use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockMovement;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Spatie\Activitylog\Models\Activity;
 
@@ -68,6 +69,10 @@ class AssetDetail extends Component
                 ->latest('id')->limit(20)->get(),
         ]);
     }
+
+    /** Kartu Servis memindah aset; kepala halaman (state, lokasi) ikut diperbarui. */
+    #[On('aset-berubah')]
+    public function segarkan(): void {}
 
     public function mintaDialog(string $dialog): void
     {

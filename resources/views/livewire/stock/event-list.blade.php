@@ -87,12 +87,12 @@
                             <td class="text-nowrap">{{ $k->occurred_at?->lokal()->format('d/m/Y H:i') }}</td>
                             <td>{{ $k->event_type->label() }}</td>
                             <td class="small">
-                                {{ $k->source_type ?? '—' }}
+                                {{ $k->source_type ?? '-' }}
                                 @if ($k->source_id)
                                     <div class="text-muted">#{{ $k->source_id }}</div>
                                 @endif
                             </td>
-                            <td>{{ $k->project?->code ?? '—' }}</td>
+                            <td>{{ $k->project?->code ?? '-' }}</td>
                             <td>
                                 @if ($k->isPublished())
                                     <span class="badge text-bg-success">{{ __('Terkirim') }}</span>
@@ -104,7 +104,7 @@
                                     @endif
                                 @endif
                             </td>
-                            <td class="small text-muted">{{ $k->last_error ?? '—' }}</td>
+                            <td class="small text-muted">{{ $k->last_error ?? '-' }}</td>
                         </tr>
                     @empty
                         <tr>

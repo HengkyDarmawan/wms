@@ -14,7 +14,7 @@
     @if ($setup)
         <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
             <span><i class="bi bi-rocket-takeoff"></i> {{ __('Setup awal company: :done dari :total langkah selesai.', ['done' => $setup['done'], 'total' => $setup['total']]) }}</span>
-            <a class="btn btn-sm btn-info" href="{{ route('setup.index') }}">{{ __('Lanjutkan setup') }}</a>
+            <a wire:navigate class="btn btn-sm btn-info" href="{{ route('setup.index') }}">{{ __('Lanjutkan setup') }}</a>
         </div>
     @endif
 
@@ -22,7 +22,7 @@
     <div class="row g-3 mb-4">
         @forelse ($cards as $c)
             <div class="col-6 col-md-4 col-xl-3">
-                <a class="card h-100 text-decoration-none" href="{{ $c['url'] }}">
+                <a class="card h-100 text-decoration-none" wire:navigate.hover href="{{ $c['url'] }}">
                     <div class="card-body d-flex align-items-start gap-3">
                         <i class="bi {{ $c['icon'] }} fs-3 text-{{ $c['count'] > 0 ? $c['tone'] : 'secondary' }}" aria-hidden="true"></i>
                         <div>

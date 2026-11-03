@@ -80,7 +80,7 @@ class ClientShipmentRecapReport extends Report
                 'required' => true,
                 'cari' => true,
                 'options' => Client::query()->orderBy('name')->get(['id', 'code', 'name'])
-                    ->mapWithKeys(fn (Client $c) => [$c->id => $c->code.' — '.$c->name])->all(),
+                    ->mapWithKeys(fn (Client $c) => [$c->id => $c->code.' · '.$c->name])->all(),
             ],
             'project_id' => ['label' => 'Proyek', 'server' => true],
             'destination_type' => ['label' => 'Tujuan', 'options' => [
@@ -183,18 +183,18 @@ class ClientShipmentRecapReport extends Report
         $adaBukti = $bukti->isNotEmpty();
 
         return [
-            'tgl_kirim' => $sj?->shipped_at?->lokal()->format('d/m/Y') ?? '—',
-            'tgl_terima' => $sj?->delivered_at?->lokal()->format('d/m/Y') ?? '—',
-            'sj' => $sj?->number ?? '—',
+            'tgl_kirim' => $sj?->shipped_at?->lokal()->format('d/m/Y') ?? '-',
+            'tgl_terima' => $sj?->delivered_at?->lokal()->format('d/m/Y') ?? '-',
+            'sj' => $sj?->number ?? '-',
             'proyek' => $this->labelProyek($sj),
-            'po_klien' => $po[$line->shipment_id] ?? '—',
-            'gr_klien' => $sj?->proof?->client_gr_number ?? '—',
+            'po_klien' => $po[$line->shipment_id] ?? '-',
+            'gr_klien' => $sj?->proof?->client_gr_number ?? '-',
             'kode_item' => $line->item?->code,
             'nama_item' => $line->item?->name,
             'dikirim' => (float) $line->qty_shipped,
-            'baik' => $adaBukti ? (float) $bukti->sum('qty_good') : '—',
-            'rusak' => $adaBukti ? (float) $bukti->sum('qty_damaged') : '—',
-            'kurang' => $adaBukti ? (float) $bukti->sum('qty_missing') : '—',
+            'baik' => $adaBukti ? (float) $bukti->sum('qty_good') : '-',
+            'rusak' => $adaBukti ? (float) $bukti->sum('qty_damaged') : '-',
+            'kurang' => $adaBukti ? (float) $bukti->sum('qty_missing') : '-',
             'satuan' => $line->item?->baseUom?->code,
         ];
     }
@@ -233,7 +233,7 @@ class ClientShipmentRecapReport extends Report
     {
         return $sj?->destinationProject?->code
             ?? $sj?->destinationWarehouse?->code
-            ?? '—';
+            ?? '-';
     }
 
     /**

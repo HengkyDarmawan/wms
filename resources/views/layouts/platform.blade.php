@@ -14,6 +14,7 @@
         })();
     </script>
     @fonts
+    @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body data-nx-root="{{ url('/') }}">
@@ -21,16 +22,16 @@
 
 <nav class="navbar navbar-expand-md border-bottom bg-body">
     <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('platform.dashboard') }}">
+        <a class="navbar-brand d-flex align-items-center gap-2" wire:navigate.hover href="{{ route('platform.dashboard') }}">
             <img src="{{ asset('img/logo.svg') }}" alt="" width="28" height="28">
             <span>{{ __('Super Admin') }}</span>
         </a>
         <ul class="navbar-nav me-auto">
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('platform.dashboard', 'platform.companies.*') ? 'active' : '' }}" href="{{ route('platform.dashboard') }}">{{ __('Company') }}</a></li>
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('platform.payments.*') ? 'active' : '' }}" href="{{ route('platform.payments.index') }}">{{ __('Pembayaran') }}</a></li>
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('platform.plans.*') ? 'active' : '' }}" href="{{ route('platform.plans.index') }}">{{ __('Paket') }}</a></li>
+            <li class="nav-item"><a class="nav-link {{ request()->routeIs('platform.dashboard', 'platform.companies.*') ? 'active' : '' }}" wire:navigate.hover href="{{ route('platform.dashboard') }}">{{ __('Company') }}</a></li>
+            <li class="nav-item"><a class="nav-link {{ request()->routeIs('platform.payments.*') ? 'active' : '' }}" wire:navigate.hover href="{{ route('platform.payments.index') }}">{{ __('Pembayaran') }}</a></li>
+            <li class="nav-item"><a class="nav-link {{ request()->routeIs('platform.plans.*') ? 'active' : '' }}" wire:navigate.hover href="{{ route('platform.plans.index') }}">{{ __('Paket') }}</a></li>
         </ul>
-        <a class="small me-3 {{ request()->routeIs('platform.security') ? 'fw-semibold' : 'text-muted' }}" href="{{ route('platform.security') }}"
+        <a class="small me-3 {{ request()->routeIs('platform.security') ? 'fw-semibold' : 'text-muted' }}" wire:navigate.hover href="{{ route('platform.security') }}"
            title="{{ __('Keamanan akun') }}">
             {{ auth('platform')->user()?->name }}
             @unless (auth('platform')->user()?->hasTwoFactorEnabled())
@@ -58,5 +59,6 @@
 
     @yield('content')
 </main>
+@livewireScripts
 </body>
 </html>

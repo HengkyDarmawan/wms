@@ -27,7 +27,7 @@ class ApprovalDemoSeeder extends Seeder
 
     public const REQ_LAINNYA = 'REQ lainnya';
 
-    public const RTV = 'RTV — kepala gudang';
+    public const RTV = 'RTV: kepala gudang';
 
     public const ADJ_BESAR = 'ADJ di atas 100 unit';
 

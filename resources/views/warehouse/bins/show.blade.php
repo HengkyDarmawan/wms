@@ -9,7 +9,7 @@
     @endphp
     <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
         <div>
-            <div class="text-muted small">{{ __('Isi bin') }} · {{ $bin->warehouse?->code }} — {{ $bin->warehouse?->name }}</div>
+            <div class="text-muted small">{{ __('Isi bin') }} · {{ $bin->warehouse?->code }} · {{ $bin->warehouse?->name }}</div>
             <h1 class="display-5 fw-bold font-monospace mb-0" data-kode-pendek>{{ $pendek[$bin->id] ?? $bin->code }}</h1>
             <div class="text-muted font-monospace">{{ $bin->code }}</div>
             <div class="mt-2 d-flex flex-wrap gap-1">
@@ -24,7 +24,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @if ($pengguna?->hasPermission('label.print'))
-                <a class="btn btn-outline-secondary" href="{{ route('labels.index', ['type' => 'label_bin', 'q' => $utama->code]) }}"><i class="bi bi-printer"></i> {{ __('Cetak label bin') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('labels.index', ['type' => 'label_bin', 'q' => $utama->code]) }}"><i class="bi bi-printer"></i> {{ __('Cetak label bin') }}</a>
             @endif
             @if ($pengguna?->hasPermission('warehouse.view'))
                 <a class="btn btn-outline-secondary" href="{{ route('warehouses.layout', $bin->warehouse_id) }}"><i class="bi bi-grid-3x3"></i> {{ __('Denah') }}</a>
@@ -35,14 +35,14 @@
     @if ($utama->id !== $bin->id)
         <div class="alert alert-info">
             {{ __('Bin ini digabung ke bin utama') }}
-            <a class="fw-semibold font-monospace" href="{{ route('bins.show', $utama->code) }}">{{ $pendek[$utama->id] ?? $utama->code }}</a>;
+            <a wire:navigate class="fw-semibold font-monospace" href="{{ route('bins.show', $utama->code) }}">{{ $pendek[$utama->id] ?? $utama->code }}</a>;
             {{ __('stoknya dicatat di bin utama. Isi di bawah adalah isi bin utama.') }}
         </div>
     @elseif ($tergabung->isNotEmpty())
         <div class="alert alert-light border">
             {{ __('Bin gabungan') }} ({{ $utama->merge_direction?->label() }}, {{ $utama->merge_type?->label() }}):
             @foreach ($tergabung as $t)
-                <a class="font-monospace" href="{{ route('bins.show', $t->code) }}">{{ $pendek[$t->id] ?? $t->code }}</a>@if (! $loop->last), @endif
+                <a wire:navigate class="font-monospace" href="{{ route('bins.show', $t->code) }}">{{ $pendek[$t->id] ?? $t->code }}</a>@if (! $loop->last), @endif
             @endforeach
         </div>
     @endif

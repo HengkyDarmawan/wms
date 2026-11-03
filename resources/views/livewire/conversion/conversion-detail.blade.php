@@ -6,8 +6,8 @@
                 <span class="badge {{ $cnv->status->badge() }}">{{ $cnv->status->label() }}</span>
             </h1>
             <p class="text-muted mb-0">
-                {{ $cnv->conversion_type->label() }} · {{ $cnv->project?->code }} — {{ $cnv->project?->name }} · {{ __('Gudang') }} {{ $cnv->warehouse?->code }}
-                @if ($cnv->reversalOf) · {{ __('Pembalik') }} <a href="{{ route('conversions.show', $cnv->reversal_of_id) }}">{{ $cnv->reversalOf->number }}</a> @endif
+                {{ $cnv->conversion_type->label() }} · {{ $cnv->project?->code }} · {{ $cnv->project?->name }} · {{ __('Gudang') }} {{ $cnv->warehouse?->code }}
+                @if ($cnv->reversalOf) · {{ __('Pembalik') }} <a wire:navigate href="{{ route('conversions.show', $cnv->reversal_of_id) }}">{{ $cnv->reversalOf->number }}</a> @endif
                 · {{ __('Dibuat') }} {{ $cnv->preparer?->name }}
                 @if ($cnv->submitter) · {{ __('Diajukan') }} {{ $cnv->submitter->name }} @endif
                 @if ($cnv->approver && $cnv->status->value === 'completed') · {{ __('Disetujui') }} {{ $cnv->approver->name }} @endif
@@ -16,17 +16,17 @@
             @if ($cnv->reason) <p class="small mb-0">{{ __('Alasan pembalikan') }}: {{ $cnv->reason->label }}</p> @endif
             @if ($cnv->notes) <p class="small mb-0">{{ $cnv->notes }}</p> @endif
             @if ($cnv->rejectReason && $cnv->status->value === 'draft')
-                <p class="text-danger small mb-0">{{ __('Ditolak') }} {{ $cnv->approver?->name }}: {{ $cnv->rejectReason->label }} — {{ __('perbaiki, ajukan ulang, atau batalkan') }}</p>
+                <p class="text-danger small mb-0">{{ __('Ditolak') }} {{ $cnv->approver?->name }}: {{ $cnv->rejectReason->label }} · {{ __('perbaiki, ajukan ulang, atau batalkan') }}</p>
             @endif
             @if ($cnv->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $cnv->cancelReason->label }}</p> @endif
             @if ($aturan) <p class="small mb-0">{{ __('Aturan approval berlaku') }}: <strong>{{ $aturan }}</strong></p> @endif
             @foreach ($pembalik as $p)
-                <p class="small mb-0">{{ __('Pembalik') }} <a href="{{ route('conversions.show', $p->id) }}">{{ $p->number }}</a> ({{ $p->status->label() }})</p>
+                <p class="small mb-0">{{ __('Pembalik') }} <a wire:navigate href="{{ route('conversions.show', $p->id) }}">{{ $p->number }}</a> ({{ $p->status->label() }})</p>
             @endforeach
         </div>
         <div class="d-flex flex-wrap gap-2">
             @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::Conversion, 'id' => $cnv->id])
-            <a class="btn btn-outline-secondary" href="{{ route('conversions.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('conversions.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -74,7 +74,7 @@
         <div class="card-body py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
             <span class="fs-5 mb-0">{{ $kalimat }}</span>
             @if ((float) $cnv->total_waste > 0 && $cnv->status->value === 'completed' && auth()->user()?->can('waste.create'))
-                <a class="btn btn-sm btn-outline-danger" href="{{ route('waste-disposals.create', ['warehouse' => $cnv->warehouse_id, 'project' => $cnv->project_id]) }}"><i class="bi bi-trash3"></i> {{ __('Buat BA Waste') }}</a>
+                <a wire:navigate class="btn btn-sm btn-outline-danger" href="{{ route('waste-disposals.create', ['warehouse' => $cnv->warehouse_id, 'project' => $cnv->project_id]) }}"><i class="bi bi-trash3"></i> {{ __('Buat BA Waste') }}</a>
             @endif
         </div>
     </div>
@@ -108,7 +108,7 @@
                             <td>{{ $l->item?->code }} <div class="small text-muted">{{ $l->item?->name }} @if ($l->trackingLabel() !== '') · {{ $l->trackingLabel() }} @endif</div></td>
                             <td>{{ $l->bin?->code }}</td>
                             <td class="text-end">{{ \App\Domain\Conversion\Support\ConversionPlanner::angka((float) $l->qty_base) }} <span class="small text-muted">{{ $l->item?->baseUom?->code }}</span></td>
-                            <td class="small">{{ $l->movement_id ? '#'.$l->movement_id : '—' }}</td>
+                            <td class="small">{{ $l->movement_id ? '#'.$l->movement_id : '-' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -139,16 +139,16 @@
                                 @if ($o->reason) <div class="small text-muted">{{ $o->reason->label }}</div> @endif
                             </td>
                             <td>{{ $o->item?->code }} <div class="small text-muted">{{ $o->item?->name }} @if ($o->trackingLabel() !== '') · {{ $o->trackingLabel() }} @endif</div></td>
-                            <td>{{ $o->bin?->code ?? '—' }}</td>
+                            <td>{{ $o->bin?->code ?? '-' }}</td>
                             <td class="text-end">{{ \App\Domain\Conversion\Support\ConversionPlanner::angka((float) $o->qty_base) }} <span class="small text-muted">{{ $o->item?->baseUom?->code }}</span></td>
                             <td class="small">
                                 @if ($o->parentInput)
                                     {{ __('dari') }} {{ $o->parentInput->item?->code }} {{ $o->parentInput->piece?->piece_no }}
                                 @else
-                                    —
+                                    -
                                 @endif
                             </td>
-                            <td class="small">{{ $o->movement_id ? '#'.$o->movement_id : '—' }}</td>
+                            <td class="small">{{ $o->movement_id ? '#'.$o->movement_id : '-' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -164,7 +164,7 @@
                 <button class="btn btn-primary" type="button" wire:click="ajukan" wire:confirm="{{ __('Ajukan CNV ini ke approval?') }}">{{ __('Ajukan ke approval') }}</button>
             @endcan
             @can('update', $cnv)
-                <a class="btn btn-outline-secondary" href="{{ route('conversions.edit', $cnv) }}">{{ __('Ubah draf') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('conversions.edit', $cnv) }}">{{ __('Ubah draf') }}</a>
             @endcan
             @can('approve', $cnv)
                 <button class="btn btn-primary" type="button" wire:click="setujui">{{ __('Setujui') }}</button>

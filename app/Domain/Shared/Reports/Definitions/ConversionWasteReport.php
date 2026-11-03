@@ -82,8 +82,8 @@ class ConversionWasteReport extends Report
         foreach ($cnv as $c) {
             // CNV pembalik membatalkan angka CNV asalnya (A-157).
             $tanda = $c->reversal_of_id !== null ? -1 : 1;
-            $item = $c->inputs->first()?->item?->code ?? '—';
-            $k = ($c->project?->code ?? '—').'|'.$item;
+            $item = $c->inputs->first()?->item?->code ?? '-';
+            $k = ($c->project?->code ?? '-').'|'.$item;
             $data[$k] ??= ['proyek' => $c->project?->code, 'kode_item' => $item, 'jumlah_cnv' => 0, 'input' => 0.0, 'output' => 0.0, 'offcut' => 0.0, 'waste' => 0.0, 'kerf' => 0.0];
             $data[$k]['jumlah_cnv'] += $tanda;
 

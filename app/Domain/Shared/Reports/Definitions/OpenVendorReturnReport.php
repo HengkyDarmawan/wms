@@ -63,9 +63,9 @@ class OpenVendorReturnReport extends Report
             ->get()
             ->map(fn (VendorReturn $r) => [
                 'rtv' => $r->number,
-                'vendor' => $r->vendor !== null ? $r->vendor->code.' — '.$r->vendor->name : '—',
+                'vendor' => $r->vendor !== null ? $r->vendor->code.' · '.$r->vendor->name : '-',
                 'gudang' => $r->warehouse?->code,
-                'grn' => $r->receipt?->number ?? '—',
+                'grn' => $r->receipt?->number ?? '-',
                 'jumlah' => round((float) $r->lines_sum_qty_base, 4),
                 'status' => $r->status->label(),
                 'dibuat' => $r->created_at?->lokal()->format('d/m/Y H:i'),

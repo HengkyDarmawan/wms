@@ -7,14 +7,14 @@
             </h1>
             <p class="text-muted mb-0">
                 {{ $task->warehouse?->code }} · {{ __('dari') }}
-                <a href="{{ route('receipts.show', $task->goods_receipt_id) }}">{{ $task->receipt?->number }}</a>
+                <a wire:navigate href="{{ route('receipts.show', $task->goods_receipt_id) }}">{{ $task->receipt?->number }}</a>
             </p>
         </div>
         <div class="d-flex gap-2">
             @if ($task->status->value === 'pending')
                 <a class="btn btn-outline-primary" href="{{ route('putaways.waiting', ['gudang' => $task->warehouse_id]) }}"><i class="bi bi-upc-scan"></i> {{ __('Pindai di HP') }}</a>
             @endif
-            <a class="btn btn-outline-secondary" href="{{ route('putaways.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('putaways.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -70,7 +70,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php($opsiBin = $bins->map(fn ($b) => ['value' => $b->id, 'text' => ($pendek[$b->id] ?? $b->code).' — '.$b->code])->all())
+                    @php($opsiBin = $bins->map(fn ($b) => ['value' => $b->id, 'text' => ($pendek[$b->id] ?? $b->code).' · '.$b->code])->all())
                     @foreach ($lines as $l)
                         <tr wire:key="put-line-{{ $l->id }}">
                             <td>
@@ -82,7 +82,7 @@
                             <td class="text-end">{{ number_format((float) $l->qty_base, 2, ',', '.') }}</td>
                             <td>{{ $l->fromBin?->code }}</td>
                             <td>
-                                <span class="fw-semibold font-monospace">{{ $l->suggestedBin ? ($pendek[$l->suggested_bin_id] ?? $l->suggestedBin->code) : '—' }}</span>
+                                <span class="fw-semibold font-monospace">{{ $l->suggestedBin ? ($pendek[$l->suggested_bin_id] ?? $l->suggestedBin->code) : '-' }}</span>
                                 @if ($penuh[$l->id] ?? false) <div><span class="badge text-bg-warning">{{ __('Tempat simpan penuh') }}</span></div> @endif
                             </td>
                             <td>
@@ -95,7 +95,7 @@
                                     <x-pilih :model="'isian.'.$l->id.'.bin_id'" :options="$opsiBin" :kosong="__('Pilih bin…')"
                                              kecil :aria="__('Bin tujuan')" />
                                 @else
-                                    <span class="font-monospace">{{ $l->bin ? ($pendek[$l->bin_id] ?? $l->bin->code) : '—' }}</span>
+                                    <span class="font-monospace">{{ $l->bin ? ($pendek[$l->bin_id] ?? $l->bin->code) : '-' }}</span>
                                     @if ($l->scanned_at) <div class="small text-muted">{{ __('Ditaruh') }} {{ $l->scanned_at->lokal()->format('d/m/Y H:i') }}</div> @endif
                                 @endif
                             </td>

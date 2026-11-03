@@ -74,7 +74,7 @@ class AdjustmentByReasonReport extends Report
                 $alasan = $grup->first()['alasan'];
 
                 return [
-                    'alasan' => $alasan !== null ? $alasan->code.' — '.$alasan->label : '—',
+                    'alasan' => $alasan !== null ? $alasan->code.' · '.$alasan->label : '-',
                     'adj' => $grup->pluck('adj')->unique()->count(),
                     'baris' => $grup->count(),
                     'masuk' => round((float) $grup->sum(fn (array $b) => max(0.0, $b['delta'])), 4),

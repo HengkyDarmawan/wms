@@ -21,7 +21,7 @@
             </template>
             <div class="list-group-item text-muted" x-show="!belum.barang.length">{{ __('Semua barang yang cocok sudah punya tempat.') }}</div>
         </div>
-        <div class="text-muted mt-1" x-show="belum.lebih">{{ __('Menampilkan 50 barang pertama — persempit pencarian.') }}</div>
+        <div class="text-muted mt-1" x-show="belum.lebih">{{ __('Menampilkan 50 barang pertama. Persempit pencarian.') }}</div>
         <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
             <div class="form-check mb-0">
                 <input class="form-check-input" type="checkbox" id="khusus-taruh" x-model="khususTaruh">

@@ -30,7 +30,7 @@
                 <div class="row g-3 mb-1">
                     <div class="col-md-6">
                         <x-pilih model="gudangId" id="pindah-gudang" live wajib :label="__('Gudang')" :kosong="__('Pilih gudang…')"
-                                 :options="$gudangList->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                                 :options="$gudangList->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
                     </div>
                 </div>
             @endif
@@ -63,7 +63,7 @@
                     <label class="list-group-item list-group-item-action d-flex align-items-start gap-2" for="pindah-saldo-{{ $s->id }}">
                         <input class="form-check-input mt-1" type="radio" id="pindah-saldo-{{ $s->id }}" value="{{ $s->id }}" wire:model.live="form.balance_id">
                         <span class="flex-grow-1">
-                            <span class="fw-semibold">{{ $s->item->code }}</span> — {{ $s->item->name }}
+                            <span class="fw-semibold">{{ $s->item->code }}</span> · {{ $s->item->name }}
                             <span class="d-block small text-muted">
                                 @if ($s->lot) {{ __('Lot') }} {{ $s->lot->lot_no }} @endif
                                 @if ($s->serial) {{ __('Serial') }} {{ $s->serial->serial_no }} @endif
@@ -116,7 +116,7 @@
 
     @if ($riwayat->isNotEmpty())
         <div class="card">
-            <div class="card-header"><strong>{{ __('Riwayat pindah bin') }}</strong> <span class="text-muted small">— {{ __('10 terakhir di gudang ini') }}</span></div>
+            <div class="card-header"><strong>{{ __('Riwayat pindah bin') }}</strong> <span class="text-muted small">{{ __('10 terakhir di gudang ini') }}</span></div>
             <div class="table-responsive">
                 <table class="table table-sm mb-0 align-middle">
                     <thead>

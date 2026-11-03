@@ -2,19 +2,19 @@
             @if (in_array('warehouse_ids', $allowed, true))
                 <div class="col-md-4">
                     <label class="form-label" for="kondisi-gudang">{{ __('Gudang') }}</label>
-                    <x-pilih-tag live model="conditions.warehouse_ids" id="kondisi-gudang" :options="$warehouses->mapWithKeys(fn ($w) => [$w->id => $w->code.' — '.$w->name])->all()" />
+                    <x-pilih-tag live model="conditions.warehouse_ids" id="kondisi-gudang" :options="$warehouses->mapWithKeys(fn ($w) => [$w->id => $w->code.' · '.$w->name])->all()" />
                 </div>
             @endif
             @if (in_array('project_ids', $allowed, true))
                 <div class="col-md-4">
                     <label class="form-label" for="kondisi-proyek">{{ __('Proyek') }}</label>
-                    <x-pilih-tag live model="conditions.project_ids" id="kondisi-proyek" :options="$projects->mapWithKeys(fn ($p) => [$p->id => $p->code.' — '.$p->name])->all()" />
+                    <x-pilih-tag live model="conditions.project_ids" id="kondisi-proyek" :options="$projects->mapWithKeys(fn ($p) => [$p->id => $p->code.' · '.$p->name])->all()" />
                 </div>
             @endif
             @if (in_array('category_ids', $allowed, true))
                 <div class="col-md-4">
                     <label class="form-label" for="kondisi-kategori">{{ __('Kategori barang (termasuk sub-kategori)') }}</label>
-                    <x-pilih-tag live model="conditions.category_ids" id="kondisi-kategori" :options="$categories->mapWithKeys(fn ($c) => [$c->id => $c->code.' — '.$c->name])->all()" />
+                    <x-pilih-tag live model="conditions.category_ids" id="kondisi-kategori" :options="$categories->mapWithKeys(fn ($c) => [$c->id => $c->code.' · '.$c->name])->all()" />
                 </div>
             @endif
             @if (in_array('ownership_models', $allowed, true))
@@ -26,7 +26,7 @@
             @if (in_array('vendor_types', $kondisiUsang, true))
                 <div class="col-12">
                     <div class="alert alert-warning py-2 mb-0" role="alert">
-                        {{ __('Aturan ini memakai kondisi Jenis vendor yang tidak lagi dinilai untuk jenis dokumen ini — vendor baru dipilih di PO. Buat aturan PO untuk jenis vendor; bila aturan ini disimpan, kondisi itu dihapus dan aturan berlaku menurut kondisi lainnya.') }}
+                        {{ __('Aturan ini memakai kondisi Jenis vendor yang tidak lagi dinilai untuk jenis dokumen ini, karena vendor baru dipilih di PO. Buat aturan PO untuk jenis vendor; bila aturan ini disimpan, kondisi itu dihapus dan aturan berlaku menurut kondisi lainnya.') }}
                     </div>
                 </div>
             @endif

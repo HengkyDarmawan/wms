@@ -6,10 +6,10 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @can('viewAny', App\Domain\Waste\Models\WasteDisposal::class)
-                <a class="btn btn-outline-secondary" href="{{ route('waste-disposals.index') }}">{{ __('Berita acara waste') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('waste-disposals.index') }}">{{ __('Berita acara waste') }}</a>
             @endcan
             @can('create', App\Domain\Conversion\Models\Conversion::class)
-                <a class="btn btn-primary" href="{{ route('conversions.create') }}">{{ __('Konversi baru') }}</a>
+                <a wire:navigate class="btn btn-primary" href="{{ route('conversions.create') }}">{{ __('Konversi baru') }}</a>
             @endcan
         </div>
     </div>
@@ -54,7 +54,7 @@
                     @forelse ($conversions as $c)
                         <tr>
                             <td>
-                                <a href="{{ route('conversions.show', $c) }}">{{ $c->number }}</a>
+                                <a wire:navigate href="{{ route('conversions.show', $c) }}">{{ $c->number }}</a>
                                 <div class="small text-muted">
                                     {{ $c->preparer?->name }}
                                     @if ($c->reversalOf) · {{ __('Pembalik') }} {{ $c->reversalOf->number }} @endif

@@ -19,7 +19,7 @@
             <div class="col-md-2">
                 <label class="form-label mb-0" for="rb-zona">{{ __('Zona') }} <span class="wajib">*</span></label>
                 <select class="form-select form-select-sm" id="rb-zona" x-model="f.rak.zona">
-                    <option value="">—</option>
+                    <option value="">-</option>
                     <template x-for="z in d.zones" :key="z.id"><option :value="z.id" x-text="z.code"></option></template>
                 </select>
             </div>
@@ -39,7 +39,7 @@
         </div>
         <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
             <button class="btn btn-sm btn-primary" type="button" x-on:click="tambahRak()">{{ __('Tambah rak') }}</button>
-            <span class="text-muted">{{ __('Tingkat diberi kode L1, L2, …; bin B01, B02, … per tingkat. Rak baru ditata otomatis — seret untuk memindahkan.') }}</span>
+            <span class="text-muted">{{ __('Tingkat diberi kode L1, L2, …; bin B01, B02, … per tingkat. Rak baru ditata otomatis. Seret untuk memindahkan.') }}</span>
         </div>
 
         <hr>
@@ -48,7 +48,7 @@
             <div class="col-md-2">
                 <label class="form-label mb-0" for="area-zona">{{ __('Zona') }}</label>
                 <select class="form-select form-select-sm" id="area-zona" x-model="f.area.zona">
-                    <option value="">—</option>
+                    <option value="">-</option>
                     <template x-for="z in d.zones" :key="z.id"><option :value="z.id" x-text="z.code"></option></template>
                 </select>
             </div>

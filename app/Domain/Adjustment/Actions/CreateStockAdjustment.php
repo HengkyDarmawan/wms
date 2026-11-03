@@ -261,7 +261,7 @@ class CreateStockAdjustment
             $adj->forceFill(['status' => StockAdjustmentStatus::Approved])->save();
 
             activity('adjustment')->performedOn($adj)->causedBy($actor)
-                ->log('Saldo awal masa setup — langsung tercatat tanpa approval (A-415)');
+                ->log('Saldo awal masa setup, langsung tercatat tanpa approval (A-415)');
 
             return $this->poster->post($adj, $actor);
         }

@@ -6,7 +6,8 @@
 
 :root {
   /* Brand */
-  --nx-primary: #6366f1;
+  /* #5558e3: putih di atasnya 5,4:1 (WCAG AA); #6366f1 bawaan template hanya 4,47:1. */
+  --nx-primary: #5558e3;
   --nx-primary-hover: #4f46e5;
   --nx-primary-subtle: #eef2ff;
   --nx-secondary: #64748b;
@@ -32,7 +33,8 @@
   /* Text */
   --nx-text:       #0f172a;
   --nx-text-body:  #3b4861;
-  --nx-text-muted: #8b93ad;
+  /* 5,1:1 di latar, 5,6:1 di kartu (dulu #8b93ad: 2,8–3,1:1, gagal AA). */
+  --nx-text-muted: #5f6782;
 
   /* Sidebar */
   --nx-sidebar-bg: #fbfbff;
@@ -72,7 +74,7 @@
   --bs-body-color: var(--nx-text-body);
   --bs-border-color: var(--nx-border);
   --bs-primary: var(--nx-primary);
-  --bs-primary-rgb: 99, 102, 241;
+  --bs-primary-rgb: 85, 88, 227;
   --bs-link-color: var(--nx-primary);
   --bs-link-hover-color: var(--nx-primary-hover);
   --bs-body-font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -148,3 +150,7 @@ h6, .h6 {
   outline: 2px solid var(--nx-primary);
   outline-offset: 2px;
 }
+
+/* Teks berwarna primary di latar gelap butuh rona lebih terang (8,6:1); tombol tetap
+   --nx-primary dengan teks putih. Link biasa di tema gelap memakai warna Bootstrap (#6ea8fe). */
+[data-bs-theme="dark"] .text-primary, [data-bs-theme="dark"] .link-primary { color: #a5b4fc !important; }

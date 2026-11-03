@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ $nomor ? __('Ubah draf').' '.$nomor : __('Purchase Order baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Pilih vendor dan gudang tujuan, lalu isi jumlah dan harga satuan (per satuan dasar) untuk baris Purchase Request yang akan dipesan.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('purchase-orders.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('purchase-orders.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')
@@ -23,7 +23,7 @@
             </div>
             <div class="col-md-3">
                 <x-pilih model="form.warehouse_id" id="po-gudang" live wajib :label="__('Gudang tujuan')" :kosong="__('Pilih gudang…')"
-                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' — '.$w->name])->all()" />
+                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' · '.$w->name])->all()" />
             </div>
             <div class="col-md-2">
                 <label class="form-label" for="po-eta">{{ __('Perkiraan datang') }}</label>
@@ -103,7 +103,7 @@
                                     <span class="badge text-bg-warning mt-1" data-naik>{{ __('Naik :p % dari harga terakhir', ['p' => number_format($naik, 1, ',', '.')]) }}</span>
                                 @endif
                             </td>
-                            <td class="text-end text-nowrap">{{ $this->nilai($l->id) > 0 ? \App\Domain\Purchasing\Support\Money::format($this->nilai($l->id)) : '—' }}</td>
+                            <td class="text-end text-nowrap">{{ $this->nilai($l->id) > 0 ? \App\Domain\Purchasing\Support\Money::format($this->nilai($l->id)) : '-' }}</td>
                         </tr>
                     @empty
                         <tr>

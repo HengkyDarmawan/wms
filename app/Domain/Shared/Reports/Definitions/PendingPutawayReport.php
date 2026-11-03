@@ -64,9 +64,9 @@ class PendingPutawayReport extends Report
             ->get()
             ->map(fn (PutawayTask $t) => [
                 'put' => $t->number,
-                'grn' => $t->receipt?->number ?? '—',
+                'grn' => $t->receipt?->number ?? '-',
                 'gudang' => $t->warehouse?->code,
-                'petugas' => $t->assignee?->name ?? '—',
+                'petugas' => $t->assignee?->name ?? '-',
                 'dibuat' => $t->created_at?->lokal()->format('d/m/Y H:i'),
                 'umur' => (int) $t->created_at?->lokal()->startOfDay()->diffInDays($hariIni),
                 'baris' => (int) $t->lines_count,

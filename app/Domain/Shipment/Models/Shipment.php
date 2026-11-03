@@ -205,9 +205,9 @@ class Shipment extends Model
     public function destinationLabel(): string
     {
         return match ($this->destination_type) {
-            DestinationType::ProjectClient => $this->destinationProject?->name ?? '—',
-            DestinationType::SiteWarehouse, DestinationType::Warehouse => $this->destinationWarehouse?->name ?? '—',
-            DestinationType::Vendor => $this->destinationVendor?->name ?? '—',
+            DestinationType::ProjectClient => $this->destinationProject?->name ?? '-',
+            DestinationType::SiteWarehouse, DestinationType::Warehouse => $this->destinationWarehouse?->name ?? '-',
+            DestinationType::Vendor => $this->destinationVendor?->name ?? '-',
         };
     }
 
@@ -235,7 +235,7 @@ class Shipment extends Model
             // A-247: plat boleh teks bebas bila bukan master; A-311: driver = teks.
             ShipmentMethod::OwnFleet => implode(' · ', array_filter([$this->vehicle?->plate_no ?? $this->vehicle_plate, $this->driverLabel()])),
             ShipmentMethod::Carrier => trim(implode(' · ', array_filter([$this->carrier?->name, $this->vehicle_plate, $this->driverLabel() ?: $this->carried_by_name, $this->tracking_no]))),
-            ShipmentMethod::SelfDelivered => (string) ($this->carried_by_name ?? '—'),
+            ShipmentMethod::SelfDelivered => (string) ($this->carried_by_name ?? '-'),
         };
     }
 

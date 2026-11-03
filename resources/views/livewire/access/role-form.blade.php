@@ -9,7 +9,7 @@
                 @endif
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('roles.index') }}">{{ __('Kembali ke daftar') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('roles.index') }}">{{ __('Kembali ke daftar') }}</a>
     </div>
 
     <form wire:submit="save">
@@ -48,7 +48,7 @@
 
                         <label class="form-label" for="copyFrom">{{ __('Salin permission dari role lain') }}</label>
                         <div class="d-flex gap-2 align-items-start">
-                            <x-pilih model="copyFrom" id="copyFrom" class="flex-grow-1" :kosong="__('— Pilih role —')"
+                            <x-pilih model="copyFrom" id="copyFrom" class="flex-grow-1" :kosong="__('(Pilih role)')"
                                      :options="$roleLain->map(fn ($r) => ['value' => $r->id, 'text' => $r->name, 'badge' => $r->is_builtin ? __('bawaan') : null])->all()" />
                             <button class="btn btn-outline-secondary" type="button" wire:click="salin">
                                 {{ __('Salin') }}
@@ -109,7 +109,7 @@
                 <span wire:loading.remove wire:target="save">{{ __('Simpan') }}</span>
                 <span wire:loading wire:target="save">{{ __('Menyimpan…') }}</span>
             </button>
-            <a class="btn btn-outline-secondary" href="{{ route('roles.index') }}">{{ __('Batal') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('roles.index') }}">{{ __('Batal') }}</a>
         </div>
     </form>
 </div>

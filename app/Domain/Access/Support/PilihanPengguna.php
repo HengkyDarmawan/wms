@@ -205,7 +205,7 @@ class PilihanPengguna
     {
         return Pilihan::dari(Project::query()->active()->orderBy('code'), ['code', 'name'], fn (Project $p) => [
             'value' => (int) $p->id,
-            'text' => $p->code.' — '.$p->name,
+            'text' => $p->code.' · '.$p->name,
         ]);
     }
 

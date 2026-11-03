@@ -8,14 +8,14 @@
                     {{ $warehouse->is_active ? __('Aktif') : __('Nonaktif') }}
                 </span>
                 @if ($warehouse->project)
-                    <a class="badge text-bg-info ms-1 text-decoration-none" href="{{ route('projects.show', $warehouse->project_id) }}">{{ $warehouse->project->code }}</a>
+                    <a wire:navigate class="badge text-bg-info ms-1 text-decoration-none" href="{{ route('projects.show', $warehouse->project_id) }}">{{ $warehouse->project->code }}</a>
                 @endif
             </p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             {{-- A-254: denah 2D zona → rak → level → bin. --}}
             <a class="btn btn-primary" href="{{ route('warehouses.layout', $warehouse) }}"><i class="bi bi-grid-3x3-gap"></i> {{ __('Denah gudang') }}</a>
-            <a class="btn btn-outline-secondary" href="{{ route('warehouses.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('warehouses.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -77,7 +77,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $bin->bin_type->label() }}</td>
-                                <td>{{ $bin->storageCategory?->name ?? '—' }}</td>
+                                <td>{{ $bin->storageCategory?->name ?? '-' }}</td>
                                 <td>
                                     <span class="badge text-bg-{{ $bin->bin_status->badge() }}">
                                         {{ $bin->bin_status->label() }}

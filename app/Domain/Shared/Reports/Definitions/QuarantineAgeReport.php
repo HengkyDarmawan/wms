@@ -44,7 +44,7 @@ class QuarantineAgeReport extends Report
 
     public function description(): string
     {
-        return 'Barang di bin Karantina — menunggu QC, atau Rusak menunggu retur ke vendor: bin, item, kondisi, jumlah, dokumen masuk terakhir, dan umurnya dalam hari.';
+        return 'Barang di bin Karantina, menunggu QC, atau Rusak menunggu retur ke vendor: bin, item, kondisi, jumlah, dokumen masuk terakhir, dan umurnya dalam hari.';
     }
 
     public function columns(): array
@@ -81,18 +81,18 @@ class QuarantineAgeReport extends Report
                 'gudang' => $b->bin?->warehouse?->code,
                 'bin' => $b->bin?->code,
                 'item' => $b->item?->code,
-                'pelacakan' => $b->lot?->lot_no ?? $b->serial?->serial_no ?? $b->piece?->piece_no ?? '—',
+                'pelacakan' => $b->lot?->lot_no ?? $b->serial?->serial_no ?? $b->piece?->piece_no ?? '-',
                 'kondisi' => $b->stock_status?->label(),
                 'jumlah' => round((float) $b->qty_base, 4),
                 'satuan' => $b->item?->baseUom?->code,
-                'dokumen' => $m?->document_number ?? '—',
-                'masuk' => $m?->occurred_at?->lokal()->format('d/m/Y') ?? '—',
+                'dokumen' => $m?->document_number ?? '-',
+                'masuk' => $m?->occurred_at?->lokal()->format('d/m/Y') ?? '-',
                 'umur' => $this->umurHari($m),
             ];
         })
             ->filter(fn (array $r) => ($r['umur'] ?? 0) >= $minimal)
             ->sortByDesc('umur')
-            ->map(fn (array $r) => ['umur' => $r['umur'] ?? '—'] + $r)
+            ->map(fn (array $r) => ['umur' => $r['umur'] ?? '-'] + $r)
             ->values();
     }
 }

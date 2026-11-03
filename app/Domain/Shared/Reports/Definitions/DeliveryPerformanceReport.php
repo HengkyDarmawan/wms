@@ -55,7 +55,7 @@ class DeliveryPerformanceReport extends Report
             ->when((int) ($filters['warehouse_id'] ?? 0) > 0, fn ($q) => $q->where('warehouse_id', (int) $filters['warehouse_id']))
             ->get(['id', 'warehouse_id', 'status', 'shipped_at', 'delivered_at']);
 
-        $baris = $sj->groupBy('warehouse_id')->map(fn (Collection $grup) => $this->ringkas($grup->first()->warehouse?->code ?? '—', $grup))->sortBy('gudang')->values();
+        $baris = $sj->groupBy('warehouse_id')->map(fn (Collection $grup) => $this->ringkas($grup->first()->warehouse?->code ?? '-', $grup))->sortBy('gudang')->values();
 
         if ($baris->count() > 1) {
             $baris->push($this->ringkas('Semua gudang', $sj));
@@ -82,7 +82,7 @@ class DeliveryPerformanceReport extends Report
             'bersisa' => $bersisa,
             'di_jalan' => $diJalan,
             'dibatalkan' => $batal,
-            'rata_hari' => $rata ?? '—',
+            'rata_hari' => $rata ?? '-',
             'utuh_pct' => $total > 0 ? round($utuh / $total * 100, 1) : 0,
         ];
     }

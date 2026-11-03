@@ -17,7 +17,7 @@
                 @if ($count->lock_date_set) · {{ __('Periode stok dikunci sampai') }} {{ $count->lock_date_set->format('d/m/Y') }} @endif
             </p>
             @if ($count->rejectReason && $count->status->value === 'reconciling')
-                <p class="text-danger small mb-0">{{ __('Ditolak approver') }}: {{ $count->rejectReason->label }} — {{ __('perbaiki lalu ajukan ulang.') }}</p>
+                <p class="text-danger small mb-0">{{ __('Ditolak approver') }}: {{ $count->rejectReason->label }} · {{ __('perbaiki lalu ajukan ulang.') }}</p>
             @endif
             @if ($count->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $count->cancelReason->label }}</p> @endif
         </div>
@@ -25,7 +25,7 @@
             @can('report', $count)
                 <a class="btn btn-outline-primary" href="{{ route('counts.report', $count) }}">{{ __('Laporan PDF') }}</a>
             @endcan
-            <a class="btn btn-outline-secondary" href="{{ route('counts.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('counts.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -112,17 +112,17 @@
                                     {{-- A-394: penghitung layak (izin hitung + cakupan gudang sesi) dimuat sekaligus. --}}
                                     <div class="d-flex gap-1 align-items-start">
                                         <x-pilih model="penghitung.{{ $a->id }}" id="penghitung-{{ $a->id }}" kecil class="flex-grow-1" :aria="__('Penghitung')"
-                                                 :kosong="$a->counter?->name ?? __('— belum ditugaskan —')" :options="$opsiPenghitung" />
+                                                 :kosong="$a->counter?->name ?? __('(belum ditugaskan)')" :options="$opsiPenghitung" />
                                         <button class="btn btn-sm btn-outline-primary" type="button" wire:click="tugaskan({{ $a->id }})">{{ __('Tetapkan') }}</button>
                                     </div>
                                 @else
-                                    {{ $a->counter?->name ?? __('— belum ditugaskan —') }}
+                                    {{ $a->counter?->name ?? __('(belum ditugaskan)') }}
                                 @endif
                             </td>
                             <td><span class="badge {{ $a->status->badge() }}">{{ $a->status->label() }}</span></td>
                             <td>
                                 @if ((int) $a->counter_user_id === (int) auth()->id() && ! $a->isDone() && $count->status->isCounting())
-                                    <a class="btn btn-sm btn-primary" href="{{ route('count-tasks.show', $a) }}">{{ __('Hitung') }}</a>
+                                    <a wire:navigate class="btn btn-sm btn-primary" href="{{ route('count-tasks.show', $a) }}">{{ __('Hitung') }}</a>
                                 @endif
                             </td>
                         </tr>
@@ -167,10 +167,10 @@
                                 </td>
                                 <td><span class="badge text-bg-{{ $l->stock_status->badge() }}">{{ $l->stock_status->label() }}</span></td>
                                 <td class="text-end">{{ number_format((float) $l->system_qty, 2, ',', '.') }}</td>
-                                <td class="text-end">{{ $l->counted_qty_r1 !== null ? number_format((float) $l->counted_qty_r1, 2, ',', '.') : '—' }}</td>
+                                <td class="text-end">{{ $l->counted_qty_r1 !== null ? number_format((float) $l->counted_qty_r1, 2, ',', '.') : '-' }}</td>
                                 <td class="text-end">{{ $l->counted_qty_r2 !== null ? number_format((float) $l->counted_qty_r2, 2, ',', '.') : ($l->is_recount ? '…' : '') }}</td>
                                 <td class="text-end">
-                                    {{ $l->variance_qty !== null ? number_format((float) $l->variance_qty, 2, ',', '.') : '—' }}
+                                    {{ $l->variance_qty !== null ? number_format((float) $l->variance_qty, 2, ',', '.') : '-' }}
                                     @if ($l->variance_pct !== null && $l->hasVariance()) <div class="small text-muted">{{ number_format((float) $l->variance_pct, 2, ',', '.') }} %</div> @endif
                                 </td>
                                 <td>@if ($l->variance_class) <span class="badge {{ $l->variance_class->badge() }}">{{ $l->variance_class->label() }}</span> @endif</td>
@@ -180,7 +180,7 @@
                                     @elseif ($l->variance_class && $bisaUbahAkar)
                                         <div class="input-group input-group-sm">
                                             <select class="form-select" wire:model="akar.{{ $l->id }}.root_cause">
-                                                <option value="">{{ $l->variance_class->value === 'major' ? __('Pilih… *') : __('—') }}</option>
+                                                <option value="">{{ $l->variance_class->value === 'major' ? __('Pilih… *') : __('-') }}</option>
                                                 @foreach ($akarOptions as $nilai => $label)
                                                     <option value="{{ $nilai }}">{{ $label }}</option>
                                                 @endforeach
@@ -209,7 +209,7 @@
                 @foreach ($adjustments as $adj)
                     <li class="list-group-item d-flex justify-content-between">
                         @can('view', $adj)
-                            <a href="{{ route('adjustments.show', $adj) }}">{{ $adj->number }}</a>
+                            <a wire:navigate href="{{ route('adjustments.show', $adj) }}">{{ $adj->number }}</a>
                         @else
                             <span>{{ $adj->number }}</span>
                         @endcan

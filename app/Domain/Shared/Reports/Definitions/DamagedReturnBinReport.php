@@ -75,12 +75,12 @@ class DamagedReturnBinReport extends Report
                 'gudang' => $b->bin?->warehouse?->code,
                 'bin' => $b->bin?->code,
                 'item' => $b->item?->code,
-                'pelacakan' => $b->lot?->lot_no ?? $b->serial?->serial_no ?? $b->piece?->piece_no ?? '—',
+                'pelacakan' => $b->lot?->lot_no ?? $b->serial?->serial_no ?? $b->piece?->piece_no ?? '-',
                 'jumlah' => round((float) $b->qty_base, 4),
                 'satuan' => $b->item?->baseUom?->code,
-                'dokumen' => $m?->document_number ?? '—',
-                'masuk' => $m?->occurred_at?->lokal()->format('d/m/Y') ?? '—',
-                'umur' => $this->umurHari($m) ?? '—',
+                'dokumen' => $m?->document_number ?? '-',
+                'masuk' => $m?->occurred_at?->lokal()->format('d/m/Y') ?? '-',
+                'umur' => $this->umurHari($m) ?? '-',
             ];
         })
             ->sortBy([['gudang', 'asc'], ['bin', 'asc'], ['item', 'asc']])

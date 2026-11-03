@@ -7,7 +7,7 @@
             </p>
         </div>
         @can('create', App\Domain\Request\Models\MaterialRequest::class)
-            <a class="btn btn-primary" href="{{ route('requests.create') }}">{{ __('Permintaan baru') }}</a>
+            <a wire:navigate class="btn btn-primary" href="{{ route('requests.create') }}">{{ __('Permintaan baru') }}</a>
         @endcan
     </div>
 
@@ -70,7 +70,7 @@
                         @php $terlambat = $r->status->value === 'under_review' && $r->reviewAgeInDays() >= $sla; @endphp
                         <tr @class(['table-warning' => $terlambat])>
                             <td>
-                                <a href="{{ route('requests.show', $r) }}">{{ $r->number }}</a>
+                                <a wire:navigate href="{{ route('requests.show', $r) }}">{{ $r->number }}</a>
                                 @if ($r->isSupplement())
                                     <span class="badge text-bg-info">{{ __('Tambahan') }}</span>
                                 @endif
@@ -80,7 +80,7 @@
                                 <div class="small text-muted">{{ $r->project?->name }}</div>
                             </td>
                             <td>
-                                {{ $r->requester?->name ?? '—' }}
+                                {{ $r->requester?->name ?? '-' }}
                                 <div class="small text-muted">{{ $r->requester_type->label() }}</div>
                             </td>
                             <td class="text-end">{{ $r->open_lines_count }}</td>

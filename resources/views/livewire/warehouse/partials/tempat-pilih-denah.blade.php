@@ -10,7 +10,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div>
-                    <h2 class="modal-title h5 mb-0" id="judul-pilih-denah">{{ __('Pilih tempat di denah') }} — {{ $gudangUbahModel->code }}</h2>
+                    <h2 class="modal-title h5 mb-0" id="judul-pilih-denah">{{ __('Pilih tempat di denah') }} · {{ $gudangUbahModel->code }}</h2>
                     <div class="small text-muted">{{ __('Klik rak atau area di tampak atas, lalu ketuk petak bin di tampak depan. Kosongkan petak = seluruh rak.') }}</div>
                 </div>
                 <button class="btn-close" type="button" wire:click="tutupDenah" aria-label="{{ __('Tutup') }}"></button>
@@ -30,7 +30,7 @@
                         <div class="d-flex flex-wrap gap-3 mt-1 text-muted">
                             <span><span class="d-inline-block border rounded-1 align-middle" style="width: .9rem; height: .9rem; background: #d0ebff; border-color: #1c7ed6 !important"></span> {{ __('rak/area sudah di daftar') }}</span>
                             <span><span class="d-inline-block border rounded-1 align-middle" style="width: .9rem; height: .9rem; background: #1c7ed6"></span> {{ __('bin sudah di daftar') }}</span>
-                            <span><span class="text-danger">⊘</span> {{ __('khusus barang lain — tidak bisa dipilih') }}</span>
+                            <span><span class="text-danger">⊘</span> {{ __('khusus barang lain, tidak bisa dipilih') }}</span>
                         </div>
                     </div>
 
@@ -53,11 +53,11 @@
                             @endif
 
                             @if ($r['is_area'])
-                                <div class="alert alert-info py-2">{{ __('Area lantai dipilih seluruhnya — tidak ada petak bin.') }}</div>
+                                <div class="alert alert-info py-2">{{ __('Area lantai dipilih seluruhnya (tidak ada petak bin).') }}</div>
                             @elseif ($petak['tingkat'] === [])
                                 <div class="alert alert-warning py-2">{{ __('Rak ini belum punya tingkat atau bin.') }}</div>
                             @else
-                                <div class="text-muted mb-1">{{ __('Tampak depan (tingkat paling bawah di bawah) — ketuk petak untuk memilih') }}</div>
+                                <div class="text-muted mb-1">{{ __('Tampak depan (tingkat paling bawah di bawah). Ketuk petak untuk memilih') }}</div>
                                 <div class="overflow-auto">
                                     <div class="d-grid gap-1" style="min-width: {{ 2.2 + $r['jumlah_bin'] * 3.2 }}rem">
                                         @foreach ($petak['tingkat'] as $t)
@@ -135,7 +135,7 @@
                             {{ __('Akan ditambah: :n bin.', ['n' => count($binBaru)]) }}
                         @endif
                     </div>
-                    <div class="text-muted">{{ __('Daftar tempat sekarang') }}: {{ count($baris) }} —
+                    <div class="text-muted">{{ __('Daftar tempat sekarang') }}: {{ count($baris) }} -
                         {{ collect($baris)->pluck('label')->take(4)->implode(', ') }}{{ count($baris) > 4 ? ', …' : '' }}
                     </div>
                 </div>

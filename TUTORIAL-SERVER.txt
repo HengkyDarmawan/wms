@@ -75,8 +75,8 @@ LANGKAH 3 — UNGGAH KE SERVER
     (ikut dari GitHub; bila memakai Cara B, ikutkan folder public/build)
 
 3c. File .env
-    Unggah berkas .env.production dari komputer kantor ke /home/CPUSER/wms/
-    lalu ganti namanya menjadi  .env
+    Templat ikut repo: .env.production.example (debug mati, cookie HTTPS).
+    Di terminal server:  cp ~/wms/.env.production.example ~/wms/.env
     Buka & ubah:
       - semua CPUSER                -> username cPanel
       - GANTI_PASSWORD_DATABASE     -> password user CPUSER_wms (langkah 1d)
@@ -105,6 +105,10 @@ cPanel > Terminal (atau SSH). Jalankan satu per satu:
     php artisan config:cache
     php artisan route:cache
     php artisan view:cache
+    php artisan about --only=environment
+
+  >> Baris "Debug Mode" WAJIB "OFF" dan "Environment" = "production" (O-06).
+     Bila tidak: perbaiki APP_DEBUG / APP_ENV di .env lalu php artisan config:cache.
 
   >> Bila "composer: command not found", coba:
        php /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader

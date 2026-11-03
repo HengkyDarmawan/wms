@@ -6,7 +6,7 @@
     <div class="list-group list-group-flush">
         <template x-for="z in d.zones" :key="z.id">
             <div class="list-group-item">
-                <div class="fw-semibold" x-text="'Zona ' + z.code + ' — ' + z.name"></div>
+                <div class="fw-semibold" x-text="'Zona ' + z.code + ' · ' + z.name"></div>
                 <div class="text-muted small" x-show="!z.racks.length">{{ __('Belum ada rak.') }}</div>
                 <template x-for="r in z.racks" :key="r.id">
                     <details class="mt-2 border rounded p-2" :open="cocokRak(r)">

@@ -37,7 +37,7 @@
                     @foreach ([
                         'direct_manager' => [__('Atasan pemohon'), __('Menurut peta jabatan, atau atasan yang diisi di pengguna.')],
                         'warehouse_head' => [__('Kepala gudang terkait'), __('Kepala gudang dari gudang dokumen. Cocok untuk permintaan klien.')],
-                        'role' => [__('Peran tertentu'), __('Mis. Manajemen — siapa pun pemegang perannya.')],
+                        'role' => [__('Peran tertentu'), __('Mis. Manajemen: siapa pun pemegang perannya.')],
                         'user' => [__('Orang tertentu'), __('Satu nama tetap.')],
                     ] as $jenis => [$judul, $bantuan])
                         @php($aktif = ($s['approver_type'] ?? '') === $jenis)

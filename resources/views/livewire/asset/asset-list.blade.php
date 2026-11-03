@@ -6,19 +6,19 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @can('asset.view')
-                <a class="btn btn-outline-secondary" href="{{ route('asset-handovers.index') }}">{{ __('Serah terima aset') }}</a>
-                <a class="btn btn-outline-secondary" href="{{ route('reports.show', 'aset-dipinjamkan') }}">{{ __('Laporan aset dipinjamkan') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('asset-handovers.index') }}">{{ __('Serah terima aset') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('reports.show', 'aset-dipinjamkan') }}">{{ __('Laporan aset dipinjamkan') }}</a>
             @endcan
         </div>
     </div>
 
     <div class="card mb-3">
         <div class="card-body row g-3 align-items-end">
-            <div class="col-lg-4">
+            <div class="col-lg-3">
                 <label class="form-label" for="cari-aset">{{ __('Cari') }}</label>
                 <input class="form-control" id="cari-aset" type="search" data-scan wire:model.live.debounce.400ms="search" placeholder="{{ __('Serial atau item') }}">
             </div>
-            <div class="col-lg-3">
+            <div class="col-sm-6 col-lg-2">
                 <label class="form-label" for="filter-state-aset">{{ __('State') }}</label>
                 <select class="form-select" id="filter-state-aset" wire:model.live="stateFilter">
                     <option value="">{{ __('Semua') }}</option>
@@ -30,6 +30,14 @@
             <div class="col-lg-3">
                 <x-pilih model="projectFilter" id="filter-proyek-aset" server live :label="__('Proyek peminjam')"
                          :kosong="__('Semua')" :options="$opsiProyek" />
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <label class="form-label" for="filter-servis-aset">{{ __('Servis') }}</label>
+                <select class="form-select" id="filter-servis-aset" wire:model.live="servisFilter">
+                    <option value="">{{ __('Semua') }}</option>
+                    <option value="jatuh-tempo">{{ __('Servis jatuh tempo') }}</option>
+                    <option value="sedang">{{ __('Sedang diservis') }}</option>
+                </select>
             </div>
             <div class="col-lg-2">
                 <div class="form-check">
@@ -59,22 +67,22 @@
                         @php($sisa = $a->remainingLifePercent())
                         <tr>
                             <td>
-                                <a href="{{ route('assets.show', $a) }}">{{ $a->serial_no }}</a>
-                                <div class="small text-muted">{{ $a->item?->code }} — {{ $a->item?->name }}</div>
+                                <a wire:navigate href="{{ route('assets.show', $a) }}">{{ $a->serial_no }}</a>
+                                <div class="small text-muted">{{ $a->item?->code }} · {{ $a->item?->name }}</div>
                             </td>
                             <td><span class="badge text-bg-{{ $a->stateBadge() }}">{{ $a->asset_state->label() }}</span></td>
-                            <td class="small">{{ $lokasi->get($a->id)?->bin?->code ?? '—' }}</td>
-                            <td>{{ $a->currentProject?->code ?? '—' }}</td>
+                            <td class="small">{{ $lokasi->get($a->id)?->bin?->code ?? '-' }}</td>
+                            <td>{{ $a->currentProject?->code ?? '-' }}</td>
                             <td class="small">
-                                {{ $a->due_return_date?->format('d/m/Y') ?? '—' }}
+                                {{ $a->due_return_date?->format('d/m/Y') ?? '-' }}
                                 @if ($a->isOverdue()) <span class="badge text-bg-danger">{{ __('Lewat') }}</span> @endif
                             </td>
-                            <td class="small">{{ $a->condition_grade ?? '—' }} @if ($a->condition_score !== null) · {{ $a->condition_score }} % @endif</td>
+                            <td class="small">{{ $a->condition_grade ?? '-' }} @if ($a->condition_score !== null) · {{ $a->condition_score }} % @endif</td>
                             <td class="text-end small">
                                 @if ($sisa !== null)
                                     <span class="{{ $sisa < $ambang ? 'text-danger fw-semibold' : '' }}">{{ number_format($sisa, 1, ',', '.') }} %</span>
                                 @else
-                                    —
+                                    -
                                 @endif
                             </td>
                         </tr>

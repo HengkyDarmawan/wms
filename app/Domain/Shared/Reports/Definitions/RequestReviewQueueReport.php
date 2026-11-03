@@ -62,10 +62,10 @@ class RequestReviewQueueReport extends Report
                 return [
                     'nomor' => $r->number,
                     'proyek' => $r->project?->code,
-                    'pemohon' => $r->requester?->name ?? '—',
+                    'pemohon' => $r->requester?->name ?? '-',
                     'status' => $r->status->label(),
                     'umur' => $umur,
-                    'sla' => $umur > $sla ? 'Ya ('.($umur - $sla).' hari)' : '—',
+                    'sla' => $umur > $sla ? 'Ya ('.($umur - $sla).' hari)' : '-',
                 ];
             })
             ->filter(fn ($r) => $r['umur'] >= $minimal)

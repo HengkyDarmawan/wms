@@ -48,7 +48,7 @@
                                 <dd class="col-sm-8">{{ $asal['batch'] }}</dd>
                             @endif
                             <dt class="col-sm-4">{{ __('Lokasi terakhir') }}</dt>
-                            <dd class="col-sm-8">{{ $label->warehouse?->code }} {{ $label->warehouse?->name }} · {{ $label->bin?->code ?? '—' }}</dd>
+                            <dd class="col-sm-8">{{ $label->warehouse?->code }} {{ $label->warehouse?->name }} · {{ $label->bin?->code ?? '-' }}</dd>
                             @if ($label->cancelReason)
                                 <dt class="col-sm-4">{{ __('Alasan batal') }}</dt>
                                 <dd class="col-sm-8">{{ $label->cancelReason->label }} · {{ $label->cancelled_at?->format('d/m/Y H:i') }}</dd>
@@ -67,16 +67,16 @@
                                 @if ($asal['grnEntry'])
                                     <a href="{{ $asal['grnEntry']['url'] }}">{{ $asal['grnEntry']['number'] }}</a>
                                 @else
-                                    {{ $asal['grn']?->number ?? '—' }}
+                                    {{ $asal['grn']?->number ?? '-' }}
                                 @endif
                             </dd>
                             <dt class="col-sm-4">{{ __('Vendor') }}</dt>
-                            <dd class="col-sm-8">{{ $asal['vendor'] ?? '—' }}</dd>
+                            <dd class="col-sm-8">{{ $asal['vendor'] ?? '-' }}</dd>
                             <dt class="col-sm-4">{{ __('Diterima') }}</dt>
-                            <dd class="col-sm-8">{{ $asal['diterima']?->format('d/m/Y H:i') ?? '—' }}</dd>
+                            <dd class="col-sm-8">{{ $asal['diterima']?->format('d/m/Y H:i') ?? '-' }}</dd>
                             <dt class="col-sm-4">{{ __('Catatan pemesanan') }}</dt>
                             <dd class="col-sm-8">
-                                {{ $asal['order']?->reference() ?? '—' }}
+                                {{ $asal['order']?->reference() ?? '-' }}
                                 @if ($asal['order']?->ordered_at) · {{ __('dipesan') }} {{ $asal['order']->ordered_at->format('d/m/Y') }} @endif
                             </dd>
                             <dt class="col-sm-4">{{ __('Dokumen asal') }}</dt>
@@ -84,7 +84,7 @@
                                 @forelse ($asal['dokumen'] as $d)
                                     <a class="me-2" href="{{ $d['url'] }}"><span class="badge text-bg-light border">{{ $d['jenis'] }}</span> {{ $d['number'] }}</a>
                                 @empty
-                                    —
+                                    -
                                 @endforelse
                             </dd>
                         </dl>
@@ -134,14 +134,14 @@
                                     @if ($r['dokumen'])
                                         <a href="{{ $r['dokumen']['url'] }}">{{ $r['dokumen']['number'] }}</a>
                                     @else
-                                        {{ $m->document_number ?? '—' }}
+                                        {{ $m->document_number ?? '-' }}
                                     @endif
                                     @if ($r['sj'])
                                         · <a href="{{ $r['sj']['url'] }}">{{ $r['sj']['number'] }}</a>
                                     @endif
                                 </td>
-                                <td class="small">{{ $m->warehouse?->code }} @if ($m->fromBin || $m->toBin) · {{ $m->fromBin?->code ?? '—' }} → {{ $m->toBin?->code ?? '—' }} @endif</td>
-                                <td class="small">{{ $m->performer?->name ?? '—' }}</td>
+                                <td class="small">{{ $m->warehouse?->code }} @if ($m->fromBin || $m->toBin) · {{ $m->fromBin?->code ?? '-' }} → {{ $m->toBin?->code ?? '-' }} @endif</td>
+                                <td class="small">{{ $m->performer?->name ?? '-' }}</td>
                             </tr>
                         @empty
                             <tr><td class="text-center text-muted py-3" colspan="6">{{ __('Belum ada riwayat.') }}</td></tr>
@@ -172,7 +172,7 @@
                                 <td>{{ $l->item?->code }}</td>
                                 <td class="text-end">{{ \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_remaining, $l->item?->baseUom?->code) }}</td>
                                 <td class="small">{{ $l->receipt?->number }}</td>
-                                <td class="small">{{ $l->warehouse?->code }} · {{ $l->bin?->code ?? '—' }}</td>
+                                <td class="small">{{ $l->warehouse?->code }} · {{ $l->bin?->code ?? '-' }}</td>
                                 <td><span class="badge {{ $l->status->badge() }}">{{ $l->status->label() }}</span></td>
                             </tr>
                         @empty

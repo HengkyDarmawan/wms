@@ -9,10 +9,10 @@
 
         @can('create', \App\Domain\Master\Models\Item::class)
             <div class="d-flex gap-2">
-                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}">
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('imports.index') }}">
                     <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
                 </a>
-                <a class="btn btn-primary" href="{{ route('items.create') }}">
+                <a wire:navigate class="btn btn-primary" href="{{ route('items.create') }}">
                     <i class="bi bi-plus-lg"></i> {{ __('Tambah item') }}
                 </a>
             </div>
@@ -102,15 +102,15 @@
                     @forelse ($items as $item)
                         <tr wire:key="item-{{ $item->id }}">
                             <td>
-                                <a class="fw-semibold text-decoration-none" href="{{ route('items.show', $item) }}">
+                                <a wire:navigate class="fw-semibold text-decoration-none" href="{{ route('items.show', $item) }}">
                                     {{ $item->name }}
                                 </a>
                                 <div class="small text-muted">{{ $item->code }}</div>
                             </td>
-                            <td>{{ $item->category?->name ?? '—' }}</td>
-                            <td>{{ $item->baseUom?->code ?? '—' }}</td>
+                            <td>{{ $item->category?->name ?? '-' }}</td>
+                            <td>{{ $item->baseUom?->code ?? '-' }}</td>
                             <td>{{ \App\Domain\Master\Enums\ItemKind::fromItem($item)?->label() ?? __('Jenis khusus') }}</td>
-                            <td class="text-end">{{ $item->reorder_point ? (float) $item->reorder_point : '—' }}</td>
+                            <td class="text-end">{{ $item->reorder_point ? (float) $item->reorder_point : '-' }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $item->statusBadge() }}">
                                     {{ $item->status->label() }}
@@ -118,7 +118,7 @@
                             </td>
                             <td class="text-end">
                                 @can('update', $item)
-                                    <a class="btn btn-sm btn-outline-secondary" href="{{ route('items.edit', $item) }}">
+                                    <a wire:navigate class="btn btn-sm btn-outline-secondary" href="{{ route('items.edit', $item) }}">
                                         {{ __('Ubah') }}
                                     </a>
                                 @endcan

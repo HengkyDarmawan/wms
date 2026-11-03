@@ -7,8 +7,7 @@ namespace App\Domain\Count\Enums;
 /**
  * Katalog Status §3 `count_type` (Blueprint §9, D-23, BR-OPN-10).
  *
- * `cycle_abc` bertag [F2]: nilainya ada supaya data lama tetap terbaca,
- * tetapi tidak bisa dipilih di Fase 1 (BR-GEN-10).
+ * `cycle_abc` (BR-OPN-11, A-424): satu gudang, item dari AbcCyclePlanner.
  */
 enum CountType: string
 {
@@ -29,7 +28,7 @@ enum CountType: string
         };
     }
 
-    /** @return array<string, string> jenis yang bisa dipilih di Fase 1 */
+    /** @return array<string, string> jenis yang bisa dipilih */
     public static function options(): array
     {
         $hasil = [];
@@ -45,7 +44,12 @@ enum CountType: string
 
     public function isAvailable(): bool
     {
-        return $this !== self::CycleAbc;
+        return true;
+    }
+
+    public function isCycleAbc(): bool
+    {
+        return $this === self::CycleAbc;
     }
 
     /** BR-OPN-10: pemeriksaan mendadak tanpa pembekuan dan tanpa ADJ sendiri. */

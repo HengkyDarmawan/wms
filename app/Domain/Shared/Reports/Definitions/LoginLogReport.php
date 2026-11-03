@@ -74,8 +74,8 @@ class LoginLogReport extends Report
             ->map(fn (LoginAttempt $baris) => [
                 'waktu' => $baris->attempted_at?->timezone($zona)->format('d/m/Y H:i'),
                 'email' => $baris->email,
-                'user' => $baris->user?->name ?? '—',
-                'ip' => $baris->ip_address ?? '—',
+                'user' => $baris->user?->name ?? '-',
+                'ip' => $baris->ip_address ?? '-',
                 'kanal' => $baris->channel,
                 'hasil' => $baris->result->label(),
             ]);

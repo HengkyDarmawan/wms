@@ -29,7 +29,7 @@
             <div class="card-body row g-3">
                 <div class="col-md-4">
                     {{-- A-388: staf kita & akun portal klien proyek ini, dicari ke server (A-384). --}}
-                    <x-pilih model="userId" id="tim-orang" server wajib :label="__('Orang')" :kosong="__('— pilih —')"
+                    <x-pilih model="userId" id="tim-orang" server wajib :label="__('Orang')" :kosong="__('(pilih)')"
                              :kelompok="[__('Staf kita'), __('Akun portal klien')]" :options="$calon"
                              :placeholder="__('Cari nama, email, jabatan, atau unit…')" />
                 </div>
@@ -37,7 +37,7 @@
                 <div class="col-md-4">
                     <label class="form-label" for="tim-peran">{{ __('Peran di site') }} <span class="wajib">*</span></label>
                     <select class="form-select @error('roleId') is-invalid @enderror" id="tim-peran" wire:model="roleId">
-                        <option value="">{{ __('— pilih —') }}</option>
+                        <option value="">{{ __('(pilih)') }}</option>
                         @foreach ($peranPilihan as $peran)
                             <option value="{{ $peran->id }}">{{ $peran->name }}</option>
                         @endforeach
@@ -72,7 +72,7 @@
 
     @if ($perpanjangkan !== null)
         <div class="card border-primary mb-3">
-            <div class="card-header"><strong>{{ __('Perpanjang') }} — {{ $perpanjangkan->user?->name }}</strong></div>
+            <div class="card-header"><strong>{{ __('Perpanjang') }} · {{ $perpanjangkan->user?->name }}</strong></div>
             <div class="card-body row g-3">
                 <div class="col-md-4">
                     <label class="form-label">{{ __('Selesai sekarang') }}</label>
@@ -99,7 +99,7 @@
     @if ($akhirkan !== null)
         <div class="card border-danger mb-3">
             <div class="card-header text-danger">
-                <strong>{{ __('Akhiri lebih awal') }} — {{ $akhirkan->user?->name }}</strong>
+                <strong>{{ __('Akhiri lebih awal') }} · {{ $akhirkan->user?->name }}</strong>
             </div>
             <div class="card-body row g-3">
                 <div class="col-md-3">
@@ -111,7 +111,7 @@
                 <div class="col-md-4">
                     <label class="form-label" for="tim-alasan">{{ __('Alasan') }} <span class="wajib">*</span></label>
                     <select class="form-select @error('reasonCode') is-invalid @enderror" id="tim-alasan" wire:model="reasonCode">
-                        <option value="">{{ __('— pilih —') }}</option>
+                        <option value="">{{ __('(pilih)') }}</option>
                         @foreach ($alasan as $kode => $label)
                             <option value="{{ $kode }}">{{ $label }}</option>
                         @endforeach
@@ -150,9 +150,9 @@
                 @forelse ($anggota as $baris)
                     @php($status = $baris->status())
                     <tr wire:key="tim-{{ $baris->id }}">
-                        <td class="fw-semibold">{{ $baris->user?->name ?? '—' }}</td>
+                        <td class="fw-semibold">{{ $baris->user?->name ?? '-' }}</td>
                         <td>{{ $baris->user?->client_id === null ? __('Kita') : __('PIC klien') }}</td>
-                        <td>{{ $baris->role?->name ?? '—' }}</td>
+                        <td>{{ $baris->role?->name ?? '-' }}</td>
                         <td>{{ $baris->starts_on->format('d/m/Y') }}</td>
                         <td>{{ $baris->ends_on->format('d/m/Y') }}</td>
                         <td>

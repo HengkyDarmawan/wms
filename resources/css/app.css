@@ -189,3 +189,40 @@ body > .nx-pilih-dropdown { z-index: 1090; } /* di atas .modal (1055) & offcanva
 .driver-popover.nx-tur .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: var(--nx-card-bg, #fff); }
 .driver-popover.nx-tur .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: var(--nx-card-bg, #fff); }
 .driver-popover.nx-tur .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: var(--nx-card-bg, #fff); }
+
+/* A-421: progress bar wire:navigate mengikuti warna tema (bawaan Livewire biru #2299dd). */
+#nprogress .bar { background: var(--nx-primary, #6366f1) !important; height: 3px !important; }
+#nprogress .peg { box-shadow: 0 0 10px var(--nx-primary, #6366f1), 0 0 5px var(--nx-primary, #6366f1) !important; }
+
+/* Tanda sedang diproses untuk SEMUA aksi Livewire: Livewire 4 memasang
+   [data-loading] pada elemen pemicu selama request berjalan. Tombol diredupkan,
+   tidak bisa diklik ulang (cegah kirim dobel), dan diberi spinner kecil. */
+button[data-loading], a[data-loading], .btn[data-loading] {
+    pointer-events: none;
+    opacity: .65;
+    cursor: progress;
+}
+button[data-loading]::after, .btn[data-loading]::after {
+    content: "";
+    display: inline-block;
+    width: .85em;
+    height: .85em;
+    margin-left: .45em;
+    vertical-align: -.1em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: wms-putar .7s linear infinite;
+}
+form[data-loading] [type="submit"] { pointer-events: none; opacity: .65; cursor: progress; }
+@keyframes wms-putar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    button[data-loading]::after, .btn[data-loading]::after { animation-duration: 2s; }
+}
+
+/* Kotak pencarian cepat (Ctrl+K): input-nya tanpa outline, jadi fokus ditandai di wadahnya. */
+.nx-palette-input-wrap:focus-within { box-shadow: inset 0 -2px 0 var(--nx-primary); }
+
+/* Select tersembunyi milik tom-select (.ts-hidden-accessible, position:absolute) di dalam tabel
+   bergulir harus ikut terpotong wadahnya; tanpa ini ia melebarkan halaman di HP (CNV baru: 477px di layar 390px). */
+.table-responsive { position: relative; }

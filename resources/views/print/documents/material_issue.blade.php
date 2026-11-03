@@ -5,13 +5,13 @@
     <table class="info">
         <tr>
             <td class="k">{{ __('Proyek') }}</td>
-            <td>{{ $isu->project?->code }} — {{ $isu->project?->name }}</td>
+            <td>{{ $isu->project?->code }} · {{ $isu->project?->name }}</td>
             <td class="k">{{ __('Gudang Site') }}</td>
-            <td>{{ $isu->warehouse?->code }} — {{ $isu->warehouse?->name }}</td>
+            <td>{{ $isu->warehouse?->code }} · {{ $isu->warehouse?->name }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Dikonfirmasi') }}</td>
-            <td>{{ $isu->confirmer?->name ?? '—' }} {{ $isu->confirmed_at?->lokal()->format('d/m/Y H:i') }}</td>
+            <td>{{ $isu->confirmer?->name ?? '-' }} {{ $isu->confirmed_at?->lokal()->format('d/m/Y H:i') }}</td>
             <td class="k">{{ __('Jenis') }}</td>
             <td>
                 @if ($isu->reversalOf)

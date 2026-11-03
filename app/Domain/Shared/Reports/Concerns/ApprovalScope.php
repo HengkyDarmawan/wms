@@ -51,6 +51,6 @@ trait ApprovalScope
 
     protected function labelJenis(?ApprovalSnapshot $snapshot): string
     {
-        return $snapshot?->document_type?->longLabel() ?? '—';
+        return $snapshot?->document_type?->longLabel() ?? '-';
     }
 }

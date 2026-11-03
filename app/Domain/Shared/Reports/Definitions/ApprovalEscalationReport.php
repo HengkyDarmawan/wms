@@ -77,12 +77,12 @@ class ApprovalEscalationReport extends Report
         return $eskalasi->map(fn (ApprovalDecision $d) => [
             'waktu' => $d->decided_at?->lokal()->format('d/m/Y H:i'),
             'jenis' => $this->labelJenis($d->task->snapshot),
-            'nomor' => $d->task->snapshot?->document_number ?? '—',
+            'nomor' => $d->task->snapshot?->document_number ?? '-',
             'lapis' => (int) $d->task->step_no,
-            'dari' => $d->task->approver?->name ?? '—',
-            'ke' => $pengganti->get($d->approval_task_id)?->approver?->name ?? '—',
+            'dari' => $d->task->approver?->name ?? '-',
+            'ke' => $pengganti->get($d->approval_task_id)?->approver?->name ?? '-',
             'oleh' => $d->decider?->name ?? 'Penjadwal',
-            'sebab' => $d->comment ?? '—',
+            'sebab' => $d->comment ?? '-',
         ]);
     }
 }

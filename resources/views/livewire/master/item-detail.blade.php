@@ -9,7 +9,7 @@
         </div>
         <div class="d-flex gap-2">
             @can('update', $item)
-                <a class="btn btn-outline-secondary" href="{{ route('items.edit', $item) }}">{{ __('Ubah') }}</a>
+                <a wire:navigate class="btn btn-outline-secondary" href="{{ route('items.edit', $item) }}">{{ __('Ubah') }}</a>
             @endcan
             @can('po.view')
                 <a class="btn btn-outline-secondary" href="{{ route('items.price-history', $item) }}">
@@ -22,7 +22,7 @@
                     <i class="bi bi-upc-scan"></i> {{ __('Cetak label') }}
                 </a>
             @endcan
-            <a class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -54,11 +54,11 @@
                     <div class="card-body">
                         <dl class="row mb-0">
                             <dt class="col-sm-5">{{ __('Kategori') }}</dt>
-                            <dd class="col-sm-7">{{ $item->category?->path() ?? '—' }}</dd>
+                            <dd class="col-sm-7">{{ $item->category?->path() ?? '-' }}</dd>
 
                             <dt class="col-sm-5">{{ __('Satuan dasar') }}</dt>
                             <dd class="col-sm-7">
-                                {{ $item->baseUom?->code }} — {{ $item->baseUom?->name }}
+                                {{ $item->baseUom?->code }} · {{ $item->baseUom?->name }}
                                 <span class="text-muted">({{ $item->baseUom?->category?->name }})</span>
                             </dd>
 
@@ -104,22 +104,22 @@
 
                                 <dt class="col-sm-6">{{ __('Panjang minimum offcut') }}</dt>
                                 <dd class="col-sm-6">
-                                    {{ $item->min_offcut_length ? (float) $item->min_offcut_length : '—' }}
+                                    {{ $item->min_offcut_length ? (float) $item->min_offcut_length : '-' }}
                                 </dd>
 
                                 <dt class="col-sm-6">{{ __('Susut mata potong') }}</dt>
-                                <dd class="col-sm-6">{{ $item->kerf ? (float) $item->kerf : '—' }}</dd>
+                                <dd class="col-sm-6">{{ $item->kerf ? (float) $item->kerf : '-' }}</dd>
                             @endif
 
                             <dt class="col-sm-6">{{ __('Titik pesan ulang') }}</dt>
-                            <dd class="col-sm-6">{{ $item->reorder_point ? (float) $item->reorder_point : '—' }}</dd>
+                            <dd class="col-sm-6">{{ $item->reorder_point ? (float) $item->reorder_point : '-' }}</dd>
 
                             <dt class="col-sm-6">{{ __('Isi sampai (stok ideal)') }}</dt>
-                            <dd class="col-sm-6">{{ $item->min_stock ? (float) $item->min_stock : '—' }}</dd>
+                            <dd class="col-sm-6">{{ $item->min_stock ? (float) $item->min_stock : '-' }}</dd>
 
                             <dt class="col-sm-6">{{ __('Ukuran') }}</dt>
                             <dd class="col-sm-6">
-                                {{ $item->measure_qty ? __('1 :dasar = :n :satuan', ['dasar' => $item->baseUom?->code, 'n' => \App\Domain\Master\Support\QtyFormat::number($item->measure_qty), 'satuan' => $item->measureUom?->code]) : '—' }}
+                                {{ $item->measure_qty ? __('1 :dasar = :n :satuan', ['dasar' => $item->baseUom?->code, 'n' => \App\Domain\Master\Support\QtyFormat::number($item->measure_qty), 'satuan' => $item->measureUom?->code]) : '-' }}
                             </dd>
                         </dl>
                     </div>
@@ -145,7 +145,7 @@
                             <tbody>
                                 @forelse ($item->activeConversions as $konversi)
                                     <tr>
-                                        <td>{{ $konversi->uom?->code }} — {{ $konversi->uom?->name }}</td>
+                                        <td>{{ $konversi->uom?->code }} · {{ $konversi->uom?->name }}</td>
                                         {{-- A-355: kalimat yang sama dengan form; data lama berisi satuan dasar. --}}
                                         <td>
                                             @if ($konversi->contentUom)
@@ -155,7 +155,7 @@
                                                 1 {{ $konversi->uom?->code }} {{ __('berisi') }} {{ \App\Domain\Master\Support\QtyFormat::withUnit($konversi->qty_base, $item->baseUom?->code) }}
                                             @endif
                                         </td>
-                                        <td>{{ $konversi->is_nominal_piece ? __('Ya') : '—' }}</td>
+                                        <td>{{ $konversi->is_nominal_piece ? __('Ya') : '-' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -187,9 +187,9 @@
                     </div>
                     <div class="card-body small">
                         {{-- A-304: pemilihan vendor tugas Purchasing; sistem hanya menyarankan. --}}
-                        <div>{{ __('Vendor terakhir') }}: <strong>{{ $saranVendor['terakhir']?->name ?? '—' }}</strong></div>
+                        <div>{{ __('Vendor terakhir') }}: <strong>{{ $saranVendor['terakhir']?->name ?? '-' }}</strong></div>
                         @can('po.view')
-                            <div>{{ __('Termurah 6 bulan') }}: <strong>{{ $saranVendor['termurah']?->name ?? '—' }}</strong></div>
+                            <div>{{ __('Termurah 6 bulan') }}: <strong>{{ $saranVendor['termurah']?->name ?? '-' }}</strong></div>
                         @endcan
                         <div class="text-muted mt-1">{{ __('Diambil dari catatan pemesanan dan PO; Purchasing bebas memilih vendor lain.') }}</div>
                     </div>
@@ -218,13 +218,13 @@
                             <tr>
                                 <td class="fw-semibold">{{ $lot->lot_no }}</td>
                                 <td>
-                                    {{ $lot->expiry_date?->format('d/m/Y') ?? '—' }}
+                                    {{ $lot->expiry_date?->format('d/m/Y') ?? '-' }}
                                     @if ($lot->isExpired())
                                         <span class="badge text-bg-danger">{{ __('Kedaluwarsa') }}</span>
                                     @endif
                                 </td>
-                                <td>{{ $lot->received_at?->format('d/m/Y') ?? '—' }}</td>
-                                <td>{{ $lot->vendor?->name ?? '—' }}</td>
+                                <td>{{ $lot->received_at?->format('d/m/Y') ?? '-' }}</td>
+                                <td>{{ $lot->vendor?->name ?? '-' }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -265,16 +265,16 @@
                                         {{ $serial->asset_state->label() }}
                                     </span>
                                 </td>
-                                <td>{{ $serial->currentProject?->name ?? '—' }}</td>
+                                <td>{{ $serial->currentProject?->name ?? '-' }}</td>
                                 <td>
-                                    {{ $serial->due_return_date?->format('d/m/Y') ?? '—' }}
+                                    {{ $serial->due_return_date?->format('d/m/Y') ?? '-' }}
                                     @if ($serial->isOverdue())
                                         <span class="badge text-bg-danger">{{ __('Lewat tempo') }}</span>
                                     @endif
                                 </td>
                                 <td class="text-end">
                                     @php($sisa = $serial->remainingLifePercent())
-                                    {{ $sisa === null ? '—' : $sisa.'%' }}
+                                    {{ $sisa === null ? '-' : $sisa.'%' }}
                                 </td>
                             </tr>
                         @empty
@@ -313,7 +313,7 @@
                                 <td class="fw-semibold">{{ $piece->piece_no }}</td>
                                 <td class="text-end">{{ (float) $piece->length }}</td>
                                 <td>{{ $piece->is_offcut ? __('Sisa potongan') : __('Batang utuh') }}</td>
-                                <td>{{ $piece->parent_piece_id ?? '—' }}</td>
+                                <td>{{ $piece->parent_piece_id ?? '-' }}</td>
                                 <td>
                                     <span class="badge text-bg-{{ $piece->is_consumed ? 'secondary' : 'success' }}">
                                         {{ $piece->is_consumed ? __('Terpakai') : __('Tersedia') }}

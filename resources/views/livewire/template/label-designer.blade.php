@@ -7,7 +7,7 @@
             </p>
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('label-formats.index') }}"><i class="bi bi-rulers"></i> {{ __('Ukuran label') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('label-formats.index') }}"><i class="bi bi-rulers"></i> {{ __('Ukuran label') }}</a>
             @if ($format)
                 <a class="btn btn-outline-secondary" href="{{ route('label-designs.preview', ['type' => $type, 'format' => $format->id]) }}" target="_blank" rel="noopener">
                     <i class="bi bi-file-earmark-pdf"></i> {{ __('Contoh cetak (tersimpan)') }}
@@ -28,7 +28,7 @@
             </div>
             <div class="col-md-5">
                 <x-pilih model="formatId" id="ld-format" live wajib :label="__('Ukuran label')"
-                         :options="$formats->map(fn ($f) => ['value' => $f->id, 'text' => $f->name.' — '.$f->summary()])->all()" />
+                         :options="$formats->map(fn ($f) => ['value' => $f->id, 'text' => $f->name.' · '.$f->summary()])->all()" />
             </div>
             <div class="col-md-3 small text-muted">
                 {{ __('Teks utama') }}: {{ $sumber['title'] }} · {{ __('Teks kedua') }}: {{ $sumber['subtitle'] }} · {{ __('Keterangan') }}: {{ $sumber['detail'] }}

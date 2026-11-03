@@ -22,7 +22,7 @@
         <div class="card-body row g-3">
             <div class="col-md-4">
                 <x-pilih model="form.warehouse_id" id="prq-gudang" wajib :label="__('Gudang tujuan')" :disabled="$draf"
-                         :kosong="__('Pilih gudang…')" :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :kosong="__('Pilih gudang…')" :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-md-4">
                 {{-- A-393: proyek dalam cakupan, dicari ke server. --}}

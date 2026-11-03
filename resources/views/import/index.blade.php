@@ -40,7 +40,7 @@
                     <div class="col-lg-7">
                         <ul class="list-unstyled small mb-2">
                             @foreach ($d['kolom'] as $kunci => $judul)
-                                <li><code>{{ $kunci }}</code> — {{ $judul }}</li>
+                                <li><code>{{ $kunci }}</code> · {{ $judul }}</li>
                             @endforeach
                         </ul>
                         <div class="small text-muted">{{ $d['catatan'] }}</div>

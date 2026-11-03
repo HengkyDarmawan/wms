@@ -298,7 +298,7 @@ class ConversionForm extends Component
         $cnv = $this->simpanDraf($action);
 
         if ($cnv !== null) {
-            $this->redirectRoute('conversions.show', $cnv);
+            $this->redirectRoute('conversions.show', $cnv, navigate: true);
         }
     }
 
@@ -316,7 +316,7 @@ class ConversionForm extends Component
             : $selesai->handle($cnv, auth()->user()));
 
         if ($ok) {
-            $this->redirectRoute('conversions.show', $cnv);
+            $this->redirectRoute('conversions.show', $cnv, navigate: true);
         }
     }
 
@@ -664,7 +664,7 @@ class ConversionForm extends Component
 
         return Pilihan::dari($query, ['code', 'name', 'barcode'], fn (Item $i) => [
             'value' => (int) $i->id,
-            'text' => $i->code.' — '.$i->name,
+            'text' => $i->code.' · '.$i->name,
             'badge' => $i->baseUom?->code,
         ]);
     }

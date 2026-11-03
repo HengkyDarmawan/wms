@@ -31,7 +31,7 @@
                 @foreach ($dipilih->lines as $l)
                     <div class="border rounded p-3 mb-2" wire:key="dsc-baris-{{ $l->id }}">
                         <div class="mb-2">
-                            <strong>{{ $l->shipmentLine?->pickTaskLine?->item?->code ?? '—' }}</strong>
+                            <strong>{{ $l->shipmentLine?->pickTaskLine?->item?->code ?? '-' }}</strong>
                             <span class="badge {{ $l->isDamaged() ? 'text-bg-danger' : 'text-bg-secondary' }}">
                                 {{ $l->discrepancy_type->label() }}
                             </span>
@@ -70,7 +70,7 @@
                                 </label>
                                 <select class="form-select form-select-sm" id="rsn-{{ $l->id }}"
                                         wire:model="keputusan.{{ $l->id }}.reason_code">
-                                    <option value="">{{ __('—') }}</option>
+                                    <option value="">{{ __('-') }}</option>
                                     @foreach ($alasan as $kode => $label)
                                         <option value="{{ $kode }}">{{ $label }}</option>
                                     @endforeach
@@ -152,9 +152,9 @@
                             <td>{{ $dsc->number }}</td>
                             <td>
                                 @if ($dsc->shipment)
-                                    <a href="{{ route('shipments.show', $dsc->shipment) }}">{{ $dsc->shipment->number }}</a>
+                                    <a wire:navigate href="{{ route('shipments.show', $dsc->shipment) }}">{{ $dsc->shipment->number }}</a>
                                 @else
-                                    —
+                                    -
                                 @endif
                             </td>
                             <td class="small">{{ $dsc->origin->label() }}</td>

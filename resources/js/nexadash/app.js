@@ -6,58 +6,21 @@
 (function ($) {
   'use strict';
 
-  /* ===================== Helpers publik ===================== */
-  window.nxCss = function (name) {
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  };
-  window.nxTheme = function () {
+  /* ===================== Helpers ===================== */
+  function nxTheme() {
     return document.documentElement.getAttribute('data-bs-theme') || 'light';
-  };
-  // Awalan relatif menuju akar template ('' di root, '../' untuk halaman dalam folder).
-  window.nxRoot = function () {
-    return document.body.getAttribute('data-nx-root') || '';
-  };
-  window.nxChartColors = function () {
-    return [nxCss('--nx-chart-1'), nxCss('--nx-chart-2'), nxCss('--nx-chart-3'), nxCss('--nx-chart-4'), nxCss('--nx-chart-5')];
-  };
-  // Opsi dasar ApexCharts yang theme-aware — merge ke setiap chart.
-  window.nxApexBase = function () {
-    return {
-      chart: {
-        fontFamily: 'Inter, system-ui, sans-serif',
-        foreColor: nxCss('--nx-text-muted'),
-        background: 'transparent',
-        toolbar: { show: false }
-      },
-      grid: { borderColor: nxCss('--nx-border'), strokeDashArray: 4 },
-      tooltip: { theme: nxTheme() }
-    };
-  };
-  // Registry chart: setiap chart didaftarkan dengan fungsi build()
-  // agar bisa dibangun ulang saat tema berubah.
-  var chartRegistry = [];
-  window.nxMountChart = function (selector, build) {
-    var el = document.querySelector(selector);
-    if (!el || typeof ApexCharts === 'undefined') return null;
-    var entry = { el: el, build: build, chart: new ApexCharts(el, build()) };
-    entry.chart.render();
-    chartRegistry.push(entry);
-    return entry.chart;
-  };
-  document.addEventListener('nx:theme-changed', function () {
-    chartRegistry.forEach(function (r) {
-      r.chart.destroy();
-      r.chart = new ApexCharts(r.el, r.build());
-      r.chart.render();
-    });
-  });
+  }
+  // Pindah halaman lewat wire:navigate (tanpa muat ulang) bila Livewire ada.
+  function go(url) {
+    if (window.Livewire && window.Livewire.navigate) window.Livewire.navigate(url);
+    else window.location.href = url;
+  }
 
   /* ===================== Theme toggle ===================== */
   function setTheme(t) {
     document.documentElement.setAttribute('data-bs-theme', t);
     localStorage.setItem('nx-theme', t);
     syncThemeIcon();
-    document.dispatchEvent(new CustomEvent('nx:theme-changed', { detail: { theme: t } }));
   }
   function syncThemeIcon() {
     var btn = document.getElementById('nxThemeToggle');
@@ -77,7 +40,9 @@
   var paletteIndex = 0;
 
   function buildPalette() {
-    if (document.getElementById('nxPalette')) return;
+    // Snapshot tombol Back (wire:navigate) ikut menyimpan markup palet tanpa
+    // handler-nya, jadi selalu dibuat ulang.
+    $('#nxPalette, #nxPaletteBackdrop').remove();
     var html =
       '<div class="nx-palette-backdrop" id="nxPaletteBackdrop"></div>' +
       '<div class="nx-palette" id="nxPalette" role="dialog" aria-modal="true" aria-label="Pencarian cepat">' +
@@ -95,7 +60,6 @@
     document.body.insertAdjacentHTML('beforeend', html);
     $('#nxPaletteBackdrop').on('click', closePalette);
     $('#nxPaletteInput').on('input', function () { renderPalette(this.value); });
-    $(document).on('keydown', paletteKeys);
     $('#nxPaletteResults').on('click', '.nx-palette-item', function (e) {
       e.preventDefault();
       openPaletteItem($(this));
@@ -154,7 +118,8 @@
       setTheme(nxTheme() === 'dark' ? 'light' : 'dark');
       closePalette();
     } else {
-      window.location.href = url;
+      closePalette();
+      go(url);
     }
   }
   function openPalette() {
@@ -276,6 +241,7 @@
     // Clone submenu menjadi flyout untuk mode collapsed.
     $('#nxSidebar .nx-menu-item.has-submenu').each(function () {
       var $ul = $(this).find('.nx-submenu').first();
+      $(this).children('.nx-flyout').remove(); // sisa snapshot tombol Back
       var $fly = $('<ul class="nx-flyout"></ul>').append($ul.children().clone());
       $(this).append($fly);
     });
@@ -294,14 +260,6 @@
       }
     });
     $('#nxSidebarBackdrop, #nxSidebarClose').on('click', closeMobileSidebar);
-    // Hamburger di header tertutup backdrop saat panel terbuka, jadi Esc
-    // dan tombol X di dalam sidebar adalah jalan keluar utamanya.
-    $(document).on('keydown', function (e) {
-      if (e.key === 'Escape' && document.body.classList.contains('nx-sidebar-open')) closeMobileSidebar();
-    });
-    $(window).on('resize', function () {
-      if (window.innerWidth >= 992) closeMobileSidebar();
-    });
   }
 
   /* ===================== Filter menu sidebar =====================
@@ -333,6 +291,7 @@
     // Pesan "tidak ada hasil" ditambahkan sekali, di dalam area scroll nav.
     var $scroll = $nav.find('.simplebar-content').first();
     if (!$scroll.length) $scroll = $nav;
+    $scroll.find('.nx-menu-empty').remove(); // sisa snapshot tombol Back
     $scroll.append('<div class="nx-menu-empty">Tidak ada menu yang cocok.</div>');
 
     function esc(s) { return $('<span>').text(s).html(); }
@@ -407,7 +366,7 @@
       if (e.key === 'Enter') {
         var first = $('#nxSidebar .nx-menu-item:not(.nx-filter-hide) .nx-menu-link[href]:not([data-bs-toggle])')
           .filter(function () { return $(this).closest('.nx-filter-hide').length === 0; })[0];
-        if (first) window.location.href = first.getAttribute('href');
+        if (first) go(first.getAttribute('href'));
       }
     });
     $clear.on('click', function () { $input.val('').trigger('focus'); apply(''); });
@@ -424,11 +383,6 @@
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
     });
-    // Label aksi cepat kontekstual (mis. halaman clinical).
-    var qa = document.body.getAttribute('data-quick-action');
-    if (qa) $('#nxQuickAction span').text(qa);
-    var qaHref = document.body.getAttribute('data-quick-action-href') || '#';
-    $('#nxQuickAction').on('click', function () { window.location.href = qaHref; });
   }
 
   /* ===================== Utils global ===================== */
@@ -437,44 +391,67 @@
     $('[data-bs-toggle="tooltip"]').each(function () { new bootstrap.Tooltip(this); });
     $('[data-bs-toggle="popover"]').each(function () { new bootstrap.Popover(this); });
 
-    // CountUp untuk [data-countup].
-    if (window.countUp && window.countUp.CountUp) {
-      $('[data-countup]').each(function () {
-        var $el = $(this);
-        var c = new countUp.CountUp(this, parseFloat($el.data('value')), {
-          duration: 1.6,
-          decimalPlaces: parseInt($el.data('decimals') || 0, 10),
-          prefix: $el.data('prefix') || '',
-          suffix: $el.data('suffix') || ''
-        });
-        if (!c.error) c.start();
-      });
-    }
-
     // Back to top.
     if (!document.getElementById('nxBackTop')) {
-      $('body').append('<button class="nx-backtop" id="nxBackTop" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>');
+      $('body').append('<button class="nx-backtop" id="nxBackTop" aria-label="Kembali ke atas"><i class="bi bi-arrow-up"></i></button>');
     }
-    $(window).on('scroll', function () {
-      $('#nxBackTop').toggleClass('show', window.scrollY > 300);
-    });
     $('#nxBackTop').on('click', function () {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
 
   /* ===================== Boot =====================
-     Sidebar, header dan footer sudah ter-inline di setiap halaman oleh
-     tools/build.js, jadi tidak ada fetch saat runtime dan halaman tetap
-     berfungsi penuh ketika dibuka langsung lewat file://. */
-  $(function () {
+     wire:navigate mengganti seluruh <body> tanpa memuat ulang halaman
+     (A-421). Jadi:
+     - handler di document/window dipasang SEKALI (bindOnce);
+     - elemen layout dipasang ulang setiap halaman (boot), karena elemennya baru.
+     livewire:navigated juga terpicu saat halaman pertama dimuat; halaman tanpa
+     Livewire jatuh ke DOMContentLoaded. */
+  function sidebarScroller() {
+    return document.querySelector('#nxSidebarNav .simplebar-content-wrapper');
+  }
+  var sidebarScroll = 0;
+
+  function boot() {
     if (document.body.hasAttribute('data-nx-layout')) {
       initSidebar();
       initMenuFilter();
       initHeader();
+      var sc = sidebarScroller();
+      if (sc) sc.scrollTop = sidebarScroll;
     }
     initUtils();
     buildPalette();
     document.dispatchEvent(new CustomEvent('nx:layout-ready'));
+  }
+
+  function bindOnce() {
+    $(document).on('keydown', paletteKeys);
+    // Hamburger di header tertutup backdrop saat panel terbuka, jadi Esc
+    // dan tombol X di dalam sidebar adalah jalan keluar utamanya.
+    $(document).on('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.classList.contains('nx-sidebar-open')) closeMobileSidebar();
+    });
+    $(window).on('resize', function () {
+      if (window.innerWidth >= 992) closeMobileSidebar();
+    });
+    $(window).on('scroll', function () {
+      $('#nxBackTop').toggleClass('show', window.scrollY > 300);
+    });
+
+    document.addEventListener('livewire:navigating', function (e) {
+      var sc = sidebarScroller();
+      sidebarScroll = sc ? sc.scrollTop : 0;
+      // Livewire menyalin atribut <html> dari respons server, yang tidak membawa
+      // data-bs-theme (dipasang JS) — pasang lagi tepat setelah body ditukar.
+      var tema = nxTheme();
+      e.detail.onSwap(function () { document.documentElement.setAttribute('data-bs-theme', tema); });
+    });
+    document.addEventListener('livewire:navigated', boot);
+  }
+
+  bindOnce();
+  $(function () {
+    if (!window.Livewire) boot();
   });
 })(jQuery);

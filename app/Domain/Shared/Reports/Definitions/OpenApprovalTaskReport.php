@@ -69,14 +69,14 @@ class OpenApprovalTaskReport extends Report
             ->get()
             ->filter(fn (ApprovalTask $t) => $this->snapshotTerlihat($t->snapshot, $gudang))
             ->map(fn (ApprovalTask $t) => [
-                'approver' => $t->approver?->name ?? '—',
+                'approver' => $t->approver?->name ?? '-',
                 'jenis' => $this->labelJenis($t->snapshot),
-                'nomor' => $t->snapshot?->document_number ?? '—',
+                'nomor' => $t->snapshot?->document_number ?? '-',
                 'lapis' => (int) $t->step_no,
-                'wakil_dari' => $t->delegatedFrom?->name ?? '—',
+                'wakil_dari' => $t->delegatedFrom?->name ?? '-',
                 'ditugaskan' => $t->created_at?->lokal()->format('d/m/Y H:i'),
                 'umur_jam' => round($t->created_at->diffInMinutes($sekarang) / 60, 1),
-                'tenggat' => $t->due_at?->lokal()->format('d/m/Y H:i') ?? '—',
+                'tenggat' => $t->due_at?->lokal()->format('d/m/Y H:i') ?? '-',
                 'lewat' => $t->due_at !== null && $t->due_at->lt($sekarang) ? 'Ya' : 'Tidak',
             ])
             ->sortBy([['approver', 'asc'], ['umur_jam', 'desc']])

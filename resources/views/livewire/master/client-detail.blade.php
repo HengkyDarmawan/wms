@@ -25,11 +25,11 @@
                 </a>
             @endcan
             @can('update', $client)
-                <a class="btn btn-primary" href="{{ route('clients.index', ['ubah' => $client->id]) }}">
+                <a wire:navigate class="btn btn-primary" href="{{ route('clients.index', ['ubah' => $client->id]) }}">
                     <i class="bi bi-pencil"></i> {{ __('Ubah') }}
                 </a>
             @endcan
-            <a class="btn btn-outline-secondary" href="{{ route('clients.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('clients.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 

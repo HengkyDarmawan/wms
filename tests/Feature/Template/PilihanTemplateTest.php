@@ -33,12 +33,12 @@ class PilihanTemplateTest extends TenantTestCase
 
         Livewire::actingAs($admin)->test(LabelDesigner::class, ['type' => 'label_lot', 'formatId' => (string) $lot->id])
             ->assertSeeHtml('id="ld-format"')->assertSeeHtml('class="nx-pilih"')
-            ->assertSeeHtml('>'.e($lot->name.' — '.$lot->summary()).'</option>')
+            ->assertSeeHtml('>'.e($lot->name.' · '.$lot->summary()).'</option>')
             ->assertSet('formatId', (string) $lot->id);
 
         Livewire::actingAs($admin)->test(LabelPrint::class, ['type' => 'label_bin'])
             ->assertSeeHtml('id="lbl-gudang"')->assertSeeHtml('id="lbl-kertas"')
-            ->assertSeeHtml('>'.e($gudang->code.' — '.$gudang->name).'</option>')
+            ->assertSeeHtml('>'.e($gudang->code.' · '.$gudang->name).'</option>')
             ->set('warehouseFilter', (string) $gudang->id)->assertSet('warehouseFilter', (string) $gudang->id);
     }
 }

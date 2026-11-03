@@ -114,7 +114,7 @@ class PutawayWaiting extends Component
         if ($cocok->count() > 1) {
             $this->batalPilih();
             $this->saring = $cocok->pluck('id')->map(fn ($v) => (int) $v)->all();
-            $this->addError('kodeBarang', __(':n baris cocok — ketuk salah satu.', ['n' => $cocok->count()]));
+            $this->addError('kodeBarang', __(':n baris cocok. Ketuk salah satu.', ['n' => $cocok->count()]));
 
             return;
         }

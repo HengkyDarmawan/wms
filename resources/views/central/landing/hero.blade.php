@@ -6,7 +6,7 @@
                 <span class="lp-hero-badge"><i class="bi bi-cone-striped" aria-hidden="true"></i> {{ __('WMS khusus material proyek') }}</span>
                 <h1 id="heroTitle">{{ __('Stok yang bisa dipercaya,') }} <em>{{ __('dari gudang sampai site.') }}</em></h1>
                 <p class="lp-lead">
-                    {{ __('Untuk perusahaan penyedia material, mesin, dan peralatan proyek pembangunan. Permintaan, pengiriman, pemakaian, retur, konversi potongan, dan aset dipinjamkan — semuanya tercatat per proyek, tanpa menghitung ulang di Excel.') }}
+                    {{ __('Untuk perusahaan penyedia material, mesin, dan peralatan proyek pembangunan. Permintaan, pengiriman, pemakaian, retur, konversi potongan, dan aset dipinjamkan. Semuanya tercatat per proyek, tanpa menghitung ulang di Excel.') }}
                 </p>
                 <div class="d-flex flex-wrap gap-3 mt-4">
                     <a class="lp-btn lp-btn-light" href="{{ $demoHref }}"><i class="bi bi-calendar2-check" aria-hidden="true"></i> {{ __('Minta demo') }}</a>

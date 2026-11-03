@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ $ruleId ? __('Ubah aturan approval') : __('Aturan approval baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Kondisi dokumen gudang tidak memakai nilai uang; hanya Purchase Order yang boleh memakai nilai PO. Dokumen yang sedang menunggu tidak terpengaruh perubahan aturan.') }}</p> {{-- BR-APR-07, D-28, BR-APR-01 --}}
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('approval.rules.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('approval.rules.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')
@@ -69,6 +69,6 @@
 
     <div class="d-flex gap-2">
         <button class="btn btn-primary" type="button" wire:click="simpan">{{ __('Simpan aturan') }}</button>
-        <a class="btn btn-outline-secondary" href="{{ route('approval.rules.index') }}">{{ __('Batal') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('approval.rules.index') }}">{{ __('Batal') }}</a>
     </div>
 </div>

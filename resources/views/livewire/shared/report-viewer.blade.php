@@ -6,7 +6,7 @@
         </div>
 
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('reports.index') }}">{{ __('Semua laporan') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('reports.index') }}">{{ __('Semua laporan') }}</a>
             <a class="btn btn-primary"
                href="{{ route('reports.export', ['report' => $laporan->key(), 'filters' => $filters]) }}">
                 <i class="bi bi-download"></i> {{ __('Ekspor Excel') }}

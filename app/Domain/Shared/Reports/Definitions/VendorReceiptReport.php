@@ -82,10 +82,10 @@ class VendorReceiptReport extends Report
             ->get()
             ->map(fn (GoodsReceipt $g) => [
                 'grn' => $g->number,
-                'vendor' => $g->vendor !== null ? $g->vendor->code.' — '.$g->vendor->name : '—',
+                'vendor' => $g->vendor !== null ? $g->vendor->code.' · '.$g->vendor->name : '-',
                 'gudang' => $g->warehouse?->code,
                 'diterima' => $g->received_at?->lokal()->format('d/m/Y H:i'),
-                'surat_jalan' => $g->vendor_doc_no ?? '—',
+                'surat_jalan' => $g->vendor_doc_no ?? '-',
                 'baris' => (int) $g->lines_count,
                 'jumlah' => round((float) $g->lines_sum_qty_received, 4),
                 // A-295: kondisi barang saat diterima (A-287).

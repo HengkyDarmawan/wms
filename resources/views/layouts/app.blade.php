@@ -8,7 +8,7 @@
     <link rel="icon" href="{{ asset('img/logo.svg') }}">
     {{-- PWA installable (Blueprint §11, A-193). --}}
     <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#6366f1">
+    <meta name="theme-color" content="#5558e3">
     <link rel="apple-touch-icon" href="/img/icons/icon-192.png">
     <script>
         (function () {
@@ -19,6 +19,7 @@
     </script>
     @include('layouts.partials.palette')
     @fonts
+    @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 {{-- data-nx-layout menyalakan sidebar, filter menu, dan header NexaDash (resources/js/nexadash/app.js). --}}
@@ -38,7 +39,7 @@
         @if (\App\Domain\Access\Support\DemoLogin::enabled())
             <div class="alert alert-warning py-1 small d-flex align-items-center gap-2" role="note" data-mode-demo>
                 <i class="bi bi-cone-striped"></i> <strong>{{ __('MODE DEMO') }}</strong>
-                <span>{{ __('Siapa pun bisa masuk lewat tombol Coba demo — jangan isi data sungguhan.') }}</span>
+                <span>{{ __('Siapa pun bisa masuk lewat tombol Coba demo. Jangan isi data sungguhan.') }}</span>
             </div>
         @endif
 
@@ -67,5 +68,6 @@
     </footer>
 </div>
 
+@livewireScripts
 </body>
 </html>

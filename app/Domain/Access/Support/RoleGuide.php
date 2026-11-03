@@ -28,6 +28,12 @@ final class RoleGuide
     /** Pilih klien, lalu proyek awalnya (periodenya diatur Tim site). */
     public const KLIEN = 'klien';
 
+    /** Gudang + tanggal akhir akses (Auditor Eksternal, BR-ACC-07, A-425). */
+    public const AUDIT = 'audit';
+
+    /** A-427: masa akses auditor eksternal paling lama sekian hari dari hari ini. */
+    public const AUDIT_MAKS_HARI = 90;
+
     /** Peran buatan company: pakai baris penugasan lama. */
     public const CUSTOM = 'custom';
 
@@ -40,7 +46,7 @@ final class RoleGuide
         'internal_requester' => ['Meminta material untuk proyeknya.', self::PROYEK, 'Proyek'],
         'pr_follow_up' => ['Mencatat pemesanan dan membuat PO ke vendor.', self::SEMUA, 'Keuangan'],
         'internal_auditor' => ['Memeriksa stok dan opname tanpa mengubah data.', self::SEMUA, 'Audit'],
-        'external_auditor' => ['Auditor dari luar company; hanya melihat data yang diizinkan.', self::SEMUA, null],
+        'external_auditor' => ['Auditor dari luar company; akses dibatasi gudang dan berakhir pada tanggal yang Anda tentukan.', self::AUDIT, null],
         'client_user' => ['Melihat proyek kliennya dan mengisi bukti terima lewat portal.', self::KLIEN, null],
         'driver' => ['Role lama yang tidak ditawarkan lagi untuk pengguna baru.', self::SEMUA, null],
     ];
@@ -70,6 +76,7 @@ final class RoleGuide
     {
         return match (self::pertanyaan($role)) {
             self::GUDANG => 'bi-building',
+            self::AUDIT => 'bi-search',
             self::PROYEK => 'bi-signpost-split',
             self::KLIEN => 'bi-person-badge',
             self::SEMUA => 'bi-shield-check',

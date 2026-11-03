@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ __('RTV baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Barang yang dicatat Rusak saat penerimaan, atau barang di Karantina dengan hasil QC Ditolak/Karantina.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('vendor-returns.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('vendor-returns.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')

@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ __('Serah terima aset') }}</h1>
             <p class="text-muted mb-0">{{ __('Lahir otomatis saat surat jalan aset diterima proyek; kembali saat GRN retur diterima; selesai setelah aset diperiksa.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('assets.index') }}">{{ __('Daftar aset') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('assets.index') }}">{{ __('Daftar aset') }}</a>
     </div>
 
     <div class="card mb-3">
@@ -51,12 +51,12 @@
                 <tbody>
                     @forelse ($handovers as $h)
                         <tr>
-                            <td><a href="{{ route('asset-handovers.show', $h) }}">{{ $h->number }}</a> <div class="small text-muted">{{ $h->warehouse?->code }}</div></td>
+                            <td><a wire:navigate href="{{ route('asset-handovers.show', $h) }}">{{ $h->number }}</a> <div class="small text-muted">{{ $h->warehouse?->code }}</div></td>
                             <td>{{ $h->serial?->serial_no }} <div class="small text-muted">{{ $h->item?->code }}</div></td>
                             <td>{{ $h->project?->code }} <div class="small text-muted">{{ $h->project?->name }}</div></td>
                             <td class="small">{{ $h->checked_out_at?->lokal()->format('d/m/Y') }}</td>
                             <td class="small">
-                                {{ $h->due_return_date?->format('d/m/Y') ?? '—' }}
+                                {{ $h->due_return_date?->format('d/m/Y') ?? '-' }}
                                 @if ($h->isOverdue()) <span class="badge text-bg-danger">{{ __('Lewat') }}</span> @endif
                             </td>
                             <td>

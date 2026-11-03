@@ -111,7 +111,7 @@ class PackageLabelLedger
             $wajib = $this->required($warehouseId, (int) $g['item_id'], $g['lot_id'], (float) $g['qty']);
 
             if ($wajib > self::EPS && (float) $g['claimed'] + self::EPS < $wajib) {
-                throw LabelRuleException::rule('BR-LBL-04', $g['label'].': barang berlabel wajib dipindai saat keluar gudang — baru '
+                throw LabelRuleException::rule('BR-LBL-04', $g['label'].': barang berlabel wajib dipindai saat keluar gudang, baru '
                     .self::angka((float) $g['claimed']).' dari '.self::angka($wajib).'; pindai label untuk '.self::angka($wajib - (float) $g['claimed']).' lagi.');
             }
         }

@@ -3,7 +3,7 @@
         <h1 class="h3 mb-1">{{ __('Bukti terima') }} {{ $sj->number }}</h1>
         <p class="text-muted mb-0">
             {{ $sj->warehouse?->code }} → {{ $sj->destinationLabel() }}
-            · {{ $sj->shipment_method->label() }}: {{ $sj->carrierLabel() ?: '—' }}
+            · {{ $sj->shipment_method->label() }}: {{ $sj->carrierLabel() ?: '-' }}
             @if ($sj->shipped_at) · {{ __('Berangkat') }} {{ $sj->shipped_at->lokal()->format('d/m/Y H:i') }} @endif
             @if ($poKlien !== []) · {{ __('No. PO klien') }} {{ implode(', ', $poKlien) }} @endif
         </p>

@@ -8,7 +8,7 @@
                 <div class="small text-muted mt-1" id="po-saran">
                     {{ __('Saran dari riwayat (bebas diganti):') }}
                     @foreach ($saran['baris'] as $sb)
-                        <div>{{ $sb['item'] }} — {{ __('Terakhir') }}: {{ $sb['terakhir'] ?? '—' }}@can('po.view') · {{ __('Termurah 6 bln') }}: {{ $sb['termurah'] ?? '—' }}@endcan</div>
+                        <div>{{ $sb['item'] }} · {{ __('Terakhir') }}: {{ $sb['terakhir'] ?? '-' }}@can('po.view') · {{ __('Termurah 6 bln') }}: {{ $sb['termurah'] ?? '-' }}@endcan</div>
                     @endforeach
                 </div>
             @endif

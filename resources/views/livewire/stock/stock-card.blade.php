@@ -1,19 +1,19 @@
 <div>
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
-            <h1 class="h3 mb-1">{{ __('Kartu stok') }} — {{ $item->code }}</h1>
+            <h1 class="h3 mb-1">{{ __('Kartu stok') }} · {{ $item->code }}</h1>
             <p class="text-muted mb-0">
-                {{ $item->name }} · {{ __('Satuan dasar') }}: {{ $item->baseUom?->code ?? '—' }}
+                {{ $item->name }} · {{ __('Satuan dasar') }}: {{ $item->baseUom?->code ?? '-' }}
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('stock.index') }}">{{ __('Kembali ke saldo') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('stock.index') }}">{{ __('Kembali ke saldo') }}</a>
     </div>
 
     <div class="card mb-3">
         <div class="card-body row g-3">
             <div class="col-lg-3">
                 <x-pilih model="warehouseFilter" id="kartu-gudang" live :label="__('Gudang')" :kosong="__('Semua gudang')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-lg-3">
                 <x-pilih model="binFilter" id="kartu-bin" server live :kunci="$warehouseFilter" :label="__('Bin')"
@@ -49,9 +49,9 @@
                 <tbody>
                     @forelse ($saldo as $s)
                         <tr>
-                            <td>{{ $s->bin?->warehouse?->code ?? '—' }}</td>
-                            <td>{{ $s->bin?->code ?? '—' }}</td>
-                            <td>{{ $s->serial?->serial_no ?? $s->lot?->lot_no ?? '—' }}</td>
+                            <td>{{ $s->bin?->warehouse?->code ?? '-' }}</td>
+                            <td>{{ $s->bin?->code ?? '-' }}</td>
+                            <td>{{ $s->serial?->serial_no ?? $s->lot?->lot_no ?? '-' }}</td>
                             <td><span class="badge text-bg-light">{{ $s->stock_status->label() }}</span></td>
                             <td class="text-end">
                                 {{ \App\Domain\Master\Support\QtyFormat::withUnit($s->qty_base, $item->baseUom?->code) }}
@@ -61,7 +61,7 @@
                             </td>
                             @if ($tampilPotongan)
                                 <td class="text-end">
-                                    {{ $s->piece_count > 0 ? number_format((int) $s->piece_count, 0, ',', '.') : '—' }}
+                                    {{ $s->piece_count > 0 ? number_format((int) $s->piece_count, 0, ',', '.') : '-' }}
                                 </td>
                             @endif
                         </tr>
@@ -108,12 +108,12 @@
                                 @endif
                             </td>
                             <td>
-                                {{ $m->document_number ?? ($m->document_type === 'bin_move' ? __('Pindah bin') : '—') }}
+                                {{ $m->document_number ?? match ($m->document_type) { 'bin_move' => __('Pindah bin'), 'maintenance' => __('Servis aset'), default => '-' } }}
                                 @if ($m->reverses_movement_id !== null)
                                     <span class="badge text-bg-warning">{{ __('Pembalik') }}</span>
                                 @endif
                             </td>
-                            <td>{{ $m->reasonCode?->name ?? '—' }}</td>
+                            <td>{{ $m->reasonCode?->name ?? '-' }}</td>
                             <td>{{ $m->performer?->name ?? __('Sistem') }}</td>
                         </tr>
                     @empty

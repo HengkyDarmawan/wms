@@ -17,7 +17,7 @@
         </div>
         @if ($jemput['shipment_method'] === 'carrier')
             <div class="col-md-3">
-                <x-pilih model="jemput.carrier_id" id="jemput-ekspedisi" kecil :label="__('Ekspedisi')" kosong="—"
+                <x-pilih model="jemput.carrier_id" id="jemput-ekspedisi" kecil :label="__('Ekspedisi')" kosong="-"
                          :options="collect($pilihanJemput['carriers'])->map(fn ($c) => ['value' => $c->id, 'text' => $c->name])->all()" />
             </div>
         @endif

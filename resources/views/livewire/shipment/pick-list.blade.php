@@ -29,7 +29,7 @@
                 @foreach ($menunggu as $req)
                     <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
                         <div>
-                            <a href="{{ route('requests.show', $req) }}">{{ $req->number }}</a>
+                            <a wire:navigate href="{{ route('requests.show', $req) }}">{{ $req->number }}</a>
                             <span class="text-muted small">
                                 · {{ $req->project?->code }} · {{ __('dibutuhkan') }}
                                 {{ $req->required_date?->format('d/m/Y') }}
@@ -54,7 +54,7 @@
             </div>
             <div class="col-lg-3">
                 <x-pilih model="warehouseFilter" id="filter-gudang-pck" live :label="__('Gudang')" :kosong="__('Semua gudang')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-lg-3">
                 <label class="form-label" for="filter-status-pck">{{ __('Status') }}</label>
@@ -90,13 +90,13 @@
                 <tbody>
                     @forelse ($tasks as $t)
                         <tr>
-                            <td><a href="{{ route('picks.show', $t) }}">{{ $t->number }}</a></td>
+                            <td><a wire:navigate href="{{ route('picks.show', $t) }}">{{ $t->number }}</a></td>
                             <td>
                                 {{ $t->warehouse?->code }}
                                 <div class="small text-muted">{{ $t->warehouse?->name }}</div>
                             </td>
                             <td class="text-end">{{ $t->lines_count }}</td>
-                            <td>{{ $t->assignee?->name ?? '—' }}</td>
+                            <td>{{ $t->assignee?->name ?? '-' }}</td>
                             <td><span class="badge {{ $t->status->badge() }}">{{ $t->status->label() }}</span></td>
                         </tr>
                     @empty

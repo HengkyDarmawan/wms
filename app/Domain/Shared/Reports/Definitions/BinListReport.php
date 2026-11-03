@@ -81,13 +81,13 @@ class BinListReport extends Report
             ->get()
             ->map(fn (Bin $bin) => [
                 'kode' => $bin->code,
-                'gudang' => $bin->warehouse?->code ?? '—',
+                'gudang' => $bin->warehouse?->code ?? '-',
                 'jenis' => $bin->bin_type->label(),
-                'kategori' => $bin->storageCategory?->name ?? '—',
+                'kategori' => $bin->storageCategory?->name ?? '-',
                 'penegakan' => $bin->capacityMode()->label(),
                 'kapasitas_jumlah' => $bin->capacity_qty === null ? '' : (float) $bin->capacity_qty,
                 'kapasitas_berat' => $bin->capacity_weight === null ? '' : (float) $bin->capacity_weight,
-                'proyek' => $bin->project?->code ?? '—',
+                'proyek' => $bin->project?->code ?? '-',
                 'penanda_hitung' => $bin->count_flag ? 'Ya' : '',
                 'status' => $bin->bin_status->label(),
             ]);

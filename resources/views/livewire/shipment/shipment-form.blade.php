@@ -6,7 +6,7 @@
                 {{ __('Beberapa tugas picking boleh digabung selama gudang asal dan tujuannya sama.') }}
             </p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('shipments.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('shipments.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')
@@ -24,7 +24,7 @@
             <div class="row g-3 mb-3">
                 <div class="col-md-5">
                     <x-pilih model="form.warehouse_id" id="sj-gudang" live wajib :label="__('Gudang asal')" :kosong="__('Pilih gudang…')"
-                             :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                             :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
                 </div>
             </div>
 
@@ -78,7 +78,7 @@
                 <div class="col-md-8">
                     <x-pilih model="form.destination_warehouse_id" id="sj-gudang-tujuan" wajib :label="__('Gudang tujuan')"
                              :kosong="__('Pilih gudang…')"
-                             :options="$gudangTujuan->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                             :options="$gudangTujuan->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
                 </div>
             @elseif ($form['destination_type'] === 'vendor')
                 <div class="col-md-8">

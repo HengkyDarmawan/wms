@@ -13,7 +13,7 @@
             <td class="k">{{ __('Tujuan') }}</td>
             <td>{{ $sj->destination_type->label() }}: {{ $sj->destinationLabel() }}</td>
             <td class="k">{{ __('Diselesaikan') }}</td>
-            <td>{{ $dsc->resolver?->name ?? '—' }} {{ $dsc->resolved_at?->lokal()->format('d/m/Y H:i') }}</td>
+            <td>{{ $dsc->resolver?->name ?? '-' }} {{ $dsc->resolved_at?->lokal()->format('d/m/Y H:i') }}</td>
         </tr>
     </table>
 
@@ -45,7 +45,7 @@
                     <td class="r">{{ PrintFormat::qty($l->qty_base) }}</td>
                     <td>{{ $p?->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($p?->item, $l->qty_base)) <br><small>{{ $kemasan }}</small>@endif</td>
                     <td>
-                        {{ $l->disposition?->label() ?? '—' }}
+                        {{ $l->disposition?->label() ?? '-' }}
                         @if ($l->client_decision)<br><span class="muted">{{ $l->client_decision->label() }}</span>@endif
                         @if ($l->claim_ref)<br><span class="muted">{{ __('Klaim') }} {{ $l->claim_ref }}</span>@endif
                     </td>

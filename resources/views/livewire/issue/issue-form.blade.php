@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ $nomor ? __('Ubah draf').' '.$nomor : __('Pemakaian baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Catat barang habis pakai yang dipakai proyek dari Gudang Site. Jumlah dalam satuan dasar; serial dipakai per unit, potongan dipakai utuh. Stok baru keluar saat dikonfirmasi.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('issues.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('issues.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')
@@ -23,7 +23,7 @@
             </div>
             <div class="col-md-4">
                 <x-pilih model="form.warehouse_id" id="isu-site" live wajib :label="__('Gudang Site')" :disabled="(bool) $nomor"
-                         :kosong="__('Pilih Gudang Site…')" :options="$sites->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :kosong="__('Pilih Gudang Site…')" :options="$sites->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
                 @if ($form['project_id'] !== '' && $sites->isEmpty())
                     <div class="form-text text-danger">{{ __('Proyek ini belum punya Gudang Site aktif dalam cakupan Anda.') }}</div>
                 @endif

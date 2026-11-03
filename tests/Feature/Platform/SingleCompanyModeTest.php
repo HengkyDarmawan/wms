@@ -6,6 +6,7 @@ namespace Tests\Feature\Platform;
 
 use App\Domain\Warehouse\Support\BinCode;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Env;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TenantTestCase;
 
@@ -24,6 +25,11 @@ class SingleCompanyModeTest extends TenantTestCase
 
     public function createApplication(): Application
     {
+        // phpdotenv mengingat variabel yang pernah ia muat dalam proses ini. Bila uji
+        // lain sudah memuat `.env` yang berisi `WMS_SINGLE_COMPANY=` (kosong), boot
+        // berikutnya menimpa nilai di bawah. Repositori baru = daftar "pernah dimuat" kosong.
+        (fn () => static::$repository = null)->bindTo(null, Env::class)();
+
         foreach (self::ENV as $kunci => $nilai) {
             $this->lama[$kunci] = getenv($kunci);
             putenv($kunci.'='.$nilai);

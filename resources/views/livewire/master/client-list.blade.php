@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ __('Klien') }}</h1>
             <p class="text-muted mb-0">
                 {{-- A-419: bedakan dari perusahaan Anda (pemilik gudang, Pengaturan company). --}}
-                {{ __('Perusahaan pemberi kerja / pemilik proyek — bukan perusahaan Anda. Klien tidak memakai WMS kecuali diberi akun portal. Klien tidak pernah dihapus, hanya dinonaktifkan.') }}
+                {{ __('Perusahaan pemberi kerja / pemilik proyek, bukan perusahaan Anda. Klien tidak memakai WMS kecuali diberi akun portal. Klien tidak pernah dihapus, hanya dinonaktifkan.') }}
             </p>
         </div>
 
@@ -130,7 +130,7 @@
                         <tr wire:key="klien-{{ $client->id }}">
                             <td>
                                 <div class="fw-semibold">
-                                    <a href="{{ route('clients.show', $client->id) }}">{{ $client->name }}</a>
+                                    <a wire:navigate href="{{ route('clients.show', $client->id) }}">{{ $client->name }}</a>
                                 </div>
                                 <div class="small text-muted">{{ $client->code }}</div>
                             </td>

@@ -52,7 +52,7 @@
                     @forelse ($requests as $r)
                         <tr @class(['table-warning' => $r->pending_substitution_count > 0])>
                             <td>
-                                <a href="{{ route('portal.requests.show', $r) }}">{{ $r->number }}</a>
+                                <a wire:navigate href="{{ route('portal.requests.show', $r) }}">{{ $r->number }}</a>
                                 @if ($r->isSupplement())
                                     <span class="badge text-bg-info">{{ __('Tambahan') }}</span>
                                 @endif

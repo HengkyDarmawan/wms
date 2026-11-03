@@ -25,11 +25,11 @@
                 </button>
             @endif
             @can('update', $user)
-                <a class="btn btn-primary" href="{{ route('users.edit', $user) }}">
+                <a wire:navigate class="btn btn-primary" href="{{ route('users.edit', $user) }}">
                     <i class="bi bi-pencil"></i> {{ __('Ubah') }}
                 </a>
             @endcan
-            <a class="btn btn-outline-secondary" href="{{ route('users.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('users.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -59,15 +59,15 @@
             @if ($tab === 'ringkasan')
                 <dl class="row mb-0">
                     <dt class="col-sm-4 col-lg-3">{{ __('Unit organisasi') }}</dt>
-                    <dd class="col-sm-8 col-lg-9">{{ $user->orgUnit?->name ?? '—' }}</dd>
+                    <dd class="col-sm-8 col-lg-9">{{ $user->orgUnit?->name ?? '-' }}</dd>
 
                     <dt class="col-sm-4 col-lg-3">{{ __('Jabatan') }}</dt>
-                    <dd class="col-sm-8 col-lg-9">{{ $user->position?->name ?? '—' }}</dd>
+                    <dd class="col-sm-8 col-lg-9">{{ $user->position?->name ?? '-' }}</dd>
 
                     <dt class="col-sm-4 col-lg-3">{{ __('Atasan langsung') }}</dt>
                     {{-- A-345: atasan efektif beserta asalnya. --}}
                     <dd class="col-sm-8 col-lg-9">
-                        {{ $atasanNama === [] ? '—' : implode(', ', $atasanNama) }}
+                        {{ $atasanNama === [] ? '-' : implode(', ', $atasanNama) }}
                         @if ($atasanSumber === \App\Domain\Access\Support\Atasan::MANUAL)
                             <span class="badge text-bg-light border ms-1">{{ __('isi manual') }}</span>
                         @elseif ($atasanSumber === \App\Domain\Access\Support\Atasan::JABATAN)
@@ -76,7 +76,7 @@
                     </dd>
 
                     <dt class="col-sm-4 col-lg-3">{{ __('Nomor WhatsApp') }}</dt>
-                    <dd class="col-sm-8 col-lg-9">{{ $user->phone ?? '—' }}</dd>
+                    <dd class="col-sm-8 col-lg-9">{{ $user->phone ?? '-' }}</dd>
 
                     <dt class="col-sm-4 col-lg-3">{{ __('Jenis user') }}</dt>
                     <dd class="col-sm-8 col-lg-9">
@@ -90,12 +90,12 @@
 
                     <dt class="col-sm-4 col-lg-3">{{ __('Login terakhir') }}</dt>
                     <dd class="col-sm-8 col-lg-9">
-                        {{ $user->last_login_at?->lokal()->format('d M Y H:i') ?? '—' }}
+                        {{ $user->last_login_at?->lokal()->format('d M Y H:i') ?? '-' }}
                     </dd>
 
                     <dt class="col-sm-4 col-lg-3">{{ __('Password diubah') }}</dt>
                     <dd class="col-sm-8 col-lg-9 mb-0">
-                        {{ $user->password_changed_at?->lokal()->format('d M Y H:i') ?? '—' }}
+                        {{ $user->password_changed_at?->lokal()->format('d M Y H:i') ?? '-' }}
                     </dd>
                 </dl>
             @elseif ($tab === 'role')
@@ -123,7 +123,13 @@
                                         &ndash;
                                         {{ $assignment->valid_until?->format('d M Y') ?? __('tanpa batas') }}
 
-                                        @if ($assignment->valid_until !== null && $assignment->project_team_member_id === null)
+                                        @if ($assignment->role?->code === 'external_auditor' && $assignment->valid_until !== null)
+                                            {{-- BR-ACC-07, A-425: akses auditor eksternal memang bertanggal. --}}
+                                            <div class="{{ $assignment->valid_until->lt(today()) ? 'text-danger' : 'text-muted' }}">
+                                                <i class="bi bi-hourglass-split"></i>
+                                                {{ $assignment->valid_until->lt(today()) ? __('Akses audit sudah berakhir') : __('Akses audit sampai :t', ['t' => $assignment->valid_until->format('d M Y')]) }}
+                                            </div>
+                                        @elseif ($assignment->valid_until !== null && $assignment->project_team_member_id === null)
                                             {{-- A-343: sisa dari form lama yang punya isian tanggal. --}}
                                             <div class="text-warning-emphasis">
                                                 <i class="bi bi-exclamation-triangle"></i>
@@ -139,7 +145,7 @@
                                             <div class="small text-muted">{{ __('Dari Tim site') }}</div>
                                         @endif
                                     </td>
-                                    <td class="small text-muted">{{ $assignment->assignedBy?->name ?? '—' }}</td>
+                                    <td class="small text-muted">{{ $assignment->assignedBy?->name ?? '-' }}</td>
                                     <td>
                                         @if ($assignment->isValid())
                                             <span class="badge text-bg-success">{{ __('Berlaku') }}</span>
@@ -177,12 +183,12 @@
                                 @php($statusSite = $site->status())
                                 <tr wire:key="pts-{{ $site->id }}">
                                     <td>
-                                        <a href="{{ route('projects.show', ['project' => $site->project_id, 'tab' => 'tim-site']) }}">
+                                        <a wire:navigate href="{{ route('projects.show', ['project' => $site->project_id, 'tab' => 'tim-site']) }}">
                                             {{ $site->project?->code }}
                                         </a>
                                         <div class="small text-muted">{{ $site->project?->name }}</div>
                                     </td>
-                                    <td>{{ $site->role?->name ?? '—' }}</td>
+                                    <td>{{ $site->role?->name ?? '-' }}</td>
                                     <td class="small">{{ $site->starts_on->format('d M Y') }}</td>
                                     <td class="small">{{ $site->ends_on->format('d M Y') }}</td>
                                     <td>
@@ -223,7 +229,7 @@
                             @forelse ($user->devices as $device)
                                 <tr wire:key="dev-{{ $device->id }}">
                                     <td>{{ $device->name ?? $device->device_uid }}</td>
-                                    <td class="small text-muted">{{ $device->platform ?? '—' }}</td>
+                                    <td class="small text-muted">{{ $device->platform ?? '-' }}</td>
                                     <td class="small text-muted">
                                         {{ $device->last_seen_at?->diffForHumans() ?? __('Belum dipakai') }}
                                     </td>

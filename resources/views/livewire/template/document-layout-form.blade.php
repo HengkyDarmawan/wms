@@ -36,7 +36,7 @@
                         <label class="form-label" for="lay-kop">{{ __('Teks kop') }}</label>
                         <textarea class="form-control @error('header') is-invalid @enderror" id="lay-kop" rows="3"
                                   maxlength="500" wire:model="header"
-                                  placeholder="{{ __('Alamat, telepon, email — satu baris per baris') }}"></textarea>
+                                  placeholder="{{ __('Alamat, telepon, email: satu per baris') }}"></textarea>
                         <div class="form-text">{{ __('Nama company tercetak otomatis di atas teks ini. Teks biasa, tanpa HTML.') }}</div>
                         @error('header') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -101,7 +101,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <strong>{{ __('Template') }}</strong>
                     <button class="btn btn-sm btn-outline-secondary" type="button" disabled
-                            title="{{ __('Tersedia di Fase 2') }}">{{ __('Editor template — Fase 2') }}</button>
+                            title="{{ __('Tersedia di Fase 2') }}">{{ __('Editor template (Fase 2)') }}</button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-sm mb-0 align-middle">
@@ -131,8 +131,8 @@
                             <tr>
                                 <td>{{ __('Label bin, item, lot, potongan') }}</td>
                                 <td>
-                                    <a href="{{ route('label-designs.index') }}">{{ __('Desain label') }}</a> ·
-                                    <a href="{{ route('label-formats.index') }}">{{ __('Ukuran label') }}</a>
+                                    <a wire:navigate href="{{ route('label-designs.index') }}">{{ __('Desain label') }}</a> ·
+                                    <a wire:navigate href="{{ route('label-formats.index') }}">{{ __('Ukuran label') }}</a>
                                 </td>
                             </tr>
                         </tbody>

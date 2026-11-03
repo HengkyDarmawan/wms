@@ -89,7 +89,7 @@ class DemoSeederTest extends TenantTestCase
         $this->assertSame(5, (int) ($perModul['issue'] ?? 0), 'Jumlah permission modul Issue (pemakaian material).');
         $this->assertSame(6, (int) ($perModul['conversion'] ?? 0), 'Jumlah permission modul Konversi material.');
         $this->assertSame(5, (int) ($perModul['waste'] ?? 0), 'Jumlah permission modul Berita acara waste.');
-        $this->assertSame(4, (int) ($perModul['asset'] ?? 0), 'Jumlah permission modul Aset dipinjamkan.');
+        $this->assertSame(5, (int) ($perModul['asset'] ?? 0), 'Jumlah permission modul Aset dipinjamkan (asset.maintain, A-423).');
         $this->assertSame(6, (int) ($perModul['purchase_request'] ?? 0), 'Jumlah permission modul Purchase Request.');
         $this->assertSame(2, (int) ($perModul['billing'] ?? 0), 'Jumlah permission tagihan langganan.');
         $this->assertSame(6, (int) ($perModul['purchase_order'] ?? 0), 'Jumlah permission Purchase Order (purchasing/02).');

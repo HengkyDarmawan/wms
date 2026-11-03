@@ -7,7 +7,7 @@
             </h1>
             <p class="text-muted mb-0">
                 {{ $rtv->warehouse?->code }} → {{ $rtv->vendor?->name }} · GRN
-                <a href="{{ route('receipts.show', $rtv->goods_receipt_id) }}">{{ $rtv->receipt?->number }}</a>
+                <a wire:navigate href="{{ route('receipts.show', $rtv->goods_receipt_id) }}">{{ $rtv->receipt?->number }}</a>
                 · {{ __('Diajukan') }} {{ $rtv->submitter?->name }}
                 @if ($rtv->approver) · {{ __('Diputus') }} {{ $rtv->approver->name }} @endif
                 @if ($rtv->replacementReceipt) · {{ __('Pengganti') }} {{ $rtv->replacementReceipt->number }} @endif
@@ -17,7 +17,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::VendorReturn, 'id' => $rtv->id, 'teks' => __('Cetak surat retur')])
-            <a class="btn btn-outline-secondary" href="{{ route('vendor-returns.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('vendor-returns.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -93,7 +93,7 @@
                 <button class="btn btn-warning" type="button" wire:click="kirim">{{ __('Kirim ke vendor') }}</button>
             @endcan
             @can('complete', $rtv)
-                <button class="btn btn-success" type="button" wire:click="selesaikan">{{ __('Konfirmasi vendor — selesai') }}</button>
+                <button class="btn btn-success" type="button" wire:click="selesaikan">{{ __('Konfirmasi vendor selesai') }}</button>
             @endcan
             @can('cancel', $rtv)
                 <button class="btn btn-outline-danger" type="button" wire:click="mintaDialog('batal')">{{ __('Batalkan') }}</button>

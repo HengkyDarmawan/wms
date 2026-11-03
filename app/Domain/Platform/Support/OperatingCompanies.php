@@ -33,7 +33,7 @@ class OperatingCompanies
 
         tenancy()->runForMultiple($daftar, function (Company $company) use ($kerja, $perintah): void {
             if (self::halted($company)) {
-                $perintah?->line('Company '.$company->getTenantKey().': dilewati — langganan ditangguhkan.');
+                $perintah?->line('Company '.$company->getTenantKey().': dilewati, langganan ditangguhkan.');
 
                 return;
             }
@@ -42,7 +42,7 @@ class OperatingCompanies
                 $kerja($company);
             } catch (\Throwable $e) {
                 Log::error('Job harian gagal untuk company '.$company->code.': '.$e->getMessage());
-                $perintah?->error('Company '.$company->getTenantKey().': gagal — '.$e->getMessage());
+                $perintah?->error('Company '.$company->getTenantKey().': gagal · '.$e->getMessage());
             }
         });
     }

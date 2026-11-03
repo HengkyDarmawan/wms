@@ -6,7 +6,7 @@
         </div>
 
         @can('create', \App\Domain\Access\Models\User::class)
-            <a class="btn btn-primary" href="{{ route('users.create') }}">
+            <a wire:navigate class="btn btn-primary" href="{{ route('users.create') }}">
                 <i class="bi bi-plus-lg"></i> {{ __('Tambah pengguna') }}
             </a>
         @endcan
@@ -87,7 +87,7 @@
                         @php($status = $user->status())
                         <tr wire:key="user-{{ $user->id }}">
                             <td>
-                                <a class="fw-semibold nx-link" href="{{ route('users.show', $user) }}">{{ $user->name }}</a>
+                                <a wire:navigate class="fw-semibold nx-link" href="{{ route('users.show', $user) }}">{{ $user->name }}</a>
                                 <div class="small text-muted">{{ $user->email }}</div>
                             </td>
                             <td>
@@ -100,12 +100,12 @@
                                 @endforelse
                             </td>
                             <td class="small">
-                                {{ $user->orgUnit?->name ?? '—' }}
+                                {{ $user->orgUnit?->name ?? '-' }}
                                 <div class="text-muted">{{ $user->position?->name }}</div>
                             </td>
                             <td><span class="badge text-bg-{{ $status->badge() }}">{{ $status->label() }}</span></td>
                             <td class="small text-muted">
-                                {{ $user->last_login_at?->lokal()->format('d M Y H:i') ?? '—' }}
+                                {{ $user->last_login_at?->lokal()->format('d M Y H:i') ?? '-' }}
                             </td>
                             <td class="text-end">
                                 <div class="dropdown">
@@ -114,11 +114,11 @@
                                         <i class="bi bi-three-dots"></i>
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end">
-                                        <a class="dropdown-item" href="{{ route('users.show', $user) }}">
+                                        <a wire:navigate class="dropdown-item" href="{{ route('users.show', $user) }}">
                                             <i class="bi bi-eye"></i> {{ __('Lihat') }}
                                         </a>
                                         @can('update', $user)
-                                            <a class="dropdown-item" href="{{ route('users.edit', $user) }}">
+                                            <a wire:navigate class="dropdown-item" href="{{ route('users.edit', $user) }}">
                                                 <i class="bi bi-pencil"></i> {{ __('Ubah') }}
                                             </a>
                                         @endcan

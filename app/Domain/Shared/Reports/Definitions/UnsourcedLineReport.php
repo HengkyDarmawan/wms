@@ -67,8 +67,8 @@ class UnsourcedLineReport extends Report
                 'status' => $l->request?->status->label(),
                 'item' => $l->item?->code ?? $l->displayName(),
                 'jumlah' => round((float) $l->qty_base, 4),
-                'satuan' => $l->item?->baseUom?->code ?? '—',
-                'dibutuhkan' => ($l->required_date ?? $l->request?->required_date)?->format('d/m/Y') ?? '—',
+                'satuan' => $l->item?->baseUom?->code ?? '-',
+                'dibutuhkan' => ($l->required_date ?? $l->request?->required_date)?->format('d/m/Y') ?? '-',
             ])
             ->sortBy('dibutuhkan')
             ->values();

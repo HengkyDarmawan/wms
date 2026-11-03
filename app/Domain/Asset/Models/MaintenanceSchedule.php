@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace App\Domain\Asset\Models;
 
+use App\Domain\Access\Models\User;
+use App\Domain\Asset\Enums\MaintenanceSource;
+use App\Domain\Asset\Enums\MaintenanceStatus;
 use App\Domain\Master\Models\Serial;
+use App\Domain\Warehouse\Models\Bin;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Jadwal maintenance `[F2]` (BR-AST-07) — stub (BR-GEN-10): tabel dan model
- * ada, belum ada layar maupun pemicu otomatis.
+ * Jadwal servis aset (BR-AST-07, A-423, 33-pendukung-f2): `planned` →
+ * `in_progress` (aset dipindah ke bin Karantina) → `done` (kembali ke bin
+ * penyimpanan). Satu jadwal terbuka per aset.
  */
 class MaintenanceSchedule extends Model
 {
@@ -23,11 +29,35 @@ class MaintenanceSchedule extends Model
         return [
             'scheduled_at' => 'date',
             'performed_at' => 'date',
+            'status' => MaintenanceStatus::class,
+            'source' => MaintenanceSource::class,
         ];
     }
 
     public function serial(): BelongsTo
     {
         return $this->belongsTo(Serial::class);
+    }
+
+    public function originBin(): BelongsTo
+    {
+        return $this->belongsTo(Bin::class, 'origin_bin_id')->withoutGlobalScopes();
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** Jadwal yang belum selesai (`planned` / `in_progress`). */
+    public function scopeOpen(Builder $q): Builder
+    {
+        return $q->whereIn('status', [MaintenanceStatus::Planned->value, MaintenanceStatus::InProgress->value]);
+    }
+
+    /** Jatuh tempo: direncanakan untuk hari ini atau sebelumnya. */
+    public function scopeDue(Builder $q): Builder
+    {
+        return $q->where('status', MaintenanceStatus::Planned->value)->whereDate('scheduled_at', '<=', now()->toDateString());
     }
 }

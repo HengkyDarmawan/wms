@@ -9,6 +9,7 @@ use App\Domain\Count\Enums\CountType;
 use App\Domain\Count\Enums\StockCountStatus;
 use App\Domain\Count\Exceptions\CountRuleException;
 use App\Domain\Count\Models\StockCount;
+use App\Domain\Count\Support\AbcCyclePlanner;
 use App\Domain\Master\Models\Item;
 use App\Domain\Stock\Support\DocumentNumber;
 use App\Domain\Warehouse\Models\Bin;
@@ -20,7 +21,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Permission: `count.create` — sesi opname `planned` (Katalog §2.13).
  *
- * Guard Katalog: cakupan, tim, jenis, pembekuan ya/tidak. Pemeriksaan
+ * Guard Katalog: cakupan, tim, jenis, pembekuan ya/tidak. Cycle count ABC
+ * mengambil item jatuh tempo dari AbcCyclePlanner (BR-OPN-11). Pemeriksaan
  * mendadak (`spot_check`) selalu tanpa pembekuan dan cakupannya kecil —
  * daftar bin atau item (BR-OPN-10). Sesi yang dibuat Auditor ditandai sesi
  * audit sehingga disetujui Auditor Internal atau Manajemen (BR-OPN-08,
@@ -29,7 +31,10 @@ use Illuminate\Support\Facades\DB;
  */
 class CreateStockCount
 {
-    public function __construct(private readonly DocumentNumber $nomor) {}
+    public function __construct(
+        private readonly DocumentNumber $nomor,
+        private readonly AbcCyclePlanner $abc,
+    ) {}
 
     /**
      * @param  array{count_type?: string, warehouse_ids?: array<int, int|string>, zone_ids?: array<int, int|string>, bin_ids?: array<int, int|string>, item_ids?: array<int, int|string>, freeze_bins?: bool, planned_start?: ?string, team_user_ids?: array<int, int|string>, notes?: ?string}  $data
@@ -39,7 +44,7 @@ class CreateStockCount
         $jenis = CountType::tryFrom((string) ($data['count_type'] ?? ''));
 
         if ($jenis === null || ! $jenis->isAvailable()) {
-            throw CountRuleException::field('BR-GEN-10', 'count_type', 'Jenis opname wajib dipilih (cycle count ABC baru Fase 2).');
+            throw CountRuleException::field('BR-GEN-10', 'count_type', 'Jenis opname wajib dipilih.');
         }
 
         $gudangIds = $this->ids($data['warehouse_ids'] ?? []);
@@ -53,6 +58,20 @@ class CreateStockCount
         $zonaIds = $this->ids($data['zone_ids'] ?? []);
         $binIds = $this->ids($data['bin_ids'] ?? []);
         $itemIds = $this->ids($data['item_ids'] ?? []);
+
+        // BR-OPN-11: cycle count ABC = satu gudang, item dari perencana (isian zona/bin/item diabaikan).
+        if ($jenis->isCycleAbc()) {
+            if (count($gudangIds) !== 1) {
+                throw CountRuleException::field('BR-OPN-11', 'warehouse_ids', 'Cycle count ABC hanya untuk satu gudang.');
+            }
+
+            $zonaIds = $binIds = [];
+            $itemIds = array_column($this->abc->untukSesi($gudangIds[0]), 'item_id');
+
+            if ($itemIds === []) {
+                throw CountRuleException::field('BR-OPN-11', 'warehouse_ids', 'Tidak ada item yang jatuh tempo hitung di gudang ini.');
+            }
+        }
 
         if ($zonaIds !== [] && Zone::query()->whereIn('id', $zonaIds)->whereIn('warehouse_id', $gudangIds)->count() !== count($zonaIds)) {
             throw CountRuleException::field('BR-OPN-01', 'zone_ids', 'Zona harus milik gudang cakupan.');

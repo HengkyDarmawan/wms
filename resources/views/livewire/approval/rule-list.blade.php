@@ -14,7 +14,7 @@
                 <a class="btn btn-outline-secondary" href="{{ route('approval.simulation') }}">{{ __('Simulasi') }}</a>
             @endcan
             @can('create', App\Domain\Approval\Models\ApprovalRule::class)
-                <a class="btn btn-primary" href="{{ route('approval.rules.create') }}">{{ __('Aturan baru') }}</a>
+                <a wire:navigate class="btn btn-primary" href="{{ route('approval.rules.create') }}">{{ __('Aturan baru') }}</a>
             @endcan
         </div>
     </div>
@@ -43,10 +43,10 @@
                                 @endif
                             @elseif ($r['status'] === 'ada_aturan')
                                 <i class="bi bi-dash-circle text-muted"></i>
-                                <span class="text-muted">{{ $r['jenis']->label() }} — {{ __('dilewati: sudah punya aturan') }}</span>
+                                <span class="text-muted">{{ $r['jenis']->label() }} · {{ __('dilewati: sudah punya aturan') }}</span>
                             @else
                                 <i class="bi bi-shield-check text-muted"></i>
-                                <span class="text-muted">{{ $r['jenis']->label() }} — {{ __('dilewati: sudah dijaga lapis minimum sistem') }}</span>
+                                <span class="text-muted">{{ $r['jenis']->label() }} · {{ __('dilewati: sudah dijaga lapis minimum sistem') }}</span>
                             @endif
                         </li>
                     @endforeach
@@ -162,7 +162,7 @@
                             </td>
                             <td class="text-end text-nowrap">
                                 @can('update', $r)
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('approval.rules.edit', $r) }}">{{ __('Ubah') }}</a>
+                                    <a wire:navigate class="btn btn-sm btn-outline-primary" href="{{ route('approval.rules.edit', $r) }}">{{ __('Ubah') }}</a>
                                     @if ($r->is_active)
                                         <button class="btn btn-sm btn-outline-danger" type="button" wire:click="setAktif({{ $r->id }}, false)">{{ __('Nonaktifkan') }}</button>
                                     @else

@@ -290,7 +290,7 @@ class RuleForm extends Component
 
         if ($ok) {
             session()->flash('pesan', __('Aturan approval disimpan.'));
-            $this->redirectRoute('approval.rules.index');
+            $this->redirectRoute('approval.rules.index', navigate: true);
         }
     }
 
@@ -414,6 +414,6 @@ class RuleForm extends Component
         $kondisi = $this->kondisiDisimpan();
         $syarat = count($kondisi) > 1 ? app(ApprovalRuleSentence::class)->kondisi($jenis, $kondisi) : '';
 
-        return Str::limit($jenis->label().($syarat !== '' ? ' — '.$syarat : ''), 99, '…');
+        return Str::limit($jenis->label().($syarat !== '' ? ' · '.$syarat : ''), 99, '…');
     }
 }

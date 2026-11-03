@@ -16,7 +16,7 @@
         @can('create', \App\Domain\Warehouse\Models\Warehouse::class)
             <div class="d-flex flex-wrap gap-2">
                 {{-- A-272: impor banyak gudang sekaligus. --}}
-                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-warehouses">
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-warehouses">
                     <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor Excel') }}
                 </a>
                 {{-- A-414: pemandu di layar. --}}
@@ -76,7 +76,7 @@
 
                 <div class="col-md-3">
                     <x-pilih model="form.parent_id" id="gudang-induk" :label="__('Gudang induk')" :kosong="__('Tidak ada induk')"
-                             :options="$semua->reject(fn ($k) => $editingId === $k->id)->map(fn ($k) => ['value' => $k->id, 'text' => $k->code.' — '.$k->name])->values()->all()" />
+                             :options="$semua->reject(fn ($k) => $editingId === $k->id)->map(fn ($k) => ['value' => $k->id, 'text' => $k->code.' · '.$k->name])->values()->all()" />
                 </div>
 
                 @php($tipeTerpilih = $types->firstWhere('id', (int) ($form['warehouse_type_id'] ?: 0)))
@@ -166,7 +166,7 @@
             <div class="card-body d-flex flex-wrap align-items-end gap-2">
                 <div>
                     <x-pilih model="gudangDenah" id="denah-gudang" live kecil :label="__('Gudang')" style="min-width: 18rem"
-                             :options="$semua->where('is_active', true)->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->values()->all()" />
+                             :options="$semua->where('is_active', true)->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->values()->all()" />
                 </div>
                 @if ($denahGudang)
                     <a class="btn btn-sm btn-primary ms-auto" href="{{ route('warehouses.layout', $denahGudang) }}"><i class="bi bi-arrows-fullscreen"></i> {{ __('Buka denah penuh / Atur denah') }}</a>
@@ -208,9 +208,9 @@
                                     {{ $gudang->code }}
                                 </div>
                             </td>
-                            <td>{{ $gudang->type?->name ?? '—' }}</td>
-                            <td>{{ $gudang->project?->code ?? '—' }}</td>
-                            <td>{{ $gudang->head?->name ?? '—' }}</td>
+                            <td>{{ $gudang->type?->name ?? '-' }}</td>
+                            <td>{{ $gudang->project?->code ?? '-' }}</td>
+                            <td>{{ $gudang->head?->name ?? '-' }}</td>
                             <td class="text-end">{{ $gudang->zones_count }}</td>
                             <td class="text-end">{{ $gudang->bins_count }}</td>
                             <td>

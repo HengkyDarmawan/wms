@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Domain\Asset\Livewire\AssetDetail;
 use App\Domain\Asset\Livewire\AssetList;
+use App\Domain\Asset\Livewire\AssetMaintenance;
 use App\Domain\Asset\Livewire\HandoverDetail;
 use App\Domain\Asset\Livewire\HandoverList;
 use App\Domain\Asset\Models\AssetHandover;
@@ -36,6 +37,7 @@ class AssetServiceProvider extends ServiceProvider
 
         Livewire::component('asset.asset-list', AssetList::class);
         Livewire::component('asset.asset-detail', AssetDetail::class);
+        Livewire::component('asset.asset-maintenance', AssetMaintenance::class);
         Livewire::component('asset.handover-list', HandoverList::class);
         Livewire::component('asset.handover-detail', HandoverDetail::class);
     }

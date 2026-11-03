@@ -9,7 +9,7 @@
         <div class="d-flex justify-content-between align-items-start gap-2">
             <div>
                 <div class="fw-semibold fs-6 text-body" style="text-transform: none; letter-spacing: normal">
-                    <span x-text="'Rak ' + (rak?.code ?? '') + ' · Zona ' + (rak?.zona ?? '') + ' — ' + (rak?.zona_nama ?? '')"></span>
+                    <span x-text="'Rak ' + (rak?.code ?? '') + ' · Zona ' + (rak?.zona ?? '') + ' · ' + (rak?.zona_nama ?? '')"></span>
                     <span class="badge text-bg-secondary" x-show="rak?.is_area">{{ __('area lantai') }}</span>
                     <span class="badge text-bg-warning" x-show="rak?.baru">{{ __('belum disimpan') }}</span>
                 </div>
@@ -27,7 +27,7 @@
     <div class="card-body small" x-show="!edit || tab === 'isi'">
         <div class="text-muted" x-show="memuat">{{ __('Memuat isi rak…') }}</div>
         <div x-show="!memuat">
-            <div class="text-muted mb-1">{{ __('Tampak depan (tingkat paling bawah di bawah) — ketuk petak') }}</div>
+            <div class="text-muted mb-1">{{ __('Tampak depan (tingkat paling bawah di bawah). Ketuk petak') }}</div>
             <div class="d-grid gap-1" data-tampak-depan>
                 <template x-for="lv in (rak?.levels ?? [])" :key="lv.id">
                     <div class="d-grid gap-1 align-items-stretch" :style="'grid-template-columns: 2.2rem repeat(' + kolomRak() + ', minmax(0, 1fr))'">
@@ -81,8 +81,8 @@
                             </div>
                             <div class="text-muted"><span x-text="s.item_name"></span><span x-show="s.tracking" x-text="' · ' + s.tracking"></span>
                                 <span class="badge text-bg-light border" x-show="s.status && s.status !== 'Tersedia'" x-text="s.status"></span></div>
-                            <div><span x-text="'Masuk ' + (s.masuk ?? '—') + ' · ' + s.umur + ' hari'"></span>
-                                <span class="badge text-bg-warning" x-show="s.tertua" title="{{ __('Masuk paling lama untuk item ini di gudang — ambil dulu (FIFO)') }}">{{ __('tertua — ambil dulu') }}</span></div>
+                            <div><span x-text="'Masuk ' + (s.masuk ?? '-') + ' · ' + s.umur + ' hari'"></span>
+                                <span class="badge text-bg-warning" x-show="s.tertua" title="{{ __('Masuk paling lama untuk item ini di gudang: ambil dulu (FIFO)') }}">{{ __('tertua, ambil dulu') }}</span></div>
                         </div>
                     </template>
                     <div class="text-muted mt-2" x-show="!(binTerpilih().isi ?? []).length && !binTerpilih().utama">{{ __('Bin kosong.') }}</div>
@@ -154,7 +154,7 @@
 @if ($bolehUbah)
     <div class="card mb-3 border-primary" x-show="edit && pilih?.jenis === 'zona'" x-cloak data-panel-zona>
         <div class="card-header d-flex justify-content-between align-items-start">
-            <div class="fw-semibold fs-6 text-body" style="text-transform: none; letter-spacing: normal" x-text="'Zona ' + (zona(pilih?.id)?.code ?? '') + ' — ' + (zona(pilih?.id)?.name ?? '')"></div>
+            <div class="fw-semibold fs-6 text-body" style="text-transform: none; letter-spacing: normal" x-text="'Zona ' + (zona(pilih?.id)?.code ?? '') + ' · ' + (zona(pilih?.id)?.name ?? '')"></div>
             <button class="btn-close" type="button" x-on:click="tutup()" aria-label="{{ __('Tutup') }}"></button>
         </div>
         <div class="card-body small">
@@ -174,7 +174,7 @@
         <div class="card-header d-flex justify-content-between align-items-start">
             <div>
                 <div class="fw-semibold fs-6 text-body" style="text-transform: none; letter-spacing: normal" x-text="objek(pilih?.id)?.name ?? ''"></div>
-                <div class="small text-muted"><span x-text="objek(pilih?.id)?.label ?? ''"></span> · {{ __('tanpa stok — tidak menyentuh kartu stok') }}</div>
+                <div class="small text-muted"><span x-text="objek(pilih?.id)?.label ?? ''"></span> · {{ __('tanpa stok (tidak menyentuh kartu stok)') }}</div>
             </div>
             <button class="btn-close" type="button" x-on:click="tutup()" aria-label="{{ __('Tutup') }}"></button>
         </div>

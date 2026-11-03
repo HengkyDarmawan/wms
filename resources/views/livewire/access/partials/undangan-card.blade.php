@@ -14,7 +14,7 @@
                 </button>
                 @if ($nomorWa !== null)
                     <a class="btn btn-sm btn-success" target="_blank" rel="noopener"
-                       href="https://wa.me/{{ $nomorWa }}?text={{ rawurlencode(__('Akun :app Anda sudah dibuat. Email: :email — Password: :pass. Silakan ganti password setelah masuk.', ['app' => config('app.name'), 'email' => $user->email, 'pass' => $passwordDibuat])) }}">
+                       href="https://wa.me/{{ $nomorWa }}?text={{ rawurlencode(__('Akun :app Anda sudah dibuat. Email: :email, Password: :pass. Silakan ganti password setelah masuk.', ['app' => config('app.name'), 'email' => $user->email, 'pass' => $passwordDibuat])) }}">
                         <i class="bi bi-whatsapp"></i> {{ __('Kirim via WhatsApp') }}
                     </a>
                 @endif
@@ -29,7 +29,7 @@
 @if ($undangan !== null && $undangan->isUsable())
     <div class="card border-info mb-3">
         <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <strong>{{ __('Undangan — belum dipakai') }}</strong>
+            <strong>{{ __('Undangan belum dipakai') }}</strong>
             <span class="small text-muted">
                 {{ __('Berlaku sampai') }}
                 {{ $undangan->expires_at->timezone(tenant()?->timezone ?? 'Asia/Jakarta')->format('d M Y H:i') }}
@@ -72,7 +72,7 @@
             </div>
 
             <p class="small text-muted mb-0 mt-2">
-                {{ __('Kirim ulang membuat tautan baru — tautan lama langsung mati. Buka tautan di jendela penyamaran, karena Anda sedang masuk sebagai pengguna lain.') }}
+                {{ __('Kirim ulang membuat tautan baru, dan tautan lama langsung mati. Buka tautan di jendela penyamaran, karena Anda sedang masuk sebagai pengguna lain.') }}
             </p>
         </div>
     </div>

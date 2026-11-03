@@ -4,7 +4,7 @@
             <h1 class="h3 mb-1">{{ __('Transfer baru') }}</h1>
             <p class="text-muted mb-0">{{ __('Stok gudang asal dicadangkan saat disetujui; tugas picking dibuat otomatis di gudang asal. Jumlah dalam satuan dasar item.') }}</p>
         </div>
-        <a class="btn btn-outline-secondary" href="{{ route('transfers.index') }}">{{ __('Kembali') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('transfers.index') }}">{{ __('Kembali') }}</a>
     </div>
 
     @if ($ruleError !== '')
@@ -57,7 +57,7 @@
                             <td style="max-width: 9rem">
                                 <input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model="rows.{{ $i }}.qty_base">
                             </td>
-                            <td class="text-end small">{{ isset($tersedia[$i]) ? number_format($tersedia[$i], 2, ',', '.') : '—' }}</td>
+                            <td class="text-end small">{{ isset($tersedia[$i]) ? number_format($tersedia[$i], 2, ',', '.') : '-' }}</td>
                             <td><input class="form-control form-control-sm" type="text" wire:model="rows.{{ $i }}.notes" placeholder="{{ __('Opsional') }}"></td>
                             <td><button class="btn btn-sm btn-outline-danger" type="button" wire:click="hapusBaris({{ $i }})" aria-label="{{ __('Hapus baris') }}">×</button></td>
                         </tr>

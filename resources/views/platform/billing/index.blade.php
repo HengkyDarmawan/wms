@@ -21,10 +21,10 @@
     <div class="row g-3 mb-3">
         @php($tz = $company->timezone ?: 'Asia/Jakarta')
         @foreach ([
-            [__('Status'), $subscription?->status->label() ?? '—'],
-            [__('Paket'), $subscription?->plan?->name ?? '—'],
-            [__('Masa berjalan sampai'), $subscription?->periodEnd()?->format('d/m/Y') ?? '—'],
-            [__('Tenggang sampai'), $subscription?->grace_ends_at?->timezone($tz)->format('d/m/Y') ?? '—'],
+            [__('Status'), $subscription?->status->label() ?? '-'],
+            [__('Paket'), $subscription?->plan?->name ?? '-'],
+            [__('Masa berjalan sampai'), $subscription?->periodEnd()?->format('d/m/Y') ?? '-'],
+            [__('Tenggang sampai'), $subscription?->grace_ends_at?->timezone($tz)->format('d/m/Y') ?? '-'],
         ] as [$label, $nilai])
             <div class="col-6 col-md-3">
                 <div class="card h-100"><div class="card-body py-2">
@@ -57,7 +57,7 @@
                             {{ __('Bukti') }} {{ $p->paid_at?->lokal()->format('d/m/Y') }} · {{ __('Rp') }} {{ number_format((float) $p->amount, 0, ',', '.') }}
                             · {{ $p->uploaded_by_name }}
                             <span class="badge {{ $p->status->badge() }}">{{ $p->status->label() }}</span>
-                            @if ($p->reject_reason) <span class="text-danger">— {{ $p->reject_reason }}</span> @endif
+                            @if ($p->reject_reason) <span class="text-danger">{{ $p->reject_reason }}</span> @endif
                             @if ($p->proof_path) <a href="{{ route('billing.payment.proof', $p->id) }}" target="_blank" rel="noopener">{{ __('Lihat bukti') }}</a> @endif
                         </div>
                     @endforeach

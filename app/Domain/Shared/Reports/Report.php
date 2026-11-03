@@ -81,7 +81,7 @@ abstract class Report
     {
         return Pilihan::dari($query, ['code', 'name'], fn (Project $p) => [
             'value' => (int) $p->id,
-            'text' => $p->code.' — '.$p->name,
+            'text' => $p->code.' · '.$p->name,
         ]);
     }
 
@@ -90,7 +90,7 @@ abstract class Report
     {
         return Pilihan::dari(Vendor::query()->orderBy('code'), ['code', 'name'], fn (Vendor $v) => [
             'value' => (int) $v->id,
-            'text' => $v->code.' — '.$v->name,
+            'text' => $v->code.' · '.$v->name,
         ]);
     }
 

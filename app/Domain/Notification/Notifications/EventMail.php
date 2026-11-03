@@ -29,7 +29,7 @@ class EventMail extends Notification
     {
         $tenant = tenant();
         $pesan = (new MailMessage)
-            ->subject($this->title.' — '.($tenant?->name ?? config('app.name')))
+            ->subject($this->title.' · '.($tenant?->name ?? config('app.name')))
             ->greeting('Halo '.$notifiable->name.',')
             ->line($this->title);
 

@@ -44,7 +44,7 @@ class ProjectClosureChecklist
             ->pluck('number');
 
         if ($req->isNotEmpty()) {
-            $butir[] = 'REQ masih diproses: '.$this->daftar($req).' — putuskan, selesaikan, tutup sisa, atau batalkan.';
+            $butir[] = 'REQ masih diproses: '.$this->daftar($req).' · putuskan, selesaikan, tutup sisa, atau batalkan.';
         }
 
         // SJ yang disiapkan (belum berangkat) juga menghalangi: tujuannya Gudang Site
@@ -56,7 +56,7 @@ class ProjectClosureChecklist
             ->pluck('number');
 
         if ($sj->isNotEmpty()) {
-            $butir[] = 'SJ belum diterima: '.$this->daftar($sj).' — berangkatkan dan tunggu bukti terima, atau batalkan SJ yang masih disiapkan.';
+            $butir[] = 'SJ belum diterima: '.$this->daftar($sj).' · berangkatkan dan tunggu bukti terima, atau batalkan SJ yang masih disiapkan.';
         }
 
         $dsc = DeliveryDiscrepancy::query()->withoutGlobalScopes()
@@ -67,14 +67,14 @@ class ProjectClosureChecklist
             ->pluck('number');
 
         if ($dsc->isNotEmpty()) {
-            $butir[] = 'Selisih pengiriman terbuka: '.$this->daftar($dsc).' — selesaikan DSC.';
+            $butir[] = 'Selisih pengiriman terbuka: '.$this->daftar($dsc).' · selesaikan DSC.';
         }
 
         $aset = Serial::query()->where('current_project_id', $project->id)
             ->where('asset_state', AssetState::OnLoan->value)->pluck('serial_no');
 
         if ($aset->isNotEmpty()) {
-            $butir[] = 'Aset masih dipinjam proyek: '.$this->daftar($aset).' — ajukan retur aset atau pindahkan ke proyek lain.'; // A-250
+            $butir[] = 'Aset masih dipinjam proyek: '.$this->daftar($aset).' · ajukan retur aset atau pindahkan ke proyek lain.'; // A-250
         }
 
         foreach ($site as $gudang) {
@@ -86,7 +86,7 @@ class ProjectClosureChecklist
 
             if ($saldo > 0.00005) {
                 $butir[] = 'Gudang Site '.$gudang->code.' masih berisi stok ('.rtrim(rtrim(number_format($saldo, 4, ',', '.'), '0'), ',')
-                    .' satuan dasar) — retur ke gudang, transfer ke proyek lain, catat pemakaian (ISU), atau jadikan waste.';
+                    .' satuan dasar), retur ke gudang, transfer ke proyek lain, catat pemakaian (ISU), atau jadikan waste.';
             }
         }
 

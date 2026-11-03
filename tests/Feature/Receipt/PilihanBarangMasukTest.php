@@ -55,10 +55,10 @@ class PilihanBarangMasukTest extends TenantTestCase
         $form = Livewire::actingAs($staf)->test(ReceiptForm::class)
             ->assertSeeHtml('data-server="1"')
             ->call('cariPilihan', 'form.vendor_id', 'baja');
-        $this->assertSame(['V-BAJA — PT Baja Jaya'], array_column($this->hasil($form), 'text'));
+        $this->assertSame(['V-BAJA · PT Baja Jaya'], array_column($this->hasil($form), 'text'));
 
         $form->call('cariPilihan', 'rows.0.item_id', 'baut');
-        $this->assertSame(['BAUT-M12 — BAUT-M12'], array_column($this->hasil($form), 'text'));
+        $this->assertSame(['BAUT-M12 · BAUT-M12'], array_column($this->hasil($form), 'text'));
 
         // Model lain (gudang, dimuat sekaligus) tidak bisa dicari.
         $form->call('cariPilihan', 'form.warehouse_id', 'ckg');
@@ -89,7 +89,7 @@ class PilihanBarangMasukTest extends TenantTestCase
         // Item draf kini nonaktif: tidak berlabel di kotak; nilai tersimpan tidak ditolak oleh daftar
         // pilihan, keputusan tetap di aksi simpan dengan pesan aturan yang sama seperti dulu.
         Livewire::actingAs($staf)->test(ReceiptForm::class, ['goodsReceipt' => $draf])
-            ->assertDontSeeHtml('>BAUT-M12 — BAUT-M12</option>')
+            ->assertDontSeeHtml('>BAUT-M12 · BAUT-M12</option>')
             ->set('form.notes', 'ubah catatan')->call('simpan')
             ->assertHasNoErrors('rows.0.item_id')
             ->assertSet('ruleError', 'Baris 1 (BAUT-M12): item berstatus Nonaktif tidak bisa diterima. Lengkapi dan aktifkan item lebih dulu.');

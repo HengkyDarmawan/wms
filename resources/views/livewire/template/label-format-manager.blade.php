@@ -7,7 +7,7 @@
             </p>
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('label-designs.index') }}"><i class="bi bi-vector-pen"></i> {{ __('Desain label') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('label-designs.index') }}"><i class="bi bi-vector-pen"></i> {{ __('Desain label') }}</a>
             <button class="btn btn-primary" type="button" wire:click="baru"><i class="bi bi-plus-lg"></i> {{ __('Tambah ukuran') }}</button>
         </div>
     </div>
@@ -126,11 +126,11 @@
                             <td class="font-monospace">{{ $f->code }}</td>
                             <td>{{ $f->name }}</td>
                             <td>{{ $f->summary() }}</td>
-                            <td>{{ implode(', ', $bawaan[$f->id] ?? []) ?: '—' }}</td>
+                            <td>{{ implode(', ', $bawaan[$f->id] ?? []) ?: '-' }}</td>
                             <td><span class="badge {{ $f->is_active ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $f->is_active ? __('Aktif') : __('Nonaktif') }}</span></td>
                             <td class="text-end text-nowrap">
                                 @if ($f->is_active)
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('label-designs.index', ['format' => $f->id]) }}">{{ __('Desain') }}</a>
+                                    <a wire:navigate class="btn btn-sm btn-outline-primary" href="{{ route('label-designs.index', ['format' => $f->id]) }}">{{ __('Desain') }}</a>
                                 @endif
                                 <button class="btn btn-sm btn-outline-secondary" type="button" wire:click="ubah({{ $f->id }})">{{ __('Ubah') }}</button>
                                 @if ($f->is_active)

@@ -6,10 +6,10 @@
         </div>
         @can('create', App\Domain\Adjustment\Models\StockAdjustment::class)
             <div class="d-flex gap-2">
-                <a class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-opening-stock">
+                <a wire:navigate class="btn btn-outline-primary" href="{{ route('imports.index') }}#impor-opening-stock">
                     <i class="bi bi-file-earmark-spreadsheet"></i> {{ __('Impor saldo awal') }}
                 </a>
-                <a class="btn btn-primary" href="{{ route('adjustments.create') }}">{{ __('Penyesuaian baru') }}</a>
+                <a wire:navigate class="btn btn-primary" href="{{ route('adjustments.create') }}">{{ __('Penyesuaian baru') }}</a>
             </div>
         @endcan
     </div>
@@ -58,7 +58,7 @@
                     @forelse ($adjustments as $a)
                         <tr>
                             <td>
-                                <a href="{{ route('adjustments.show', $a) }}">{{ $a->number }}</a>
+                                <a wire:navigate href="{{ route('adjustments.show', $a) }}">{{ $a->number }}</a>
                                 <div class="small text-muted">{{ $a->submitter?->name }}</div>
                             </td>
                             <td>{{ $a->warehouse?->code }}</td>

@@ -16,7 +16,7 @@
                 ['el' => '#pengaturan-tambahan', 'judul' => __('Pengaturan tambahan (opsional)'), 'isi' => __('Isian pembelian otomatis, ukuran barang (mis. 1 BATANG = 6 M), dan kemasan (mis. 1 DUS = 12 PCS). Boleh dilewati, bisa diisi nanti.')],
                 ['el' => '[data-tur-simpan]', 'judul' => __('5. Simpan'), 'isi' => __('Klik Simpan item. Dianggap selesai bila muncul tulisan Item disimpan di halaman detail item.')],
             ]" />
-            <a class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali ke daftar') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Kembali ke daftar') }}</a>
         </div>
     </div>
 
@@ -52,7 +52,7 @@
             <div class="col-md-4">
                 <x-pilih model="form.base_uom_id" id="item-satuan" live wajib :label="__('Satuan dasar')" :disabled="$baseUomLocked"
                          :kosong="__('Pilih satuan…')"
-                         :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' — '.$u->name, 'sub' => $u->category?->name])->all()" />
+                         :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' · '.$u->name, 'sub' => $u->category?->name])->all()" />
                 {{-- A-355: arti satuan dasar dijelaskan supaya kemasan tidak terbaca terbalik. --}}
                 <div class="form-text" id="item-satuan-bantuan">{{ __('Satuan terkecil yang dikeluarkan ke proyek. Stok dihitung dalam satuan ini.') }}</div>
                 @if ($alasanKunciDasar)
@@ -109,7 +109,7 @@
                     <dd class="col-sm-8">{{ $itemKhusus->effectiveRemovalStrategy()->label() }}</dd>
                     @if ($itemKhusus->is_cuttable)
                         <dt class="col-sm-4">{{ __('Bisa dipotong') }}</dt>
-                        <dd class="col-sm-8">{{ __('Ya') }} · {{ __('panjang minimum offcut') }} {{ $itemKhusus->min_offcut_length ?? '—' }} · {{ __('kerf') }} {{ $itemKhusus->kerf ?? '—' }}</dd>
+                        <dd class="col-sm-8">{{ __('Ya') }} · {{ __('panjang minimum offcut') }} {{ $itemKhusus->min_offcut_length ?? '-' }} · {{ __('kerf') }} {{ $itemKhusus->kerf ?? '-' }}</dd>
                     @endif
                 </dl>
             @else
@@ -132,7 +132,7 @@
                 @if ($jenisTerpilih)
                     <div class="form-text mt-2">
                         {{ __('Saat diminta proyek:') }}
-                        <strong>{{ $jenisTerpilih->ownershipModel()->value === 'asset' ? __('Pinjam — kembali ke gudang') : __('Beli — tidak kembali') }}</strong>.
+                        <strong>{{ $jenisTerpilih->ownershipModel()->value === 'asset' ? __('Pinjam (kembali ke gudang)') : __('Beli (tidak kembali)') }}</strong>.
                     </div>
                 @endif
             @endif
@@ -153,7 +153,7 @@
     <div class="card mb-3" id="pengaturan-tambahan">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-baseline gap-2">
             <strong>{{ __('Pengaturan tambahan') }}</strong>
-            <span class="text-muted small">{{ __('Opsional — boleh dilewati, bisa diisi nanti.') }}</span>
+            <span class="text-muted small">{{ __('Opsional: boleh dilewati, bisa diisi nanti.') }}</span>
         </div>
         <div class="px-3 pt-3">
             <ul class="nav nav-tabs" role="tablist">
@@ -243,7 +243,7 @@
                                 <x-pilih model="conversions.{{ $index }}.uom_id" id="konversi-satuan-{{ $index }}" live kecil style="min-width: 10rem"
                                          :aria="__('Satuan kemasan')" :kosong="__('Kemasan…')"
                                          :options="$uoms->reject(fn ($u) => (string) $u->id === (string) $form['base_uom_id'])
-                                             ->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' — '.$u->name])->all()" />
+                                             ->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' · '.$u->name])->all()" />
 
                                 <span>{{ __('berisi') }}</span>
                                 <input class="form-control form-control-sm" style="width: 6.5rem" id="konversi-qty-{{ $index }}" type="text" inputmode="decimal"
@@ -291,6 +291,6 @@
 
     <div class="d-flex gap-2 mb-4">
         <button class="btn btn-primary" type="button" wire:click="simpan" data-tur-simpan>{{ __('Simpan item') }}</button>
-        <a class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Batal') }}</a>
+        <a wire:navigate class="btn btn-outline-secondary" href="{{ route('items.index') }}">{{ __('Batal') }}</a>
     </div>
 </div>

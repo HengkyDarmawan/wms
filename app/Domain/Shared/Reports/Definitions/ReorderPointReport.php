@@ -73,7 +73,7 @@ class ReorderPointReport extends Report
             ->map(fn (Item $i) => [
                 'item' => $i->code,
                 'nama' => $i->name,
-                'kategori' => $i->category?->name ?? '—',
+                'kategori' => $i->category?->name ?? '-',
                 'tersedia' => round((float) ($tersedia[$i->id] ?? 0), 4),
                 'titik' => round((float) $i->reorder_point, 4),
                 'selisih' => round((float) $i->reorder_point - (float) ($tersedia[$i->id] ?? 0), 4),

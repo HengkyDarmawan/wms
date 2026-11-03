@@ -81,7 +81,7 @@ class RuleList extends Component
         })) {
             $this->dialogDasar = false;
             $this->dispatch('pesan', teks: $dipasang === []
-                ? __('Semua jenis dokumen sudah punya aturan — tidak ada yang dipasang.')
+                ? __('Semua jenis dokumen sudah punya aturan, tidak ada yang dipasang.')
                 : __(':n aturan dasar dipasang.', ['n' => count($dipasang)]));
         }
     }

@@ -100,7 +100,7 @@ class WarehouseLayout extends Component
         }
 
         if (! $hasil['ok']) {
-            return ['ok' => false, 'galat' => $hasil['galat'], 'pesan' => __(':n perubahan ditolak — tidak ada yang disimpan. Perbaiki yang ditandai merah atau urungkan.', ['n' => count($hasil['galat'])])];
+            return ['ok' => false, 'galat' => $hasil['galat'], 'pesan' => __(':n perubahan ditolak, tidak ada yang disimpan. Perbaiki yang ditandai merah atau urungkan.', ['n' => count($hasil['galat'])])];
         }
 
         return ['ok' => true, 'denah' => $data->payload($gudang->refresh()), 'pesan' => __(':n perubahan disimpan.', ['n' => $hasil['jumlah']])];

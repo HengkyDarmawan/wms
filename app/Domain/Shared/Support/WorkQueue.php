@@ -7,6 +7,8 @@ namespace App\Domain\Shared\Support;
 use App\Domain\Access\Models\User;
 use App\Domain\Approval\Enums\ApprovalTaskStatus;
 use App\Domain\Approval\Models\ApprovalTask;
+use App\Domain\Asset\Models\MaintenanceSchedule;
+use App\Domain\Asset\Support\AssetQuery;
 use App\Domain\Count\Enums\StockCountStatus;
 use App\Domain\Count\Models\StockCount;
 use App\Domain\Master\Models\Serial;
@@ -88,6 +90,11 @@ class WorkQueue
         $tambah('asset.view', __('Aset lewat jatuh tempo'),
             fn () => Serial::query()->overdue()->count(),
             route('assets.index', ['perhatian' => 1]), 'bi-alarm', __('belum kembali dari proyek'), 'danger');
+
+        // A-423: jadwal servis yang sudah sampai tanggalnya, hanya aset dalam cakupan pengguna.
+        $tambah('asset.maintain', __('Servis aset jatuh tempo'),
+            fn () => app(AssetQuery::class)->for($user)->whereIn('id', MaintenanceSchedule::query()->due()->select('serial_id'))->count(),
+            route('assets.index', ['servis' => 'jatuh-tempo']), 'bi-tools', __('mulai servis dari detail aset'), 'warning');
 
         return $kartu;
     }

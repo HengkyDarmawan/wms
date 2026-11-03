@@ -6,7 +6,7 @@
                 <span class="badge {{ $wst->status->badge() }}">{{ $wst->status->label() }}</span>
             </h1>
             <p class="text-muted mb-0">
-                {{ $wst->disposition->label() }} · {{ $wst->project?->code }} — {{ $wst->project?->name }} · {{ __('Gudang') }} {{ $wst->warehouse?->code }}
+                {{ $wst->disposition->label() }} · {{ $wst->project?->code }} · {{ $wst->project?->name }} · {{ __('Gudang') }} {{ $wst->warehouse?->code }}
                 @if ($wst->targetBin) · {{ __('ke bin') }} {{ $wst->targetBin->code }} @endif
                 · {{ __('Diajukan') }} {{ $wst->submitter?->name }}
                 @if ($wst->approver && in_array($wst->status->value, ['approved', 'closed'], true)) · {{ __('Disetujui') }} {{ $wst->approver->name }} @endif
@@ -25,7 +25,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             @include('print.partials.button', ['jenis' => \App\Domain\Template\Enums\DocumentTemplateType::WasteDisposal, 'id' => $wst->id])
-            <a class="btn btn-outline-secondary" href="{{ route('waste-disposals.index') }}">{{ __('Kembali') }}</a>
+            <a wire:navigate class="btn btn-outline-secondary" href="{{ route('waste-disposals.index') }}">{{ __('Kembali') }}</a>
         </div>
     </div>
 
@@ -89,8 +89,8 @@
                             <td>{{ $l->bin?->code }}</td>
                             <td class="small">{{ $l->stock_status->label() }}</td>
                             <td class="text-end">{{ number_format((float) $l->qty_base, 2, ',', '.') }} <span class="small text-muted">{{ $l->item?->baseUom?->code }}</span></td>
-                            <td class="small">{{ $l->reason?->label ?? '—' }}</td>
-                            <td class="small">{{ $l->movement_id ? '#'.$l->movement_id : '—' }}</td>
+                            <td class="small">{{ $l->reason?->label ?? '-' }}</td>
+                            <td class="small">{{ $l->movement_id ? '#'.$l->movement_id : '-' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
