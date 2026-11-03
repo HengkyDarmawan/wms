@@ -24,7 +24,7 @@ class PilihKomponenTest extends TenantTestCase
         ];
 
         $html = (string) $this->withViewErrors(['managerId' => 'Pilih atasan dari daftar.'])->blade(
-            '<x-pilih model="managerId" id="atasan" label="Atasan" wajib kosong="— Ikuti jabatan —" server kunci="7"
+            '<x-pilih model="managerId" id="atasan" label="Atasan" wajib kosong="(Ikuti jabatan)" server kunci="7"
                       :kelompok="[\'Unit ini\', \'Unit induk\', \'Unit lain\']" :options="$opsi" />',
             ['opsi' => $opsi],
         );
@@ -39,7 +39,7 @@ class PilihKomponenTest extends TenantTestCase
         $this->assertStringContainsString('data-model="managerId"', $html);
         $this->assertStringContainsString('data-server="1" data-min="2"', $html);
         // Pilihan kosong paling atas, opsi tanpa kelompok sebelum kelompok, teks di-escape.
-        $this->assertLessThan(strpos($html, 'Tersimpan'), strpos($html, '<option value="">— Ikuti jabatan —</option>'));
+        $this->assertLessThan(strpos($html, 'Tersimpan'), strpos($html, '<option value="">(Ikuti jabatan)</option>'));
         $this->assertStringContainsString('<option value="9">Tersimpan &lt;lama&gt;</option>', $html);
         // Kelompok mengikuti urutan `kelompok` (Unit ini → Unit induk → Unit lain), walau kosong.
         $ini = strpos($html, '<optgroup label="Unit ini">');

@@ -17,7 +17,7 @@
             </div>
             <div class="col-lg-4">
                 <x-pilih model="warehouseFilter" id="filter-gudang-stok" live :label="__('Gudang')" :kosong="__('Semua gudang')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-lg-3">
                 <div class="form-check">
@@ -72,7 +72,7 @@
                                         <a class="text-muted" href="{{ route('stock.card', ['item' => $b->item_id, 'warehouseFilter' => $b->warehouse_id]) }}">{{ __('+:n bin lain', ['n' => $lok['total'] - 2]) }}</a>
                                     @endif
                                 @else
-                                    <span class="text-muted">—</span>
+                                    <span class="text-muted">-</span>
                                 @endif
                             </td>
                             @php($itemBaris = $itemHalaman[$b->item_id] ?? null)
@@ -86,7 +86,7 @@
                                 @if ($dicadangkan > 0)
                                     <span class="badge text-bg-warning">{{ number_format($dicadangkan, 2, ',', '.') }}</span>
                                 @else
-                                    <span class="text-muted">—</span>
+                                    <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td class="text-end">{{ number_format((float) $b->qty_quarantine, 2, ',', '.') }}</td>
@@ -96,7 +96,7 @@
                                     @if ($this->pakaiPotongan((string) $b->tracking_mode))
                                         {{ number_format((int) $b->piece_count, 0, ',', '.') }}
                                     @else
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">-</span>
                                     @endif
                                 </td>
                             @endif

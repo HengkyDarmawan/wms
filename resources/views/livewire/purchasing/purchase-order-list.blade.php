@@ -20,7 +20,7 @@
             </div>
             <div class="col-lg-3">
                 <x-pilih model="warehouseFilter" id="filter-gudang-po" live :label="__('Gudang tujuan')" :kosong="__('Semua')"
-                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' — '.$w->name])->all()" />
+                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' · '.$w->name])->all()" />
             </div>
             <div class="col-lg-3">
                 <label class="form-label" for="filter-status-po">{{ __('Status') }}</label>
@@ -59,7 +59,7 @@
                             <td>{{ $po->warehouse?->code }}</td>
                             <td class="text-end">{{ $po->lines_count }}</td>
                             <td class="text-end text-nowrap">{{ \App\Domain\Purchasing\Support\Money::format($po->total_amount) }}</td>
-                            <td>{{ $po->eta_date?->format('d/m/Y') ?? '—' }}</td>
+                            <td>{{ $po->eta_date?->format('d/m/Y') ?? '-' }}</td>
                             <td><span class="badge {{ $po->status->badge() }}">{{ $po->status->label() }}</span></td>
                         </tr>
                     @empty

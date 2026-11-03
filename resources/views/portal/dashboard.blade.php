@@ -44,7 +44,7 @@
                         <tr>
                             <td class="text-nowrap">{{ $p->code }}</td>
                             <td>{{ $p->name }}<div class="small text-muted">{{ $p->address }}</div></td>
-                            <td class="small text-nowrap">{{ $p->start_date?->format('d/m/Y') ?? '—' }} &rarr; {{ $p->target_end_date?->format('d/m/Y') ?? '—' }}</td>
+                            <td class="small text-nowrap">{{ $p->start_date?->format('d/m/Y') ?? '-' }} &rarr; {{ $p->target_end_date?->format('d/m/Y') ?? '-' }}</td>
                             <td><span class="badge {{ $p->status === \App\Domain\Master\Enums\ProjectStatus::Active ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $p->status->label() }}</span></td>
                         </tr>
                     @empty
@@ -59,7 +59,7 @@
     @foreach ($stokProyek as $proyekId => $grup)
         @php($p = $proyek->firstWhere('id', $proyekId))
         <div class="card mb-3">
-            <div class="card-header"><strong>{{ __('Stok on-site') }} — {{ $p->code }} {{ $p->name }}</strong></div>
+            <div class="card-header"><strong>{{ __('Stok on-site') }} · {{ $p->code }} {{ $p->name }}</strong></div>
             <div class="card-body pb-0">
                 @foreach ([\App\Domain\Return\Enums\ReturnSource::SiteStock, \App\Domain\Return\Enums\ReturnSource::DeliveredToClient] as $sumber)
                     @php($baris = $grup->get($sumber->value, collect()))
@@ -71,8 +71,8 @@
                                 @forelse ($baris->take(30) as $c)
                                     <tr>
                                         <td>{{ $c['item_code'] }} <div class="small text-muted">{{ $c['item_name'] }}</div></td>
-                                        <td class="small">{{ $c['tracking'] ?: '—' }}</td>
-                                        <td class="small">{{ $c['shipment_number'] ?? $c['bin_code'] ?? '—' }}</td>
+                                        <td class="small">{{ $c['tracking'] ?: '-' }}</td>
+                                        <td class="small">{{ $c['shipment_number'] ?? $c['bin_code'] ?? '-' }}</td>
                                         <td class="text-end">{{ rtrim(rtrim(number_format((float) $c['max'], 4, ',', '.'), '0'), ',') }} <span class="small text-muted">{{ $c['uom'] ?? '' }}</span></td>
                                     </tr>
                                 @empty

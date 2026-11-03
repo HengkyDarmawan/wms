@@ -52,9 +52,9 @@
                                 <div class="small text-muted"><code>{{ $device->device_uid }}</code></div>
                             </td>
                             @if ($lihatSemua)
-                                <td class="small">{{ $device->user?->name ?? '—' }}</td>
+                                <td class="small">{{ $device->user?->name ?? '-' }}</td>
                             @endif
-                            <td class="small text-muted">{{ $device->platform ?? '—' }}</td>
+                            <td class="small text-muted">{{ $device->platform ?? '-' }}</td>
                             <td class="small text-muted">
                                 {{ $device->last_seen_at?->lokal()->format('d M Y H:i') ?? __('Belum dipakai') }}
                             </td>

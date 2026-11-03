@@ -27,8 +27,8 @@
             </div>
             <div class="col-md-6 small">
                 <div class="fw-semibold mb-1">{{ __('Bedanya perusahaan Anda dan klien') }}</div>
-                <div><strong>{{ __('Perusahaan Anda') }}</strong> — {{ __('pemilik gudang dan pengguna WMS ini (admin, kepala gudang, staf).') }}</div>
-                <div><strong>{{ __('Klien') }}</strong> — {{ __('perusahaan pemberi kerja / pemilik proyek, dicatat di Master data → Klien. Bukan pengguna WMS; boleh diberi akun portal klien.') }}</div>
+                <div><strong>{{ __('Perusahaan Anda') }}</strong> · {{ __('pemilik gudang dan pengguna WMS ini (admin, kepala gudang, staf).') }}</div>
+                <div><strong>{{ __('Klien') }}</strong> · {{ __('perusahaan pemberi kerja / pemilik proyek, dicatat di Master data → Klien. Bukan pengguna WMS; boleh diberi akun portal klien.') }}</div>
             </div>
         </div>
     </div>

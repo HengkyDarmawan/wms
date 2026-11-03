@@ -43,7 +43,7 @@
         <div class="card mb-3 {{ $zona->is_active ? '' : 'opacity-75' }}" wire:key="zona-{{ $zona->id }}" data-zona="{{ $zona->code }}">
             <div class="card-header d-flex flex-wrap align-items-center gap-2">
                 <div class="me-auto">
-                    <strong>{{ __('Zona') }} {{ $zona->code }}</strong> <span class="text-muted">— {{ $zona->name }}</span>
+                    <strong>{{ __('Zona') }} {{ $zona->code }}</strong> <span class="text-muted">{{ $zona->name }}</span>
                     <span class="small text-muted ms-2">{{ $iz['rak'] }} {{ __('rak') }} · {{ $iz['bin'] }} {{ __('bin') }}</span>
                     @unless ($zona->is_active) <span class="badge text-bg-secondary">{{ __('Nonaktif') }}</span> @endunless
                 </div>
@@ -69,7 +69,7 @@
                         <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                             <div class="me-auto">
                                 <span class="fw-semibold">{{ $rak->is_area ? __('Area') : __('Rak') }} {{ $rak->code }}</span>
-                                @if ($rak->name) <span class="text-muted">— {{ $rak->name }}</span> @endif
+                                @if ($rak->name) <span class="text-muted">{{ $rak->name }}</span> @endif
                                 <span class="small text-muted ms-1">
                                     @unless ($rak->is_area) {{ $arahLabel[$rak->orientation ?: 'h'] ?? '' }} · @endunless
                                     {{ $ir['tingkat'] }} {{ __('tingkat') }} · {{ $ir['bin'] }} {{ __('bin') }}
@@ -217,7 +217,7 @@
                                 </div>
                             </div>
                             <div class="alert alert-info py-2 mt-3 mb-0 small" data-ringkas-rak>
-                                {{ __('Akan dibuat: tingkat L1 sampai L:n (L1 paling bawah), masing-masing :b bin (B01…) — total :t bin.', ['n' => max(1, (int) $rakForm['levels']), 'b' => max(0, (int) $rakForm['bins_per_level']), 't' => max(1, (int) $rakForm['levels']) * max(0, (int) $rakForm['bins_per_level'])]) }}
+                                {{ __('Akan dibuat: tingkat L1 sampai L:n (L1 paling bawah), masing-masing :b bin (B01…), total :t bin.', ['n' => max(1, (int) $rakForm['levels']), 'b' => max(0, (int) $rakForm['bins_per_level']), 't' => max(1, (int) $rakForm['levels']) * max(0, (int) $rakForm['bins_per_level'])]) }}
                             </div>
                         @elseif ($popup === 'tingkat')
                             <div class="row g-3">
@@ -283,7 +283,7 @@
                             </div>
                             <div class="form-text">{{ __('Kode hanya bisa diubah selama bin di bawahnya belum pernah dipakai; kode bin ikut berubah.') }}</div>
                         @elseif ($popup === 'nonaktif' && $target)
-                            <p class="text-muted">{{ __('Sudah pernah dipakai, jadi tidak dihapus — datanya tetap tersimpan. Bin di dalamnya ikut nonaktif dan harus kosong.') }}</p>
+                            <p class="text-muted">{{ __('Sudah pernah dipakai, jadi tidak dihapus; datanya tetap tersimpan. Bin di dalamnya ikut nonaktif dan harus kosong.') }}</p>
                             <label class="form-label" for="nonaktif-alasan">{{ __('Alasan') }} <span class="wajib">*</span></label>
                             <select class="form-select @error('nonaktif.reason') is-invalid @enderror" id="nonaktif-alasan" wire:model="nonaktifAlasan">
                                 <option value="">{{ __('Pilih alasan…') }}</option>
@@ -360,7 +360,7 @@
                                                 wire:confirm="{{ __('Hapus bin :k? Belum pernah dipakai, jadi dihapus permanen. Pastikan label fisik bin ini dicopot dari rak.', ['k' => $satu->code]) }}"><i class="bi bi-trash"></i> {{ __('Hapus bin') }}</button>
                                         <span class="small text-warning ms-2"><i class="bi bi-exclamation-triangle"></i> {{ __('Pastikan label fisik bin ini dicopot dari rak.') }}</span>
                                     @elseif ($satu)
-                                        <span class="small text-muted">{{ __('Bin ini pernah dipakai — tidak bisa dihapus. Nonaktifkan lewat tab Bin atau Denah.') }}</span>
+                                        <span class="small text-muted">{{ __('Bin ini pernah dipakai, jadi tidak bisa dihapus. Nonaktifkan lewat tab Bin atau Denah.') }}</span>
                                     @else
                                         <span class="small text-muted">{{ __('Ketuk satu bin untuk hapus/pisah, atau dua bin atau lebih untuk gabung.') }}</span>
                                     @endif

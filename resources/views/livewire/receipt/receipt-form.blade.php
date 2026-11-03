@@ -58,7 +58,7 @@
                 <div class="col-md-4">
                     <x-pilih model="form.warehouse_id" id="grn-gudang" wajib :label="__('Gudang penerima')"
                              :disabled="(bool) $receiptId" :kosong="__('Pilih gudang…')"
-                             :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                             :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
                 </div>
                 <div class="col-md-4">
                     {{-- A-391: vendor dicari ke server (kode atau nama). --}}
@@ -93,7 +93,7 @@
 
     @if ($form['receipt_type'] === 'return')
         <div class="card mb-3">
-            <div class="card-header"><strong>{{ __('Baris retur') }}</strong> <span class="text-muted small">— {{ __('masuk bin Retur, dipilah dari detail RET') }}</span></div>
+            <div class="card-header"><strong>{{ __('Baris retur') }}</strong> <span class="text-muted small">{{ __('masuk bin Retur, dipilah dari detail RET') }}</span></div>
             @if ($ret === null)
                 <div class="card-body text-muted">{{ __('Pilih RET yang sedang diproses.') }}</div>
             @else
@@ -176,7 +176,7 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center gap-2" wire:key="grn-po-{{ $ol->id }}">
                             <span>
                                 <strong>{{ $ol->order?->purchaseRequest?->number }}</strong> · {{ $ol->order?->reference() }}
-                                · {{ $ol->line?->item?->code }} — {{ $ol->line?->item?->name }}
+                                · {{ $ol->line?->item?->code }} · {{ $ol->line?->item?->name }}
                                 · {{ __('sisa') }} {{ number_format($ol->outstandingQty(), 2, ',', '.') }}
                             </span>
                             <button class="btn btn-sm btn-outline-info" type="button" wire:click="pakaiPesanan({{ $ol->id }})">{{ __('Tambah') }}</button>

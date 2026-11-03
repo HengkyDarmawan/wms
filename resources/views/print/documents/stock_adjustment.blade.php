@@ -5,7 +5,7 @@
     <table class="info">
         <tr>
             <td class="k">{{ __('Gudang') }}</td>
-            <td>{{ $adj->warehouse?->code }} — {{ $adj->warehouse?->name }}</td>
+            <td>{{ $adj->warehouse?->code }} · {{ $adj->warehouse?->name }}</td>
             <td class="k">{{ __('Asal') }}</td>
             <td>
                 {{ $adj->origin?->label() }}
@@ -15,9 +15,9 @@
         </tr>
         <tr>
             <td class="k">{{ __('Alasan') }}</td>
-            <td>{{ $adj->reason?->label ?? '—' }}</td>
+            <td>{{ $adj->reason?->label ?? '-' }}</td>
             <td class="k">{{ __('Disetujui') }}</td>
-            <td>{{ $adj->approver?->name ?? '—' }} {{ $adj->approved_at?->lokal()->format('d/m/Y H:i') }}</td>
+            <td>{{ $adj->approver?->name ?? '-' }} {{ $adj->approved_at?->lokal()->format('d/m/Y H:i') }}</td>
         </tr>
     </table>
 

@@ -43,10 +43,10 @@
                                 @endif
                             @elseif ($r['status'] === 'ada_aturan')
                                 <i class="bi bi-dash-circle text-muted"></i>
-                                <span class="text-muted">{{ $r['jenis']->label() }} — {{ __('dilewati: sudah punya aturan') }}</span>
+                                <span class="text-muted">{{ $r['jenis']->label() }} · {{ __('dilewati: sudah punya aturan') }}</span>
                             @else
                                 <i class="bi bi-shield-check text-muted"></i>
-                                <span class="text-muted">{{ $r['jenis']->label() }} — {{ __('dilewati: sudah dijaga lapis minimum sistem') }}</span>
+                                <span class="text-muted">{{ $r['jenis']->label() }} · {{ __('dilewati: sudah dijaga lapis minimum sistem') }}</span>
                             @endif
                         </li>
                     @endforeach

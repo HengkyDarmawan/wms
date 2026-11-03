@@ -33,7 +33,7 @@
     </div>
 
     <div class="card mb-3">
-        <div class="card-header"><strong>{{ __('Kondisi berlaku') }}</strong> <span class="text-muted small">{{ __('— kosongkan semua agar berlaku untuk semua dokumen jenis ini') }}</span></div>
+        <div class="card-header"><strong>{{ __('Kondisi berlaku') }}</strong> <span class="text-muted small">{{ __('kosongkan semua agar berlaku untuk semua dokumen jenis ini') }}</span></div>
         <div class="card-body row g-3">
             <div class="col-md-4">
                 <label class="form-label" for="kondisi-cocok">{{ __('Cara menggabungkan') }}</label>

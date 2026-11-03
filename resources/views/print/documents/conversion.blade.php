@@ -5,9 +5,9 @@
     <table class="info">
         <tr>
             <td class="k">{{ __('Proyek') }}</td>
-            <td>{{ $cnv->project?->code }} — {{ $cnv->project?->name }}</td>
+            <td>{{ $cnv->project?->code }} · {{ $cnv->project?->name }}</td>
             <td class="k">{{ __('Gudang') }}</td>
-            <td>{{ $cnv->warehouse?->code }} — {{ $cnv->warehouse?->name }}</td>
+            <td>{{ $cnv->warehouse?->code }} · {{ $cnv->warehouse?->name }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Jenis') }}</td>
@@ -16,7 +16,7 @@
                 @if ($cnv->reversalOf) · {{ __('Pembalik') }} {{ $cnv->reversalOf->number }} · {{ $cnv->reason?->label }} @endif
             </td>
             <td class="k">{{ __('Selesai') }}</td>
-            <td>{{ $cnv->completer?->name ?? '—' }} {{ $cnv->completed_at?->lokal()->format('d/m/Y H:i') }}</td>
+            <td>{{ $cnv->completer?->name ?? '-' }} {{ $cnv->completed_at?->lokal()->format('d/m/Y H:i') }}</td>
         </tr>
     </table>
 
@@ -68,7 +68,7 @@
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $o->output_kind->label() }}</td>
-                    <td>{{ $o->bin?->code ?? '—' }}</td>
+                    <td>{{ $o->bin?->code ?? '-' }}</td>
                     <td>{{ $o->item?->code }}</td>
                     <td>{{ $o->item?->name }}</td>
                     <td>{{ PrintFormat::tracking($o->lot, null, $o->newPiece) ?: $o->lot_no }}</td>

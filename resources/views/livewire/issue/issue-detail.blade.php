@@ -7,7 +7,7 @@
                 @if ($menunggu) <span class="badge text-bg-warning">{{ __('Menunggu approval') }}</span> @endif
             </h1>
             <p class="text-muted mb-0">
-                {{ $isu->project?->code }} — {{ $isu->project?->name }} · {{ __('Gudang Site') }} {{ $isu->warehouse?->code }}
+                {{ $isu->project?->code }} · {{ $isu->project?->name }} · {{ __('Gudang Site') }} {{ $isu->warehouse?->code }}
                 @if ($isu->reversalOf) · {{ __('Pembalik') }} <a wire:navigate href="{{ route('issues.show', $isu->reversal_of_id) }}">{{ $isu->reversalOf->number }}</a> @endif
                 · {{ __('Dibuat') }} {{ $isu->issuer?->name }}
                 @if ($isu->submitter) · {{ __('Diajukan') }} {{ $isu->submitter->name }} @endif
@@ -17,7 +17,7 @@
             @if ($isu->reason) <p class="small mb-0">{{ __('Alasan pembalikan') }}: {{ $isu->reason->label }}</p> @endif
             @if ($isu->notes) <p class="small mb-0">{{ $isu->notes }}</p> @endif
             @if ($isu->rejectReason && $isu->status->value === 'draft')
-                <p class="text-danger small mb-0">{{ __('Ditolak') }} {{ $isu->approver?->name }}: {{ $isu->rejectReason->label }} — {{ __('ajukan ulang atau batalkan') }}</p>
+                <p class="text-danger small mb-0">{{ __('Ditolak') }} {{ $isu->approver?->name }}: {{ $isu->rejectReason->label }} · {{ __('ajukan ulang atau batalkan') }}</p>
             @endif
             @if ($isu->cancelReason) <p class="text-danger small mb-0">{{ __('Dibatalkan') }}: {{ $isu->cancelReason->label }}</p> @endif
             @foreach ($pembalik as $p)
@@ -106,9 +106,9 @@
                             <td class="text-end {{ (float) $l->qty_base < 0 ? 'text-danger' : '' }}">
                                 {{ number_format((float) $l->qty_base, 2, ',', '.') }} <span class="small text-muted">{{ $l->item?->baseUom?->code }}</span>
                             </td>
-                            <td class="small">{{ $l->work_note ?? '—' }}</td>
+                            <td class="small">{{ $l->work_note ?? '-' }}</td>
                             <td class="small">
-                                {{ $l->movement_id ? '#'.$l->movement_id : '—' }}
+                                {{ $l->movement_id ? '#'.$l->movement_id : '-' }}
                                 @if (in_array((int) $l->id, $sudahDibalik, true)) <span class="badge text-bg-secondary">{{ __('dibalik') }}</span> @endif
                             </td>
                         </tr>

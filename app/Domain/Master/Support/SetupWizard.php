@@ -73,7 +73,7 @@ class SetupWizard
                     $impor !== null ? ['label' => 'Impor struktur gudang dari Excel', 'url' => $impor.'#impor-bins'] : null,
                 ])), selesaiBila: 'ada minimal satu bin penyimpanan di gudang.'),
             // A-414: isi manual lebih dulu; impor Excel hanya pilihan untuk banyak barang.
-            $this->langkah('items', 'Daftarkan item', 'Klik Item baru, isi kode, nama, satuan dasar, dan jenis barang, lalu Simpan item. Impor Excel tidak wajib — hanya untuk banyak barang sekaligus.',
+            $this->langkah('items', 'Daftarkan item', 'Klik Item baru, isi kode, nama, satuan dasar, dan jenis barang, lalu Simpan item. Impor Excel tidak wajib, hanya untuk banyak barang sekaligus.',
                 Item::query()->exists(), $this->rute('items.create') ?? $this->rute('items.index'), false, array_values(array_filter([
                     $impor !== null ? ['label' => 'Banyak barang sekaligus: impor Excel', 'url' => $impor.'#impor-items'] : null,
                 ])), selesaiBila: 'ada minimal satu item.'),
@@ -99,7 +99,7 @@ class SetupWizard
                 selesaiBila: 'ada pengguna aktif lain selain Admin Company.'),
             // A-405: company baru sudah memegang aturan dasar aktif sejak provisioning.
             $this->langkah('approval', 'Atur aturan approval', ApprovalRule::query()->where('is_basic', true)->exists()
-                    ? 'Opsional: aturan dasar sudah aktif — Permintaan disetujui Kepala gudang terkait, dokumen lain oleh atasan langsung pemohon. Ubah bila perlu; tombol Kembalikan ke aturan dasar memulihkannya.'
+                    ? 'Opsional: aturan dasar sudah aktif. Permintaan disetujui Kepala gudang terkait, dokumen lain oleh atasan langsung pemohon. Ubah bila perlu; tombol Kembalikan ke aturan dasar memulihkannya.'
                     : 'Opsional: tanpa aturan dokumen disetujui otomatis. Tombol Pasang aturan dasar membuat aturan umum sekali klik.',
                 ApprovalRule::query()->exists(), $this->rute('approval.rules.index'), true,
                 selesaiBila: 'ada minimal satu aturan approval.'),

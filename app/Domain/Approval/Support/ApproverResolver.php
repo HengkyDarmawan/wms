@@ -161,7 +161,7 @@ class ApproverResolver
     public function label(ApproverType $type, ?int $refId, ?int $managerLevels = null): string
     {
         if ($type === ApproverType::DirectManager) {
-            return $type->label().' — '.self::tingkat($managerLevels).' tingkat';
+            return $type->label().' · '.self::tingkat($managerLevels).' tingkat';
         }
 
         $nama = match ($type) {

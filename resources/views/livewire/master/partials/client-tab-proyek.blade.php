@@ -30,8 +30,8 @@
                         <td>
                             <span class="badge text-bg-{{ $proyek->statusBadge() }}">{{ $proyek->status->label() }}</span>
                         </td>
-                        <td>{{ $proyek->site_codes ?: '—' }}</td>
-                        <td>{{ $proyek->pic?->name ?? '—' }}</td>
+                        <td>{{ $proyek->site_codes ?: '-' }}</td>
+                        <td>{{ $proyek->pic?->name ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr>

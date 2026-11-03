@@ -3,7 +3,7 @@
         <div>
             <h1 class="h3 mb-1">{{ __('Kunci periode stok') }}</h1>
             <p class="text-muted mb-0">
-                {{ __('Setelah dikunci, mutasi dengan tanggal pada atau sebelum tanggal kunci ditolak — termasuk dokumen pembalik. Koreksi diposting di periode berjalan.') }}
+                {{ __('Setelah dikunci, mutasi dengan tanggal pada atau sebelum tanggal kunci ditolak, termasuk dokumen pembalik. Koreksi diposting di periode berjalan.') }}
             </p>
         </div>
     </div>
@@ -70,9 +70,9 @@
                                 <tr>
                                     <td class="text-nowrap">{{ $log->created_at?->lokal()->format('d/m/Y H:i') }}</td>
                                     <td>{{ $log->properties['dari'] ?? __('belum ada') }}</td>
-                                    <td>{{ $log->properties['ke'] ?? '—' }}</td>
+                                    <td>{{ $log->properties['ke'] ?? '-' }}</td>
                                     <td>{{ $log->causer?->name ?? __('Sistem') }}</td>
-                                    <td class="small text-muted">{{ $log->properties['notes'] ?? '—' }}</td>
+                                    <td class="small text-muted">{{ $log->properties['notes'] ?? '-' }}</td>
                                 </tr>
                             @empty
                                 <tr>

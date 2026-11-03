@@ -229,7 +229,7 @@ class ClientInteractionTest extends TenantTestCase
 
         $this->assertTrue($baris->isSubstituted());
         $this->assertTrue($baris->substitutionIsPending());
-        $this->assertSame('BAUT-M12 — Baut M12', $baris->original_item_text);
+        $this->assertSame('BAUT-M12 · Baut M12', $baris->original_item_text);
 
         $baris = app(RespondSubstitution::class)->reject($baris, $this->alasanId(), $this->klien);
 

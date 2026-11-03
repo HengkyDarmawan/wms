@@ -128,7 +128,7 @@ class ReceiptDetail extends Component
             ->contains(fn (GoodsReceiptLine $l) => $l->receivingBinIsQuarantine() && $l->qc_result === null);
 
         if ($perluQc) {
-            $this->dispatch('pesan', teks: __('Barang diterima. Ada barang yang perlu QC — isi hasil QC dulu, lalu klik Selesaikan.'), jenis: 'warning');
+            $this->dispatch('pesan', teks: __('Barang diterima. Ada barang yang perlu QC. Isi hasil QC dulu, lalu klik Selesaikan.'), jenis: 'warning');
 
             return;
         }

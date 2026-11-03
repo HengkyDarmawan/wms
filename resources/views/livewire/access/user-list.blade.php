@@ -100,12 +100,12 @@
                                 @endforelse
                             </td>
                             <td class="small">
-                                {{ $user->orgUnit?->name ?? '—' }}
+                                {{ $user->orgUnit?->name ?? '-' }}
                                 <div class="text-muted">{{ $user->position?->name }}</div>
                             </td>
                             <td><span class="badge text-bg-{{ $status->badge() }}">{{ $status->label() }}</span></td>
                             <td class="small text-muted">
-                                {{ $user->last_login_at?->lokal()->format('d M Y H:i') ?? '—' }}
+                                {{ $user->last_login_at?->lokal()->format('d M Y H:i') ?? '-' }}
                             </td>
                             <td class="text-end">
                                 <div class="dropdown">

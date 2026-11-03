@@ -63,7 +63,7 @@
             <div class="card-header"><strong>{{ __('Ubah bin') }}</strong></div>
             <div class="card-body row g-2">
                 <div class="col-md-4">
-                    <x-pilih model="formBin.storage_category_id" id="ubah-kategori" :label="__('Kategori penyimpanan')" kosong="—"
+                    <x-pilih model="formBin.storage_category_id" id="ubah-kategori" :label="__('Kategori penyimpanan')" kosong="-"
                              :options="$storageCategories->map(fn ($k) => ['value' => $k->id, 'text' => $k->name])->all()" />
                 </div>
                 <div class="col-md-4">
@@ -98,7 +98,7 @@
             </div>
             <div class="col-lg-3">
                 <x-pilih model="warehouseFilter" id="filter-gudang-bin" live :label="__('Gudang')" :kosong="__('Semua gudang')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-lg-2">
                 <label class="form-label" for="filter-jenis-bin">{{ __('Jenis') }}</label>
@@ -167,25 +167,25 @@
                                     <div class="small text-muted">{{ $bin->project->code }}</div>
                                 @endif
                             </td>
-                            <td>{{ $bin->warehouse?->code ?? '—' }}</td>
+                            <td>{{ $bin->warehouse?->code ?? '-' }}</td>
                             <td class="small">
                                 @if ($bin->rackLevel)
                                     {{ $bin->rackLevel->rack?->zone?->code }} · {{ $bin->rackLevel->rack?->code }} · {{ $bin->rackLevel->code }}
                                     @if ($bin->rackLevel->rack?->is_area) <span class="badge text-bg-secondary">{{ __('area') }}</span> @endif
                                 @else
-                                    —
+                                    -
                                 @endif
                                 @if ($bin->mainBin) <div class="text-muted">{{ __('digabung ke') }} {{ $bin->mainBin->code }} ({{ mb_strtolower($bin->merge_direction?->label() ?? '') }}, {{ mb_strtolower($bin->merge_type?->label() ?? '') }})</div> @endif
                             </td>
                             <td>{{ $bin->bin_type->label() }}</td>
                             <td>
-                                {{ $bin->storageCategory?->name ?? '—' }}
+                                {{ $bin->storageCategory?->name ?? '-' }}
                                 @if ($bin->blocksOnOverCapacity())
                                     <span class="badge text-bg-danger">{{ __('Blokir') }}</span>
                                 @endif
                             </td>
                             <td class="text-end small">
-                                {{ collect(['' => $bin->capacity_qty, ' kg' => $bin->capacity_weight, ' m³' => $bin->capacity_volume, ' ('.__('panjang').')' => $bin->capacity_length])->filter(fn ($v) => $v !== null)->map(fn ($v, $s) => (float) $v.$s)->implode(' · ') ?: '—' }}
+                                {{ collect(['' => $bin->capacity_qty, ' kg' => $bin->capacity_weight, ' m³' => $bin->capacity_volume, ' ('.__('panjang').')' => $bin->capacity_length])->filter(fn ($v) => $v !== null)->map(fn ($v, $s) => (float) $v.$s)->implode(' · ') ?: '-' }}
                             </td>
                             <td>
                                 <span class="badge text-bg-{{ $bin->bin_status->badge() }}">

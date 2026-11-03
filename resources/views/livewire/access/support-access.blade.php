@@ -15,7 +15,7 @@
 
                     <form wire:submit="beri">
                         <div class="mb-3">
-                            <x-pilih model="platformUserId" id="platformUserId" wajib :label="__('Super Admin')" :kosong="__('— Pilih —')"
+                            <x-pilih model="platformUserId" id="platformUserId" wajib :label="__('Super Admin')" :kosong="__('(Pilih)')"
                                      :options="$superAdmins->map(fn ($sa) => ['value' => $sa->id, 'text' => $sa->name, 'sub' => $sa->email])->all()" />
                         </div>
 
@@ -70,7 +70,7 @@
                         <div class="border rounded p-2 mb-2" wire:key="aktif-{{ $akses->id }}">
                             <div class="d-flex justify-content-between align-items-start gap-2">
                                 <div>
-                                    <div class="fw-semibold">{{ $akses->platformUser?->name ?? '—' }}</div>
+                                    <div class="fw-semibold">{{ $akses->platformUser?->name ?? '-' }}</div>
                                     <div class="small text-muted">
                                         {{ $akses->starts_at->lokal()->format('d M Y H:i') }}
                                         &ndash;
@@ -110,7 +110,7 @@
                             <tbody>
                                 @forelse ($riwayat as $akses)
                                     <tr wire:key="riwayat-{{ $akses->id }}">
-                                        <td class="small">{{ $akses->platformUser?->name ?? '—' }}</td>
+                                        <td class="small">{{ $akses->platformUser?->name ?? '-' }}</td>
                                         <td class="small text-muted">
                                             {{ $akses->starts_at->lokal()->format('d M Y H:i') }}
                                             &ndash;

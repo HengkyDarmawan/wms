@@ -28,7 +28,7 @@
             </div>
             <div class="col-md-5">
                 <x-pilih model="formatId" id="ld-format" live wajib :label="__('Ukuran label')"
-                         :options="$formats->map(fn ($f) => ['value' => $f->id, 'text' => $f->name.' — '.$f->summary()])->all()" />
+                         :options="$formats->map(fn ($f) => ['value' => $f->id, 'text' => $f->name.' · '.$f->summary()])->all()" />
             </div>
             <div class="col-md-3 small text-muted">
                 {{ __('Teks utama') }}: {{ $sumber['title'] }} · {{ __('Teks kedua') }}: {{ $sumber['subtitle'] }} · {{ __('Keterangan') }}: {{ $sumber['detail'] }}

@@ -109,7 +109,7 @@ class SimpleApprovalTest extends TenantTestCase
 
         $hasil = $sim->run($ctx);
 
-        $this->assertSame('Aturan dasar — Permintaan Material', $hasil['rule']['name']);
+        $this->assertSame('Aturan dasar · Permintaan Material', $hasil['rule']['name']);
         $this->assertSame([(int) $kepalaCkg->id], $hasil['layers'][0]['approver_user_ids'], 'Kepala gudang CKG saja, bukan BKS.');
     }
 
@@ -193,7 +193,7 @@ class SimpleApprovalTest extends TenantTestCase
 
         $this->assertNotSame($sederhana->id, $lanjutan->id);
         $this->assertSame($bentuk($lanjutan), $bentuk($sederhana));
-        $this->assertSame('Transfer — di gudang CKG', $sederhana->name, 'Nama otomatis dari pilihan.');
+        $this->assertSame('Transfer · di gudang CKG', $sederhana->name, 'Nama otomatis dari pilihan.');
 
         // Aturan tersimpan yang memakai isian lanjutan dibuka di mode lanjutan.
         $rumit = $this->aturan(ApprovalDocumentType::Transfer, [$this->lapisUser($admin, extra: ['timeout_hours' => 48])]);
@@ -249,7 +249,7 @@ class SimpleApprovalTest extends TenantTestCase
             ->call('keMode', 'lanjutan')
             ->assertSeeHtml('class="nx-pilih-tag"')
             ->assertSeeHtml('id="kondisi-gudang"')
-            ->assertSee('CKG — Gudang Utama Cakung')
+            ->assertSee('CKG · Gudang Utama Cakung')
             ->assertDontSeeHtml('multiple size=');
 
         $komponen->set('form.name', 'Dua gudang')
@@ -312,7 +312,7 @@ class SimpleApprovalTest extends TenantTestCase
 
         $dasarReq->refresh()->load('steps');
         $this->assertTrue($dasarReq->is_active && $dasarReq->is_basic);
-        $this->assertSame('Aturan dasar — Permintaan Material', $dasarReq->name);
+        $this->assertSame('Aturan dasar · Permintaan Material', $dasarReq->name);
         $this->assertSame(900, $dasarReq->priority);
         $this->assertSame(ApproverType::WarehouseHead, $dasarReq->steps->sole()->approver_type);
 

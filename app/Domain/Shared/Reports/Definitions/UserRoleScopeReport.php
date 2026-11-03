@@ -85,15 +85,15 @@ class UserRoleScopeReport extends Report
                     $baris[] = [
                         'user' => $user->name,
                         'email' => $user->email,
-                        'role' => $penugasan->role?->name ?? '—',
+                        'role' => $penugasan->role?->name ?? '-',
                         'cakupan' => match ($penugasan->scope_type) {
                             ScopeType::All => 'Seluruh company',
                             ScopeType::Warehouse => 'Gudang: '.($gudang[$penugasan->scope_id] ?? $penugasan->scope_id),
                             ScopeType::Project => 'Proyek: '.($proyek[$penugasan->scope_id] ?? $penugasan->scope_id),
                         },
-                        'berlaku_dari' => $penugasan->valid_from?->format('d/m/Y') ?? '—',
-                        'berlaku_sampai' => $penugasan->valid_until?->format('d/m/Y') ?? '—',
-                        'atasan' => $user->manager?->name ?? '—',
+                        'berlaku_dari' => $penugasan->valid_from?->format('d/m/Y') ?? '-',
+                        'berlaku_sampai' => $penugasan->valid_until?->format('d/m/Y') ?? '-',
+                        'atasan' => $user->manager?->name ?? '-',
                         'status' => $user->status()->label(),
                     ];
                 }

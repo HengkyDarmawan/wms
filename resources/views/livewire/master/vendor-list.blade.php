@@ -119,7 +119,7 @@
                     @if ($dampak['po']->isEmpty() && $dampak['pesanan']->isEmpty())
                         <div class="text-muted">{{ __('Tidak ada PO atau catatan pemesanan terbuka untuk vendor ini.') }}</div>
                     @else
-                        <div class="mb-1">{{ __('Masih terbuka — tetap berjalan, bisa ditutup atau dibatalkan dari dokumennya:') }}</div>
+                        <div class="mb-1">{{ __('Masih terbuka (tetap berjalan, bisa ditutup atau dibatalkan dari dokumennya):') }}</div>
                         @if ($dampak['po']->isNotEmpty())
                             <div>{{ __('PO') }} ({{ $dampak['po']->count() }}):
                                 @foreach ($dampak['po'] as $po)
@@ -212,8 +212,8 @@
                             </td>
                             <td>{{ $vendor->vendor_type->label() }}</td>
                             <td>
-                                <div>{{ $vendor->contact_name ?: '—' }}</div>
-                                <div class="small text-muted">{{ $vendor->phone ?: $vendor->email ?: '—' }}</div>
+                                <div>{{ $vendor->contact_name ?: '-' }}</div>
+                                <div class="small text-muted">{{ $vendor->phone ?: $vendor->email ?: '-' }}</div>
                             </td>
                             <td class="text-end">{{ $vendor->pesanan_count }}</td>
                             <td>

@@ -21,7 +21,7 @@
             @if ($type === 'label_bin')
                 <div class="col-md-3">
                     <x-pilih model="warehouseFilter" id="lbl-gudang" live :label="__('Gudang')" :kosong="__('Semua gudang')"
-                             :options="$gudang->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                             :options="$gudang->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
                 </div>
             @endif
             <div class="col-md">
@@ -107,7 +107,7 @@
             <div class="card-body row g-3 align-items-end">
                 <div class="col-md-4">
                     <x-pilih model="formatId" id="lbl-kertas" live wajib :label="__('Ukuran label')"
-                             :options="$formats->map(fn ($f) => ['value' => $f->id, 'text' => $f->name.' — '.$f->summary()])->all()" />
+                             :options="$formats->map(fn ($f) => ['value' => $f->id, 'text' => $f->name.' · '.$f->summary()])->all()" />
                     @if ($bisaDesain)
                         <div class="form-text"><a wire:navigate href="{{ route('label-designs.index', ['type' => $type, 'format' => $formatId]) }}">{{ __('Atur desain label ini') }}</a> · <a wire:navigate href="{{ route('label-formats.index') }}">{{ __('Kelola ukuran') }}</a></div>
                     @endif

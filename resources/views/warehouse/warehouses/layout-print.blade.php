@@ -36,7 +36,7 @@
 </head>
 <body>
     <div class="alat"><button type="button" onclick="window.print()">{{ __('Cetak') }}</button></div>
-    <h1>{{ __('Denah gudang') }} {{ $gudang->code }} — {{ $gudang->name }}</h1>
+    <h1>{{ __('Denah gudang') }} {{ $gudang->code }} · {{ $gudang->name }}</h1>
     <div class="muted">{{ __('Dicetak') }} {{ now()->lokal()->format('d/m/Y H:i') }} · {{ __('tampak atas; ▣ = barang yang ditetapkan (Tempat Simpan), * = Khusus barang ini') }}</div>
 
     <svg viewBox="{{ -$M }} {{ -$M }} {{ $K['w'] * $S + 2 * $M }} {{ $K['h'] * $S + 2 * $M }}" role="img" aria-label="{{ __('Denah gudang') }} {{ $gudang->code }}" data-cetak-svg>
@@ -50,7 +50,7 @@
         @foreach ($d['zones'] as $z)
             <g transform="translate({{ $z['x'] * $S }},{{ $z['y'] * $S }})">
                 <rect x="0" y="0" width="{{ $z['w'] * $S }}" height="{{ $z['h'] * $S }}" rx="8" fill="#eef2ff" fill-opacity="0.5" stroke="#6366f1" stroke-width="2"/>
-                <text x="10" y="22" font-size="17" font-weight="600" fill="#4338ca">Zona {{ $z['code'] }} — {{ $pendek($z['name'], 28) }}</text>
+                <text x="10" y="22" font-size="17" font-weight="600" fill="#4338ca">Zona {{ $z['code'] }} · {{ $pendek($z['name'], 28) }}</text>
                 @foreach ($z['racks'] as $r)
                     @php
                         $brg = $barangRak->get($z['code'].'|'.$r['code'])['barang'] ?? [];
@@ -84,7 +84,7 @@
                     <tr>
                         <td>{{ $r['zona'] }} · {{ $r['rak'] }}{{ $r['area'] ? ' ('.__('area').')' : '' }}</td>
                         <td>{{ $b['dimana'] }}</td>
-                        <td><strong>{{ $b['code'] }}</strong> — {{ $b['name'] }} @if ($b['khusus'])<span class="khusus">· {{ __('Khusus barang ini') }}</span>@endif</td>
+                        <td><strong>{{ $b['code'] }}</strong> · {{ $b['name'] }} @if ($b['khusus'])<span class="khusus">· {{ __('Khusus barang ini') }}</span>@endif</td>
                     </tr>
                 @endforeach
             @endforeach

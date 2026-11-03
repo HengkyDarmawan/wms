@@ -9,7 +9,7 @@
                 {{ $prq->origin->label() }}
                 @if ($prq->materialRequest) · <a wire:navigate href="{{ route('requests.show', $prq->material_request_id) }}">{{ $prq->materialRequest->number }}</a> @endif
                 · {{ __('Gudang tujuan') }} {{ $prq->warehouse?->code }}
-                @if ($prq->project) · {{ $prq->project->code }} — {{ $prq->project->name }} @endif
+                @if ($prq->project) · {{ $prq->project->code }} · {{ $prq->project->name }} @endif
                 · {{ __('Dibuat') }} {{ $prq->creator?->name ?? __('Sistem') }}
                 @if ($prq->submitter) · {{ __('Diajukan') }} {{ $prq->submitter->name }} @endif
                 @if ($prq->approved_at) · {{ __('Disetujui') }} {{ $prq->approver?->name ?? __('otomatis') }} @endif
@@ -83,7 +83,7 @@
                             <td class="text-end">{{ number_format((float) $l->qty_base, 2, ',', '.') }} <span class="small text-muted">{{ $l->item?->baseUom?->code }}</span></td>
                             <td class="text-end">{{ number_format((float) $l->qty_ordered, 2, ',', '.') }}</td>
                             <td class="text-end">{{ number_format((float) $l->qty_received, 2, ',', '.') }}</td>
-                            <td>{{ $l->required_date?->format('d/m/Y') ?? '—' }}</td>
+                            <td>{{ $l->required_date?->format('d/m/Y') ?? '-' }}</td>
                             <td class="small">{{ $l->notes }}</td>
                         </tr>
                     @endforeach

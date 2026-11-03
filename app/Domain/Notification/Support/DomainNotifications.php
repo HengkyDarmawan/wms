@@ -71,7 +71,7 @@ class DomainNotifications
             foreach (app(DeliveryRecipients::class)->recipientsFor($sj) as $penerima) {
                 $this->notifier->send($penerima, 'shipment.shipped',
                     'SJ '.$sj->number.' berangkat ke '.$sj->destinationLabel(),
-                    'Pengantar: '.($sj->carrierLabel() ?: '—').'. Isi bukti terima saat barang tiba.',
+                    'Pengantar: '.($sj->carrierLabel() ?: '-').'. Isi bukti terima saat barang tiba.',
                     route($penerima->isClient() ? 'portal.shipments.proof' : 'shipments.show', $sj->id, false),
                     'shipment', (int) $sj->id, [], $actor);
             }
@@ -225,7 +225,7 @@ class DomainNotifications
 
             $this->notifier->send($this->notifier->recipients('request.confirm_cancel', null, (int) $req->project_id),
                 'request.line_cancel_requested', 'Permintaan batal baris '.$req->number,
-                $line->displayName().' — pastikan belum berjalan, lalu konfirmasi atau tolak.',
+                $line->displayName().' · pastikan belum berjalan, lalu konfirmasi atau tolak.',
                 route('requests.show', $req->id, false), 'material_request_line', (int) $line->id, [], $actor);
         });
     }

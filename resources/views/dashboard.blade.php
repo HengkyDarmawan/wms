@@ -22,7 +22,7 @@
     <div class="row g-3 mb-4">
         @forelse ($cards as $c)
             <div class="col-6 col-md-4 col-xl-3">
-                <a class="card h-100 text-decoration-none" href="{{ $c['url'] }}">
+                <a class="card h-100 text-decoration-none" wire:navigate.hover href="{{ $c['url'] }}">
                     <div class="card-body d-flex align-items-start gap-3">
                         <i class="bi {{ $c['icon'] }} fs-3 text-{{ $c['count'] > 0 ? $c['tone'] : 'secondary' }}" aria-hidden="true"></i>
                         <div>

@@ -78,10 +78,10 @@ class ProjectListReport extends Report
             ->map(fn (Project $proyek) => [
                 'kode' => $proyek->code,
                 'nama' => $proyek->name,
-                'klien' => $proyek->is_internal ? 'Proyek Internal' : ($proyek->client?->name ?? '—'),
-                'pic' => $proyek->pic?->name ?? '—',
-                'mulai' => $proyek->start_date?->format('d/m/Y') ?? '—',
-                'target_selesai' => $proyek->target_end_date?->format('d/m/Y') ?? '—',
+                'klien' => $proyek->is_internal ? 'Proyek Internal' : ($proyek->client?->name ?? '-'),
+                'pic' => $proyek->pic?->name ?? '-',
+                'mulai' => $proyek->start_date?->format('d/m/Y') ?? '-',
+                'target_selesai' => $proyek->target_end_date?->format('d/m/Y') ?? '-',
                 'gudang_site' => (int) ($siteCount[$proyek->id] ?? 0),
                 'status' => $proyek->status->label(),
             ]);

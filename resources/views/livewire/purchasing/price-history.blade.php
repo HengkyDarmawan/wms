@@ -3,7 +3,7 @@
     <div class="card mb-3">
         <div class="card-body row g-3 align-items-end">
             <div class="col-md-4">
-                <div class="fw-semibold">{{ $item->code }} — {{ $item->name }}</div>
+                <div class="fw-semibold">{{ $item->code }} · {{ $item->name }}</div>
                 <div class="small text-muted">{{ __('Harga satuan per :u, seperti tercatat di PO (tanda PPN per baris).', ['u' => $item->baseUom?->code]) }}</div>
             </div>
             <div class="col-md-3">
@@ -45,8 +45,8 @@
                             <td>{{ $r['vendor'] }}</td>
                             <td class="text-end text-nowrap">{{ $rp($r['terakhir']['harga']) }} <div class="small text-muted">{{ $r['terakhir']['tanggal']->format('d/m/Y') }}{{ $r['terakhir']['ppn'] ? ' · '.__('termasuk PPN') : '' }}</div></td>
                             @foreach ($r['jendela'] as $j)
-                                <td class="text-end text-nowrap">{{ $j['termurah'] === null ? '—' : $rp($j['termurah']) }}</td>
-                                <td class="text-end text-nowrap">{{ $j['rata'] === null ? '—' : $rp($j['rata']) }} @if ($j['jumlah_po']) <div class="small text-muted">{{ $j['jumlah_po'] }} PO</div> @endif</td>
+                                <td class="text-end text-nowrap">{{ $j['termurah'] === null ? '-' : $rp($j['termurah']) }}</td>
+                                <td class="text-end text-nowrap">{{ $j['rata'] === null ? '-' : $rp($j['rata']) }} @if ($j['jumlah_po']) <div class="small text-muted">{{ $j['jumlah_po'] }} PO</div> @endif</td>
                             @endforeach
                         </tr>
                     @empty

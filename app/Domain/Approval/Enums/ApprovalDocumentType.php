@@ -67,7 +67,7 @@ enum ApprovalDocumentType: string
     /** Label singkat untuk tabel: "REQ — Permintaan Material". */
     public function longLabel(): string
     {
-        return $this->code().' — '.$this->label();
+        return $this->code().' · '.$this->label();
     }
 
     /**

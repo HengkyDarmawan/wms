@@ -104,7 +104,7 @@ class ModuleReportTest extends TenantTestCase
 
         $terima = $this->rows('penerimaan-vendor')->sole();
         $this->assertSame($grn->number, $terima['grn']);
-        $this->assertSame('V-BAJA — PT Baja Jaya', $terima['vendor']);
+        $this->assertSame('V-BAJA · PT Baja Jaya', $terima['vendor']);
         $this->assertSame(2, $terima['baris']);
         $this->assertSame(13.0, $terima['jumlah']);
         $this->assertTrue($this->rows('penerimaan-vendor', ['vendor_id' => 999999])->isEmpty(), 'Penyaring vendor.');
@@ -152,7 +152,7 @@ class ModuleReportTest extends TenantTestCase
 
         $this->actingAs($this->admin);
         $tugas = $this->rows('tugas-approval-terbuka')->sole();
-        $this->assertSame([$kepala->name, 'RTV — Retur ke Vendor', $rtv->number, 1, 'Tidak'], [$tugas['approver'], $tugas['jenis'], $tugas['nomor'], $tugas['lapis'], $tugas['lewat']]);
+        $this->assertSame([$kepala->name, 'RTV · Retur ke Vendor', $rtv->number, 1, 'Tidak'], [$tugas['approver'], $tugas['jenis'], $tugas['nomor'], $tugas['lapis'], $tugas['lewat']]);
 
         $menunggu = $this->rows('dokumen-menunggu-approval')->sole();
         $this->assertSame([1, 1, $rtv->number], [$menunggu['dokumen'], $menunggu['tugas'], $menunggu['tertua']]);
@@ -172,7 +172,7 @@ class ModuleReportTest extends TenantTestCase
         $this->assertSame([$rtv->number, $kepala->name, $atasan->name, $this->admin->name], [$eskalasi['nomor'], $eskalasi['dari'], $eskalasi['ke'], $eskalasi['oleh']]);
 
         $putus = $this->rows('waktu-putus-approval')->sole();
-        $this->assertSame(['RTV — Retur ke Vendor', 1, 1, 1, 0], [$putus['jenis'], $putus['lapis'], $putus['keputusan'], $putus['setuju'], $putus['tolak']]);
+        $this->assertSame(['RTV · Retur ke Vendor', 1, 1, 1, 0], [$putus['jenis'], $putus['lapis'], $putus['keputusan'], $putus['setuju'], $putus['tolak']]);
         $this->assertTrue($this->rows('tugas-approval-terbuka')->isEmpty(), 'Dokumen sudah diputus.');
         $this->assertTrue($this->rows('waktu-putus-approval', ['document_type' => 'material_request'])->isEmpty(), 'Penyaring jenis dokumen.');
 

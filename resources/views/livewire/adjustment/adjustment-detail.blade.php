@@ -84,7 +84,7 @@
                             <td class="text-end {{ (float) $l->qty_delta < 0 ? 'text-danger' : 'text-success' }}">
                                 {{ (float) $l->qty_delta > 0 ? '+' : '' }}{{ number_format((float) $l->qty_delta, 2, ',', '.') }}
                             </td>
-                            <td class="small">{{ $l->movement_id ? '#'.$l->movement_id : '—' }}</td>
+                            <td class="small">{{ $l->movement_id ? '#'.$l->movement_id : '-' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

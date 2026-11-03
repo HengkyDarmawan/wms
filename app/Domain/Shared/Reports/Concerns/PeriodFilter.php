@@ -23,7 +23,7 @@ trait PeriodFilter
     protected function penyaringGudang(): array
     {
         return ['label' => 'Gudang', 'cari' => true, 'options' => Warehouse::query()->orderBy('code')->get(['id', 'code', 'name'])
-            ->mapWithKeys(fn (Warehouse $w) => [$w->id => $w->code.' — '.$w->name])->all()];
+            ->mapWithKeys(fn (Warehouse $w) => [$w->id => $w->code.' · '.$w->name])->all()];
     }
 
     /**

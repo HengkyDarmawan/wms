@@ -42,7 +42,7 @@
                                 <input class="form-check-input" type="checkbox" id="pic-proyek-{{ $proyek->id }}"
                                        value="{{ $proyek->id }}" wire:model="formPic.projects">
                                 <label class="form-check-label" for="pic-proyek-{{ $proyek->id }}">
-                                    {{ $proyek->code }} — {{ $proyek->name }}
+                                    {{ $proyek->code }} · {{ $proyek->name }}
                                 </label>
                             </div>
                         @empty
@@ -51,7 +51,7 @@
                     </div>
                     @error('formPic.projects') <div class="small text-danger mt-1">{{ $message }}</div> @enderror
                     <div class="form-text">
-                        {{ __('Keterangan kontak — siapa mengurus apa. Hak lihat portal diatur lewat Tim site di halaman proyek.') }}
+                        {{ __('Keterangan kontak: siapa mengurus apa. Hak lihat portal diatur lewat Tim site di halaman proyek.') }}
                     </div>
                 </div>
 
@@ -79,7 +79,7 @@
                 <div class="col-md-4">
                     <label class="form-label" for="pic-alasan">{{ __('Alasan') }} <span class="wajib">*</span></label>
                     <select class="form-select @error('reasonCode') is-invalid @enderror" id="pic-alasan" wire:model="reasonCode">
-                        <option value="">{{ __('— pilih —') }}</option>
+                        <option value="">{{ __('(pilih)') }}</option>
                         @foreach ($alasan as $kode => $label)
                             <option value="{{ $kode }}">{{ $label }}</option>
                         @endforeach
@@ -130,7 +130,7 @@
     <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
         <div>
             <strong>{{ __('PIC klien') }}</strong>
-            <span class="text-muted small ms-2">{{ __('Orang dari pihak klien — bukan staf kita.') }}</span>
+            <span class="text-muted small ms-2">{{ __('Orang dari pihak klien, bukan staf kita.') }}</span>
         </div>
         @can('create', \App\Domain\Master\Models\Client::class)
             <button class="btn btn-sm btn-primary" type="button" wire:click="buatPic">
@@ -156,12 +156,12 @@
                 @forelse ($data as $pic)
                     <tr wire:key="pic-{{ $pic->id }}">
                         <td class="fw-semibold">{{ $pic->name }}</td>
-                        <td>{{ $pic->position ?: '—' }}</td>
+                        <td>{{ $pic->position ?: '-' }}</td>
                         <td>
-                            <div>{{ $pic->phone ?: '—' }}</div>
-                            <div class="small text-muted">{{ $pic->email ?: '—' }}</div>
+                            <div>{{ $pic->phone ?: '-' }}</div>
+                            <div class="small text-muted">{{ $pic->email ?: '-' }}</div>
                         </td>
-                        <td class="small">{{ $pic->projects->pluck('code')->implode(', ') ?: '—' }}</td>
+                        <td class="small">{{ $pic->projects->pluck('code')->implode(', ') ?: '-' }}</td>
                         <td>
                             @if ($pic->portalUser !== null)
                                 <a wire:navigate href="{{ route('users.show', $pic->portalUser->id) }}">{{ $pic->portalUser->name }}</a>

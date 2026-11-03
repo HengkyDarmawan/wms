@@ -114,8 +114,8 @@ class LabelDesignTest extends TenantTestCase
         // Ukuran nonaktif tidak ditawarkan dan tidak bisa dipakai mencetak.
         $kepala = $this->makeUser('warehouse_head');
         Livewire::actingAs($kepala)->test(LabelPrint::class, ['type' => 'label_item'])
-            ->assertDontSee('Thermal 40×30 mm —')
-            ->assertSee('Thermal 50×30 mm —');
+            ->assertDontSee('Thermal 40×30 mm ·')
+            ->assertSee('Thermal 50×30 mm ·');
         $this->actingAs($kepala)->getJson($this->tenantUrl('labels/print?type=label_item&ids='.$this->baut->id.'&format='.$kecil->id))
             ->assertStatus(422)->assertJsonValidationErrors('format');
 

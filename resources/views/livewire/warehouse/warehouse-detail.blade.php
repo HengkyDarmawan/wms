@@ -77,7 +77,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $bin->bin_type->label() }}</td>
-                                <td>{{ $bin->storageCategory?->name ?? '—' }}</td>
+                                <td>{{ $bin->storageCategory?->name ?? '-' }}</td>
                                 <td>
                                     <span class="badge text-bg-{{ $bin->bin_status->badge() }}">
                                         {{ $bin->bin_status->label() }}

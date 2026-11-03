@@ -174,7 +174,7 @@ class PackageLabelIssueReturnTest extends TenantTestCase
 
         // TC-RPT-12: laporan per vendor menelusuri retur rusak lewat label.
         $this->actingAs($this->makeUser('warehouse_head'));
-        $baris = app(VendorProblemReport::class)->rows([])->firstWhere('item', $this->kabel->code.' — '.$this->kabel->name);
+        $baris = app(VendorProblemReport::class)->rows([])->firstWhere('item', $this->kabel->code.' · '.$this->kabel->name);
         $this->assertNotNull($baris);
         $this->assertSame(24.0, $baris['diterima']);
         $this->assertSame(8.0, $baris['retur_rusak']);

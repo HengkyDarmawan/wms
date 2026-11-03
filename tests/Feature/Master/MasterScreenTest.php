@@ -153,8 +153,8 @@ class MasterScreenTest extends TenantTestCase
             ->assertDontSee('validation.');
 
         // Beli/Pinjam mengikuti jenis barang, tanpa pilihan sifat baris.
-        $c->set('form.item_kind', 'serial_tool')->assertSee(__('Pinjam — kembali ke gudang'))
-            ->set('form.item_kind', 'standard')->assertSee(__('Beli — tidak kembali'))
+        $c->set('form.item_kind', 'serial_tool')->assertSee(__('Pinjam (kembali ke gudang)'))
+            ->set('form.item_kind', 'standard')->assertSee(__('Beli (tidak kembali)'))
             ->assertDontSee(__('Sifat baris bawaan'));
     }
 }

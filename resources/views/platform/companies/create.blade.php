@@ -37,7 +37,7 @@
                 <label class="form-label" for="paket">{{ __('Paket') }} <span class="wajib">*</span></label>
                 <select class="form-select @error('plan_id') is-invalid @enderror" id="paket" name="plan_id" required>
                     @foreach ($plans as $p)
-                        <option value="{{ $p->id }}" @selected(old('plan_id') == $p->id)>{{ $p->name }} — {{ __('trial') }} {{ $p->trial_days }} {{ __('hari') }}</option>
+                        <option value="{{ $p->id }}" @selected(old('plan_id') == $p->id)>{{ $p->name }} · {{ __('trial') }} {{ $p->trial_days }} {{ __('hari') }}</option>
                     @endforeach
                 </select>
                 @error('plan_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -55,7 +55,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-12"><hr class="my-1"><div class="small text-muted">{{ __('Admin Company pertama — menerima undangan untuk mengatur password.') }}</div></div>
+            <div class="col-12"><hr class="my-1"><div class="small text-muted">{{ __('Admin Company pertama. Ia menerima undangan untuk mengatur password.') }}</div></div>
             <div class="col-md-5">
                 <label class="form-label" for="admin-nama">{{ __('Nama Admin Company') }} <span class="wajib">*</span></label>
                 <input class="form-control @error('admin_name') is-invalid @enderror" id="admin-nama" name="admin_name" value="{{ old('admin_name') }}" maxlength="100" required>

@@ -126,7 +126,7 @@
                             <td class="font-monospace">{{ $f->code }}</td>
                             <td>{{ $f->name }}</td>
                             <td>{{ $f->summary() }}</td>
-                            <td>{{ implode(', ', $bawaan[$f->id] ?? []) ?: '—' }}</td>
+                            <td>{{ implode(', ', $bawaan[$f->id] ?? []) ?: '-' }}</td>
                             <td><span class="badge {{ $f->is_active ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $f->is_active ? __('Aktif') : __('Nonaktif') }}</span></td>
                             <td class="text-end text-nowrap">
                                 @if ($f->is_active)

@@ -142,8 +142,8 @@
                                 @if ($l->serial) <div class="small text-muted">{{ __('Serial') }} {{ $l->serial->serial_no }}</div> @endif
                                 @if ($l->piece) <div class="small text-muted">{{ __('Potongan') }} {{ $l->piece->piece_no }}</div> @endif
                             </td>
-                            <td>{{ $l->pickTaskLine?->bin?->code ?? ($sj->isWithoutPicking() ? __('Proyek').' '.$sj->originProject?->code : '—') }}</td>
-                            <td class="small">{{ $asal[$l->id] ?? '—' }}</td>
+                            <td>{{ $l->pickTaskLine?->bin?->code ?? ($sj->isWithoutPicking() ? __('Proyek').' '.$sj->originProject?->code : '-') }}</td>
+                            <td class="small">{{ $asal[$l->id] ?? '-' }}</td>
                             <td class="text-end">{{ number_format((float) $l->qty_shipped, 2, ',', '.') }}</td>
                             <td class="text-end">{{ number_format((float) $l->qty_delivered, 2, ',', '.') }}</td>
                             <td><span class="badge text-bg-light">{{ $sj->isReturnPickup() ? __('Retur') : $l->ownership_effect->label() }}</span></td>

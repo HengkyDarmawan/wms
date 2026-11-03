@@ -21,7 +21,7 @@ use App\Domain\Master\Models\ItemCategory;
 class CompanySettingCatalog
 {
     /** Zona waktu yang didukung; sama dengan `Platform\Actions\CreateCompany`. */
-    public const ZONA_WAKTU = ['Asia/Jakarta' => 'WIB — Asia/Jakarta', 'Asia/Makassar' => 'WITA — Asia/Makassar', 'Asia/Jayapura' => 'WIT — Asia/Jayapura'];
+    public const ZONA_WAKTU = ['Asia/Jakarta' => 'WIB · Asia/Jakarta', 'Asia/Makassar' => 'WITA · Asia/Makassar', 'Asia/Jayapura' => 'WIT · Asia/Jayapura'];
 
     /**
      * @return array<string, array{label: string, hint: string, default: int|float, min: int|float, max: int|float, satuan: string, grup: string, desimal: bool}>

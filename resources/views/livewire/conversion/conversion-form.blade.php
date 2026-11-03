@@ -25,7 +25,7 @@
             </div>
             <div class="col-md-4">
                 <x-pilih model="form.warehouse_id" id="cnv-gudang" live wajib :label="__('Gudang')" :disabled="(bool) $nomor"
-                         :kosong="__('Pilih gudang…')" :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :kosong="__('Pilih gudang…')" :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="cnv-ket">{{ __('Keterangan') }}</label>
@@ -84,7 +84,7 @@
                     <div class="col-12 small text-muted">
                         {{ $batangTerpilih['item_name'] }} · {{ __('panjang') }} <strong>{{ $angka($batangTerpilih['balance']) }} {{ $batangTerpilih['uom'] }}</strong>
                         · {{ __('kerf per potongan') }} <strong>{{ $batangTerpilih['kerf'] === null ? __('belum diatur') : $angka($batangTerpilih['kerf']).' '.$batangTerpilih['uom'] }}</strong>
-                        · {{ __('sisa minimal jadi offcut') }} <strong>{{ $batangTerpilih['min_offcut'] === null ? '—' : $angka($batangTerpilih['min_offcut']).' '.$batangTerpilih['uom'] }}</strong>
+                        · {{ __('sisa minimal jadi offcut') }} <strong>{{ $batangTerpilih['min_offcut'] === null ? '-' : $angka($batangTerpilih['min_offcut']).' '.$batangTerpilih['uom'] }}</strong>
                         ({{ __('di bawah itu otomatis waste') }})
                     </div>
                 @endif
@@ -118,7 +118,7 @@
                                 </td>
                                 <td><input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model.live.debounce.500ms="potong.{{ $i }}.length" aria-label="{{ __('Panjang') }}"></td>
                                 <td><input class="form-control form-control-sm" type="number" step="1" min="1" max="100" wire:model.live.debounce.500ms="potong.{{ $i }}.count" aria-label="{{ __('Jumlah potongan') }}"></td>
-                                <td class="text-end">{{ is_numeric($p['length']) && is_numeric($p['count']) ? $angka((float) $p['length'] * (int) $p['count']) : '—' }}</td>
+                                <td class="text-end">{{ is_numeric($p['length']) && is_numeric($p['count']) ? $angka((float) $p['length'] * (int) $p['count']) : '-' }}</td>
                                 <td class="text-end"><button class="btn btn-sm btn-outline-danger" type="button" wire:click="hapusPotong('{{ $p['id'] }}')" aria-label="{{ __('Hapus baris') }}"><i class="bi bi-x-lg"></i></button></td>
                             </tr>
                             @if ($galat !== '')
@@ -166,7 +166,7 @@
                                     </td>
                                     <td style="width: 22%"><input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model.live.debounce.500ms="tambahan.{{ $bi }}.potong.{{ $pi }}.length" aria-label="{{ __('Panjang') }}"></td>
                                     <td style="width: 18%"><input class="form-control form-control-sm" type="number" step="1" min="1" max="100" wire:model.live.debounce.500ms="tambahan.{{ $bi }}.potong.{{ $pi }}.count" aria-label="{{ __('Jumlah potongan') }}"></td>
-                                    <td class="text-end">{{ is_numeric($p['length']) && is_numeric($p['count']) ? $angka((float) $p['length'] * (int) $p['count']) : '—' }}</td>
+                                    <td class="text-end">{{ is_numeric($p['length']) && is_numeric($p['count']) ? $angka((float) $p['length'] * (int) $p['count']) : '-' }}</td>
                                     <td class="text-end"><button class="btn btn-sm btn-outline-danger" type="button" wire:click="hapusPotongBatang('{{ $b['id'] }}', '{{ $p['id'] }}')" aria-label="{{ __('Hapus baris') }}"><i class="bi bi-x-lg"></i></button></td>
                                 </tr>
                                 @if ($galat !== '')

@@ -36,7 +36,7 @@ class PurchasePriceHistoryReport extends Report
 
     public function description(): string
     {
-        return 'Semua baris PO per item: tanggal, nomor PO, vendor, jumlah, harga satuan, PPN, dan status — dasar memilih vendor dan menilai kenaikan harga.';
+        return 'Semua baris PO per item: tanggal, nomor PO, vendor, jumlah, harga satuan, PPN, dan status, dasar memilih vendor dan menilai kenaikan harga.';
     }
 
     public function columns(): array

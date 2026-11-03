@@ -61,7 +61,7 @@
 
     @if ($dialog === 'isi' && $labelDialog)
         <div class="card-body border-bottom">
-            <strong>{{ __('Cetak label isi — :kode', ['kode' => $labelDialog->code]) }}</strong>
+            <strong>{{ __('Cetak label isi: :kode', ['kode' => $labelDialog->code]) }}</strong>
             <p class="small text-muted mb-2">
                 {{ __('Isi kemasan') }} {{ \App\Domain\Master\Support\QtyFormat::withUnit($labelDialog->qty_remaining, $labelDialog->item?->baseUom?->code) }}
                 {{ __('dibagi rata ke label isi; label isi terakhir berisi sisanya. Setelah itu yang dipindai saat keluar adalah label isinya.') }}
@@ -138,7 +138,7 @@
                                 <div class="small text-muted">{{ __('sisa') }} {{ \App\Domain\Label\Support\PackageLabelLedger::angka((float) $l->qty_remaining) }}</div>
                             @endif
                         </td>
-                        <td class="small">{{ $l->warehouse?->code }} · {{ $l->bin?->code ?? '—' }}</td>
+                        <td class="small">{{ $l->warehouse?->code }} · {{ $l->bin?->code ?? '-' }}</td>
                         <td><span class="badge {{ $l->status->badge() }}">{{ $l->status->label() }}</span></td>
                         <td class="text-end text-nowrap">
                             @can('label.print')

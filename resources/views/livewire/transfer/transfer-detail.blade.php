@@ -80,7 +80,7 @@
                                 @if ($l->serial)
                                     <a wire:navigate href="{{ route('assets.show', $l->serial_id) }}">{{ $l->serial->serial_no }}</a>
                                 @else
-                                    {{ $l->requestLine?->request?->number ?? '—' }}
+                                    {{ $l->requestLine?->request?->number ?? '-' }}
                                 @endif
                             </td>
                         </tr>

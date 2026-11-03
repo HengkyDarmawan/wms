@@ -66,9 +66,9 @@ class StockCardReport extends Report
             ->map(fn (StockMovement $m) => [
                 'waktu' => $m->occurred_at?->lokal()->format('d/m/Y H:i'),
                 'item' => $m->item?->code,
-                'dokumen' => $m->document_number ?? ($m->document_type ? $m->document_type.'#'.$m->document_id : '—'),
-                'asal' => $m->fromBin?->code ?? '—',
-                'tujuan' => $m->toBin?->code ?? '—',
+                'dokumen' => $m->document_number ?? ($m->document_type ? $m->document_type.'#'.$m->document_id : '-'),
+                'asal' => $m->fromBin?->code ?? '-',
+                'tujuan' => $m->toBin?->code ?? '-',
                 'jumlah' => round((float) $m->qty_base, 4),
                 'satuan' => $m->item?->baseUom?->code,
                 'kondisi' => $m->stock_status?->label(),

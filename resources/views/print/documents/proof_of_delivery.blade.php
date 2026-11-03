@@ -7,7 +7,7 @@
             <td class="k">{{ __('Surat jalan') }}</td>
             <td>{{ $sj->number }}</td>
             <td class="k">{{ __('Diterima') }}</td>
-            <td>{{ $proof->confirmed_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $proof->confirmed_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Tujuan') }}</td>
@@ -17,16 +17,16 @@
         </tr>
         <tr>
             <td class="k">{{ __('Dari gudang') }}</td>
-            <td>{{ $sj->warehouse?->code }} — {{ $sj->warehouse?->name }}</td>
+            <td>{{ $sj->warehouse?->code }} · {{ $sj->warehouse?->name }}</td>
             <td class="k">{{ __('Diisi lewat') }}</td>
             <td>{{ $proof->channel?->label() }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Driver') }}</td>
-            <td>{{ $sj->driverLabel() ?: '—' }}</td>
+            <td>{{ $sj->driverLabel() ?: '-' }}</td>
             {{-- A-313: nomor GR di sistem klien (referensi, opsional). --}}
             <td class="k">{{ __('No. GR klien') }}</td>
-            <td>{{ $proof->client_gr_number ?: '—' }}</td>
+            <td>{{ $proof->client_gr_number ?: '-' }}</td>
         </tr>
     </table>
 

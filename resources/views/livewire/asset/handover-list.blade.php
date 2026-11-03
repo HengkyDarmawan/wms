@@ -56,7 +56,7 @@
                             <td>{{ $h->project?->code }} <div class="small text-muted">{{ $h->project?->name }}</div></td>
                             <td class="small">{{ $h->checked_out_at?->lokal()->format('d/m/Y') }}</td>
                             <td class="small">
-                                {{ $h->due_return_date?->format('d/m/Y') ?? '—' }}
+                                {{ $h->due_return_date?->format('d/m/Y') ?? '-' }}
                                 @if ($h->isOverdue()) <span class="badge text-bg-danger">{{ __('Lewat') }}</span> @endif
                             </td>
                             <td>

@@ -36,7 +36,7 @@ class StaleReservationReport extends Report
 
     public function description(): string
     {
-        return 'Reservasi lunak yang masih aktif lebih lama dari ambang (bawaan mengikuti pengaturan company) — janji stok yang belum berubah menjadi tugas picking.';
+        return 'Reservasi lunak yang masih aktif lebih lama dari ambang (bawaan mengikuti pengaturan company), janji stok yang belum berubah menjadi tugas picking.';
     }
 
     public function columns(): array
@@ -68,7 +68,7 @@ class StaleReservationReport extends Report
             'dokumen' => $nomor[$r->document_type.'#'.$r->document_id] ?? ($r->document_type.'#'.$r->document_id),
             'item' => $r->item?->code,
             'gudang' => $r->warehouse?->code,
-            'bin' => $r->bin?->code ?? '—',
+            'bin' => $r->bin?->code ?? '-',
             'jumlah' => round((float) $r->qty_base, 4),
             'satuan' => $r->item?->baseUom?->code,
             'umur' => $r->ageInDays(),

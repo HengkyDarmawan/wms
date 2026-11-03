@@ -60,21 +60,21 @@
                         <tr>
                             <td>
                                 <a wire:navigate href="{{ route('assets.show', $a) }}">{{ $a->serial_no }}</a>
-                                <div class="small text-muted">{{ $a->item?->code }} — {{ $a->item?->name }}</div>
+                                <div class="small text-muted">{{ $a->item?->code }} · {{ $a->item?->name }}</div>
                             </td>
                             <td><span class="badge text-bg-{{ $a->stateBadge() }}">{{ $a->asset_state->label() }}</span></td>
-                            <td class="small">{{ $lokasi->get($a->id)?->bin?->code ?? '—' }}</td>
-                            <td>{{ $a->currentProject?->code ?? '—' }}</td>
+                            <td class="small">{{ $lokasi->get($a->id)?->bin?->code ?? '-' }}</td>
+                            <td>{{ $a->currentProject?->code ?? '-' }}</td>
                             <td class="small">
-                                {{ $a->due_return_date?->format('d/m/Y') ?? '—' }}
+                                {{ $a->due_return_date?->format('d/m/Y') ?? '-' }}
                                 @if ($a->isOverdue()) <span class="badge text-bg-danger">{{ __('Lewat') }}</span> @endif
                             </td>
-                            <td class="small">{{ $a->condition_grade ?? '—' }} @if ($a->condition_score !== null) · {{ $a->condition_score }} % @endif</td>
+                            <td class="small">{{ $a->condition_grade ?? '-' }} @if ($a->condition_score !== null) · {{ $a->condition_score }} % @endif</td>
                             <td class="text-end small">
                                 @if ($sisa !== null)
                                     <span class="{{ $sisa < $ambang ? 'text-danger fw-semibold' : '' }}">{{ number_format($sisa, 1, ',', '.') }} %</span>
                                 @else
-                                    —
+                                    -
                                 @endif
                             </td>
                         </tr>

@@ -6,7 +6,7 @@
                 <span class="badge {{ $req->status->badge() }}">{{ $req->status->label() }}</span>
             </h1>
             <p class="text-muted mb-0">
-                {{ $req->project?->code }} — {{ $req->project?->name }} ·
+                {{ $req->project?->code }} · {{ $req->project?->name }} ·
                 {{ __('Dibutuhkan') }}: {{ $req->required_date?->format('d/m/Y') }}
                 @if ($req->parent)
                     · {{ __('Tambahan dari') }}
@@ -51,7 +51,7 @@
                     <div class="row g-2 mb-2" wire:key="portal-baris-{{ $i }}">
                         <div class="col-md-5">
                             <x-pilih model="barisBaru.{{ $i }}.item_id" id="portal-item-{{ $i }}" server :kunci="(string) count($barisBaru)"
-                                     :aria="__('Item katalog')" :kosong="__('— tidak dari katalog —')" :options="$opsiItem[$i] ?? []" />
+                                     :aria="__('Item katalog')" :kosong="__('(tidak dari katalog)')" :options="$opsiItem[$i] ?? []" />
                         </div>
                         <div class="col-md-4">
                             <input class="form-control" type="text" wire:model="barisBaru.{{ $i }}.non_catalog_text"

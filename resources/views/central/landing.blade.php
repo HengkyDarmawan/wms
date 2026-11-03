@@ -16,7 +16,7 @@
     ];
 @endphp
 
-@section('title', __(':app — WMS khusus material proyek', ['app' => $appName]))
+@section('title', __(':app: WMS khusus material proyek', ['app' => $appName]))
 @section('description', __('Warehouse management system untuk penyedia material & alat proyek: stok per proyek dan Gudang Site, konversi potongan, pemakaian material, aset dipinjamkan, dan portal klien.'))
 
 @section('body')

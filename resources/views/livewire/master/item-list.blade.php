@@ -107,10 +107,10 @@
                                 </a>
                                 <div class="small text-muted">{{ $item->code }}</div>
                             </td>
-                            <td>{{ $item->category?->name ?? '—' }}</td>
-                            <td>{{ $item->baseUom?->code ?? '—' }}</td>
+                            <td>{{ $item->category?->name ?? '-' }}</td>
+                            <td>{{ $item->baseUom?->code ?? '-' }}</td>
                             <td>{{ \App\Domain\Master\Enums\ItemKind::fromItem($item)?->label() ?? __('Jenis khusus') }}</td>
-                            <td class="text-end">{{ $item->reorder_point ? (float) $item->reorder_point : '—' }}</td>
+                            <td class="text-end">{{ $item->reorder_point ? (float) $item->reorder_point : '-' }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $item->statusBadge() }}">
                                     {{ $item->status->label() }}

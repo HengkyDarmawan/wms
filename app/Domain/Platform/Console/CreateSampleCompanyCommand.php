@@ -36,7 +36,7 @@ class CreateSampleCompanyCommand extends Command
         {--email=admin@demo.wms.test : Email Admin Company}
         {--password= : Password Admin Company (min. 10 karakter); kosong = ditanyakan}';
 
-    protected $description = 'Buat satu contoh company siap login (company + akun & aturan dasar + password Admin Company) — A-408';
+    protected $description = 'Buat satu contoh company siap login (company + akun & aturan dasar + password Admin Company) · A-408';
 
     public function handle(CreateCompany $buat, ProvisionCompany $siapkan, SetInitialPassword $password): int
     {

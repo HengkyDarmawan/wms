@@ -42,18 +42,18 @@
                                 <div class="small text-muted">{{ $company->code }}</div>
                             </td>
                             <td>{{ $company->host() }}</td>
-                            <td>{{ $company->plan?->name ?? '—' }}</td>
+                            <td>{{ $company->plan?->name ?? '-' }}</td>
                             <td>
                                 {{ $company->status->label() }}
                                 @if ($company->provisioningError()) <span class="badge text-bg-danger">{{ __('gagal disiapkan') }}</span> @endif
                             </td>
                             <td>
-                                {{ $company->subscription?->status->label() ?? '—' }}
+                                {{ $company->subscription?->status->label() ?? '-' }}
                                 @if ($company->subscription?->purge_after && $company->subscription->purge_after->isPast())
                                     <span class="badge text-bg-dark">{{ __('siap dihapus') }}</span>
                                 @endif
                             </td>
-                            <td>{{ $company->subscription?->periodEnd()?->format('d/m/Y') ?? '—' }}</td>
+                            <td>{{ $company->subscription?->periodEnd()?->format('d/m/Y') ?? '-' }}</td>
                         </tr>
                     @empty
                         <tr>

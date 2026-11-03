@@ -8,7 +8,7 @@
         <div class="lp-section-head">
             <span class="lp-eyebrow">{{ __('Paket') }}</span>
             <h2 class="lp-title" id="plansTitle">{{ __('Langganan bulanan flat per company') }}</h2>
-            <p class="lp-lead">{{ __('Tidak dihitung per user atau per gudang. Tambah tim, gudang, dan proyek sesuai kebutuhan — biayanya tetap.') }}</p>
+            <p class="lp-lead">{{ __('Tidak dihitung per user atau per gudang. Tambah tim, gudang, dan proyek sesuai kebutuhan; biayanya tetap.') }}</p>
         </div>
 
         @if ($plans->isEmpty())
@@ -22,7 +22,7 @@
                 @foreach ($plans as $plan)
                     @php
                         $gb = $plan->storage_quota_mb ? $plan->storage_quota_mb / 1024 : null;
-                        $planHref = 'mailto:'.$salesEmail.'?subject='.rawurlencode(__('Paket :plan — :app', ['plan' => $plan->name, 'app' => $appName]));
+                        $planHref = 'mailto:'.$salesEmail.'?subject='.rawurlencode(__('Paket :plan · :app', ['plan' => $plan->name, 'app' => $appName]));
                     @endphp
                     <div class="col-md-6 col-lg-4">
                         <article class="lp-plan {{ $plans->count() === 1 ? 'is-featured' : '' }}" data-plan="{{ $plan->code }}">

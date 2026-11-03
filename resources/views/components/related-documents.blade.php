@@ -31,7 +31,7 @@
         <details>
             <summary class="card-header d-flex justify-content-between" style="cursor: pointer;">
                 <strong>{{ __('Riwayat cetak') }}</strong>
-                <span class="small text-muted">{{ __(':n kali · terakhir :waktu oleh :nama', ['n' => $cetak->count(), 'waktu' => $cetak->first()->printed_at->lokal()->format('d/m/Y H:i'), 'nama' => $cetak->first()->printer?->name ?? '—']) }}</span>
+                <span class="small text-muted">{{ __(':n kali · terakhir :waktu oleh :nama', ['n' => $cetak->count(), 'waktu' => $cetak->first()->printed_at->lokal()->format('d/m/Y H:i'), 'nama' => $cetak->first()->printer?->name ?? '-']) }}</span>
             </summary>
             <div class="table-responsive">
                 <table class="table table-sm mb-0 small">
@@ -42,7 +42,7 @@
                                 <td>{{ __('ke-:n', ['n' => $c->copy_no]) }} @if ($c->copy_no > 1 && \App\Domain\Template\Support\PrintHistory::marked($c->document_type)) <span class="badge text-bg-danger">{{ __('cetak ulang') }}</span> @endif</td>
                                 <td>{{ $c->document_type->label() }}</td>
                                 <td>{{ $c->printed_at->lokal()->format('d/m/Y H:i') }}</td>
-                                <td>{{ $c->printer?->name ?? '—' }}</td>
+                                <td>{{ $c->printer?->name ?? '-' }}</td>
                             </tr>
                         @endforeach
                     </tbody>

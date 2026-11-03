@@ -13,7 +13,7 @@
             @if ($grn->receipt_type->value === 'return' && $grn->goods_return_id)
                 <p class="small mb-0">
                     {{ __('Retur') }} <a wire:navigate href="{{ route('returns.show', $grn->goods_return_id) }}">{{ $grn->goodsReturn?->number }}</a>
-                    — {{ __('barang masuk bin Retur; GRN selesai otomatis saat barangnya dipilah di detail RET.') }}
+                    · {{ __('barang masuk bin Retur; GRN selesai otomatis saat barangnya dipilah di detail RET.') }}
                 </p>
             @endif
         </div>
@@ -175,7 +175,7 @@
                             @if ($kondisi)
                                 @php($satuan = $l->item?->baseUom?->code)
                                 <td class="text-end">
-                                    {{ $l->qty_vendor === null ? '—' : \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_vendor, $satuan) }}
+                                    {{ $l->qty_vendor === null ? '-' : \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_vendor, $satuan) }}
                                     @if ($l->typedQuantity()) <div class="small text-muted">{{ $l->typedQuantity() }}</div> @endif
                                 </td>
                                 <td class="text-end">
@@ -189,10 +189,10 @@
                                         @php($sisaRetur = $l->damagedReturnable())
                                         <div class="small {{ $sisaRetur > 0 ? 'text-danger-emphasis' : 'text-muted' }}">{{ $sisaRetur > 0 ? __('menunggu retur').' '.\App\Domain\Master\Support\QtyFormat::withUnit($sisaRetur, $satuan).(($kms = \App\Domain\Master\Support\QtyFormat::packaging($l->item, $sisaRetur)) ? ' ('.$kms.')' : '') : __('sudah dimuat RTV') }}</div>
                                     @else
-                                        —
+                                        -
                                     @endif
                                 </td>
-                                <td class="text-end">{{ (float) $l->qty_short > 0 ? \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_short, $satuan) : '—' }}</td>
+                                <td class="text-end">{{ (float) $l->qty_short > 0 ? \App\Domain\Master\Support\QtyFormat::withUnit($l->qty_short, $satuan) : '-' }}</td>
                             @else
                             <td class="text-end">
                                 {{ number_format((float) $l->qty_received, 2, ',', '.') }}
@@ -202,7 +202,7 @@
                                 @endif
                             </td>
                             @endif
-                            <td>{{ $l->receivingBin?->code ?? '—' }}</td>
+                            <td>{{ $l->receivingBin?->code ?? '-' }}</td>
                             <td>
                                 @if ($l->qc_result)
                                     <span class="badge {{ $l->qc_result->badge() }}">{{ $l->qc_result->label() }}</span>
@@ -210,7 +210,7 @@
                                 @elseif ($l->receivingBinIsQuarantine())
                                     <span class="badge text-bg-warning">{{ __('Menunggu QC') }}</span>
                                 @elseif ((float) $l->qty_received <= 0)
-                                    <span class="text-muted small">—</span>
+                                    <span class="text-muted small">-</span>
                                 @else
                                     <span class="text-muted small">{{ __('Tanpa QC') }}</span>
                                 @endif

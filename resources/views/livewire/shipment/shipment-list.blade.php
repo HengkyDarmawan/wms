@@ -29,7 +29,7 @@
             </div>
             <div class="col-lg-3">
                 <x-pilih model="warehouseFilter" id="filter-gudang-sj" live :label="__('Gudang asal')" :kosong="__('Semua gudang')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-lg-2">
                 <label class="form-label" for="filter-cara-sj">{{ __('Cara kirim') }}</label>

@@ -18,7 +18,7 @@
         <div class="card-body row g-3">
             <div class="col-md-4">
                 <x-pilih model="form.warehouse_id" id="adj-gudang" live wajib :label="__('Gudang')" :disabled="(bool) $asal"
-                         :kosong="__('Pilih gudang…')" :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :kosong="__('Pilih gudang…')" :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="adj-alasan">{{ __('Alasan') }} <span class="wajib">*</span></label>
@@ -109,7 +109,7 @@
                                             <input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model="rows.{{ $i }}.piece_length" placeholder="{{ __('Panjang potongan *') }}">
                                         @endif
                                     @else
-                                        <span class="text-muted small">—</span>
+                                        <span class="text-muted small">-</span>
                                     @endif
                                 </td>
                                 <td><button class="btn btn-sm btn-outline-danger" type="button" wire:click="hapusBaris({{ $i }})" aria-label="{{ __('Hapus baris') }}">×</button></td>

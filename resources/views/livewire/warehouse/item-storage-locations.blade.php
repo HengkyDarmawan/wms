@@ -14,7 +14,7 @@
             @if ($gudangUbah !== (int) $gudangId)
                 <div class="mb-3" data-tempat-gudang="{{ $g?->code }}">
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="fw-semibold">{{ $g?->code }} — {{ $g?->name }}</span>
+                        <span class="fw-semibold">{{ $g?->code }} · {{ $g?->name }}</span>
                         @if ($bolehUbah)
                             <button class="btn btn-sm btn-outline-primary py-0 ms-auto" type="button" wire:click="ubah({{ (int) $gudangId }})">{{ __('Ubah') }}</button>
                         @endif
@@ -51,7 +51,7 @@
 
         @if ($gudangUbah > 0 && $gudangUbahModel)
             <div class="border rounded p-2 mb-2" data-ubah-tempat>
-                <div class="fw-semibold mb-1">{{ $gudangUbahModel->code }} — {{ $gudangUbahModel->name }}</div>
+                <div class="fw-semibold mb-1">{{ $gudangUbahModel->code }} · {{ $gudangUbahModel->name }}</div>
                 <div class="text-muted mb-2">{{ __('Urutan = urutan saran. "Seluruh rak": bin yang sudah berisi barang ini dulu, lalu bin kosong dari tingkat bawah, kiri ke kanan.') }}</div>
                 @forelse ($baris as $i => $b)
                     <div class="d-flex align-items-center gap-1 mb-1" wire:key="tempat-{{ $b['tempat'] }}">
@@ -66,7 +66,7 @@
                         <button class="btn btn-sm btn-outline-danger py-0" type="button" wire:click="hapus({{ $i }})" aria-label="{{ __('Lepas') }}"><i class="bi bi-x-lg"></i></button>
                     </div>
                 @empty
-                    <div class="text-muted mb-1">{{ __('Daftar kosong — simpan untuk melepas semua tempat di gudang ini.') }}</div>
+                    <div class="text-muted mb-1">{{ __('Daftar kosong. Simpan untuk melepas semua tempat di gudang ini.') }}</div>
                 @endforelse
 
                 {{-- Tambah tempat: utama lewat popup bergambar (A-400); isian bertahap ① Zona → ② Rak/area → ③ Bin (A-399) sebagai cadangan. --}}
@@ -86,20 +86,20 @@
                         <div class="col-12 col-md-4">
                             <label class="form-label mb-0" for="tempat-zona">① {{ __('Zona') }}</label>
                             <select class="form-select form-select-sm" id="tempat-zona" wire:model.live="zonaBaru">
-                                <option value="">{{ __('— Pilih zona —') }}</option>
+                                <option value="">{{ __('(Pilih zona)') }}</option>
                                 @foreach ($opsiZona as $id => $teks) <option value="{{ $id }}">{{ $teks }}</option> @endforeach
                             </select>
                         </div>
                         <div class="col-12 col-md-8">
                             <label class="form-label mb-0" for="tempat-rak-ts-control">② {{ __('Rak atau area lantai') }}</label>
                             <x-pilih model="rakBaru" id="tempat-rak" live kecil :options="$opsiRak" :disabled="$zonaBaru === ''"
-                                     :kosong="$zonaBaru === '' ? __('Pilih zona dulu…') : __('— Pilih rak atau area —')" />
+                                     :kosong="$zonaBaru === '' ? __('Pilih zona dulu…') : __('(Pilih rak atau area)')" />
                         </div>
                     </div>
 
                     @if ($rakBaru !== '' && ! $rakArea)
                         <div class="mt-2" data-pilih-bin>
-                            <label class="form-label mb-0" for="tempat-bin">③ {{ __('Bin (opsional — boleh lebih dari satu)') }}</label>
+                            <label class="form-label mb-0" for="tempat-bin">③ {{ __('Bin (opsional, boleh lebih dari satu)') }}</label>
                             <x-pilih-tag model="binBaru" id="tempat-bin" live :options="$opsiBin" :placeholder="__('Kosongkan = seluruh rak · klik/ketik mis. L1')" />
                             @if (count($tingkat) > 0)
                                 <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
@@ -152,7 +152,7 @@
             <div class="d-flex gap-2 align-items-center">
                 <x-pilih model="gudangBaru" id="tempat-gudang-baru" kecil class="flex-grow-1" :aria="__('Gudang')"
                          :kosong="__('Atur tempat di gudang…')"
-                         :options="$gudangLain->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$gudangLain->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
                 <button class="btn btn-sm btn-outline-primary text-nowrap" type="button" wire:click="tambahGudang">{{ __('Atur') }}</button>
             </div>
         @endif

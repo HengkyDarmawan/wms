@@ -664,7 +664,7 @@ class ConversionForm extends Component
 
         return Pilihan::dari($query, ['code', 'name', 'barcode'], fn (Item $i) => [
             'value' => (int) $i->id,
-            'text' => $i->code.' — '.$i->name,
+            'text' => $i->code.' · '.$i->name,
             'badge' => $i->baseUom?->code,
         ]);
     }

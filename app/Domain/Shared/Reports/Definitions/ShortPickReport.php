@@ -67,7 +67,7 @@ class ShortPickReport extends Report
                 'dialokasikan' => round((float) $l->qty_allocated, 4),
                 'diambil' => round((float) $l->qty_picked, 4),
                 'selisih' => round($l->shortQty(), 4),
-                'alasan' => $l->shortReason?->label ?? '—',
+                'alasan' => $l->shortReason?->label ?? '-',
             ])
             ->sortByDesc('selesai')
             ->values();

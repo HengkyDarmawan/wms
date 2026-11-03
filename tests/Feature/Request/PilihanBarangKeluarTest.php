@@ -153,7 +153,7 @@ class PilihanBarangKeluarTest extends TenantTestCase
         $form = Livewire::actingAs($pemohon)->test(RequestForm::class);
 
         $form->call('labelPilihan', 'lines.0.item_id', (string) $this->baut->id);
-        $this->assertSame('BAUT-M12 — BAUT-M12', $form->effects['returns'][0]['text'] ?? null);
+        $this->assertSame('BAUT-M12 · BAUT-M12', $form->effects['returns'][0]['text'] ?? null);
 
         foreach ([['lines.0.item_id', (string) $this->mati->id], ['form.project_id', (string) $this->lain->id], ['form.notes', '1'], ['lines.0.item_id', $this->baut->id.'abc']] as [$model, $nilai]) {
             $form->call('labelPilihan', $model, $nilai);

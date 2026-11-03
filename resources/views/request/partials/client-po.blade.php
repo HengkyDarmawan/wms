@@ -14,7 +14,7 @@
     </div>
 @else
     <div class="small mt-1">
-        {{ __('No. PO klien') }}: <strong>{{ $req->client_po_number ?: '—' }}</strong>
+        {{ __('No. PO klien') }}: <strong>{{ $req->client_po_number ?: '-' }}</strong>
         @can('setClientPo', $req)
             <button class="btn btn-link btn-sm p-0 ms-1 align-baseline" type="button" wire:click="mintaUbahPo">{{ $req->client_po_number ? __('Ubah') : __('Isi') }}</button>
         @endcan

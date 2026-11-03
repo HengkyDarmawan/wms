@@ -7,19 +7,19 @@
             @if ($sj->isWithoutPicking())
                 {{-- A-247: SJ jemput / antar site berangkat dari proyek. --}}
                 <td class="k">{{ __('Dijemput dari') }}</td>
-                <td>{{ $sj->originProject?->code }} — {{ $sj->originProject?->name }}</td>
+                <td>{{ $sj->originProject?->code }} · {{ $sj->originProject?->name }}</td>
             @else
                 <td class="k">{{ __('Dari gudang') }}</td>
-                <td>{{ $sj->warehouse?->code }} — {{ $sj->warehouse?->name }}</td>
+                <td>{{ $sj->warehouse?->code }} · {{ $sj->warehouse?->name }}</td>
             @endif
             <td class="k">{{ __('Tanggal berangkat') }}</td>
-            <td>{{ $sj->shipped_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $sj->shipped_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Tujuan') }}</td>
             <td>{{ $sj->destination_type->label() }}: {{ $sj->destinationLabel() }}</td>
             <td class="k">{{ __('Cara kirim') }}</td>
-            <td>{{ $sj->shipment_method->label() }}: {{ $sj->carrierLabel() ?: '—' }}</td>
+            <td>{{ $sj->shipment_method->label() }}: {{ $sj->carrierLabel() ?: '-' }}</td>
         </tr>
         @if ($sj->driverName())
             {{-- A-311: driver tanpa akun — nama & HP tertulis agar penerima bisa menghubunginya. --}}
@@ -27,7 +27,7 @@
                 <td class="k">{{ __('Driver') }}</td>
                 <td>{{ $sj->driverName() }}</td>
                 <td class="k">{{ __('No. HP driver') }}</td>
-                <td>{{ $sj->driver_phone ?: '—' }}</td>
+                <td>{{ $sj->driver_phone ?: '-' }}</td>
             </tr>
         @endif
         @if ($rujukan['po_klien'] !== [])
@@ -39,7 +39,7 @@
         <tr>
             <td class="k">{{ __('Rujukan') }}</td>
             <td colspan="3">
-                {{ implode(', ', array_merge($rujukan['dokumen'], $rujukan['req'])) ?: '—' }}
+                {{ implode(', ', array_merge($rujukan['dokumen'], $rujukan['req'])) ?: '-' }}
                 @if ($rujukan['pck'] !== []) · {{ __('PCK') }} {{ implode(', ', $rujukan['pck']) }} @endif
             </td>
         </tr>
@@ -66,7 +66,7 @@
                     <td>{{ $p?->item?->code }}</td>
                     <td>{{ $p?->item?->name }}</td>
                     <td>{{ PrintFormat::tracking($p?->lot, $p?->serial, $p?->piece) }}</td>
-                    <td>{{ $asal[$l->id] ?? '—' }}</td>
+                    <td>{{ $asal[$l->id] ?? '-' }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_shipped) }}</td>
                     <td>{{ $p?->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($p?->item, $l->qty_shipped)) <br><small>{{ $kemasan }}</small>@endif</td>
                     <td></td>

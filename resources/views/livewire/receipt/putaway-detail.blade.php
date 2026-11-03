@@ -70,7 +70,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php($opsiBin = $bins->map(fn ($b) => ['value' => $b->id, 'text' => ($pendek[$b->id] ?? $b->code).' — '.$b->code])->all())
+                    @php($opsiBin = $bins->map(fn ($b) => ['value' => $b->id, 'text' => ($pendek[$b->id] ?? $b->code).' · '.$b->code])->all())
                     @foreach ($lines as $l)
                         <tr wire:key="put-line-{{ $l->id }}">
                             <td>
@@ -82,7 +82,7 @@
                             <td class="text-end">{{ number_format((float) $l->qty_base, 2, ',', '.') }}</td>
                             <td>{{ $l->fromBin?->code }}</td>
                             <td>
-                                <span class="fw-semibold font-monospace">{{ $l->suggestedBin ? ($pendek[$l->suggested_bin_id] ?? $l->suggestedBin->code) : '—' }}</span>
+                                <span class="fw-semibold font-monospace">{{ $l->suggestedBin ? ($pendek[$l->suggested_bin_id] ?? $l->suggestedBin->code) : '-' }}</span>
                                 @if ($penuh[$l->id] ?? false) <div><span class="badge text-bg-warning">{{ __('Tempat simpan penuh') }}</span></div> @endif
                             </td>
                             <td>
@@ -95,7 +95,7 @@
                                     <x-pilih :model="'isian.'.$l->id.'.bin_id'" :options="$opsiBin" :kosong="__('Pilih bin…')"
                                              kecil :aria="__('Bin tujuan')" />
                                 @else
-                                    <span class="font-monospace">{{ $l->bin ? ($pendek[$l->bin_id] ?? $l->bin->code) : '—' }}</span>
+                                    <span class="font-monospace">{{ $l->bin ? ($pendek[$l->bin_id] ?? $l->bin->code) : '-' }}</span>
                                     @if ($l->scanned_at) <div class="small text-muted">{{ __('Ditaruh') }} {{ $l->scanned_at->lokal()->format('d/m/Y H:i') }}</div> @endif
                                 @endif
                             </td>

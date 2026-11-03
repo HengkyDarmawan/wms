@@ -52,7 +52,7 @@ class VendorProblemReport extends Report
 
     public function description(): string
     {
-        return 'Per vendor & item yang diterima dalam periode: rusak dan kurang saat terima, ditolak QC, rusak saat dikirim, dan retur rusak/waste yang ditelusuri lewat label kemasan atau lot — plus yang sudah diretur ke vendor.';
+        return 'Per vendor & item yang diterima dalam periode: rusak dan kurang saat terima, ditolak QC, rusak saat dikirim, dan retur rusak/waste yang ditelusuri lewat label kemasan atau lot, plus yang sudah diretur ke vendor.';
     }
 
     public function columns(): array
@@ -187,8 +187,8 @@ class VendorProblemReport extends Report
                 $i = $items->get($r['item_id']);
 
                 return [
-                    'vendor' => $v !== null ? $v->code.' — '.$v->name : '—',
-                    'item' => $i !== null ? $i->code.' — '.$i->name : '—',
+                    'vendor' => $v !== null ? $v->code.' · '.$v->name : '-',
+                    'item' => $i !== null ? $i->code.' · '.$i->name : '-',
                     'satuan' => $i?->baseUom?->code,
                     'diterima' => round($r['diterima'], 4),
                     'rusak' => round($r['rusak'], 4),

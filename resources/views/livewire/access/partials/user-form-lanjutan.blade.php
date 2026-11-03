@@ -14,14 +14,14 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <x-pilih model="orgUnitId" id="orgUnitId" live :label="__('Unit organisasi')"
-                             :kosong="__('— Tidak diisi —')" :options="$units" />
+                             :kosong="__('(Tidak diisi)')" :options="$units" />
                     <div class="form-text">{{ __('Disarankan otomatis dari peran yang dipilih.') }}</div>
                 </div>
 
                 <div class="col-md-4">
                     {{-- A-385: hanya jabatan aktif di unit terpilih; tanpa unit = berkelompok per unit. --}}
                     <x-pilih model="positionId" id="positionId" live :label="__('Jabatan')"
-                             :kosong="__('— Tidak diisi —')" :options="$positions" />
+                             :kosong="__('(Tidak diisi)')" :options="$positions" />
                     <div class="form-text">
                         {{ $orgUnitId === null ? __('Memilih jabatan ikut mengisi unitnya.') : __('Hanya jabatan di unit ini.') }}
                     </div>
@@ -31,7 +31,7 @@
                     {{-- A-358, A-386: nama + badge jabatan + unit; Unit ini → Unit induk → Unit lain; cari ke server. --}}
                     <x-pilih model="managerId" id="managerId" server :kunci="(string) $orgUnitId" :kelompok="$kelompokAtasan"
                              :label="__('Atasan langsung (bila beda dari jabatan)')"
-                             :kosong="__('— Ikuti jabatan —')" :options="$managers"
+                             :kosong="__('(Ikuti jabatan)')" :options="$managers"
                              :placeholder="__('Cari nama, jabatan, atau unit…')" />
                     {{-- A-345: kosong = pemegang jabatan atasan (peta jabatan); isi hanya bila berbeda. --}}
                     <div class="form-text">
@@ -59,7 +59,7 @@
                         <div class="row g-2 align-items-end">
                             <div class="col-md-4">
                                 <x-pilih model="assignments.{{ $index }}.role_id" id="role-{{ $index }}" kecil wajib
-                                         :label="__('Peran')" :kosong="__('— pilih peran —')"
+                                         :label="__('Peran')" :kosong="__('(pilih peran)')"
                                          :options="$roles->map(fn ($r) => ['value' => $r->id, 'text' => $r->name])->all()" />
                             </div>
 
@@ -79,11 +79,11 @@
                                 @if (($assignment['scope_type'] ?? '') === 'project')
                                     {{-- A-384: proyek dicari ke server; kunci = jenis cakupan supaya kotak dibuat ulang saat diganti. --}}
                                     <x-pilih model="assignments.{{ $index }}.scope_id" id="scopeid-{{ $index }}" kecil server kunci="project"
-                                             :label="__('Proyek')" :kosong="__('— pilih proyek —')" :options="$proyekBaris[$index] ?? []" />
+                                             :label="__('Proyek')" :kosong="__('(pilih proyek)')" :options="$proyekBaris[$index] ?? []" />
                                 @elseif (($assignment['scope_type'] ?? '') === 'warehouse')
                                     <x-pilih model="assignments.{{ $index }}.scope_id" id="scopeid-{{ $index }}" kecil
-                                             :label="__('Gudang')" :kosong="__('— pilih gudang —')"
-                                             :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' — '.$w->name])->all()" />
+                                             :label="__('Gudang')" :kosong="__('(pilih gudang)')"
+                                             :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' · '.$w->name])->all()" />
                                 @else
                                     {{-- Cakupan `all` tidak memakai id sama sekali. --}}
                                     <label class="form-label small" for="scopeid-{{ $index }}">{{ __('Cakupan') }}</label>
@@ -105,8 +105,8 @@
                             <div class="small text-warning-emphasis mt-1">
                                 <i class="bi bi-exclamation-triangle"></i>
                                 {{ __('Penugasan bertanggal lama (:dari s/d :sampai); masih ditegakkan dan tidak diubah dari sini.', [
-                                    'dari' => $assignment['valid_from'] ?? '—',
-                                    'sampai' => $assignment['valid_until'] ?? '—',
+                                    'dari' => $assignment['valid_from'] ?? '-',
+                                    'sampai' => $assignment['valid_until'] ?? '-',
                                 ]) }}
                             </div>
                         @endif

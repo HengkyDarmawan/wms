@@ -93,7 +93,7 @@
                 <button class="btn btn-warning" type="button" wire:click="kirim">{{ __('Kirim ke vendor') }}</button>
             @endcan
             @can('complete', $rtv)
-                <button class="btn btn-success" type="button" wire:click="selesaikan">{{ __('Konfirmasi vendor — selesai') }}</button>
+                <button class="btn btn-success" type="button" wire:click="selesaikan">{{ __('Konfirmasi vendor selesai') }}</button>
             @endcan
             @can('cancel', $rtv)
                 <button class="btn btn-outline-danger" type="button" wire:click="mintaDialog('batal')">{{ __('Batalkan') }}</button>

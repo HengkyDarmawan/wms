@@ -17,7 +17,7 @@
                                 <input class="form-check-input" type="checkbox" id="gudang-{{ $gudang->id }}"
                                        value="{{ $gudang->id }}" wire:model="gudangDipilih">
                                 <label class="form-check-label" for="gudang-{{ $gudang->id }}">
-                                    {{ $gudang->code }} — {{ $gudang->name }}
+                                    {{ $gudang->code }} · {{ $gudang->name }}
                                 </label>
                             </div>
                         </div>
@@ -42,7 +42,7 @@
                                 <input class="form-check-input" type="checkbox" id="proyek-{{ $proyek->id }}"
                                        value="{{ $proyek->id }}" wire:model="proyekDipilih">
                                 <label class="form-check-label" for="proyek-{{ $proyek->id }}">
-                                    {{ $proyek->code }} — {{ $proyek->name }}
+                                    {{ $proyek->code }} · {{ $proyek->name }}
                                 </label>
                             </div>
                         </div>
@@ -56,8 +56,8 @@
             @elseif ($pertanyaan === $guide::KLIEN)
                 <div class="row g-3">
                     <div class="col-md-5">
-                        <x-pilih model="clientId" id="clientId" live wajib :label="__('Klien')" :kosong="__('— pilih klien —')"
-                                 :options="$clients->map(fn ($k) => ['value' => $k->id, 'text' => $k->code.' — '.$k->name])->all()" />
+                        <x-pilih model="clientId" id="clientId" live wajib :label="__('Klien')" :kosong="__('(pilih klien)')"
+                                 :options="$clients->map(fn ($k) => ['value' => $k->id, 'text' => $k->code.' · '.$k->name])->all()" />
                     </div>
 
                     <div class="col-md-7">
@@ -71,7 +71,7 @@
                                         <input class="form-check-input" type="checkbox" id="kproyek-{{ $proyek->id }}"
                                                value="{{ $proyek->id }}" wire:model="proyekDipilih">
                                         <label class="form-check-label" for="kproyek-{{ $proyek->id }}">
-                                            {{ $proyek->code }} — {{ $proyek->name }}
+                                            {{ $proyek->code }} · {{ $proyek->name }}
                                         </label>
                                     </div>
                                 </div>

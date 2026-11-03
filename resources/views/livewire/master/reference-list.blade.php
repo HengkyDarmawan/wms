@@ -175,11 +175,11 @@
                                 <td>{{ $item->capacity_mode->label() }}</td>
                             @elseif ($tab === 'kendaraan')
                                 <td class="fw-semibold">{{ $item->plate_no }}</td>
-                                <td>{{ $item->type ?: '—' }}</td>
-                                <td>{{ $item->default_driver_name ?? '—' }} @if ($item->default_driver_phone) <div class="small text-muted">{{ $item->default_driver_phone }}</div> @endif</td>
+                                <td>{{ $item->type ?: '-' }}</td>
+                                <td>{{ $item->default_driver_name ?? '-' }} @if ($item->default_driver_phone) <div class="small text-muted">{{ $item->default_driver_phone }}</div> @endif</td>
                             @else
                                 <td class="fw-semibold">{{ $item->name }}</td>
-                                <td>{{ $item->phone ?: '—' }}</td>
+                                <td>{{ $item->phone ?: '-' }}</td>
                                 <td></td>
                             @endif
 

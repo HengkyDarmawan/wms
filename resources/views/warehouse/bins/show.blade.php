@@ -9,7 +9,7 @@
     @endphp
     <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
         <div>
-            <div class="text-muted small">{{ __('Isi bin') }} · {{ $bin->warehouse?->code }} — {{ $bin->warehouse?->name }}</div>
+            <div class="text-muted small">{{ __('Isi bin') }} · {{ $bin->warehouse?->code }} · {{ $bin->warehouse?->name }}</div>
             <h1 class="display-5 fw-bold font-monospace mb-0" data-kode-pendek>{{ $pendek[$bin->id] ?? $bin->code }}</h1>
             <div class="text-muted font-monospace">{{ $bin->code }}</div>
             <div class="mt-2 d-flex flex-wrap gap-1">

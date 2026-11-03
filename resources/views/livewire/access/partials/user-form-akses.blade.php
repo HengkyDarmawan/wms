@@ -5,7 +5,7 @@
         <div class="form-check">
             <input class="form-check-input" type="radio" id="cara-undangan" value="undangan" wire:model.live="caraMasuk">
             <label class="form-check-label" for="cara-undangan">
-                {{ __('Kirim undangan — ia mengatur passwordnya sendiri') }}
+                {{ __('Kirim undangan (ia mengatur passwordnya sendiri)') }}
                 <div class="small text-muted">
                     {{ __('Tautannya bisa Anda salin atau kirim lewat WhatsApp setelah disimpan.') }}
                 </div>

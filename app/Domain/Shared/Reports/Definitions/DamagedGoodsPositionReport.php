@@ -66,11 +66,11 @@ class DamagedGoodsPositionReport extends Report
                 'dsc' => $l->discrepancy?->number,
                 'sj' => $l->discrepancy?->shipment?->number,
                 'gudang' => $l->discrepancy?->shipment?->warehouse?->code,
-                'proyek' => $l->discrepancy?->shipment?->destinationProject?->code ?? '—',
+                'proyek' => $l->discrepancy?->shipment?->destinationProject?->code ?? '-',
                 'item' => $l->shipmentLine?->pickTaskLine?->item?->code,
                 'jenis' => $l->discrepancy_type?->label(),
                 'jumlah' => round((float) $l->qty_base, 4),
-                'disposisi' => $l->disposition?->label() ?? '—',
+                'disposisi' => $l->disposition?->label() ?? '-',
                 'status' => $l->discrepancy?->status?->label(),
                 'umur' => (int) $l->discrepancy?->created_at?->startOfDay()->diffInDays($hariIni),
             ])

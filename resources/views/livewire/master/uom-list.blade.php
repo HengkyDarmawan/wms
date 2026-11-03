@@ -49,7 +49,7 @@
                     <div class="col-md-4">
                         <x-pilih model="categoryForm.reference_uom_id" id="kat-satuan-acuan" wajib :label="__('Satuan acuan')"
                                  :kosong="__('Pilih satuan acuan…')"
-                                 :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' — '.$u->name])->all()" />
+                                 :options="$uoms->map(fn ($u) => ['value' => $u->id, 'text' => $u->code.' · '.$u->name])->all()" />
                     </div>
                 @else
                     <div class="col-md-2">
@@ -142,7 +142,7 @@
                                 </div>
 
                                 @if ($formDasar)
-                                    <div class="col-12 small text-muted">{{ __('Ini satuan acuan kategori — satuan lain dihitung terhadapnya, jadi tidak punya "setara".') }}</div>
+                                    <div class="col-12 small text-muted">{{ __('Ini satuan acuan kategori: satuan lain dihitung terhadapnya, jadi tidak punya "setara".') }}</div>
                                 @else
                                     <div class="col-12">
                                         <span class="form-label d-block">{{ __('Setara') }} <span class="wajib">*</span></span>
@@ -177,7 +177,7 @@
                                             </label>
                                             <label class="d-flex flex-wrap align-items-center gap-2">
                                                 <input class="form-check-input mt-0" type="radio" value="kemasan" wire:model.live="form.mode">
-                                                <span>{{ __('Kemasan — isinya beda tiap barang (mis. DUS, BOX); diatur di tab Kemasan barang') }}</span>
+                                                <span>{{ __('Kemasan: isinya beda tiap barang (mis. DUS, BOX); diatur di tab Kemasan barang') }}</span>
                                             </label>
                                         </div>
                                         @error('form.angka') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
@@ -218,7 +218,7 @@
                                     <tr wire:key="satuan-{{ $uom->id }}">
                                         <td>
                                             <span class="fw-semibold">{{ $uom->code }}</span>
-                                            <span class="text-muted">— {{ $uom->name }}</span>
+                                            <span class="text-muted">{{ $uom->name }}</span>
                                             @if ($kategoriAktif->reference_uom_id === $uom->id)
                                                 <span class="badge text-bg-info">{{ __('Satuan acuan') }}</span>
                                             @elseif ($uom->is_packaging)

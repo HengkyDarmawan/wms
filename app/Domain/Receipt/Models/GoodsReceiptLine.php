@@ -211,7 +211,7 @@ class GoodsReceiptLine extends Model
             $this->serial_id !== null => 'SN '.$this->serial?->serial_no,
             $this->lot_id !== null => 'Lot '.$this->lot?->lot_no,
             $this->piece_id !== null => 'Potongan '.$this->piece?->piece_no,
-            default => '—',
+            default => '-',
         };
     }
 }

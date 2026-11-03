@@ -54,7 +54,7 @@
             </div>
             <div class="col-lg-3">
                 <x-pilih model="warehouseFilter" id="filter-gudang-reservasi" live :label="__('Gudang')" :kosong="__('Semua gudang')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-lg-2">
                 <label class="form-label" for="filter-level">{{ __('Tingkat') }}</label>
@@ -108,7 +108,7 @@
                                 <div class="small text-muted">{{ $r->item?->name }}</div>
                             </td>
                             <td>
-                                {{ $r->warehouse?->code ?? '—' }}
+                                {{ $r->warehouse?->code ?? '-' }}
                                 <div class="small text-muted">{{ $r->bin?->code ?? __('belum ditunjuk') }}</div>
                             </td>
                             <td class="text-end">{{ number_format((float) $r->qty_base, 2, ',', '.') }}</td>

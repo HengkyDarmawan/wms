@@ -112,7 +112,7 @@ class ClientRecapReportTest extends TenantTestCase
         $this->assertSame('PCS', $keProyekBaris['satuan']);
 
         // Belum ada bukti terima → kolom hasilnya kosong, bukan nol palsu.
-        $this->assertSame('—', $data->firstWhere('sj', $keSite->number)['baik']);
+        $this->assertSame('-', $data->firstWhere('sj', $keSite->number)['baik']);
 
         // Baris TOTAL per item.
         $this->assertCount(1, $total);
@@ -163,7 +163,7 @@ class ClientRecapReportTest extends TenantTestCase
         $this->assertTrue($laporan->rows([
             'client_id' => (string) $klienPolos->id,
             'destination_type' => 'site_warehouse',
-        ])->isEmpty(), 'Tanpa Gudang Site, saringan itu menghasilkan nol baris — bukan semua SJ.');
+        ])->isEmpty(), 'Tanpa Gudang Site, saringan itu menghasilkan nol baris, bukan semua SJ.');
     }
 
     #[Test]

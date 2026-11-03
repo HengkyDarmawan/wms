@@ -204,14 +204,14 @@
                                 @elseif ($project->client !== null)
                                     <a wire:navigate href="{{ route('clients.show', $project->client->id) }}">{{ $project->client->name }}</a>
                                 @else
-                                    —
+                                    -
                                 @endif
                             </td>
-                            <td>{{ $project->pic?->name ?? '—' }}</td>
+                            <td>{{ $project->pic?->name ?? '-' }}</td>
                             <td class="small">
-                                {{ $project->start_date?->format('d/m/Y') ?? '—' }}
+                                {{ $project->start_date?->format('d/m/Y') ?? '-' }}
                                 &rarr;
-                                {{ $project->target_end_date?->format('d/m/Y') ?? '—' }}
+                                {{ $project->target_end_date?->format('d/m/Y') ?? '-' }}
                             </td>
                             <td>
                                 <span class="badge text-bg-{{ $project->statusBadge() }}">

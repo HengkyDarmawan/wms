@@ -558,7 +558,7 @@ class ReceiptForm extends Component
     {
         return Pilihan::dari(Vendor::query()->where('is_active', true)->orderBy('name'), ['code', 'name'], fn (Vendor $v) => [
             'value' => (int) $v->id,
-            'text' => $v->code.' — '.$v->name,
+            'text' => $v->code.' · '.$v->name,
         ]);
     }
 

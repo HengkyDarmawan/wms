@@ -5,9 +5,9 @@
     <table class="info">
         <tr>
             <td class="k">{{ __('Proyek') }}</td>
-            <td>{{ $wst->project?->code }} — {{ $wst->project?->name }}</td>
+            <td>{{ $wst->project?->code }} · {{ $wst->project?->name }}</td>
             <td class="k">{{ __('Gudang') }}</td>
-            <td>{{ $wst->warehouse?->code }} — {{ $wst->warehouse?->name }}</td>
+            <td>{{ $wst->warehouse?->code }} · {{ $wst->warehouse?->name }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Disposisi') }}</td>
@@ -16,7 +16,7 @@
                 @if ($wst->targetBin) · {{ __('ke bin') }} {{ $wst->targetBin->code }} @endif
             </td>
             <td class="k">{{ __('Bukti') }}</td>
-            <td>{{ $wst->evidence_note ?? ($wst->evidence_path ? __('Foto terlampir di sistem') : '—') }}</td>
+            <td>{{ $wst->evidence_note ?? ($wst->evidence_path ? __('Foto terlampir di sistem') : '-') }}</td>
         </tr>
     </table>
 

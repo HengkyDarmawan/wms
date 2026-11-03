@@ -85,9 +85,9 @@
                             </td>
                             <td>{{ $c->count_type->label() }} @unless ($c->freeze_bins) <span class="badge text-bg-light">{{ __('tanpa beku') }}</span> @endunless</td>
                             <td>{{ $c->warehouses->pluck('code')->implode(', ') }}</td>
-                            <td class="text-end">{{ $c->assignments_count ?: '—' }}</td>
-                            <td class="text-end">{{ isset($akurasi[$c->id]['akurasi']) ? number_format($akurasi[$c->id]['akurasi'], 1, ',', '.').' %' : '—' }}</td>
-                            <td class="text-end">{{ $akurasi[$c->id]['besar'] ?? '—' }}</td>
+                            <td class="text-end">{{ $c->assignments_count ?: '-' }}</td>
+                            <td class="text-end">{{ isset($akurasi[$c->id]['akurasi']) ? number_format($akurasi[$c->id]['akurasi'], 1, ',', '.').' %' : '-' }}</td>
+                            <td class="text-end">{{ $akurasi[$c->id]['besar'] ?? '-' }}</td>
                             <td><span class="badge {{ $c->status->badge() }}">{{ $c->status->label() }}</span></td>
                         </tr>
                     @empty

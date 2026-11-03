@@ -2,7 +2,7 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
             <h1 class="h3 mb-1">{{ __('Peta approval') }}</h1>
-            <p class="text-muted mb-0">{{ __('Siapa menyetujui apa, dan siapa atasan siapa. Hanya membaca — ubah lewat Aturan approval dan Struktur organisasi.') }}</p>
+            <p class="text-muted mb-0">{{ __('Siapa menyetujui apa, dan siapa atasan siapa. Hanya membaca; ubah lewat Aturan approval dan Struktur organisasi.') }}</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <a wire:navigate class="btn btn-outline-secondary" href="{{ route('approval.rules.index') }}">{{ __('Aturan approval') }}</a>
@@ -40,14 +40,14 @@
 
     {{-- 2. Bagan jabatan (A-344). --}}
     <div class="card mb-3">
-        <div class="card-header"><strong>{{ __('2. Bagan jabatan') }}</strong> <span class="text-muted small">{{ __('— pemegang jabatan atasan menjadi atasan langsung, kecuali diisi manual di pengguna') }}</span></div>
+        <div class="card-header"><strong>{{ __('2. Bagan jabatan') }}</strong> <span class="text-muted small">{{ __('pemegang jabatan atasan menjadi atasan langsung, kecuali diisi manual di pengguna') }}</span></div>
         <div class="card-body">
             @forelse ($bagan as $b)
                 <div class="py-1" style="padding-left: {{ $b['depth'] * 1.5 }}rem" wire:key="bagan-{{ $b['jabatan']->id }}">
                     @if ($b['depth'] > 0)<span class="text-muted">└</span>@endif
                     <strong>{{ $b['jabatan']->name }}</strong>
-                    <span class="text-muted small">· {{ $b['unit']?->name ?? '—' }} · {{ __('level :n', ['n' => $b['jabatan']->level]) }}</span>
-                    — {{ $b['pemegang'] === [] ? __('belum ada pemegang') : implode(', ', $b['pemegang']) }}
+                    <span class="text-muted small">· {{ $b['unit']?->name ?? '-' }} · {{ __('level :n', ['n' => $b['jabatan']->level]) }}</span>
+                    · {{ $b['pemegang'] === [] ? __('belum ada pemegang') : implode(', ', $b['pemegang']) }}
                 </div>
             @empty
                 <p class="text-muted mb-0">{{ __('Belum ada jabatan. Tambahkan di Struktur organisasi.') }}</p>
@@ -71,11 +71,11 @@
                 @error('jenis') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-2">
-                <x-pilih model="gudang" id="cek-gudang" :label="__('Gudang')" :kosong="__('— opsional —')"
+                <x-pilih model="gudang" id="cek-gudang" :label="__('Gudang')" :kosong="__('(opsional)')"
                          :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code, 'sub' => $w->name])->all()" />
             </div>
             <div class="col-md-2">
-                <x-pilih model="proyek" id="cek-proyek" server :label="__('Proyek')" :kosong="__('— opsional —')" :options="$opsiProyek" />
+                <x-pilih model="proyek" id="cek-proyek" server :label="__('Proyek')" :kosong="__('(opsional)')" :options="$opsiProyek" />
             </div>
             <div class="col-md-2">
                 <button class="btn btn-primary w-100" type="button" wire:click="cek">{{ __('Cek') }}</button>

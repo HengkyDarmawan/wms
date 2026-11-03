@@ -56,7 +56,7 @@
                 <strong>{{ $l['approver_label'] }}</strong>
                 <span class="text-muted small">({{ \App\Domain\Approval\Enums\DecisionMode::from($l['decision_mode'])->label() }}, {{ $l['timeout_hours'] }} {{ __('jam') }})</span>:
                 @if ($l['blocked'])
-                    <span class="badge text-bg-danger">{{ __('Tidak ada approver — dokumen tidak bisa diajukan') }}</span>
+                    <span class="badge text-bg-danger">{{ __('Tidak ada approver, jadi dokumen tidak bisa diajukan') }}</span>
                 @else
                     {{ implode(', ', $l['approver_names']) }}
                 @endif

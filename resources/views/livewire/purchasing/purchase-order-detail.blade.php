@@ -114,7 +114,7 @@
                                 @endif
                             </td>
                             <td class="text-end">{{ number_format((float) $l->qty_received, 2, ',', '.') }}</td>
-                            <td class="text-end">{{ (float) $l->qty_cancelled > 0 ? number_format((float) $l->qty_cancelled, 2, ',', '.') : '—' }}</td>
+                            <td class="text-end">{{ (float) $l->qty_cancelled > 0 ? number_format((float) $l->qty_cancelled, 2, ',', '.') : '-' }}</td>
                             <td class="text-end text-nowrap">{{ $rp($l->unit_price) }}</td>
                             <td class="text-end text-nowrap">{{ $rp($l->line_amount) }}</td>
                         </tr>
@@ -168,7 +168,7 @@
                 <strong class="small">{{ __('Bonus dari vendor') }}</strong>
                 <ul class="small mb-0">
                     @foreach ($bonus as $b)
-                        <li>{{ $b->item?->code }} {{ $b->item?->name }} — {{ rtrim(rtrim(number_format((float) $b->qty_received, 4, ',', '.'), '0'), ',') }} {{ $b->item?->baseUom?->code }} ({{ $b->receipt?->number }}){{ $b->notes ? ': '.$b->notes : '' }}</li>
+                        <li>{{ $b->item?->code }} {{ $b->item?->name }} · {{ rtrim(rtrim(number_format((float) $b->qty_received, 4, ',', '.'), '0'), ',') }} {{ $b->item?->baseUom?->code }} ({{ $b->receipt?->number }}){{ $b->notes ? ': '.$b->notes : '' }}</li>
                     @endforeach
                 </ul>
             </div>

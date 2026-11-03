@@ -60,7 +60,7 @@ class RecordCountRootCause
 
         activity('count')->performedOn($count)->causedBy($actor)
             ->withProperties(['baris' => $line->id, 'akar_masalah' => $kategori?->value])
-            ->log('Akar masalah baris '.$line->item?->code.' di '.$line->bin?->code.': '.($kategori?->label() ?? '—'));
+            ->log('Akar masalah baris '.$line->item?->code.' di '.$line->bin?->code.': '.($kategori?->label() ?? '-'));
 
         return $line->refresh();
     }

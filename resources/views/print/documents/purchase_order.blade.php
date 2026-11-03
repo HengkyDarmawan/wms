@@ -17,13 +17,13 @@
         </tr>
         <tr>
             <td class="k">{{ __('Kirim ke') }}</td>
-            <td>{{ $po->warehouse?->code }} — {{ $po->warehouse?->name }}<br>{{ $po->warehouse?->address }}</td>
+            <td>{{ $po->warehouse?->code }} · {{ $po->warehouse?->name }}<br>{{ $po->warehouse?->address }}</td>
             <td class="k">{{ __('Perkiraan datang') }}</td>
-            <td>{{ $po->eta_date?->format('d/m/Y') ?? '—' }}</td>
+            <td>{{ $po->eta_date?->format('d/m/Y') ?? '-' }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Termin') }}</td>
-            <td>{{ $po->payment_terms ?? '—' }}</td>
+            <td>{{ $po->payment_terms ?? '-' }}</td>
             <td class="k">{{ __('Mata uang') }}</td>
             <td>{{ $po->currency }}</td>
         </tr>

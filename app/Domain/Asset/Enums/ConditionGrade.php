@@ -23,10 +23,10 @@ enum ConditionGrade: string
     public function label(): string
     {
         return match ($this) {
-            self::A => 'A — Baik',
-            self::B => 'B — Layak',
-            self::C => 'C — Rusak ringan',
-            self::D => 'D — Rusak berat',
+            self::A => 'A · Baik',
+            self::B => 'B · Layak',
+            self::C => 'C · Rusak ringan',
+            self::D => 'D · Rusak berat',
         };
     }
 

@@ -31,10 +31,10 @@
                         </td>
                         <td class="small text-muted">{{ $akun->email }}</td>
                         <td class="small">
-                            {{ $akun->roleAssignments->pluck('role.name')->filter()->unique()->implode(', ') ?: '—' }}
+                            {{ $akun->roleAssignments->pluck('role.name')->filter()->unique()->implode(', ') ?: '-' }}
                         </td>
                         <td><span class="badge text-bg-{{ $status->badge() }}">{{ $status->label() }}</span></td>
-                        <td>{{ $akun->dari_pic ?: '—' }}</td>
+                        <td>{{ $akun->dari_pic ?: '-' }}</td>
                     </tr>
                 @empty
                     <tr>

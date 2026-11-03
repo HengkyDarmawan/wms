@@ -56,7 +56,7 @@ class ApprovalWhatsApp
         try {
             $id = $this->channel->template($nomor, 'approval', [
                 $this->channel->companyName(),
-                $snapshot->document_type->code().' '.$snapshot->document_number.' — lapis '.$task->step_no,
+                $snapshot->document_type->code().' '.$snapshot->document_number.' · lapis '.$task->step_no,
                 $summary,
             ], [
                 ['type' => 'quick_reply', 'value' => $payload('A')],

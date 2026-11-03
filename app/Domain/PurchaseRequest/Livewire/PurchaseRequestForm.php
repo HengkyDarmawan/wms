@@ -117,7 +117,7 @@ class PurchaseRequestForm extends Component
         return Pilihan::dari(
             Project::query()->when($proyek !== null, fn (Builder $q) => $q->whereIn('id', $proyek))->orderBy('code'),
             ['code', 'name'],
-            fn (Project $p) => ['value' => (int) $p->id, 'text' => $p->code.' — '.$p->name],
+            fn (Project $p) => ['value' => (int) $p->id, 'text' => $p->code.' · '.$p->name],
         );
     }
 
@@ -128,7 +128,7 @@ class PurchaseRequestForm extends Component
             Item::query()->with('baseUom:id,code')
                 ->whereIn('status', [ItemStatus::Active->value, ItemStatus::Provisional->value])->orderBy('code'),
             ['code', 'name', 'barcode'],
-            fn (Item $i) => ['value' => (int) $i->id, 'text' => $i->code.' — '.$i->name.' ('.$i->baseUom?->code.')'],
+            fn (Item $i) => ['value' => (int) $i->id, 'text' => $i->code.' · '.$i->name.' ('.$i->baseUom?->code.')'],
         );
     }
 

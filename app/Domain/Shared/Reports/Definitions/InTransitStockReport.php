@@ -81,14 +81,14 @@ class InTransitStockReport extends Report
             return [
                 'gudang' => $b->bin?->warehouse?->code,
                 'item' => $b->item?->code,
-                'pelacakan' => $b->lot?->lot_no ?? $b->serial?->serial_no ?? $b->piece?->piece_no ?? '—',
+                'pelacakan' => $b->lot?->lot_no ?? $b->serial?->serial_no ?? $b->piece?->piece_no ?? '-',
                 'kondisi' => $b->stock_status->label(),
                 'jumlah' => round((float) $b->qty_base, 4),
                 'satuan' => $b->item?->baseUom?->code,
-                'sj' => $m?->document_number ?? '—',
-                'tujuan' => $kiriman?->destinationWarehouse?->code ?? $kiriman?->destinationProject?->code ?? '—',
-                'trf' => $kiriman !== null ? ($trf[$kiriman->id] ?? '—') : '—',
-                'umur' => $this->umurHari($m) ?? '—',
+                'sj' => $m?->document_number ?? '-',
+                'tujuan' => $kiriman?->destinationWarehouse?->code ?? $kiriman?->destinationProject?->code ?? '-',
+                'trf' => $kiriman !== null ? ($trf[$kiriman->id] ?? '-') : '-',
+                'umur' => $this->umurHari($m) ?? '-',
             ];
         })
             ->sortBy([['gudang', 'asc'], ['item', 'asc']])

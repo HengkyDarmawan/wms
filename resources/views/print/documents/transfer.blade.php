@@ -6,21 +6,21 @@
     <table class="info">
         <tr>
             <td class="k">{{ __('Dari gudang') }}</td>
-            <td>{{ $trf->fromWarehouse?->code }} — {{ $trf->fromWarehouse?->name }}@if ($trf->fromProject) <br><small>{{ __('Proyek') }} {{ $trf->fromProject->code }} — {{ $trf->fromProject->name }}</small>@endif</td>
+            <td>{{ $trf->fromWarehouse?->code }} · {{ $trf->fromWarehouse?->name }}@if ($trf->fromProject) <br><small>{{ __('Proyek') }} {{ $trf->fromProject->code }} · {{ $trf->fromProject->name }}</small>@endif</td>
             <td class="k">{{ __('Jenis') }}</td>
             <td>{{ $trf->kind()->label() }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Ke gudang') }}</td>
-            <td>{{ $trf->toWarehouse?->code }} — {{ $trf->toWarehouse?->name }}@if ($trf->toProject) <br><small>{{ __('Proyek') }} {{ $trf->toProject->code }} — {{ $trf->toProject->name }}</small>@endif</td>
+            <td>{{ $trf->toWarehouse?->code }} · {{ $trf->toWarehouse?->name }}@if ($trf->toProject) <br><small>{{ __('Proyek') }} {{ $trf->toProject->code }} · {{ $trf->toProject->name }}</small>@endif</td>
             <td class="k">{{ __('Disetujui') }}</td>
-            <td>{{ $trf->approved_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $trf->approved_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Rujukan') }}</td>
-            <td>{{ $rujukan ?: '—' }}</td>
+            <td>{{ $rujukan ?: '-' }}</td>
             <td class="k">{{ __('Selesai') }}</td>
-            <td>{{ $trf->completed_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $trf->completed_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
         </tr>
     </table>
 

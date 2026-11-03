@@ -30,7 +30,7 @@
     @foreach ($d['zones'] as $z)
         <g transform="translate({{ $z['x'] * $S }},{{ $z['y'] * $S }})" data-mini-zona="{{ $z['code'] }}">
             <rect x="0" y="0" width="{{ $z['w'] * $S }}" height="{{ $z['h'] * $S }}" rx="8" fill="#eef2ff" fill-opacity="0.55" stroke="#6366f1" stroke-width="2"/>
-            <text x="10" y="22" font-size="17" font-weight="600" fill="#4338ca">Zona {{ $z['code'] }} — {{ $pendek($z['name'], 28) }}</text>
+            <text x="10" y="22" font-size="17" font-weight="600" fill="#4338ca">Zona {{ $z['code'] }} · {{ $pendek($z['name'], 28) }}</text>
             @foreach ($z['racks'] as $r)
                 @php
                     $W = $r['w'] * $S;
@@ -43,7 +43,7 @@
                     $bisaKlik = $klik && ! $ditolak;
                     $garis = $aktif ? '#1c7ed6' : ($rakSorot || $binSorot ? '#1c7ed6' : ($ditolak ? '#adb5bd' : '#495057'));
                     $arah = ($r['orientation'] ?? 'h') === 'v' ? __('Memanjang ke bawah') : __('Memanjang ke samping');
-                    $judul = ($r['is_area'] ? __('Area lantai') : __('Rak')).' '.$r['code'].($r['name'] ? ' — '.$r['name'] : '').' · '.$arah.' · '.$angka($r['len']).' × '.$angka($r['wid']).' m'
+                    $judul = ($r['is_area'] ? __('Area lantai') : __('Rak')).' '.$r['code'].($r['name'] ? ' · '.$r['name'] : '').' · '.$arah.' · '.$angka($r['len']).' × '.$angka($r['wid']).' m'
                         .($r['is_area'] ? '' : ' · '.count($r['levels']).' '.__('tingkat').' × '.$r['kolom'].' '.__('bin'))
                         .($ditolak ? ' · '.__('khusus barang').' '.$tolak[(string) $r['id']] : '');
                 @endphp

@@ -80,7 +80,7 @@
                                 <div class="small text-muted">{{ $r->project?->name }}</div>
                             </td>
                             <td>
-                                {{ $r->requester?->name ?? '—' }}
+                                {{ $r->requester?->name ?? '-' }}
                                 <div class="small text-muted">{{ $r->requester_type->label() }}</div>
                             </td>
                             <td class="text-end">{{ $r->open_lines_count }}</td>

@@ -18,7 +18,7 @@
         <div class="card-body row g-3">
             <div class="col-md-3">
                 <x-pilih model="form.warehouse_id" id="wst-gudang" live wajib :label="__('Gudang')" :kosong="__('Pilih gudang…')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-md-3">
                 {{-- A-395: proyek aktif dalam cakupan (Gudang Site: proyek pemiliknya), dicari ke server. --}}

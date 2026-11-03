@@ -13,16 +13,16 @@
                 @elseif ($project->client !== null)
                     · <a wire:navigate href="{{ route('clients.show', $project->client->id) }}">{{ $project->client->name }}</a>
                 @else
-                    · —
+                    · -
                 @endif
-                · {{ __('PIC') }} {{ $project->pic?->name ?? '—' }}
-                · {{ $project->start_date?->format('d/m/Y') ?? '—' }} &rarr; {{ $project->target_end_date?->format('d/m/Y') ?? '—' }}
+                · {{ __('PIC') }} {{ $project->pic?->name ?? '-' }}
+                · {{ $project->start_date?->format('d/m/Y') ?? '-' }} &rarr; {{ $project->target_end_date?->format('d/m/Y') ?? '-' }}
                 @if ($project->closed_at) · {{ __('Ditutup') }} {{ $project->closed_at->lokal()->format('d/m/Y') }} @endif
             </p>
             <p class="small mb-0">
                 {{ __('Gudang Site') }}:
                 @forelse ($sites as $g)
-                    <a wire:navigate class="badge text-bg-light text-decoration-none border" href="{{ route('warehouses.show', $g) }}">{{ $g->code }} — {{ $g->name }}</a>
+                    <a wire:navigate class="badge text-bg-light text-decoration-none border" href="{{ route('warehouses.show', $g) }}">{{ $g->code }} · {{ $g->name }}</a>
                 @empty
                     <span class="text-muted">{{ __('belum ada') }}</span>
                 @endforelse
@@ -170,7 +170,7 @@
                         <a wire:navigate href="{{ route('transfers.show', $t->id) }}">{{ $t->number }}</a>
                         <span>{{ $t->kind()->label() }} · {{ $t->lines_count }} {{ __('baris') }} · {{ $keluar ? __('dipindah ke') : __('diterima dari') }}</span>
                         @if ($lawan)
-                            <a wire:navigate class="btn btn-sm btn-outline-secondary py-0" href="{{ route('projects.show', $lawan->id) }}">{{ $lawan->code }} — {{ $lawan->name }}</a>
+                            <a wire:navigate class="btn btn-sm btn-outline-secondary py-0" href="{{ route('projects.show', $lawan->id) }}">{{ $lawan->code }} · {{ $lawan->name }}</a>
                         @endif
                         <span class="badge {{ $t->status->badge() }}">{{ $t->status->label() }}</span>
                         <span class="text-muted ms-auto">{{ $t->created_at?->lokal()->format('d/m/Y') }}</span>
@@ -198,7 +198,7 @@
                             <tr wire:key="req-{{ $r->id }}">
                                 <td><a wire:navigate href="{{ route('requests.show', $r) }}">{{ $r->number }}</a><div class="small text-muted">{{ $r->created_at?->lokal()->format('d/m/Y') }}</div></td>
                                 <td>{{ $r->requester?->name }}</td>
-                                <td>{{ $r->required_date?->format('d/m/Y') ?? '—' }}</td>
+                                <td>{{ $r->required_date?->format('d/m/Y') ?? '-' }}</td>
                                 <td class="text-end">{{ $r->lines_count }}</td>
                                 <td><span class="badge {{ $r->status->badge() }}">{{ $r->status->label() }}</span></td>
                             </tr>
@@ -221,8 +221,8 @@
                                 <td><a wire:navigate href="{{ route('shipments.show', $s) }}">{{ $s->number }}</a></td>
                                 <td>{{ $s->warehouse?->code }}</td>
                                 <td>{{ $s->destinationWarehouse?->code ?? $s->destination_type?->label() }}</td>
-                                <td>{{ $s->driverLabel() ?: ($s->carried_by_name ?? '—') }}</td>
-                                <td>{{ $s->shipped_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+                                <td>{{ $s->driverLabel() ?: ($s->carried_by_name ?? '-') }}</td>
+                                <td>{{ $s->shipped_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
                                 <td><span class="badge {{ $s->status->badge() }}">{{ $s->status->label() }}</span></td>
                             </tr>
                         @empty
@@ -247,8 +247,8 @@
                                 @forelse ($baris as $c)
                                     <tr wire:key="stok-{{ $c['key'] }}">
                                         <td>{{ $c['item_code'] }} <div class="small text-muted">{{ $c['item_name'] }}</div></td>
-                                        <td class="small">{{ $c['tracking'] ?: '—' }}</td>
-                                        <td class="small">{{ $c['shipment_number'] ?? $c['bin_code'] ?? '—' }}</td>
+                                        <td class="small">{{ $c['tracking'] ?: '-' }}</td>
+                                        <td class="small">{{ $c['shipment_number'] ?? $c['bin_code'] ?? '-' }}</td>
                                         <td class="text-end">{{ $angka($c['max'], 4) }}</td>
                                     </tr>
                                 @empty
@@ -396,11 +396,11 @@
                                 <td><a wire:navigate href="{{ route('asset-handovers.show', $a) }}">{{ $a->number }}</a></td>
                                 <td>
                                     @if ($a->serial) <a wire:navigate href="{{ route('assets.show', $a->serial) }}">{{ $a->serial->serial_no }}</a> @endif
-                                    <div class="small text-muted">{{ $a->item?->code }} — {{ $a->item?->name }}</div>
+                                    <div class="small text-muted">{{ $a->item?->code }} · {{ $a->item?->name }}</div>
                                 </td>
-                                <td>{{ $a->checked_out_at?->lokal()->format('d/m/Y') ?? '—' }}</td>
-                                <td>{{ $a->due_return_date?->format('d/m/Y') ?? '—' }}</td>
-                                <td>{{ $a->returned_at?->lokal()->format('d/m/Y') ?? '—' }}</td>
+                                <td>{{ $a->checked_out_at?->lokal()->format('d/m/Y') ?? '-' }}</td>
+                                <td>{{ $a->due_return_date?->format('d/m/Y') ?? '-' }}</td>
+                                <td>{{ $a->returned_at?->lokal()->format('d/m/Y') ?? '-' }}</td>
                                 <td><span class="badge {{ $a->status->badge() }}">{{ $a->status->label() }}</span></td>
                             </tr>
                         @empty
@@ -424,10 +424,10 @@
                                     @if ($a['url']) <a href="{{ $a['url'] }}">{{ $a['nomor'] }}</a> @else {{ $a['nomor'] }} @endif
                                     <div class="small text-muted">{{ $a['jenis'] }}</div>
                                 </td>
-                                <td class="small">{{ $a['aturan'] ?? '—' }}</td>
-                                <td>{{ $a['lapis'] ?? '—' }}</td>
-                                <td>{{ $a['approver'] ?: '—' }}</td>
-                                <td class="small">{{ $a['diajukan'] ?? '—' }} · {{ $a['sejak']?->lokal()->format('d/m/Y H:i') }}</td>
+                                <td class="small">{{ $a['aturan'] ?? '-' }}</td>
+                                <td>{{ $a['lapis'] ?? '-' }}</td>
+                                <td>{{ $a['approver'] ?: '-' }}</td>
+                                <td class="small">{{ $a['diajukan'] ?? '-' }} · {{ $a['sejak']?->lokal()->format('d/m/Y H:i') }}</td>
                             </tr>
                         @empty
                             <tr><td class="text-center text-muted py-4" colspan="5">{{ __('Tidak ada dokumen proyek ini yang menunggu approval.') }}</td></tr>

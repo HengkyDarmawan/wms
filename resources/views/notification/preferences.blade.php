@@ -43,7 +43,7 @@
                                         <input class="form-check-input" type="checkbox" name="prefs[{{ $kunci }}][whatsapp]" value="1" aria-label="{{ __('WhatsApp') }} {{ __($e['label']) }}" @checked($p?->whatsapp ?? true)>
                                         <div class="small text-muted">{{ ['instant' => __('langsung'), 'digest' => __('ringkasan'), 'buttons' => __('tombol')][$waEvents[$kunci]] ?? '' }}</div>
                                     @else
-                                        <span class="text-muted" title="{{ __('Tidak diizinkan company') }}">—</span>
+                                        <span class="text-muted" title="{{ __('Tidak diizinkan company') }}">-</span>
                                     @endisset
                                 </td>
                             @endif

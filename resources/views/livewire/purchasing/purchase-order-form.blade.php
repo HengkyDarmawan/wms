@@ -23,7 +23,7 @@
             </div>
             <div class="col-md-3">
                 <x-pilih model="form.warehouse_id" id="po-gudang" live wajib :label="__('Gudang tujuan')" :kosong="__('Pilih gudang…')"
-                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' — '.$w->name])->all()" />
+                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' · '.$w->name])->all()" />
             </div>
             <div class="col-md-2">
                 <label class="form-label" for="po-eta">{{ __('Perkiraan datang') }}</label>
@@ -103,7 +103,7 @@
                                     <span class="badge text-bg-warning mt-1" data-naik>{{ __('Naik :p % dari harga terakhir', ['p' => number_format($naik, 1, ',', '.')]) }}</span>
                                 @endif
                             </td>
-                            <td class="text-end text-nowrap">{{ $this->nilai($l->id) > 0 ? \App\Domain\Purchasing\Support\Money::format($this->nilai($l->id)) : '—' }}</td>
+                            <td class="text-end text-nowrap">{{ $this->nilai($l->id) > 0 ? \App\Domain\Purchasing\Support\Money::format($this->nilai($l->id)) : '-' }}</td>
                         </tr>
                     @empty
                         <tr>

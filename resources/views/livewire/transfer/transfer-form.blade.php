@@ -57,7 +57,7 @@
                             <td style="max-width: 9rem">
                                 <input class="form-control form-control-sm" type="number" step="0.0001" min="0" wire:model="rows.{{ $i }}.qty_base">
                             </td>
-                            <td class="text-end small">{{ isset($tersedia[$i]) ? number_format($tersedia[$i], 2, ',', '.') : '—' }}</td>
+                            <td class="text-end small">{{ isset($tersedia[$i]) ? number_format($tersedia[$i], 2, ',', '.') : '-' }}</td>
                             <td><input class="form-control form-control-sm" type="text" wire:model="rows.{{ $i }}.notes" placeholder="{{ __('Opsional') }}"></td>
                             <td><button class="btn btn-sm btn-outline-danger" type="button" wire:click="hapusBaris({{ $i }})" aria-label="{{ __('Hapus baris') }}">×</button></td>
                         </tr>

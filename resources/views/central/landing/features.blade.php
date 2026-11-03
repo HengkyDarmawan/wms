@@ -5,7 +5,7 @@
         ['bi-geo-alt', __('Stok per proyek & Gudang Site'), __('Gudang utama, cabang, sampai titik di lokasi proyek. Stok on-site terlihat per proyek, termasuk aset yang sedang dipinjam.'), null],
         ['bi-hammer', __('Pemakaian material'), __('Barang habis pakai di Gudang Site dicatat terpakai oleh proyek, sehingga diminta vs terkirim vs terpakai selalu bisa dibandingkan.'), null],
         ['bi-tools', __('Aset dipinjamkan'), __('Mesin & alat punya siklus hidup sendiri: dipinjam, kembali, diperiksa dengan grade dan skor kondisi, plus peringatan jatuh tempo.'), null],
-        ['bi-people', __('Portal klien'), __('Klien pemilik proyek mengajukan permintaan — termasuk barang di luar katalog — melacak pengiriman, dan mengonfirmasi penerimaan.'), null],
+        ['bi-people', __('Portal klien'), __('Klien pemilik proyek mengajukan permintaan (termasuk barang di luar katalog), melacak pengiriman, dan mengonfirmasi penerimaan.'), null],
         ['bi-diagram-3', __('Approval berlapis'), __('Mengikuti struktur organisasi Anda, lengkap dengan delegasi dan eskalasi. Approval lewat WhatsApp menyusul.'), null],
         ['bi-clipboard-check', __('Stock opname hitung buta'), __('Penghitung tidak melihat angka sistem. Toleransi selisih, hitung ulang, dan rekonsiliasi langsung dari aplikasi.'), null],
         ['bi-qr-code-scan', __('PWA & scan kamera'), __('Pasang di HP tanpa toko aplikasi, pindai barcode/QR dengan kamera, dan simpan draf bukti terima di perangkat.'), null],

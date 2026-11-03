@@ -147,7 +147,7 @@ class AdjustmentForm extends Component
     {
         return Pilihan::dari(Item::query()->orderBy('code'), ['code', 'name', 'barcode'], fn (Item $i) => [
             'value' => (int) $i->id,
-            'text' => $i->code.' — '.$i->name,
+            'text' => $i->code.' · '.$i->name,
         ]);
     }
 

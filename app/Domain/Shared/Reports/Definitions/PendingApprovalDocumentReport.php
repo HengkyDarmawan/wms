@@ -74,7 +74,7 @@ class PendingApprovalDocumentReport extends Report
                     'dokumen' => $grup->count(),
                     'tugas' => $tugas->count(),
                     'lewat' => $tugas->filter(fn (ApprovalTask $t) => $t->due_at !== null && $t->due_at->lt($sekarang))->count(),
-                    'tertua' => $tertua->document_number ?? '—',
+                    'tertua' => $tertua->document_number ?? '-',
                     'umur_hari' => round($tertua->submitted_at->diffInMinutes($sekarang) / 1440, 1),
                 ];
             })

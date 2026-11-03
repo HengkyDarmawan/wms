@@ -53,7 +53,7 @@ class StockMovementPeriodReport extends Report
             'date_from' => ['label' => 'Dari tanggal'],
             'date_to' => ['label' => 'Sampai tanggal'],
             'warehouse_id' => ['label' => 'Gudang', 'cari' => true, 'options' => Warehouse::query()->orderBy('code')->get(['id', 'code', 'name'])
-                ->mapWithKeys(fn (Warehouse $w) => [$w->id => $w->code.' — '.$w->name])->all()],
+                ->mapWithKeys(fn (Warehouse $w) => [$w->id => $w->code.' · '.$w->name])->all()],
         ];
     }
 

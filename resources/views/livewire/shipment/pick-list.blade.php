@@ -54,7 +54,7 @@
             </div>
             <div class="col-lg-3">
                 <x-pilih model="warehouseFilter" id="filter-gudang-pck" live :label="__('Gudang')" :kosong="__('Semua gudang')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
             <div class="col-lg-3">
                 <label class="form-label" for="filter-status-pck">{{ __('Status') }}</label>
@@ -96,7 +96,7 @@
                                 <div class="small text-muted">{{ $t->warehouse?->name }}</div>
                             </td>
                             <td class="text-end">{{ $t->lines_count }}</td>
-                            <td>{{ $t->assignee?->name ?? '—' }}</td>
+                            <td>{{ $t->assignee?->name ?? '-' }}</td>
                             <td><span class="badge {{ $t->status->badge() }}">{{ $t->status->label() }}</span></td>
                         </tr>
                     @empty

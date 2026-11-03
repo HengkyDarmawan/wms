@@ -2,7 +2,7 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
             <h1 class="h3 mb-1">{{ __('Purchase Request') }}</h1>
-            <p class="text-muted mb-0">{{ __('Permintaan pembelian ke tim Purchasing: dari backorder REQ, titik pesan ulang, atau manual. Tanpa harga — PO dan nilai ada di sistem Purchasing.') }}</p>
+            <p class="text-muted mb-0">{{ __('Permintaan pembelian ke tim Purchasing: dari backorder REQ, titik pesan ulang, atau manual. Tanpa harga: PO dan nilai ada di sistem Purchasing.') }}</p>
         </div>
         @can('create', App\Domain\PurchaseRequest\Models\PurchaseRequest::class)
             <a wire:navigate class="btn btn-primary" href="{{ route('purchase-requests.create') }}">{{ __('PRQ manual') }}</a>
@@ -17,7 +17,7 @@
             </div>
             <div class="col-lg-3">
                 <x-pilih model="warehouseFilter" id="filter-gudang-prq" live :label="__('Gudang tujuan')" :kosong="__('Semua')"
-                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' — '.$w->name])->all()" />
+                         :options="$warehouses->map(fn ($w) => ['value' => $w->id, 'text' => $w->code.' · '.$w->name])->all()" />
             </div>
             <div class="col-lg-3">
                 <label class="form-label" for="filter-asal-prq">{{ __('Asal') }}</label>
@@ -66,7 +66,7 @@
                                 {{ $p->origin->label() }}
                                 @if ($p->materialRequest) <div class="small text-muted">{{ $p->materialRequest->number }}</div> @endif
                             </td>
-                            <td>{{ $p->project?->code ?? '—' }}</td>
+                            <td>{{ $p->project?->code ?? '-' }}</td>
                             <td class="text-end">{{ $p->lines_count }}</td>
                             <td class="text-end">{{ $p->orders_count }}</td>
                             <td><span class="badge {{ $p->status->badge() }}">{{ $p->status->label() }}</span></td>

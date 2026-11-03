@@ -98,7 +98,7 @@ class SaveItemStorageLocations
             if ($baru !== $lama) {
                 activity('master')->performedOn($item)->causedBy($actor)
                     ->withProperties(['gudang' => $gudang->code, 'sebelum' => $lama, 'sesudah' => $baru])
-                    ->log('Tempat simpan di gudang '.$gudang->code.' diubah: '.($baru === [] ? '—' : implode(', ', $baru)));
+                    ->log('Tempat simpan di gudang '.$gudang->code.' diubah: '.($baru === [] ? '-' : implode(', ', $baru)));
             }
 
             return $hasil;

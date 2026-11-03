@@ -108,7 +108,7 @@ class DocumentLayoutTest extends TenantTestCase
 
         $admin = $this->makeUser('company_admin');
         $this->actingAs($admin)->get($this->tenantUrl('settings/document-layout'))->assertOk()
-            ->assertSee('Editor template — Fase 2');
+            ->assertSee('Editor template (Fase 2)');
 
         $contoh = $this->actingAs($admin)->get($this->tenantUrl('settings/document-layout/preview'));
         $contoh->assertOk();

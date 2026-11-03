@@ -59,7 +59,7 @@ class InvitationLinkTest extends TenantTestCase
         app(AcceptInvitation::class)->handle((string) $sekarang->token_plain, 'Rahasia#2026!Baru', null, null);
 
         Livewire::actingAs($admin)->test(UserDetail::class, ['userId' => $baru->id])
-            ->assertDontSee('Undangan — belum dipakai');
+            ->assertDontSee('Undangan belum dipakai');
     }
 
     #[Test]

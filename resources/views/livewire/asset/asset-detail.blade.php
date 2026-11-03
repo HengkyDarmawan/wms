@@ -8,8 +8,8 @@
                 @if ($aset->isOverdue()) <span class="badge text-bg-danger">{{ __('Lewat jatuh tempo') }}</span> @endif
             </h1>
             <p class="text-muted mb-0">
-                {{ $aset->item?->code }} — {{ $aset->item?->name }}
-                · {{ __('Lokasi') }} {{ $saldo?->bin?->code ?? '—' }}
+                {{ $aset->item?->code }} · {{ $aset->item?->name }}
+                · {{ __('Lokasi') }} {{ $saldo?->bin?->code ?? '-' }}
                 @if ($aset->currentProject) · {{ __('Proyek') }} {{ $aset->currentProject->code }} @endif
                 @if ($aset->due_return_date) · {{ __('Kembali') }} {{ $aset->due_return_date->format('d/m/Y') }} @endif
             </p>
@@ -28,11 +28,11 @@
 
     <div class="row g-3 mb-3">
         @foreach ([
-            [__('Grade / skor'), ($aset->condition_grade ?? '—').($aset->condition_score !== null ? ' · '.$aset->condition_score.' %' : '')],
-            [__('Meter'), $aset->meter_unit?->value === 'none' ? '—' : number_format((float) $aset->meter_total, 1, ',', '.').' '.$aset->meter_unit?->label()],
-            [__('Diperoleh'), $aset->acquired_at?->format('d/m/Y') ?? '—'],
-            [__('Umur harapan'), trim(($aset->expected_life_days ? $aset->expected_life_days.' '.__('hari') : '').($aset->expected_life_hours ? ' · '.number_format((float) $aset->expected_life_hours, 1, ',', '.').' '.$aset->meter_unit?->label() : '')) ?: '—'],
-            [__('Sisa umur'), $sisa === null ? '—' : number_format($sisa, 1, ',', '.').' %'],
+            [__('Grade / skor'), ($aset->condition_grade ?? '-').($aset->condition_score !== null ? ' · '.$aset->condition_score.' %' : '')],
+            [__('Meter'), $aset->meter_unit?->value === 'none' ? '-' : number_format((float) $aset->meter_total, 1, ',', '.').' '.$aset->meter_unit?->label()],
+            [__('Diperoleh'), $aset->acquired_at?->format('d/m/Y') ?? '-'],
+            [__('Umur harapan'), trim(($aset->expected_life_days ? $aset->expected_life_days.' '.__('hari') : '').($aset->expected_life_hours ? ' · '.number_format((float) $aset->expected_life_hours, 1, ',', '.').' '.$aset->meter_unit?->label() : '')) ?: '-'],
+            [__('Sisa umur'), $sisa === null ? '-' : number_format($sisa, 1, ',', '.').' %'],
         ] as [$label, $nilai])
             <div class="col-6 col-md">
                 <div class="card h-100"><div class="card-body py-2">
@@ -143,8 +143,8 @@
                             <td><a wire:navigate href="{{ route('asset-handovers.show', $h) }}">{{ $h->number }}</a> <div class="small text-muted">{{ $h->shipment?->number }} @if ($h->goodsReturn) · {{ $h->goodsReturn->number }} @endif</div></td>
                             <td>{{ $h->project?->code }}</td>
                             <td class="small">{{ $h->checked_out_at?->lokal()->format('d/m/Y') }} @if ($h->due_return_date) <div class="text-muted">{{ __('jatuh tempo') }} {{ $h->due_return_date->format('d/m/Y') }}</div> @endif</td>
-                            <td class="small">{{ $h->returned_at?->lokal()->format('d/m/Y') ?? '—' }}</td>
-                            <td class="text-end">{{ $h->usage_days ?? '—' }}</td>
+                            <td class="small">{{ $h->returned_at?->lokal()->format('d/m/Y') ?? '-' }}</td>
+                            <td class="text-end">{{ $h->usage_days ?? '-' }}</td>
                             <td>
                                 <span class="badge {{ $h->status->badge() }}">{{ $h->status->label() }}</span>
                                 @if ($h->lost_at) <span class="badge text-bg-danger">{{ __('Hilang') }}</span> @endif

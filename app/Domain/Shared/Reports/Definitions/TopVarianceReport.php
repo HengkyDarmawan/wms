@@ -85,13 +85,13 @@ class TopVarianceReport extends Report
                 'gudang' => $l->bin?->warehouse?->code,
                 'bin' => $l->bin?->code,
                 'item' => $l->item?->code,
-                'pelacakan' => $l->trackingLabel() !== '' ? $l->trackingLabel() : '—',
+                'pelacakan' => $l->trackingLabel() !== '' ? $l->trackingLabel() : '-',
                 'sistem' => round((float) $l->system_qty, 4),
                 'hitung' => round((float) $l->final_qty, 4),
                 'selisih' => round((float) $l->variance_qty, 4),
-                'persen' => $l->variance_pct !== null ? round((float) $l->variance_pct, 2) : '—',
-                'kelas' => $l->variance_class?->label() ?? '—',
-                'akar' => $l->root_cause?->label() ?? '—',
+                'persen' => $l->variance_pct !== null ? round((float) $l->variance_pct, 2) : '-',
+                'kelas' => $l->variance_class?->label() ?? '-',
+                'akar' => $l->root_cause?->label() ?? '-',
             ]);
     }
 }

@@ -72,12 +72,12 @@ class PendingSubstitutionReport extends Report
             ->map(fn (MaterialRequestLine $l) => [
                 'req' => $l->request?->number,
                 'proyek' => $l->request?->project?->code,
-                'asal' => $l->original_item_text ?: ($l->non_catalog_text ?: '—'),
-                'pengganti' => trim(($l->item?->code ?? '').' '.($l->item?->name ?? '')) ?: '—',
+                'asal' => $l->original_item_text ?: ($l->non_catalog_text ?: '-'),
+                'pengganti' => trim(($l->item?->code ?? '').' '.($l->item?->name ?? '')) ?: '-',
                 'jumlah' => round((float) $l->qty_base, 4),
                 'diganti' => $l->substituted_at?->lokal()->format('d/m/Y H:i'),
-                'tenggat' => $l->substitution_deadline_at?->lokal()->format('d/m/Y H:i') ?? '—',
-                'lewat' => $l->substitution_deadline_at !== null && $l->substitution_deadline_at->lt($sekarang) ? 'Ya' : '—',
+                'tenggat' => $l->substitution_deadline_at?->lokal()->format('d/m/Y H:i') ?? '-',
+                'lewat' => $l->substitution_deadline_at !== null && $l->substitution_deadline_at->lt($sekarang) ? 'Ya' : '-',
             ]);
     }
 }

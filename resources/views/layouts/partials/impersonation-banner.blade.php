@@ -14,7 +14,7 @@
         <div class="nx-imp-banner-inner">
             <span class="nx-imp-avatar nx-imp-tone-{{ $DemoFlows::tone($kodeUtama) }}" aria-hidden="true">{{ $DemoFlows::initials($dipakai->name) }}</span>
             <div class="nx-imp-banner-text">
-                <span class="nx-imp-banner-kicker"><i class="bi bi-easel2"></i> {{ __('Mode presentasi — Anda sedang masuk sebagai') }}</span>
+                <span class="nx-imp-banner-kicker"><i class="bi bi-easel2"></i> {{ __('Mode presentasi: Anda sedang masuk sebagai') }}</span>
                 <span class="nx-imp-banner-who">
                     <strong>{{ $dipakai->name }}</strong>
                     <span class="nx-imp-banner-roles">{{ implode(' · ', $DemoFlows::describe($dipakai)) }}</span>

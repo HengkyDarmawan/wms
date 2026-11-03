@@ -5,15 +5,15 @@
     <table class="info">
         <tr>
             <td class="k">{{ __('Vendor') }}</td>
-            <td>{{ $rtv->vendor?->code }} — {{ $rtv->vendor?->name }}</td>
+            <td>{{ $rtv->vendor?->code }} · {{ $rtv->vendor?->name }}</td>
             <td class="k">{{ __('Penerimaan asal') }}</td>
-            <td>{{ $rtv->receipt?->number ?? '—' }}</td>
+            <td>{{ $rtv->receipt?->number ?? '-' }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Dari gudang') }}</td>
-            <td>{{ $rtv->warehouse?->code }} — {{ $rtv->warehouse?->name }}</td>
+            <td>{{ $rtv->warehouse?->code }} · {{ $rtv->warehouse?->name }}</td>
             <td class="k">{{ __('Dikirim') }}</td>
-            <td>{{ $rtv->shipped_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $rtv->shipped_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
         </tr>
     </table>
 

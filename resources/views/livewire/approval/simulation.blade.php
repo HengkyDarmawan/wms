@@ -38,14 +38,14 @@
             @else
                 <div class="col-md-4">
                     <label class="form-label" for="sim-gudang">{{ __('Gudang') }}</label>
-                    <x-pilih-tag model="manual.warehouse_ids" id="sim-gudang" :options="$warehouses->mapWithKeys(fn ($w) => [$w->id => $w->code.' — '.$w->name])->all()" />
+                    <x-pilih-tag model="manual.warehouse_ids" id="sim-gudang" :options="$warehouses->mapWithKeys(fn ($w) => [$w->id => $w->code.' · '.$w->name])->all()" />
                 </div>
                 <div class="col-md-4">
-                    <x-pilih model="manual.project_id" id="sim-proyek" server :label="__('Proyek')" kosong="—" :options="$opsiProyek" />
+                    <x-pilih model="manual.project_id" id="sim-proyek" server :label="__('Proyek')" kosong="-" :options="$opsiProyek" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="sim-kategori">{{ __('Kategori barang') }}</label>
-                    <x-pilih-tag model="manual.category_ids" id="sim-kategori" :options="$categories->mapWithKeys(fn ($c) => [$c->id => $c->code.' — '.$c->name])->all()" />
+                    <x-pilih-tag model="manual.category_ids" id="sim-kategori" :options="$categories->mapWithKeys(fn ($c) => [$c->id => $c->code.' · '.$c->name])->all()" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="sim-milik">{{ __('Jenis barang (aset/habis pakai)') }}</label>
@@ -60,12 +60,12 @@
                     <input class="form-control" id="sim-qty" type="number" min="0" step="0.0001" wire:model="manual.max_line_qty">
                 </div>
                 <div class="col-md-4">
-                    <x-pilih model="manual.requester_id" id="sim-pemohon" server :label="__('Pemohon / pengaju')" kosong="—" :options="$opsiPemohon" />
+                    <x-pilih model="manual.requester_id" id="sim-pemohon" server :label="__('Pemohon / pengaju')" kosong="-" :options="$opsiPemohon" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="sim-vendor">{{ __('Jenis vendor') }}</label>
                     <select class="form-select" id="sim-vendor" wire:model="manual.vendor_type">
-                        <option value="">—</option>
+                        <option value="">-</option>
                         @foreach ($vendorTypes as $nilai => $label) <option value="{{ $nilai }}">{{ $label }}</option> @endforeach
                     </select>
                 </div>

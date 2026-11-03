@@ -6,21 +6,21 @@
     <table class="info">
         <tr>
             <td class="k">{{ __('Gudang') }}</td>
-            <td>{{ $prq->warehouse?->code }} — {{ $prq->warehouse?->name }}</td>
+            <td>{{ $prq->warehouse?->code }} · {{ $prq->warehouse?->name }}</td>
             <td class="k">{{ __('Proyek') }}</td>
-            <td>{{ $prq->project ? $prq->project->code.' — '.$prq->project->name : '—' }}</td>
+            <td>{{ $prq->project ? $prq->project->code.' · '.$prq->project->name : '-' }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Asal') }}</td>
             <td>{{ $prq->origin->label() }}@if ($prq->materialRequest) · {{ $prq->materialRequest->number }}@endif</td>
             <td class="k">{{ __('Diajukan') }}</td>
-            <td>{{ $prq->submitted_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $prq->submitted_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
         </tr>
         <tr>
             <td class="k">{{ __('Disetujui') }}</td>
-            <td>{{ $prq->approved_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $prq->approved_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
             <td class="k">{{ __('Diteruskan ke pembelian') }}</td>
-            <td>{{ $prq->forwarded_at?->lokal()->format('d/m/Y H:i') ?? '—' }}</td>
+            <td>{{ $prq->forwarded_at?->lokal()->format('d/m/Y H:i') ?? '-' }}</td>
         </tr>
     </table>
 
@@ -47,7 +47,7 @@
                     <td class="r">{{ PrintFormat::qty($l->qty_ordered) }}</td>
                     <td class="r">{{ PrintFormat::qty($l->qty_received) }}</td>
                     <td>{{ $l->item?->baseUom?->code }}@if ($kemasan = PrintFormat::kemasan($l->item, $l->qty_base)) <br><small>{{ $kemasan }}</small>@endif</td>
-                    <td>{{ $l->required_date?->format('d/m/Y') ?? '—' }}</td>
+                    <td>{{ $l->required_date?->format('d/m/Y') ?? '-' }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -68,10 +68,10 @@
                 @foreach ($orders as $o)
                     <tr>
                         <td>{{ $o->lines->map(fn ($ol) => ($ol->line?->item?->code ?? '').' × '.PrintFormat::qty($ol->qty_ordered))->implode(', ') }}</td>
-                        <td>{{ $o->vendor?->name ?? '—' }}</td>
-                        <td>{{ $o->external_po_no ?? '—' }}</td>
-                        <td>{{ $o->eta_date?->format('d/m/Y') ?? '—' }}</td>
-                        <td>{{ $o->ordered_at?->lokal()->format('d/m/Y') ?? '—' }}</td>
+                        <td>{{ $o->vendor?->name ?? '-' }}</td>
+                        <td>{{ $o->external_po_no ?? '-' }}</td>
+                        <td>{{ $o->eta_date?->format('d/m/Y') ?? '-' }}</td>
+                        <td>{{ $o->ordered_at?->lokal()->format('d/m/Y') ?? '-' }}</td>
                     </tr>
                 @endforeach
             </tbody>

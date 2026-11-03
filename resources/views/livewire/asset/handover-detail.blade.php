@@ -8,7 +8,7 @@
                 @if ($ast->lost_at) <span class="badge text-bg-danger">{{ __('Hilang') }}</span> @endif
             </h1>
             <p class="text-muted mb-0">
-                <a wire:navigate href="{{ route('assets.show', $ast->serial_id) }}">{{ $ast->serial?->serial_no }}</a> · {{ $ast->item?->code }} — {{ $ast->item?->name }}
+                <a wire:navigate href="{{ route('assets.show', $ast->serial_id) }}">{{ $ast->serial?->serial_no }}</a> · {{ $ast->item?->code }} · {{ $ast->item?->name }}
                 · {{ __('Proyek') }} {{ $ast->project?->code }} · {{ __('Gudang') }} {{ $ast->warehouse?->code }}
                 @if ($ast->shipment) · {{ __('SJ') }} <a wire:navigate href="{{ route('shipments.show', $ast->shipment_id) }}">{{ $ast->shipment->number }}</a> @endif
                 @if ($ast->goodsReturn) · {{ __('RET') }} <a wire:navigate href="{{ route('returns.show', $ast->goods_return_id) }}">{{ $ast->goodsReturn->number }}</a> @endif
@@ -53,12 +53,12 @@
     <div class="row g-3 mb-3">
         @foreach ([
             [__('Keluar'), $ast->checked_out_at?->lokal()->format('d/m/Y H:i')],
-            [__('Jatuh tempo'), $ast->due_return_date?->format('d/m/Y') ?? '—'],
-            [__('Grade keluar'), $ast->condition_out ?? '—'],
-            [__('Meter keluar / kembali'), ($ast->meter_out !== null ? number_format((float) $ast->meter_out, 1, ',', '.') : '—').' / '.($ast->meter_in !== null ? number_format((float) $ast->meter_in, 1, ',', '.') : '—')],
-            [__('Kembali'), $ast->returned_at?->lokal()->format('d/m/Y H:i') ?? '—'],
-            [__('Hari pakai'), $ast->usage_days ?? '—'],
-            [__('Pemakaian meter'), $ast->usage_hours !== null ? number_format((float) $ast->usage_hours, 1, ',', '.').' '.__('jam') : ($ast->usage_km !== null ? number_format((float) $ast->usage_km, 1, ',', '.').' km' : '—')],
+            [__('Jatuh tempo'), $ast->due_return_date?->format('d/m/Y') ?? '-'],
+            [__('Grade keluar'), $ast->condition_out ?? '-'],
+            [__('Meter keluar / kembali'), ($ast->meter_out !== null ? number_format((float) $ast->meter_out, 1, ',', '.') : '-').' / '.($ast->meter_in !== null ? number_format((float) $ast->meter_in, 1, ',', '.') : '-')],
+            [__('Kembali'), $ast->returned_at?->lokal()->format('d/m/Y H:i') ?? '-'],
+            [__('Hari pakai'), $ast->usage_days ?? '-'],
+            [__('Pemakaian meter'), $ast->usage_hours !== null ? number_format((float) $ast->usage_hours, 1, ',', '.').' '.__('jam') : ($ast->usage_km !== null ? number_format((float) $ast->usage_km, 1, ',', '.').' km' : '-')],
         ] as [$label, $nilai])
             <div class="col-6 col-md">
                 <div class="card h-100"><div class="card-body py-2">
@@ -87,7 +87,7 @@
                     <div class="col-md-3">
                         <label class="form-label" for="ast-grade">{{ __('Grade keluar') }}</label>
                         <select class="form-select @error('form.condition_out') is-invalid @enderror" id="ast-grade" wire:model="form.condition_out">
-                            <option value="">—</option>
+                            <option value="">-</option>
                             @foreach ($grades as $nilai => $label)
                                 <option value="{{ $nilai }}">{{ $label }}</option>
                             @endforeach

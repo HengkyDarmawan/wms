@@ -31,7 +31,7 @@ class DemoFlows
             'steps' => [
                 ['role' => 'internal_requester', 'action' => 'Membuat & mengirim Permintaan Material (REQ)'],
                 ['role' => 'warehouse_head', 'action' => 'Meninjau & menyetujui REQ'],
-                ['role' => 'warehouse_staff', 'action' => 'Mengerjakan Tugas Picking (PCK), menyusun & memberangkatkan Surat Jalan (SJ) — nama & HP driver ditulis di SJ'],
+                ['role' => 'warehouse_staff', 'action' => 'Mengerjakan Tugas Picking (PCK), menyusun & memberangkatkan Surat Jalan (SJ), nama & HP driver ditulis di SJ'],
                 ['role' => 'internal_requester', 'action' => 'Mengisi Bukti Terima saat barang tiba di site (otomatis terkonfirmasi)'],
             ],
         ],

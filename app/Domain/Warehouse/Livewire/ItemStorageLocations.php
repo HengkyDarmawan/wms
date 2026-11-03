@@ -108,7 +108,7 @@ class ItemStorageLocations extends Component
         $tempat = app(WarehouseLayoutData::class)->tempatSimpan((int) $gudang->id, (int) $rak->id);
 
         if ($this->khususLain($tempat['rak'][(int) $rak->id] ?? []) !== null) {
-            $this->galat = __('Rak :rak khusus untuk barang :barang — tidak bisa dipilih.', ['rak' => $rak->code, 'barang' => $this->khususLain($tempat['rak'][(int) $rak->id] ?? [])]);
+            $this->galat = __('Rak :rak khusus untuk barang :barang, tidak bisa dipilih.', ['rak' => $rak->code, 'barang' => $this->khususLain($tempat['rak'][(int) $rak->id] ?? [])]);
 
             return;
         }
@@ -132,7 +132,7 @@ class ItemStorageLocations extends Component
 
         if ($petak === null || ! $petak['boleh']) {
             $this->galat = $petak !== null && $petak['khusus_lain'] !== null
-                ? __('Bin :bin khusus untuk barang :barang — tidak bisa dipilih.', ['bin' => $petak['pendek'], 'barang' => $petak['khusus_lain']])
+                ? __('Bin :bin khusus untuk barang :barang, tidak bisa dipilih.', ['bin' => $petak['pendek'], 'barang' => $petak['khusus_lain']])
                 : __('Bin itu tidak bisa dijadikan tempat simpan.');
 
             return;
@@ -388,10 +388,10 @@ class ItemStorageLocations extends Component
 
         return [
             'opsiZona' => $rak->pluck('zone')->unique('id')->sortBy('code')
-                ->mapWithKeys(fn ($z) => [$z->id => $z->code.($z->name ? ' — '.$z->name : '')])->all(),
+                ->mapWithKeys(fn ($z) => [$z->id => $z->code.($z->name ? ' · '.$z->name : '')])->all(),
             'opsiRak' => $diZona->sortBy(fn (Rack $r) => [(int) $r->is_area, $r->code])->map(fn (Rack $r) => [
                 'value' => $r->id,
-                'text' => $r->code.($r->name ? ' — '.$r->name : ''),
+                'text' => $r->code.($r->name ? ' · '.$r->name : ''),
                 'badge' => $r->is_area ? __('area lantai') : __('rak'),
             ])->values()->all(),
             'opsiBin' => $bin->pluck('text', 'value')->all(),
@@ -452,7 +452,7 @@ class ItemStorageLocations extends Component
         $kembar = $rak->pluck('code')->countBy()->filter(fn ($n) => $n > 1)->all();
         $opsi = $rak->map(fn (Rack $r) => [
             'value' => 'rak:'.$r->id,
-            'text' => ($r->is_area ? __('Area') : __('Seluruh rak')).' '.$r->zone->code.' · '.$r->code.($r->name ? ' — '.$r->name : ''),
+            'text' => ($r->is_area ? __('Area') : __('Seluruh rak')).' '.$r->zone->code.' · '.$r->code.($r->name ? ' · '.$r->name : ''),
         ]);
 
         return $opsi->merge($this->binGudang($gudang)->map(fn (Bin $b) => [

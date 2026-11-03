@@ -82,7 +82,7 @@ class AccuracyTrendReport extends Report
             ->whereNotNull('final_qty')
             ->when($gudang !== null, fn ($q) => $q->whereIn('bin_id', fn ($b) => $b->select('id')->from('bins')->whereIn('warehouse_id', $gudang)))
             ->get(['id', 'stock_count_id', 'bin_id', 'variance_qty', 'variance_class'])
-            ->groupBy(fn (CountLine $l) => $sesi[$l->stock_count_id]->lokal()->format('Y-m').'|'.($l->bin?->warehouse?->code ?? '—'))
+            ->groupBy(fn (CountLine $l) => $sesi[$l->stock_count_id]->lokal()->format('Y-m').'|'.($l->bin?->warehouse?->code ?? '-'))
             ->map(function (Collection $grup, string $kunci) {
                 [$bulan, $kode] = explode('|', $kunci, 2);
                 $dihitung = $grup->count();

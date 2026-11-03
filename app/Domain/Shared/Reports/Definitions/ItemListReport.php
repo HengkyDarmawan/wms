@@ -67,8 +67,8 @@ class ItemListReport extends Report
             ->map(fn (Item $item) => [
                 'kode' => $item->code,
                 'nama' => $item->name,
-                'kategori' => $item->category?->name ?? '—',
-                'satuan_dasar' => $item->baseUom?->code ?? '—',
+                'kategori' => $item->category?->name ?? '-',
+                'satuan_dasar' => $item->baseUom?->code ?? '-',
                 'jenis' => ItemKind::fromItem($item)?->label() ?? 'Jenis khusus',
                 'titik_pesan_ulang' => $item->reorder_point === null ? '' : (float) $item->reorder_point,
                 'stok_minimum' => $item->min_stock === null ? '' : (float) $item->min_stock,

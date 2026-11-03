@@ -23,7 +23,7 @@
             </div>
             <div class="col-md-4">
                 <x-pilih model="form.warehouse_id" id="isu-site" live wajib :label="__('Gudang Site')" :disabled="(bool) $nomor"
-                         :kosong="__('Pilih Gudang Site…')" :options="$sites->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :kosong="__('Pilih Gudang Site…')" :options="$sites->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
                 @if ($form['project_id'] !== '' && $sites->isEmpty())
                     <div class="form-text text-danger">{{ __('Proyek ini belum punya Gudang Site aktif dalam cakupan Anda.') }}</div>
                 @endif

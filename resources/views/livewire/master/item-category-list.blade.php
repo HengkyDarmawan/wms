@@ -137,12 +137,12 @@
                                     {{ $kategori->code }}
                                 </div>
                             </td>
-                            <td>{{ $kategori->storageCategory?->name ?? '—' }}</td>
-                            <td>{{ $kategori->removal_strategy?->label() ?? '—' }}</td>
+                            <td>{{ $kategori->storageCategory?->name ?? '-' }}</td>
+                            <td>{{ $kategori->removal_strategy?->label() ?? '-' }}</td>
                             <td class="small">
-                                {{ $kategori->tolerance_pct ? (float) $kategori->tolerance_pct.'%' : '—' }}
+                                {{ $kategori->tolerance_pct ? (float) $kategori->tolerance_pct.'%' : '-' }}
                                 /
-                                {{ $kategori->tolerance_abs ? (float) $kategori->tolerance_abs : '—' }}
+                                {{ $kategori->tolerance_abs ? (float) $kategori->tolerance_abs : '-' }}
                             </td>
                             <td class="text-end">{{ $kategori->items_count }}</td>
                             <td>

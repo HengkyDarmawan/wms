@@ -125,9 +125,9 @@ class GoodsReceipt extends Model
     public function sourceLabel(): string
     {
         return match ($this->receipt_type) {
-            ReceiptType::Vendor => $this->vendor?->name ?? '—',
-            ReceiptType::Transfer => $this->shipment?->number ?? '—',
-            ReceiptType::Return => $this->goodsReturn?->number ?? '—',
+            ReceiptType::Vendor => $this->vendor?->name ?? '-',
+            ReceiptType::Transfer => $this->shipment?->number ?? '-',
+            ReceiptType::Return => $this->goodsReturn?->number ?? '-',
         };
     }
 

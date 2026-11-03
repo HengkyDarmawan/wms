@@ -270,7 +270,7 @@ function denahGedung(opts = {}) {
       const g = this.d.gedung;
       if (g) {
         o.push(`<rect x="0" y="0" width="${g.p * S}" height="${g.l * S}" fill="none" stroke="#212529" stroke-width="6" data-gedung/>`);
-        o.push(`<text x="0" y="${-10 * F}" font-size="${20 * F}" font-weight="600" fill="currentColor">${esc(this.meta.teks?.gedung || 'Gedung')} ${esc(this.meta.gudang?.code)} — ${angka(g.p)} × ${angka(g.l)} m</text>`);
+        o.push(`<text x="0" y="${-10 * F}" font-size="${20 * F}" font-weight="600" fill="currentColor">${esc(this.meta.teks?.gedung || 'Gedung')} ${esc(this.meta.gudang?.code)} · ${angka(g.p)} × ${angka(g.l)} m</text>`);
         for (let m = 0; m <= g.p; m += 5) o.push(`<text x="${m * S}" y="${g.l * S + 22 * F}" font-size="${14 * F}" text-anchor="middle" fill="#868e96">${m}</text>`);
       }
 
@@ -295,7 +295,7 @@ function denahGedung(opts = {}) {
         const merahZ = tump.has('zona:' + z.id) || galat['zona:' + z.id];
         o.push(`<g data-jenis="zona" data-id="${z.id}" data-zona="${esc(z.code)}" transform="translate(${z.x * S},${z.y * S})" style="cursor:${this.edit ? 'move' : 'default'}">`);
         o.push(`<rect data-badan x="0" y="0" width="${z.w * S}" height="${z.h * S}" rx="8" fill="#eef2ff" fill-opacity="0.55" stroke="${merahZ ? '#e03131' : '#6366f1'}" stroke-width="${selZ ? 5 : 2}"${merahZ ? ' stroke-dasharray="10 5"' : ''}/>`);
-        o.push(`<text x="10" y="${22 * F}" font-size="${17 * F}" font-weight="600" fill="#4338ca">Zona ${esc(z.code)} — ${esc(potong(z.name, 28))}</text>`);
+        o.push(`<text x="10" y="${22 * F}" font-size="${17 * F}" font-weight="600" fill="#4338ca">Zona ${esc(z.code)} · ${esc(potong(z.name, 28))}</text>`);
         o.push(`<text x="${z.w * S - 8}" y="${z.h * S - 8}" font-size="${13 * F}" text-anchor="end" fill="#6366f1">${z.length_m !== null && z.length_m !== undefined ? angka(z.length_m) + ' × ' + angka(z.width_m ?? 0) + ' m' : esc(this.meta.teks?.ukuranOtomatis || 'ukuran otomatis')}</text>`);
 
         for (const r of z.racks) {
@@ -715,7 +715,7 @@ function denahGedung(opts = {}) {
       this.catat({ op: 'objek_baru', tmp: id, jenis, data: { pos_x: 0.5, pos_y: 0.5 } });
       this.d.objects.push({ id, type: jenis, label: j.label, name: j.label, x: 0.5, y: 0.5, p: j.p, l: j.l, length_m: j.p, width_m: j.l, rotation: 0, solid: j.solid, fill: j.fill, stroke: j.stroke });
       this.pilihBenda('obj', id);
-      this.pesan(j.label + ' ditambahkan — seret ke tempatnya.');
+      this.pesan(j.label + ' ditambahkan. Seret ke tempatnya.');
     },
 
     // ------------------------------------------------------------ isian panel (mode Atur)
@@ -764,7 +764,7 @@ function denahGedung(opts = {}) {
         const num = (v) => Number(String(v).replace(',', '.'));
         Object.assign(o, { name: e.name.trim(), type: e.object_type, label: j?.label ?? o.label, fill: j?.fill ?? o.fill, stroke: j?.stroke ?? o.stroke, solid: j?.solid ?? o.solid, x: num(e.pos_x), y: num(e.pos_y), p: num(e.length_m), l: num(e.width_m) });
       }
-      this.pesan('Diterapkan — belum tersimpan.');
+      this.pesan('Diterapkan, belum tersimpan.');
       this.gambar();
     },
 
@@ -828,13 +828,13 @@ function denahGedung(opts = {}) {
       const lain = pilihan.filter((b) => b !== utama);
       if (!utama || !lain.length) { this.pesan('Pilih minimal dua petak dan bin utamanya.', 'danger'); return; }
       if (!g.alasan.trim()) { this.pesan('Isi alasan gabung.', 'danger'); return; }
-      if (lain.some((b) => b.total > 0)) { this.pesan('Petak yang digabung harus kosong — stok hanya di bin utama.', 'danger'); return; }
+      if (lain.some((b) => b.total > 0)) { this.pesan('Petak yang digabung harus kosong; stok hanya di bin utama.', 'danger'); return; }
       this.catat({ op: 'gabung', utama: Number(utama.id), bins: lain.map((b) => Number(b.id)), arah: g.arah, sifat: g.sifat, alasan: g.alasan.trim() });
       for (const b of lain) Object.assign(b, { utama: utama.id, utama_kode: utama.code, arah: g.arah, sifat: g.sifat, status: 'tergabung', alasan_gabung: g.alasan.trim() });
       utama.tergabung = [...(utama.tergabung || []), ...lain.map((b) => b.id)];
       this.pilihPetak = [];
       this.f.gabung = { utama: '', arah: 'side', sifat: 'temporary', alasan: '' };
-      this.pesan('Digabung — belum tersimpan.');
+      this.pesan('Digabung, belum tersimpan.');
       this.gambar();
     },
 
@@ -849,7 +849,7 @@ function denahGedung(opts = {}) {
       for (const x of anggota) Object.assign(this.petakLokal(x.id), { utama: null, utama_kode: null, arah: null, sifat: null, status: x.total > 0 ? 'terisi' : 'kosong' });
       this.petakLokal(b.id).tergabung = [];
       this.pilihPetak = [];
-      this.pesan('Dipisah — belum tersimpan.');
+      this.pesan('Dipisah, belum tersimpan.');
       this.gambar();
     },
 
@@ -887,7 +887,7 @@ function denahGedung(opts = {}) {
       if (t !== '' && !(Number(t) > 0 && Number(t) <= 99)) { this.pesan('Lebar bin harus angka lebih dari 0 (meter), atau kosong.', 'danger'); return; }
       this.catat({ op: 'lebar_bin', bin: Number(b.id), lebar: t });
       this.petakLokal(b.id).lebar = t === '' ? null : Number(t);
-      this.pesan('Lebar diterapkan — belum tersimpan.');
+      this.pesan('Lebar diterapkan, belum tersimpan.');
       this.gambar();
     },
 
@@ -906,7 +906,7 @@ function denahGedung(opts = {}) {
       if ([k.capacity_qty, k.capacity_weight, k.capacity_volume].some((v) => { const n = num(v); return n !== null && !(n > 0); })) { this.pesan('Kapasitas harus angka lebih dari 0, atau kosong = tanpa batas.', 'danger'); return; }
       this.catat({ op: 'kapasitas_area', id: a.r.id, data: { ...k } });
       a.r.kapasitas_area = { qty: num(k.capacity_qty), berat: num(k.capacity_weight), volume: num(k.capacity_volume) };
-      this.pesan('Kapasitas area diterapkan — belum tersimpan.');
+      this.pesan('Kapasitas area diterapkan, belum tersimpan.');
       this.gambar();
     },
 
@@ -944,7 +944,7 @@ function denahGedung(opts = {}) {
           if (this.tata) this.cariBelum();
         } else {
           this.galat = hasil.galat || [];
-          this.pesan(hasil.pesan || 'Perubahan belum tersimpan — perbaiki yang ditandai merah.', 'danger');
+          this.pesan(hasil.pesan || 'Perubahan belum tersimpan. Perbaiki yang ditandai merah.', 'danger');
         }
       } finally {
         this.menyimpan = false;
@@ -1057,7 +1057,7 @@ function denahGedung(opts = {}) {
       this.barangPilih = [];
       this.menaruh = false;
       this.khususTaruh = false;
-      this.pesan(n + ' barang ditaruh di ' + this.labelTempat(t) + ' — belum tersimpan.');
+      this.pesan(n + ' barang ditaruh di ' + this.labelTempat(t) + ', belum tersimpan.');
       this.gambar();
     },
 
@@ -1076,7 +1076,7 @@ function denahGedung(opts = {}) {
       this.catat({ op: 'tempat_barang', item: brg.id, tempat: t.kunci, khusus: k });
       this.pasangLokal(t, brg, k);
       this.belum.barang = this.belum.barang.filter((x) => x.id !== brg.id);
-      this.pesan(brg.code + ' ditaruh di ' + this.labelTempat(t) + ' — belum tersimpan.');
+      this.pesan(brg.code + ' ditaruh di ' + this.labelTempat(t) + ', belum tersimpan.');
       this.gambar();
     },
 
@@ -1097,7 +1097,7 @@ function denahGedung(opts = {}) {
       this.catat({ op: 'lepas_barang', item: x.id, tempat: x.tempat });
       const i = daftar.findIndex((z) => String(z.id) === String(x.id));
       if (i >= 0) daftar.splice(i, 1);
-      this.pesan(x.code + ' dilepas dari ' + x.dimana + ' — belum tersimpan.');
+      this.pesan(x.code + ' dilepas dari ' + x.dimana + ', belum tersimpan.');
       this.gambar();
     },
 

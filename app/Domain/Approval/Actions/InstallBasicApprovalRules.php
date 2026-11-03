@@ -118,7 +118,7 @@ class InstallBasicApprovalRules
     {
         $rule = $this->saveRule->handle($rule, [
             'document_type' => $jenis->value,
-            'name' => 'Aturan dasar — '.$jenis->label(),
+            'name' => 'Aturan dasar · '.$jenis->label(),
             'priority' => self::PRIORITAS,
             'is_active' => true,
             'conditions' => [],

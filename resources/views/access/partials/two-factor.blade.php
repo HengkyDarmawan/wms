@@ -55,7 +55,7 @@
             <form method="POST" action="{{ route($rute.'.disable') }}" novalidate>
                 @csrf
                 <label class="form-label" for="disable_password">
-                    {{ __('Matikan dua langkah — masukkan password Anda') }} <span class="wajib">*</span>
+                    {{ __('Matikan dua langkah: masukkan password Anda') }} <span class="wajib">*</span>
                 </label>
                 <div class="d-flex gap-2">
                     <input class="form-control @error('current_password') is-invalid @enderror"

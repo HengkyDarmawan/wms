@@ -42,7 +42,7 @@
                     @foreach ($warehouses as $g)
                         <div class="form-check">
                             <input class="form-check-input" id="opn-g-{{ $g->id }}" type="checkbox" value="{{ $g->id }}" wire:model.live="form.warehouse_ids">
-                            <label class="form-check-label" for="opn-g-{{ $g->id }}">{{ $g->code }} — {{ $g->name }}</label>
+                            <label class="form-check-label" for="opn-g-{{ $g->id }}">{{ $g->code }} · {{ $g->name }}</label>
                         </div>
                     @endforeach
                 </div>
@@ -71,7 +71,7 @@
             @endif
             <div class="col-md-6">
                 <label class="form-label" for="opn-item">{{ __('Item tertentu (opsional)') }}</label>
-                <x-pilih-tag model="form.item_ids" id="opn-item" :options="$items->mapWithKeys(fn ($i) => [$i->id => $i->code.' — '.$i->name])->all()" />
+                <x-pilih-tag model="form.item_ids" id="opn-item" :options="$items->mapWithKeys(fn ($i) => [$i->id => $i->code.' · '.$i->name])->all()" />
             </div>
             <div class="col-md-6">
                 <label class="form-label">{{ __('Tim penghitung') }} <span class="wajib">*</span></label>

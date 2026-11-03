@@ -9,7 +9,7 @@
             <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
                 <div>
                     <span class="badge {{ $s->status->badge() }}">{{ $s->status->label() }}</span>
-                    <strong>{{ $s->wasAutoApproved() ? __('Disetujui otomatis — tidak ada aturan') : ($s->rule_name ?? __('Lapis minimum')) }}</strong> {{-- A-08 --}}
+                    <strong>{{ $s->wasAutoApproved() ? __('Disetujui otomatis (tidak ada aturan)') : ($s->rule_name ?? __('Lapis minimum')) }}</strong> {{-- A-08 --}}
                 </div>
                 <div class="text-muted">
                     {{ __('Diajukan') }} {{ $s->submitter?->name ?? __('Sistem') }} · {{ $s->submitted_at?->lokal()->format('d/m/Y H:i') }}
@@ -19,7 +19,7 @@
             @foreach ($s->steps ?? [] as $l)
                 <div class="mb-2">
                     <div>
-                        <strong>{{ __('Lapis') }} {{ $l['step_no'] }}</strong> — {{ $l['approver_label'] }}
+                        <strong>{{ __('Lapis') }} {{ $l['step_no'] }}</strong> · {{ $l['approver_label'] }}
                         <span class="text-muted">({{ \App\Domain\Approval\Enums\DecisionMode::from($l['decision_mode'])->label() }})</span>
                         @if ((int) $s->current_step === (int) $l['step_no'] && $s->status->value === 'pending')
                             <span class="badge text-bg-warning">{{ __('Berjalan') }}</span>

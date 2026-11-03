@@ -80,7 +80,7 @@ class UserFormManagerOptionsTest extends TenantTestCase
             ->assertSeeHtml('data-badge="Kepala Gudang"')
             ->assertSeeHtml('data-sub="Gudang"');
         $html = $layar->html();
-        $this->assertLessThan(strpos($html, 'Andi Kepala'), strpos($html, '<option value="">'.__('— Ikuti jabatan —').'</option>'), '"Ikuti jabatan" paling atas.');
+        $this->assertLessThan(strpos($html, 'Andi Kepala'), strpos($html, '<option value="">'.__('(Ikuti jabatan)').'</option>'), '"Ikuti jabatan" paling atas.');
         $this->assertStringContainsString(__('Jabatan ini belum punya atasan di Struktur organisasi; isi bila perlu.'), $html, 'Keterangan A-345 tetap ada.');
     }
 

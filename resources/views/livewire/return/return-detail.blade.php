@@ -6,7 +6,7 @@
                 <span class="badge {{ $ret->status->badge() }}">{{ $ret->status->label() }}</span>
             </h1>
             <p class="text-muted mb-0">
-                {{ $ret->project?->code }} — {{ $ret->project?->name }}
+                {{ $ret->project?->code }} · {{ $ret->project?->name }}
                 · {{ __('ke') }} {{ $ret->toWarehouse?->code }}
                 · {{ $ret->self_delivered ? __('Diantar sendiri') : ($ret->isPickup() ? __('Dijemput driver') : __('SJ balik dari').' '.$ret->fromWarehouse?->code) }}
                 @if ($ret->originShipment) · {{ __('SJ asal') }} {{ $ret->originShipment->number }} @endif
@@ -77,10 +77,10 @@
                             <td>{{ $l->item?->code }} <div class="small text-muted">{{ $l->item?->name }} @if ($l->trackingLabel()) · {{ $l->trackingLabel() }} @endif</div></td>
                             <td class="small">{{ $l->ownership->label() }} <div class="text-muted">{{ $l->stock_status->label() }}</div></td>
                             <td class="text-end">
-                                {{ $l->isSplit() ? '—' : number_format((float) $l->qty_base, 2, ',', '.') }}
+                                {{ $l->isSplit() ? '-' : number_format((float) $l->qty_base, 2, ',', '.') }}
                                 @if (! $l->isSplit() && $l->typedQuantity()) <div class="small text-muted">{{ $l->typedQuantity() }}</div> @endif
                             </td>
-                            <td class="text-end">{{ $l->isSplit() ? '—' : number_format((float) $l->qty_received, 2, ',', '.') }}</td>
+                            <td class="text-end">{{ $l->isSplit() ? '-' : number_format((float) $l->qty_received, 2, ',', '.') }}</td>
                             <td class="small">
                                 @if ($l->sorting)
                                     <span class="badge {{ $l->sorting->badge() }}">{{ $l->sorting->label() }}</span>
@@ -89,7 +89,7 @@
                                     @if ($l->newPiece) · {{ __('potongan baru') }} {{ $l->newPiece->piece_no }} @endif
                                     @if ($l->reason) <div class="text-muted">{{ $l->reason->label }}</div> @endif
                                 @else
-                                    —
+                                    -
                                 @endif
                             </td>
                         </tr>
@@ -146,7 +146,7 @@
 
     @can('sort', $ret)
         <div class="card mb-3 border-primary">
-            <div class="card-header"><strong>{{ __('Pemilahan') }}</strong> <span class="text-muted small">— {{ __('setiap baris dipilah seluruhnya; boleh dibagi ke beberapa hasil.') }}</span></div>
+            <div class="card-header"><strong>{{ __('Pemilahan') }}</strong> <span class="text-muted small">{{ __('setiap baris dipilah seluruhnya; boleh dibagi ke beberapa hasil.') }}</span></div>
             <div class="card-body">
                 @foreach ($lines->reject->isSplit()->filter(fn ($l) => (float) $l->qty_received > 0) as $l)
                     <div class="border-bottom pb-2 mb-3" wire:key="pilah-{{ $l->id }}">
@@ -181,7 +181,7 @@
                                         @php $rusak = ($p['sorting'] ?? '') === 'damaged'; @endphp
                                         <x-pilih :model="'pilah.'.$l->id.'.'.$i.'.target_bin_id'" live kecil :aria="__('Bin tujuan')"
                                                  :kosong="$rusak ? __('Bin Retur (bawaan)') : __('Pilih bin…')"
-                                                 :options="($rusak ? $binRusak : $binPenyimpanan)->map(fn ($b) => ['value' => $b->id, 'text' => ($pendekBin[$b->id] ?? $b->code).' — '.$b->code])->all()" />
+                                                 :options="($rusak ? $binRusak : $binPenyimpanan)->map(fn ($b) => ['value' => $b->id, 'text' => ($pendekBin[$b->id] ?? $b->code).' · '.$b->code])->all()" />
                                         @php $sp = $saranPilah[$l->id] ?? null; @endphp
                                         @if ($sp && $sp['bin'] && in_array($p['sorting'] ?? '', ['good', 'offcut'], true))
                                             <div class="small mt-1">

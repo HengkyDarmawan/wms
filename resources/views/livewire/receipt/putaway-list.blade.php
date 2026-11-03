@@ -17,7 +17,7 @@
             </div>
             <div class="col-lg-4">
                 <x-pilih model="warehouseFilter" id="filter-gudang-put" live :label="__('Gudang')" :kosong="__('Semua gudang')"
-                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                         :options="$warehouses->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
             </div>
         </div>
     </div>

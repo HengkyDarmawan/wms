@@ -62,8 +62,8 @@ class ProvisionalItemReport extends Report
             ->map(fn (Item $item) => [
                 'kode' => $item->code,
                 'nama' => $item->name,
-                'kategori' => $item->category?->name ?? '—',
-                'satuan_dasar' => $item->baseUom?->code ?? '—',
+                'kategori' => $item->category?->name ?? '-',
+                'satuan_dasar' => $item->baseUom?->code ?? '-',
                 'dibuat' => $item->created_at?->timezone($zona)->format('d/m/Y'),
                 'umur_hari' => $item->created_at === null
                     ? ''

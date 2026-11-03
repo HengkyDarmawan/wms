@@ -25,7 +25,7 @@
             <div class="card-body">
                 @if ($gudangList->count() > 1)
                     <x-pilih model="gudang" id="mdm-gudang" class="mb-3" live :label="__('Gudang')" :kosong="__('Semua gudang saya')"
-                             :options="$gudangList->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' — '.$g->name])->all()" />
+                             :options="$gudangList->map(fn ($g) => ['value' => $g->id, 'text' => $g->code.' · '.$g->name])->all()" />
                 @endif
                 <label class="form-label fw-semibold" for="mdm-barang">{{ __('1. Pindai label barang') }}</label>
                 <input class="form-control form-control-lg @error('kodeBarang') is-invalid @enderror" id="mdm-barang" type="text" data-scan
@@ -54,7 +54,7 @@
                         </div>
                         <div class="text-end">
                             <div class="small text-muted">{{ __('Taruh di') }}</div>
-                            <div class="fs-5 fw-bold font-monospace">{{ $l->suggestedBin ? ($pendek[$l->suggested_bin_id] ?? $l->suggestedBin->code) : '—' }}</div>
+                            <div class="fs-5 fw-bold font-monospace">{{ $l->suggestedBin ? ($pendek[$l->suggested_bin_id] ?? $l->suggestedBin->code) : '-' }}</div>
                             @if ($penuh[$l->id] ?? false) <span class="badge text-bg-warning">{{ __('Tempat simpan penuh') }}</span> @endif
                         </div>
                     </div>
@@ -87,10 +87,10 @@
                         <div class="display-5 fw-bold font-monospace" data-bin-tujuan>{{ $pendek[$baris->suggested_bin_id] ?? $baris->suggestedBin->code }}</div>
                         <div class="small text-muted font-monospace">{{ $baris->suggestedBin->code }}</div>
                     @else
-                        <div class="fs-4 text-muted">{{ __('Tidak ada saran — pilih bin sendiri') }}</div>
+                        <div class="fs-4 text-muted">{{ __('Tidak ada saran. Pilih bin sendiri') }}</div>
                     @endif
                     @if ($penuh[$baris->id] ?? false)
-                        <div class="mt-1"><span class="badge text-bg-warning">{{ __('Tempat simpan barang ini penuh — saran dari aturan lama') }}</span></div>
+                        <div class="mt-1"><span class="badge text-bg-warning">{{ __('Tempat simpan barang ini penuh, jadi saran dari aturan lama') }}</span></div>
                     @endif
                 </div>
 

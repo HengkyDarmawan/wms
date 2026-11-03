@@ -6,7 +6,7 @@
                 <span class="badge {{ $task->status->badge() }}">{{ $task->status->label() }}</span>
             </h1>
             <p class="text-muted mb-0">
-                {{ $task->warehouse?->code }} — {{ $task->warehouse?->name }}
+                {{ $task->warehouse?->code }} · {{ $task->warehouse?->name }}
                 @if ($task->assignee)
                     · {{ __('Petugas') }}: {{ $task->assignee->name }}
                 @endif
@@ -14,7 +14,7 @@
             @if ($task->hasFreezeOverride())
                 <p class="small text-warning-emphasis mb-0">
                     <i class="bi bi-unlock" aria-hidden="true"></i>
-                    {{ __('Override bin beku') }} · {{ $task->freezeOverrider?->name }} · {{ $task->freeze_override_at->lokal()->format('d/m/Y H:i') }} — {{ $task->freeze_override_reason }}
+                    {{ __('Override bin beku') }} · {{ $task->freezeOverrider?->name }} · {{ $task->freeze_override_at->lokal()->format('d/m/Y H:i') }} · {{ $task->freeze_override_reason }}
                 </p>
             @endif
         </div>
@@ -82,7 +82,7 @@
                        placeholder="{{ __('Kode bin, label kemasan, kode item, atau barcode item') }}">
                 @error('kodePindai') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 <div class="form-text">
-                    {{ __('Bin aktif') }}: {{ $binPindai ? ($bins->firstWhere('id', $binPindai)?->code ?? '—') : '—' }} ·
+                    {{ __('Bin aktif') }}: {{ $binPindai ? ($bins->firstWhere('id', $binPindai)?->code ?? '-') : '-' }} ·
                     {{ __('Item yang dipindai dicatat sejumlah isian barisnya; ubah jumlah lalu Catat bila kurang.') }}
                     {{ __('Barang berlabel wajib dipindai label kemasannya.') }}
                 </div>
@@ -161,13 +161,13 @@
                                 @if ($task->status->value === 'in_progress')
                                     <select class="form-select form-select-sm"
                                             wire:model="isian.{{ $l->id }}.short_reason">
-                                        <option value="">{{ __('— tidak kurang —') }}</option>
+                                        <option value="">{{ __('(tidak kurang)') }}</option>
                                         @foreach ($alasan as $kode => $label)
                                             <option value="{{ $kode }}">{{ $label }}</option>
                                         @endforeach
                                     </select>
                                 @else
-                                    {{ $l->shortReason?->name ?? '—' }}
+                                    {{ $l->shortReason?->name ?? '-' }}
                                 @endif
                             </td>
                             <td class="text-end">
