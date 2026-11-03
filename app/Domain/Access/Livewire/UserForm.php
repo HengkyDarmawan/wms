@@ -63,6 +63,12 @@ class UserForm extends Component
     /** @var array<int, string> id gudang tetap untuk peran gudang */
     public array $gudangDipilih = [];
 
+    /** A-425: tanggal akhir akses Auditor Eksternal (Y-m-d). */
+    public string $aksesSampai = '';
+
+    /** Tanggal mulai penugasan auditor yang sudah ada (dibawa apa adanya saat diubah). */
+    public string $aksesDari = '';
+
     /** @var array<int, string> id proyek untuk peran berbasis proyek */
     public array $proyekDipilih = [];
 
@@ -117,6 +123,8 @@ class UserForm extends Component
         $this->peranUtama = (string) $roleId;
         $this->gudangDipilih = [];
         $this->proyekDipilih = [];
+        $this->aksesSampai = '';
+        $this->aksesDari = '';
         $this->resetValidation();
 
         $role = Role::query()->find($roleId);
@@ -346,8 +354,12 @@ class UserForm extends Component
         } else {
             $rules['peranUtama'] = ['required', 'integer', 'exists:roles,id'];
 
-            if ($pertanyaan === RoleGuide::GUDANG) {
+            if ($pertanyaan === RoleGuide::GUDANG || $pertanyaan === RoleGuide::AUDIT) {
                 $rules['gudangDipilih'] = ['required', 'array', 'min:1'];
+            }
+
+            if ($pertanyaan === RoleGuide::AUDIT) {
+                $rules['aksesSampai'] = ['required', 'date', 'after_or_equal:today', 'before_or_equal:'.now()->addDays(RoleGuide::AUDIT_MAKS_HARI)->toDateString()];
             }
 
             if ($pertanyaan === RoleGuide::PROYEK) {
@@ -375,6 +387,9 @@ class UserForm extends Component
             'gudangDipilih.required' => __('Pilih minimal satu gudang.'),
             'proyekDipilih.required' => __('Pilih minimal satu proyek.'),
             'clientId.required' => __('Pilih klien dulu.'),
+            'aksesSampai.required' => __('Isi tanggal akhir akses auditor.'),
+            'aksesSampai.after_or_equal' => __('Tanggal akhir akses tidak boleh sebelum hari ini.'),
+            'aksesSampai.before_or_equal' => __('Akses auditor paling lama :n hari dari hari ini.', ['n' => RoleGuide::AUDIT_MAKS_HARI]),
             'assignments.required' => __('Pilih satu peran dulu.'),
             'assignments.min' => __('Pilih satu peran dulu.'),
             'passwordAwal.required' => __('Isi passwordnya, atau pilih kirim undangan.'),
@@ -395,6 +410,7 @@ class UserForm extends Component
             'clientId' => 'Klien',
             'peranUtama' => 'Peran',
             'gudangDipilih' => 'Gudang',
+            'aksesSampai' => 'Akses sampai',
             'proyekDipilih' => 'Proyek',
             'passwordAwal' => 'Password',
             'assignments' => 'Peran',

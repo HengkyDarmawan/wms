@@ -14,11 +14,11 @@
 
     <div class="card mb-3">
         <div class="card-body row g-3 align-items-end">
-            <div class="col-lg-4">
+            <div class="col-lg-3">
                 <label class="form-label" for="cari-aset">{{ __('Cari') }}</label>
                 <input class="form-control" id="cari-aset" type="search" data-scan wire:model.live.debounce.400ms="search" placeholder="{{ __('Serial atau item') }}">
             </div>
-            <div class="col-lg-3">
+            <div class="col-sm-6 col-lg-2">
                 <label class="form-label" for="filter-state-aset">{{ __('State') }}</label>
                 <select class="form-select" id="filter-state-aset" wire:model.live="stateFilter">
                     <option value="">{{ __('Semua') }}</option>
@@ -30,6 +30,14 @@
             <div class="col-lg-3">
                 <x-pilih model="projectFilter" id="filter-proyek-aset" server live :label="__('Proyek peminjam')"
                          :kosong="__('Semua')" :options="$opsiProyek" />
+            </div>
+            <div class="col-sm-6 col-lg-2">
+                <label class="form-label" for="filter-servis-aset">{{ __('Servis') }}</label>
+                <select class="form-select" id="filter-servis-aset" wire:model.live="servisFilter">
+                    <option value="">{{ __('Semua') }}</option>
+                    <option value="jatuh-tempo">{{ __('Servis jatuh tempo') }}</option>
+                    <option value="sedang">{{ __('Sedang diservis') }}</option>
+                </select>
             </div>
             <div class="col-lg-2">
                 <div class="form-check">

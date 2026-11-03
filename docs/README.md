@@ -1,6 +1,6 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.125
+**Versi:** 0.126
 **Tanggal:** 3 November 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
@@ -109,6 +109,12 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.126 — 3 November 2026 (Fase 2b: Tahap 0 dokumen, Tahap 1 dibangun)
+- **Spesifikasi baru:** [33-pendukung-f2](wms/33-pendukung-f2.md) v0.1 (jadwal servis aset, cycle count ABC, auditor eksternal; TC-F2-01–12) dan [32-pwa-offline](wms/32-pwa-offline.md) v0.1 (draf, ditunda).
+- **Keputusan arsitektur** AD-16 (layar offline Alpine + IndexedDB, mengganti sebagian AD-12) di [08-arsitektur](wms/08-arsitektur.md) v0.23.
+- **Asumsi baru** [A-423](wms/04c-asumsi-lanjutan.md#a-423)–[A-426](wms/04c-asumsi-lanjutan.md#a-426) (*Setuju*) dan [A-427](wms/04c-asumsi-lanjutan.md#a-427) angka bawaan (*Perlu validasi*); 04c v0.11.
+- **Aturan:** BR-AST-07 dibangun, BR-OPN-11 & BR-ACC-07 baru, BR-ACC-01 per request ([05-aturan-bisnis](wms/05-aturan-bisnis.md) v0.25). Katalog v0.33 (`cycle_abc` aktif, `abc_class`, `maintenance_status`, `maintenance_source`); glosarium v0.39; [25-aset](wms/25-aset.md) v0.10, [21-opname-penyesuaian](wms/21-opname-penyesuaian.md) v0.12, [10-access](wms/10-access.md) v0.22.
 
 ### v0.125 — 3 November 2026 (audit antislop 001)
 - **Asumsi baru** [A-422](wms/04c-asumsi-lanjutan.md#a-422) (04c v0.10, *Setuju*): kontras teks redup & warna primary, tanda proses `[data-loading]`, fokus pencarian cepat, teks UI tanpa em dash (sel kosong `-`), kartu Beranda `wire:navigate.hover`.

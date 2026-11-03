@@ -20,6 +20,10 @@ class EnsureClientPortal
         /** @var User|null $user */
         $user = $request->user();
 
+        if ($user !== null && ($keluar = EnsureInternalArea::keluarkanBilaAksesHabis($request, $user)) !== null) {
+            return $keluar;
+        }
+
         if ($user !== null && ! $user->isClient()) {
             abort(403, __('Halaman ini khusus untuk user klien.'));
         }

@@ -123,7 +123,13 @@
                                         &ndash;
                                         {{ $assignment->valid_until?->format('d M Y') ?? __('tanpa batas') }}
 
-                                        @if ($assignment->valid_until !== null && $assignment->project_team_member_id === null)
+                                        @if ($assignment->role?->code === 'external_auditor' && $assignment->valid_until !== null)
+                                            {{-- BR-ACC-07, A-425: akses auditor eksternal memang bertanggal. --}}
+                                            <div class="{{ $assignment->valid_until->lt(today()) ? 'text-danger' : 'text-muted' }}">
+                                                <i class="bi bi-hourglass-split"></i>
+                                                {{ $assignment->valid_until->lt(today()) ? __('Akses audit sudah berakhir') : __('Akses audit sampai :t', ['t' => $assignment->valid_until->format('d M Y')]) }}
+                                            </div>
+                                        @elseif ($assignment->valid_until !== null && $assignment->project_team_member_id === null)
                                             {{-- A-343: sisa dari form lama yang punya isian tanggal. --}}
                                             <div class="text-warning-emphasis">
                                                 <i class="bi bi-exclamation-triangle"></i>

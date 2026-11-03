@@ -9,6 +9,7 @@ use App\Domain\Count\Actions\CreateStockCount;
 use App\Domain\Count\Enums\CountType;
 use App\Domain\Count\Livewire\Concerns\HandlesCountRules;
 use App\Domain\Count\Models\StockCount;
+use App\Domain\Count\Support\AbcCyclePlanner;
 use App\Domain\Master\Models\Item;
 use App\Domain\Warehouse\Models\Bin;
 use App\Domain\Warehouse\Models\Warehouse;
@@ -96,7 +97,50 @@ class StockCountForm extends Component
                 ->orderByDesc('count_flag')->orderBy('code')->get(['id', 'code', 'bin_type', 'count_flag']),
             'items' => Item::query()->active()->orderBy('code')->get(['id', 'code', 'name']),
             'counters' => $this->penghitung($gudangIds),
+            'abc' => $this->pratinjauAbc($gudangIds),
         ]);
+    }
+
+    /**
+     * BR-OPN-11: pratinjau cycle count ABC (satu gudang) — jumlah jatuh tempo per
+     * kelas dan item yang akan masuk sesi. Null bila jenis lain.
+     *
+     * @param  array<int, int>  $gudangIds
+     * @return array{satuGudang: bool, perKelas: array<string, int>, item: Collection<int, array{kode: string, nama: string, kelas: string, terakhir: ?string}>, maks: int}|null
+     */
+    private function pratinjauAbc(array $gudangIds): ?array
+    {
+        if ($this->form['count_type'] !== CountType::CycleAbc->value) {
+            return null;
+        }
+
+        if (count($gudangIds) !== 1) {
+            return ['satuGudang' => false, 'perKelas' => [], 'item' => collect(), 'maks' => AbcCyclePlanner::MAKS_ITEM];
+        }
+
+        $rencana = app(AbcCyclePlanner::class);
+        $semua = $rencana->klasifikasi($gudangIds[0]);
+        $sesi = $rencana->untukSesi($gudangIds[0]);
+        $nama = Item::query()->whereIn('id', array_column($sesi, 'item_id'))->get(['id', 'code', 'name'])->keyBy('id');
+
+        $perKelas = ['A' => 0, 'B' => 0, 'C' => 0];
+        foreach ($semua as $r) {
+            if ($r['jatuh_tempo']) {
+                $perKelas[$r['kelas']]++;
+            }
+        }
+
+        return [
+            'satuGudang' => true,
+            'perKelas' => $perKelas,
+            'item' => collect($sesi)->map(fn (array $r) => [
+                'kode' => (string) $nama->get($r['item_id'])?->code,
+                'nama' => (string) $nama->get($r['item_id'])?->name,
+                'kelas' => $r['kelas'],
+                'terakhir' => $r['terakhir'],
+            ]),
+            'maks' => AbcCyclePlanner::MAKS_ITEM,
+        ];
     }
 
     /**

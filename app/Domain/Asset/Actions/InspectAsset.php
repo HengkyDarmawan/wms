@@ -120,6 +120,9 @@ class InspectAsset
                     'due_return_date' => null,
                 ])->save();
 
+                // BR-AST-07, A-423: skor rendah langsung menjadwalkan servis.
+                MaintainAsset::dariPemeriksaan($serial, (int) $skor, $actor);
+
                 // BR-AST-03 / matriks §14: kerusakan diteruskan ke Akuntansi tanpa pergerakan.
                 if ($grade->isDamage()) {
                     $this->ledger->emitEvent(StockEventType::AssetLostOrDamaged, [

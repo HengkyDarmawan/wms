@@ -43,6 +43,7 @@ trait ComposesRoleAssignments
         }
 
         $utamaDipakai = false;
+        $barisUtama = collect();
 
         foreach ($baris->groupBy('role_id') as $roleId => $rows) {
             $role = Role::query()->find($roleId);
@@ -51,6 +52,7 @@ trait ComposesRoleAssignments
                 $this->peranUtama = (string) $roleId;
                 $this->isiCakupanUtama($role, $rows);
                 $utamaDipakai = true;
+                $barisUtama = $rows;
 
                 continue;
             }
@@ -67,8 +69,9 @@ trait ComposesRoleAssignments
         }
 
         // Mode Ubah membuka Pengaturan lanjutan sendiri bila ada yang perlu dilihat.
+        // Tanggal peran utama Auditor Eksternal sudah tampil di pertanyaannya sendiri.
         $this->lanjutanTerbuka = $this->assignments !== []
-            || $baris->contains(fn (RoleAssignment $a) => $a->valid_from !== null || $a->valid_until !== null);
+            || $baris->diff($barisUtama)->contains(fn (RoleAssignment $a) => $a->valid_from !== null || $a->valid_until !== null);
     }
 
     /** @param  Collection<int, RoleAssignment>  $rows */
@@ -77,6 +80,7 @@ trait ComposesRoleAssignments
         return match (RoleGuide::pertanyaan($role)) {
             RoleGuide::SEMUA => $rows->count() === 1 && $rows->first()->scope_type === ScopeType::All,
             RoleGuide::GUDANG => $rows->every(fn (RoleAssignment $a) => $a->scope_type === ScopeType::Warehouse && $a->scope_id !== null),
+            RoleGuide::AUDIT => $rows->every(fn (RoleAssignment $a) => $a->scope_type === ScopeType::Warehouse && $a->scope_id !== null && $a->valid_until !== null),
             RoleGuide::PROYEK, RoleGuide::KLIEN => $rows->every(fn (RoleAssignment $a) => $a->scope_type === ScopeType::Project && $a->scope_id !== null),
             default => false,
         };
@@ -88,10 +92,15 @@ trait ComposesRoleAssignments
         $ids = $rows->map(fn (RoleAssignment $a) => (string) $a->scope_id)->values()->all();
 
         match (RoleGuide::pertanyaan($role)) {
-            RoleGuide::GUDANG => $this->gudangDipilih = $ids,
+            RoleGuide::GUDANG, RoleGuide::AUDIT => $this->gudangDipilih = $ids,
             RoleGuide::PROYEK, RoleGuide::KLIEN => $this->proyekDipilih = $ids,
             default => null,
         };
+
+        if (RoleGuide::pertanyaan($role) === RoleGuide::AUDIT) {
+            $this->aksesSampai = (string) $rows->max(fn (RoleAssignment $a) => $a->valid_until?->toDateString());
+            $this->aksesDari = (string) $rows->min(fn (RoleAssignment $a) => $a->valid_from?->toDateString());
+        }
     }
 
     /**
@@ -116,6 +125,11 @@ trait ComposesRoleAssignments
             if ($pertanyaan === RoleGuide::GUDANG) {
                 foreach ($this->gudangDipilih as $id) {
                     $hasil[] = $baris(ScopeType::Warehouse->value, (int) $id);
+                }
+            } elseif ($pertanyaan === RoleGuide::AUDIT) {
+                // BR-ACC-07: gudang + tanggal akhir; mulai = hari ini (atau tanggal lama bila diubah).
+                foreach ($this->gudangDipilih as $id) {
+                    $hasil[] = $baris(ScopeType::Warehouse->value, (int) $id, $this->aksesDari !== '' ? $this->aksesDari : now()->toDateString(), $this->aksesSampai ?: null);
                 }
             } elseif ($pertanyaan === RoleGuide::PROYEK) {
                 foreach ($this->proyekDipilih as $id) {

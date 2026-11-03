@@ -72,7 +72,6 @@ class StockCountTest extends TenantTestCase
         $this->assertFalse($spot->freeze_bins);
 
         $this->tolak(fn () => $this->sesi(['count_type' => 'spot_check', 'bin_ids' => []]), 'BR-OPN-10');
-        $this->tolak(fn () => $this->sesi(['count_type' => 'cycle_abc']), 'BR-GEN-10');
         $this->tolak(fn () => $this->sesi(['team_user_ids' => []]), 'BR-OPN-05');
         $this->tolak(fn () => $this->sesi(['team_user_ids' => [$this->makeUser('driver')->id]]), 'BR-GEN-09');
 

@@ -108,7 +108,7 @@
                                 @endif
                             </td>
                             <td>
-                                {{ $m->document_number ?? ($m->document_type === 'bin_move' ? __('Pindah bin') : '-') }}
+                                {{ $m->document_number ?? match ($m->document_type) { 'bin_move' => __('Pindah bin'), 'maintenance' => __('Servis aset'), default => '-' } }}
                                 @if ($m->reverses_movement_id !== null)
                                     <span class="badge text-bg-warning">{{ __('Pembalik') }}</span>
                                 @endif

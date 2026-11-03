@@ -158,6 +158,8 @@
         </div>
     </div>
 
+    @livewire('asset.asset-maintenance', ['serialId' => $aset->id], key('servis-'.$aset->id))
+
     <div class="card mb-3">
         <div class="card-header"><strong>{{ __('Riwayat kondisi') }}</strong></div>
         <ul class="list-group list-group-flush small">
@@ -202,7 +204,7 @@
         <div class="card-header"><strong>{{ __('Kartu stok serial') }}</strong></div>
         <ul class="list-group list-group-flush small">
             @forelse ($movements as $m)
-                <li class="list-group-item">#{{ $m->id }} · {{ $m->occurred_at?->lokal()->format('d/m/Y H:i') }} · {{ $m->fromBin?->code ?? __('luar') }} → {{ $m->toBin?->code ?? __('luar') }} · {{ $m->stock_status->label() }} · {{ $m->document_number }}</li>
+                <li class="list-group-item">#{{ $m->id }} · {{ $m->occurred_at?->lokal()->format('d/m/Y H:i') }} · {{ $m->fromBin?->code ?? __('luar') }} → {{ $m->toBin?->code ?? __('luar') }} · {{ $m->stock_status->label() }} · {{ $m->document_number ?? $m->notes }}</li>
             @empty
                 <li class="list-group-item text-muted">{{ __('Belum ada pergerakan.') }}</li>
             @endforelse

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Asset\Livewire;
 
+use App\Domain\Asset\Enums\MaintenanceStatus;
+use App\Domain\Asset\Models\MaintenanceSchedule;
 use App\Domain\Asset\Support\AssetQuery;
 use App\Domain\Master\Enums\AssetState;
 use App\Domain\Master\Models\Serial;
@@ -38,6 +40,10 @@ class AssetList extends Component
 
     #[Url(as: 'perhatian', except: false)]
     public bool $attention = false;
+
+    /** A-423: '' · 'jatuh-tempo' (jadwal servis lewat tanggal) · 'sedang' (sedang diservis). */
+    #[Url(as: 'servis', except: '')]
+    public string $servisFilter = '';
 
     public function mount(): void
     {
@@ -89,6 +95,8 @@ class AssetList extends Component
             ->when($this->stateFilter !== '', fn (Builder $q) => $q->where('asset_state', $this->stateFilter))
             ->when($this->projectFilter !== '', fn (Builder $q) => $q->where('current_project_id', (int) $this->projectFilter))
             ->when($this->attention, fn (Builder $q) => $q->overdue())
+            ->when($this->servisFilter === 'jatuh-tempo', fn (Builder $q) => $q->whereIn('id', MaintenanceSchedule::query()->due()->select('serial_id')))
+            ->when($this->servisFilter === 'sedang', fn (Builder $q) => $q->whereIn('id', MaintenanceSchedule::query()->where('status', MaintenanceStatus::InProgress->value)->select('serial_id')))
             ->orderBy('serial_no')
             ->paginate(25);
     }
