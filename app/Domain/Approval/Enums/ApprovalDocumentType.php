@@ -79,7 +79,7 @@ enum ApprovalDocumentType: string
     public function conditions(): array
     {
         return match ($this) {
-            self::MaterialRequest => ['warehouse_ids', 'project_ids', 'category_ids', 'ownership_models', 'line_count_min', 'line_qty_min', 'from_client'],
+            self::MaterialRequest => ['warehouse_ids', 'project_ids', 'category_ids', 'ownership_models', 'line_count_min', 'line_qty_min', 'from_client', 'exceeds_plan'],
             self::VendorReturn => ['warehouse_ids', 'category_ids', 'ownership_models', 'line_count_min', 'line_qty_min', 'vendor_types'],
             // A-308: jenis vendor dinilai di PO (vendor baru dipilih setelah PRQ disetujui).
             self::PurchaseRequest => ['warehouse_ids', 'project_ids', 'category_ids', 'line_count_min', 'line_qty_min', 'purchase_request_origins'],

@@ -67,6 +67,9 @@
 
             {{-- Fase 2a (31-whatsapp §6): kejadian WhatsApp; tampil bila fitur company menyala. --}}
             @livewire('whatsapp.company-settings', key('whatsapp-company'))
+            @if (\App\Domain\WhatsApp\Livewire\WhatsAppSimulator::aktif())
+                <a wire:navigate class="btn btn-sm btn-outline-primary mt-2" href="{{ route('whatsapp.simulator') }}"><i class="bi bi-chat-dots" aria-hidden="true"></i> {{ __('Kotak pesan WhatsApp (simulasi)') }}</a>
+            @endif
 
             <div class="card mb-3">
                 <div class="card-header"><strong>{{ __('Zona waktu & periode') }}</strong></div>

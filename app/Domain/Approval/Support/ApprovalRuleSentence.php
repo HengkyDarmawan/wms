@@ -139,6 +139,10 @@ class ApprovalRuleSentence
             $bagian[] = filter_var($kondisi['from_client'], FILTER_VALIDATE_BOOLEAN) ? __('dari klien') : __('dari internal');
         }
 
+        if (array_key_exists('exceeds_plan', $kondisi) && $kondisi['exceeds_plan'] !== '' && $kondisi['exceeds_plan'] !== null) {
+            $bagian[] = filter_var($kondisi['exceeds_plan'], FILTER_VALIDATE_BOOLEAN) ? __('yang melebihi rencana material') : __('yang masih dalam rencana material');
+        }
+
         if (! empty($kondisi['vendor_types'])) {
             $bagian[] = __('ke vendor jenis').' '.collect((array) $kondisi['vendor_types'])
                 ->map(fn ($v) => VendorType::tryFrom((string) $v)?->label() ?? (string) $v)->implode(' / ');

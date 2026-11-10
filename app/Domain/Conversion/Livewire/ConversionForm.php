@@ -11,6 +11,7 @@ use App\Domain\Conversion\Enums\ConversionOutputKind;
 use App\Domain\Conversion\Enums\ConversionType;
 use App\Domain\Conversion\Livewire\Concerns\HandlesConversionRules;
 use App\Domain\Conversion\Models\Conversion;
+use App\Domain\Conversion\Models\ConversionRecipe;
 use App\Domain\Conversion\Support\ConversionApprovalRoute;
 use App\Domain\Conversion\Support\ConversionLines;
 use App\Domain\Conversion\Support\ConversionPlanner;
@@ -75,6 +76,11 @@ class ConversionForm extends Component
     public string $cari = '';
 
     public string $kodePindai = '';
+
+    /** A-431: resep yang dipilih / terakhir diterapkan (id, '' = tanpa resep). */
+    public string $resepId = '';
+
+    public string $resepDipakai = '';
 
     #[Locked]
     public ?int $conversionId = null;
@@ -209,6 +215,37 @@ class ConversionForm extends Component
         }
     }
 
+    /**
+     * A-431, BR-CNV-06: terapkan resep — jenis, pola potong batang pertama, atau
+     * baris hasil. Batang & jumlah input yang sudah dipilih dipertahankan bila
+     * jenisnya sama; semua isian tetap bisa diubah sebelum disimpan.
+     */
+    public function pakaiResep(): void
+    {
+        $resep = ConversionRecipe::query()->active()->find((int) $this->resepId);
+
+        if ($resep === null || $resep->type() === null) {
+            $this->addError('resepId', __('Pilih resep yang aktif.'));
+
+            return;
+        }
+
+        if ($resep->type()->value !== $this->form['conversion_type']) {
+            $this->form['conversion_type'] = $resep->type()->value;
+            $this->kosongkanInput();
+        }
+
+        if ($resep->type() === ConversionType::Cut) {
+            $this->potong = array_map(fn (array $p) => ['id' => (string) Str::uuid(), 'item_id' => (string) ($p['item_id'] ?? ''), 'length' => $this->angka((float) $p['length']), 'count' => (string) (int) $p['count']], $resep->potong()) ?: [$this->barisPotong()];
+        } else {
+            $this->hasil = array_map(fn (array $h) => array_merge($this->barisHasil($h['kind']), ['item_id' => (string) $h['item_id'], 'qty' => $this->angka((float) $h['qty'])]), $resep->hasil()) ?: [$this->barisHasil()];
+        }
+
+        $this->resepDipakai = (string) $resep->id;
+        $this->resetErrorBag();
+        $this->dispatch('pesan', teks: __('Resep :kode diterapkan. Periksa dan sesuaikan sebelum menyimpan.', ['kode' => $resep->code]));
+    }
+
     public function tambahHasil(string $kind = 'output'): void
     {
         $this->hasil[] = $this->barisHasil($kind === 'waste' ? 'waste' : 'output');
@@ -333,6 +370,7 @@ class ConversionForm extends Component
         $pilihanBin = $gudang !== null ? app(ConversionLines::class)->pilihanStorageBin($gudang) : null;
 
         return view('livewire.conversion.conversion-form', [
+            'resep' => ConversionRecipe::query()->active()->orderBy('code')->get(),
             // A-395: proyek, item hasil, bin tujuan dicari ke server (daftar lama).
             'opsiProyek' => $this->pilihanProyek()->awalDengan($this->form['project_id']),
             'opsiItemPotong' => $pilihanItem->awalPerBaris(array_column($this->potong, 'item_id')),
@@ -418,7 +456,7 @@ class ConversionForm extends Component
             : $this->inputTerpilih($calon)->map(fn ($c) => ['key' => $c['key'], 'qty_base' => $c['qty']])->values()->all();
 
         $cnv = null;
-        $header = ['project_id' => $this->form['project_id'], 'warehouse_id' => $this->form['warehouse_id'], 'conversion_type' => $this->form['conversion_type'], 'notes' => $this->form['notes']];
+        $header = ['project_id' => $this->form['project_id'], 'warehouse_id' => $this->form['warehouse_id'], 'conversion_type' => $this->form['conversion_type'], 'notes' => $this->form['notes'], 'recipe_id' => $this->resepDipakai];
 
         $this->jalankan(function () use ($action, $header, $inputs, $rencana, &$cnv) {
             if ($this->conversionId !== null) {

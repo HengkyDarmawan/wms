@@ -45,6 +45,7 @@ class ApprovalSimulation extends Component
         'line_count' => '1',
         'max_line_qty' => '1',
         'from_client' => false,
+        'exceeds_plan' => false,
         'vendor_type' => '',
         'requester_id' => '',
     ];
@@ -118,6 +119,7 @@ class ApprovalSimulation extends Component
             lineCount: max(0, (int) $this->manual['line_count']),
             maxLineQty: max(0.0, (float) $this->manual['max_line_qty']),
             fromClient: (bool) $this->manual['from_client'],
+            exceedsPlan: (bool) $this->manual['exceeds_plan'],
             vendorType: ($this->manual['vendor_type'] ?? '') ?: null,
             requesterId: $pemohon,
             requesterIds: $pemohon !== null ? [$pemohon] : [],

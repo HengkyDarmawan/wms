@@ -12,6 +12,8 @@ use App\Domain\Asset\Models\MaintenanceSchedule;
 use App\Domain\Master\Enums\AssetState;
 use App\Domain\Stock\Models\StockBalance;
 use App\Domain\Stock\Models\StockMovement;
+use App\Domain\Stock\Support\MovementRequest;
+use App\Domain\Stock\Support\StockLedger;
 use App\Domain\Warehouse\Enums\BinType;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\Asset\Concerns\AssetFixtures;
@@ -131,5 +133,39 @@ class AssetMaintenanceTest extends TenantTestCase
         $jadwal = $this->servis()->plan($this->gns, ['scheduled_at' => now()->toDateString()], $this->makeUser('warehouse_staff'));
         $luar = $this->makeUser('warehouse_staff', ScopeType::Warehouse, (int) $this->krw1->id);
         $this->gagalAset(fn () => $this->servis()->start($jadwal, $luar), 'BR-GEN-09');
+    }
+
+    #[Test]
+    public function tc_f2_13_meter_melewati_batas_memajukan_jadwal(): void
+    {
+        $staf = $this->makeUser('warehouse_staff');
+        // Meter GNS-01 = 100 jam; servis tiap 40 jam → jatuh tempo meter 140, tanggal cadangan +30 hari.
+        $jadwal = $this->servis()->plan($this->gns, ['scheduled_at' => now()->addDays(30)->toDateString(), 'interval_meter' => '40'], $staf);
+        $this->assertSame(140.0, (float) $jadwal->due_meter);
+
+        $this->pinjamkan();
+        $this->kembalikan();
+        $this->periksa($this->ast(), ['meter_in' => 150]);
+
+        $jadwal->refresh();
+        $this->assertSame(now()->toDateString(), $jadwal->scheduled_at->toDateString(), 'Meter 150 ≥ 140: jadwal dimajukan ke hari ini.');
+        $this->assertStringContainsString('melewati batas 140', (string) $jadwal->notes);
+
+        // Aset dipilah dulu dari bin Retur ke rak (servis hanya dimulai dari bin penyimpanan).
+        app(StockLedger::class)->post(new MovementRequest(item: $this->genset, qtyBase: 1, fromBinId: $this->binRetur()->id, toBinId: $this->binB->id,
+            serialId: $this->gns->id, documentType: 'bin_move'));
+
+        // Selesai: jadwal berikutnya ikut berinterval meter dari meter saat selesai.
+        $this->servis()->finish($this->servis()->start($jadwal, $staf), $this->binB->id, $staf);
+        $berikut = MaintenanceSchedule::query()->where('serial_id', $this->gns->id)->open()->sole();
+        $this->assertSame(190.0, (float) $berikut->due_meter, 'Meter selesai 150 + 40.');
+        $this->assertSame(150.0, (float) $jadwal->refresh()->meter_done);
+    }
+
+    #[Test]
+    public function tc_f2_14_interval_meter_hanya_untuk_aset_bermeter(): void
+    {
+        $this->gns->forceFill(['meter_unit' => 'none'])->save();
+        $this->gagalAset(fn () => $this->servis()->plan($this->gns->refresh(), ['scheduled_at' => now()->toDateString(), 'interval_meter' => '10'], $this->makeUser('warehouse_staff')), 'BR-AST-07');
     }
 }

@@ -29,6 +29,15 @@ class ProjectPolicy
         return $actor->canAccessProject((int) $project->id);
     }
 
+    /**
+     * Rencana material (A-428, A-433): pemegang `project.view` atau klien pemilik
+     * proyek (lewat portal), keduanya dalam cakupan proyek.
+     */
+    public function viewPlan(User $actor, Project $project): bool
+    {
+        return ($actor->hasPermission('project.view') || $actor->isClient()) && $actor->canAccessProject((int) $project->id);
+    }
+
     public function create(User $actor): bool
     {
         return $actor->hasPermission('project.create');

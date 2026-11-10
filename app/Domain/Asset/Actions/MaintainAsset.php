@@ -42,7 +42,7 @@ class MaintainAsset
     public function __construct(private readonly StockLedger $ledger) {}
 
     /**
-     * @param  array{scheduled_at?: mixed, interval_days?: mixed, notes?: mixed}  $data
+     * @param  array{scheduled_at?: mixed, interval_days?: mixed, interval_meter?: mixed, notes?: mixed}  $data
      */
     public function plan(Serial $serial, array $data, User $actor, ?MaintenanceSchedule $jadwal = null): MaintenanceSchedule
     {
@@ -51,20 +51,24 @@ class MaintainAsset
 
         $tanggal = $this->tanggal($data['scheduled_at'] ?? null);
         $interval = $this->interval($data['interval_days'] ?? null);
+        $intervalMeter = $this->intervalMeter($serial, $data['interval_meter'] ?? null);
         $catatan = $this->teks($data['notes'] ?? null);
+        // A-432: jatuh tempo meter dihitung dari meter sekarang.
+        $dueMeter = $intervalMeter === null ? null : round((float) $serial->meter_total + $intervalMeter, 1);
 
         if ($jadwal !== null) {
             if ((int) $jadwal->serial_id !== (int) $serial->id || $jadwal->status !== MaintenanceStatus::Planned) {
                 throw AssetRuleException::rule('BR-GEN-01', 'Hanya jadwal yang masih direncanakan yang bisa diubah.');
             }
 
-            $jadwal->update(['scheduled_at' => $tanggal, 'interval_days' => $interval, 'notes' => $catatan]);
+            $jadwal->update(['scheduled_at' => $tanggal, 'interval_days' => $interval, 'interval_meter' => $intervalMeter,
+                'due_meter' => $intervalMeter === null ? null : ($jadwal->interval_meter == $intervalMeter && $jadwal->due_meter !== null ? $jadwal->due_meter : $dueMeter), 'notes' => $catatan]);
             $this->log($jadwal, $actor, 'Jadwal servis diubah ke '.$tanggal);
 
             return $jadwal->refresh();
         }
 
-        return DB::transaction(function () use ($serial, $tanggal, $interval, $catatan, $actor) {
+        return DB::transaction(function () use ($serial, $tanggal, $interval, $intervalMeter, $dueMeter, $catatan, $actor) {
             Serial::query()->whereKey($serial->id)->lockForUpdate()->first();
 
             if (MaintenanceSchedule::query()->where('serial_id', $serial->id)->open()->exists()) {
@@ -75,6 +79,8 @@ class MaintainAsset
                 'serial_id' => $serial->id,
                 'scheduled_at' => $tanggal,
                 'interval_days' => $interval,
+                'interval_meter' => $intervalMeter,
+                'due_meter' => $dueMeter,
                 'status' => MaintenanceStatus::Planned,
                 'source' => MaintenanceSource::Manual,
                 'notes' => $catatan,
@@ -158,16 +164,20 @@ class MaintainAsset
             $jadwal->update([
                 'status' => MaintenanceStatus::Done,
                 'performed_at' => now()->toDateString(),
+                'meter_done' => $serial->meter_total,
                 'finished_movement_id' => $gerak->id,
                 'notes' => $catatan !== null && trim($catatan) !== '' ? $this->teks($catatan) : $jadwal->notes,
             ]);
             $this->log($jadwal, $actor, 'Servis selesai → '.$tujuan->code);
 
-            if ($jadwal->interval_days !== null) {
+            if ($jadwal->interval_days !== null || $jadwal->interval_meter !== null) {
                 MaintenanceSchedule::create([
                     'serial_id' => $serial->id,
-                    'scheduled_at' => now()->addDays((int) $jadwal->interval_days)->toDateString(),
+                    // A-432: hanya berinterval meter → tanggal cadangan setahun, meter yang biasanya lebih dulu.
+                    'scheduled_at' => now()->addDays((int) ($jadwal->interval_days ?? 365))->toDateString(),
                     'interval_days' => $jadwal->interval_days,
+                    'interval_meter' => $jadwal->interval_meter,
+                    'due_meter' => $jadwal->interval_meter === null ? null : round((float) $serial->meter_total + (float) $jadwal->interval_meter, 1),
                     'status' => MaintenanceStatus::Planned,
                     'source' => MaintenanceSource::Interval,
                     'created_by' => $actor->id,
@@ -197,6 +207,46 @@ class MaintainAsset
             'notes' => mb_substr('Skor pemeriksaan '.$skor.' % (di bawah '.self::SKOR_AMBANG.' %)', 0, 255),
             'created_by' => $actor?->id,
         ]);
+    }
+
+    /**
+     * A-432: meter aset bertambah (pemeriksaan kembali) — jadwal `planned` yang
+     * jatuh tempo meternya sudah tercapai dimajukan ke hari ini.
+     */
+    public static function dariMeter(Serial $serial): int
+    {
+        $meter = (float) $serial->meter_total;
+        $n = 0;
+
+        foreach (MaintenanceSchedule::query()->where('serial_id', $serial->id)->where('status', MaintenanceStatus::Planned->value)
+            ->whereNotNull('due_meter')->where('due_meter', '<=', $meter)->whereDate('scheduled_at', '>', now()->toDateString())->get() as $j) {
+            $j->update([
+                'scheduled_at' => now()->toDateString(),
+                'notes' => mb_substr(trim(($j->notes ? $j->notes.' · ' : '').'Meter '.rtrim(rtrim(number_format($meter, 1, ',', '.'), '0'), ',').' melewati batas '.rtrim(rtrim(number_format((float) $j->due_meter, 1, ',', '.'), '0'), ',')), 0, 255),
+            ]);
+            $n++;
+        }
+
+        return $n;
+    }
+
+    private function intervalMeter(Serial $serial, mixed $nilai): ?float
+    {
+        $isi = str_replace(',', '.', trim((string) $nilai));
+
+        if ($isi === '') {
+            return null;
+        }
+
+        if ($serial->meter_unit === null || $serial->meter_unit->value === 'none') {
+            throw AssetRuleException::field('BR-AST-07', 'interval_meter', 'Aset ini tidak bermeter; kosongkan interval meter.');
+        }
+
+        if (! is_numeric($isi) || (float) $isi <= 0 || (float) $isi > 1000000) {
+            throw AssetRuleException::field('BR-GEN-11', 'interval_meter', 'Interval meter harus angka lebih dari 0.');
+        }
+
+        return round((float) $isi, 1);
     }
 
     private function pindah(StockBalance $saldo, Bin $tujuan, User $actor, MaintenanceSchedule $jadwal, string $judul)

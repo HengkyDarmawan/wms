@@ -36,6 +36,7 @@ use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\Platform\BillingController;
 use App\Http\Controllers\Platform\SupportSessionController;
 use App\Http\Controllers\Portal\PortalDashboardController;
+use App\Http\Controllers\Portal\PortalProjectPlanController;
 use App\Http\Controllers\PurchaseRequest\PurchaseRequestController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Receipt\ReceiptController;
@@ -45,6 +46,8 @@ use App\Http\Controllers\Request\RequestController;
 use App\Http\Controllers\Return\ReturnController;
 use App\Http\Controllers\Shared\AttachmentController;
 use App\Http\Controllers\Shared\FileController;
+use App\Http\Controllers\Shared\Fase2PageController;
+use App\Http\Controllers\Shared\OfflineController;
 use App\Http\Controllers\Shared\ReportController;
 use App\Http\Controllers\Shipment\DeliveryTokenController;
 use App\Http\Controllers\Shipment\PortalDeliveryProofController;
@@ -153,6 +156,8 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/setup/complete', [SetupController::class, 'complete'])->name('setup.complete');
         // Pengaturan company (11-master §6, A-230): ambang, saklar fitur, zona waktu.
         Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company');
+        // A-435: kotak pesan WhatsApp simulasi (driver log, bukan produksi).
+        Route::get('/settings/whatsapp-simulator', [Fase2PageController::class, 'whatsappSimulator'])->name('whatsapp.simulator');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
@@ -329,6 +334,7 @@ Route::middleware('auth')->group(function (): void {
         // lewat GET; transisi lewat Livewire (POST), penutupan WST lewat POST
         // form unggah bukti.
         Route::get('/conversions', [ConversionController::class, 'index'])->name('conversions.index');
+        Route::get('/conversion-recipes', [ConversionController::class, 'recipes'])->name('conversion-recipes.index');
         Route::get('/conversions/create', [ConversionController::class, 'create'])->name('conversions.create');
         Route::get('/conversions/{conversion}', [ConversionController::class, 'show'])->name('conversions.show');
         Route::get('/conversions/{conversion}/edit', [ConversionController::class, 'edit'])->name('conversions.edit');
@@ -372,6 +378,18 @@ Route::middleware('auth')->group(function (): void {
 
         // Laporan lintas modul (Access §9, Master §9, Warehouse §9).
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        // A-438: PWA offline (AD-16) — hitung opname offline, paket data, sinkron idempoten, antrean tinjauan.
+        Route::get('/offline/hitung', [OfflineController::class, 'count'])->name('offline.count');
+        Route::get('/offline/hitung/data', [OfflineController::class, 'countData'])->name('offline.count.data');
+        // A-439: tugas gudang offline.
+        Route::get('/offline/tugas', [OfflineController::class, 'tasks'])->name('offline.tasks');
+        Route::get('/offline/tugas/data', [OfflineController::class, 'tasksData'])->name('offline.tasks.data');
+        Route::post('/offline/sync', [OfflineController::class, 'sync'])->middleware('throttle:60,1')->name('offline.sync');
+        Route::get('/offline/tinjauan', [Fase2PageController::class, 'offlineReview'])->name('offline.review');
+        // A-437: tag RFID (fitur rfid company).
+        Route::get('/rfid-tags', [Fase2PageController::class, 'rfidTags'])->name('rfid-tags.index');
+        // A-434: dashboard konsolidasi opname & waste (Fase 2).
+        Route::get('/dashboards/opname-waste', [Fase2PageController::class, 'consolidation'])->name('dashboards.opname-waste');
         Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
         Route::get('/reports/{report}/export', [ReportController::class, 'export'])->name('reports.export');
         Route::get('/reports/{report}/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
@@ -381,6 +399,8 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('portal')->prefix('portal')->name('portal.')->group(function (): void {
         Route::get('/', PortalDashboardController::class)->name('dashboard');
         Route::get('/requests', [PortalRequestController::class, 'index'])->name('requests.index');
+        // A-433: klien melihat & mengunggah rencana material proyeknya (komponen sama dengan hub proyek).
+        Route::get('/projects/{project}/plan', PortalProjectPlanController::class)->name('projects.plan');
         Route::get('/requests/{materialRequest}', [PortalRequestController::class, 'show'])->name('requests.show');
         Route::post('/requests/{materialRequest}/receipts/{proof}/confirm', [DeliveryReceiptController::class, 'confirm'])->whereNumber('proof')->name('requests.receipt.confirm');
         Route::post('/requests/{materialRequest}/receipts/{proof}/dispute', [DeliveryReceiptController::class, 'dispute'])->whereNumber('proof')->name('requests.receipt.dispute');

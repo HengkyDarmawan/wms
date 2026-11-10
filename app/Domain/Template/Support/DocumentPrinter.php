@@ -149,6 +149,8 @@ class DocumentPrinter
             'bernilai' => false,
             'cetakKe' => $copyNo,
             'cetakUlang' => $copyNo !== null && $copyNo > 1 && PrintHistory::marked($type),
+            // A-436: teks template kustom (sudah disaring) di atas/bawah isi bawaan.
+            'templateKustom' => TemplateText::render(DocumentTemplate::forType($type)->body_html, TemplateText::nilai($type, $model, $nomor, $copyNo)),
         ]);
     }
 

@@ -11,6 +11,7 @@ use App\Domain\Conversion\Exceptions\ConversionRuleException;
 use App\Domain\Conversion\Models\Conversion;
 use App\Domain\Conversion\Models\ConversionInput;
 use App\Domain\Conversion\Models\ConversionOutput;
+use App\Domain\Conversion\Models\ConversionRecipe;
 use App\Domain\Conversion\Support\ConversionLines;
 use App\Domain\Conversion\Support\ConversionReversibility;
 use App\Domain\Conversion\Support\ConvertibleStock;
@@ -66,6 +67,8 @@ class CreateConversion
                 'status' => ConversionStatus::Draft,
                 'prepared_by' => $actor?->id,
                 'notes' => $this->teks($header['notes'] ?? null),
+                // A-431: resep hanya dicatat asal-usulnya; hasil nyata tetap dari isian (BR-CNV-06).
+                'recipe_id' => ConversionRecipe::query()->whereKey((int) ($header['recipe_id'] ?? 0))->value('id'),
             ] + $this->lines->totals($masuk, $hasil));
 
             $this->simpanBaris($cnv, $masuk, $hasil);

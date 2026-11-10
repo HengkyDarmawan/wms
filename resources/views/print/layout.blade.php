@@ -38,7 +38,12 @@
 
     @include('print.partials.kop')
 
+    {{-- A-436: teks template kustom, sudah disaring (TemplateText::sanitize) & nilai di-escape. --}}
+    @if (($templateKustom['sebelum'] ?? '') !== '')<div class="teks-template">{!! $templateKustom['sebelum'] !!}</div>@endif
+
     @yield('isi')
+
+    @if (($templateKustom['sesudah'] ?? '') !== '')<div class="teks-template">{!! $templateKustom['sesudah'] !!}</div>@endif
 
     @include('print.partials.signatures')
 

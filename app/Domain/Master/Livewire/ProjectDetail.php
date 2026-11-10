@@ -52,7 +52,7 @@ class ProjectDetail extends Component
     use HandlesMasterRules;
     use WithPagination;
 
-    public const TABS = ['permintaan', 'pengiriman', 'stok', 'pemakaian', 'konversi', 'retur', 'aset', 'approval', 'tim-site', 'riwayat'];
+    public const TABS = ['permintaan', 'rencana', 'pengiriman', 'stok', 'pemakaian', 'konversi', 'retur', 'aset', 'approval', 'tim-site', 'riwayat'];
 
     #[Locked]
     public int $projectId;
@@ -192,6 +192,7 @@ class ProjectDetail extends Component
     {
         return [
             'permintaan' => __('Permintaan'),
+            'rencana' => __('Rencana material'),
             'pengiriman' => __('Pengiriman'),
             'stok' => __('Stok on-site'),
             'pemakaian' => __('Pemakaian'),

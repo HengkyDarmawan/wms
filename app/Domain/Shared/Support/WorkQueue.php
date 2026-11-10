@@ -20,6 +20,7 @@ use App\Domain\Receipt\Models\GoodsReceipt;
 use App\Domain\Receipt\Models\PutawayTask;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Models\MaterialRequest;
+use App\Domain\Shared\Models\SyncItem;
 use App\Domain\Shipment\Enums\DiscrepancyStatus;
 use App\Domain\Shipment\Enums\PickTaskStatus;
 use App\Domain\Shipment\Enums\ShipmentStatus;
@@ -90,6 +91,11 @@ class WorkQueue
         $tambah('asset.view', __('Aset lewat jatuh tempo'),
             fn () => Serial::query()->overdue()->count(),
             route('assets.index', ['perhatian' => 1]), 'bi-alarm', __('belum kembali dari proyek'), 'danger');
+
+        // A-438: isian dari perangkat offline yang bentrok, menunggu diputus.
+        $tambah('count.approve', __('Isian offline perlu ditinjau'),
+            fn () => SyncItem::query()->where('status', SyncItem::REVIEW)->count(),
+            route('offline.review'), 'bi-wifi-off', __('coba lagi atau tolak'), 'warning');
 
         // A-423: jadwal servis yang sudah sampai tanggalnya, hanya aset dalam cakupan pengguna.
         $tambah('asset.maintain', __('Servis aset jatuh tempo'),

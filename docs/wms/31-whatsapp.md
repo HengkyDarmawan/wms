@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `whatsapp` (Notifikasi & Approval WhatsApp, Fase 2a)
 
-**Versi:** 0.1
-**Tanggal:** 27 September 2026
-**Status:** terimplementasi (Fase 2a) — dibangun 27 Sep 2026 tanpa akun Meta (driver `log` & uji HTTP palsu, §13); rincian yang tidak tertulis di dokumen sebelumnya dicatat sebagai [A-274](04b-asumsi-lanjutan.md#a-274)–[A-280](04b-asumsi-lanjutan.md#a-280) *Perlu validasi*. Pendaftaran WhatsApp Cloud API & persetujuan template = pekerjaan pemilik produk ([checklist §5](../00-checklist-persiapan.md#5-checklist-pendaftaran-whatsapp-cloud-api-mulai-hari-pertama-fase-2a), [O-03](04-keputusan-dan-asumsi.md#o-03))
+**Versi:** 0.2
+**Tanggal:** 4 November 2026
+**Status:** terimplementasi (Fase 2a) — v0.2: Kotak pesan simulasi untuk demo tanpa Meta ([A-435](04c-asumsi-lanjutan.md#a-435)); dibangun 27 Sep 2026 tanpa akun Meta (driver `log` & uji HTTP palsu, §13); rincian yang tidak tertulis di dokumen sebelumnya dicatat sebagai [A-274](04b-asumsi-lanjutan.md#a-274)–[A-280](04b-asumsi-lanjutan.md#a-280) *Perlu validasi*. Pendaftaran WhatsApp Cloud API & persetujuan template = pekerjaan pemilik produk ([checklist §5](../00-checklist-persiapan.md#5-checklist-pendaftaran-whatsapp-cloud-api-mulai-hari-pertama-fase-2a), [O-03](04-keputusan-dan-asumsi.md#o-03))
 **Modul:** `whatsapp` (`app/Domain/WhatsApp`), menyentuh `notification`, `approval`, `access`, `shipment`, `platform`
 **Fase:** F2 (Fase 2a, [D-29](04-keputusan-dan-asumsi.md#d-29))
 **Dokumen terkait:** [Blueprint §8.2](01-blueprint.md#82-approval-via-whatsapp-f2), [§10](01-blueprint.md#10-notifikasi) · [Riset §2.6](02-riset-wms-sejenis.md#26-whatsapp-untuk-notifikasi--approval) · [BR-APR-10](05-aturan-bisnis.md#br-apr) · [A-24](04-keputusan-dan-asumsi.md#a-24) · [O-04](04-keputusan-dan-asumsi.md#o-04) · [Arsitektur §8](08-arsitektur.md) (webhook pusat) · [20-approval](20-approval.md) · [27-pendukung-f1](27-pendukung-f1.md) (notifikasi)

@@ -436,6 +436,9 @@
                 </table>
             </div>
         </div>
+    @elseif ($tab === 'rencana')
+        {{-- A-428: rencana material (BoQ) vs realisasi; komponen sendiri agar berkas ini tidak membengkak. --}}
+        @livewire('master.project-material-plan', ['project' => $project], key('rencana-'.$project->id))
     @elseif ($tab === 'tim-site')
         {{-- A-337: penempatan berbatas waktu di site proyek; komponen sendiri agar berkas ini tidak membengkak. --}}
         <div class="card">

@@ -122,6 +122,7 @@ class InspectAsset
 
                 // BR-AST-07, A-423: skor rendah langsung menjadwalkan servis.
                 MaintainAsset::dariPemeriksaan($serial, (int) $skor, $actor);
+                MaintainAsset::dariMeter($serial);
 
                 // BR-AST-03 / matriks §14: kerusakan diteruskan ke Akuntansi tanpa pergerakan.
                 if ($grade->isDamage()) {

@@ -1,8 +1,8 @@
 # Spesifikasi Modul — PWA offline penuh (Fase 2b, draf)
 
-**Versi:** 0.1
-**Tanggal:** 3 November 2026
-**Status:** draf; **ditunda sampai ada klien trial yang memakai aplikasi** ([A-426](04c-asumsi-lanjutan.md#a-426), Blueprint §19 "offline penuh setelah ledger stabil"). Arah arsitektur disetujui ([AD-16](08-arsitektur.md)); rincian di bawah *Perlu validasi*
+**Versi:** 0.3
+**Tanggal:** 10 November 2026
+**Status:** v0.3: tahap 2 dibangun: tugas gudang offline `/offline/tugas` ([A-439](04c-asumsi-lanjutan.md#a-439)); v0.2: tahap 1 dibangun: hitung opname offline ([A-438](04c-asumsi-lanjutan.md#a-438)); penundaan diganti [A-430](04c-asumsi-lanjutan.md#a-430); draf; **ditunda sampai ada klien trial yang memakai aplikasi** ([A-426](04c-asumsi-lanjutan.md#a-426), Blueprint §19 "offline penuh setelah ledger stabil"). Arah arsitektur disetujui ([AD-16](08-arsitektur.md)); rincian di bawah *Perlu validasi*
 **Modul:** `pwa` (lintas modul: Receipt, Putaway, Shipment, Count)
 **Fase:** F2b
 **Dokumen terkait:** [Blueprint §11](01-blueprint.md#11-pwa--mode-offline) · [AD-12, AD-16](08-arsitektur.md) · [A-42](04-keputusan-dan-asumsi.md#a-42), [A-43](04-keputusan-dan-asumsi.md#a-43), [A-44](04-keputusan-dan-asumsi.md#a-44), [A-49](04-keputusan-dan-asumsi.md#a-49) · [BR-OPN-03](05-aturan-bisnis.md#br-opn)
@@ -50,4 +50,12 @@ Sinkron berjalan saat koneksi kembali dan saat aplikasi dibuka, tanpa bergantung
 
 ## 6. Kasus uji
 
-Ditulis saat tahap ini dimulai (`TC-PWA-1x`); TC-PWA-01 (berkas PWA) tetap berlaku.
+TC-PWA-01 (berkas PWA) tetap berlaku; TC-PWA-11–15 di [35 §5](35-pendukung-f2-lanjutan.md#5-kasus-uji).
+
+| ID | Isi | Berkas |
+|---|---|---|
+| TC-PWA-21 | penerimaan & put-away diposting sekali walau dikirim ulang | `Shared/OfflineTasksTest` |
+| TC-PWA-22 | picking selesai; short tanpa alasan → tinjauan, tugas kembali seperti semula | `Shared/OfflineTasksTest` |
+| TC-PWA-23 | konfirmasi muat; bukti terima berfoto, foto tidak masuk `sync_queue` | `Shared/OfflineTasksTest` |
+| TC-PWA-24 | tanpa izin tidak diposting; dokumen tak dikenal ditolak | `Shared/OfflineTasksTest` |
+| TC-PWA-25 | halaman & paket data mengikuti izin | `Shared/OfflineTasksTest` |

@@ -9,6 +9,7 @@ use App\Domain\Approval\Support\ApprovalRegistry;
 use App\Domain\Conversion\Livewire\ConversionDetail;
 use App\Domain\Conversion\Livewire\ConversionForm;
 use App\Domain\Conversion\Livewire\ConversionList;
+use App\Domain\Conversion\Livewire\RecipeManager;
 use App\Domain\Conversion\Models\Conversion;
 use App\Domain\Conversion\Policies\ConversionPolicy;
 use App\Domain\Conversion\Support\ConversionApprovalHandler;
@@ -38,6 +39,7 @@ class ConversionServiceProvider extends ServiceProvider
         Livewire::component('conversion.conversion-list', ConversionList::class);
         Livewire::component('conversion.conversion-form', ConversionForm::class);
         Livewire::component('conversion.conversion-detail', ConversionDetail::class);
+        Livewire::component('conversion.recipe-manager', RecipeManager::class);
         Livewire::component('waste.waste-disposal-list', WasteDisposalList::class);
         Livewire::component('waste.waste-disposal-form', WasteDisposalForm::class);
         Livewire::component('waste.waste-disposal-detail', WasteDisposalDetail::class);

@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Domain\Label\Livewire\LabelTrace;
 use App\Domain\Label\Livewire\ReceiptLabels;
+use App\Domain\Label\Livewire\RfidTagManager;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 
@@ -15,6 +16,7 @@ class LabelServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Livewire::component('label.receipt-labels', ReceiptLabels::class);
+        Livewire::component('label.rfid-tag-manager', RfidTagManager::class);
         Livewire::component('label.label-trace', LabelTrace::class);
     }
 }

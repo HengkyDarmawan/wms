@@ -8,6 +8,7 @@ use App\Domain\Notification\Models\Notification;
 use App\Domain\Notification\Support\Notifier;
 use App\Domain\Platform\Models\Company;
 use App\Domain\WhatsApp\Models\WaMessageLog;
+use App\Domain\WhatsApp\Transport\LogTransport;
 use App\Domain\WhatsApp\Transport\WhatsAppNotSent;
 use App\Domain\WhatsApp\Transport\WhatsAppTransport;
 use Illuminate\Support\Str;
@@ -177,6 +178,12 @@ class WhatsAppChannel
             WaMessageLog::create($log + ['wa_message_id' => 'failed.'.Str::uuid()->toString(), 'status' => 'failed', 'payload' => $meta + ['galat' => $e->getMessage()]]);
 
             throw $e;
+        }
+
+        // A-435: driver `log` (demo) menyimpan isi pesan & tombol untuk Kotak pesan simulasi.
+        // Driver sungguhan tidak: payload tombol memuat token approval sekali pakai.
+        if ($this->transport instanceof LogTransport) {
+            $meta['pesan'] = $message;
         }
 
         WaMessageLog::create($log + ['wa_message_id' => $id, 'status' => 'sent', 'payload' => $meta ?: null]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Master\Support;
 
 use App\Domain\Label\Models\PackageLabel;
+use App\Domain\Label\Models\RfidTag;
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Lot;
 use App\Domain\Master\Models\Piece;
@@ -40,6 +41,13 @@ class ScanCode
      */
     public static function resolve(string $raw): array
     {
+        // A-437: tag RFID (reader keyboard wedge) diterjemahkan ke kode targetnya dulu.
+        $tag = RfidTag::aktif($raw);
+
+        if ($tag !== null && $tag->target_type !== 'bin' && ($target = $tag->kodeTarget()) !== null) {
+            $raw = $target;
+        }
+
         $kode = self::normalize($raw);
 
         if ($kode === '') {

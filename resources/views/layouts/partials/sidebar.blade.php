@@ -42,6 +42,7 @@
         ['Di proyek', 'proyek-site', [
             ['issue.view', 'issues.index', __('Pemakaian material'), 'bi-hammer', 'issues.*'],
             ['conversion.view', 'conversions.index', __('Konversi material'), 'bi-scissors', 'conversions.*'],
+            ['conversion.view', 'conversion-recipes.index', __('Resep konversi'), 'bi-journal-text', 'conversion-recipes.*'],
             ['waste.view', 'waste-disposals.index', __('Berita acara waste'), 'bi-trash3', 'waste-disposals.*'],
             ['asset.view', 'assets.index', __('Aset'), 'bi-truck-front', 'assets.*'],
             ['asset.view', 'asset-handovers.index', __('Serah terima aset'), 'bi-box-arrow-right', 'asset-handovers.*'],
@@ -54,6 +55,9 @@
         ['Opname & penyesuaian', 'opname', [
             ['count.view', 'counts.index', __('Stock opname'), 'bi-clipboard-data', 'counts.*'],
             ['count.record', 'count-tasks.index', __('Hitungan saya'), 'bi-123', 'count-tasks.*'],
+            ['count.record', 'offline.count', __('Hitung offline'), 'bi-wifi-off', 'offline.count'],
+            [['putaway.complete', 'pick.complete', 'receipt.receive', 'shipment.ship', 'shipment.confirm_delivery', 'shipment.confirm_delivery_signed'], 'offline.tasks', __('Tugas gudang offline'), 'bi-wifi-off', 'offline.tasks'],
+            ['count.approve', 'offline.review', __('Antrean tinjauan offline'), 'bi-inbox', 'offline.review'],
             ['adjustment.view', 'adjustments.index', __('Penyesuaian stok'), 'bi-plus-slash-minus', 'adjustments.*'],
         ]],
         ['Master data', 'master', [
@@ -66,8 +70,10 @@
         ]],
         ['Laporan & cetak', 'laporan', [
             [null, 'reports.index', __('Laporan'), 'bi-file-earmark-bar-graph', 'reports.*'],
+            [['count.view', 'waste.view'], 'dashboards.opname-waste', __('Ringkasan opname & waste'), 'bi-speedometer2', 'dashboards.opname-waste'],
             ['label.print', 'labels.index', __('Cetak label'), 'bi-upc-scan', 'labels.index'],
             ['item.view', 'labels.trace', __('Telusuri label'), 'bi-search', 'labels.trace'],
+            ...(\App\Domain\Label\Livewire\RfidTagManager::tersedia() ? [['rfid.manage', 'rfid-tags.index', __('Tag RFID'), 'bi-broadcast-pin', 'rfid-tags.*']] : []),
             [['item.create', 'project.create', 'vendor.create', 'adjustment.create', 'warehouse.create', 'bin.manage'], 'imports.index', __('Impor Excel'), 'bi-file-earmark-spreadsheet', 'imports.*'],
         ]],
         ['Pengaturan', 'pengaturan', [

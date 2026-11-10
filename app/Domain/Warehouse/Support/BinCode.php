@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Warehouse\Support;
 
+use App\Domain\Label\Models\RfidTag;
 use App\Domain\Warehouse\Models\Bin;
 use Illuminate\Support\Facades\DB;
 
@@ -116,6 +117,13 @@ final class BinCode
      */
     public static function dariPindai(string $raw): string
     {
+        // A-437: tag RFID bin → kode bin.
+        $tag = RfidTag::aktif($raw);
+
+        if ($tag !== null && $tag->target_type === 'bin' && ($kode = $tag->kodeTarget()) !== null) {
+            return $kode;
+        }
+
         $teks = trim($raw);
 
         if (preg_match('~/bins/([^/?#\s]+)~i', $teks, $m) === 1) {
