@@ -1,8 +1,8 @@
 # Spesifikasi Modul — `issue` (Pemakaian Material di Site)
 
-**Versi:** 0.7
-**Tanggal:** 1 Oktober 2026
-**Status:** selesai Fase 1 — v0.7: pilihan yang bisa dicari; proyek ISU & saringan proyek dicari ke server ([A-395](04b-asumsi-lanjutan.md#a-395), §13.5, TC-ISU-22); modul kesebelas setelah [Transfer/Retur](22-retur-transfer.md) dan [Template dokumen & label](18-template-dokumen-label.md); ISU pembalik diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-117](04-keputusan-dan-asumsi.md#a-117)–[A-119](04-keputusan-dan-asumsi.md#a-119) dan [A-150](04-keputusan-dan-asumsi.md#a-150)–[A-152](04-keputusan-dan-asumsi.md#a-152) (*Perlu validasi*)
+**Versi:** 0.8
+**Tanggal:** 4 November 2026
+**Status:** selesai Fase 1 — v0.8: laporan Material per Proyek menambah kolom *Rencana* (BR-PRJ-09, [A-428](04c-asumsi-lanjutan.md#a-428)); v0.7: pilihan yang bisa dicari; proyek ISU & saringan proyek dicari ke server ([A-395](04b-asumsi-lanjutan.md#a-395), §13.5, TC-ISU-22); modul kesebelas setelah [Transfer/Retur](22-retur-transfer.md) dan [Template dokumen & label](18-template-dokumen-label.md); ISU pembalik diputus lewat mesin approval; keputusan yang tidak tertulis di dokumen dicatat sebagai [A-117](04-keputusan-dan-asumsi.md#a-117)–[A-119](04-keputusan-dan-asumsi.md#a-119) dan [A-150](04-keputusan-dan-asumsi.md#a-150)–[A-152](04-keputusan-dan-asumsi.md#a-152) (*Perlu validasi*)
 **Modul:** `issue` (ISU)
 **Fase:** F1 (ISU dari bin penyimpanan Gudang Site, ISU pembalik dengan approval, laporan Material per Proyek, cetak Bukti Pemakaian Material, foto pemakaian sebagai lampiran [A-238](04-keputusan-dan-asumsi.md#a-238))
 **Dokumen terkait:** [Blueprint §6.9, §7, §9](01-blueprint.md#7-dokumen--alur-utama) · [Aturan Bisnis §BR-PRJ](05-aturan-bisnis.md#br-prj), [§BR-GEN](05-aturan-bisnis.md#br-gen), [§14 matriks kejadian](05-aturan-bisnis.md#14-matriks-kejadian-stok) · [Katalog Status §2.9, §3](06-katalog-status-dan-enum.md) · [Glosarium §5](03-glosarium.md#5-dokumen-transaksi) · [Model data 08b](08b-model-data-stok-dokumen.md) · [Alur 3](07-proses-bisnis.md#alur-3--pemakaian-material-di-gudang-site) · [A-32](04-keputusan-dan-asumsi.md#a-32), [A-40](04-keputusan-dan-asumsi.md#a-40), [A-50](04-keputusan-dan-asumsi.md#a-50), [A-85](04-keputusan-dan-asumsi.md#a-85)

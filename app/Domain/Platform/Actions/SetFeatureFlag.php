@@ -20,7 +20,7 @@ class SetFeatureFlag
     public const KEYS = [
         'whatsapp' => 'Notifikasi & approval WhatsApp (Fase 2a)',
         'offline_sync' => 'PWA offline [F2]',
-        'rfid' => 'RFID [F3]',
+        'rfid' => 'RFID (reader keyboard wedge, A-437)',
     ];
 
     public function handle(Company $company, string $key, bool $enabled, PlatformUser $actor): FeatureFlag

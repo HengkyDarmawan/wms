@@ -75,6 +75,12 @@
                         <label class="form-check-label" for="sim-klien">{{ __('Permintaan dari klien') }}</label>
                     </div>
                 </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <div class="form-check">
+                        <input class="form-check-input" id="sim-rencana" type="checkbox" wire:model="manual.exceeds_plan">
+                        <label class="form-check-label" for="sim-rencana">{{ __('Melebihi rencana material') }}</label>
+                    </div>
+                </div>
             @endif
         </div>
         <div class="card-footer">

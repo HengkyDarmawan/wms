@@ -6,7 +6,7 @@
                 <span class="badge {{ $cnv->status->badge() }}">{{ $cnv->status->label() }}</span>
             </h1>
             <p class="text-muted mb-0">
-                {{ $cnv->conversion_type->label() }} · {{ $cnv->project?->code }} · {{ $cnv->project?->name }} · {{ __('Gudang') }} {{ $cnv->warehouse?->code }}
+                {{ $cnv->conversion_type->label() }} · {{ $cnv->project?->code }} · {{ $cnv->project?->name }} · {{ __('Gudang') }} {{ $cnv->warehouse?->code }}@if ($cnv->recipe) · {{ __('Resep') }} {{ $cnv->recipe->code }}@endif
                 @if ($cnv->reversalOf) · {{ __('Pembalik') }} <a wire:navigate href="{{ route('conversions.show', $cnv->reversal_of_id) }}">{{ $cnv->reversalOf->number }}</a> @endif
                 · {{ __('Dibuat') }} {{ $cnv->preparer?->name }}
                 @if ($cnv->submitter) · {{ __('Diajukan') }} {{ $cnv->submitter->name }} @endif

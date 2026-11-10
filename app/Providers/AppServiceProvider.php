@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Domain\Shared\Livewire\ConsolidationDashboard;
 use App\Domain\Shared\Livewire\ReportViewer;
+use App\Domain\Shared\Livewire\SyncReview;
 use App\Domain\Shared\Messaging\HttpGateway;
 use App\Domain\Shared\Messaging\LogGateway;
 use App\Domain\Shared\Messaging\MessageGateway;
@@ -57,6 +59,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Layar laporan dipakai seluruh modul, jadi didaftarkan di sini (AD-02).
         Livewire::component('shared.report-viewer', ReportViewer::class);
+        Livewire::component('shared.consolidation-dashboard', ConsolidationDashboard::class);
+        Livewire::component('shared.sync-review', SyncReview::class);
     }
 
     /**

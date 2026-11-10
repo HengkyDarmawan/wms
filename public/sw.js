@@ -1,9 +1,10 @@
 /* Service worker WMS Proyek (Blueprint §11, A-193).
  * - Aset build (/build/*, /img/*) disimpan cache-first agar aplikasi cepat & bisa dipasang.
  * - Navigasi halaman selalu ke jaringan; bila offline tampilkan /offline.html.
+ * - Kecuali halaman offline /offline/* (A-438): disimpan saat dibuka, dipakai tanpa sinyal.
  * - Data dokumen & permintaan POST tidak pernah disimpan (server acuan akhir).
  */
-const CACHE = 'wms-static-v1';
+const CACHE = 'wms-static-v2';
 const OFFLINE = '/offline.html';
 
 self.addEventListener('install', (event) => {
@@ -26,6 +27,20 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
 
   if (req.mode === 'navigate') {
+    // A-438 (AD-16): halaman offline (/offline/*) disimpan setiap dibuka online,
+    // lalu dipakai saat tidak ada sinyal. Halaman lain tetap selalu ke jaringan.
+    if (url.pathname.startsWith('/offline/') && !url.pathname.startsWith('/offline/tinjauan')) {
+      event.respondWith(
+        fetch(req).then((res) => {
+          if (res.ok) {
+            const salin = res.clone();
+            caches.open(CACHE).then((c) => c.put(url.pathname, salin));
+          }
+          return res;
+        }).catch(() => caches.match(url.pathname).then((hit) => hit || caches.match(OFFLINE))),
+      );
+      return;
+    }
     event.respondWith(fetch(req).catch(() => caches.match(OFFLINE)));
     return;
   }

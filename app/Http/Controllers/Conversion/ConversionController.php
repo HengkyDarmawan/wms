@@ -18,6 +18,14 @@ class ConversionController extends Controller
         return view('conversion.index');
     }
 
+    /** Resep konversi (BR-CNV-06, A-431). */
+    public function recipes(): View
+    {
+        $this->authorize('viewAny', Conversion::class);
+
+        return view('conversion.recipes');
+    }
+
     public function create(): View
     {
         $this->authorize('create', Conversion::class);

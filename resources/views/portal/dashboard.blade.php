@@ -43,7 +43,8 @@
                     @forelse ($proyek as $p)
                         <tr>
                             <td class="text-nowrap">{{ $p->code }}</td>
-                            <td>{{ $p->name }}<div class="small text-muted">{{ $p->address }}</div></td>
+                            <td>{{ $p->name }}<div class="small text-muted">{{ $p->address }}</div>
+                                <a wire:navigate class="small" href="{{ route('portal.projects.plan', $p) }}"><i class="bi bi-clipboard-data" aria-hidden="true"></i> {{ __('Rencana material') }}</a></td>
                             <td class="small text-nowrap">{{ $p->start_date?->format('d/m/Y') ?? '-' }} &rarr; {{ $p->target_end_date?->format('d/m/Y') ?? '-' }}</td>
                             <td><span class="badge {{ $p->status === \App\Domain\Master\Enums\ProjectStatus::Active ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $p->status->label() }}</span></td>
                         </tr>

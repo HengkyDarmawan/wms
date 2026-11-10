@@ -6,6 +6,7 @@ namespace App\Domain\Issue\Support;
 
 use App\Domain\Master\Models\Item;
 use App\Domain\Master\Models\Project;
+use App\Domain\Master\Models\ProjectMaterialPlan;
 use App\Domain\Request\Enums\MaterialRequestStatus;
 use App\Domain\Request\Enums\RequestLineStatus;
 use App\Domain\Stock\Models\StockBalance;
@@ -33,7 +34,7 @@ use Illuminate\Support\Facades\DB;
  * - *Waste* — waste CNV dan pilah RET ke bin Waste ber-proyek, dikurangi pembalik.
  * - *Waste didisposisi* — isi bin Waste yang ditutup WST `closed` (A-161).
  *
- * Kolom *Rencana* `[F2]` (BR-PRJ-09) belum.
+ * - *Rencana* — jumlah rencana versi berlaku (BR-PRJ-09, A-428); null = tanpa rencana.
  */
 class ProjectMaterialSummary
 {
@@ -178,6 +179,10 @@ class ProjectMaterialSummary
                 ->each(fn (StockBalance $s) => $tambah($bins[(int) $s->bin_id], (int) $s->item_id, $kolom, (float) $s->qty_base));
         }
 
+        // Rencana (BR-PRJ-09, A-428): versi berlaku; item yang direncanakan tanpa pergerakan ikut tampil.
+        ProjectMaterialPlan::query()->current()->whereIn('project_id', $pids)->get(['project_id', 'item_id', 'planned_qty_base'])
+            ->each(fn (ProjectMaterialPlan $p) => $tambah((int) $p->project_id, (int) $p->item_id, 'rencana', (float) $p->planned_qty_base));
+
         $itemIds = collect($angka)->flatMap(fn (array $perItem) => array_keys($perItem))->unique()->all();
         $item = Item::query()->with('baseUom:id,code')->whereIn('id', $itemIds ?: [0])->get(['id', 'code', 'name', 'base_uom_id'])->keyBy('id');
         $cari = mb_strtolower(trim($itemSearch));
@@ -200,6 +205,7 @@ class ProjectMaterialSummary
                     'item_code' => $i?->code,
                     'item_name' => $i?->name,
                     'uom' => $i?->baseUom?->code,
+                    'rencana' => $nilai['rencana'] ?? null,
                     'diminta' => $nilai['diminta'] ?? 0.0,
                     'terkirim' => $nilai['terkirim'] ?? 0.0,
                     'terpakai' => $nilai['terpakai'] ?? 0.0,

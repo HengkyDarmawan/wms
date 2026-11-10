@@ -70,7 +70,7 @@ class DemoSeederTest extends TenantTestCase
         $perModul = Permission::query()->selectRaw('module, count(*) as jumlah')
             ->groupBy('module')->pluck('jumlah', 'module')->all();
 
-        $this->assertSame(24, (int) ($perModul['master'] ?? 0), 'Jumlah permission modul Master.');
+        $this->assertSame(25, (int) ($perModul['master'] ?? 0), 'Jumlah permission modul Master (project.plan, A-429).');
         $this->assertSame(8, (int) ($perModul['warehouse'] ?? 0), 'Jumlah permission modul Warehouse.');
         $this->assertSame(5, (int) ($perModul['stock'] ?? 0), 'Jumlah permission modul Stock.');
         $this->assertSame(14, (int) ($perModul['request'] ?? 0), 'Jumlah permission modul Request.');
@@ -87,16 +87,17 @@ class DemoSeederTest extends TenantTestCase
         $this->assertSame(5, (int) ($perModul['return'] ?? 0), 'Jumlah permission modul Retur dari proyek.');
         $this->assertSame(2, (int) ($perModul['template'] ?? 0), 'Jumlah permission modul Template.');
         $this->assertSame(5, (int) ($perModul['issue'] ?? 0), 'Jumlah permission modul Issue (pemakaian material).');
-        $this->assertSame(6, (int) ($perModul['conversion'] ?? 0), 'Jumlah permission modul Konversi material.');
+        $this->assertSame(7, (int) ($perModul['conversion'] ?? 0), 'Jumlah permission modul Konversi material (conversion.recipe, A-431).');
         $this->assertSame(5, (int) ($perModul['waste'] ?? 0), 'Jumlah permission modul Berita acara waste.');
         $this->assertSame(5, (int) ($perModul['asset'] ?? 0), 'Jumlah permission modul Aset dipinjamkan (asset.maintain, A-423).');
         $this->assertSame(6, (int) ($perModul['purchase_request'] ?? 0), 'Jumlah permission modul Purchase Request.');
         $this->assertSame(2, (int) ($perModul['billing'] ?? 0), 'Jumlah permission tagihan langganan.');
         $this->assertSame(6, (int) ($perModul['purchase_order'] ?? 0), 'Jumlah permission Purchase Order (purchasing/02).');
         $this->assertSame(2, (int) ($perModul['vendor_price'] ?? 0), 'Jumlah permission harga beli vendor.');
+        $this->assertSame(1, (int) ($perModul['label'] ?? 0), 'Jumlah permission RFID (rfid.manage, A-437).');
 
         $akses = collect($perModul)
-            ->except(['master', 'warehouse', 'stock', 'request', 'picking', 'shipment', 'receipt', 'putaway', 'vendor_return', 'approval', 'count', 'adjustment', 'transfer', 'return', 'template', 'issue', 'conversion', 'waste', 'asset', 'purchase_request', 'billing', 'purchase_order', 'vendor_price'])
+            ->except(['master', 'warehouse', 'stock', 'request', 'picking', 'shipment', 'receipt', 'putaway', 'vendor_return', 'approval', 'count', 'adjustment', 'transfer', 'return', 'template', 'issue', 'conversion', 'waste', 'asset', 'purchase_request', 'billing', 'purchase_order', 'vendor_price', 'label'])
             ->sum();
 
         $this->assertSame(22, (int) $akses, 'Jumlah permission modul Access.');

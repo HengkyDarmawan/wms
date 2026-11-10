@@ -65,6 +65,16 @@
                     </select>
                 </div>
             @endif
+            @if (in_array('exceeds_plan', $allowed, true))
+                <div class="col-md-3">
+                    <label class="form-label" for="kondisi-rencana">{{ __('Melebihi rencana material') }}</label>
+                    <select class="form-select" id="kondisi-rencana" wire:model.live="conditions.exceeds_plan">
+                        <option value="">{{ __('Abaikan') }}</option>
+                        <option value="1">{{ __('Ya') }}</option>
+                        <option value="0">{{ __('Tidak') }}</option>
+                    </select>
+                </div>
+            @endif
             @if (in_array('purchase_request_origins', $allowed, true))
                 <div class="col-md-4">
                     <label class="form-label" for="kondisi-asal">{{ __('Asal PRQ') }}</label>

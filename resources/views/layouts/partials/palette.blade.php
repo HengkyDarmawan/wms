@@ -31,6 +31,7 @@
         ['izin' => 'issue.view', 'route' => 'issues.index', 'label' => __('Pemakaian material'), 'ikon' => 'bi-hammer'],
         ['izin' => 'issue.create', 'route' => 'issues.create', 'label' => __('Pemakaian baru'), 'ikon' => 'bi-plus-square'],
         ['izin' => 'conversion.view', 'route' => 'conversions.index', 'label' => __('Konversi material'), 'ikon' => 'bi-scissors'],
+        ['izin' => 'conversion.view', 'route' => 'conversion-recipes.index', 'label' => __('Resep konversi'), 'ikon' => 'bi-journal-text'],
         ['izin' => 'conversion.create', 'route' => 'conversions.create', 'label' => __('Konversi baru'), 'ikon' => 'bi-plus-square'],
         ['izin' => 'waste.view', 'route' => 'waste-disposals.index', 'label' => __('Berita acara waste'), 'ikon' => 'bi-trash3'],
         ['izin' => 'waste.create', 'route' => 'waste-disposals.create', 'label' => __('BA waste baru'), 'ikon' => 'bi-plus-square'],
@@ -79,6 +80,7 @@
         ['izin' => 'label.print', 'route' => 'labels.index', 'label' => __('Cetak label'), 'ikon' => 'bi-upc-scan'],
         ['izin' => 'item.view', 'route' => 'labels.trace', 'label' => __('Telusuri label kemasan (asal GRN, vendor, PO)'), 'ikon' => 'bi-search'],
         ['izin' => null, 'route' => 'reports.index', 'label' => __('Laporan'), 'ikon' => 'bi-file-earmark-bar-graph'],
+        ['izin' => 'count.view', 'route' => 'dashboards.opname-waste', 'label' => __('Ringkasan opname & waste'), 'ikon' => 'bi-speedometer2'],
         ['izin' => null, 'route' => 'profile.edit', 'label' => __('Profil'), 'ikon' => 'bi-person'],
         ['izin' => 'device.view', 'route' => 'devices.index', 'label' => __('Perangkat'), 'ikon' => 'bi-phone'],
     ])

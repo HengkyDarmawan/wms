@@ -26,6 +26,7 @@ class ConditionMatcher
         'line_count_min' => 'Jumlah baris ≥',
         'line_qty_min' => 'Jumlah satuan dasar per baris ≥',
         'from_client' => 'Permintaan dari klien',
+        'exceeds_plan' => 'Melebihi rencana material',
         'vendor_types' => 'Jenis vendor',
         'purchase_request_origins' => 'Asal PRQ',
         'count_types' => 'Jenis opname',
@@ -80,8 +81,10 @@ class ConditionMatcher
             }
         }
 
-        if (isset($raw['from_client']) && $raw['from_client'] !== '' && $raw['from_client'] !== null) {
-            $hasil['from_client'] = filter_var($raw['from_client'], FILTER_VALIDATE_BOOLEAN);
+        foreach (['from_client', 'exceeds_plan'] as $k) {
+            if (isset($raw[$k]) && $raw[$k] !== '' && $raw[$k] !== null) {
+                $hasil[$k] = filter_var($raw[$k], FILTER_VALIDATE_BOOLEAN);
+            }
         }
 
         // Nilai uang hanya untuk PO; jenis lain membuangnya lewat conditions() (D-28, A-212).
@@ -131,6 +134,7 @@ class ConditionMatcher
             'line_count_min' => $ctx->lineCount >= (int) $nilai,
             'line_qty_min' => $ctx->maxLineQty + 0.00005 >= (float) $nilai,
             'from_client' => $ctx->fromClient === (bool) $nilai,
+            'exceeds_plan' => $ctx->exceedsPlan === (bool) $nilai,
             'vendor_types' => $ctx->vendorType !== null && in_array($ctx->vendorType, $nilai, true),
             'purchase_request_origins' => $ctx->purchaseRequestOrigin !== null && in_array($ctx->purchaseRequestOrigin, $nilai, true),
             'count_types' => $ctx->countType !== null && in_array($ctx->countType, $nilai, true),

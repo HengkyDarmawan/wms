@@ -29,6 +29,9 @@ class MaintenanceSchedule extends Model
         return [
             'scheduled_at' => 'date',
             'performed_at' => 'date',
+            'interval_meter' => 'decimal:1',
+            'due_meter' => 'decimal:1',
+            'meter_done' => 'decimal:1',
             'status' => MaintenanceStatus::class,
             'source' => MaintenanceSource::class,
         ];

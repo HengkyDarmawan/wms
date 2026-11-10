@@ -63,6 +63,7 @@ class ReferenceSeeder extends Seeder
             'project.create' => 'Tambah proyek',
             'project.update' => 'Ubah proyek',
             'project.close' => 'Tutup, batalkan, atau arsipkan proyek',
+            'project.plan' => 'Kelola rencana material proyek',
             'vendor.view' => 'Lihat vendor',
             'vendor.create' => 'Tambah vendor',
             'vendor.update' => 'Ubah vendor',
@@ -214,6 +215,7 @@ class ReferenceSeeder extends Seeder
             'conversion.complete' => 'Selesaikan konversi material',
             'conversion.approve' => 'Setujui konversi material',
             'conversion.cancel' => 'Batalkan konversi material',
+            'conversion.recipe' => 'Kelola resep konversi',
         ],
         // Modul Aset dipinjamkan (25-aset §2). Katalog §2.11 menulis asset.inspect,
         // matriks §14 asset.mark_lost; asset.view dan asset.manage ditambah (A-168).
@@ -271,6 +273,10 @@ class ReferenceSeeder extends Seeder
         ],
         // Modul Template dokumen & label (18-template-dokumen-label §2). Cetak
         // dokumen memakai izin lihat dokumennya, tanpa permission sendiri (A-124).
+        // A-437: RFID (reader keyboard wedge).
+        'label' => [
+            'rfid.manage' => 'Kelola tag RFID',
+        ],
         'template' => [
             'document_layout.manage' => 'Kelola layout dokumen cetak',
             'label.print' => 'Cetak label bin & barang',
@@ -287,12 +293,12 @@ class ReferenceSeeder extends Seeder
         'management' => [
             'name' => 'Manajemen',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'role.view', 'org.view', 'client.view', 'project.view', 'vendor.view', 'item.view', 'item_category.view', 'uom.view', 'reference.view', 'company_setting.view', 'warehouse.view', 'bin.view', 'warehouse_type.view', 'stock.view', 'reservation.view', 'stock_event.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'request.approve', 'vendor_return.approve', 'approval_rule.view', 'approval.simulate', 'approval.delegate', 'count.view', 'count.approve', 'adjustment.view', 'adjustment.approve', 'transfer.view', 'transfer.approve', 'return.view', 'return.approve', 'issue.view', 'issue.approve', 'conversion.view', 'conversion.approve', 'waste.view', 'waste.approve', 'asset.view', 'pr.view', 'pr.approve', 'po.view', 'po.approve', 'vendor_price.view'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'role.view', 'org.view', 'client.view', 'project.view', 'project.plan', 'vendor.view', 'item.view', 'item_category.view', 'uom.view', 'reference.view', 'company_setting.view', 'warehouse.view', 'bin.view', 'warehouse_type.view', 'stock.view', 'reservation.view', 'stock_event.view', 'request.view', 'pick.view', 'shipment.view', 'discrepancy.view', 'receipt.view', 'putaway.view', 'vendor_return.view', 'request.approve', 'vendor_return.approve', 'approval_rule.view', 'approval.simulate', 'approval.delegate', 'count.view', 'count.approve', 'adjustment.view', 'adjustment.approve', 'transfer.view', 'transfer.approve', 'return.view', 'return.approve', 'issue.view', 'issue.approve', 'conversion.view', 'conversion.approve', 'waste.view', 'waste.approve', 'asset.view', 'pr.view', 'pr.approve', 'po.view', 'po.approve', 'vendor_price.view'],
         ],
         'warehouse_head' => [
             'name' => 'Kepala Gudang',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'device.view', 'org.view', 'client.view', 'project.view', 'vendor.view', 'item.view', 'item.update', 'item_category.view', 'uom.view', 'reference.view', 'reference.manage', 'warehouse.view', 'warehouse.update', 'bin.view', 'bin.manage', 'warehouse_type.view', 'stock.view', 'reservation.view', 'reservation.release', 'request.view', 'request.review', 'request.split_line', 'request.close_short', 'request.cancel', 'request.confirm_cancel', 'pick.view', 'pick.create', 'pick.start', 'pick.complete', 'pick.cancel', 'shipment.view', 'shipment.create', 'shipment.ship', 'shipment.confirm_delivery', 'shipment.confirm_delivery_signed', 'shipment.cancel', 'discrepancy.view', 'discrepancy.resolve', 'receipt.view', 'receipt.create', 'receipt.receive', 'receipt.qc', 'receipt.complete', 'receipt.cancel', 'putaway.view', 'putaway.complete', 'putaway.cancel', 'vendor_return.view', 'vendor_return.create', 'vendor_return.approve', 'vendor_return.ship', 'vendor_return.complete', 'vendor_return.cancel', 'request.approve', 'approval_rule.view', 'approval.delegate', 'count.view', 'count.create', 'count.start', 'count.assign', 'count.record', 'count.reconcile', 'count.approve', 'count.cancel', 'adjustment.view', 'adjustment.create', 'adjustment.approve', 'adjustment.cancel', 'transfer.view', 'transfer.create', 'transfer.approve', 'transfer.cancel', 'return.view', 'return.create', 'return.approve', 'return.sort', 'return.cancel', 'issue.view', 'issue.create', 'issue.confirm', 'issue.cancel', 'issue.approve', 'conversion.view', 'conversion.create', 'conversion.submit', 'conversion.complete', 'conversion.approve', 'conversion.cancel', 'waste.view', 'waste.create', 'waste.approve', 'waste.close', 'waste.cancel', 'asset.view', 'asset.manage', 'asset.inspect', 'asset.maintain', 'asset.mark_lost', 'label.print', 'pr.view', 'pr.create', 'pr.submit', 'pr.approve', 'pr.cancel'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'user.view', 'device.view', 'org.view', 'client.view', 'project.view', 'vendor.view', 'item.view', 'item.update', 'item_category.view', 'uom.view', 'reference.view', 'reference.manage', 'warehouse.view', 'warehouse.update', 'bin.view', 'bin.manage', 'warehouse_type.view', 'stock.view', 'reservation.view', 'reservation.release', 'request.view', 'request.review', 'request.split_line', 'request.close_short', 'request.cancel', 'request.confirm_cancel', 'pick.view', 'pick.create', 'pick.start', 'pick.complete', 'pick.cancel', 'shipment.view', 'shipment.create', 'shipment.ship', 'shipment.confirm_delivery', 'shipment.confirm_delivery_signed', 'shipment.cancel', 'discrepancy.view', 'discrepancy.resolve', 'receipt.view', 'receipt.create', 'receipt.receive', 'receipt.qc', 'receipt.complete', 'receipt.cancel', 'putaway.view', 'putaway.complete', 'putaway.cancel', 'vendor_return.view', 'vendor_return.create', 'vendor_return.approve', 'vendor_return.ship', 'vendor_return.complete', 'vendor_return.cancel', 'request.approve', 'approval_rule.view', 'approval.delegate', 'count.view', 'count.create', 'count.start', 'count.assign', 'count.record', 'count.reconcile', 'count.approve', 'count.cancel', 'adjustment.view', 'adjustment.create', 'adjustment.approve', 'adjustment.cancel', 'transfer.view', 'transfer.create', 'transfer.approve', 'transfer.cancel', 'return.view', 'return.create', 'return.approve', 'return.sort', 'return.cancel', 'issue.view', 'issue.create', 'issue.confirm', 'issue.cancel', 'issue.approve', 'conversion.view', 'conversion.create', 'conversion.submit', 'conversion.complete', 'conversion.approve', 'conversion.recipe', 'conversion.cancel', 'waste.view', 'waste.create', 'waste.approve', 'waste.close', 'waste.cancel', 'asset.view', 'asset.manage', 'asset.inspect', 'asset.maintain', 'asset.mark_lost', 'label.print', 'rfid.manage', 'pr.view', 'pr.create', 'pr.submit', 'pr.approve', 'pr.cancel'],
         ],
         'warehouse_staff' => [
             'name' => 'Staf Gudang',
@@ -308,7 +314,7 @@ class ReferenceSeeder extends Seeder
         'internal_requester' => [
             'name' => 'Pemohon Internal',
             'client' => false,
-            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'device.manage', 'item.view', 'project.view', 'warehouse.view', 'stock.view', 'request.view', 'request.create', 'request.submit', 'request.cancel', 'request.close_short', 'request.confirm_receipt', 'request.dispute_receipt', 'shipment.confirm_delivery', 'return.view', 'return.create', 'return.cancel', 'issue.view', 'issue.create', 'issue.cancel'],
+            'permissions' => ['auth.login', 'auth.logout', 'auth.two_factor', 'profile.update', 'device.manage', 'item.view', 'project.view', 'project.plan', 'warehouse.view', 'stock.view', 'request.view', 'request.create', 'request.submit', 'request.cancel', 'request.close_short', 'request.confirm_receipt', 'request.dispute_receipt', 'shipment.confirm_delivery', 'return.view', 'return.create', 'return.cancel', 'issue.view', 'issue.create', 'issue.cancel'],
         ],
         'pr_follow_up' => [
             'name' => 'Penindak Lanjut PR',
@@ -328,7 +334,7 @@ class ReferenceSeeder extends Seeder
         'client_user' => [
             'name' => 'Klien',
             'client' => true,
-            'permissions' => ['auth.login', 'auth.logout', 'profile.update', 'request.view', 'request.create', 'request.submit', 'request.cancel', 'request.add_lines', 'request.respond_substitution', 'request.request_cancel', 'request.confirm_receipt', 'request.dispute_receipt', 'shipment.view', 'shipment.confirm_delivery', 'return.view', 'return.create', 'return.cancel'],
+            'permissions' => ['auth.login', 'auth.logout', 'profile.update', 'request.view', 'project.plan', 'request.create', 'request.submit', 'request.cancel', 'request.add_lines', 'request.respond_substitution', 'request.request_cancel', 'request.confirm_receipt', 'request.dispute_receipt', 'shipment.view', 'shipment.confirm_delivery', 'return.view', 'return.create', 'return.cancel'],
         ],
     ];
 

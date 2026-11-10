@@ -1,7 +1,7 @@
 # Dokumentasi WMS Proyek (SaaS Multi-Company)
 
-**Versi:** 0.127
-**Tanggal:** 4 November 2026
+**Versi:** 0.130
+**Tanggal:** 10 November 2026
 **Status:** Part 1–3 selesai; **Part 4 berjalan** — modul **Access, Master, Warehouse, Stock, Request, Picking/Shipment, Receipt/Putaway, Approval, Count/Adjustment, Return/Transfer, Template dokumen & label, Issue (pemakaian material di site), Conversion/Waste, Asset, PurchaseRequest, Platform (company, langganan, tagihan), dan Pendukung F1 (strategi pengambilan, notifikasi, laporan & Beranda, wizard, impor Excel, PWA) selesai untuk Fase 1** (770 uji hijau 28 Sep 2026; sisa kecil Fase 1 selesai dan **Fase 2a WhatsApp** dibangun 27 Sep 2026 — [31-whatsapp](wms/31-whatsapp.md)). **Kode aplikasi ada di repo ini** (`app/`, `routes/`, `resources/`). Penutup Fase 1 selesai (uji rantai penuh, E2E, tinjauan kode 25 Sep); sesi kantor 25 Sep: sisa Fase 1 (pindai REQ/ISU, impor vendor & saldo awal), **Purchasing inti Fase 1b** ([purchasing/02](purchasing/02-purchasing-inti.md)), dan **landing page Part 5** ([30-landing-page](wms/30-landing-page.md)) selesai. **26 Sep 2026:** pemilik produk memutus 31 asumsi ⚠ (+A-111, A-116); fitur turunannya dibangun ([A-246–A-256](wms/04b-asumsi-lanjutan.md): PO melebihi PRQ, SJ jemput, aset antar proyek, dokumen terkait, potong banyak batang, denah gudang 2D), ditambah kompresi foto (A-257) dan impor struktur gudang (A-258). D-01–D-29 berlaku (peta rilis: WMS → Purchasing inti → WhatsApp → PWA offline → SSO); **A-01–A-71 disetujui**; asumsi A-72 dst. divalidasi lewat [tinjauan asumsi](00-tinjauan-asumsi-2026-09-25.md) — **35 masih menunggu** (28 Sep 2026: lima asumsi sisa Fase 1 diputus; driver tanpa akun & bukti terima oleh admin site klien — [A-311–A-313](wms/04b-asumsi-lanjutan.md#a-311) — belum dibangun, menahan penutupan Fase 1). Menjalankan aplikasi: [00-setup-lokal.md](00-setup-lokal.md) · Progres: [00-laporan-progres-2026-09-24.md](00-laporan-progres-2026-09-24.md) · Laporan: [00-laporan-audit-2026-09-24.md](00-laporan-audit-2026-09-24.md)
 
 Dokumentasi ini adalah acuan tunggal untuk membangun WMS baru dari nol. Prototipe lama (`warehouse.sipembantu.com`) hanya referensi; indeks temuan auditnya ada di [00-audit](00-audit/README.md).
@@ -109,6 +109,17 @@ docs/
 - Satu file ≤ ±450 baris.
 
 ## Catatan perubahan
+
+### v0.130 — 10 November 2026 (PWA offline tahap 2)
+- **Asumsi baru** [A-439](wms/04c-asumsi-lanjutan.md#a-439) (*Perlu validasi*, 04c v0.14). [32-pwa-offline](wms/32-pwa-offline.md) v0.3 (TC-PWA-21–25); glosarium v0.42 (*Tugas Gudang Offline*). Katalog status tidak berubah.
+
+### v0.129 — 4 November 2026 (Fase 2 dengan data dummy)
+- **Spesifikasi baru** [35-pendukung-f2-lanjutan](wms/35-pendukung-f2-lanjutan.md) v0.1: resep konversi, pemicu servis meter, rencana material oleh klien, dashboard konsolidasi, WhatsApp mode demo, editor teks template, RFID keyboard wedge, PWA offline tahap 1 (hitung opname). **Asumsi baru** [A-430](wms/04c-asumsi-lanjutan.md#a-430)–[A-438](wms/04c-asumsi-lanjutan.md#a-438) (04c v0.13); A-426 dan sebagian A-429 diganti.
+- Katalog v0.34 (`sync_status`, `rfid_target`), glosarium v0.41, aturan v0.27 (BR-CNV-06, BR-OPN-03, BR-AST-07), [08-arsitektur](wms/08-arsitektur.md) v0.24, [32-pwa-offline](wms/32-pwa-offline.md) v0.2, 18/24/25/31 dinaikkan. Data contoh `Fase2DemoSeeder`.
+
+### v0.128 — 4 November 2026 (Fase 2: rencana material proyek)
+- **Spesifikasi baru** [34-rencana-material](wms/34-rencana-material.md) v0.1 (TC-BOQ-01–08). **Asumsi baru** [A-428](wms/04c-asumsi-lanjutan.md#a-428) (*Setuju*) dan [A-429](wms/04c-asumsi-lanjutan.md#a-429) (*Perlu validasi*); 04c v0.12.
+- BR-PRJ-09 dibangun ([05-aturan-bisnis](wms/05-aturan-bisnis.md) v0.26); glosarium v0.40; [11-master](wms/11-master.md) v0.23, [20-approval](wms/20-approval.md) v0.19 (kondisi `exceeds_plan`), [23-pemakaian](wms/23-pemakaian.md) v0.8 (kolom *Rencana*).
 
 ### v0.127 — 4 November 2026 (siap trial)
 - Templat `.env.production.example` ikut repo (debug mati, cookie HTTPS, log `warning`) dan `TUTORIAL-SERVER.txt` langkah 3c/4 memakainya + cek `php artisan about` "Debug Mode = OFF" ([O-06](wms/04-keputusan-dan-asumsi.md#o-06) tetap terbuka sampai server live diperiksa).

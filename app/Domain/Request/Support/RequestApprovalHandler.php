@@ -11,6 +11,7 @@ use App\Domain\Approval\Models\ApprovalSnapshot;
 use App\Domain\Approval\Support\ApprovalContext;
 use App\Domain\Master\Models\FeatureSetting;
 use App\Domain\Master\Models\Item;
+use App\Domain\Master\Support\ProjectPlan;
 use App\Domain\Notification\Support\DomainNotifications;
 use App\Domain\PurchaseRequest\Support\BackorderPurchases;
 use App\Domain\Request\Enums\MaterialRequestStatus;
@@ -93,6 +94,11 @@ class RequestApprovalHandler implements ApprovalHandler
             lineCount: $baris->count(),
             maxLineQty: (float) ($baris->max('qty_base') ?? 0),
             fromClient: $document->isFromClient(),
+            exceedsPlan: app(ProjectPlan::class)->exceeds(
+                (int) $document->project_id,
+                $baris->whereNotNull('item_id')->groupBy('item_id')->map(fn ($b) => (float) $b->sum('qty_base'))->all(),
+                (int) $document->getKey(),
+            ),
             requesterId: (int) $document->requester_id,
             requesterIds: [(int) $document->requester_id],
         );

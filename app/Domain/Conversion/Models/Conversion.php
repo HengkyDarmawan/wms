@@ -77,6 +77,12 @@ class Conversion extends Model
         return 'project_id';
     }
 
+    /** A-431: resep yang mengisi form saat CNV dibuat (asal-usul saja). */
+    public function recipe(): BelongsTo
+    {
+        return $this->belongsTo(ConversionRecipe::class, 'recipe_id');
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class)->withoutGlobalScopes();

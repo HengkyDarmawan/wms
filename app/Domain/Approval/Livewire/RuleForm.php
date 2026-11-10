@@ -83,6 +83,7 @@ class RuleForm extends Component
         'line_count_min' => '',
         'line_qty_min' => '',
         'from_client' => '',
+        'exceeds_plan' => '',
         'vendor_types' => [],
         'purchase_request_origins' => [],
         'count_types' => [],
@@ -111,6 +112,8 @@ class RuleForm extends Component
             $this->conditions = array_merge($this->conditions, $rule->conditions ?? []);
             $this->conditions['from_client'] = array_key_exists('from_client', $rule->conditions ?? [])
                 ? ($rule->conditions['from_client'] ? '1' : '0') : '';
+            $this->conditions['exceeds_plan'] = array_key_exists('exceeds_plan', $rule->conditions ?? [])
+                ? ($rule->conditions['exceeds_plan'] ? '1' : '0') : '';
             $this->steps = $rule->steps->map(fn ($s) => [
                 'approver_type' => $s->approver_type->value,
                 'approver_ref_id' => (string) ($s->approver_ref_id ?? ''),

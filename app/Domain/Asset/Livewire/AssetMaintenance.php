@@ -32,8 +32,8 @@ class AssetMaintenance extends Component
     /** Id jadwal yang sedang diubah; 0 = form jadwal baru tertutup, -1 = jadwal baru. */
     public int $ubah = 0;
 
-    /** @var array{scheduled_at: string, interval_days: string, notes: string} */
-    public array $form = ['scheduled_at' => '', 'interval_days' => '', 'notes' => ''];
+    /** @var array{scheduled_at: string, interval_days: string, interval_meter: string, notes: string} */
+    public array $form = ['scheduled_at' => '', 'interval_days' => '', 'interval_meter' => '', 'notes' => ''];
 
     public string $binTujuan = '';
 
@@ -51,6 +51,7 @@ class AssetMaintenance extends Component
         return view('livewire.asset.asset-maintenance', [
             'jadwal' => $jadwal,
             'bisaAtur' => auth()->user()->hasPermission('asset.maintain'),
+            'aset' => Serial::query()->find($this->serialId, ['id', 'meter_unit', 'meter_total']),
             'binPilihan' => $sedang ? $this->binPilihan($sedang) : [],
         ]);
     }
@@ -62,6 +63,7 @@ class AssetMaintenance extends Component
         $this->form = [
             'scheduled_at' => $j?->scheduled_at?->toDateString() ?? now()->toDateString(),
             'interval_days' => $j?->interval_days !== null ? (string) $j->interval_days : '',
+            'interval_meter' => $j?->interval_meter !== null ? rtrim(rtrim((string) $j->interval_meter, '0'), '.') : '',
             'notes' => (string) ($j?->notes ?? ''),
         ];
         $this->resetValidation();

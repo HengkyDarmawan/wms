@@ -58,6 +58,9 @@ class DemoSeeder extends Seeder
         // Purchasing inti Fase 1b: harga beli vendor demo (A-218).
         $this->call(PurchasingDemoSeeder::class);
 
+        // A-430: data contoh Fase 2 (WhatsApp simulasi, RFID, servis, resep, BoQ, teks template).
+        $this->call(Fase2DemoSeeder::class);
+
         $this->command?->info('Data demo siap: '.User::count().' user, password '.self::PASSWORD.'.');
     }
 

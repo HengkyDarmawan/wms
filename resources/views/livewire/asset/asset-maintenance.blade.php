@@ -27,7 +27,16 @@
                 <input class="form-control @error('form.interval_days') is-invalid @enderror" id="servis-interval" type="number" min="1" max="3650" inputmode="numeric" wire:model="form.interval_days" placeholder="{{ __('kosong = sekali') }}">
                 @error('form.interval_days') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
-            <div class="col-sm-5">
+            @php($bermeter = $aset && $aset->meter_unit?->value !== 'none')
+            @if ($bermeter)
+                <div class="col-sm-3">
+                    <label class="form-label" for="servis-meter">{{ __('atau tiap (:u)', ['u' => $aset->meter_unit->label()]) }}</label>
+                    <input class="form-control @error('form.interval_meter') is-invalid @enderror" id="servis-meter" type="number" min="0" step="0.1" wire:model="form.interval_meter" placeholder="{{ __('mis. 250') }}">
+                    @error('form.interval_meter') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="form-text">{{ __('Meter sekarang :m; yang lebih dulu tercapai yang berlaku.', ['m' => rtrim(rtrim(number_format((float) $aset->meter_total, 1, ',', '.'), '0'), ',')]) }}</div>
+                </div>
+            @endif
+            <div class="col-sm-{{ $bermeter ? 2 : 5 }}">
                 <label class="form-label" for="servis-catatan">{{ __('Catatan') }}</label>
                 <input class="form-control" id="servis-catatan" type="text" maxlength="255" wire:model="form.notes" placeholder="{{ __('mis. ganti oli dan filter') }}">
             </div>
@@ -61,6 +70,7 @@
                                     <span class="badge text-bg-warning">{{ __('Jatuh tempo') }}</span>
                                 @endif
                                 @if ($j->interval_days) <div class="small text-muted">{{ __('tiap :n hari', ['n' => $j->interval_days]) }}</div> @endif
+                                @if ($j->due_meter !== null) <div class="small text-muted">{{ __('atau saat meter :m', ['m' => rtrim(rtrim(number_format((float) $j->due_meter, 1, ',', '.'), '0'), ',')]) }}</div> @endif
                             </td>
                             <td>
                                 <span class="badge text-bg-{{ $j->status->tone() }}">{{ $j->status->label() }}</span>

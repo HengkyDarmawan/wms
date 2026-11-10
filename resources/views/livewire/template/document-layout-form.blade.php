@@ -100,13 +100,12 @@
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <strong>{{ __('Template') }}</strong>
-                    <button class="btn btn-sm btn-outline-secondary" type="button" disabled
-                            title="{{ __('Tersedia di Fase 2') }}">{{ __('Editor template (Fase 2)') }}</button>
+                    <span class="small text-muted">{{ __('Atur teks: tambahkan kalimat, syarat, atau catatan di atas/bawah isi dokumen.') }}</span>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-sm mb-0 align-middle">
                         <thead>
-                            <tr><th>{{ __('Jenis') }}</th><th>{{ __('Kertas') }}</th></tr>
+                            <tr><th>{{ __('Jenis') }}</th><th>{{ __('Kertas') }}</th><th class="text-end">{{ __('Teks') }}</th></tr>
                         </thead>
                         <tbody>
                             @foreach ([$dokumen] as $kelompok)
@@ -114,7 +113,7 @@
                                     <tr>
                                         <td>
                                             {{ $type->label() }}
-                                            <span class="badge text-bg-light">{{ $type->isStub() ? __('Menunggu modulnya') : __('Bawaan') }}</span>
+                                            <span class="badge text-bg-light">{{ $type->isStub() ? __('Menunggu modulnya') : (in_array($type->value, $berteks, true) ? __('Teks kustom') : __('Bawaan')) }}</span>
                                         </td>
                                         <td style="min-width: 11rem;">
                                             <select class="form-select form-select-sm @error('papers.'.$type->value) is-invalid @enderror"
@@ -125,7 +124,37 @@
                                                 @endforeach
                                             </select>
                                         </td>
+                                        <td class="text-end">
+                                            @unless ($type->isStub())
+                                                <button class="btn btn-sm btn-outline-secondary" type="button" wire:click="aturTeks('{{ $type->value }}')">{{ __('Atur teks') }}</button>
+                                            @endunless
+                                        </td>
                                     </tr>
+                                    @if ($editType === $type->value)
+                                        <tr>
+                                            <td colspan="3" class="bg-body-tertiary">
+                                                <label class="form-label mt-2" for="teks-template">{{ __('Teks template :jenis', ['jenis' => $type->label()]) }}</label>
+                                                <textarea class="form-control font-monospace @error('body') is-invalid @enderror" id="teks-template" rows="8" wire:model="editBody"
+                                                          placeholder="&lt;p&gt;Dikirim untuk proyek {proyek}.&lt;/p&gt;&#10;{isi_bawaan}&#10;&lt;p&gt;&lt;small&gt;Barang diterima dalam keadaan baik.&lt;/small&gt;&lt;/p&gt;"></textarea>
+                                                @error('body') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                                <div class="form-text">{{ __('Boleh teks biasa atau HTML sederhana (p, b, i, u, tabel, daftar). Skrip, gambar, dan tautan luar dibuang. Tanpa {isi_bawaan}, teks muncul di atas isi dokumen.') }}</div>
+                                                <details class="small mt-2">
+                                                    <summary>{{ __('Variabel yang bisa dipakai') }}</summary>
+                                                    <ul class="mb-0 mt-1">
+                                                        @foreach ($variabel as $kunci => $ket)
+                                                            <li><code>{{ '{'.$kunci.'}' }}</code> · {{ $ket }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                </details>
+                                                <div class="d-flex flex-wrap gap-2 my-2">
+                                                    <button class="btn btn-sm btn-primary" type="button" wire:click="simpanTeks">{{ __('Simpan teks') }}</button>
+                                                    <a class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener" href="{{ route('document-layout.preview', ['type' => $type->value]) }}">{{ __('Pratinjau PDF') }}</a>
+                                                    <button class="btn btn-sm btn-outline-danger" type="button" wire:click="simpanTeks(true)" wire:confirm="{{ __('Hapus teks kustom dan kembali ke bawaan?') }}">{{ __('Kembalikan ke bawaan') }}</button>
+                                                    <button class="btn btn-sm btn-link" type="button" wire:click="tutupTeks">{{ __('Tutup') }}</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @endforeach
                             @endforeach
                             <tr>

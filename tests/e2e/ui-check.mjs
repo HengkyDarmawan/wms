@@ -139,7 +139,7 @@ for (const url of links) {
   const judul = await ev('document.querySelector("main h1")?.textContent?.trim() || ""');
   cek('hub proyek: judul', /PRJ-001|Pipa Karawang/.test(judul), judul);
   const tabs = await ev('[...document.querySelectorAll("main .nav-tabs .nav-link")].map(b => b.textContent.trim())');
-  cek('hub proyek: 10 tab', tabs.length === 10, tabs.join(' | '));
+  cek('hub proyek: 11 tab', tabs.length === 11, tabs.join(' | '));
   for (const [i, nama] of tabs.entries()) {
     await ev(`document.querySelectorAll("main .nav-tabs .nav-link")[${i}].click()`);
     await sleep(900);

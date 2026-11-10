@@ -52,6 +52,21 @@
                 </div>
                 @error('form.conversion_type') <div class="text-danger small">{{ $message }}</div> @enderror
             </div>
+            @if ($resep->isNotEmpty() && $conversionId === null)
+                {{-- A-431: resep mengisi pola; isian tetap bisa diubah (BR-CNV-06). --}}
+                <div class="col-12" data-pakai-resep>
+                    <div class="d-flex flex-wrap align-items-end gap-2">
+                        <div style="min-width: 16rem; flex: 1 1 18rem">
+                            <x-pilih model="resepId" id="cnv-resep" :label="__('Pakai resep (opsional)')" :kosong="__('Tanpa resep')"
+                                     :options="$resep->map(fn ($r) => ['value' => $r->id, 'text' => $r->code.' · '.$r->name, 'sub' => $r->ringkasan()])->all()" />
+                        </div>
+                        <button class="btn btn-outline-primary" type="button" wire:click="pakaiResep" @disabled($resepId === '')>{{ __('Terapkan') }}</button>
+                    </div>
+                    @if ($resepDipakai !== '' && ($r = $resep->firstWhere('id', (int) $resepDipakai)))
+                        <div class="small text-muted mt-1">{{ __('Diisi dari resep :kode; hasil nyata tetap dari isian di bawah.', ['kode' => $r->code]) }}</div>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 

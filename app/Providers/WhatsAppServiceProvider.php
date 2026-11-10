@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Domain\WhatsApp\Console\SimulateWhatsAppReplyCommand;
 use App\Domain\WhatsApp\Livewire\WhatsAppCompanySettings;
 use App\Domain\WhatsApp\Livewire\WhatsAppNumber;
+use App\Domain\WhatsApp\Livewire\WhatsAppSimulator;
 use App\Domain\WhatsApp\Transport\CloudTransport;
 use App\Domain\WhatsApp\Transport\LogTransport;
 use App\Domain\WhatsApp\Transport\NullTransport;
@@ -30,6 +31,7 @@ class WhatsAppServiceProvider extends ServiceProvider
     {
         Livewire::component('whatsapp.number', WhatsAppNumber::class);
         Livewire::component('whatsapp.company-settings', WhatsAppCompanySettings::class);
+        Livewire::component('whatsapp.simulator', WhatsAppSimulator::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([SimulateWhatsAppReplyCommand::class]);

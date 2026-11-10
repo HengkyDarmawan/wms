@@ -11,6 +11,7 @@ use App\Domain\Template\Models\DocumentLayout;
 use App\Domain\Template\Models\DocumentTemplate;
 use App\Domain\Template\Support\PdfRenderer;
 use App\Domain\Template\Support\PrintAssets;
+use App\Domain\Template\Support\TemplateText;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -66,12 +67,18 @@ class DocumentLayoutController extends Controller
         $this->authorize('document_layout.manage');
 
         $layout = DocumentLayout::current();
-        $type = DocumentTemplateType::Shipment;
+        // A-436: pratinjau per jenis, termasuk teks template kustom dengan nilai contoh.
+        $type = DocumentTemplateType::tryFrom((string) request()->query('type', '')) ?? DocumentTemplateType::Shipment;
+        $type = $type->isLabel() || $type->isStub() ? DocumentTemplateType::Shipment : $type;
+        $contoh = ['nomor_dokumen' => 'CONTOH/0001', 'jenis_dokumen' => $type->label(), 'status' => __('Contoh'), 'tanggal_dokumen' => now()->lokal()->format('d/m/Y'),
+            'tanggal_cetak' => now()->lokal()->format('d/m/Y'), 'nama_perusahaan' => (string) (tenant()?->name ?? config('app.name')), 'gudang' => 'CKG · Gudang Contoh',
+            'proyek' => 'PRJ-001 · Proyek Contoh', 'klien' => 'PT Klien Contoh', 'cetak_ke' => '1'];
 
         $html = view('print.preview', [
             'type' => $type,
             'kop' => $assets->kop($layout),
-            'nomor' => 'SJ/CONTOH/0001',
+            'nomor' => 'CONTOH/0001',
+            'templateKustom' => TemplateText::render(DocumentTemplate::forType($type)->body_html, $contoh),
             'status' => __('Contoh'),
             'batal' => false,
             'qr' => $assets->qr(route('document-layout.edit')),

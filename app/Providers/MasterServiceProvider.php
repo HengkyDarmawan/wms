@@ -14,6 +14,7 @@ use App\Domain\Master\Livewire\ItemForm;
 use App\Domain\Master\Livewire\ItemList;
 use App\Domain\Master\Livewire\ProjectDetail;
 use App\Domain\Master\Livewire\ProjectList;
+use App\Domain\Master\Livewire\ProjectMaterialPlanTab;
 use App\Domain\Master\Livewire\ReferenceList;
 use App\Domain\Master\Livewire\UomList;
 use App\Domain\Master\Livewire\VendorList;
@@ -79,6 +80,7 @@ class MasterServiceProvider extends ServiceProvider
         Livewire::component('master.client-detail', ClientDetail::class);
         Livewire::component('master.project-list', ProjectList::class);
         Livewire::component('master.project-detail', ProjectDetail::class);
+        Livewire::component('master.project-material-plan', ProjectMaterialPlanTab::class);
         Livewire::component('master.company-settings-form', CompanySettingsForm::class);
         Livewire::component('master.holiday-calendar', HolidayCalendar::class);
         Livewire::component('master.vendor-list', VendorList::class);
